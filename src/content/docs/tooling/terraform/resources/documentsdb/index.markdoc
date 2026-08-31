@@ -4,7 +4,7 @@ title: DocumentsDB
 description: Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.
 ---
 
-**DocumentsDB** stores schemaless JSON documents in collections. The provider exposes it as a database (`appwrite_documentsdb`), then **collections**, then **indexes**, and optionally **documents** for seed data.
+DocumentsDB stores schemaless JSON documents in collections. The provider exposes it as a database (`appwrite_documentsdb`), then collections, then indexes, and optionally documents for seed data.
 
 For full generated schemas, see the Terraform Registry: [documentsdb](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb), [documentsdb_collection](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_collection), [documentsdb_index](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_index), and [documentsdb_document](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_document).
 
@@ -24,8 +24,8 @@ For full generated schemas, see the Terraform Registry: [documentsdb](https://re
 | `appwrite_documentsdb` | Look up a database by ID |
 | `appwrite_documentsdb_specifications` | List the compute specifications your billing plan allows |
 
-{% info title="DocumentsDB needs the legacy Databases scopes" %}
-DocumentsDB is gated behind the **legacy Databases scopes** (`databases.write`, `collections.write`, `documents.write`), not the TablesDB ones (`tables.*`, `rows.*`). This is not obvious from the product name, and the Appwrite Console does not always offer those checkboxes. Where it does not, set the scopes on the key through the project keys API — a key's scope list accepts names the Console does not render.
+{% info title="DocumentsDB has its own API key scopes" %}
+DocumentsDB does not use the TablesDB scopes (`tables.*`, `rows.*`) or the deprecated `collections.*` and `documents.*` ones. Give the key `documentsdb.read` and `documentsdb.write` for databases, `documentsdb.collections.read` and `documentsdb.collections.write` for collections and indexes, and `documentsdb.documents.read` and `documentsdb.documents.write` for documents.
 {% /info %}
 
 # Creating a database {% #creating-a-database %}
@@ -38,7 +38,7 @@ resource "appwrite_documentsdb" "main" {
 }
 ```
 
-Setting `specification` instead places the database on **dedicated infrastructure** reserved for your project, which is billed separately. Read the slug from the DocumentsDB catalogue: each product publishes its own, so a DocumentsDB database must be sized from the DocumentsDB specifications rather than a dedicated engine's.
+Setting `specification` instead places the database on dedicated infrastructure reserved for your project, which is billed separately. Each product publishes its own catalog of compute sizes, so size a DocumentsDB database from the DocumentsDB specifications rather than a dedicated engine's.
 
 ```hcl
 data "appwrite_documentsdb_specifications" "available" {}
@@ -59,19 +59,19 @@ resource "appwrite_documentsdb" "production" {
 }
 ```
 
-Pick the slug deliberately from what the catalogue reports rather than deriving it — see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source) for a `precondition` that fails the plan when a slug is not enabled on your billing plan.
+Set the slug you want rather than deriving one from the catalog output. For a `precondition` that fails the plan when a slug is not enabled on your billing plan, see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source).
 
 {% info title="Some deployments require a specification" %}
-Omitting `specification` runs the database on the deployment's **shared pool**, but not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required` and a `specification` becomes mandatory.
+Omitting `specification` runs the database on the deployment's shared pool. Not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required`, and `specification` becomes required.
 {% /info %}
 
-`replicas` counts high availability replicas on the dedicated backing, excluding the primary, and `sync_mode` (`async`, `sync`, or `quorum`) only matters when it is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning, so a collection is never created against a database that is still coming up.
+`replicas` counts high availability replicas on the dedicated backing, not counting the primary. `sync_mode` (`async`, `sync`, or `quorum`) applies only when `replicas` is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning, so a collection is never created against a database that is still starting.
 
-Set `enabled = false` to make a database inaccessible to your users while it stays reachable with an API key. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`; `engine` and `status` are empty when the database has no dedicated backing.
+Set `enabled = false` to make a database unreachable for your users while an API key can still reach it. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`. `engine` and `status` are empty when the database has no dedicated backing.
 
 # Collections {% #collections %}
 
-A collection holds the documents. Permissions are set at the collection level, and `document_security` enforces per-document permissions on top of them.
+A collection holds the documents. You set permissions at the collection level, and `document_security` enforces per-document permissions on top of them.
 
 ```hcl
 resource "appwrite_documentsdb_collection" "articles" {
@@ -99,7 +99,7 @@ resource "appwrite_documentsdb_collection" "articles" {
 ```
 
 {% info title="Attributes are create-only" %}
-`attributes` is applied **only when the collection is created** — the API has no route to add, change, or remove one afterwards — so changing it **replaces the collection and discards its documents**. It is also not refreshed from the server, so drift on it is not detected. An index can only be built on a declared attribute, so declare here anything you intend to index.
+Appwrite applies `attributes` only when the collection is created. There is no route to add, change, or remove one afterwards, so changing this argument replaces the collection and discards its documents. Terraform does not refresh it from the server either, so drift on it goes undetected. An index can only be built on a declared attribute, so declare anything you intend to index here.
 {% /info %}
 
 # Indexes {% #indexes %}
@@ -125,11 +125,11 @@ resource "appwrite_documentsdb_index" "by_published" {
 
 `type` is `key`, `unique`, or `fulltext`, depending on the attribute being indexed. `orders` (`ASC` or `DESC`) and `lengths` are positional, matching `attributes` entry for entry.
 
-Indexes have **no update route**, so changing any argument replaces the index. Creation is asynchronous and Terraform waits for the index to become available, so a dependent resource is never handed one that is still building. The read-only `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`, with `error` explaining a failed build.
+Indexes have no update route, so changing any argument replaces the index. Terraform waits for a new index to become available, so a dependent resource is never handed one that is still building. The read-only `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`, and `error` explains a failed build.
 
 # Documents {% #documents %}
 
-The document resource manages **data** rather than infrastructure, which makes it a fit for seed and reference records:
+The document resource manages data rather than infrastructure, which fits seed and reference records:
 
 ```hcl
 resource "appwrite_documentsdb_collection" "settings" {
@@ -150,7 +150,7 @@ resource "appwrite_documentsdb_document" "defaults" {
 }
 ```
 
-Only the keys present in `data` are tracked, so fields written by other clients do not show up as drift. Documents your application writes at runtime should **not** be managed here, or every apply will fight the application. `permissions` on a document is only enforced when the collection has `document_security` enabled.
+Terraform tracks only the keys present in `data`, so fields written by other clients do not show up as drift. Do not manage documents your application writes at runtime here. Every apply would fight the application. `permissions` on a document is only enforced when the collection has `document_security` enabled.
 
 # Looking up a database {% #looking-up-a-database %}
 

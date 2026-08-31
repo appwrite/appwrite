@@ -4,7 +4,7 @@ title: Custom domains
 description: Point custom domains at Appwrite sites and functions with the appwrite_proxy_rule Terraform resource.
 ---
 
-The `appwrite_proxy_rule` resource attaches a **custom domain** to an Appwrite site or function. Appwrite verifies the domain and issues a certificate for it, so the rule's useful state is mostly read-only: you declare the domain and target, and read back verification progress.
+The `appwrite_proxy_rule` resource attaches a custom domain to an Appwrite site or function. Appwrite verifies the domain and issues a certificate for it, so most of the rule's state is read-only. You declare the domain and the target, then read back verification progress.
 
 See the Terraform Registry for the full schema: [proxy_rule](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/proxy_rule).
 
@@ -14,7 +14,7 @@ See the Terraform Registry for the full schema: [proxy_rule](https://registry.te
 |----------|---------|
 | `appwrite_proxy_rule` | Serve a site or function from a custom domain |
 
-This resource uses a standard **project** API key with `rules.read` and `rules.write` scopes.
+This resource uses a standard project API key with `rules.read` and `rules.write` scopes.
 
 # Example {% #example %}
 
@@ -34,11 +34,11 @@ resource "appwrite_proxy_rule" "example" {
 
 `type` is `site` or `function`, and `resource_id` is the ID of the target. Set `branch` to have a VCS branch update the rule automatically.
 
-Point the domain's DNS at Appwrite before or shortly after applying; until it resolves, verification stays pending.
+Point the domain's DNS at Appwrite before or shortly after applying. Verification stays pending until the domain resolves.
 
 # Reading verification state {% #reading-verification-state %}
 
-`status` reports domain verification, and `logs` carries the verification or certificate-generation output — the first place to look when a domain does not come up. `renew_at` is when the certificate auto-renews.
+`status` reports domain verification. `logs` carries the verification and certificate generation output, which is the first place to look when a domain does not come up. `renew_at` is when the certificate auto-renews.
 
 ```hcl
 output "domain_status" {
@@ -59,7 +59,7 @@ terraform import appwrite_proxy_rule.example <rule-id>
 
 The second form works when `project_id` is configured on the provider.
 
-Some installations derive the rule ID as `md5(lower(domain))`, but others use generated IDs. Always prefer the ID the API returns rather than computing one.
+Some installations derive the rule ID as `md5(lower(domain))`, and others use generated IDs. Use the ID the API returns rather than computing one.
 
 # Related {% #related %}
 

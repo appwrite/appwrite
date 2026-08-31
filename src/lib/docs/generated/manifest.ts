@@ -4092,7 +4092,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "DocumentsDB",
     "description": "Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/domains",

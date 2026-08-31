@@ -7,13 +7,13 @@ description: Use Terraform to manage Appwrite TablesDB databases, tables, column
 The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (`appwrite_tablesdb`), then **tables**, then **columns** and **indexes**, and optionally **rows**.
 
 {% info title="Other database products" %}
-This page covers **TablesDB**, Appwrite's relational product on shared infrastructure. The provider also manages [dedicated databases](/docs/tooling/terraform/resources/dedicated-databases) (PostgreSQL, MySQL, and MongoDB on reserved infrastructure), [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) (schemaless JSON collections), and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb) (embeddings searched by similarity).
+This page covers TablesDB, Appwrite's relational product on shared infrastructure. The provider also manages [dedicated databases](/docs/tooling/terraform/resources/dedicated-databases) (PostgreSQL, MySQL, and MongoDB on reserved infrastructure), [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) (schemaless JSON collections), and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb) (embeddings searched by similarity).
 {% /info %}
 
 For full generated schemas, see the Terraform Registry: [tablesdb](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/tablesdb), [tablesdb_table](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/tablesdb_table), [tablesdb_column](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/tablesdb_column), [tablesdb_index](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/tablesdb_index), and [tablesdb_row](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/tablesdb_row). The [provider repository](https://github.com/appwrite/terraform-provider-appwrite) contains the source and examples.
 
 {% info title="Version compatibility" %}
-TablesDB resources target Appwrite Cloud or **Community Edition 1.9.0 and later**. Earlier self-hosted versions return `general_route_not_found` for TablesDB routes.
+TablesDB resources target Appwrite Cloud or Community Edition 1.9.0 and later. Earlier self-hosted versions return `general_route_not_found` for TablesDB routes.
 {% /info %}
 
 # Resources {% #resources %}

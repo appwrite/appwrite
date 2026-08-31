@@ -4,7 +4,7 @@ title: VectorsDB
 description: Manage Appwrite VectorsDB databases, collections, indexes, and embeddings with the official Terraform provider.
 ---
 
-**VectorsDB** stores embeddings in collections and searches them by vector similarity. Its Terraform resources mirror [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) — the two products share one implementation — with one difference that matters: a VectorsDB collection has a required `dimension` and takes no typed attributes.
+VectorsDB stores embeddings in collections and searches them by vector similarity. Its Terraform resources mirror [DocumentsDB](/docs/tooling/terraform/resources/documentsdb), since the two products share one implementation. One difference matters. A VectorsDB collection has a required `dimension` and takes no typed attributes.
 
 For full generated schemas, see the Terraform Registry: [vectorsdb](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb), [vectorsdb_collection](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_collection), [vectorsdb_index](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_index), and [vectorsdb_document](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/vectorsdb_document).
 
@@ -24,8 +24,8 @@ For full generated schemas, see the Terraform Registry: [vectorsdb](https://regi
 | `appwrite_vectorsdb` | Look up a database by ID |
 | `appwrite_vectorsdb_specifications` | List the compute specifications your billing plan allows |
 
-{% info title="VectorsDB needs the legacy Databases scopes" %}
-VectorsDB is gated behind the **legacy Databases scopes** (`databases.write`, `collections.write`, `documents.write`), not the TablesDB ones (`tables.*`, `rows.*`). This is not obvious from the product name, and the Appwrite Console does not always offer those checkboxes. Where it does not, set the scopes on the key through the project keys API — a key's scope list accepts names the Console does not render.
+{% info title="VectorsDB has its own API key scopes" %}
+VectorsDB does not use the TablesDB scopes (`tables.*`, `rows.*`) or the deprecated `collections.*` and `documents.*` ones. Give the key `vectorsdb.read` and `vectorsdb.write` for databases, `vectorsdb.collections.read` and `vectorsdb.collections.write` for collections and indexes, and `vectorsdb.documents.read` and `vectorsdb.documents.write` for documents.
 {% /info %}
 
 # Creating a database {% #creating-a-database %}
@@ -36,7 +36,7 @@ resource "appwrite_vectorsdb" "main" {
 }
 ```
 
-Setting `specification` places the database on **dedicated infrastructure** reserved for your project, which is billed separately. Size it from the VectorsDB catalogue, since each product publishes its own:
+Setting `specification` places the database on dedicated infrastructure reserved for your project, which is billed separately. Size it from the VectorsDB catalog, since each product publishes its own:
 
 ```hcl
 data "appwrite_vectorsdb_specifications" "available" {}
@@ -57,17 +57,17 @@ resource "appwrite_vectorsdb" "production" {
 }
 ```
 
-Pick the slug deliberately from what the catalogue reports rather than deriving it — see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source) for a `precondition` that fails the plan when a slug is not enabled on your billing plan.
+Set the slug you want rather than deriving one from the catalog output. For a `precondition` that fails the plan when a slug is not enabled on your billing plan, see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source).
 
 {% info title="Some deployments require a specification" %}
-Omitting `specification` runs the database on the deployment's **shared pool**, but not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required` and a `specification` becomes mandatory.
+Omitting `specification` runs the database on the deployment's shared pool. Not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required`, and `specification` becomes required.
 {% /info %}
 
-`replicas` excludes the primary, and `sync_mode` (`async`, `sync`, or `quorum`) only matters when it is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`; `engine` and `status` are empty when there is no dedicated backing.
+`replicas` does not count the primary, and `sync_mode` (`async`, `sync`, or `quorum`) applies only when `replicas` is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`. `engine` and `status` are empty when there is no dedicated backing.
 
 # Collections {% #collections %}
 
-`dimension` is **required** and must match the model producing your embeddings — `text-embedding-3-small` emits 1536 values, for example. Changing it later re-indexes the collection, so pick it deliberately.
+`dimension` is required and must match the model producing your embeddings. `text-embedding-3-small` emits 1536 values, for example. Changing it later re-indexes the collection.
 
 ```hcl
 resource "appwrite_vectorsdb_collection" "articles" {
@@ -81,7 +81,7 @@ resource "appwrite_vectorsdb_collection" "articles" {
 }
 ```
 
-VectorsDB collections take **no typed attribute definitions**: `attributes` is read-only here and exists only so both products share one state shape. Conversely, `dimension` is rejected at plan time on a DocumentsDB collection.
+VectorsDB collections take no typed attribute definitions. `attributes` is read-only here, and exists so both products share one state shape. In the other direction, the provider rejects `dimension` at plan time on a DocumentsDB collection.
 
 # Indexes {% #indexes %}
 
@@ -95,7 +95,7 @@ resource "appwrite_vectorsdb_index" "by_source" {
 }
 ```
 
-`orders` (`ASC` or `DESC`) and `lengths` are positional, matching `attributes` entry for entry. Indexes have **no update route**, so changing any argument replaces the index. Creation is asynchronous and Terraform waits for the index to become available; `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`.
+`orders` (`ASC` or `DESC`) and `lengths` are positional, matching `attributes` entry for entry. Indexes have no update route, so changing any argument replaces the index. Terraform waits for a new index to become available, and `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`.
 
 # Documents {% #documents %}
 
@@ -120,7 +120,7 @@ resource "appwrite_vectorsdb_document" "seed" {
 }
 ```
 
-Real embeddings come from a model, so they are normally written by your application rather than pinned in configuration. Keep this resource for seed and reference records: only the keys present in `data` are tracked, so fields written by other clients do not show as drift.
+Embeddings come from a model, so your application normally writes them rather than pinning them in configuration. Keep this resource for seed and reference records. Terraform tracks only the keys present in `data`, so fields written by other clients do not show as drift.
 
 # Looking up a database {% #looking-up-a-database %}
 

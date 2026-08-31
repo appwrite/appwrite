@@ -4,7 +4,7 @@ title: Terraform provider
 description: Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.
 ---
 
-The [Terraform provider for Appwrite](https://github.com/appwrite/terraform-provider-appwrite) lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **dedicated databases** (PostgreSQL, MySQL, and MongoDB), **DocumentsDB** and **VectorsDB**, **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, **custom domains**, and more in `.tf` files, and apply those changes through [HashiCorp Terraform](https://www.terraform.io/). It is the official way to automate Appwrite project configuration alongside the rest of your stack.
+The [Terraform provider for Appwrite](https://github.com/appwrite/terraform-provider-appwrite) lets you declare Appwrite resources in `.tf` files and apply them through [HashiCorp Terraform](https://www.terraform.io/). It covers TablesDB (databases, tables, columns, indexes, rows), dedicated databases (PostgreSQL, MySQL, and MongoDB), DocumentsDB, VectorsDB, Storage (buckets and files), Auth (users and teams), Functions, Sites, Messaging (providers, topics, subscribers), webhooks, backup policies, projects, and custom domains. It is the official way to automate Appwrite project configuration alongside the rest of your stack.
 
 # Resources {% #resources %}
 

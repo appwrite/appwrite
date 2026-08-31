@@ -4,7 +4,7 @@ title: Dedicated databases
 description: Provision dedicated Appwrite PostgreSQL, MySQL, and MongoDB databases with Terraform, including replicas, backups, branches, poolers, and extensions.
 ---
 
-A **dedicated database** runs on infrastructure reserved for a single project, with its own connection string, compute specification, and lifecycle. The provider exposes each engine as its own set of resources, because Appwrite routes them separately and only some engines have a pooler or extensions.
+A dedicated database runs on infrastructure reserved for a single project, with its own connection string, compute specification, and lifecycle. The provider exposes each engine as its own set of resources, because Appwrite routes them separately and only some engines have a pooler or extensions.
 
 | Engine | Resource prefix |
 |--------|-----------------|
@@ -13,14 +13,14 @@ A **dedicated database** runs on infrastructure reserved for a single project, w
 | MongoDB | `appwrite_mongo_` |
 
 {% info title="Provisioning takes minutes" %}
-Creating, resizing, or upgrading a dedicated database takes several minutes. Terraform waits for the database to leave its transitional state before continuing, so dependent resources are never handed a half-built database. Expect `terraform apply` to sit on these resources for a while.
+Creating, resizing, or upgrading a dedicated database takes several minutes. Terraform waits for the database to leave its transitional state before continuing, so dependent resources are never handed a half-built database. Expect `terraform apply` to sit on these resources for several minutes.
 {% /info %}
 
 For full generated schemas, see the Terraform Registry: [postgresql_database](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/postgresql_database), [mysql_database](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/mysql_database), and [mongo_database](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/mongo_database). The [provider repository](https://github.com/appwrite/terraform-provider-appwrite) contains the source and examples.
 
 # Resources {% #resources %}
 
-Every engine has the same database, backup, and branch resources. Poolers and extensions are only available where the engine supports them.
+Every engine has the same database, backup, and branch resources. Poolers and extensions exist only where the engine supports them.
 
 | Resource | Purpose | PostgreSQL | MySQL | MongoDB |
 |----------|---------|------------|-------|---------|
@@ -35,7 +35,7 @@ Written out, that is `appwrite_postgresql_database`, `appwrite_mysql_database`, 
 
 # Data sources {% #data-sources %}
 
-Data sources read what already exists instead of creating it. Use them to size a database from what your plan actually allows, to look up a connection string, or to report on live health.
+Data sources read what already exists instead of creating it. Use them to size a database from what your plan allows, to look up a connection string, or to report on live health.
 
 | Data source | Purpose | PostgreSQL | MySQL | MongoDB |
 |-------------|---------|------------|-------|---------|
@@ -60,11 +60,11 @@ resource "appwrite_postgresql_database" "main" {
 }
 ```
 
-Changing `specification` resizes the database in place. Changing `version` performs an in-place major version upgrade, which **cannot be rolled back**.
+Changing `specification` resizes the database in place. Changing `version` performs an in-place major version upgrade, which cannot be rolled back.
 
 # Sizing from the specifications data source {% #sizing-from-the-specifications-data-source %}
 
-Compute slugs (`s-1vcpu-1gb` through `s-8vcpu-64gb`) are not all enabled on every billing plan, and a slug your plan does not allow is rejected at apply. Read the catalogue to see what you can pick:
+Compute slugs (`s-1vcpu-1gb` through `s-8vcpu-64gb`) are not all enabled on every billing plan, and Appwrite rejects a slug your plan does not allow at apply time. Read the catalog to see what you can pick:
 
 ```hcl
 data "appwrite_postgresql_specifications" "available" {}
@@ -80,7 +80,7 @@ output "available_specifications" {
 
 Each specification reports `slug`, `name`, `cpu`, `memory`, `max_connections`, `included_storage`, `included_bandwidth`, `price`, and `enabled`.
 
-Then choose one deliberately. How much compute a database gets is a decision to make explicitly, not something to derive from whatever the catalogue happens to return:
+Then set the slug you want. How much compute a database gets is worth choosing rather than deriving from whatever the catalog returns first:
 
 ```hcl
 resource "appwrite_postgresql_database" "production" {
@@ -90,7 +90,7 @@ resource "appwrite_postgresql_database" "production" {
 }
 ```
 
-To catch an unavailable slug while planning rather than halfway through an apply, assert your choice against the catalogue:
+To catch an unavailable slug at plan time rather than halfway through an apply, check your choice against the catalog:
 
 ```hcl
 variable "database_specification" {
@@ -117,7 +117,7 @@ resource "appwrite_postgresql_database" "production" {
 
 # High availability and recovery {% #high-availability-and-recovery %}
 
-High availability is enabled when `replicas` is greater than 0. `sync_mode` is only meaningful alongside replicas: `async` never blocks a commit, `sync` waits for a standby, and `quorum` waits for a majority.
+Setting `replicas` above 0 turns on high availability. `sync_mode` applies only when there are replicas. `async` never blocks a commit, `sync` waits for a standby, and `quorum` waits for a majority.
 
 ```hcl
 resource "appwrite_postgresql_database" "production" {
@@ -143,7 +143,7 @@ Set `storage_autoscaling_max_gb` to `0` for no ceiling.
 
 # Networking and maintenance {% #networking-and-maintenance %}
 
-`network_ip_allowlist` takes IP addresses and CIDR ranges; an **empty set allows any address**, so an allowlist is only a restriction once it has an entry. `maintenance_window_day` and `maintenance_window_hour_utc` must be set together.
+`network_ip_allowlist` takes IP addresses and CIDR ranges. An empty set allows any address, so the allowlist restricts nothing until it has an entry. `maintenance_window_day` and `maintenance_window_hour_utc` must be set together.
 
 ```hcl
 resource "appwrite_mysql_database" "production" {
@@ -161,7 +161,7 @@ resource "appwrite_mysql_database" "production" {
 
 # Pausing and idling {% #pausing-and-idling %}
 
-`idle_timeout_minutes` scales the container to zero after a period of inactivity; `0` keeps it always on. `status` is the desired state: set it to `paused` to stop a database without deleting its data, and back to `ready` to resume. Left unset, `status` is only read back from the server.
+`idle_timeout_minutes` scales the container to zero after a period of inactivity, and `0` keeps it always on. `status` is the desired state. Set it to `paused` to stop a database without deleting its data, and back to `ready` to resume. When you leave it unset, Terraform only reads `status` back from the server.
 
 ```hcl
 resource "appwrite_postgresql_database" "development" {
@@ -172,11 +172,11 @@ resource "appwrite_postgresql_database" "development" {
 }
 ```
 
-The read-only `lifecycle_state` reports where an idling database currently sits: `active`, `warm`, `cold`, or `hibernated`.
+The read-only `lifecycle_state` reports how far an idling database has scaled down: `active`, `warm`, `cold`, or `hibernated`.
 
 # SQL API {% #sql-api %}
 
-The SQL API runs statements over the Appwrite API rather than a direct connection. It is opt-in, and the statement types it accepts are worth narrowing: DDL and DCL types (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`, `GRANT`, `REVOKE`) are not accepted unless you list them.
+The SQL API runs statements over the Appwrite API rather than a direct connection. It is off by default. DDL and DCL statements (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`, `GRANT`, `REVOKE`) are rejected unless you list them in `sql_api_allowed_statements`.
 
 ```hcl
 resource "appwrite_postgresql_database" "analytics" {
@@ -191,11 +191,11 @@ resource "appwrite_postgresql_database" "analytics" {
 }
 ```
 
-MongoDB accepts these arguments for a consistent schema across engines, but has no SQL execution endpoint for them to act on.
+MongoDB accepts these arguments so the schema is the same across engines, but it does not run SQL, so they have no effect.
 
 # Connection details {% #connection-details %}
 
-Each database exports its connection details as read-only attributes. `connection_string` and `connection_password` are **sensitive**: they land in Terraform state, so protect the state file and mark any output that carries them.
+Each database exports its connection details as read-only attributes. `connection_string` and `connection_password` are sensitive. They land in Terraform state, so protect the state file and mark any output that carries them.
 
 ```hcl
 output "database_host" {
@@ -208,11 +208,11 @@ output "database_url" {
 }
 ```
 
-Also exported: `connection_user`, `connection_port`, `ssl`, `cpu`, `memory`, `storage`, `engine`, `network_max_connections`, `backup_enabled`, `created_at`, `updated_at`, and `error` when the status is `failed`. Rotate credentials out of band; the provider only reads them.
+The database also exports `connection_user`, `connection_port`, `ssl`, `cpu`, `memory`, `storage`, `engine`, `network_max_connections`, `backup_enabled`, `created_at`, `updated_at`, and `error` when the status is `failed`. Rotate credentials outside Terraform, since the provider only reads them.
 
 # Connection pooling {% #connection-pooling %}
 
-A pooler fronts PostgreSQL and MySQL databases. It exists for the lifetime of the database, so this resource only ever **updates settings**: destroying it leaves the pooler running with its last applied configuration.
+A pooler sits in front of PostgreSQL and MySQL databases. It exists for the lifetime of the database, so this resource only updates settings. Destroying it leaves the pooler running with its last applied configuration.
 
 ```hcl
 resource "appwrite_postgresql_pooler" "main" {
@@ -227,7 +227,7 @@ resource "appwrite_postgresql_pooler" "main" {
 
 `mode` is `transaction` (a connection returns to the pool after each transaction, which suits short serverless queries) or `session` (held for the whole client session). `read_write_splitting` is only active when the database has replicas.
 
-`max_connections` is settable on MySQL but read-only on PostgreSQL, where the pooler has no client cap of its own and reports the database's `network_max_connections` instead; size it through the database specification. You can also tune the sidecar with `pooler_cpu_request`, `pooler_cpu_limit`, `pooler_memory_request`, and `pooler_memory_limit`, each a Kubernetes quantity such as `200m` or `128Mi`.
+`max_connections` is settable on MySQL and read-only on PostgreSQL. The PostgreSQL pooler has no client cap of its own and reports the database's `network_max_connections` instead, so size it through the database specification. You can also tune the sidecar with `pooler_cpu_request`, `pooler_cpu_limit`, `pooler_memory_request`, and `pooler_memory_limit`, each a Kubernetes quantity such as `200m` or `128Mi`.
 
 # Extensions {% #extensions %}
 
@@ -252,7 +252,7 @@ The data source also returns `installed` and a `metadata` list describing each a
 
 # Branches {% #branches %}
 
-A **branch** is a copy of a database that shares the parent's credentials but has its own host and database name, which suits giving a preview environment or CI job realistic data.
+A branch is a copy of a database. It shares the parent's credentials but has its own host and database name, which gives a preview environment or a CI job production-like data.
 
 ```hcl
 resource "appwrite_postgresql_branch" "preview" {
@@ -273,7 +273,7 @@ output "preview_connection_string" {
 }
 ```
 
-Branches have **no update route**, so changing any argument replaces the branch and discards its data. When a `ttl` expires, the server deletes the branch; the next refresh drops it from state and the following plan recreates it, so a short-lived branch comes back rather than staying gone.
+Branches have no update route, so changing any argument replaces the branch and discards its data. When a `ttl` expires, the server deletes the branch. The next refresh drops it from state and the following plan recreates it, so a short-lived branch comes back instead of staying deleted.
 
 # Backups {% #backups %}
 
@@ -308,7 +308,7 @@ data "appwrite_postgresql_backups" "main" {
 }
 ```
 
-Each backup reports `id`, `status`, `type`, `requested_type`, `trigger`, `size_bytes`, `policy_id`, `log_position`, and its timestamps. `requested_type` differs from `type` when the backend could not run what was asked for and fell back, with `fallback_reason` explaining why.
+Each backup reports `id`, `status`, `type`, `requested_type`, `trigger`, `size_bytes`, `policy_id`, `log_position`, and its timestamps. `requested_type` differs from `type` when the server could not run the backup that was asked for and fell back to another, and `fallback_reason` explains why.
 
 ## Backup storage {% #backup-storage %}
 
@@ -330,7 +330,7 @@ resource "appwrite_postgresql_backup_storage" "offsite" {
 `storage_provider` is `s3` (Amazon S3 or S3-compatible), `gcs`, or `azure`. An S3-compatible provider that is not Amazon needs an explicit `endpoint`.
 
 {% info title="Backup storage cannot be read back" %}
-Appwrite exposes no route to read this configuration, so Terraform **cannot detect drift on it, cannot verify what the server currently has, and cannot import an existing configuration**. Destroying the resource only removes it from state; backups keep going to the last destination applied. Change the destination by applying a new one.
+Appwrite has no route to read this configuration back, so Terraform cannot detect drift on it, cannot verify what the server holds, and cannot import an existing configuration. Destroying the resource only removes it from state, and backups keep going to the last destination applied. Change the destination by applying a new one.
 {% /info %}
 
 # Reading live status {% #reading-live-status %}
@@ -352,7 +352,7 @@ output "database_health" {
 }
 ```
 
-`health` is `healthy`, `degraded`, `unhealthy`, or `unknown` when nothing could be measured. The `replicas` list reports each member's `role`, `healthy`, `replicating`, and `lag_seconds`, and `volumes` reports mount paths and usage. `sync_state_confirmed` says whether the replication fields are an engine reading rather than a recorded estimate — `false` means no reading was taken, not that replication is unhealthy.
+`health` is `healthy`, `degraded`, `unhealthy`, or `unknown` when nothing could be measured. The `replicas` list reports each member's `role`, `healthy`, `replicating`, and `lag_seconds`, and `volumes` reports mount paths and usage. `sync_state_confirmed` says whether the replication fields come from an engine reading rather than a recorded estimate. `false` means no reading was taken, not that replication is unhealthy.
 
 # Looking up existing databases {% #looking-up-existing-databases %}
 
@@ -372,7 +372,7 @@ output "ready_database_count" {
 
 # Importing {% #importing %}
 
-Most dedicated database resources can be imported. Identifiers are composed from the database ID:
+You can import most dedicated database resources. Identifiers start with the database ID:
 
 ```bash
 terraform import appwrite_postgresql_database.main <database-id>
@@ -382,7 +382,7 @@ terraform import appwrite_postgresql_branch.preview <database-id>/<branch-id>
 terraform import appwrite_postgresql_backup_policy.nightly <database-id>/<policy-id>
 ```
 
-Backup storage is the exception: it has no read route, so it cannot be imported.
+Backup storage is the exception. It has no read route, so it cannot be imported.
 
 # Related {% #related %}
 
