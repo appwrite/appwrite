@@ -6321,7 +6321,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
-    "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the Terraform Registry documentation. | Area | Resources…",
+    "excerpt": "The Terraform provider for Appwrite lets you declare Appwrite resources in files and apply them through HashiCorp Terraform. It covers TablesDB (databases, tables, columns, indexes, rows), dedicated databases (PostgreSQL, MySQL, and MongoDB), DocumentsDB, VectorsDB, Storage (buckets and files), Auth (users and teams), Functions, Sites, Messaging (providers, topics, subscribers), webhooks, backup policies, projects, and custom domains. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the prefix and match the…",
     "breadcrumbs": [
       "Tooling",
       "Getting started",
@@ -6354,7 +6354,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/terraform/resources/backups",
     "title": "Backups",
     "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
-    "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use **** (CRON), **** (days), and **** (for example ). Omit **** to cover all databases in the project, or set **** to a specific database ID (often ) to back up…",
+    "excerpt": "The resource configures **backup policies** for supported resources. Availability depends on your Appwrite Cloud plan or self-hosted setup. covers resources on Appwrite's shared infrastructure. A dedicated database uses its own engine-specific resource instead, , , or . Those also support incremental backups and shipping to a bucket you own. See the Terraform Registry: backup_policy. The provider repository lists the full argument reference. Resource | Resource | Purpose | |----------|---------| | | Configure backup policies for supported resources | Policies use…",
     "breadcrumbs": [
       "Tooling",
       "Resources",
@@ -6363,13 +6363,46 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
+    "title": "TablesDB",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
-    "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. Resources | Resource | Purpose | |----------|---------| | | Create a database in your project | | | Create a table within a database | | | Define columns (types, constraints, defaults) | | |…",
+    "excerpt": "The provider exposes Appwrite **TablesDB** as Terraform resources. Typical order: create a **database** (), then **tables**, then **columns** and **indexes**, and optionally **rows**. This page covers TablesDB, Appwrite's relational product on shared infrastructure. The provider also manages dedicated databases (PostgreSQL, MySQL, and MongoDB on reserved infrastructure), DocumentsDB (schemaless JSON collections), and VectorsDB (embeddings searched by similarity). For full generated schemas, see the Terraform Registry: tablesdb, tablesdb_table, tablesdb_column, tablesdb_index, and tablesdb_row. The provider repository contains the source and examples. TablesDB resources…",
     "breadcrumbs": [
       "Tooling",
       "Resources",
-      "Databases"
+      "TablesDB"
+    ]
+  },
+  {
+    "slug": "tooling/terraform/resources/dedicated-databases",
+    "title": "Dedicated databases",
+    "description": "Provision dedicated Appwrite PostgreSQL, MySQL, and MongoDB databases with Terraform, including replicas, backups, branches, poolers, and extensions.",
+    "excerpt": "A dedicated database runs on infrastructure reserved for a single project, with its own connection string, compute specification, and lifecycle. The provider exposes each engine as its own set of resources, because Appwrite routes them separately and only some engines have a pooler or extensions. | Engine | Resource prefix | |--------|-----------------| | PostgreSQL | | | MySQL | | | MongoDB | | Creating, resizing, or upgrading a dedicated database takes several minutes. Terraform waits for the database to…",
+    "breadcrumbs": [
+      "Tooling",
+      "Resources",
+      "Dedicated databases"
+    ]
+  },
+  {
+    "slug": "tooling/terraform/resources/documentsdb",
+    "title": "DocumentsDB",
+    "description": "Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.",
+    "excerpt": "DocumentsDB stores schemaless JSON documents in collections. The provider exposes it as a database (), then collections, then indexes, and optionally documents for seed data. For full generated schemas, see the Terraform Registry: documentsdb, documentsdb_collection, documentsdb_index, and documentsdb_document. Resources | Resource | Purpose | |----------|---------| | | Create a DocumentsDB database in your project | | | Create a collection within a database | | | Index one or more document attributes | | | Manage seed and reference documents…",
+    "breadcrumbs": [
+      "Tooling",
+      "Resources",
+      "DocumentsDB"
+    ]
+  },
+  {
+    "slug": "tooling/terraform/resources/domains",
+    "title": "Custom domains",
+    "description": "Point custom domains at Appwrite sites and functions with the appwrite_proxy_rule Terraform resource.",
+    "excerpt": "The resource attaches a custom domain to an Appwrite site or function. Appwrite verifies the domain and issues a certificate for it, so most of the rule's state is read-only. You declare the domain and the target, then read back verification progress. See the Terraform Registry for the full schema: proxy_rule. Resource | Resource | Purpose | |----------|---------| | | Serve a site or function from a custom domain | This resource uses a standard project API key with and…",
+    "breadcrumbs": [
+      "Tooling",
+      "Resources",
+      "Custom domains"
     ]
   },
   {
@@ -6414,6 +6447,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "Resources",
       "Storage"
+    ]
+  },
+  {
+    "slug": "tooling/terraform/resources/vectorsdb",
+    "title": "VectorsDB",
+    "description": "Manage Appwrite VectorsDB databases, collections, indexes, and embeddings with the official Terraform provider.",
+    "excerpt": "VectorsDB stores embeddings in collections and searches them by vector similarity. Its Terraform resources mirror DocumentsDB, since the two products share one implementation. One difference matters. A VectorsDB collection has a required and takes no typed attributes. For full generated schemas, see the Terraform Registry: vectorsdb, vectorsdb_collection, vectorsdb_index, and vectorsdb_document. Resources | Resource | Purpose | |----------|---------| | | Create a VectorsDB database in your project | | | Create a collection of fixed-dimension embeddings | | | Index one…",
+    "breadcrumbs": [
+      "Tooling",
+      "Resources",
+      "VectorsDB"
     ]
   },
   {

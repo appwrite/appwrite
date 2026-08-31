@@ -4050,14 +4050,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "tooling/terraform/provider",
     "title": "Configuration",
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/auth",
@@ -4075,8 +4075,29 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
+    "title": "TablesDB",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "tooling/terraform/resources/dedicated-databases",
+    "title": "Dedicated databases",
+    "description": "Provision dedicated Appwrite PostgreSQL, MySQL, and MongoDB databases with Terraform, including replicas, backups, branches, poolers, and extensions.",
+    "layout": "article",
+    "readingTimeMinutes": 7
+  },
+  {
+    "slug": "tooling/terraform/resources/documentsdb",
+    "title": "DocumentsDB",
+    "description": "Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "tooling/terraform/resources/domains",
+    "title": "Custom domains",
+    "description": "Point custom domains at Appwrite sites and functions with the appwrite_proxy_rule Terraform resource.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -4107,6 +4128,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "tooling/terraform/resources/vectorsdb",
+    "title": "VectorsDB",
+    "description": "Manage Appwrite VectorsDB databases, collections, indexes, and embeddings with the official Terraform provider.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/webhooks",

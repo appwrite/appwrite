@@ -2606,8 +2606,20 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Resources',
         items: [
           {
-            label: 'Databases',
+            label: 'TablesDB',
             href: '/docs/tooling/terraform/resources/databases',
+          },
+          {
+            label: 'Dedicated databases',
+            href: '/docs/tooling/terraform/resources/dedicated-databases',
+          },
+          {
+            label: 'DocumentsDB',
+            href: '/docs/tooling/terraform/resources/documentsdb',
+          },
+          {
+            label: 'VectorsDB',
+            href: '/docs/tooling/terraform/resources/vectorsdb',
           },
           {
             label: 'Storage',
@@ -2636,6 +2648,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Backups',
             href: '/docs/tooling/terraform/resources/backups',
+          },
+          {
+            label: 'Custom domains',
+            href: '/docs/tooling/terraform/resources/domains',
           },
         ],
       },
