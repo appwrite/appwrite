@@ -8,7 +8,6 @@ timeToRead: 8
 author: eldad-fux
 category: product, announcement
 featured: true
-draft: true
 faqs:
   - question: "What is Appwrite Explorer?"
     answer: "Appwrite Explorer is an interactive API workspace inside the Appwrite Console. It loads the official OpenAPI specification for your project, groups endpoints by product (Auth, Databases, Storage, Functions, and more), and lets you compose and send live REST requests from the browser."

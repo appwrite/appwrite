@@ -8,7 +8,6 @@ timeToRead: 7
 author: eldad-fux
 category: product, announcement
 featured: true
-draft: true
 callToAction: true
 faqs:
   - question: "What is Appwrite 2.0?"
