@@ -295,10 +295,15 @@ export function canShowOrgDomainsTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(
-    features.domains &&
-    (!features.orgRoles || access.isOwner || access.isDeveloper)
-  )
+  return canAccessOrgDomains(access, features)
+}
+
+/** Buy domain and transfer-in (registrar commerce). Gated by the domains profile flag. */
+export function canBuyOrTransferOrgDomain(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!(features.domains && canAccessOrgDomains(access, features))
 }
 
 /** Organization marketplace tab (cloud profile + feature flag; browse integrations). */

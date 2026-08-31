@@ -2091,8 +2091,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               ),
               createProfileFeatureFlagItem(
-                'Organization domains',
-                'Org Domains tab (DNS, verification, buy/transfer domain) and related routes.',
+                'Domain buy/transfer',
+                'Buy domain and transfer-in in the console, plus Domains marketing/docs. Org Domains tab (add domain, DNS) stays available when off.',
                 'domains',
                 profileId,
                 features.domains,

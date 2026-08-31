@@ -15,7 +15,11 @@ export type ConsoleProfileId = 'cloud' | 'self-hosted'
 export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
-  /** Organization-level custom domains (DNS, verification, buy domain, transfer in) */
+  /**
+   * Domain registrar commerce (buy domain, transfer in) plus marketing/docs Domains
+   * product surfaces. Org Domains tab (add domain, DNS, verification) stays available
+   * when this is false.
+   */
   domains: boolean
   /** Organization marketplace (browse and publish apps) */
   marketplace: boolean
@@ -105,7 +109,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   string
 > = {
   billing: 'Billing',
-  domains: 'Domains',
+  domains: 'Domain buy/transfer',
   marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
