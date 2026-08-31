@@ -332,7 +332,9 @@ function AllDatabasesGridCardShell({
       database={{
         $id: db.$id,
         name: db.name,
-        databaseType: db.databaseType,
+        // Prefer engine / raw API type so native DBs are not coerced to tablesdb.
+        databaseType:
+          dedicated?.engine ?? db.apiType ?? db.databaseType,
       }}
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
