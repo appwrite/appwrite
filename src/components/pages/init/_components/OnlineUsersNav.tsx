@@ -287,7 +287,7 @@ function OnlineUserRow({
         user.id === selfUserId ||
         (selfMapKey && user.id === selfMapKey)),
   )
-  const displayName = formatInitPresenceDisplayName(user.name, { isSelf })
+  const displayName = formatInitPresenceDisplayName(user.name)
   const displayActivity = formatInitPresenceActivityDisplay(user.activity)
 
   const row = (

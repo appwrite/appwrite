@@ -12,7 +12,7 @@ export const INIT_ORG_PROMO_BANNER_DAYS_AFTER_EVENT = 7
  * slider) when ready to reveal a day.
  */
 export function getInitMockCurrentDayDefault(): number {
-  return INIT_MOCK_DAY_BEFORE
+  return 1
 }
 
 export function getInitMockDayAfter(

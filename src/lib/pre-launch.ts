@@ -10,15 +10,15 @@ const PRE_LAUNCH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 /**
  * Pre-launch lock: only Init (landing, ticket share pages, OG images) and
  * sign-in are reachable. Unset or unrecognized `VITE_CONSOLE_PRE_LAUNCH`
- * → enabled. `false` / `0` / `disabled` turns it off.
+ * → disabled. `true` / `1` / `enabled` turns it on.
  */
 export function isPreLaunchEnabledFromEnv(
   envValue: string | null | undefined,
 ): boolean {
   const normalized = (envValue ?? '').toLowerCase().trim()
-  if (normalized === 'false' || normalized === '0' || normalized === 'disabled')
-    return false
-  return true
+  if (normalized === 'true' || normalized === '1' || normalized === 'enabled')
+    return true
+  return false
 }
 
 export function getPreLaunchDefault(): boolean {
@@ -181,7 +181,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
   try {
     var cfg = window.__APP_CONFIG__ || {};
     var flag = String(cfg.preLaunch || '').toLowerCase().trim();
-    var enabled = !(flag === 'false' || flag === '0' || flag === 'disabled');
+    var enabled = flag === 'true' || flag === '1' || flag === 'enabled';
     var cookieRe = new RegExp('(?:^|;\\\\s*)${PRE_LAUNCH_COOKIE_NAME}=([^;]*)');
     var cookieMatch = document.cookie.match(cookieRe);
     if (cookieMatch && cookieMatch[1]) {

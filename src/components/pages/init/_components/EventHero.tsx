@@ -61,11 +61,13 @@ function CollapsedHeroBar({
   particlesActive: boolean
   days: InitDisplayEvent['days']
 }) {
+  const t = useT()
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
   const showStickyJool = useMediaMinWidth(STICKY_JOOL_MIN_WIDTH_PX)
   const { setTransientActivity } = useInitPresenceActivity()
   const resolvedLiveHref = useInitHref(liveBanner?.href)
+  const isStartingSoon = liveBanner?.mode === 'startingSoon'
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
   }, [setTransientActivity])
@@ -134,8 +136,11 @@ function CollapsedHeroBar({
             <div className="relative z-10 ms-auto flex shrink-0 justify-end">
               {liveBanner ? (
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Badge variant="error" className="text-[10px] shrink-0">
-                    Live
+                  <Badge
+                    variant={isStartingSoon ? 'warning' : 'error'}
+                    className="text-[10px] shrink-0"
+                  >
+                    {isStartingSoon ? t('Starting soon') : t('Live')}
                   </Badge>
                   {resolvedLiveHref ? (
                     <Button
@@ -150,13 +155,13 @@ function CollapsedHeroBar({
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
                       >
-                        Watch
+                        {t('Watch')}
                         <ChevronRight className="size-3.5" />
                       </a>
                     </Button>
                   ) : (
                     <span className="hidden max-w-[120px] truncate text-[12px] font-medium text-foreground sm:inline">
-                      {liveBanner.title}
+                      {t(liveBanner.title)}
                     </span>
                   )}
                 </div>
@@ -169,11 +174,14 @@ function CollapsedHeroBar({
             {liveBanner ? (
               <>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <Badge variant="error" className="text-[10px] shrink-0">
-                    Live now
+                  <Badge
+                    variant={isStartingSoon ? 'warning' : 'error'}
+                    className="text-[10px] shrink-0"
+                  >
+                    {isStartingSoon ? t('Starting soon') : t('Live now')}
                   </Badge>
                   <span className="truncate text-[13px] font-medium text-foreground">
-                    {liveBanner.title}
+                    {t(liveBanner.title)}
                   </span>
                 </div>
                 {resolvedLiveHref ? (
@@ -184,7 +192,7 @@ function CollapsedHeroBar({
                         ? { target: '_blank', rel: 'noopener noreferrer' }
                         : {})}
                     >
-                      Watch
+                      {t('Watch')}
                       <ChevronRight className="size-3.5" />
                     </a>
                   </Button>

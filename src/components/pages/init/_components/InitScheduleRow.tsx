@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { useInitHref } from '@/lib/init/use-init-href'
 import { INIT_YOUTUBE_CHANNEL_HREF } from '@/lib/init/links'
 import { useInitScheduleTime } from '@/lib/init/use-init-schedule-time'
+import { useT } from '@/lib/i18n/translate'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -34,6 +35,7 @@ export function InitScheduleRow({
   isRecapMode?: boolean
   inlineWhenWide?: boolean
 }) {
+  const t = useT()
   const meta = INIT_SCHEDULE_PLATFORM_META[item.platform]
   const { setTransientActivity } = useInitPresenceActivity()
   const formatScheduleTime = useInitScheduleTime()
@@ -50,6 +52,8 @@ export function InitScheduleRow({
       : null)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
   const actionExternal = resolvedAction?.external ?? false
+  const showLive = !isRecapMode && item.isLive
+  const showStartingSoon = !isRecapMode && item.isStartingSoon
   const badge = (
     <span
       className={cn(
@@ -86,9 +90,13 @@ export function InitScheduleRow({
         <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
           {item.title}
         </p>
-        {!isRecapMode && item.isLive ? (
+        {showLive ? (
           <Badge variant="error" className="text-[10px] shrink-0">
-            Live
+            {t('Live')}
+          </Badge>
+        ) : showStartingSoon ? (
+          <Badge variant="warning" className="text-[10px] shrink-0">
+            {t('Starting soon')}
           </Badge>
         ) : null}
       </div>
@@ -98,9 +106,11 @@ export function InitScheduleRow({
           inlineWhenWide && 'sm:shrink-0',
         )}
       >
-        {!isRecapMode && item.isLive
-          ? 'Live now'
-          : formatScheduleTime(item.startsAt)}
+        {showLive
+          ? t('Live now')
+          : showStartingSoon
+            ? t('Starting soon')
+            : formatScheduleTime(item.startsAt)}
       </p>
     </div>
   )
@@ -126,9 +136,11 @@ export function InitScheduleRow({
       className={cn(
         'group flex items-start gap-4 px-6 py-3.5',
         inlineWhenWide && 'sm:items-center',
-        !isRecapMode &&
-          item.isLive &&
+        showLive &&
           'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
+        showStartingSoon &&
+          !showLive &&
+          'bg-[color-mix(in_srgb,var(--brand-cta)_3%,transparent)]',
       )}
       onMouseEnter={() => setTransientActivity(sessionActivity)}
       onMouseLeave={() => setTransientActivity(null)}
@@ -153,7 +165,7 @@ export function InitScheduleRow({
               {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >
-              {actionLabel}
+              {t(actionLabel)}
               <ArrowUpRight className="size-3.5" aria-hidden />
             </a>
           </>

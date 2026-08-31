@@ -9,10 +9,8 @@ function firstTokenFromHandle(value: string): string {
   return value.split(/[\s._-]+/).find(Boolean) ?? value
 }
 
-export function formatInitPresenceDisplayName(
-  name: string,
-  options?: { isSelf?: boolean },
-): string {
+/** Presence list names: keep full display names; never show raw emails. */
+export function formatInitPresenceDisplayName(name: string): string {
   const trimmed = name.trim()
   if (!trimmed) return trimmed
 
@@ -21,10 +19,5 @@ export function formatInitPresenceDisplayName(
     return capitalizeFirst(firstTokenFromHandle(localPart))
   }
 
-  if (options?.isSelf) {
-    return trimmed
-  }
-
-  const firstName = trimmed.split(/\s+/)[0] ?? trimmed
-  return capitalizeFirst(firstName)
+  return trimmed
 }

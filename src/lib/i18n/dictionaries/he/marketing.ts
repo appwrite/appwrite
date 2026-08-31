@@ -99,6 +99,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'apply.': 'של Google.',
   'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.': // pragma: allowlist secret
     'Appwrite 2.0 הביאה חוויית פלטפורמה מרעננת ויסודות חזקים יותר, מונעת על ידי Hyperloop B, מנוע חדש לפלטפורמה, ו-Console IV, קונסולה מהדור הבא שנבנתה מחדש עם TanStack.', // pragma: allowlist secret
+  'Appwrite 2.0 launch': 'Appwrite 2.0 launch',
   'Appwrite Arena launched as an open benchmark for evaluating how effectively AI models understand and work with Appwrite APIs and workflows.': // pragma: allowlist secret
     'Appwrite Arena הושקה כמדד פתוח להערכת מידת ההבנה והעבודה של מודלי AI עם ממשקי ה-API ותהליכי העבודה של Appwrite.', // pragma: allowlist secret
   'Appwrite Cloud entered public beta, making the platform available without self-hosting and opening the door to managed infrastructure for teams of every size.': // pragma: allowlist secret
@@ -637,6 +638,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join Discord': 'הצטרפו ל-Discord',
   'Join on Discord': 'הצטרפו ל-Discord',
   'Join Init': 'הצטרפו ל-Init',
+  'Join event': 'הצטרפות לאירוע',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
   'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
     'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מקבלים גישה חינמית ל-Appwrite Cloud לאורך כל הלימודים.', // pragma: allowlist secret
@@ -666,6 +668,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Learn more about': 'למדו עוד על',
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
+  'Live now': 'בשידור חי',
   'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
@@ -1059,6 +1062,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Start small, build consistently, and give things enough time to become real.': 'התחילו בקטן, בנו בעקביות ותנו לדברים מספיק זמן להפוך לאמיתיים.',
   'Startups program': 'תוכנית הסטארטאפים',
   'Startups Program': 'תוכנית הסטארטאפים',
+  'Starting soon': 'מתחיל בקרוב',
   'Static assets': 'נכסים סטטיים',
   'Static, SPA, and PWA': 'סטטי, SPA ו-PWA',
   'Status': 'סטטוס',
@@ -1216,6 +1220,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Visit the community': 'בקרו בקהילה',
   'Volume discounts': 'הנחות כמות',
   'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Watch': 'צפייה',
   'Ways to partner': 'דרכים לשותפות',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
   'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':

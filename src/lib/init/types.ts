@@ -83,7 +83,13 @@ export interface LaunchEventScheduleItem {
   /** Absolute session start, authored in IST (e.g. `2026-08-31T21:30:00+05:30`). */
   startsAt: string
   href?: string
+  /**
+   * Authored: this session is a livestream that can show "Live now" after start.
+   * Display: set true only while the session is live (after `startsAt` on the current day).
+   */
   isLive?: boolean
+  /** Display-only: within 1 hour before `startsAt` on the current unlocked day. */
+  isStartingSoon?: boolean
 }
 
 export interface LaunchEventActivity {
@@ -156,6 +162,11 @@ export interface LaunchEventHeaderNavCtaConfig {
 export interface LaunchEventLiveBanner {
   title: string
   href?: string
+  /**
+   * Set by visibility: `startingSoon` within 1h of the livestream start,
+   * `live` after it begins. Omitted on authored event data.
+   */
+  mode?: 'startingSoon' | 'live'
 }
 
 export interface LaunchEventGiveaway {
