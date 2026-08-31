@@ -749,7 +749,7 @@ class TransactionState
      * @return array<Query>
      * @throws Exception\Query
      */
-    private function parseStoredQueries(array $queries): array
+    public function parseStoredQueries(array $queries): array
     {
         $parsed = [];
 
