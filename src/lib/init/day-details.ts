@@ -298,7 +298,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'Appwrite 2.0 AMA',
     startsAt: '2026-08-31T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w3j9n7/appwrite_20_is_here_and_were_running_an_ama_in/',
   },
   {
     id: 'sched-yt-databases',
