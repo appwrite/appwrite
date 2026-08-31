@@ -75,7 +75,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
       - appwrite-geo
     environment:
       - _APP_ENV
@@ -309,7 +308,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -368,7 +366,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -532,7 +529,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -610,7 +606,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -650,7 +645,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -735,7 +729,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -794,7 +787,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -1002,7 +994,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -1052,7 +1043,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -1451,7 +1441,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1494,7 +1483,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1536,7 +1524,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1793,6 +1780,8 @@ services:
       - full_page_writes=off
   appwrite-embedding:
     image: appwrite/embedding:0.1.0
+    profiles:
+      - embedding
     environment:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
