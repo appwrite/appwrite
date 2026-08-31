@@ -1,5 +1,4 @@
-import { parseDateOnly } from './dates'
-import { getInitMockDayAfter } from './mock-current-day'
+import { getInitMockDayAfter, getInitMockCurrentDayDefault } from './mock-current-day'
 import {
   applyInitPrizesVisibility,
   getInitMaskedSessionTitle,
@@ -29,49 +28,24 @@ function getInitMaxDay(event: LaunchEvent): number {
 /**
  * Resolve which Init day (1-indexed) is "today".
  * Returns 0 when the event has not started yet.
+ * Unlock state is always controlled (debug default / code default), never calendar.
  */
 export function resolveInitCurrentDay(
   event: LaunchEvent,
-  now = new Date(),
-  mockCurrentDay: number | null = null,
+  currentDay: number = getInitMockCurrentDayDefault(),
 ): number {
-  const dayNumbers = event.days.map((day) => day.day).sort((a, b) => a - b)
-  const minDay = dayNumbers[0] ?? 1
-  const maxDay = dayNumbers[dayNumbers.length - 1] ?? minDay
-
-  if (mockCurrentDay !== null) {
-    return Math.min(Math.max(mockCurrentDay, 0), maxDay + 1)
-  }
-
-  const start = parseDateOnly(event.startDate)
-  const end = parseDateOnly(event.endDate)
-  end.setHours(23, 59, 59, 999)
-
-  if (now < start) return 0
-  if (now > end) return maxDay
-
-  const dayIndex =
-    Math.floor((now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1
-
-  return Math.min(Math.max(dayIndex, minDay), maxDay)
+  const maxDay = event.days.reduce((max, day) => Math.max(max, day.day), 0) || 1
+  return Math.min(Math.max(currentDay, 0), maxDay + 1)
 }
 
 /** True when the launch week has ended and the page should show recap mode. */
 export function resolveInitRecapMode(
   event: LaunchEvent,
-  now = new Date(),
-  mockCurrentDay: number | null = null,
+  currentDay: number = getInitMockCurrentDayDefault(),
 ): boolean {
   const maxDay = getInitMaxDay(event)
   if (maxDay === 0) return false
-
-  if (mockCurrentDay !== null) {
-    return mockCurrentDay >= getInitMockDayAfter(maxDay)
-  }
-
-  const end = parseDateOnly(event.endDate)
-  end.setHours(23, 59, 59, 999)
-  return now > end
+  return currentDay >= getInitMockDayAfter(maxDay)
 }
 
 function buildRecapDisplayEvent(
@@ -111,18 +85,18 @@ function buildRecapDisplayEvent(
  * Apply day-based visibility to the event for display.
  *
  * Future-day launch cards stay locked; schedule and prizes stay visible with
- * session titles masked until each day unlocks. When `mockCurrentDay` is set
- * (debug), it drives which days unlock.
+ * session titles masked until each day unlocks. Unlock state is always driven
+ * by `currentDay` (code default or debug Day slider), never the calendar.
  */
 export function applyInitEventVisibility(
   event: LaunchEvent,
-  options?: { now?: Date; mockCurrentDay?: number | null },
+  options?: { currentDay?: number },
 ): InitDisplayEvent {
-  const now = options?.now ?? new Date()
-  const mockCurrentDay = options?.mockCurrentDay ?? null
-
-  const currentDay = resolveInitCurrentDay(event, now, mockCurrentDay)
-  const isRecapMode = resolveInitRecapMode(event, now, mockCurrentDay)
+  const currentDay = resolveInitCurrentDay(
+    event,
+    options?.currentDay ?? getInitMockCurrentDayDefault(),
+  )
+  const isRecapMode = resolveInitRecapMode(event, currentDay)
 
   if (isRecapMode) {
     return buildRecapDisplayEvent(event, currentDay)

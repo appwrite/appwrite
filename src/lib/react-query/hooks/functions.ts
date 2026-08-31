@@ -1468,15 +1468,15 @@ export function useCreateFunctionDomainRule(
           string,
           (typeof StatusCode)[keyof typeof StatusCode]
         > = {
-          '301': StatusCode.MovedPermanently301,
-          '302': StatusCode.Found302,
-          '307': StatusCode.TemporaryRedirect307,
-          '308': StatusCode.PermanentRedirect308,
+          '301': StatusCode.MovedPermanently,
+          '302': StatusCode.Found,
+          '307': StatusCode.TemporaryRedirect,
+          '308': StatusCode.PermanentRedirect,
         }
         return await projectSdk.proxy.createRedirectRule({
           domain: domainNorm,
           url: redirectUrl.trim(),
-          statusCode: codeMap[statusCode] ?? StatusCode.Found302,
+          statusCode: codeMap[statusCode] ?? StatusCode.Found,
           resourceId: functionId,
           resourceType: ProxyResourceType.Function,
         })

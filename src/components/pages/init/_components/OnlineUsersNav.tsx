@@ -15,6 +15,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInitPresence } from '@/lib/init/init-presence-context'
 import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
+import { formatInitCappedCount } from '@/lib/init/presence'
 import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { useT } from '@/lib/i18n/translate'
@@ -391,31 +392,38 @@ function OnlineUserRow({
   return animatedRow
 }
 
-function UserCategoryCount({ count }: { count: number }) {
+function UserCategoryCount({ count, capped = false }: { count: number; capped?: boolean }) {
   const reduceMotion = useReducedMotion()
+  const label = formatInitCappedCount(count, capped)
 
   const countClassName =
     'shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/60'
 
   if (reduceMotion) {
-    return <span className={countClassName}>{count}</span>
+    return <span className={countClassName}>{label}</span>
   }
 
   return (
     <motion.span
-      key={count}
+      key={label}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={PRESENCE_ACTIVITY_ENTER_TRANSITION}
       className={countClassName}
     >
-      {count}
+      {label}
     </motion.span>
   )
 }
 
-function UserCategoryCounts({ totalCount }: { totalCount: number }) {
-  return <UserCategoryCount count={totalCount} />
+function UserCategoryCounts({
+  totalCount,
+  capped = false,
+}: {
+  totalCount: number
+  capped?: boolean
+}) {
+  return <UserCategoryCount count={totalCount} capped={capped} />
 }
 
 function InvisibleOnlineCountFooter({
@@ -456,6 +464,8 @@ function UserCategory({
   raffleWinnerId = null,
   infoTooltip,
   hiddenCount = 0,
+  totalOnlineCount,
+  totalOnlineCountCapped = false,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
@@ -469,6 +479,8 @@ function UserCategory({
   raffleWinnerId?: string | null
   infoTooltip?: string
   hiddenCount?: number
+  totalOnlineCount?: number
+  totalOnlineCountCapped?: boolean
 }) {
   const t = useT()
   const reduceMotion = useReducedMotion()
@@ -476,6 +488,9 @@ function UserCategory({
     () => sortUsersWithRaffleWinner(users, raffleWinnerId),
     [raffleWinnerId, users],
   )
+  const headerCount = totalOnlineCount ?? users.length + hiddenCount
+  const headerCapped =
+    totalOnlineCount != null ? totalOnlineCountCapped : false
 
   return (
     <AnimatePresence initial={false}>
@@ -516,7 +531,7 @@ function UserCategory({
                   </Tooltip>
                 ) : null}
               </div>
-              <UserCategoryCounts totalCount={users.length + hiddenCount} />
+              <UserCategoryCounts totalCount={headerCount} capped={headerCapped} />
             </div>
           )}
           <AnimatePresence initial={false} mode="popLayout">
@@ -755,6 +770,8 @@ function OnlineUsersNavContent({
             label="Online now"
             users={event.onlineUsers}
             hiddenCount={event.hiddenOnlineCount}
+            totalOnlineCount={event.onlineCount}
+            totalOnlineCountCapped={event.onlineCountCapped}
             presence="online"
             collapsed={collapsed}
             isMobile={isMobile}

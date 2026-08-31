@@ -3,14 +3,12 @@ import {
   ExternalLink,
   XCircle,
   Loader2,
-  Globe,
-  Zap,
   AlertTriangle,
   Settings,
   Unplug,
   GitBranch,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -36,6 +34,8 @@ import {
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   Dialog,
   DialogContent,
@@ -78,6 +78,69 @@ interface GitConfigurationCardProps {
   isVcsEnabled?: boolean
 }
 
+async function fetchInstallationAffectedFunctions(
+  projectId: string,
+  installationId: string,
+) {
+  const projectSdk = sdk.forProject(projectId)
+  const response = await projectSdk.functions.list({
+    queries: [
+      Query.limit(100),
+      Query.equal('installationId', installationId),
+    ],
+  })
+  return {
+    functions: response.functions || [],
+    total: response.total || 0,
+  }
+}
+
+async function fetchInstallationAffectedSites(
+  projectId: string,
+  installationId: string,
+) {
+  const projectSdk = sdk.forProject(projectId)
+  const response = await projectSdk.sites.list({
+    queries: [
+      Query.limit(100),
+      Query.equal('installationId', installationId),
+    ],
+  })
+  return {
+    sites: response.sites || [],
+    total: response.total || 0,
+  }
+}
+
+function installationAffectedFunctionsQueryOptions(
+  projectId: string,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'functions',
+      'project',
+      projectId,
+      'installation',
+      installationId,
+    ],
+    queryFn: () =>
+      fetchInstallationAffectedFunctions(projectId, installationId!),
+    enabled: !!projectId && !!installationId,
+  })
+}
+
+function installationAffectedSitesQueryOptions(
+  projectId: string,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['sites', 'project', projectId, 'installation', installationId],
+    queryFn: () => fetchInstallationAffectedSites(projectId, installationId!),
+    enabled: !!projectId && !!installationId,
+  })
+}
+
 export function GitConfigurationCard({
   projectId,
   page,
@@ -89,6 +152,7 @@ export function GitConfigurationCard({
   isVcsEnabled = true,
 }: GitConfigurationCardProps) {
   const t = useT()
+  const queryClient = useQueryClient()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
   const vcsAuthUrl = (
     provider: VcsProviderId,
@@ -109,58 +173,23 @@ export function GitConfigurationCard({
   const [selectedInstallation, setSelectedInstallation] =
     useState<Models.Installation | null>(null)
 
-  // Fetch affected functions and sites when modal opens
-  const { data: affectedFunctions, isLoading: functionsLoading } = useQuery({
-    queryKey: [
-      'functions',
-      'project',
+  // Prefetched before the modal opens so first paint has the final layout
+  const { data: affectedFunctions } = useQuery(
+    installationAffectedFunctionsQueryOptions(
       projectId,
-      'installation',
-      selectedInstallation?.$id,
-    ],
-    queryFn: async () => {
-      if (!projectId || !selectedInstallation?.$id) {
-        return { functions: [], total: 0 }
-      }
-      const projectSdk = sdk.forProject(projectId)
-      const queries = [
-        Query.limit(100),
-        Query.equal('installationId', selectedInstallation.$id),
-      ]
-      const response = await projectSdk.functions.list({ queries })
-      return {
-        functions: response.functions || [],
-        total: response.total || 0,
-      }
-    },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
-  })
+      disconnectModalOpen ? selectedInstallation?.$id : null,
+    ),
+  )
 
-  const { data: affectedSites, isLoading: sitesLoading } = useQuery({
-    queryKey: [
-      'sites',
-      'project',
+  const { data: affectedSites } = useQuery(
+    installationAffectedSitesQueryOptions(
       projectId,
-      'installation',
-      selectedInstallation?.$id,
-    ],
-    queryFn: async () => {
-      if (!projectId || !selectedInstallation?.$id) {
-        return { sites: [], total: 0 }
-      }
-      const projectSdk = sdk.forProject(projectId)
-      const queries = [
-        Query.limit(100),
-        Query.equal('installationId', selectedInstallation.$id),
-      ]
-      const response = await projectSdk.sites.list({ queries })
-      return {
-        sites: response.sites || [],
-        total: response.total || 0,
-      }
-    },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
-  })
+      disconnectModalOpen ? selectedInstallation?.$id : null,
+    ),
+  )
+
+  const hasAffectedResources =
+    (affectedSites?.total ?? 0) > 0 || (affectedFunctions?.total ?? 0) > 0
 
   const handleDisconnect = async () => {
     if (!selectedInstallation) return
@@ -184,8 +213,30 @@ export function GitConfigurationCard({
   }
 
   const handleOpenDisconnectModal = (installation: Models.Installation) => {
-    setSelectedInstallation(installation)
-    openDialogAfterOverlayCloses(() => setDisconnectModalOpen(true))
+    openDialogAfterOverlayCloses(() => {
+      void (async () => {
+        setSelectedInstallation(installation)
+        try {
+          await Promise.all([
+            queryClient.ensureQueryData(
+              installationAffectedFunctionsQueryOptions(
+                projectId,
+                installation.$id,
+              ),
+            ),
+            queryClient.ensureQueryData(
+              installationAffectedSitesQueryOptions(
+                projectId,
+                installation.$id,
+              ),
+            ),
+          ])
+        } catch {
+          // Open anyway; lists stay empty if the prefetch failed
+        }
+        setDisconnectModalOpen(true)
+      })()
+    })
   }
 
   const getProviderUrl = (provider: string, organization: string) => {
@@ -527,10 +578,10 @@ export function GitConfigurationCard({
       {/* Disconnect Modal */}
       <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-start">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Disconnect installation')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {affectedFunctions?.total === 0 && affectedSites?.total === 0
+              {!hasAffectedResources
                 ? t(
                     'Are you sure you want to disconnect this git installation?',
                   )
@@ -539,73 +590,77 @@ export function GitConfigurationCard({
                   )}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0 max-h-[60dvh] overflow-y-auto">
-            {(functionsLoading || sitesLoading) && (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            )}
-
-            {!functionsLoading && !sitesLoading && (
-              <>
+          {hasAffectedResources ? (
+            <>
+              <div className="border-t border-border" />
+              <div className="max-h-[60dvh] overflow-y-auto px-6 pb-4 pt-0">
                 {affectedSites && affectedSites.total > 0 && (
                   <div className="mb-4">
-                    <p className="text-[12px] font-medium text-foreground mb-2">
+                    <p className="mb-2 text-[12px] font-medium text-foreground">
                       {t('Sites')}
                     </p>
                     <div className="space-y-2">
-                      {affectedSites.sites.map((site) => (
-                        <div
-                          key={site.$id}
-                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
-                        >
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-foreground truncate">
-                              {site.name}
-                            </p>
-                            <p className="text-[12px] text-muted-foreground">
-                              {t('Last deployed:')}{' '}
-                              <DateTooltip date={site.$updatedAt} />
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                          {affectedSites.sites.map((site) => (
+                            <div
+                              key={site.$id}
+                              className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <FrameworkIcon
+                                  framework={site.framework}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[13px] font-medium text-foreground">
+                                  {site.name}
+                                </p>
+                                <p className="text-[12px] text-muted-foreground">
+                                  {t('Last deployed:')}{' '}
+                                  <DateTooltip date={site.$updatedAt} />
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                     </div>
                   </div>
                 )}
 
                 {affectedFunctions && affectedFunctions.total > 0 && (
                   <div>
-                    <p className="text-[12px] font-medium text-foreground mb-2">
+                    <p className="mb-2 text-[12px] font-medium text-foreground">
                       {t('Functions')}
                     </p>
                     <div className="space-y-2">
-                      {affectedFunctions.functions.map((func) => (
-                        <div
-                          key={func.$id}
-                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
-                        >
-                          <Zap className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-foreground truncate">
-                              {func.name}
-                            </p>
-                            <p className="text-[12px] text-muted-foreground">
-                              {t('Last deployed:')}{' '}
-                              <DateTooltip date={func.$updatedAt} />
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                          {affectedFunctions.functions.map((func) => (
+                            <div
+                              key={func.$id}
+                              className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <RuntimeIcon
+                                  runtime={func.runtime || ''}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[13px] font-medium text-foreground">
+                                  {func.name}
+                                </p>
+                                <p className="text-[12px] text-muted-foreground">
+                                  {t('Last deployed:')}{' '}
+                                  <DateTooltip date={func.$updatedAt} />
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                     </div>
                   </div>
                 )}
-              </>
-            )}
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              </div>
+            </>
+          ) : null}
+          <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
               size="sm"

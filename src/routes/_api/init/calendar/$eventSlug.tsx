@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_api/init/calendar/$eventSlug')({
 
         const download =
           new URL(request.url).searchParams.get('download') === '1'
-        const ics = buildInitEventCalendarIcs(event, { now: new Date() })
+        const ics = buildInitEventCalendarIcs(event)
 
         return new Response(ics, {
           headers: {

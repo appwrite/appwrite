@@ -25,6 +25,61 @@ function getErrorCode(error: ErrorWithCode): number | undefined {
   return error.code ?? (error as ErrorWithCode & { status?: number }).status
 }
 
+function isShortActionableErrorMessage(message: string): boolean {
+  return (
+    message.length > 0 &&
+    message.length <= 400 &&
+    !message.includes('\n') &&
+    !message.includes(' at ') &&
+    !message.includes('TypeError') &&
+    !message.includes('ReferenceError')
+  )
+}
+
+/** SQL engine failures often arrive as HTTP 500 with a useful message. */
+function looksLikeDatabaseEngineError(message: string): boolean {
+  if (!isShortActionableErrorMessage(message)) return false
+  const lower = message.toLowerCase()
+  if (
+    lower.includes('internal server error') ||
+    lower.includes('an error occurred on the server')
+  ) {
+    return false
+  }
+  return (
+    lower.includes('sqlstate') ||
+    lower.includes('syntax error') ||
+    lower.includes('parse error') ||
+    lower.includes('query error') ||
+    lower.includes('key specification') ||
+    lower.includes('duplicate entry') ||
+    lower.includes('unknown column') ||
+    lower.includes('check constraint') ||
+    lower.includes('invalid default') ||
+    lower.includes('duplicate column') ||
+    lower.includes('duplicate key') ||
+    lower.includes('operator does not exist') ||
+    lower.includes('invalid input syntax') ||
+    lower.includes('undefined column') ||
+    lower.includes('does not exist') ||
+    lower.includes('cannot add') ||
+    lower.includes('cannot change') ||
+    lower.includes('truncated') ||
+    lower.includes('violat') ||
+    /\ber_\d+\b/i.test(message)
+  )
+}
+
+function rewriteDatabaseEngineErrorMessage(message: string): string {
+  if (/used in key specification without a key length/i.test(message)) {
+    return 'MySQL cannot uniquely index TEXT or BLOB columns without a key length. Use VARCHAR with a defined length, or create a prefix index.'
+  }
+  if (/duplicate entry '' for key/i.test(message)) {
+    return 'Existing rows were filled with an empty value, which is not unique. Allow NULL, or add the column first and fill distinct values.'
+  }
+  return message
+}
+
 /** True when the API responded with HTTP 403 (e.g. blocked console account). */
 export function isHttpForbiddenError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
@@ -196,6 +251,14 @@ export function formatError(
     const lowerMessage = message.toLowerCase()
     const code = isErrorWithCode(error) ? getErrorCode(error) : undefined
 
+    if (looksLikeDatabaseEngineError(message)) {
+      return {
+        title: translate('Invalid Request'),
+        message: translate(rewriteDatabaseEngineErrorMessage(message)),
+        isUserFriendly: true,
+      }
+    }
+
     // Check for 404 / not found errors
     if (
       error.name === 'NotFoundError' ||
@@ -361,7 +424,9 @@ export function formatError(
     // Message seems user-friendly, use it
     return {
       title: translate('Error'),
-      message: translate(message || fallbackMessage),
+      message: translate(
+        rewriteDatabaseEngineErrorMessage(message) || fallbackMessage,
+      ),
       isUserFriendly: true,
     }
   }

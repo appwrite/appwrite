@@ -1486,15 +1486,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
-  'Historic data is not available through the new usage API.':
-    'נתונים היסטוריים אינם זמינים דרך ה-API החדש של נתוני שימוש.',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
   Bandwidth: 'רוחב פס',
   'Bandwidth over time': 'רוחב פס לאורך זמן',
   Buckets: 'באקטים',
   'Chart interval': 'מרווח תרשים',
+  '1m': '1 דק׳',
   '15m': '15 דק׳',
   '1h': '1 שע׳',
   '1d': '1 יום',

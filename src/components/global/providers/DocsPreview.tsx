@@ -36,6 +36,7 @@ import {
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
+import { isDomainsDocsSlug } from '@/lib/docs/domains-docs-feature'
 import { isFirewallDocsSlug } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
@@ -60,6 +61,7 @@ export function DocsPreviewContent() {
   const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
+  const domainsDocsEnabled = features.domains
   const firewallDocsEnabled = features.firewall
   const agentDocsEnabled = features.agent
 
@@ -69,6 +71,7 @@ export function DocsPreviewContent() {
     view === 'menu' &&
     canShowDocsPreviewMenu(slug) &&
     (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
+    (!isDomainsDocsSlug(slug) || domainsDocsEnabled) &&
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
     (!isAgentDocsSlug(slug) || agentDocsEnabled)
 
@@ -81,6 +84,7 @@ export function DocsPreviewContent() {
       slug !== '' &&
       !showMenu &&
       (!isPartnersDocsSlug(slug!) || partnersDocsEnabled) &&
+      (!isDomainsDocsSlug(slug!) || domainsDocsEnabled) &&
       (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
       isClientQueryEnabled,
@@ -98,6 +102,10 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isDomainsDocsSlug(nextSlug) && !domainsDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       if (isFirewallDocsSlug(nextSlug) && !firewallDocsEnabled) {
         openDocsPreview('', { view: 'article' })
         return
@@ -112,6 +120,7 @@ export function DocsPreviewContent() {
     },
     [
       agentDocsEnabled,
+      domainsDocsEnabled,
       firewallDocsEnabled,
       openDocsPreview,
       partnersDocsEnabled,
@@ -126,6 +135,10 @@ export function DocsPreviewContent() {
       openDocsPreview('', { view: 'article' })
       return
     }
+    if (!domainsDocsEnabled && isDomainsDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+      return
+    }
     if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
       return
@@ -135,6 +148,7 @@ export function DocsPreviewContent() {
     }
   }, [
     agentDocsEnabled,
+    domainsDocsEnabled,
     firewallDocsEnabled,
     isOpen,
     openDocsPreview,
@@ -196,7 +210,15 @@ export function DocsPreviewContent() {
     return null
   }
 
+  if (!domainsDocsEnabled && isDomainsDocsSlug(slug)) {
+    return null
+  }
+
   if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
+    return null
+  }
+
+  if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
     return null
   }
 

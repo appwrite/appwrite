@@ -28,7 +28,6 @@ import {
   useProjectDatabaseWritesChart,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import {
   collectUsageResourceBreakdownItems,
@@ -65,8 +64,7 @@ export function DatabasesSection({
 }: DatabasesSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<DatabaseBreakdownDrawerState | null>(null)
 

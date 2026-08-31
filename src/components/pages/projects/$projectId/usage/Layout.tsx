@@ -59,7 +59,6 @@ import {
   getUsageStatus,
 } from './data'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
-import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
@@ -102,6 +101,7 @@ import {
   isUsageFilterDimensionAllowed,
   USAGE_FILTER_EXCLUDED_ATTRIBUTES,
 } from '@/lib/usage/usage-filter-configs'
+import { canShowUsageCategoryFilters } from '@/lib/usage/aggregate-only-metrics'
 import {
   getUsageFilterQueriesForSurface,
   sanitizeUsageFilterMap,
@@ -446,10 +446,11 @@ function UsageLayoutContent({
     [usageFilterMap, categoryId, filterAvailability],
   )
   const usageFilterScope = getUsageSavedFilterScope(categoryId)
-  const showUsageFilters = categorySupportsUsageFilters(categoryId)
-
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const showUsageFilters =
+    categorySupportsUsageFilters(categoryId) &&
+    canShowUsageCategoryFilters(categoryId, organizationPlan)
   const { access } = useOrganizationScopes(project?.teamId)
   const canWriteFirewallRules = canWriteRules(access, features)
   const canApplyFiltersAsFirewallRule =
@@ -470,12 +471,18 @@ function UsageLayoutContent({
   )
 
   useEffect(() => {
+    if (!showUsageFilters) {
+      if (usageQueryParam) {
+        navigateUsageFilters(undefined)
+      }
+      return
+    }
     const sanitizedQuery =
       usageFilterMap.size > 0 ? mapToQueryParam(usageFilterMap) : undefined
     if (sanitizedQuery !== (usageQueryParam ?? undefined)) {
       navigateUsageFilters(sanitizedQuery)
     }
-  }, [navigateUsageFilters, usageFilterMap, usageQueryParam])
+  }, [navigateUsageFilters, showUsageFilters, usageFilterMap, usageQueryParam])
 
   const applyUsageFilter = useCallback(
     (
@@ -729,12 +736,9 @@ function UsageLayoutContent({
         <div className="border-b border-border">
           <div className="w-full px-4 py-4 sm:px-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-                <h1 className="text-[17px] font-semibold leading-tight text-foreground">
-                  {t('Usage')}
-                </h1>
-                <UsageHistoricDataNote className="min-w-0" />
-              </div>
+              <h1 className="min-w-0 flex-1 text-[17px] font-semibold leading-tight text-foreground">
+                {t('Usage')}
+              </h1>
 
               <div className="flex flex-wrap items-center justify-end gap-3">
                 {showUsageFilters ? (
@@ -872,8 +876,8 @@ function UsageLayoutContent({
                     chartInterval,
                     onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,
-                    eventFilterQueries: usageEventFilterQueries,
-                    gaugeFilterQueries: usageGaugeFilterQueries,
+                    eventFilterQueries: showUsageFilters ? usageEventFilterQueries : undefined,
+                    gaugeFilterQueries: showUsageFilters ? usageGaugeFilterQueries : undefined,
                     filterColumns: usageFilterColumns,
                     filterScope: usageFilterScope,
                     onApplyFilter: applyUsageFilter,

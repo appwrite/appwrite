@@ -6,6 +6,7 @@ import { INIT_PRESENCE_ACTIVITY_OFFLINE } from '@/lib/init/init-presence-activit
 import { sanitizeInitPresenceActivity } from '@/lib/init/init-presence-activity-allowlist'
 import { parseInitPresenceTheme, type InitPresenceTheme } from '@/lib/init/init-presence-theme'
 import type { LaunchEventOnlineUser, InitCommunityCountry } from '@/lib/init/types'
+import { normalizeCountryCode } from '@/lib/locale/country-lookups'
 
 /** Heartbeat interval while the Init page is active. */
 export const INIT_PRESENCE_HEARTBEAT_MS = 30_000
@@ -117,7 +118,9 @@ export function parseInitPresenceMetadata(
   if (!eventId) return null
   const name = typeof record.name === 'string' ? record.name.trim() : ''
   const countryCode =
-    typeof record.countryCode === 'string' ? record.countryCode.trim().toUpperCase() : ''
+    typeof record.countryCode === 'string'
+      ? normalizeCountryCode(record.countryCode) ?? undefined
+      : undefined
   const emailHash = parseAvatarEmailHash(record.emailHash)
   const onlineAt =
     typeof record.onlineAt === 'string' && record.onlineAt.trim()
@@ -129,7 +132,7 @@ export function parseInitPresenceMetadata(
     activity: typeof record.activity === 'string' ? record.activity : undefined,
     isLive: record.isLive === true,
     theme: parseInitPresenceTheme(record.theme),
-    countryCode: countryCode || undefined,
+    countryCode,
     emailHash,
     onlineAt,
   }
@@ -215,14 +218,32 @@ function placeInitPresenceInMaps(
   const mapKey = getInitPresenceMapKey(presence)
   if (!mapKey) return
 
-  if (isInitHiddenPresence(presence) || isInitAwayStatus(presence, eventId)) {
-    maps.away.set(mapKey, presence)
+  const previous = maps.online.get(mapKey) ?? maps.away.get(mapKey)
+  const incomingMeta = parseInitPresenceMetadata(presence.metadata)
+  const previousMeta = previous
+    ? parseInitPresenceMetadata(previous.metadata)
+    : null
+  const mergedPresence =
+    previous &&
+    normalizeCountryCode(previousMeta?.countryCode) &&
+    !normalizeCountryCode(incomingMeta?.countryCode)
+      ? {
+          ...presence,
+          metadata: {
+            ...(incomingMeta ?? previousMeta ?? { eventId, name: '' }),
+            countryCode: previousMeta!.countryCode,
+          },
+        }
+      : presence
+
+  if (isInitHiddenPresence(mergedPresence) || isInitAwayStatus(mergedPresence, eventId)) {
+    maps.away.set(mapKey, mergedPresence)
     maps.online.delete(mapKey)
     return
   }
 
-  if (isInitOnlineStatus(presence, eventId)) {
-    maps.online.set(mapKey, presence)
+  if (isInitOnlineStatus(mergedPresence, eventId)) {
+    maps.online.set(mapKey, mergedPresence)
     maps.away.delete(mapKey)
   }
 }
@@ -562,12 +583,20 @@ export function aggregateInitCommunityCountries(
   presences: Iterable<InitPresenceRecord>,
   activityAllowlist: ReadonlySet<string>,
 ): InitCommunityCountry[] {
+  return aggregateInitCommunityCountriesFromUsers(
+    mapPresencesToOnlineUsers(presences, activityAllowlist),
+  )
+}
+
+/** Aggregate from already-mapped online users (post-overlay / sidebar source). */
+export function aggregateInitCommunityCountriesFromUsers(
+  users: Iterable<{ countryCode?: string | null }>,
+): InitCommunityCountry[] {
   const counts = new Map<string, number>()
 
-  for (const presence of presences) {
-    const user = presenceToOnlineUser(presence, activityAllowlist)
-    if (!user.countryCode) continue
-    const code = user.countryCode.toUpperCase()
+  for (const user of users) {
+    const code = normalizeCountryCode(user.countryCode)
+    if (!code) continue
     counts.set(code, (counts.get(code) ?? 0) + 1)
   }
 

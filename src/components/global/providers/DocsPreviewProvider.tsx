@@ -18,6 +18,10 @@ import {
   isAgentDocsSlug,
 } from '@/lib/docs/agent-docs-feature'
 import {
+  isDomainsDocsEnabled,
+  isDomainsDocsSlug,
+} from '@/lib/docs/domains-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
@@ -68,6 +72,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
       if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
+      if (isDomainsDocsSlug(nextSlug) && !isDomainsDocsEnabled()) return
       if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
       if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
       showDocs()

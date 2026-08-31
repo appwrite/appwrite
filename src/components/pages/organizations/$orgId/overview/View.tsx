@@ -192,6 +192,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -375,7 +376,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     null,
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
-  const { features, isCloud } = useConsoleProfile()
+  const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -422,6 +423,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 3]
     ) {
       const domainId = pathParts[orgIndex + 3]
+      // Wizard segments are not domain detail routes (transfer-in is long enough to
+      // look like an id if we only check length).
+      if (domainId === 'buy' || domainId === 'transfer-in') {
+        return false
+      }
       // If the domainId looks like an ID (long alphanumeric), we're on a detail route
       if (domainId && domainId.length > 10) {
         return true
@@ -483,6 +489,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 2] === 'domains' &&
       !pathParts[orgIndex + 3] // No domainId means we're on the index route
 
+    // Pathname updates to /domains/buy|transfer-in before the wizard match commits.
+    // Keep the Outlet children slot so the list stays visible until then.
+    const isDomainsWizardPendingByPath =
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'domains' &&
+      (pathParts[orgIndex + 3] === 'buy' ||
+        pathParts[orgIndex + 3] === 'transfer-in')
+
     const isMarketplaceRouteByPath =
       orgIndex >= 0 &&
       pathParts[orgIndex + 2] === 'marketplace' &&
@@ -492,6 +506,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return (
       isDomainsIndexRoute ||
       isDomainsRouteByPath ||
+      isDomainsWizardPendingByPath ||
       isMarketplaceIndexRoute ||
       isMarketplaceRouteByPath
     )
@@ -1799,7 +1814,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const showProjectUsageCharts = features.usageStats
+  const showProjectUsageCharts =
+    features.usageStats ||
+    (isSelfHosted && !isUsageStatsCapabilityResolved())
   // Budget-locked projects cannot load platform/usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
@@ -1823,7 +1840,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
     visibleProjectIds,
-    showProjectUsageCharts && !skipProjectCardExtras,
+    features.usageStats && !skipProjectCardExtras,
+    organizationPlan,
   )
 
   const projectListPlatformIds = useMemo(() => {

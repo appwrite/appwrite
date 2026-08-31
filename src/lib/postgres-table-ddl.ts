@@ -8,6 +8,38 @@ import {
   formatPostgresColumnTypeLabel,
   parsePostgresColumnTypeFromRow,
 } from '@/lib/postgres-column-types'
+import type { SqlColumnDefaultKind } from '@/lib/sql-column-default'
+import { resolveSqlColumnDefaultEmission } from '@/lib/sql-column-default'
+
+/**
+ * Format a column default for DDL.
+ * Value mode always quotes a data literal. Expression mode is passed through.
+ */
+export function formatPostgresColumnDefaultSql(
+  value: string,
+  kind: SqlColumnDefaultKind,
+): string {
+  if (kind === 'expression') {
+    return value.trim()
+  }
+  return quotePostgresStringLiteral(value)
+}
+
+function postgresDefaultSql(options?: {
+  defaultValue?: string
+  defaultKind?: SqlColumnDefaultKind
+  defaultIsNull?: boolean
+}): string | undefined {
+  if (options?.defaultIsNull) return 'NULL'
+  if (options?.defaultValue === undefined) return undefined
+  const emission = resolveSqlColumnDefaultEmission({
+    isNull: false,
+    value: options.defaultValue,
+    kind: options.defaultKind ?? 'value',
+  })
+  if (emission === 'omit' || emission === 'null') return undefined
+  return formatPostgresColumnDefaultSql(emission.value, emission.kind)
+}
 
 export function buildPostgresAddColumnSql(
   tableId: string,
@@ -16,6 +48,8 @@ export function buildPostgresAddColumnSql(
   options?: {
     nullable?: boolean
     defaultValue?: string
+    defaultKind?: SqlColumnDefaultKind
+    defaultIsNull?: boolean
     primaryKey?: boolean
     unique?: boolean
   },
@@ -34,8 +68,9 @@ export function buildPostgresAddColumnSql(
   if (options?.nullable === false && !options?.primaryKey) {
     parts.push('NOT NULL')
   }
-  if (options?.defaultValue?.trim()) {
-    parts.push(`DEFAULT ${options.defaultValue.trim()}`)
+  const defaultSql = postgresDefaultSql(options)
+  if (defaultSql !== undefined) {
+    parts.push(`DEFAULT ${defaultSql}`)
   }
   return prefixPostgresSqlComment(parts.join(' '), 'Add table column')
 }
@@ -44,18 +79,25 @@ export function buildPostgresAlterColumnDefaultSql(
   tableId: string,
   columnName: string,
   defaultValue: string | null,
+  kind: SqlColumnDefaultKind = 'value',
+  defaultIsNull = false,
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
   const column = quotePostgresIdentifier(columnName)
-  if (!defaultValue?.trim()) {
+  const defaultSql = postgresDefaultSql({
+    defaultValue: defaultValue ?? undefined,
+    defaultKind: kind,
+    defaultIsNull,
+  })
+  if (defaultSql === undefined) {
     return prefixPostgresSqlComment(
       `ALTER TABLE ${qualified} ALTER COLUMN ${column} DROP DEFAULT`,
       'Drop column default',
     )
   }
   return prefixPostgresSqlComment(
-    `ALTER TABLE ${qualified} ALTER COLUMN ${column} SET DEFAULT ${defaultValue.trim()}`,
+    `ALTER TABLE ${qualified} ALTER COLUMN ${column} SET DEFAULT ${defaultSql}`,
     'Set column default',
   )
 }

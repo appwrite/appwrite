@@ -418,7 +418,7 @@ export function MysqlDatabasePrimaryCard({
             <AlertDialogDescription className="text-[13px] mt-2">
               {selectedMember
                 ? t(
-                    'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.',
+                    'Promote {instance} to primary? The current primary will become a read replica. Writes will still be available here while failover completes.',
                   ).replace(
                     '{instance}',
                     getReplicaLabel(

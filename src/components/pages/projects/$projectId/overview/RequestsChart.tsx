@@ -130,6 +130,7 @@ function buildSkeletonChartData(
 function coarsenUsageChartInterval(
   interval: UsageChartInterval,
 ): UsageChartInterval {
+  if (interval === '1m') return '15m'
   if (interval === '15m') return '1h'
   if (interval === '1h') return '1d'
   return '1d'

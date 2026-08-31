@@ -35,6 +35,8 @@ export type MarketplaceApp = {
   author: string
   creators: MarketplaceAppCreator[]
   featured: boolean
+  /** Curated position from a `rank:N` tag; lower ranks list first, unranked apps last. */
+  rank?: number
   /** Published by Appwrite. */
   isOfficial: boolean
   /** Reviewed and trusted by Appwrite. */

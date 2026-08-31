@@ -31,7 +31,6 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
@@ -447,12 +446,14 @@ function get15MinuteIntervalStart(date: Date): Date {
 }
 
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return startOfMinute(date)
   if (interval === '15m') return get15MinuteIntervalStart(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return addMinutes(date, 1)
   if (interval === '15m') return addMinutes(date, 15)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
@@ -511,7 +512,7 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '15m' || interval === '1h') {
+  if (interval === '1m' || interval === '15m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays
       ? formatLocalizedDate(day, 'd MMM HH:mm')
@@ -921,8 +922,7 @@ async function fetchUsageMetricSeries(
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   options?: FetchUsageOverviewOptions,
 ): Promise<UsageMetricSeriesResult> {
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType
@@ -975,8 +975,7 @@ export async function fetchProjectUsageMetricsOverview(
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
   }
 
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType

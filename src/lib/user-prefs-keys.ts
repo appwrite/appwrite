@@ -2388,6 +2388,34 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: admin nav collapsed (Credentials, Monitor, Connections, …)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.databases.adminNavCollapsed` - admin links hidden when true. */
+export const USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED =
+  'console.databases.adminNavCollapsed'
+
+export function parseDatabaseAdminNavCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED],
+    ) ?? false
+  )
+}
+
+export function mergeDatabaseAdminNavCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED]: collapsed,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Connect project dialog tab (account prefs)
 // ---------------------------------------------------------------------------
 
@@ -3434,10 +3462,10 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
   'console.usageChart.dateRange'
 
-/** Full key: `console.usageChart.interval` - `"15m"`, `"1h"`, or `"1d"`. */
+/** Full key: `console.usageChart.interval` - `"1m"`, `"15m"`, `"1h"`, or `"1d"`. */
 export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
 
-const USAGE_CHART_INTERVAL_PREF_VALUES = ['15m', '1h', '1d'] as const
+const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '15m', '1h', '1d'] as const
 
 export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
 

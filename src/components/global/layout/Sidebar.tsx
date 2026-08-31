@@ -117,6 +117,7 @@ interface SidebarCopy {
   }
   badges: {
     soon: string
+    new: string
   }
   accessibility: {
     mainNavigation: string
@@ -399,6 +400,7 @@ export function ConsoleSidebar({
     const isActive = activeSection === item.id
     const isImagineIcon = item.icon === 'imagine'
     const navAnalytics = getSidebarNavAnalyticsAction(item.id)
+    const showLabel = !collapsed || isMobile
 
     // Render the appropriate icon
     const renderIcon = () => {
@@ -439,12 +441,12 @@ export function ConsoleSidebar({
           <Icon
             className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
           />
-          {(!collapsed || isMobile) && (
+          {showLabel && (
             <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
               {item.label}
             </span>
           )}
-          {(!collapsed || isMobile) && (
+          {showLabel && (
             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               {sidebarCopy.badges.soon}
             </span>
@@ -485,7 +487,7 @@ export function ConsoleSidebar({
         )}
       >
         {renderIcon()}
-        {(!collapsed || isMobile) && (
+        {showLabel && (
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
             {item.label}
           </span>

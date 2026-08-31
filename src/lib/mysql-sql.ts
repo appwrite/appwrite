@@ -72,22 +72,20 @@ function stripTrailingMysqlSqlSemicolon(sql: string): string {
   return sql.trim().replace(/;\s*$/, '')
 }
 
-/**
- * Combine multiple DDL statements for one API request.
- * MySQL has no DO $$ blocks; join with semicolons when more than one statement.
- */
-export function buildMysqlSingleRequestDdlSql(
-  statements: string[],
-  traceComment: string,
-): string {
-  const normalized = statements
+export function normalizeMysqlDdlStatements(statements: string[]): string[] {
+  return statements
     .map((statement) => stripTrailingMysqlSqlSemicolon(statement))
     .filter(Boolean)
-  if (normalized.length === 0) return ''
-  if (normalized.length === 1) {
-    return prefixMysqlSqlComment(normalized[0]!, traceComment)
+}
+
+/** Run each statement as its own HTTP call. The SQL API allows one statement per request. */
+export async function runMysqlDdlStatements(
+  run: (sql: string) => Promise<unknown>,
+  statements: string[],
+): Promise<void> {
+  for (const sql of normalizeMysqlDdlStatements(statements)) {
+    await run(sql)
   }
-  return prefixMysqlSqlComment(normalized.join(';\n'), traceComment)
 }
 
 export function escapeMysqlLikePattern(value: string): string {

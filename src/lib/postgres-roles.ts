@@ -1,7 +1,10 @@
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
-import { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-sql'
 import { isPostgresTruthyFlag } from '@/lib/postgres-rls'
-import { prefixPostgresSqlComment, quotePostgresStringLiteral } from '@/lib/postgres-sql'
+import {
+  normalizePostgresDdlStatements,
+  prefixPostgresSqlComment,
+  quotePostgresStringLiteral,
+} from '@/lib/postgres-sql'
 
 export type PostgresRoleRow = {
   role_name: string
@@ -336,7 +339,7 @@ function buildPostgresRoleMembershipChangeSql(
 export function buildPostgresUpdateRoleSql(
   formState: PostgresRoleFormState,
   previousMembers: string[],
-): string {
+): string[] {
   const roleName = formState.roleName.trim()
   const statements = [
     `ALTER ROLE ${quotePostgresIdentifier(roleName)} WITH ${buildPostgresRoleAttributeClauses(formState, {
@@ -349,9 +352,8 @@ export function buildPostgresUpdateRoleSql(
     ),
   ]
 
-  return buildPostgresSingleRequestDdlSql(
-    statements,
-    `Update PostgreSQL role ${roleName}`,
+  return normalizePostgresDdlStatements(statements).map((statement) =>
+    prefixPostgresSqlComment(statement, `Update PostgreSQL role ${roleName}`),
   )
 }
 

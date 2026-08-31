@@ -22,6 +22,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
 import { MarketplaceAppCreators } from '../_components/MarketplaceAppCreators'
+import { MarketplaceAppLogo } from '../_components/MarketplaceAppLogo'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -129,17 +130,13 @@ export function View({ initialData }: ViewProps = {}) {
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground overflow-hidden">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+                {logoUrl ? (
+                  <MarketplaceAppLogo src={logoUrl} size="lg" />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <CategoryIcon className="h-6 w-6" />
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-[20px] font-semibold text-foreground truncate">

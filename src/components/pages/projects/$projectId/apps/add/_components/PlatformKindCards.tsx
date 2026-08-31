@@ -32,13 +32,13 @@ export function PlatformKindCards({ value, onChange, disabled }: Props) {
               'flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/50 p-4 text-start transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               selected
-                ? 'border-primary bg-card ring-1 ring-primary/30'
+                ? 'border-primary/40 bg-card ring-1 ring-primary/15'
                 : 'hover:bg-card',
               disabled && 'pointer-events-none cursor-not-allowed opacity-50',
             )}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <PlatformIcon platform={iconPlatformForKind(k)} size="md" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <PlatformIcon platform={iconPlatformForKind(k)} size="sm" />
             </div>
             <span className="min-w-0 text-[13px] font-medium leading-snug text-foreground">
               {getPlatformDisplayName(k)}

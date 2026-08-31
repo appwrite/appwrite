@@ -23,11 +23,14 @@ import {
   buildMysqlCreateIndexSql,
   buildMysqlIndexCommentSql,
   buildMysqlTableCommentSql,
+  formatMysqlColumnDefaultSql,
+  formatMysqlIndexKeyColumn,
 } from '@/lib/mysql-table-ddl'
 import {
   buildMysqlColumnTypeSql,
   createDefaultMysqlColumnTypeState,
   getMysqlColumnDefaultPlaceholder,
+  getMysqlColumnTypeDefinition,
   validateMysqlColumnTypeState,
   type MysqlColumnTypeState,
 } from '@/lib/mysql-column-types'
@@ -37,10 +40,16 @@ import {
   type MysqlIndexFormState,
 } from '@/lib/mysql-index-metadata'
 import { mysqlTableId, quoteMysqlIdentifier } from '@/lib/mysql-database-routes'
-import { quoteMysqlStringLiteral } from '@/lib/mysql-sql'
+import { quoteMysqlStringLiteral, runMysqlDdlStatements } from '@/lib/mysql-sql'
 import { useExecuteMysqlSql } from '@/lib/react-query/hooks'
 import { useMysqlSidebarSchemas } from '@/lib/react-query/hooks/mysql-databases'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getPreferredSqlColumnDefaultKind,
+  resolveSqlColumnDefaultEmission,
+  type SqlColumnDefaultKind,
+} from '@/lib/sql-column-default'
+import { ColumnDefaultValueField } from '@/components/pages/projects/$projectId/databases/_components/ColumnDefaultValueField'
 import { cn } from '@/lib/utils'
 import { MysqlColumnTypeSelector } from './MysqlColumnTypeSelector'
 import { MysqlIndexAlgorithmSelector } from './MysqlIndexAlgorithmSelector'
@@ -62,6 +71,8 @@ type DraftColumn = {
   typeState: MysqlColumnTypeState
   nullable: boolean
   defaultValue: string
+  defaultKind: SqlColumnDefaultKind
+  defaultIsNull: boolean
   comment: string
   primaryKey: boolean
 }
@@ -138,8 +149,18 @@ function isNoOpColumnDrop(
   return dragIndex === insertIndex
 }
 
+function preferredMysqlDraftDefaultKind(
+  typeState: MysqlColumnTypeState,
+): SqlColumnDefaultKind {
+  const definition = getMysqlColumnTypeDefinition(typeState.typeId)
+  return getPreferredSqlColumnDefaultKind({
+    typeGroup: definition.group,
+    typeId: typeState.typeId,
+  })
+}
+
 function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
-  return {
+  const merged = {
     id: crypto.randomUUID(),
     name: '',
     typeState: createDefaultMysqlColumnTypeState(),
@@ -148,6 +169,15 @@ function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
     comment: '',
     primaryKey: false,
     ...overrides,
+  }
+  return {
+    ...merged,
+    defaultKind:
+      overrides?.defaultKind ??
+      preferredMysqlDraftDefaultKind(merged.typeState),
+    defaultIsNull:
+      overrides?.defaultIsNull ??
+      !(merged.primaryKey || Boolean(merged.defaultValue)),
   }
 }
 
@@ -239,7 +269,12 @@ function CreateTableColumnSettings({
           <Label className="text-[12px] font-medium">{t('Nullable')}</Label>
           <Switch
             checked={column.nullable}
-            onCheckedChange={(nullable) => onChange({ nullable })}
+            onCheckedChange={(nullable) =>
+              onChange({
+                nullable,
+                ...(nullable ? {} : { defaultIsNull: false }),
+              })
+            }
             disabled={column.primaryKey}
           />
         </div>
@@ -535,8 +570,28 @@ export function CreateTable({
         if (!column.nullable) {
           pieces.push('NOT NULL')
         }
-        if (column.defaultValue) {
-          pieces.push(`DEFAULT ${column.defaultValue}`)
+        const defaultEmission = resolveSqlColumnDefaultEmission({
+          isNull: column.defaultIsNull,
+          value: column.defaultValue,
+          kind: column.defaultKind,
+        })
+        if (defaultEmission === 'null' && !column.primaryKey) {
+          pieces.push('DEFAULT NULL')
+        } else if (
+          typeof defaultEmission === 'object' &&
+          !(
+            column.primaryKey &&
+            defaultEmission.kind === 'value' &&
+            !defaultEmission.value.trim()
+          )
+        ) {
+          pieces.push(
+            `DEFAULT ${formatMysqlColumnDefaultSql(
+              defaultEmission.value,
+              buildMysqlColumnTypeSql(column.typeState),
+              defaultEmission.kind,
+            )}`,
+          )
         }
         if (column.comment) {
           pieces.push(
@@ -547,8 +602,21 @@ export function CreateTable({
       })
 
       if (primaryKeyColumns.length > 0) {
+        const primaryKeyByName = new Map(
+          normalizedColumns.map((column) => [column.name, column]),
+        )
         columnDefinitions.push(
-          `PRIMARY KEY (${primaryKeyColumns.map((column) => quoteMysqlIdentifier(column)).join(', ')})`,
+          `PRIMARY KEY (${primaryKeyColumns
+            .map((columnName) => {
+              const column = primaryKeyByName.get(columnName)
+              return formatMysqlIndexKeyColumn(
+                columnName,
+                column
+                  ? buildMysqlColumnTypeSql(column.typeState)
+                  : undefined,
+              )
+            })
+            .join(', ')})`,
         )
       }
 
@@ -565,6 +633,12 @@ export function CreateTable({
         )
       }
 
+      const columnTypeByName = new Map(
+        normalizedColumns.map((column) => [
+          column.name,
+          buildMysqlColumnTypeSql(column.typeState),
+        ]),
+      )
       for (const index of normalizedIndexes) {
         followUpStatements.push(
           buildMysqlCreateIndexSql(tableId, index.name, index.columns, {
@@ -572,6 +646,9 @@ export function CreateTable({
             algorithm: index.algorithm,
             condition: index.condition || undefined,
             includeColumns: index.includeColumns,
+            columnTypes: index.columns.map(
+              (columnName) => columnTypeByName.get(columnName),
+            ),
           }),
         )
         if (index.comment) {
@@ -581,9 +658,7 @@ export function CreateTable({
         }
       }
 
-      for (const statement of followUpStatements) {
-        await executeSql.mutateAsync(statement)
-      }
+      await runMysqlDdlStatements(executeSql.mutateAsync, followUpStatements)
 
       toast.success(t('Table created'))
       onOpenChange(false)
@@ -666,8 +741,8 @@ export function CreateTable({
                 {t('Columns')}
               </h4>
               <div className="overflow-x-auto rounded-lg border border-border">
-                <div className="min-w-[668px]">
-                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
+                <div className="min-w-[760px]">
+                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
                     <span aria-hidden="true" />
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t('Name')}
@@ -719,7 +794,7 @@ export function CreateTable({
                           <div
                             data-column-row
                             className={cn(
-                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
+                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
                               isDragging && 'opacity-35',
                               isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]',
                             )}
@@ -757,22 +832,51 @@ export function CreateTable({
                         <MysqlColumnTypeSelector
                           value={column.typeState}
                           onChange={(typeState) =>
-                            updateColumn(column.id, { typeState })
+                            updateColumn(column.id, {
+                              typeState,
+                              ...(!column.defaultValue.trim()
+                                ? {
+                                    defaultKind:
+                                      preferredMysqlDraftDefaultKind(typeState),
+                                  }
+                                : {}),
+                            })
                           }
                           compact
                         />
-                        <Input
+                        <ColumnDefaultValueField
+                          id={`column-default-${column.id}`}
+                          kind={column.defaultKind}
                           value={column.defaultValue}
-                          onChange={(event) =>
+                          isNull={column.defaultIsNull}
+                          onKindChange={(defaultKind) =>
+                            updateColumn(column.id, { defaultKind })
+                          }
+                          onValueChange={(defaultValue) =>
                             updateColumn(column.id, {
-                              defaultValue: event.target.value,
+                              defaultValue,
+                              ...(defaultValue ? { defaultIsNull: false } : {}),
                             })
                           }
-                          className="h-8 font-mono text-[12px]"
-                          placeholder={t(
-                            getMysqlColumnDefaultPlaceholder(column.typeState.typeId),
+                          onNullChange={(defaultIsNull) =>
+                            updateColumn(
+                              column.id,
+                              defaultIsNull
+                                ? {
+                                    defaultIsNull: true,
+                                    defaultValue: '',
+                                    nullable: true,
+                                    primaryKey: false,
+                                  }
+                                : { defaultIsNull: false },
+                            )
+                          }
+                          expressionPlaceholder={getMysqlColumnDefaultPlaceholder(
+                            column.typeState.typeId,
                           )}
-                          aria-label={t('Default value')}
+                          expressionHint="Passed to the database as SQL, for example CURRENT_TIMESTAMP."
+                          compact
+                          nullDisabled={column.primaryKey}
                         />
                         <div className="flex justify-center">
                           <Checkbox
@@ -780,7 +884,11 @@ export function CreateTable({
                             onCheckedChange={(primaryKey) =>
                               updateColumn(column.id, {
                                 primaryKey: primaryKey === true,
-                                nullable: primaryKey === true ? false : column.nullable,
+                                nullable:
+                                  primaryKey === true ? false : column.nullable,
+                                ...(primaryKey === true
+                                  ? { defaultIsNull: false }
+                                  : {}),
                               })
                             }
                             aria-label={t('Primary key')}

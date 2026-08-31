@@ -262,34 +262,36 @@ function SignUpPage() {
   })
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <SignIn
-          mode="sign-up"
-          onSubmit={(data, options) =>
-            signUpMutation.mutate({
-              ...data,
-              skipAccountCreate: options?.skipAccountCreate,
-            })
-          }
-          onOAuthLogin={handleOAuthLogin}
-          isLoading={signUpMutation.isPending || isOpeningMfa}
-          oauthLoading={oauthLoading}
-          redirect={search.redirect}
-        />
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t('By clicking continue, you agree to our')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/terms">
-            {t('Terms of Service')}
-          </MarketingSiteLink>{' '}
-          {t('and')}{' '}
-          <MarketingSiteLink className="link-neutral" href="/privacy">
-            {t('Privacy Policy')}
-          </MarketingSiteLink>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <SignIn
+            mode="sign-up"
+            onSubmit={(data, options) =>
+              signUpMutation.mutate({
+                ...data,
+                skipAccountCreate: options?.skipAccountCreate,
+              })
+            }
+            onOAuthLogin={handleOAuthLogin}
+            isLoading={signUpMutation.isPending || isOpeningMfa}
+            oauthLoading={oauthLoading}
+            redirect={search.redirect}
+          />
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            {t('By clicking continue, you agree to our')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/terms">
+              {t('Terms of Service')}
+            </MarketingSiteLink>{' '}
+            {t('and')}{' '}
+            <MarketingSiteLink className="link-neutral" href="/privacy">
+              {t('Privacy Policy')}
+            </MarketingSiteLink>
+            .
+          </p>
+          <div className="mt-10 md:mt-16 flex justify-center">
+            <AppwriteLogo className="h-6 w-auto" />
+          </div>
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ import {
 } from '@/lib/database-specs'
 import { useT } from '@/lib/i18n/translate'
 import {
-  DEFAULT_USAGE_CHART_INTERVAL,
+  DEFAULT_MONITOR_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
@@ -56,7 +56,6 @@ import {
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
 } from '@/lib/usage/dedicated-databases-usage'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
   collectUsageResourceBreakdownItems,
@@ -149,11 +148,10 @@ export function DatabaseMonitorView({
   const queryClient = useQueryClient()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
 
   const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_USAGE_CHART_INTERVAL,
+    DEFAULT_MONITOR_CHART_INTERVAL,
   )
   const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [breakdownDrawer, setBreakdownDrawer] =

@@ -77,7 +77,7 @@ export function resolveAffiliateUsageInterval(
   dateRange: DateRange | undefined,
 ): AffiliateUsageInterval {
   const resolved = resolveUsageChartIntervalForRange(interval, dateRange)
-  if (resolved === '15m') {
+  if (resolved === '1m' || resolved === '15m') {
     return isUsageChartIntervalValidForRange('1h', dateRange) ? '1h' : '1d'
   }
   return resolved
