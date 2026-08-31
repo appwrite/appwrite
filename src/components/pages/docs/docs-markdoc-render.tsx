@@ -6,6 +6,7 @@ import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { useDocsPrompt } from '@/components/pages/docs/DocsPromptContext'
 import { Cards, CardsItem } from './markdoc/Cards'
 import { ComposeGenerator } from './markdoc/ComposeGenerator'
+import { FeatureGate } from './markdoc/FeatureGate'
 import { Fence } from './markdoc/Fence'
 import { MarkdocIcon, MarkdocIconImage } from './markdoc/Icon'
 import { Info } from './markdoc/Info'
@@ -38,6 +39,7 @@ function PromptContentMarkdoc() {
 
 const baseMarkdocComponents = {
   ComposeGenerator,
+  FeatureGate,
   MultiCode,
   Fence,
   Tabs,

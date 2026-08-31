@@ -78,6 +78,13 @@ export const docsMarkdocConfig: Config = {
       selfClosing: true,
       render: 'IndexLookupAnimation',
     },
+    feature_gate: {
+      render: 'FeatureGate',
+      attributes: {
+        anyOf: { type: String },
+        allOf: { type: String },
+      },
+    },
     compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },

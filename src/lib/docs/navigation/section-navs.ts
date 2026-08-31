@@ -3,6 +3,10 @@ import {
   isAgentDocsHref,
 } from '../agent-docs-feature'
 import {
+  isDatabaseTypeDocsHrefHidden,
+  isDatabaseTypeDocsSlugHidden,
+} from '../database-docs-feature'
+import {
   isDomainsDocsEnabled,
 } from '../domains-docs-feature'
 import {
@@ -84,6 +88,20 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
         : config,
     )
   }
+
+  configs = configs
+    .filter((config) => !isDatabaseTypeDocsSlugHidden(config.prefix))
+    .map((config) =>
+      config.prefix === 'products/databases'
+        ? {
+            ...config,
+            navigation: withoutHref(
+              config.navigation,
+              isDatabaseTypeDocsHrefHidden,
+            ),
+          }
+        : config,
+    )
 
   return configs
     .map((config) =>

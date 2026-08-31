@@ -2,6 +2,7 @@ import {
   isAgentDocsEnabled,
   isAgentDocsSlug,
 } from './agent-docs-feature'
+import { isDatabaseTypeDocsSlugHidden } from './database-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsSlug,
@@ -37,5 +38,6 @@ export function isFeatureGatedDocsSlugHidden(
   if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
   if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
   if (isStorageS3DocsSlug(slug) && !isStorageS3DocsEnabled()) return true
+  if (isDatabaseTypeDocsSlugHidden(slug)) return true
   return false
 }

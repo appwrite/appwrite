@@ -32,6 +32,7 @@ An Appwrite database runs either on a shared pool that Appwrite manages for you,
 
 If you leave `specification` out when creating a database, it lands on the shared pool and is ready to use as soon as the call returns. If you pass a specification, Appwrite provisions a dedicated database on that tier, which you can then resize, replicate, and fail over. Collections and rows or documents work through the same methods either way.
 
+{% feature_gate anyOf="nativeDbsPostgres,nativeDbsMySQL" %}
 # Native databases {% #native-databases %}
 
 Native database engines provisioned for your project with direct connection access and no abstraction layer. Available on dedicated infrastructure.
@@ -44,3 +45,4 @@ A dedicated, native PostgreSQL database you connect to directly.
 A dedicated, native MySQL database you connect to directly.
 {% /cards_item %}
 {% /cards %}
+{% /feature_gate %}
