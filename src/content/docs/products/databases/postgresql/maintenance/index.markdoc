@@ -10,6 +10,13 @@ Appwrite manages the infrastructure around your database: security patches, engi
 
 Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it under **Settings** > **Maintenance** in the Console by picking a day and start hour (UTC), or through the API:
 
+{% only_dark %}
+![Maintenance window grid in database settings](/images/docs/products/databases/postgresql/dark/settings-maintenance.avif)
+{% /only_dark %}
+{% only_light %}
+![Maintenance window grid in database settings](/images/docs/products/databases/postgresql/settings-maintenance.avif)
+{% /only_light %}
+
 {% multicode %}
 ```server-nodejs
 import { Client, Postgresql } from 'node-appwrite';

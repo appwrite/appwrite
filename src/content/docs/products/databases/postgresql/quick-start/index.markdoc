@@ -37,10 +37,10 @@ Your database starts provisioning and becomes ready shortly after. You land in t
 # Run your first queries {% #first-queries %}
 
 {% only_dark %}
-![SQL editor](/images/docs/products/databases/postgresql/dark/sql-editor.avif)
+![SQL editor](/images/docs/products/databases/postgresql/dark/sql-editor-run.avif)
 {% /only_dark %}
 {% only_light %}
-![SQL editor](/images/docs/products/databases/postgresql/sql-editor.avif)
+![SQL editor](/images/docs/products/databases/postgresql/sql-editor-run.avif)
 {% /only_light %}
 
 The **SQL editor** tab gives you an editor with formatting, query explain, and a results panel, without leaving the browser.

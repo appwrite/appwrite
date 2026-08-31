@@ -17,14 +17,28 @@ If a user has read, create, update, or delete permissions at the collection leve
 
 Configure collection level permissions by navigating to **Your collection** > **Security** > **Permissions**.
 
+{% only_dark %}
+![Collection permissions in the Security tab](/images/docs/databases/documentsdb/dark/security-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Collection permissions in the Security tab](/images/docs/databases/documentsdb/security-permissions.avif)
+{% /only_light %}
+
 [Learn more about permissions and roles](/docs/advanced/platform/permissions)
 
 # Document level {% #document-level %}
 Document level permissions grant access to individual documents.
 If a user has read, create, update, or delete permissions at the document level, the user can access the **individual document**.
 
-Document level permissions are only applied if row level security is enabled in the security settings of your collection.
-Enable document level permissions by navigating to **Your collection** > **Security** > **Row level security (RLS)**.
+Document level permissions are only applied if document level security is enabled in the security settings of your collection.
+Enable document level permissions by navigating to **Your collection** > **Security** > **Document level security**.
+
+{% only_dark %}
+![Document level security toggle in the Security tab](/images/docs/databases/documentsdb/dark/security-rls.avif)
+{% /only_dark %}
+{% only_light %}
+![Document level security toggle in the Security tab](/images/docs/databases/documentsdb/security-rls.avif)
+{% /only_light %}
 
 Document level permissions are configured on individual documents.
 

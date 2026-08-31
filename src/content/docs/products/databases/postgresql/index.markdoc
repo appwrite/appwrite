@@ -6,19 +6,13 @@ description: Run a dedicated, native PostgreSQL database provisioned for your pr
 
 Appwrite native PostgreSQL databases give you a managed PostgreSQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS.
 
-Native databases are different from Appwrite databases like [TablesDB](/docs/products/databases/tablesdb), [DocumentsDB](/docs/products/databases/documentsdb), and [VectorsDB](/docs/products/databases/vectorsdb), which are accessed through Appwrite SDKs and platform APIs. A native PostgreSQL database gives you the raw engine. You connect with `psql` or any PostgreSQL driver and use the full feature set of PostgreSQL, with no Appwrite abstraction layer in between.
-
-{% info title="Looking for Appwrite data APIs?" %}
-If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, start with [Appwrite Databases](/docs/products/databases). Native PostgreSQL is for teams who want a managed PostgreSQL engine they can talk to directly with their own ORM, migrations, and drivers.
-{% /info %}
+A native PostgreSQL database gives you the raw engine: you connect with `psql` or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between. If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, use [TablesDB](/docs/products/databases/tablesdb) for relational data, [DocumentsDB](/docs/products/databases/documentsdb) for schemaless documents, or [VectorsDB](/docs/products/databases/vectorsdb) for embeddings instead.
 
 # Supported versions {% #versions %}
 
 Appwrite manages the database container, storage, backups, and networking. You bring the application.
 
-| Engine     | Default version | Other supported versions | Default port |
-|------------|-----------------|--------------------------|--------------|
-| PostgreSQL | 18              | 17                       | 5432         |
+New databases run PostgreSQL 18 by default, and you can select PostgreSQL 17 on create instead. The database listens on the standard PostgreSQL port, 5432.
 
 The version is selected on create and can be upgraded later. Upgrades run online: a second instance is provisioned on the new version, data is streamed over with logical replication, and traffic cuts over once replication is caught up, with no read or write outages and no manual dump-and-restore.
 
