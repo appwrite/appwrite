@@ -70,6 +70,7 @@ export type CodeBlockLanguage =
   | 'hcl'
   | 'rust'
   | 'graphql'
+  | 'sql'
   | 'http'
   | 'groovy'
   | 'docker'
@@ -124,6 +125,7 @@ export function getCodeLanguageLabel(lang: CodeBlockLanguage): string {
     hcl: 'Terraform',
     rust: 'Rust',
     graphql: 'GraphQL',
+    sql: 'SQL',
     http: 'HTTP',
     groovy: 'Groovy',
     docker: 'Dockerfile',
@@ -159,6 +161,7 @@ const EXTRA_LANGUAGES: string[] = [
   'hcl',
   'rust',
   'graphql',
+  'sql',
   'http',
   'groovy',
   'docker',
@@ -194,6 +197,7 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   hcl: () => import('prismjs/components/prism-hcl'),
   rust: () => import('prismjs/components/prism-rust'),
   graphql: () => import('prismjs/components/prism-graphql'),
+  sql: () => import('prismjs/components/prism-sql'),
   http: () => import('prismjs/components/prism-http'),
   groovy: () => import('prismjs/components/prism-groovy'),
   docker: () => import('prismjs/components/prism-docker'),

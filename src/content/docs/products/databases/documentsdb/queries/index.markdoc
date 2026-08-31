@@ -308,6 +308,18 @@ Query.select(["name", "title"])
 ```client-flutter
 Query.select(["name", "title"])
 ```
+```client-react-native
+Query.select(["name", "title"])
+```
+```client-apple
+Query.select(["name", "title"])
+```
+```client-android-kotlin
+Query.select(listOf("name", "title"))
+```
+```client-android-java
+Query.select(Arrays.asList("name", "title"))
+```
 ```server-python
 Query.select(["name", "title"])
 ```
@@ -317,17 +329,35 @@ Query.select(["name", "title"])
 ```server-deno
 Query.select(["name", "title"])
 ```
+```server-nodejs
+Query.select(["name", "title"])
+```
 ```server-php
 Query::select(["name", "title"])
 ```
-```client-apple
-Query.select(["name", "title"])
+```server-dotnet
+Query.Select(new List<string> { "name", "title" })
 ```
 ```server-go
 query.Select([]string{"name", "title"})
 ```
+```server-dart
+Query.select(["name", "title"])
+```
+```server-swift
+Query.select(["name", "title"])
+```
+```server-kotlin
+Query.select(listOf("name", "title"))
+```
 ```server-rust
 Query::select(vec!["name", "title"]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"select","values":["name","title"]}'
 ```
 ```http
 {"method":"select","values":["name","title"]}
@@ -360,6 +390,18 @@ Query.equal("title", ["Iron Man"])
 ```client-flutter
 Query.equal("title", ["Iron Man"])
 ```
+```client-react-native
+Query.equal("title", ["Iron Man"])
+```
+```client-apple
+Query.equal("title", value: ["Iron Man"])
+```
+```client-android-kotlin
+Query.equal("title", listOf("Iron Man"))
+```
+```client-android-java
+Query.equal("title", Arrays.asList("Iron Man"))
+```
 ```server-python
 Query.equal("title", ["Iron Man"])
 ```
@@ -369,17 +411,35 @@ Query.equal("title", ["Iron Man"])
 ```server-deno
 Query.equal("title", ["Iron Man"])
 ```
+```server-nodejs
+Query.equal("title", ["Iron Man"])
+```
 ```server-php
 Query::equal("title", ["Iron Man"])
 ```
-```client-apple
-Query.equal("title", value: ["Iron Man"])
+```server-dotnet
+Query.Equal("title", new List<string> { "Iron Man" })
 ```
 ```server-go
 query.Equal("title", []string{"Iron Man"})
 ```
+```server-dart
+Query.equal("title", ["Iron Man"])
+```
+```server-swift
+Query.equal("title", value: ["Iron Man"])
+```
+```server-kotlin
+Query.equal("title", listOf("Iron Man"))
+```
 ```server-rust
 Query::equal("title", Value::Array(vec![Value::String("Iron Man".to_string())])).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"equal","attribute":"title","values":["Iron Man"]}'
 ```
 ```http
 {"method":"equal","attribute":"title","values":["Iron Man"]}
@@ -397,6 +457,18 @@ Query.notEqual("title", "Iron Man")
 ```client-flutter
 Query.notEqual("title", "Iron Man")
 ```
+```client-react-native
+Query.notEqual("title", "Iron Man")
+```
+```client-apple
+Query.notEqual("title", value: "Iron Man")
+```
+```client-android-kotlin
+Query.notEqual("title", "Iron Man")
+```
+```client-android-java
+Query.notEqual("title", "Iron Man")
+```
 ```server-python
 Query.not_equal("title", "Iron Man")
 ```
@@ -406,17 +478,35 @@ Query.not_equal("title", "Iron Man")
 ```server-deno
 Query.notEqual("title", "Iron Man")
 ```
+```server-nodejs
+Query.notEqual("title", "Iron Man")
+```
 ```server-php
 Query::notEqual("title", "Iron Man")
 ```
-```client-apple
-Query.notEqual("title", value: "Iron Man")
+```server-dotnet
+Query.NotEqual("title", "Iron Man")
 ```
 ```server-go
 query.NotEqual("title", "Iron Man")
 ```
+```server-dart
+Query.notEqual("title", "Iron Man")
+```
+```server-swift
+Query.notEqual("title", value: "Iron Man")
+```
+```server-kotlin
+Query.notEqual("title", "Iron Man")
+```
 ```server-rust
 Query::not_equal("title", "Iron Man").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notEqual","attribute":"title","values":"Iron Man"}'
 ```
 ```http
 {"method":"notEqual","attribute":"title","values":"Iron Man"}
@@ -434,6 +524,18 @@ Query.lessThan("score", 10)
 ```client-flutter
 Query.lessThan("score", 10)
 ```
+```client-react-native
+Query.lessThan("score", 10)
+```
+```client-apple
+Query.lessThan("score", value: 10)
+```
+```client-android-kotlin
+Query.lessThan("score", 10)
+```
+```client-android-java
+Query.lessThan("score", 10)
+```
 ```server-python
 Query.less_than("score", 10)
 ```
@@ -443,17 +545,35 @@ Query.less_than("score", 10)
 ```server-deno
 Query.lessThan("score", 10)
 ```
+```server-nodejs
+Query.lessThan("score", 10)
+```
 ```server-php
 Query::lessThan("score", 10)
 ```
-```client-apple
-Query.lessThan("score", value: 10)
+```server-dotnet
+Query.LessThan("score", 10)
 ```
 ```server-go
 query.LessThan("score", 10)
 ```
+```server-dart
+Query.lessThan("score", 10)
+```
+```server-swift
+Query.lessThan("score", value: 10)
+```
+```server-kotlin
+Query.lessThan("score", 10)
+```
 ```server-rust
 Query::less_than("score", 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"lessThan","attribute":"score","values":[10]}'
 ```
 ```http
 {"method":"lessThan","attribute":"score","values":[10]}
@@ -471,6 +591,18 @@ Query.lessThanEqual("score", 10)
 ```client-flutter
 Query.lessThanEqual("score", 10)
 ```
+```client-react-native
+Query.lessThanEqual("score", 10)
+```
+```client-apple
+Query.lessThanEqual("score", value: 10)
+```
+```client-android-kotlin
+Query.lessThanEqual("score", 10)
+```
+```client-android-java
+Query.lessThanEqual("score", 10)
+```
 ```server-python
 Query.less_than_equal("score", 10)
 ```
@@ -480,17 +612,35 @@ Query.less_than_equal("score", 10)
 ```server-deno
 Query.lessThanEqual("score", 10)
 ```
+```server-nodejs
+Query.lessThanEqual("score", 10)
+```
 ```server-php
 Query::lessThanEqual("score", 10)
 ```
-```client-apple
-Query.lessThanEqual("score", value: 10)
+```server-dotnet
+Query.LessThanEqual("score", 10)
 ```
 ```server-go
 query.LessThanEqual("score", 10)
 ```
+```server-dart
+Query.lessThanEqual("score", 10)
+```
+```server-swift
+Query.lessThanEqual("score", value: 10)
+```
+```server-kotlin
+Query.lessThanEqual("score", 10)
+```
 ```server-rust
 Query::less_than_equal("score", 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"lessThanEqual","attribute":"score","values":[10]}'
 ```
 ```http
 {"method":"lessThanEqual","attribute":"score","values":[10]}
@@ -508,6 +658,18 @@ Query.greaterThan("score", 10)
 ```client-flutter
 Query.greaterThan("score", 10)
 ```
+```client-react-native
+Query.greaterThan("score", 10)
+```
+```client-apple
+Query.greaterThan("score", value: 10)
+```
+```client-android-kotlin
+Query.greaterThan("score", 10)
+```
+```client-android-java
+Query.greaterThan("score", 10)
+```
 ```server-python
 Query.greater_than("score", 10)
 ```
@@ -517,17 +679,35 @@ Query.greater_than("score", 10)
 ```server-deno
 Query.greaterThan("score", 10)
 ```
+```server-nodejs
+Query.greaterThan("score", 10)
+```
 ```server-php
 Query::greaterThan("score", 10)
 ```
-```client-apple
-Query.greaterThan("score", value: 10)
+```server-dotnet
+Query.GreaterThan("score", 10)
 ```
 ```server-go
 query.GreaterThan("score", 10)
 ```
+```server-dart
+Query.greaterThan("score", 10)
+```
+```server-swift
+Query.greaterThan("score", value: 10)
+```
+```server-kotlin
+Query.greaterThan("score", 10)
+```
 ```server-rust
 Query::greater_than("score", 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"greaterThan","attribute":"score","values":[10]}'
 ```
 ```http
 {"method":"greaterThan","attribute":"score","values":[10]}
@@ -545,6 +725,18 @@ Query.greaterThanEqual("score", 10)
 ```client-flutter
 Query.greaterThanEqual("score", 10)
 ```
+```client-react-native
+Query.greaterThanEqual("score", 10)
+```
+```client-apple
+Query.greaterThanEqual("score", value: 10)
+```
+```client-android-kotlin
+Query.greaterThanEqual("score", 10)
+```
+```client-android-java
+Query.greaterThanEqual("score", 10)
+```
 ```server-python
 Query.greater_than_equal("score", 10)
 ```
@@ -554,17 +746,35 @@ Query.greater_than_equal("score", 10)
 ```server-deno
 Query.greaterThanEqual("score", 10)
 ```
+```server-nodejs
+Query.greaterThanEqual("score", 10)
+```
 ```server-php
 Query::greaterThanEqual("score", 10)
 ```
-```client-apple
-Query.greaterThanEqual("score", value: 10)
+```server-dotnet
+Query.GreaterThanEqual("score", 10)
 ```
 ```server-go
 query.GreaterThanEqual("score", 10)
 ```
+```server-dart
+Query.greaterThanEqual("score", 10)
+```
+```server-swift
+Query.greaterThanEqual("score", value: 10)
+```
+```server-kotlin
+Query.greaterThanEqual("score", 10)
+```
 ```server-rust
 Query::greater_than_equal("score", 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"greaterThanEqual","attribute":"score","values":[10]}'
 ```
 ```http
 {"method":"greaterThanEqual","attribute":"score","values":[10]}
@@ -582,6 +792,18 @@ Query.between("price", 5, 10)
 ```client-flutter
 Query.between("price", 5, 10)
 ```
+```client-react-native
+Query.between("price", 5, 10)
+```
+```client-apple
+Query.between("price", start: 5, end: 10)
+```
+```client-android-kotlin
+Query.between("price", 5, 10)
+```
+```client-android-java
+Query.between("price", 5, 10)
+```
 ```server-python
 Query.between("price", 5, 10)
 ```
@@ -591,17 +813,35 @@ Query.between("price", 5, 10)
 ```server-deno
 Query.between("price", 5, 10)
 ```
+```server-nodejs
+Query.between("price", 5, 10)
+```
 ```server-php
 Query::between("price", 5, 10)
 ```
-```client-apple
-Query.between("price", start: 5, end: 10)
+```server-dotnet
+Query.Between("price", 5, 10)
 ```
 ```server-go
 query.Between("price", 5, 10)
 ```
+```server-dart
+Query.between("price", 5, 10)
+```
+```server-swift
+Query.between("price", start: 5, end: 10)
+```
+```server-kotlin
+Query.between("price", 5, 10)
+```
 ```server-rust
 Query::between("price", 5, 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"between","attribute":"price","values":[5,10]}'
 ```
 ```http
 {"method":"between","attribute":"price","values":[5,10]}
@@ -618,6 +858,9 @@ Works with strings or numbers. Boundary values are excluded.
 Query.notBetween("price", 5, 10)
 ```
 ```client-flutter
+Query.notBetween("price", 5, 10)
+```
+```client-react-native
 Query.notBetween("price", 5, 10)
 ```
 ```client-apple
@@ -644,11 +887,29 @@ Query.notBetween("price", 5, 10)
 ```server-php
 Query::notBetween("price", 5, 10)
 ```
+```server-dotnet
+Query.NotBetween("price", 5, 10)
+```
+```server-go
+query.NotBetween("price", 5, 10)
+```
+```server-dart
+Query.notBetween("price", 5, 10)
+```
 ```server-swift
 Query.notBetween("price", start: 5, end: 10)
 ```
+```server-kotlin
+Query.notBetween("price", 5, 10)
+```
 ```server-rust
 Query::not_between("price", 5, 10).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notBetween","attribute":"price","values":[5,10]}'
 ```
 ```http
 {"method":"notBetween","attribute":"price","values":[5,10]}
@@ -668,6 +929,18 @@ Query.isNull("name")
 ```client-flutter
 Query.isNull("name")
 ```
+```client-react-native
+Query.isNull("name")
+```
+```client-apple
+Query.isNull("name")
+```
+```client-android-kotlin
+Query.isNull("name")
+```
+```client-android-java
+Query.isNull("name")
+```
 ```server-python
 Query.is_null("name")
 ```
@@ -677,17 +950,35 @@ Query.is_null("name")
 ```server-deno
 Query.isNull("name")
 ```
+```server-nodejs
+Query.isNull("name")
+```
 ```server-php
 Query::isNull("name")
 ```
-```client-apple
-Query.isNull("name")
+```server-dotnet
+Query.IsNull("name")
 ```
 ```server-go
 query.IsNull("name")
 ```
+```server-dart
+Query.isNull("name")
+```
+```server-swift
+Query.isNull("name")
+```
+```server-kotlin
+Query.isNull("name")
+```
 ```server-rust
 Query::is_null("name").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"isNull","attribute":"name"}'
 ```
 ```http
 {"method":"isNull","attribute":"name"}
@@ -705,6 +996,18 @@ Query.isNotNull("name")
 ```client-flutter
 Query.isNotNull("name")
 ```
+```client-react-native
+Query.isNotNull("name")
+```
+```client-apple
+Query.isNotNull("name")
+```
+```client-android-kotlin
+Query.isNotNull("name")
+```
+```client-android-java
+Query.isNotNull("name")
+```
 ```server-python
 Query.is_not_null("name")
 ```
@@ -714,17 +1017,35 @@ Query.is_not_null("name")
 ```server-deno
 Query.isNotNull("name")
 ```
+```server-nodejs
+Query.isNotNull("name")
+```
 ```server-php
 Query::isNotNull("name")
 ```
-```client-apple
-Query.isNotNull("name")
+```server-dotnet
+Query.IsNotNull("name")
 ```
 ```server-go
 query.IsNotNull("name")
 ```
+```server-dart
+Query.isNotNull("name")
+```
+```server-swift
+Query.isNotNull("name")
+```
+```server-kotlin
+Query.isNotNull("name")
+```
 ```server-rust
 Query::is_not_null("name").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"isNotNull","attribute":"name"}'
 ```
 ```http
 {"method":"isNotNull","attribute":"name"}
@@ -744,6 +1065,18 @@ Query.startsWith("name", "Once upon a time")
 ```client-flutter
 Query.startsWith("name", "Once upon a time")
 ```
+```client-react-native
+Query.startsWith("name", "Once upon a time")
+```
+```client-apple
+Query.startsWith("name", value: "Once upon a time")
+```
+```client-android-kotlin
+Query.startsWith("name", "Once upon a time")
+```
+```client-android-java
+Query.startsWith("name", "Once upon a time")
+```
 ```server-python
 Query.starts_with("name", "Once upon a time")
 ```
@@ -753,17 +1086,35 @@ Query.starts_with("name", "Once upon a time")
 ```server-deno
 Query.startsWith("name", "Once upon a time")
 ```
+```server-nodejs
+Query.startsWith("name", "Once upon a time")
+```
 ```server-php
 Query::startsWith("name", "Once upon a time")
 ```
-```client-apple
-Query.startsWith("name", value: "Once upon a time")
+```server-dotnet
+Query.StartsWith("name", "Once upon a time")
 ```
 ```server-go
 query.StartsWith("name", "Once upon a time")
 ```
+```server-dart
+Query.startsWith("name", "Once upon a time")
+```
+```server-swift
+Query.startsWith("name", value: "Once upon a time")
+```
+```server-kotlin
+Query.startsWith("name", "Once upon a time")
+```
 ```server-rust
 Query::starts_with("name", "Once upon a time").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"startsWith","attribute":"name","values":["Once upon a time"]}'
 ```
 ```http
 {"method":"startsWith","attribute":"name","values":["Once upon a time"]}
@@ -779,6 +1130,9 @@ Returns documents if a string field does not start with a substring.
 Query.notStartsWith("name", "Once upon a time")
 ```
 ```client-flutter
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-react-native
 Query.notStartsWith("name", "Once upon a time")
 ```
 ```client-apple
@@ -805,11 +1159,29 @@ Query.notStartsWith("name", "Once upon a time")
 ```server-php
 Query::notStartsWith("name", "Once upon a time")
 ```
+```server-dotnet
+Query.NotStartsWith("name", "Once upon a time")
+```
+```server-go
+query.NotStartsWith("name", "Once upon a time")
+```
+```server-dart
+Query.notStartsWith("name", "Once upon a time")
+```
 ```server-swift
 Query.notStartsWith("name", value: "Once upon a time")
 ```
+```server-kotlin
+Query.notStartsWith("name", "Once upon a time")
+```
 ```server-rust
 Query::not_starts_with("name", "Once upon a time").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notStartsWith","attribute":"name","values":["Once upon a time"]}'
 ```
 ```http
 {"method":"notStartsWith","attribute":"name","values":["Once upon a time"]}
@@ -827,6 +1199,18 @@ Query.endsWith("name", "happily ever after.")
 ```client-flutter
 Query.endsWith("name", "happily ever after.")
 ```
+```client-react-native
+Query.endsWith("name", "happily ever after.")
+```
+```client-apple
+Query.endsWith("name", value: "happily ever after.")
+```
+```client-android-kotlin
+Query.endsWith("name", "happily ever after.")
+```
+```client-android-java
+Query.endsWith("name", "happily ever after.")
+```
 ```server-python
 Query.ends_with("name", "happily ever after.")
 ```
@@ -836,17 +1220,35 @@ Query.ends_with("name", "happily ever after.")
 ```server-deno
 Query.endsWith("name", "happily ever after.")
 ```
+```server-nodejs
+Query.endsWith("name", "happily ever after.")
+```
 ```server-php
 Query::endsWith("name", "happily ever after.")
 ```
-```client-apple
-Query.endsWith("name", value: "happily ever after.")
+```server-dotnet
+Query.EndsWith("name", "happily ever after.")
 ```
 ```server-go
 query.EndsWith("name", "happily ever after.")
 ```
+```server-dart
+Query.endsWith("name", "happily ever after.")
+```
+```server-swift
+Query.endsWith("name", value: "happily ever after.")
+```
+```server-kotlin
+Query.endsWith("name", "happily ever after.")
+```
 ```server-rust
 Query::ends_with("name", "happily ever after.").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"endsWith","attribute":"name","values":["happily ever after."]}'
 ```
 ```http
 {"method":"endsWith","attribute":"name","values":["happily ever after."]}
@@ -862,6 +1264,9 @@ Returns documents if a string field does not end with a substring.
 Query.notEndsWith("name", "happily ever after.")
 ```
 ```client-flutter
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-react-native
 Query.notEndsWith("name", "happily ever after.")
 ```
 ```client-apple
@@ -888,11 +1293,29 @@ Query.notEndsWith("name", "happily ever after.")
 ```server-php
 Query::notEndsWith("name", "happily ever after.")
 ```
+```server-dotnet
+Query.NotEndsWith("name", "happily ever after.")
+```
+```server-go
+query.NotEndsWith("name", "happily ever after.")
+```
+```server-dart
+Query.notEndsWith("name", "happily ever after.")
+```
 ```server-swift
 Query.notEndsWith("name", value: "happily ever after.")
 ```
+```server-kotlin
+Query.notEndsWith("name", "happily ever after.")
+```
 ```server-rust
 Query::not_ends_with("name", "happily ever after.").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notEndsWith","attribute":"name","values":["happily ever after."]}'
 ```
 ```http
 {"method":"notEndsWith","attribute":"name","values":["happily ever after."]}
@@ -918,6 +1341,34 @@ Query.contains("ingredients", ['apple', 'banana'])
 // For strings
 Query.contains("name", "Tom")
 ```
+```client-react-native
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
+```client-apple
+// For arrays
+Query.contains("ingredients", value: ["apple", "banana"])
+
+// For strings
+Query.contains("name", value: "Tom")
+```
+```client-android-kotlin
+// For arrays
+Query.contains("ingredients", listOf("apple", "banana"))
+
+// For strings
+Query.contains("name", "Tom")
+```
+```client-android-java
+// For arrays
+Query.contains("ingredients", Arrays.asList("apple", "banana"))
+
+// For strings
+Query.contains("name", "Tom")
+```
 ```server-python
 # For arrays
 Query.contains("ingredients", ['apple', 'banana'])
@@ -939,6 +1390,13 @@ Query.contains("ingredients", ['apple', 'banana'])
 // For strings
 Query.contains("name", "Tom")
 ```
+```server-nodejs
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
 ```server-php
 // For arrays
 Query::contains("ingredients", ['apple', 'banana'])
@@ -946,18 +1404,40 @@ Query::contains("ingredients", ['apple', 'banana'])
 // For strings
 Query::contains("name", "Tom")
 ```
-```client-apple
+```server-dotnet
 // For arrays
-Query.contains("ingredients", value: ["apple", "banana"])
+Query.Contains("ingredients", new List<string> { "apple", "banana" })
 
 // For strings
-Query.contains("name", value: "Tom")
+Query.Contains("name", "Tom")
+```
 ```server-go
 // For arrays
 query.Contains("ingredients", []string{"apple", "banana"})
 
 // For strings
 query.Contains("name", "Tom")
+```
+```server-dart
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
+```server-swift
+// For arrays
+Query.contains("ingredients", value: ["apple", "banana"])
+
+// For strings
+Query.contains("name", value: "Tom")
+```
+```server-kotlin
+// For arrays
+Query.contains("ingredients", listOf("apple", "banana"))
+
+// For strings
+Query.contains("name", "Tom")
 ```
 ```server-rust
 // For arrays
@@ -968,6 +1448,19 @@ Query::contains("ingredients", Value::Array(vec![
 
 // For strings
 Query::contains("name", "Tom").to_string()
+```
+```bash
+# For arrays
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"contains","attribute":"ingredients","values":["apple","banana"]}'
+
+# For strings
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"contains","attribute":"name","values":["Tom"]}'
 ```
 ```http
 # For arrays
@@ -1075,6 +1568,7 @@ query.NotContains("ingredients", []string{"apple", "banana"})
 
 // For strings
 query.NotContains("name", "Tom")
+```
 ```server-dart
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
@@ -1106,6 +1600,19 @@ Query::not_contains("ingredients", Value::Array(vec![
 // For strings
 Query::not_contains("name", "Tom").to_string()
 ```
+```bash
+# For arrays
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notContains","attribute":"ingredients","values":["apple","banana"]}'
+
+# For strings
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notContains","attribute":"name","values":["Tom"]}'
+```
 ```http
 # For arrays
 {"method":"notContains","attribute":"ingredients","values":["apple","banana"]}
@@ -1126,6 +1633,18 @@ Query.search("text", "key words")
 ```client-flutter
 Query.search("text", "key words")
 ```
+```client-react-native
+Query.search("text", "key words")
+```
+```client-apple
+Query.search("text", value: "key words")
+```
+```client-android-kotlin
+Query.search("text", "key words")
+```
+```client-android-java
+Query.search("text", "key words")
+```
 ```server-python
 Query.search("text", "key words")
 ```
@@ -1135,17 +1654,35 @@ Query.search("text", "key words")
 ```server-deno
 Query.search("text", "key words")
 ```
+```server-nodejs
+Query.search("text", "key words")
+```
 ```server-php
 Query::search("text", "key words")
 ```
-```client-apple
-Query.search("text", value: "key words")
+```server-dotnet
+Query.Search("text", "key words")
 ```
 ```server-go
 query.Search("text", "key words")
 ```
+```server-dart
+Query.search("text", "key words")
+```
+```server-swift
+Query.search("text", value: "key words")
+```
+```server-kotlin
+Query.search("text", "key words")
+```
 ```server-rust
 Query::search("text", "key words").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"search","attribute":"text","values":["key words"]}'
 ```
 ```http
 {"method":"search","attribute":"text","values":["key words"]}
@@ -1163,6 +1700,9 @@ on queried fields.
 Query.notSearch("text", "key words")
 ```
 ```client-flutter
+Query.notSearch("text", "key words")
+```
+```client-react-native
 Query.notSearch("text", "key words")
 ```
 ```client-apple
@@ -1189,11 +1729,29 @@ Query.notSearch("text", "key words")
 ```server-php
 Query::notSearch("text", "key words")
 ```
+```server-dotnet
+Query.NotSearch("text", "key words")
+```
+```server-go
+query.NotSearch("text", "key words")
+```
+```server-dart
+Query.notSearch("text", "key words")
+```
 ```server-swift
 Query.notSearch("text", value: "key words")
 ```
+```server-kotlin
+Query.notSearch("text", "key words")
+```
 ```server-rust
 Query::not_search("text", "key words").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notSearch","attribute":"text","values":["key words"]}'
 ```
 ```http
 {"method":"notSearch","attribute":"text","values":["key words"]}
@@ -1219,6 +1777,30 @@ Query.and([
     Query.greaterThan("size", 5)
 ])
 ```
+```client-react-native
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```client-apple
+Query.and([
+    Query.lessThan("size", value: 10),
+    Query.greaterThan("size", value: 5)
+])
+```
+```client-android-kotlin
+Query.and(listOf(
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+))
+```
+```client-android-java
+Query.and(Arrays.asList(
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+))
+```
 ```server-python
 Query.and_queries([
     Query.less_than("size", 10),
@@ -1237,17 +1819,23 @@ Query.and([
     Query.greaterThan("size", 5)
 ])
 ```
+```server-nodejs
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
 ```server-php
 Query::and([
     Query::lessThan("size", 10),
     Query::greaterThan("size", 5)
 ])
 ```
-```client-apple
-Query.and([
-    Query.lessThan("size", value: 10),
-    Query.greaterThan("size", value: 5)
-])
+```server-dotnet
+Query.And(new List<string> {
+    Query.LessThan("size", 10),
+    Query.GreaterThan("size", 5)
+})
 ```
 ```server-go
 query.And([]string{
@@ -1255,11 +1843,35 @@ query.And([]string{
     query.GreaterThan("size", 5),
 })
 ```
+```server-dart
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```server-swift
+Query.and([
+    Query.lessThan("size", value: 10),
+    Query.greaterThan("size", value: 5)
+])
+```
+```server-kotlin
+Query.and(listOf(
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+))
+```
 ```server-rust
 Query::and(vec![
     Query::less_than("size", 10).to_string(),
     Query::greater_than("size", 5).to_string(),
 ]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"and","values":[{"method":"lessThan","attribute":"size","values":[10]},{"method":"greaterThan","attribute":"size","values":[5]}]}'
 ```
 ```http
 {"method":"and","values":[{"method":"lessThan","attribute":"size","values":[10]},{"method":"greaterThan","attribute":"size","values":[5]}]}
@@ -1283,6 +1895,30 @@ Query.or([
     Query.greaterThan("size", 10)
 ])
 ```
+```client-react-native
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```client-apple
+Query.or([
+    Query.lessThan("size", value: 5),
+    Query.greaterThan("size", value: 10)
+])
+```
+```client-android-kotlin
+Query.or(listOf(
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+))
+```
+```client-android-java
+Query.or(Arrays.asList(
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+))
+```
 ```server-python
 Query.or_queries([
     Query.less_than("size", 5),
@@ -1301,17 +1937,23 @@ Query.or([
     Query.greaterThan("size", 10)
 ])
 ```
+```server-nodejs
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
 ```server-php
 Query::or([
     Query::lessThan("size", 5),
     Query::greaterThan("size", 10)
 ])
 ```
-```client-apple
-Query.or([
-    Query.lessThan("size", value: 5),
-    Query.greaterThan("size", value: 10)
-])
+```server-dotnet
+Query.Or(new List<string> {
+    Query.LessThan("size", 5),
+    Query.GreaterThan("size", 10)
+})
 ```
 ```server-go
 query.Or([]string{
@@ -1319,11 +1961,35 @@ query.Or([]string{
     query.GreaterThan("size", 10),
 })
 ```
+```server-dart
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```server-swift
+Query.or([
+    Query.lessThan("size", value: 5),
+    Query.greaterThan("size", value: 10)
+])
+```
+```server-kotlin
+Query.or(listOf(
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+))
+```
 ```server-rust
 Query::or(vec![
     Query::less_than("size", 5).to_string(),
     Query::greater_than("size", 10).to_string(),
 ]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"or","values":[{"method":"lessThan","attribute":"size","values":[5]},{"method":"greaterThan","attribute":"size","values":[10]}]}'
 ```
 ```http
 {"method":"or","values":[{"method":"lessThan","attribute":"size","values":[5]},{"method":"greaterThan","attribute":"size","values":[10]}]}
@@ -1343,11 +2009,26 @@ Query.orderDesc("field")
 ```client-flutter
 Query.orderDesc("field")
 ```
+```client-react-native
+Query.orderDesc("field")
+```
+```client-apple
+Query.orderDesc("field")
+```
+```client-android-kotlin
+Query.orderDesc("field")
+```
+```client-android-java
+Query.orderDesc("field")
+```
 ```server-python
 Query.order_desc("field")
 ```
 ```server-ruby
 Query.order_desc("field")
+```
+```server-deno
+Query.orderDesc("field")
 ```
 ```server-nodejs
 Query.orderDesc("field")
@@ -1355,14 +2036,29 @@ Query.orderDesc("field")
 ```server-php
 Query::orderDesc("field")
 ```
-```client-apple
-Query.orderDesc("field")
+```server-dotnet
+Query.OrderDesc("field")
 ```
 ```server-go
 query.OrderDesc("attribute")
 ```
+```server-dart
+Query.orderDesc("field")
+```
+```server-swift
+Query.orderDesc("field")
+```
+```server-kotlin
+Query.orderDesc("field")
+```
 ```server-rust
 Query::order_desc("field").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderDesc","attribute":"field"}'
 ```
 ```http
 {"method":"orderDesc","attribute":"field"}
@@ -1380,11 +2076,26 @@ Query.orderAsc("field")
 ```client-flutter
 Query.orderAsc("field")
 ```
+```client-react-native
+Query.orderAsc("field")
+```
+```client-apple
+Query.orderAsc("field")
+```
+```client-android-kotlin
+Query.orderAsc("field")
+```
+```client-android-java
+Query.orderAsc("field")
+```
 ```server-python
 Query.order_asc("field")
 ```
 ```server-ruby
 Query.order_asc("field")
+```
+```server-deno
+Query.orderAsc("field")
 ```
 ```server-nodejs
 Query.orderAsc("field")
@@ -1392,14 +2103,29 @@ Query.orderAsc("field")
 ```server-php
 Query::orderAsc("field")
 ```
-```client-apple
-Query.orderAsc("field")
+```server-dotnet
+Query.OrderAsc("field")
 ```
 ```server-go
 query.OrderAsc("attribute")
 ```
+```server-dart
+Query.orderAsc("field")
+```
+```server-swift
+Query.orderAsc("field")
+```
+```server-kotlin
+Query.orderAsc("field")
+```
 ```server-rust
 Query::order_asc("field").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderAsc","attribute":"field"}'
 ```
 ```http
 {"method":"orderAsc","attribute":"field"}
@@ -1419,6 +2145,18 @@ Query.limit(25)
 ```client-flutter
 Query.limit(25)
 ```
+```client-react-native
+Query.limit(25)
+```
+```client-apple
+Query.limit(25)
+```
+```client-android-kotlin
+Query.limit(25)
+```
+```client-android-java
+Query.limit(25)
+```
 ```server-python
 Query.limit(25)
 ```
@@ -1428,17 +2166,35 @@ Query.limit(25)
 ```server-deno
 Query.limit(25)
 ```
+```server-nodejs
+Query.limit(25)
+```
 ```server-php
 Query::limit(25)
 ```
-```client-apple
-Query.limit(25)
+```server-dotnet
+Query.Limit(25)
 ```
 ```server-go
 query.Limit(25)
 ```
+```server-dart
+Query.limit(25)
+```
+```server-swift
+Query.limit(25)
+```
+```server-kotlin
+Query.limit(25)
+```
 ```server-rust
 Query::limit(25).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"limit","values":[25]}'
 ```
 ```http
 {"method":"limit","values":[25]}
@@ -1456,6 +2212,18 @@ Query.offset(0)
 ```client-flutter
 Query.offset(0)
 ```
+```client-react-native
+Query.offset(0)
+```
+```client-apple
+Query.offset(0)
+```
+```client-android-kotlin
+Query.offset(0)
+```
+```client-android-java
+Query.offset(0)
+```
 ```server-python
 Query.offset(0)
 ```
@@ -1465,17 +2233,35 @@ Query.offset(0)
 ```server-deno
 Query.offset(0)
 ```
+```server-nodejs
+Query.offset(0)
+```
 ```server-php
 Query::offset(0)
 ```
-```client-apple
-Query.offset(0)
+```server-dotnet
+Query.Offset(0)
 ```
 ```server-go
 query.Offset(0)
 ```
+```server-dart
+Query.offset(0)
+```
+```server-swift
+Query.offset(0)
+```
+```server-kotlin
+Query.offset(0)
+```
 ```server-rust
 Query::offset(0).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"offset","values":[0]}'
 ```
 ```http
 {"method":"offset","values":[0]}
@@ -1493,6 +2279,18 @@ Query.cursorAfter("62a7...f620")
 ```client-flutter
 Query.cursorAfter("62a7...f620")
 ```
+```client-react-native
+Query.cursorAfter("62a7...f620")
+```
+```client-apple
+Query.cursorAfter("62a7...f620")
+```
+```client-android-kotlin
+Query.cursorAfter("62a7...f620")
+```
+```client-android-java
+Query.cursorAfter("62a7...f620")
+```
 ```server-python
 Query.cursor_after("62a7...f620")
 ```
@@ -1502,17 +2300,35 @@ Query.cursor_after("62a7...f620")
 ```server-deno
 Query.cursorAfter("62a7...f620")
 ```
+```server-nodejs
+Query.cursorAfter("62a7...f620")
+```
 ```server-php
 Query::cursorAfter("62a7...f620")
 ```
-```client-apple
-Query.cursorAfter("62a7...f620")
+```server-dotnet
+Query.CursorAfter("62a7...f620")
 ```
 ```server-go
 query.CursorAfter("62a7...f620")
 ```
+```server-dart
+Query.cursorAfter("62a7...f620")
+```
+```server-swift
+Query.cursorAfter("62a7...f620")
+```
+```server-kotlin
+Query.cursorAfter("62a7...f620")
+```
 ```server-rust
 Query::cursor_after("62a7...f620").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"cursorAfter","values":["62a7...f620"]}'
 ```
 ```http
 {"method":"cursorAfter","values":["62a7...f620"]}
@@ -1530,6 +2346,18 @@ Query.cursorBefore("62a7...a600")
 ```client-flutter
 Query.cursorBefore("62a7...a600")
 ```
+```client-react-native
+Query.cursorBefore("62a7...a600")
+```
+```client-apple
+Query.cursorBefore("62a7...a600")
+```
+```client-android-kotlin
+Query.cursorBefore("62a7...a600")
+```
+```client-android-java
+Query.cursorBefore("62a7...a600")
+```
 ```server-python
 Query.cursor_before("62a7...a600")
 ```
@@ -1539,17 +2367,35 @@ Query.cursor_before("62a7...a600")
 ```server-deno
 Query.cursorBefore("62a7...a600")
 ```
+```server-nodejs
+Query.cursorBefore("62a7...a600")
+```
 ```server-php
 Query::cursorBefore("62a7...a600")
 ```
-```client-apple
-Query.cursorBefore("62a7...a600")
+```server-dotnet
+Query.CursorBefore("62a7...a600")
 ```
 ```server-go
 query.CursorBefore("62a7...a600")
 ```
+```server-dart
+Query.cursorBefore("62a7...a600")
+```
+```server-swift
+Query.cursorBefore("62a7...a600")
+```
+```server-kotlin
+Query.cursorBefore("62a7...a600")
+```
 ```server-rust
 Query::cursor_before("62a7...a600").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"cursorBefore","values":["62a7...a600"]}'
 ```
 ```http
 {"method":"cursorBefore","values":["62a7...a600"]}
@@ -1570,6 +2416,9 @@ Returns documents created before the given date.
 Query.createdBefore("2025-01-01T00:00:00Z")
 ```
 ```client-flutter
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-react-native
 Query.createdBefore("2025-01-01T00:00:00Z")
 ```
 ```client-apple
@@ -1596,11 +2445,29 @@ Query.createdBefore("2025-01-01T00:00:00Z")
 ```server-php
 Query::createdBefore("2025-01-01T00:00:00Z")
 ```
+```server-dotnet
+Query.CreatedBefore("2025-01-01T00:00:00Z")
+```
+```server-go
+query.CreatedBefore("2025-01-01T00:00:00Z")
+```
+```server-dart
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
 ```server-swift
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-kotlin
 Query.createdBefore("2025-01-01T00:00:00Z")
 ```
 ```server-rust
 Query::created_before("2025-01-01T00:00:00Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"createdBefore","values":["2025-01-01T00:00:00Z"]}'
 ```
 ```http
 {"method":"createdBefore","values":["2025-01-01T00:00:00Z"]}
@@ -1616,6 +2483,9 @@ Returns documents created after the given date.
 Query.createdAfter("2025-01-01T00:00:00Z")
 ```
 ```client-flutter
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-react-native
 Query.createdAfter("2025-01-01T00:00:00Z")
 ```
 ```client-apple
@@ -1642,11 +2512,29 @@ Query.createdAfter("2025-01-01T00:00:00Z")
 ```server-php
 Query::createdAfter("2025-01-01T00:00:00Z")
 ```
+```server-dotnet
+Query.CreatedAfter("2025-01-01T00:00:00Z")
+```
+```server-go
+query.CreatedAfter("2025-01-01T00:00:00Z")
+```
+```server-dart
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
 ```server-swift
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-kotlin
 Query.createdAfter("2025-01-01T00:00:00Z")
 ```
 ```server-rust
 Query::created_after("2025-01-01T00:00:00Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"createdAfter","values":["2025-01-01T00:00:00Z"]}'
 ```
 ```http
 {"method":"createdAfter","values":["2025-01-01T00:00:00Z"]}
@@ -1662,6 +2550,9 @@ Returns documents updated before the given date.
 Query.updatedBefore("2025-01-01T00:00:00Z")
 ```
 ```client-flutter
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-react-native
 Query.updatedBefore("2025-01-01T00:00:00Z")
 ```
 ```client-apple
@@ -1688,11 +2579,29 @@ Query.updatedBefore("2025-01-01T00:00:00Z")
 ```server-php
 Query::updatedBefore("2025-01-01T00:00:00Z")
 ```
+```server-dotnet
+Query.UpdatedBefore("2025-01-01T00:00:00Z")
+```
+```server-go
+query.UpdatedBefore("2025-01-01T00:00:00Z")
+```
+```server-dart
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
 ```server-swift
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-kotlin
 Query.updatedBefore("2025-01-01T00:00:00Z")
 ```
 ```server-rust
 Query::updated_before("2025-01-01T00:00:00Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"updatedBefore","values":["2025-01-01T00:00:00Z"]}'
 ```
 ```http
 {"method":"updatedBefore","values":["2025-01-01T00:00:00Z"]}
@@ -1708,6 +2617,9 @@ Returns documents updated after the given date.
 Query.updatedAfter("2025-01-01T00:00:00Z")
 ```
 ```client-flutter
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-react-native
 Query.updatedAfter("2025-01-01T00:00:00Z")
 ```
 ```client-apple
@@ -1734,11 +2646,29 @@ Query.updatedAfter("2025-01-01T00:00:00Z")
 ```server-php
 Query::updatedAfter("2025-01-01T00:00:00Z")
 ```
+```server-dotnet
+Query.UpdatedAfter("2025-01-01T00:00:00Z")
+```
+```server-go
+query.UpdatedAfter("2025-01-01T00:00:00Z")
+```
+```server-dart
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
 ```server-swift
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-kotlin
 Query.updatedAfter("2025-01-01T00:00:00Z")
 ```
 ```server-rust
 Query::updated_after("2025-01-01T00:00:00Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"updatedAfter","values":["2025-01-01T00:00:00Z"]}'
 ```
 ```http
 {"method":"updatedAfter","values":["2025-01-01T00:00:00Z"]}

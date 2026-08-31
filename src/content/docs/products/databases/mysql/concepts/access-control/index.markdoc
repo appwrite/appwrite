@@ -95,6 +95,35 @@ MySQL has no row-level security policies, so multi-tenant isolation lives in you
 - Route all data access through one layer (a repository module or ORM scope) that always applies `WHERE tenant_id = ?`, rather than trusting every call site to remember.
 - For read paths, per-tenant views or parameterized views over `tenant_id` make the scoping visible and testable.
 
+# Use Appwrite Auth as the tenant identity {% #appwrite-auth %}
+
+Native MySQL has no built-in link to Appwrite's permission system. [Permissions](/docs/advanced/security/permissions) apply to Appwrite databases, not to the raw engine. You can still scope tenants to Appwrite users: your backend verifies the caller's Appwrite session as a [JWT](/docs/products/auth/jwt) and uses the verified user ID as the `tenant_id` in every query:
+
+```server-nodejs
+import { Client, Account } from 'node-appwrite';
+import mysql from 'mysql2/promise';
+
+const pool = mysql.createPool(process.env.DATABASE_URL);
+
+export async function listDocuments(jwt) {
+    // Verify the Appwrite session. Throws if the JWT is invalid or expired.
+    const client = new Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>')
+        .setJWT(jwt);
+    const user = await new Account(client).get();
+
+    // The verified user ID scopes the query. Never accept a tenant ID from the request body.
+    const [rows] = await pool.execute(
+        'SELECT * FROM documents WHERE tenant_id = ?',
+        [user.$id]
+    );
+    return rows;
+}
+```
+
+The user ID comes from the verified session, never from request input, so a client cannot query another tenant by sending a different ID.
+
 # Protect the connection itself {% #connection %}
 
 Since the `admin` credentials are the whole story, treat them accordingly:

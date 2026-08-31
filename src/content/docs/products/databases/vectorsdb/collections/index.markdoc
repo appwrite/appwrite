@@ -16,6 +16,12 @@ Unlike TablesDB, you don't define a schema for a VectorsDB collection. The schem
 Because the schema is fixed, VectorsDB has no typed-attribute endpoints like TablesDB columns. You cannot add, update, or delete attributes on a collection. You store your vector under `embeddings` and any associated data under `metadata`. Indexes are the one part of a collection you do control, and you manage them from [vector search](/docs/products/databases/vectorsdb/vector-search#manage-indexes).
 
 # Create collection {% #create-collection %}
+{% only_dark %}
+![Create collection dialog](/images/docs/products/databases/vectorsdb/dark/create-collection.avif)
+{% /only_dark %}
+{% only_light %}
+![Create collection dialog](/images/docs/products/databases/vectorsdb/create-collection.avif)
+{% /only_light %}
 You can create collections using the Appwrite Console, a [Server SDK](/docs/sdks#server), or using the [CLI](/docs/tooling/command-line/installation).
 
 Head to the **Databases** page, open a [database](/docs/products/databases/vectorsdb/databases), and click **Create collection**. Name the collection and pick the **Embedding model** you plan to use. The Console lists each model with the dimension it produces and sets the collection's `dimension` from your choice.

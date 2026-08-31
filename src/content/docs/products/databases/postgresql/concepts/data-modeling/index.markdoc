@@ -54,9 +54,13 @@ INSERT INTO order_lines_1nf VALUES
 
 Now `WHERE product_name = 'Mouse'` works. But the duplication got worse: Ada's email appears three times, and the Mouse's price twice.
 
-# Second and third normal form: facts move to their owners {% #second-third-nf %}
+# Second normal form: columns depend on the whole key {% #second-nf %}
 
-Second normal form (2NF) says every column must depend on the whole key, which here is implicitly `(order_id, product_name)`: `product_price` depends only on the product, not on which order it's in, so it belongs in a products table. Third normal form (3NF) says no column may depend on a non-key column: `customer_email` depends on the customer, not the order, so it belongs in a customers table.
+Second normal form (2NF) applies to tables whose key spans more than one column. Every non-key column must depend on the whole key, not on part of it. The key here is implicitly `(order_id, product_name)`, and `product_price` depends only on the product, not on which order it is in. The fix is to move the price into a products table, where the product alone is the key.
+
+# Third normal form: no column depends on another non-key column {% #third-nf %}
+
+Third normal form (3NF) says no column may depend on a non-key column. `customer_email` depends on the customer, not the order, so it belongs in a customers table keyed by customer.
 
 Applying both produces the standard shape, where every fact has exactly one home:
 
@@ -99,6 +103,21 @@ INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES
 Changing Ada's email is now a one-row `UPDATE` that cannot leave a stale copy anywhere. The anomalies are gone because duplication is gone.
 
 Notice `unit_price` in `order_items` looks like duplication but isn't: the price *at the time of the order* is a different fact from the product's *current* price, and both deserve a home. Normalization is about one home per fact, not zero copies of anything that looks similar.
+
+## Boyce-Codd normal form {% #bcnf %}
+
+Boyce-Codd normal form (BCNF) is a stricter 3NF: whenever one column determines another, the determining column must be a candidate key. The difference from 3NF only shows up in tables with overlapping composite candidate keys, for example a bookings table `(room, time_slot, teacher)` where each teacher always teaches in one room. That table is in 3NF, yet the teacher-to-room fact still duplicates per booking; BCNF moves it into its own table. Schemas like this are rare, and a schema in 3NF almost always satisfies BCNF too.
+
+## The normal forms at a glance {% #normal-forms-summary %}
+
+| Form | Rule | Duplication it removes |
+| --- | --- | --- |
+| 1NF | One value per cell, no repeating groups | Lists packed into a single cell |
+| 2NF | Every column depends on the whole key | Facts about part of a composite key, copied into every row |
+| 3NF | No column depends on a non-key column | Facts about another column, copied into every row |
+| BCNF | Every determining column is a candidate key | Dependencies between overlapping composite keys that 3NF misses |
+
+Higher forms (4NF, 5NF) deal with multi-valued and join dependencies and rarely change a practical schema; the forms above cover day-to-day design.
 
 # Reading a normalized schema {% #querying %}
 

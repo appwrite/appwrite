@@ -19,6 +19,13 @@ If a user has read, create, update, or delete permissions at the collection leve
 
 Configure collection level permissions by navigating to **Your collection** > **Security** > **Permissions**, or pass a `permissions` array when you create or update the collection.
 
+{% only_dark %}
+![Collection permissions in the Security tab](/images/docs/products/databases/vectorsdb/dark/security-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Collection permissions in the Security tab](/images/docs/products/databases/vectorsdb/security-permissions.avif)
+{% /only_light %}
+
 {% multicode %}
 ```server-nodejs
 const sdk = require('node-appwrite');
@@ -632,6 +639,13 @@ Document level permissions grant access to individual documents.
 If a user has read, update, or delete permissions at the document level, the user can access the **individual document**.
 
 Document level permissions are only applied if `documentSecurity` is enabled on the collection. Enable it in the Console by navigating to **Your collection** > **Security** > **Document security**, or by setting `documentSecurity` to `true` when you create or update the collection, as shown above.
+
+{% only_dark %}
+![Row level security toggle in the Security tab](/images/docs/products/databases/vectorsdb/dark/security-rls.avif)
+{% /only_dark %}
+{% only_light %}
+![Row level security toggle in the Security tab](/images/docs/products/databases/vectorsdb/security-rls.avif)
+{% /only_light %}
 
 Set permissions on an individual document by passing a `permissions` array to `createDocument`. Use `Role.user('<USER_ID>')` to scope access to a specific user.
 

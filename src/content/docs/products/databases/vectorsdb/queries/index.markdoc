@@ -318,6 +318,18 @@ Query.select(["metadata"])
 ```client-flutter
 Query.select(["metadata"])
 ```
+```client-react-native
+Query.select(["metadata"])
+```
+```client-apple
+Query.select(["metadata"])
+```
+```client-android-kotlin
+Query.select(listOf("metadata"))
+```
+```client-android-java
+Query.select(Arrays.asList("metadata"))
+```
 ```server-python
 Query.select(["metadata"])
 ```
@@ -327,17 +339,26 @@ Query.select(["metadata"])
 ```server-deno
 Query.select(["metadata"])
 ```
+```server-nodejs
+Query.select(["metadata"])
+```
 ```server-php
 Query::select(["metadata"])
 ```
-```client-apple
-Query.select(["metadata"])
+```server-dotnet
+Query.Select(new List<string> { "metadata" })
 ```
 ```server-go
 query.Select([]string{"metadata"})
 ```
-```server-nodejs
+```server-dart
 Query.select(["metadata"])
+```
+```server-swift
+Query.select(["metadata"])
+```
+```server-kotlin
+Query.select(listOf("metadata"))
 ```
 ```server-rust
 Query::select(vec!["metadata"]).to_string()
@@ -382,6 +403,18 @@ Query.equal("metadata.genre", ["sci-fi"])
 ```client-flutter
 Query.equal("metadata.genre", ["sci-fi"])
 ```
+```client-react-native
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```client-apple
+Query.equal("metadata.genre", value: ["sci-fi"])
+```
+```client-android-kotlin
+Query.equal("metadata.genre", listOf("sci-fi"))
+```
+```client-android-java
+Query.equal("metadata.genre", Arrays.asList("sci-fi"))
+```
 ```server-python
 Query.equal("metadata.genre", ["sci-fi"])
 ```
@@ -391,17 +424,26 @@ Query.equal("metadata.genre", ["sci-fi"])
 ```server-deno
 Query.equal("metadata.genre", ["sci-fi"])
 ```
+```server-nodejs
+Query.equal("metadata.genre", ["sci-fi"])
+```
 ```server-php
 Query::equal("metadata.genre", ["sci-fi"])
 ```
-```client-apple
-Query.equal("metadata.genre", value: ["sci-fi"])
+```server-dotnet
+Query.Equal("metadata.genre", new List<string> { "sci-fi" })
 ```
 ```server-go
 query.Equal("metadata.genre", []string{"sci-fi"})
 ```
-```server-nodejs
+```server-dart
 Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-swift
+Query.equal("metadata.genre", value: ["sci-fi"])
+```
+```server-kotlin
+Query.equal("metadata.genre", listOf("sci-fi"))
 ```
 ```server-rust
 Query::equal("metadata.genre", Value::Array(vec![Value::String("sci-fi".to_string())])).to_string()
@@ -428,6 +470,18 @@ Query.notEqual("metadata.genre", "sci-fi")
 ```client-flutter
 Query.notEqual("metadata.genre", "sci-fi")
 ```
+```client-react-native
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```client-apple
+Query.notEqual("metadata.genre", value: "sci-fi")
+```
+```client-android-kotlin
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```client-android-java
+Query.notEqual("metadata.genre", "sci-fi")
+```
 ```server-python
 Query.not_equal("metadata.genre", "sci-fi")
 ```
@@ -437,16 +491,25 @@ Query.not_equal("metadata.genre", "sci-fi")
 ```server-deno
 Query.notEqual("metadata.genre", "sci-fi")
 ```
+```server-nodejs
+Query.notEqual("metadata.genre", "sci-fi")
+```
 ```server-php
 Query::notEqual("metadata.genre", "sci-fi")
 ```
-```client-apple
-Query.notEqual("metadata.genre", value: "sci-fi")
+```server-dotnet
+Query.NotEqual("metadata.genre", "sci-fi")
 ```
 ```server-go
 query.NotEqual("metadata.genre", "sci-fi")
 ```
-```server-nodejs
+```server-dart
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```server-swift
+Query.notEqual("metadata.genre", value: "sci-fi")
+```
+```server-kotlin
 Query.notEqual("metadata.genre", "sci-fi")
 ```
 ```server-rust
@@ -474,6 +537,18 @@ Query.lessThan("metadata.year", "2009")
 ```client-flutter
 Query.lessThan("metadata.year", "2009")
 ```
+```client-react-native
+Query.lessThan("metadata.year", "2009")
+```
+```client-apple
+Query.lessThan("metadata.year", value: "2009")
+```
+```client-android-kotlin
+Query.lessThan("metadata.year", "2009")
+```
+```client-android-java
+Query.lessThan("metadata.year", "2009")
+```
 ```server-python
 Query.less_than("metadata.year", "2009")
 ```
@@ -483,16 +558,25 @@ Query.less_than("metadata.year", "2009")
 ```server-deno
 Query.lessThan("metadata.year", "2009")
 ```
+```server-nodejs
+Query.lessThan("metadata.year", "2009")
+```
 ```server-php
 Query::lessThan("metadata.year", "2009")
 ```
-```client-apple
-Query.lessThan("metadata.year", value: "2009")
+```server-dotnet
+Query.LessThan("metadata.year", "2009")
 ```
 ```server-go
 query.LessThan("metadata.year", "2009")
 ```
-```server-nodejs
+```server-dart
+Query.lessThan("metadata.year", "2009")
+```
+```server-swift
+Query.lessThan("metadata.year", value: "2009")
+```
+```server-kotlin
 Query.lessThan("metadata.year", "2009")
 ```
 ```server-rust
@@ -520,6 +604,18 @@ Query.lessThanEqual("metadata.year", "2009")
 ```client-flutter
 Query.lessThanEqual("metadata.year", "2009")
 ```
+```client-react-native
+Query.lessThanEqual("metadata.year", "2009")
+```
+```client-apple
+Query.lessThanEqual("metadata.year", value: "2009")
+```
+```client-android-kotlin
+Query.lessThanEqual("metadata.year", "2009")
+```
+```client-android-java
+Query.lessThanEqual("metadata.year", "2009")
+```
 ```server-python
 Query.less_than_equal("metadata.year", "2009")
 ```
@@ -529,16 +625,25 @@ Query.less_than_equal("metadata.year", "2009")
 ```server-deno
 Query.lessThanEqual("metadata.year", "2009")
 ```
+```server-nodejs
+Query.lessThanEqual("metadata.year", "2009")
+```
 ```server-php
 Query::lessThanEqual("metadata.year", "2009")
 ```
-```client-apple
-Query.lessThanEqual("metadata.year", value: "2009")
+```server-dotnet
+Query.LessThanEqual("metadata.year", "2009")
 ```
 ```server-go
 query.LessThanEqual("metadata.year", "2009")
 ```
-```server-nodejs
+```server-dart
+Query.lessThanEqual("metadata.year", "2009")
+```
+```server-swift
+Query.lessThanEqual("metadata.year", value: "2009")
+```
+```server-kotlin
 Query.lessThanEqual("metadata.year", "2009")
 ```
 ```server-rust
@@ -566,6 +671,18 @@ Query.greaterThan("metadata.year", "2009")
 ```client-flutter
 Query.greaterThan("metadata.year", "2009")
 ```
+```client-react-native
+Query.greaterThan("metadata.year", "2009")
+```
+```client-apple
+Query.greaterThan("metadata.year", value: "2009")
+```
+```client-android-kotlin
+Query.greaterThan("metadata.year", "2009")
+```
+```client-android-java
+Query.greaterThan("metadata.year", "2009")
+```
 ```server-python
 Query.greater_than("metadata.year", "2009")
 ```
@@ -575,16 +692,25 @@ Query.greater_than("metadata.year", "2009")
 ```server-deno
 Query.greaterThan("metadata.year", "2009")
 ```
+```server-nodejs
+Query.greaterThan("metadata.year", "2009")
+```
 ```server-php
 Query::greaterThan("metadata.year", "2009")
 ```
-```client-apple
-Query.greaterThan("metadata.year", value: "2009")
+```server-dotnet
+Query.GreaterThan("metadata.year", "2009")
 ```
 ```server-go
 query.GreaterThan("metadata.year", "2009")
 ```
-```server-nodejs
+```server-dart
+Query.greaterThan("metadata.year", "2009")
+```
+```server-swift
+Query.greaterThan("metadata.year", value: "2009")
+```
+```server-kotlin
 Query.greaterThan("metadata.year", "2009")
 ```
 ```server-rust
@@ -612,6 +738,18 @@ Query.greaterThanEqual("metadata.year", "2009")
 ```client-flutter
 Query.greaterThanEqual("metadata.year", "2009")
 ```
+```client-react-native
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```client-apple
+Query.greaterThanEqual("metadata.year", value: "2009")
+```
+```client-android-kotlin
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```client-android-java
+Query.greaterThanEqual("metadata.year", "2009")
+```
 ```server-python
 Query.greater_than_equal("metadata.year", "2009")
 ```
@@ -621,16 +759,25 @@ Query.greater_than_equal("metadata.year", "2009")
 ```server-deno
 Query.greaterThanEqual("metadata.year", "2009")
 ```
+```server-nodejs
+Query.greaterThanEqual("metadata.year", "2009")
+```
 ```server-php
 Query::greaterThanEqual("metadata.year", "2009")
 ```
-```client-apple
-Query.greaterThanEqual("metadata.year", value: "2009")
+```server-dotnet
+Query.GreaterThanEqual("metadata.year", "2009")
 ```
 ```server-go
 query.GreaterThanEqual("metadata.year", "2009")
 ```
-```server-nodejs
+```server-dart
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```server-swift
+Query.greaterThanEqual("metadata.year", value: "2009")
+```
+```server-kotlin
 Query.greaterThanEqual("metadata.year", "2009")
 ```
 ```server-rust
@@ -658,6 +805,18 @@ Query.between("metadata.year", "2005", "2010")
 ```client-flutter
 Query.between("metadata.year", "2005", "2010")
 ```
+```client-react-native
+Query.between("metadata.year", "2005", "2010")
+```
+```client-apple
+Query.between("metadata.year", start: "2005", end: "2010")
+```
+```client-android-kotlin
+Query.between("metadata.year", "2005", "2010")
+```
+```client-android-java
+Query.between("metadata.year", "2005", "2010")
+```
 ```server-python
 Query.between("metadata.year", "2005", "2010")
 ```
@@ -667,16 +826,25 @@ Query.between("metadata.year", "2005", "2010")
 ```server-deno
 Query.between("metadata.year", "2005", "2010")
 ```
+```server-nodejs
+Query.between("metadata.year", "2005", "2010")
+```
 ```server-php
 Query::between("metadata.year", "2005", "2010")
 ```
-```client-apple
-Query.between("metadata.year", start: "2005", end: "2010")
+```server-dotnet
+Query.Between("metadata.year", "2005", "2010")
 ```
 ```server-go
 query.Between("metadata.year", "2005", "2010")
 ```
-```server-nodejs
+```server-dart
+Query.between("metadata.year", "2005", "2010")
+```
+```server-swift
+Query.between("metadata.year", start: "2005", end: "2010")
+```
+```server-kotlin
 Query.between("metadata.year", "2005", "2010")
 ```
 ```server-rust
@@ -704,6 +872,9 @@ Query.notBetween("metadata.year", "2005", "2010")
 ```client-flutter
 Query.notBetween("metadata.year", "2005", "2010")
 ```
+```client-react-native
+Query.notBetween("metadata.year", "2005", "2010")
+```
 ```client-apple
 Query.notBetween("metadata.year", start: "2005", end: "2010")
 ```
@@ -728,8 +899,20 @@ Query.notBetween("metadata.year", "2005", "2010")
 ```server-php
 Query::notBetween("metadata.year", "2005", "2010")
 ```
+```server-dotnet
+Query.NotBetween("metadata.year", "2005", "2010")
+```
+```server-go
+query.NotBetween("metadata.year", "2005", "2010")
+```
+```server-dart
+Query.notBetween("metadata.year", "2005", "2010")
+```
 ```server-swift
 Query.notBetween("metadata.year", start: "2005", end: "2010")
+```
+```server-kotlin
+Query.notBetween("metadata.year", "2005", "2010")
 ```
 ```server-rust
 Query::not_between("metadata.year", "2005", "2010").to_string()
@@ -758,6 +941,18 @@ Query.isNull("metadata.archived")
 ```client-flutter
 Query.isNull("metadata.archived")
 ```
+```client-react-native
+Query.isNull("metadata.archived")
+```
+```client-apple
+Query.isNull("metadata.archived")
+```
+```client-android-kotlin
+Query.isNull("metadata.archived")
+```
+```client-android-java
+Query.isNull("metadata.archived")
+```
 ```server-python
 Query.is_null("metadata.archived")
 ```
@@ -767,16 +962,25 @@ Query.is_null("metadata.archived")
 ```server-deno
 Query.isNull("metadata.archived")
 ```
+```server-nodejs
+Query.isNull("metadata.archived")
+```
 ```server-php
 Query::isNull("metadata.archived")
 ```
-```client-apple
-Query.isNull("metadata.archived")
+```server-dotnet
+Query.IsNull("metadata.archived")
 ```
 ```server-go
 query.IsNull("metadata.archived")
 ```
-```server-nodejs
+```server-dart
+Query.isNull("metadata.archived")
+```
+```server-swift
+Query.isNull("metadata.archived")
+```
+```server-kotlin
 Query.isNull("metadata.archived")
 ```
 ```server-rust
@@ -804,6 +1008,18 @@ Query.isNotNull("metadata.archived")
 ```client-flutter
 Query.isNotNull("metadata.archived")
 ```
+```client-react-native
+Query.isNotNull("metadata.archived")
+```
+```client-apple
+Query.isNotNull("metadata.archived")
+```
+```client-android-kotlin
+Query.isNotNull("metadata.archived")
+```
+```client-android-java
+Query.isNotNull("metadata.archived")
+```
 ```server-python
 Query.is_not_null("metadata.archived")
 ```
@@ -813,16 +1029,25 @@ Query.is_not_null("metadata.archived")
 ```server-deno
 Query.isNotNull("metadata.archived")
 ```
+```server-nodejs
+Query.isNotNull("metadata.archived")
+```
 ```server-php
 Query::isNotNull("metadata.archived")
 ```
-```client-apple
-Query.isNotNull("metadata.archived")
+```server-dotnet
+Query.IsNotNull("metadata.archived")
 ```
 ```server-go
 query.IsNotNull("metadata.archived")
 ```
-```server-nodejs
+```server-dart
+Query.isNotNull("metadata.archived")
+```
+```server-swift
+Query.isNotNull("metadata.archived")
+```
+```server-kotlin
 Query.isNotNull("metadata.archived")
 ```
 ```server-rust
@@ -852,6 +1077,18 @@ Query.startsWith("metadata.title", "Iron")
 ```client-flutter
 Query.startsWith("metadata.title", "Iron")
 ```
+```client-react-native
+Query.startsWith("metadata.title", "Iron")
+```
+```client-apple
+Query.startsWith("metadata.title", value: "Iron")
+```
+```client-android-kotlin
+Query.startsWith("metadata.title", "Iron")
+```
+```client-android-java
+Query.startsWith("metadata.title", "Iron")
+```
 ```server-python
 Query.starts_with("metadata.title", "Iron")
 ```
@@ -861,16 +1098,25 @@ Query.starts_with("metadata.title", "Iron")
 ```server-deno
 Query.startsWith("metadata.title", "Iron")
 ```
+```server-nodejs
+Query.startsWith("metadata.title", "Iron")
+```
 ```server-php
 Query::startsWith("metadata.title", "Iron")
 ```
-```client-apple
-Query.startsWith("metadata.title", value: "Iron")
+```server-dotnet
+Query.StartsWith("metadata.title", "Iron")
 ```
 ```server-go
 query.StartsWith("metadata.title", "Iron")
 ```
-```server-nodejs
+```server-dart
+Query.startsWith("metadata.title", "Iron")
+```
+```server-swift
+Query.startsWith("metadata.title", value: "Iron")
+```
+```server-kotlin
 Query.startsWith("metadata.title", "Iron")
 ```
 ```server-rust
@@ -898,6 +1144,9 @@ Query.notStartsWith("metadata.title", "Iron")
 ```client-flutter
 Query.notStartsWith("metadata.title", "Iron")
 ```
+```client-react-native
+Query.notStartsWith("metadata.title", "Iron")
+```
 ```client-apple
 Query.notStartsWith("metadata.title", value: "Iron")
 ```
@@ -922,8 +1171,20 @@ Query.notStartsWith("metadata.title", "Iron")
 ```server-php
 Query::notStartsWith("metadata.title", "Iron")
 ```
+```server-dotnet
+Query.NotStartsWith("metadata.title", "Iron")
+```
+```server-go
+query.NotStartsWith("metadata.title", "Iron")
+```
+```server-dart
+Query.notStartsWith("metadata.title", "Iron")
+```
 ```server-swift
 Query.notStartsWith("metadata.title", value: "Iron")
+```
+```server-kotlin
+Query.notStartsWith("metadata.title", "Iron")
 ```
 ```server-rust
 Query::not_starts_with("metadata.title", "Iron").to_string()
@@ -950,6 +1211,18 @@ Query.endsWith("metadata.title", "Man")
 ```client-flutter
 Query.endsWith("metadata.title", "Man")
 ```
+```client-react-native
+Query.endsWith("metadata.title", "Man")
+```
+```client-apple
+Query.endsWith("metadata.title", value: "Man")
+```
+```client-android-kotlin
+Query.endsWith("metadata.title", "Man")
+```
+```client-android-java
+Query.endsWith("metadata.title", "Man")
+```
 ```server-python
 Query.ends_with("metadata.title", "Man")
 ```
@@ -959,16 +1232,25 @@ Query.ends_with("metadata.title", "Man")
 ```server-deno
 Query.endsWith("metadata.title", "Man")
 ```
+```server-nodejs
+Query.endsWith("metadata.title", "Man")
+```
 ```server-php
 Query::endsWith("metadata.title", "Man")
 ```
-```client-apple
-Query.endsWith("metadata.title", value: "Man")
+```server-dotnet
+Query.EndsWith("metadata.title", "Man")
 ```
 ```server-go
 query.EndsWith("metadata.title", "Man")
 ```
-```server-nodejs
+```server-dart
+Query.endsWith("metadata.title", "Man")
+```
+```server-swift
+Query.endsWith("metadata.title", value: "Man")
+```
+```server-kotlin
 Query.endsWith("metadata.title", "Man")
 ```
 ```server-rust
@@ -996,6 +1278,9 @@ Query.notEndsWith("metadata.title", "Man")
 ```client-flutter
 Query.notEndsWith("metadata.title", "Man")
 ```
+```client-react-native
+Query.notEndsWith("metadata.title", "Man")
+```
 ```client-apple
 Query.notEndsWith("metadata.title", value: "Man")
 ```
@@ -1020,8 +1305,20 @@ Query.notEndsWith("metadata.title", "Man")
 ```server-php
 Query::notEndsWith("metadata.title", "Man")
 ```
+```server-dotnet
+Query.NotEndsWith("metadata.title", "Man")
+```
+```server-go
+query.NotEndsWith("metadata.title", "Man")
+```
+```server-dart
+Query.notEndsWith("metadata.title", "Man")
+```
 ```server-swift
 Query.notEndsWith("metadata.title", value: "Man")
+```
+```server-kotlin
+Query.notEndsWith("metadata.title", "Man")
 ```
 ```server-rust
 Query::not_ends_with("metadata.title", "Man").to_string()
@@ -1056,6 +1353,34 @@ Query.contains("metadata.tags", ["space"])
 // For strings
 Query.contains("metadata.title", "Iron")
 ```
+```client-react-native
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```client-apple
+// For arrays
+Query.contains("metadata.tags", value: ["space"])
+
+// For strings
+Query.contains("metadata.title", value: "Iron")
+```
+```client-android-kotlin
+// For arrays
+Query.contains("metadata.tags", listOf("space"))
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```client-android-java
+// For arrays
+Query.contains("metadata.tags", Arrays.asList("space"))
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
 ```server-python
 # For arrays
 Query.contains("metadata.tags", ["space"])
@@ -1077,6 +1402,13 @@ Query.contains("metadata.tags", ["space"])
 // For strings
 Query.contains("metadata.title", "Iron")
 ```
+```server-nodejs
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
 ```server-php
 // For arrays
 Query::contains("metadata.tags", ["space"])
@@ -1084,12 +1416,12 @@ Query::contains("metadata.tags", ["space"])
 // For strings
 Query::contains("metadata.title", "Iron")
 ```
-```client-apple
+```server-dotnet
 // For arrays
-Query.contains("metadata.tags", value: ["space"])
+Query.Contains("metadata.tags", new List<string> { "space" })
 
 // For strings
-Query.contains("metadata.title", value: "Iron")
+Query.Contains("metadata.title", "Iron")
 ```
 ```server-go
 // For arrays
@@ -1098,9 +1430,23 @@ query.Contains("metadata.tags", []string{"space"})
 // For strings
 query.Contains("metadata.title", "Iron")
 ```
-```server-nodejs
+```server-dart
 // For arrays
 Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-swift
+// For arrays
+Query.contains("metadata.tags", value: ["space"])
+
+// For strings
+Query.contains("metadata.title", value: "Iron")
+```
+```server-kotlin
+// For arrays
+Query.contains("metadata.tags", listOf("space"))
 
 // For strings
 Query.contains("metadata.title", "Iron")
@@ -1289,6 +1635,30 @@ Query.and([
     Query.startsWith("metadata.title", "Inter")
 ])
 ```
+```client-react-native
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
+```client-apple
+Query.and([
+    Query.equal("metadata.genre", value: "sci-fi"),
+    Query.startsWith("metadata.title", value: "Inter")
+])
+```
+```client-android-kotlin
+Query.and(listOf(
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+))
+```
+```client-android-java
+Query.and(Arrays.asList(
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+))
+```
 ```server-python
 Query.and_queries([
     Query.equal("metadata.genre", "sci-fi"),
@@ -1307,17 +1677,23 @@ Query.and([
     Query.startsWith("metadata.title", "Inter")
 ])
 ```
+```server-nodejs
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
 ```server-php
 Query::and([
     Query::equal("metadata.genre", "sci-fi"),
     Query::startsWith("metadata.title", "Inter")
 ])
 ```
-```client-apple
-Query.and([
-    Query.equal("metadata.genre", value: "sci-fi"),
-    Query.startsWith("metadata.title", value: "Inter")
-])
+```server-dotnet
+Query.And(new List<string> {
+    Query.Equal("metadata.genre", "sci-fi"),
+    Query.StartsWith("metadata.title", "Inter")
+})
 ```
 ```server-go
 query.And([]string{
@@ -1325,11 +1701,23 @@ query.And([]string{
     query.StartsWith("metadata.title", "Inter"),
 })
 ```
-```server-nodejs
+```server-dart
 Query.and([
     Query.equal("metadata.genre", "sci-fi"),
     Query.startsWith("metadata.title", "Inter")
 ])
+```
+```server-swift
+Query.and([
+    Query.equal("metadata.genre", value: "sci-fi"),
+    Query.startsWith("metadata.title", value: "Inter")
+])
+```
+```server-kotlin
+Query.and(listOf(
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+))
 ```
 ```server-rust
 Query::and(vec![
@@ -1365,6 +1753,30 @@ Query.or([
     Query.equal("metadata.genre", "sci-fi")
 ])
 ```
+```client-react-native
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```client-apple
+Query.or([
+    Query.equal("metadata.genre", value: "romance"),
+    Query.equal("metadata.genre", value: "sci-fi")
+])
+```
+```client-android-kotlin
+Query.or(listOf(
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+))
+```
+```client-android-java
+Query.or(Arrays.asList(
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+))
+```
 ```server-python
 Query.or_queries([
     Query.equal("metadata.genre", "romance"),
@@ -1383,17 +1795,23 @@ Query.or([
     Query.equal("metadata.genre", "sci-fi")
 ])
 ```
+```server-nodejs
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
 ```server-php
 Query::or([
     Query::equal("metadata.genre", "romance"),
     Query::equal("metadata.genre", "sci-fi")
 ])
 ```
-```client-apple
-Query.or([
-    Query.equal("metadata.genre", value: "romance"),
-    Query.equal("metadata.genre", value: "sci-fi")
-])
+```server-dotnet
+Query.Or(new List<string> {
+    Query.Equal("metadata.genre", "romance"),
+    Query.Equal("metadata.genre", "sci-fi")
+})
 ```
 ```server-go
 query.Or([]string{
@@ -1401,11 +1819,23 @@ query.Or([]string{
     query.Equal("metadata.genre", []string{"sci-fi"}),
 })
 ```
-```server-nodejs
+```server-dart
 Query.or([
     Query.equal("metadata.genre", "romance"),
     Query.equal("metadata.genre", "sci-fi")
 ])
+```
+```server-swift
+Query.or([
+    Query.equal("metadata.genre", value: "romance"),
+    Query.equal("metadata.genre", value: "sci-fi")
+])
+```
+```server-kotlin
+Query.or(listOf(
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+))
 ```
 ```server-rust
 Query::or(vec![
@@ -1439,11 +1869,26 @@ Query.orderDesc("$createdAt")
 ```client-flutter
 Query.orderDesc("$createdAt")
 ```
+```client-react-native
+Query.orderDesc("$createdAt")
+```
+```client-apple
+Query.orderDesc("$createdAt")
+```
+```client-android-kotlin
+Query.orderDesc("$createdAt")
+```
+```client-android-java
+Query.orderDesc("$createdAt")
+```
 ```server-python
 Query.order_desc("$createdAt")
 ```
 ```server-ruby
 Query.order_desc("$createdAt")
+```
+```server-deno
+Query.orderDesc("$createdAt")
 ```
 ```server-nodejs
 Query.orderDesc("$createdAt")
@@ -1451,11 +1896,20 @@ Query.orderDesc("$createdAt")
 ```server-php
 Query::orderDesc("$createdAt")
 ```
-```client-apple
-Query.orderDesc("$createdAt")
+```server-dotnet
+Query.OrderDesc("$createdAt")
 ```
 ```server-go
 query.OrderDesc("$createdAt")
+```
+```server-dart
+Query.orderDesc("$createdAt")
+```
+```server-swift
+Query.orderDesc("$createdAt")
+```
+```server-kotlin
+Query.orderDesc("$createdAt")
 ```
 ```server-rust
 Query::order_desc("$createdAt").to_string()
@@ -1482,11 +1936,26 @@ Query.orderAsc("$createdAt")
 ```client-flutter
 Query.orderAsc("$createdAt")
 ```
+```client-react-native
+Query.orderAsc("$createdAt")
+```
+```client-apple
+Query.orderAsc("$createdAt")
+```
+```client-android-kotlin
+Query.orderAsc("$createdAt")
+```
+```client-android-java
+Query.orderAsc("$createdAt")
+```
 ```server-python
 Query.order_asc("$createdAt")
 ```
 ```server-ruby
 Query.order_asc("$createdAt")
+```
+```server-deno
+Query.orderAsc("$createdAt")
 ```
 ```server-nodejs
 Query.orderAsc("$createdAt")
@@ -1494,11 +1963,20 @@ Query.orderAsc("$createdAt")
 ```server-php
 Query::orderAsc("$createdAt")
 ```
-```client-apple
-Query.orderAsc("$createdAt")
+```server-dotnet
+Query.OrderAsc("$createdAt")
 ```
 ```server-go
 query.OrderAsc("$createdAt")
+```
+```server-dart
+Query.orderAsc("$createdAt")
+```
+```server-swift
+Query.orderAsc("$createdAt")
+```
+```server-kotlin
+Query.orderAsc("$createdAt")
 ```
 ```server-rust
 Query::order_asc("$createdAt").to_string()
@@ -1525,11 +2003,26 @@ Query.orderRandom()
 ```client-flutter
 Query.orderRandom()
 ```
+```client-react-native
+Query.orderRandom()
+```
+```client-apple
+Query.orderRandom()
+```
+```client-android-kotlin
+Query.orderRandom()
+```
+```client-android-java
+Query.orderRandom()
+```
 ```server-python
 Query.order_random()
 ```
 ```server-ruby
 Query.order_random()
+```
+```server-deno
+Query.orderRandom()
 ```
 ```server-nodejs
 Query.orderRandom()
@@ -1537,11 +2030,20 @@ Query.orderRandom()
 ```server-php
 Query::orderRandom()
 ```
-```client-apple
-Query.orderRandom()
+```server-dotnet
+Query.OrderRandom()
 ```
 ```server-go
 query.OrderRandom()
+```
+```server-dart
+Query.orderRandom()
+```
+```server-swift
+Query.orderRandom()
+```
+```server-kotlin
+Query.orderRandom()
 ```
 ```server-rust
 Query::order_random().to_string()
@@ -1570,6 +2072,18 @@ Query.limit(25)
 ```client-flutter
 Query.limit(25)
 ```
+```client-react-native
+Query.limit(25)
+```
+```client-apple
+Query.limit(25)
+```
+```client-android-kotlin
+Query.limit(25)
+```
+```client-android-java
+Query.limit(25)
+```
 ```server-python
 Query.limit(25)
 ```
@@ -1579,16 +2093,25 @@ Query.limit(25)
 ```server-deno
 Query.limit(25)
 ```
+```server-nodejs
+Query.limit(25)
+```
 ```server-php
 Query::limit(25)
 ```
-```client-apple
-Query.limit(25)
+```server-dotnet
+Query.Limit(25)
 ```
 ```server-go
 query.Limit(25)
 ```
-```server-nodejs
+```server-dart
+Query.limit(25)
+```
+```server-swift
+Query.limit(25)
+```
+```server-kotlin
 Query.limit(25)
 ```
 ```server-rust
@@ -1616,6 +2139,18 @@ Query.offset(0)
 ```client-flutter
 Query.offset(0)
 ```
+```client-react-native
+Query.offset(0)
+```
+```client-apple
+Query.offset(0)
+```
+```client-android-kotlin
+Query.offset(0)
+```
+```client-android-java
+Query.offset(0)
+```
 ```server-python
 Query.offset(0)
 ```
@@ -1625,16 +2160,25 @@ Query.offset(0)
 ```server-deno
 Query.offset(0)
 ```
+```server-nodejs
+Query.offset(0)
+```
 ```server-php
 Query::offset(0)
 ```
-```client-apple
-Query.offset(0)
+```server-dotnet
+Query.Offset(0)
 ```
 ```server-go
 query.Offset(0)
 ```
-```server-nodejs
+```server-dart
+Query.offset(0)
+```
+```server-swift
+Query.offset(0)
+```
+```server-kotlin
 Query.offset(0)
 ```
 ```server-rust
@@ -1662,6 +2206,18 @@ Query.cursorAfter("62a7...f620")
 ```client-flutter
 Query.cursorAfter("62a7...f620")
 ```
+```client-react-native
+Query.cursorAfter("62a7...f620")
+```
+```client-apple
+Query.cursorAfter("62a7...f620")
+```
+```client-android-kotlin
+Query.cursorAfter("62a7...f620")
+```
+```client-android-java
+Query.cursorAfter("62a7...f620")
+```
 ```server-python
 Query.cursor_after("62a7...f620")
 ```
@@ -1671,16 +2227,25 @@ Query.cursor_after("62a7...f620")
 ```server-deno
 Query.cursorAfter("62a7...f620")
 ```
+```server-nodejs
+Query.cursorAfter("62a7...f620")
+```
 ```server-php
 Query::cursorAfter("62a7...f620")
 ```
-```client-apple
-Query.cursorAfter("62a7...f620")
+```server-dotnet
+Query.CursorAfter("62a7...f620")
 ```
 ```server-go
 query.CursorAfter("62a7...f620")
 ```
-```server-nodejs
+```server-dart
+Query.cursorAfter("62a7...f620")
+```
+```server-swift
+Query.cursorAfter("62a7...f620")
+```
+```server-kotlin
 Query.cursorAfter("62a7...f620")
 ```
 ```server-rust
@@ -1708,6 +2273,18 @@ Query.cursorBefore("62a7...a600")
 ```client-flutter
 Query.cursorBefore("62a7...a600")
 ```
+```client-react-native
+Query.cursorBefore("62a7...a600")
+```
+```client-apple
+Query.cursorBefore("62a7...a600")
+```
+```client-android-kotlin
+Query.cursorBefore("62a7...a600")
+```
+```client-android-java
+Query.cursorBefore("62a7...a600")
+```
 ```server-python
 Query.cursor_before("62a7...a600")
 ```
@@ -1717,16 +2294,25 @@ Query.cursor_before("62a7...a600")
 ```server-deno
 Query.cursorBefore("62a7...a600")
 ```
+```server-nodejs
+Query.cursorBefore("62a7...a600")
+```
 ```server-php
 Query::cursorBefore("62a7...a600")
 ```
-```client-apple
-Query.cursorBefore("62a7...a600")
+```server-dotnet
+Query.CursorBefore("62a7...a600")
 ```
 ```server-go
 query.CursorBefore("62a7...a600")
 ```
-```server-nodejs
+```server-dart
+Query.cursorBefore("62a7...a600")
+```
+```server-swift
+Query.cursorBefore("62a7...a600")
+```
+```server-kotlin
 Query.cursorBefore("62a7...a600")
 ```
 ```server-rust
