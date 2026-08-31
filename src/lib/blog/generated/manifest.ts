@@ -56,7 +56,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": true,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
     "hasCover": true
   },
@@ -71,7 +70,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": true,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-explorer/cover.avif",
     "hasCover": true
   },
@@ -86,7 +84,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "product, announcement",
     "featured": true,
-    "draft": true,
     "cover": "/images/blog-local/announcing-console-iv/cover.avif",
     "hasCover": true
   },
@@ -101,7 +98,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": true,
-    "draft": true,
     "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
@@ -115,7 +111,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "luke-silver",
     "category": "architecture, announcement",
-    "draft": true,
+    "featured": true,
     "cover": "/images/blog-local/hyperloop-b/cover.avif",
     "hasCover": true
   },
@@ -425,6 +421,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-appwrite-firewall",
+    "href": "/blog/post/announcing-appwrite-firewall",
+    "title": "Announcing Appwrite Firewall: traffic control for your project",
+    "description": "Appwrite Firewall adds project-level traffic rules to Appwrite Cloud. Deny, bypass, challenge, rate limit, or redirect requests to your API, Functions, and Sites, with an impact preview before every change.",
+    "date": "2026-08-06",
+    "lastUpdated": "2026-08-06",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "product, announcement",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-mcp-server-template",
     "href": "/blog/post/announcing-mcp-server-template",
     "title": "Build and deploy an MCP server with Appwrite Functions",
@@ -479,21 +490,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": true,
     "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-appwrite-firewall",
-    "href": "/blog/post/announcing-appwrite-firewall",
-    "title": "Announcing Appwrite Firewall: traffic control for your project",
-    "description": "Appwrite Firewall adds project-level traffic rules to Appwrite Cloud. Deny, bypass, challenge, rate limit, or redirect requests to your API, Functions, and Sites, with an impact preview before every change.",
-    "date": "2026-08-06",
-    "lastUpdated": "2026-08-06",
-    "timeToRead": 6,
-    "author": "atharva",
-    "category": "product, announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
     "hasCover": true
   },
   {

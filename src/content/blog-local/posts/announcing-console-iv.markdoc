@@ -4,7 +4,7 @@ title: "Announcing Console IV: the website and Console as one app"
 description: Console IV rebuilds the Appwrite Console on TanStack Start and merges it with appwrite.io, so the docs, the blog, and your projects run in one application.
 date: 2026-08-31
 cover: /images/blog-local/announcing-console-iv/cover.avif
-timeToRead: 8
+timeToRead: 7
 author: aditya-oberai
 category: product, announcement
 featured: true
@@ -15,8 +15,6 @@ faqs:
     answer: "Both are being retired. The website ran on SvelteKit and the Console on Svelte, each with its own build, design system, and deploy pipeline. Console IV replaces both with a single codebase."
   - question: "Do I need to migrate anything to use Console IV?"
     answer: "No. Console IV is a new interface over the same Appwrite APIs. Your projects, organizations, API keys, and SDK code are untouched, and nothing about how your applications call Appwrite changes."
-  - question: "Did the Appwrite Console URLs change?"
-    answer: "Yes. The Console moved off the `/console` prefix and dropped the region and typed-resource segments, so `/console/project-fra-68a1c2/auth/user-9f3d0b` is now `/projects/68a1c2/auth/users/9f3d0b`, and `/organization-{id}` is now `/organizations/{id}`. Old links are not broken: the server matches pre-2.0 paths and returns a 302 to the new equivalent. The one exception is a deep link to a single webhook, which lands on the webhooks list because Console IV has no per-webhook page."
   - question: "Why did Appwrite move from SvelteKit to TanStack?"
     answer: "Two reasons. React has deeper library coverage for the components a console needs, including data tables, virtualized lists, code editors, and charts. And coding agents write React far more reliably than Svelte, which matters when much of the code behind a 600-page documentation site and a large console is now written with agent assistance."
   - question: "Can I read the Appwrite docs without leaving the Console?"
@@ -28,6 +26,8 @@ faqs:
 For most of Appwrite's life, appwrite.io and the Console were two products that happened to share a logo. The website lived in [appwrite/website](https://github.com/appwrite/website). The Console lived in [appwrite/console](https://github.com/appwrite/console). Two Svelte apps, two build pipelines, two design systems drifting apart at their own pace, and a hard border down the middle: docs on one side of it, your project on the other.
 
 The cost of that border was small each time and constant. For example, you are setting permissions on a storage bucket, and you want to check whether `Role.users()` covers anonymous sessions or only signed-in ones. The answer is one line in the [permissions reference](/docs/advanced/security/permissions), and reaching it means leaving the form you are in the middle of filling out.
+
+That hop is a miniature of a larger pattern. Building on Appwrite has always meant bouncing between the IDE, the docs, the SDKs, the CLI, and a terminal, and we have wanted to shrink that context switching for years. Console IV is our dig at it.
 
 Today we are announcing **Console IV**, the fourth generation of the Appwrite Console. It is rebuilt on TanStack Start, and it absorbs appwrite.io. The marketing pages, more than 600 documentation pages, the blog, the changelog, and every Console route now run in one application.
 
@@ -87,30 +87,6 @@ Because the docs and the Console are one application, the machine-readable expor
 The same codebase builds the Cloud Console and the self-hosted one. A console profile decides which features exist, and the self-hosted profile turns off everything tied to Appwrite Cloud: billing, Domains, Firewall, usage statistics, the marketplace, multi-region, and the marketing and documentation routes. Docs links on a self-hosted instance open [appwrite.io/docs](https://appwrite.io/docs) in a new tab instead.
 
 One build, two products, and no separate self-hosted fork drifting a release behind.
-
-# Console URLs changed, and old ones redirect
-
-The Console's URL scheme is the one thing in this release that genuinely moves, so it is worth being precise about it.
-
-The old Console addressed resources with typed segments and baked the region into the project path. A user page looked like this:
-
-```
-/console/project-fra-68a1c2/auth/user-9f3d0b
-```
-
-Console IV uses plural collections and bare IDs, and it serves the Console from the host root rather than a `/console` prefix:
-
-```
-/projects/68a1c2/auth/users/9f3d0b
-```
-
-Organizations moved from `/organization-{id}` to `/organizations/{id}` on the same principle. Dropping the region from the path is what lets a project move between regions without invalidating every link anyone saved to it.
-
-Links to the old shape are redirected, not broken. The server matches pre-2.0 paths and answers with a 302 to the new equivalent, covering the `/console` prefix, the region-prefixed project segment, and typed segments including `user-`, `team-`, `bucket-`, `database-`, `collection-`, `function-`, `site-`, and `deployment-`. Paste a two-year-old link from a runbook and it lands on the right page.
-
-One case loses precision. The old Console had a page per webhook, Console IV does not, so a deep link to `settings/webhooks/webhook-{id}` redirects to the webhooks list rather than to that webhook.
-
-Everything outside the Console kept its address. Docs paths, blog post slugs, and changelog entries are unchanged, because those routes came over from the website with their URLs intact. Your API keys, SDK versions, and integrations are untouched too, since Console IV is a client of the same API your applications call. Auth is still Auth, and a bucket is still a bucket.
 
 # Getting started with Console IV
 
