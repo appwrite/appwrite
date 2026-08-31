@@ -84,7 +84,7 @@ Because the docs and the Console are one application, the machine-readable expor
 
 # Getting started with Console IV
 
-Console IV goes live on [Appwrite Cloud](https://cloud.appwrite.io) during [Init](/init) week alongside the rest of [Appwrite 2.0](/blog/post/announcing-appwrite-2). Community Edition ships it for [self-hosting](/docs/advanced/self-hosting) when the week wraps up.
+Console IV goes live on [appwrite.io](https://appwrite.io) during [Init](/init) week alongside the rest of [Appwrite 2.0](/blog/post/announcing-appwrite-2). Community Edition ships it for [self-hosting](/docs/advanced/self-hosting) when the week wraps up.
 
 The fastest way to feel the difference is to go configure something you do not already know how to configure. Open a project, start setting up an OAuth provider or a Firewall rule, and click the docs link in the description instead of reaching for a new tab. The instructions arrive next to the form.
 
