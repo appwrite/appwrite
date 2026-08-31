@@ -571,7 +571,6 @@ export const jaProjectMiscTranslations: Record<string, string> = {
   'Install the Kotlin SDK': 'Kotlin SDK のインストール',
   "Deploy your function using the Appwrite CLI by running the following command inside your function's folder.": '関数フォルダー内で次のコマンドを実行し、Appwrite CLI を使用して関数をデプロイしてください。',
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.": 'サイトフォルダー内で次のコマンドを実行し、Appwrite CLI を使用してサイトをデプロイしてください。',
-  'Historic data is not available through the new usage API.': '新しい使用量 API では履歴データは利用できません。',
   'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).': 'provider {} ブロックの一般的なファイル名。例: Appwrite が cloud.appwrite.io にない場合のカスタムエンドポイントと self_signed。シークレットは .tf ファイルではなく、tfvars、env、または CI に保持します。ルートモジュールごとに 1 つの required_providers ブロック (main.tf を参照)。',
   'About GBH': 'GBH について',
   'Bandwidth': '帯域幅',

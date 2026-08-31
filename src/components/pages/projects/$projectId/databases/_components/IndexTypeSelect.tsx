@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,10 +40,20 @@ export function IndexTypeSelect({
 }: IndexTypeSelectProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  const { rootRef, portalContainer, modal, handleOpenChange } =
+    useModalAwarePopover()
   const selected = getCollectionIndexTypeDefinition(value)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <div ref={rootRef} className="contents">
+    <Popover
+      open={open}
+      modal={modal}
+      onOpenChange={(nextOpen) => {
+        handleOpenChange(nextOpen)
+        setOpen(nextOpen)
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           id={id}
@@ -60,16 +71,21 @@ export function IndexTypeSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent
+        container={portalContainer}
         className="max-h-[min(320px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
         align="start"
         onWheelCapture={(event) => {
           event.stopPropagation()
+        }}
+        onCloseAutoFocus={(event) => {
+          if (portalContainer) event.preventDefault()
         }}
       >
         <Command>
           <CommandInput
             placeholder={t('Search index types...')}
             className="h-9 text-[13px]"
+            onKeyDown={(event) => event.stopPropagation()}
           />
           <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain p-1">
             <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
@@ -107,5 +123,6 @@ export function IndexTypeSelect({
         </Command>
       </PopoverContent>
     </Popover>
+    </div>
   )
 }

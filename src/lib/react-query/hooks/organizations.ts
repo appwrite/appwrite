@@ -193,6 +193,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     activityLogs: Number.MAX_SAFE_INTEGER,
     usageLogs: Number.MAX_SAFE_INTEGER,
     usageLogsIntervals: ['15m', '1h', '1d'],
+    usageAggregateOnlyMetrics: [],
     projectInactivityDays: 0,
     alertLimit: 0,
     usage: {} as Models.UsageBillingPlan,

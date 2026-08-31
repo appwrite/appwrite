@@ -73,7 +73,9 @@ import {
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartInterval,
   type UsageChartInterval,
+  type UsageChartIntervalPlan,
 } from '@/lib/usage/chart-interval'
 import {
   getStableUsageChartDateRange,
@@ -2255,12 +2257,24 @@ export type ProjectListRequestsUsageEntry = {
 
 /**
  * Fetches request usage chart data for many projects in parallel (org project cards).
+ * Interval follows the org plan (`usageLogsIntervals`) so restricted plans still get totals.
  */
 export function useProjectListRequestsUsage(
   projectIds: string[],
   enabled: boolean,
+  plan?: UsageChartIntervalPlan,
 ): Map<string, ProjectListRequestsUsageEntry> {
   const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
   const uniqueIds = useMemo(
     () => [...new Set(projectIds.filter(Boolean))],
     [projectIds],
@@ -2271,7 +2285,7 @@ export function useProjectListRequestsUsage(
       ...requestsChartOverviewQueryOptions(
         projectId,
         dateRange,
-        DEFAULT_USAGE_CHART_INTERVAL,
+        chartInterval,
       ),
       enabled: enabled && !!projectId,
     })),
@@ -2289,6 +2303,32 @@ export function useProjectListRequestsUsage(
     })
     return map
   }, [uniqueIds, queries])
+}
+
+/** Prefetch org project-list request sparklines without blocking first paint. */
+export function prefetchProjectListRequestsUsage(
+  queryClient: QueryClient,
+  projectIds: string[],
+  plan?: UsageChartIntervalPlan,
+): void {
+  const dateRange = getProjectListRequestsChartDateRange()
+  const chartInterval = resolveUsageChartInterval(
+    DEFAULT_USAGE_CHART_INTERVAL,
+    dateRange,
+    plan,
+  )
+  const uniqueIds = [...new Set(projectIds.filter(Boolean))]
+  for (const projectId of uniqueIds) {
+    void queryClient
+      .prefetchQuery(
+        requestsChartOverviewQueryOptions(
+          projectId,
+          dateRange,
+          chartInterval,
+        ),
+      )
+      .catch(() => {})
+  }
 }
 
 function databaseReadsChartQueryOptions(

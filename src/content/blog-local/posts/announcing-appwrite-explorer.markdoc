@@ -2,7 +2,7 @@
 layout: post
 title: "Introducing Appwrite Explorer"
 description: Appwrite Explorer brings the Appwrite REST API into the Console. Browse every endpoint, build requests with guided forms, send live calls against your project, and inspect responses without leaving the browser.
-date: 2026-06-23
+date: 2026-08-31
 cover: /images/blog-local/announcing-appwrite-explorer/cover.avif
 timeToRead: 8
 author: eldad-fux

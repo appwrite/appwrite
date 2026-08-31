@@ -78,13 +78,14 @@ export function getRouter() {
       if (!event.error && !event.message) return
       reportUnhandledError(event.error ?? event.message, 'window.error')
     }
-    // Vite dispatches this when a dynamically imported chunk fails to load
-    // (common right after a deploy deletes the previous hashed assets).
-    // This is the canonical signal - no message matching required.
+    // Vite dispatches this when a dynamically imported chunk fails to load.
+    // Do not reload on the event alone (Firefox cancels intent preloads with
+    // the same signal). tryReloadForStaleChunk only reloads after MIME / 404
+    // confirmation on a hashed /assets/ URL.
     const onVitePreloadError = (event: Event) => {
       const payload = (event as Event & { payload?: unknown }).payload
       if (
-        tryReloadForStaleChunk(payload ?? 'vite:preloadError', {
+        tryReloadForStaleChunk(payload, {
           event,
           fromVitePreload: true,
         })

@@ -417,6 +417,13 @@ Each specification includes a storage allowance, and storage beyond the allowanc
 
 With storage autoscaling enabled, Appwrite grows the storage automatically when usage crosses a threshold, so the database never hits a full disk. Configure it under **Settings** > **Storage** in the Console, or through the API:
 
+{% only_dark %}
+![Storage settings with the autoscaling toggle](/images/docs/products/databases/postgresql/dark/settings-storage.avif)
+{% /only_dark %}
+{% only_light %}
+![Storage settings with the autoscaling toggle](/images/docs/products/databases/postgresql/settings-storage.avif)
+{% /only_light %}
+
 {% multicode %}
 ```server-nodejs
 import { Client, Postgresql } from 'node-appwrite';

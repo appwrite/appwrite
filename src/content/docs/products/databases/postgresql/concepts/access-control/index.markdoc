@@ -133,6 +133,41 @@ CREATE POLICY tenant_by_setting ON documents
 
 The application runs `SET app.current_tenant = '...'` after taking a connection from the pool, and every query in that session is automatically scoped. Whichever variant you choose, the isolation lives in the database: a forgotten `WHERE` clause in application code returns no one else's data instead of everyone's.
 
+# Use Appwrite Auth as the tenant identity {% #appwrite-auth %}
+
+Native PostgreSQL has no built-in link to Appwrite's permission system. [Permissions](/docs/advanced/security/permissions) apply to Appwrite databases, not to the raw engine. You can still key row-level security on Appwrite users: your backend verifies the caller's Appwrite session and sets `app.current_tenant` to the verified user ID before running queries.
+
+The client sends its session as a [JWT](/docs/products/auth/jwt). The backend verifies the JWT against Appwrite, then scopes the connection to the verified user:
+
+```server-nodejs
+import { Client, Account } from 'node-appwrite';
+import pg from 'pg';
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+
+export async function listDocuments(jwt) {
+    // Verify the Appwrite session. Throws if the JWT is invalid or expired.
+    const client = new Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>')
+        .setJWT(jwt);
+    const user = await new Account(client).get();
+
+    const conn = await pool.connect();
+    try {
+        // Scope every query in this session to the verified user.
+        await conn.query("SELECT set_config('app.current_tenant', $1, false)", [user.$id]);
+        const result = await conn.query('SELECT * FROM documents');
+        return result.rows;
+    } finally {
+        await conn.query('RESET app.current_tenant');
+        conn.release();
+    }
+}
+```
+
+With `owner` columns storing Appwrite user IDs, the `tenant_by_setting` policy above isolates rows per Appwrite user. The backend only translates a verified Appwrite identity into a session variable; the database enforces the isolation.
+
 # What the primary role can do {% #admin-role %}
 
 The `admin` role you receive with the database owns your schema and can create roles (`CREATEROLE`), but it is not a superuser: instance-level settings, replication, and other managed responsibilities stay with the platform. Network-level restrictions such as IP allowlists are configured separately; see [Network security](/docs/products/databases/postgresql/network-security).

@@ -61,6 +61,7 @@ import { CreateTable } from '../CreateTable'
 import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import { DatabaseAdminNavSection } from '../_components/DatabaseAdminNavSection'
 import { DatabaseSidebarNavItem } from '../_components/DatabaseSidebarNavItem'
 import {
   DATABASE_SIDEBAR_LIST_STRIP_CLASS,
@@ -1363,7 +1364,7 @@ export function Workspace({
 
       {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
       <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
-        <div className="space-y-0.5">
+        <DatabaseAdminNavSection>
         <Link
           {...dbNav.visualizer(tableNavParams)}
           className={cn(
@@ -1394,6 +1395,7 @@ export function Workspace({
           <DatabaseBackupsNavLink
             projectId={projectId}
             databaseId={databaseId}
+            dbKind={DB_KIND}
             disabled={provisioning}
             disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             {...dbNav.backups(tableNavParams)}
@@ -1431,7 +1433,7 @@ export function Workspace({
             <span>{t('Settings')}</span>
           </DatabaseSidebarNavItem>
         )}
-        </div>
+        </DatabaseAdminNavSection>
         <DatabaseSidebarComputeSpec
           projectId={projectId}
           databaseId={databaseId}
@@ -1786,6 +1788,7 @@ export function Workspace({
               <DatabaseSectionSelector
                 projectId={projectId}
                 databaseId={databaseId}
+                dbKind={DB_KIND}
                 value={mobileSectionValue}
                 tablesLabel={dbLabels.databaseOverviewTabLabel}
                 tablesIcon={ContainerListIcon}

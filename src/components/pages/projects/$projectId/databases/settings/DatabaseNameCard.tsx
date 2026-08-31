@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   invalidateDatabaseModel,
+  refetchProjectDatabaseLists,
   updateProjectDatabase,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -51,14 +52,13 @@ export function DatabaseNameCard({
         dbKind,
       )
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       invalidateDatabaseModel(projectId, databaseId)
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['database', 'project', projectId, databaseId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
+      // List queries use refetchOnMount: false, so refetch (not invalidate).
+      await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database name updated successfully'))
     },
     onError: (error: unknown) => {

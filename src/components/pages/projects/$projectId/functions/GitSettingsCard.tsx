@@ -20,9 +20,8 @@ import {
   useProject,
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
-import { GitBranch, Lock, ExternalLink, Loader2, X } from 'lucide-react'
+import { Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -45,7 +44,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const { projectId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
-  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
@@ -56,7 +54,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     func.providerRootDirectory || '',
   )
 
-  // Connect repository modal state
+  // Connect repository state
   const [selectedInstallationId, setSelectedInstallationId] =
     useState<string>('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>('')
@@ -89,7 +87,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   } = useVcsInstallationReconnect(projectId, func.installationId)
 
   // Fetch installations for connect modal
-  const { data: installationsData } = useVcsInstallations(projectId)
+  const { data: installationsData, isLoading: installationsLoading } =
+    useVcsInstallations(projectId)
 
   const { project } = useProject(projectId ?? undefined)
 
@@ -97,7 +96,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     return (provider: VcsProviderId = 'github') => {
       if (typeof window === 'undefined' || !projectId || !func.$id) return '#'
       const origin = window.location.origin
-      const redirectUrl = `${origin}/projects/${projectId}/functions/${func.$id}/settings`
+      const redirectUrl = `${origin}/projects/${projectId}/functions/${func.$id}/settings/git`
       const projectEndpoint = getApiEndpoint(project?.region)
       return buildVcsAuthUrl({
         endpoint: projectEndpoint,
@@ -109,6 +108,9 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     }
   }, [projectId, func.$id, project?.region])
   const getGitHubAuthUrl = getVcsAuthUrl('github')
+
+  const installations = installationsData?.installations ?? []
+  const hasInstallations = installations.length > 0
 
   // Initialize selected installation when installations load
   useEffect(() => {
@@ -204,7 +206,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     },
     onSuccess: (updated) => {
       toast.success(t('Repository connected successfully'))
-      setConnectDialogOpen(false)
       setSelectedRepositoryId('')
       queryClient.setQueryData(
         ['function', 'project', projectId, func.$id],
@@ -303,81 +304,19 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         {!hasRepository ? (
-          // No repository connected state
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <EmptyState
-              icon={GitBranch}
-              title={t('No repository connected')}
-              description={t(
-                'Connect a repository to enable automatic deployments',
-              )}
-              isEmpty={true}
-              iconSize="md"
-            />
-            <Dialog
-              open={connectDialogOpen}
-              onOpenChange={(open) => {
-                setConnectDialogOpen(open)
-                if (open) setSelectedRepositoryId('')
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="h-9 text-[13px] mt-4">
-                  {t('Connect repository')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl p-0">
-                <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>{t('Connect repository')}</DialogTitle>
-                  <DialogDescription className="text-[13px] mt-2">
-                    {t(
-                      'Select a Git installation and repository to connect to this function',
-                    )}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="border-t border-border" />
-                <div className="px-6 pb-4 pt-4 max-h-[70dvh] overflow-y-auto">
-                  <RepositoryPicker
-                    projectId={projectId}
-                    getGitHubAuthUrl={getGitHubAuthUrl}
-                    getVcsAuthUrl={getVcsAuthUrl}
-                    installations={installationsData?.installations ?? []}
-                    selectedInstallationId={selectedInstallationId}
-                    onInstallationChange={setSelectedInstallationId}
-                    selectedRepositoryId={selectedRepositoryId}
-                    onRepositorySelect={(repo) =>
-                      setSelectedRepositoryId(repo.id)
-                    }
-                    mode="connect"
-                    detectionType="runtime"
-                  />
-                </div>
-                <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    onClick={() => setConnectDialogOpen(false)}
-                    disabled={connectRepositoryMutation.isPending}
-                  >
-                    {t('Cancel')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    onClick={handleConnectRepository}
-                    disabled={
-                      !selectedInstallationId ||
-                      !selectedRepositoryId ||
-                      connectRepositoryMutation.isPending
-                    }
-                  >
-                    {t('Connect')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <RepositoryPicker
+            projectId={projectId}
+            getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
+            installations={installations}
+            isLoadingInstallations={installationsLoading}
+            selectedInstallationId={selectedInstallationId}
+            onInstallationChange={setSelectedInstallationId}
+            selectedRepositoryId={selectedRepositoryId}
+            onRepositorySelect={(repo) => setSelectedRepositoryId(repo.id)}
+            mode="connect"
+            detectionType="runtime"
+          />
         ) : (
           // Repository connected state
           <div className="space-y-4">
@@ -459,7 +398,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-start">
+                      <DialogHeader className="px-6 pt-6 pb-4 text-start">
                         <DialogTitle>{t('Disconnect Repository')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           {t('Are you sure you want to disconnect')}{' '}
@@ -526,7 +465,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
           </div>
         )}
       </div>
-      {hasRepository && (
+      {hasRepository ? (
         <div className="px-6 py-4 border-t border-border bg-muted/30">
           <Button
             size="sm"
@@ -537,7 +476,22 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             {t('Update')}
           </Button>
         </div>
-      )}
+      ) : hasInstallations ? (
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={handleConnectRepository}
+            disabled={
+              !selectedInstallationId ||
+              !selectedRepositoryId ||
+              connectRepositoryMutation.isPending
+            }
+          >
+            {t('Connect')}
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

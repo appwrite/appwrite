@@ -108,7 +108,9 @@ function CreateFunctionLayoutInner() {
   }, [installationsData, setInstallations])
 
   useEffect(() => {
-    setBaseDomain(functionsDomain ?? 'appwrite.network')
+    if (functionsDomain) {
+      setBaseDomain(functionsDomain)
+    }
   }, [functionsDomain, setBaseDomain])
 
   useEffect(() => {

@@ -15,9 +15,7 @@ import {
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { loadDebugOverrides } from '@/lib/debug-overrides'
 import {
-  isOverviewChartTabEnabled,
   OVERVIEW_CHART_TAB_ORDER,
   type OverviewChartTabId,
 } from '@/lib/overview-chart-tabs'
@@ -154,12 +152,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
           to: usageChartFilters.dateRange.to!,
         }
         const chartInterval = usageChartFilters.chartInterval
-        const debugOverrides = loadDebugOverrides()
 
         // Usage is non-critical: prefetch in background; page renders with chart skeletons.
-        const usagePrefetchTasks = OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>
-          isOverviewChartTabEnabled(tabId, debugOverrides),
-        ).map((tabId) =>
+        const usagePrefetchTasks = OVERVIEW_CHART_TAB_ORDER.map((tabId) =>
           queryClient.prefetchQuery(
             OVERVIEW_CHART_PREFETCH_BY_TAB[tabId](
               projectId,

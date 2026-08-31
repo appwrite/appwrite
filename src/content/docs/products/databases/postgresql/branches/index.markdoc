@@ -637,6 +637,12 @@ curl -X DELETE \
 
 A branch runs on fixed, lightweight compute, so its cost is dominated by storage. The snapshot is free at the moment of branching; storage cost accumulates as the branch's data diverges from the parent. There is no separate branch line item, branches roll into your regular database storage and compute totals.
 
+# Use case: a development copy of production {% #dev-prod %}
+
+Branches also separate daily development from production without maintaining seed scripts. Create a long-lived branch from the production database and point local and staging environments at the branch's hostname. Developers query production-shaped data, and every write stays on the branch, so production is never at risk from a bad migration or a careless `DELETE`.
+
+Branch data diverges from the parent from the moment of branching. To refresh, delete the branch and create a new one with the same `branchId`; the new branch starts from the parent's current state. Set a `ttl` if the branch should clean itself up, or omit it for a permanent development copy.
+
 # Use case: per-PR preview database {% #ci-example %}
 
 A CI pipeline that branches on every pull request and tears down on close:

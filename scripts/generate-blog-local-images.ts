@@ -134,10 +134,58 @@ async function generateMcpServerOauth2Images(outputDir: string): Promise<void> {
   await convertScreenshotSources(outputDir)
 }
 
+async function generateAnnouncingAppwrite2Cover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'version-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    version: '2.0',
+    title: 'A new foundation for your apps',
+    eyebrow: 'Announcing Appwrite',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
+async function generateHyperloopBCover(outputDir: string): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'milestone-split',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    eyebrow: 'Engineering',
+    stat: '7x',
+    statLabel: 'I/O throughput',
+    title: 'Hyperloop B',
+    subtitle: 'The new engine behind Appwrite 2.0',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'announcing-appwrite-domains': convertCoverSourceToAvif,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
+  'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
+  'announcing-console-iv': convertCoverSourceToAvif,
+  'hyperloop-b': generateHyperloopBCover,
 }
 
 async function main() {

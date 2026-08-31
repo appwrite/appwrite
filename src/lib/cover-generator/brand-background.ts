@@ -85,7 +85,7 @@ export function buildCoverSvgShell(params: {
     params.contentAnchor,
   )
   // Gradient text lives inside the scaled content group; userSpaceOnUse coords must
-  // stay in artboard space (1200×630), not output canvas space.
+  // stay in artboard space (1200×675), not output canvas space.
   const titleGradientBounds = params.titleGradientBounds
   const { defs, layers } = buildCoverBrandBackgroundParts(
     params.theme,

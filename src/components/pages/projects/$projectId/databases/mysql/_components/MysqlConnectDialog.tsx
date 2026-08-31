@@ -20,6 +20,7 @@ import {
   buildMysqlCopyAllText,
   buildMysqlDrizzleSnippetPartDisplayCode,
   buildMysqlCliSnippetPartDisplayCode,
+  getMysqlPooledConnectionString,
   MYSQL_CONNECT_TABS,
   MYSQL_CONNECT_SNIPPET_TABS,
   type MysqlConnectSnippetContext,
@@ -162,16 +163,23 @@ function MysqlConnectDetails({
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
         <MysqlCopyableField
           label={t('Host')}
-          value={credentials.host || database.hostname || ''}
+          value={
+            endpointInfo.pooledHost ||
+            credentials.host ||
+            database.hostname ||
+            ''
+          }
         />
         <MysqlCopyableField
           label={t('Port')}
           value={
-            credentials.port
-              ? String(credentials.port)
-              : database.connectionPort
-                ? String(database.connectionPort)
-                : ''
+            endpointInfo.pooledPort
+              ? String(endpointInfo.pooledPort)
+              : credentials.port
+                ? String(credentials.port)
+                : database.connectionPort
+                  ? String(database.connectionPort)
+                  : ''
           }
         />
       </div>
@@ -239,18 +247,23 @@ function MysqlConnectDetails({
 
 type MysqlConnectDsnProps = {
   credentials: DedicatedDatabaseCredentials
+  endpointInfo: MysqlConnectionEndpointInfo
 }
 
-function MysqlConnectDsn({ credentials }: MysqlConnectDsnProps) {
+function MysqlConnectDsn({ credentials, endpointInfo }: MysqlConnectDsnProps) {
   const t = useT()
-  const maskedConnectionString = credentials.connectionString
+  const connectionString = getMysqlPooledConnectionString({
+    credentials,
+    endpointInfo,
+  })
+  const maskedConnectionString = connectionString
     ? maskMysqlConnectionStringPassword(
-        credentials.connectionString,
+        connectionString,
         credentials.password,
       )
     : ''
 
-  if (!credentials.connectionString) {
+  if (!connectionString) {
     return (
       <div className="flex h-full items-center justify-center text-[13px] text-muted-foreground">
         {t('Connection string unavailable.')}
@@ -288,7 +301,7 @@ function MysqlConnectDsn({ credentials }: MysqlConnectDsnProps) {
           <span className="text-[12px] font-medium text-muted-foreground">
             DSN
           </span>
-          <CodeSnippetCopyButton content={credentials.connectionString} />
+          <CodeSnippetCopyButton content={connectionString} />
         </div>
         <ConnectCodePanel
           code={maskedConnectionString}
@@ -624,7 +637,10 @@ export function MysqlConnectDialog({
                 value="dsn"
                 className={cn('mt-0 data-[state=inactive]:hidden', CONNECT_TAB_CONTENT_HEIGHT)}
               >
-                <MysqlConnectDsn credentials={credentials} />
+                <MysqlConnectDsn
+                  credentials={credentials}
+                  endpointInfo={endpointInfo}
+                />
               </TabsContent>
 
               {MYSQL_CONNECT_SNIPPET_TABS.map((tab) => {

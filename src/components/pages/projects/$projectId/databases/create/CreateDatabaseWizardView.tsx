@@ -632,7 +632,13 @@ export function CreateDatabaseWizardView() {
           policies: [] as Models.BackupPolicy[],
           total: 0,
         }))
-      : await fetchBackupPolicies(pid, database.$id).catch(() => ({
+      : await fetchBackupPolicies(
+          pid,
+          database.$id,
+          dbType
+            ? databaseRouteKindFromApiType(wizardBackend(dbType))
+            : undefined,
+        ).catch(() => ({
           policies: [] as Models.BackupPolicy[],
           total: 0,
         }))

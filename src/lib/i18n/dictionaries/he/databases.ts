@@ -42,6 +42,12 @@ export const heDatabasesDictionary: Record<string, string> = {
     'אפשרו לעמודה להיות NULL כאשר לא מסופק ערך.',
   'A literal or SQL expression, for example now() or gen_random_uuid().':
     'ערך קבוע או ביטוי SQL, לדוגמה now() או gen_random_uuid().',
+  'A value or SQL expression, for example CURRENT_TIMESTAMP.':
+    'ערך או ביטוי SQL, לדוגמה CURRENT_TIMESTAMP.',
+  'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
+    'הזינו ערך כמו שהוא, או ביטוי SQL כגון CURRENT_TIMESTAMP.',
+  'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
+    'הזינו ערך כמו שהוא, או ביטוי SQL כגון now() או gen_random_uuid().',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _': 'תווים מותרים: a-z, A-Z, 0-9, -, ., _',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.': 'תווים מותרים: a-z, A-Z, 0-9, -, ., _. לאחר היצירה לא ניתן לשנות את מפתח העמודה, כדי לשמור על שלמות הנתונים.',
   'always require collection-level permissions, regardless of document security settings.': 'תמיד דורשות הרשאות ברמת האוסף, ללא תלות בהגדרות אבטחת המסמכים.',
@@ -588,6 +594,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'has been created': 'נוצר בהצלחה',
   'has been deleted': 'נמחקה בהצלחה',
   'Hash indexes support one key column.': 'אינדקסי Hash תומכים בעמודת מפתח אחת.',
+  'Hide database tools': 'הסתרת כלי מסד הנתונים',
   'Hide encrypted values': 'הסתרת ערכים מוצפנים',
   'Hide password': 'הסתרת סיסמה',
   'Host': 'Host',
@@ -926,6 +933,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Policy limit reached. Upgrade to create more.': 'הגעתם למגבלת כללי המדיניות. שדרגו כדי ליצור עוד.',
   'Policy Name': 'שם המדיניות',
   'Port': 'Port',
+  'PostgreSQL is here!': 'PostgreSQL כאן!',
+  'MySQL is here!': 'MySQL כאן!',
+  'DocumentsDB is here!': 'DocumentsDB כאן!',
+  'VectorsDB is here!': 'VectorsDB כאן!',
   'PostgreSQL connection URI for clients that accept a single connection string.': 'כתובת URI לחיבור PostgreSQL עבור לקוחות שמקבלים מחרוזת חיבור אחת.',
   'Preset Policies': 'כללי מדיניות מוגדרים מראש',
   'Prettify JSON': 'עיצוב JSON',
@@ -934,8 +945,18 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Price': 'מחיר',
   'Primary key': 'מפתח ראשי',
   'Optional SQL expression, for example': 'ביטוי SQL אופציונלי, לדוגמה',
+  'Must be valid SQL for this column type, for example':
+    'חייב להיות SQL תקין לסוג העמודה, לדוגמה',
   'Require values in this column to be unique across rows.':
     'דרשו שערכים בעמודה זו יהיו ייחודיים בין השורות.',
+  'MySQL indexes on TEXT and BLOB use the first 255 characters.':
+    'אינדקסים של MySQL על TEXT ו-BLOB משתמשים ב-255 התווים הראשונים.',
+  'JSON columns cannot be uniquely indexed. Use VARCHAR, or store a unique key in a separate column.':
+    'לא ניתן ליצור אינדקס ייחודי על עמודות JSON. השתמשו ב-VARCHAR, או שמרו מפתח ייחודי בעמודה נפרדת.',
+  'MySQL cannot uniquely index TEXT or BLOB columns without a key length. Use VARCHAR with a defined length, or create a prefix index.':
+    'MySQL לא יכול ליצור אינדקס ייחודי על עמודות TEXT או BLOB בלי אורך מפתח. השתמשו ב-VARCHAR עם אורך מוגדר, או צרו אינדקס עם קידומת.',
+  'Existing rows were filled with an empty value, which is not unique. Allow NULL, or add the column first and fill distinct values.':
+    'שורות קיימות מולאו בערך ריק, שאינו ייחודי. אפשרו NULL, או הוסיפו את העמודה ואז מלאו ערכים שונים.',
   'Store multiple values of this type in a single column.':
     'שמירת מספר ערכים מסוג זה בעמודה אחת.',
   'Use lowercase letters and underscores, for example column_name.':
@@ -1089,6 +1110,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Share of blocks served from memory instead of disk.': 'שיעור הבלוקים שסופקו מהזיכרון במקום מהדיסק.',
   'Show less': 'הצגת פחות',
   'Show more': 'הצגת עוד',
+  'Show database tools': 'הצגת כלי מסד הנתונים',
   'Show encrypted values': 'הצגת ערכים מוצפנים',
   'Show password': 'הצגת סיסמה',
   'Show, hide, and reorder table columns': 'הצגה, הסתרה ושינוי סדר של עמודות הטבלה',
@@ -1103,6 +1125,14 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Specifications': 'מפרטים',
   'Rename query tab': 'שינוי שם לשונית השאילתה',
   'SQL editor': 'עורך SQL',
+  'Expression': 'ביטוי',
+  'Expression': 'ביטוי',
+  'Stored as data. Quotes and escaping are applied for you.':
+    'נשמר כנתונים. מרכאות וטיפול בתווים מיוחדים מתווספים אוטומטית.',
+  'Passed to the database as SQL, for example CURRENT_TIMESTAMP.':
+    'מועבר למסד הנתונים כ-SQL, לדוגמה CURRENT_TIMESTAMP.',
+  'Passed to the database as SQL, for example now() or gen_random_uuid().':
+    'מועבר למסד הנתונים כ-SQL, לדוגמה now() או gen_random_uuid().',
   'Started': 'זמן התחלה',
   'Connection state': 'מצב החיבור',
   'State change': 'שינוי מצב',
@@ -1167,6 +1197,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'The table will be permanently deleted, including all the rows within it. This action is irreversible.': 'הטבלה תימחק לצמיתות, כולל כל השורות שבה. פעולה זו אינה הפיכה.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
   'This column has multiple check constraints. Saving replaces them with a single check.': 'לעמודה זו יש כמה אילוצי check. שמירה תחליף אותם באילוץ check יחיד.',
+  'This check compares text to a number.': 'בדיקה זו משווה טקסט למספר.',
   'This column has multiple foreign keys. Saving replaces them with a single foreign key.': 'לעמודה זו יש כמה מפתחות זרים. שמירה תחליף אותם במפתח זר יחיד.',
   'This console does not create collection attributes from the grid. Use the Appwrite Documents API or your preferred SDK.': 'קונסולה זו אינה יוצרת מאפייני אוסף מתצוגת הגריד. השתמשו ב-Appwrite Documents API או ב-SDK המועדף עליכם.', // pragma: allowlist secret
   'This console does not create collection attributes from the grid. Use the Appwrite Vectors API or your preferred SDK.': 'קונסולה זו אינה יוצרת מאפייני אוסף מתצוגת הגריד. השתמשו ב-Appwrite Vectors API או ב-SDK המועדף עליכם.', // pragma: allowlist secret
@@ -1242,6 +1273,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Visual': 'חזותי',
   'Visualizer': 'תרשים סכימה',
   'Wait': 'המתנה',
+  'Will be stored as': 'יישמר כ-',
   'Wait event': 'אירוע המתנה',
   'Wednesday': 'רביעי',
   'Weekly': 'שבועי',
@@ -1670,8 +1702,8 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ה-primary הנוכחי הוא {instance}. בחרו read replica וקדמו אותו כדי להעביר תעבורת כתיבה.',
   'Refreshing cluster members…': 'מרענן חברי אשכול…',
   'Promote to primary': 'קידום ל-primary',
-  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
-    'לקדם את {instance} ל-primary? ה-primary הנוכחי יהפוך ל-read replica. ייתכן שכתיבות לא יהיו זמינות לזמן קצר עד לסיום ה-failover.',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes will still be available here while failover completes.':
+    'לקדם את {instance} ל-primary? ה-primary הנוכחי יהפוך ל-read replica. כתיבות יישארו זמינות כאן עד לסיום ה-failover.',
   'Promote the selected read replica to primary? The current primary will become a read replica.':
     'לקדם את read replica שנבחר ל-primary? ה-primary הנוכחי יהפוך ל-read replica.',
   'Failover started': 'Failover התחיל',

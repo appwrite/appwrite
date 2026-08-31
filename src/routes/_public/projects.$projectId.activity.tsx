@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/activity/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { canAccessProjectActivity } from '@/lib/console-rbac-loader'
 import { countriesQueryOptions } from '@/lib/react-query/hooks'
 
 const activitySearchSchema = z.object({
@@ -29,6 +30,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
+
+    const canAccess = await canAccessProjectActivity(queryClient, projectId)
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId',
+        params: { projectId },
+        replace: true,
+      })
+    }
 
     // Activity list uses an in-table skeleton; fetch runs once from `useProjectActivities`.
     // Prefetch only filter UI data (country enum for filters).

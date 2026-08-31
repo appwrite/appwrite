@@ -79,6 +79,13 @@ Exports run as background jobs, so a large collection doesn't block your workflo
 
 Open the database and select the **Export / Import** tab to watch the job and download the file once it completes.
 
+{% only_dark %}
+![Export / Import page of a database](/images/docs/products/databases/vectorsdb/dark/import-export.avif)
+{% /only_dark %}
+{% only_light %}
+![Export / Import page of a database](/images/docs/products/databases/vectorsdb/import-export.avif)
+{% /only_light %}
+
 # Use cases {% #use-cases %}
 
 CSV exports are useful for many common workflows:

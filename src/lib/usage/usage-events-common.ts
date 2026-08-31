@@ -31,7 +31,6 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
@@ -923,8 +922,7 @@ async function fetchUsageMetricSeries(
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   options?: FetchUsageOverviewOptions,
 ): Promise<UsageMetricSeriesResult> {
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType
@@ -977,8 +975,7 @@ export async function fetchProjectUsageMetricsOverview(
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
   }
 
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
   const resourceId = options?.resourceId
   const resourceType = options?.resourceType

@@ -1,5 +1,3 @@
-import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
-
 export const DIAGRAM_SIZE_PRESETS = [
   { id: 'og', label: 'Open Graph', width: 1200, height: 630 },
   { id: 'blog', label: 'Blog post (16:9)', width: 1920, height: 1080 },
@@ -35,11 +33,12 @@ export function resolveDiagramSizePresetKey(key: string): { width: number; heigh
     return { width: Math.round(width), height: Math.round(height) }
   }
 
-  return { width: COVER_WIDTH, height: COVER_HEIGHT }
+  return { width: DIAGRAM_DEFAULT_WIDTH, height: DIAGRAM_DEFAULT_HEIGHT }
 }
 
-export const DIAGRAM_DEFAULT_WIDTH = COVER_WIDTH
-export const DIAGRAM_DEFAULT_HEIGHT = COVER_HEIGHT
+/** Diagrams keep classic OG defaults; cover generator uses 16:9 independently. */
+export const DIAGRAM_DEFAULT_WIDTH = 1200
+export const DIAGRAM_DEFAULT_HEIGHT = 630
 
 /** Display artboard width in the generator canvas at 100% zoom. */
 export const DIAGRAM_ARTBOARD_DISPLAY_WIDTH = 720

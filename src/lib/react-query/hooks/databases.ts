@@ -14,7 +14,12 @@ import {
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
 import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate, EmbeddingModel } from '@appwrite.io/console'
-import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
+import {
+  DatabaseType,
+  coerceDatabaseType,
+  engineFromDatabaseTypeValue,
+  toSdkDatabaseType,
+} from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
@@ -1569,18 +1574,31 @@ export async function updateProductDatabaseSpecification(
 }
 
 /**
- * Delete a database on the correct product SDK.
+ * Delete a database on the correct product or native-engine SDK.
+ *
+ * `dbKindOrType` may be a product route kind (`tablesdb` / `documentsdb` /
+ * `vectorsdb`) or a native engine type (`postgresql` / `mysql` / `mongodb`).
+ * Native types must not fall through to TablesDB — that is what broke context-
+ * menu delete for Postgres (settings used `postgresql.delete` directly).
  */
 export async function deleteProjectDatabase(
   projectId: string,
   databaseId: string,
-  dbKind: DatabaseRouteKind,
+  dbKindOrType: DatabaseRouteKind | string,
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
   }
   const projectSdk = sdk.forProject(projectId)
-  const kind = resolveProjectDatabaseType(dbKind)
+
+  const engine = engineFromDatabaseTypeValue(dbKindOrType)
+  if (engine) {
+    return await dedicatedEngineService(projectSdk, engine).delete({
+      databaseId,
+    })
+  }
+
+  const kind = resolveProjectDatabaseType(dbKindOrType as DatabaseRouteKind)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.delete({ databaseId })

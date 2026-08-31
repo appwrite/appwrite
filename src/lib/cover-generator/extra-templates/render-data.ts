@@ -9,7 +9,7 @@ import {
   getCoverChartPlotArea,
   getCoverChartYAxisMax,
 } from '@/lib/cover-generator/chart/layout'
-import { COVER_HEIGHT } from '@/lib/cover-generator/constants'
+import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
 import { getCoverFrameWidthPx } from '@/lib/cover-generator/cover-frame-width'
 import { getCoverScreenshotGlassColors } from '@/lib/cover-generator/cover-screenshot-frame'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
@@ -225,7 +225,7 @@ export function renderDonutChartTemplateSvg(
   const textHeight = titleHeight + subtitleGap + subtitleHeight
   const textStartY = Math.round((COVER_HEIGHT - textHeight) / 2)
 
-  const donutCx = 1200 - 96 - DONUT_RADIUS - 24
+  const donutCx = COVER_WIDTH - 96 - DONUT_RADIUS - 24
   const donutCy = COVER_HEIGHT / 2
   const circumference = 2 * Math.PI * DONUT_RADIUS
   const percent = Math.min(100, Math.max(0, data.percent))

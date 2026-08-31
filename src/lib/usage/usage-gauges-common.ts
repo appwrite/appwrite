@@ -8,7 +8,6 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
   fillGaugeChartPointsGaps,
@@ -699,9 +698,7 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
   )
 
   const includeBreakdown =
-    options?.includeBreakdown !== false &&
-    breakdown != null &&
-    areUsageBreakdownQueriesEnabled()
+    options?.includeBreakdown !== false && breakdown != null
   const queries = options?.queries
 
   const [snapshotGroups, topConsumers] = await Promise.all([

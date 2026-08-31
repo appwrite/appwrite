@@ -8,12 +8,17 @@ export {
 
 export type { CoverThemeId as CoverTheme } from '@/lib/cover-generator/themes'
 
+/**
+ * Layout artboard size (16:9). Templates compose in this space, then scale
+ * uniformly into the selected export canvas. Matches blog cover aspect ratio
+ * (`BLOG_COVER_ASPECT_CLASS` / Google Discover-friendly covers).
+ */
 export const COVER_WIDTH = 1200
-export const COVER_HEIGHT = 630
+export const COVER_HEIGHT = 675
 
 export const COVER_SIZE_PRESETS = [
+  { id: 'blog', label: 'Blog', width: 1920, height: 1080 },
   { id: 'og', label: 'Open Graph', width: 1200, height: 630 },
-  { id: 'blog', label: 'Blog post (16:9)', width: 1920, height: 1080 },
   { id: 'twitter', label: 'Twitter / X', width: 1600, height: 900 },
   { id: 'square', label: 'Square', width: 1080, height: 1080 },
   { id: 'story', label: 'Story', width: 1080, height: 1920 },
@@ -21,6 +26,16 @@ export const COVER_SIZE_PRESETS = [
 ] as const
 
 export type CoverSizePresetId = (typeof COVER_SIZE_PRESETS)[number]['id']
+
+/** Default export: blog cover at 1920×1080 (16:9, ≥1200px wide for Discover). */
+export const DEFAULT_COVER_SIZE_PRESET_ID = 'blog' satisfies CoverSizePresetId
+
+export function getDefaultCoverSize(): { width: number; height: number } {
+  const preset = COVER_SIZE_PRESETS.find((item) => item.id === DEFAULT_COVER_SIZE_PRESET_ID)
+  return preset
+    ? { width: preset.width, height: preset.height }
+    : { width: COVER_WIDTH, height: COVER_HEIGHT }
+}
 
 export function getCoverSizePresetKey(width: number, height: number): string {
   const match = COVER_SIZE_PRESETS.find(
@@ -47,7 +62,7 @@ export function resolveCoverSizePresetKey(key: string): { width: number; height:
     return { width: Math.round(width), height: Math.round(height) }
   }
 
-  return { width: COVER_WIDTH, height: COVER_HEIGHT }
+  return getDefaultCoverSize()
 }
 
 export const COVER_TEMPLATE_IDS = [

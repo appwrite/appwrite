@@ -8,7 +8,14 @@ import { useQuery, queryOptions } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { DEFAULT_STALE_TIME, TINY_PAGE_SIZE } from './constants'
+
+export function backupResourceTypeForDbKind(dbKind?: DatabaseRouteKind): string {
+  if (dbKind === 'documentsdb') return 'documentsdb'
+  if (dbKind === 'vectorsdb') return 'vectorsdb'
+  return 'database'
+}
 
 const IN_PROGRESS_RESTORATION_STATUSES = [
   'pending',
@@ -37,6 +44,7 @@ const RECENT_RESTORATION_WINDOW_MS = 24 * 60 * 60 * 1000
 export async function fetchBackupPolicies(
   projectId: string,
   databaseId: string,
+  dbKind?: DatabaseRouteKind,
 ): Promise<Models.BackupPolicyList> {
   if (!projectId || !databaseId) {
     return { policies: [], total: 0 }
@@ -45,7 +53,7 @@ export async function fetchBackupPolicies(
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     Query.orderDesc('$createdAt'),
-    Query.equal('resourceType', 'database'),
+    Query.equal('resourceType', backupResourceTypeForDbKind(dbKind)),
     Query.equal('resourceId', databaseId),
   ]
 
@@ -63,6 +71,7 @@ export async function fetchBackupArchives(
   databaseId: string,
   page: number = 0,
   limit: number = TINY_PAGE_SIZE,
+  dbKind?: DatabaseRouteKind,
 ): Promise<Models.BackupArchiveList> {
   if (!projectId || !databaseId) {
     return { archives: [], total: 0 }
@@ -73,7 +82,7 @@ export async function fetchBackupArchives(
     Query.limit(limit),
     Query.offset(page * limit),
     Query.orderDesc('$createdAt'),
-    Query.equal('resourceType', 'database'),
+    Query.equal('resourceType', backupResourceTypeForDbKind(dbKind)),
     Query.equal('resourceId', databaseId),
   ]
 
@@ -93,10 +102,18 @@ export async function fetchBackupArchives(
 export function backupPoliciesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind?: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
-    queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
+    queryKey: [
+      'backup-policies',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      backupResourceTypeForDbKind(dbKind),
+    ],
+    queryFn: () => fetchBackupPolicies(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -117,6 +134,7 @@ export function backupArchivesQueryOptions(
   databaseId: string | null | undefined,
   page: number = 0,
   limit: number = TINY_PAGE_SIZE,
+  dbKind?: DatabaseRouteKind,
 ) {
   return queryOptions({
     queryKey: [
@@ -127,8 +145,10 @@ export function backupArchivesQueryOptions(
       databaseId,
       page,
       limit,
+      backupResourceTypeForDbKind(dbKind),
     ],
-    queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
+    queryFn: () =>
+      fetchBackupArchives(projectId!, databaseId!, page, limit, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -149,9 +169,13 @@ export function backupArchivesQueryOptions(
 export function useBackupPolicies(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; dbKind?: DatabaseRouteKind },
 ) {
-  const queryOpts = backupPoliciesQueryOptions(projectId, databaseId)
+  const queryOpts = backupPoliciesQueryOptions(
+    projectId,
+    databaseId,
+    options?.dbKind,
+  )
   return useQuery({
     ...queryOpts,
     enabled: queryOpts.enabled && (options?.enabled ?? true),
@@ -166,13 +190,14 @@ export function useBackupArchives(
   databaseId: string | null | undefined,
   page: number = 0,
   limit: number = TINY_PAGE_SIZE,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; dbKind?: DatabaseRouteKind },
 ) {
   const queryOpts = backupArchivesQueryOptions(
     projectId,
     databaseId,
     page,
     limit,
+    options?.dbKind,
   )
   return useQuery({
     ...queryOpts,
@@ -407,6 +432,7 @@ function isRecentRestoration(restoration: Models.BackupRestoration): boolean {
 export async function fetchDatabaseRestoreMigrations(
   projectId: string,
   databaseId: string,
+  dbKind?: DatabaseRouteKind,
 ): Promise<Models.BackupRestoration[]> {
   if (!projectId || !databaseId) return []
 
@@ -422,7 +448,7 @@ export async function fetchDatabaseRestoreMigrations(
     }),
     projectSdk.backups.listArchives({
       queries: [
-        Query.equal('resourceType', 'database'),
+        Query.equal('resourceType', backupResourceTypeForDbKind(dbKind)),
         Query.equal('resourceId', databaseId),
         Query.orderDesc('$createdAt'),
         Query.limit(100),
@@ -453,6 +479,7 @@ export async function fetchDatabaseRestoreMigrations(
 export function databaseRestoreMigrationsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind?: DatabaseRouteKind,
 ) {
   return queryOptions({
     queryKey: [
@@ -462,8 +489,10 @@ export function databaseRestoreMigrationsQueryOptions(
       'database',
       databaseId,
       'recent-migrations',
+      backupResourceTypeForDbKind(dbKind),
     ],
-    queryFn: () => fetchDatabaseRestoreMigrations(projectId!, databaseId!),
+    queryFn: () =>
+      fetchDatabaseRestoreMigrations(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: 15 * 1000,
     refetchInterval: (query) => {
@@ -491,9 +520,13 @@ export function databaseRestoreMigrationsQueryOptions(
 export function useDatabaseRestoreMigrations(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; dbKind?: DatabaseRouteKind },
 ) {
-  const queryOpts = databaseRestoreMigrationsQueryOptions(projectId, databaseId)
+  const queryOpts = databaseRestoreMigrationsQueryOptions(
+    projectId,
+    databaseId,
+    options?.dbKind,
+  )
   return useQuery({
     ...queryOpts,
     enabled: queryOpts.enabled && (options?.enabled ?? true),

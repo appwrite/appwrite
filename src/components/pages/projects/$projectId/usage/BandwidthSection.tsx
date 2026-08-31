@@ -46,14 +46,16 @@ import {
 } from '@/lib/usage/usage-events-common'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
+  useOrganizationPlan,
+  useProject,
   useProjectBandwidthBreakdowns,
   useProjectBandwidthChartOnly,
   useCountryLookups,
   refetchProjectBandwidthUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
+import { canShowBandwidthUsageBreakdown } from '@/lib/usage/aggregate-only-metrics'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { Skeleton } from '@/components/ui/skeleton'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
@@ -462,11 +464,12 @@ export function BandwidthSection({
 }: BandwidthSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
   const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BandwidthBreakdownDrawerState | null>(null)
-  const showBreakdown = !disableUsageBreakdownQueries
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const showBreakdown = canShowBandwidthUsageBreakdown(organizationPlan)
   const { lookups: countryLookups } = useCountryLookups()
 
   const {

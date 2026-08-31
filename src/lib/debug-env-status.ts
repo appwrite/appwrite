@@ -95,7 +95,7 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
   {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
     group: 'Runtime',
-    description: 'Pre-launch lock (only /init; unset = on)',
+    description: 'Pre-launch lock (only /init; unset = off)',
   },
   {
     key: 'VITE_CONSTRUCTION',

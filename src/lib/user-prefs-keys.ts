@@ -2388,6 +2388,34 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: admin nav collapsed (Credentials, Monitor, Connections, …)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.databases.adminNavCollapsed` - admin links hidden when true. */
+export const USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED =
+  'console.databases.adminNavCollapsed'
+
+export function parseDatabaseAdminNavCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED],
+    ) ?? false
+  )
+}
+
+export function mergeDatabaseAdminNavCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED]: collapsed,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Connect project dialog tab (account prefs)
 // ---------------------------------------------------------------------------
 
