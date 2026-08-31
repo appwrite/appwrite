@@ -12,6 +12,7 @@ import {
   INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { INIT_JULY_2026_PRIZES } from './prizes'
+import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
 import {
@@ -60,7 +61,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     },
     liveBanner: {
       title: 'Appwrite 2.0 launch',
-      href: '/init/keynote',
+      href: INIT_YOUTUBE_CHANNEL_HREF,
     },
     onlineCount: 0,
     hiddenOnlineCount: 0,

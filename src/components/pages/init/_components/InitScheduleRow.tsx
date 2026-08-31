@@ -42,9 +42,7 @@ export function InitScheduleRow({
   const sessionActivity = buildInitCheckingScheduleActivity(item.day)
   const actionHref =
     item.href ??
-    (item.platform === 'youtube'
-      ? event.liveBanner?.href ?? INIT_YOUTUBE_CHANNEL_HREF
-      : undefined)
+    (item.platform === 'youtube' ? INIT_YOUTUBE_CHANNEL_HREF : undefined)
   const resolvedAction =
     useInitHref(actionHref) ??
     (item.platform === 'youtube'

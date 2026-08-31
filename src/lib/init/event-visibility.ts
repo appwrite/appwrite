@@ -58,12 +58,15 @@ function resolveInitLiveBanner(
   )
   if (!liveSession) return undefined
 
+  // The banner follows whichever day is live, so it takes that session's link.
+  const href = liveSession.href ?? event.liveBanner.href
+
   if (hasInitScheduleStarted(liveSession.startsAt, nowMs)) {
-    return { ...event.liveBanner, mode: 'live' }
+    return { ...event.liveBanner, href, mode: 'live' }
   }
 
   if (isInitScheduleStartingSoon(liveSession.startsAt, nowMs)) {
-    return { ...event.liveBanner, mode: 'startingSoon' }
+    return { ...event.liveBanner, href, mode: 'startingSoon' }
   }
 
   return undefined

@@ -5,6 +5,7 @@ import {
   Shield,
 } from 'lucide-react'
 import type { LaunchEventDay, LaunchEventScheduleItem } from './types'
+import { INIT_DAY_STREAM_HREFS } from './links'
 
 export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   {
@@ -289,6 +290,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Appwrite 2.0 launch stream',
     startsAt: '2026-08-31T09:00:00-07:00',
     isLive: true,
+    href: INIT_DAY_STREAM_HREFS[1],
   },
   {
     id: 'sched-reddit-ama',
@@ -305,6 +307,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'PostgreSQL deep dive',
     // Day 2 runs later than the rest of the week.
     startsAt: '2026-09-01T13:30:00-07:00',
+    href: INIT_DAY_STREAM_HREFS[2],
   },
   {
     id: 'sched-reddit-databases-ama',
@@ -320,6 +323,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'VectorsDB, DocumentsDB & MySQL deep dive',
     startsAt: '2026-09-02T09:00:00-07:00',
+    href: INIT_DAY_STREAM_HREFS[3],
   },
   {
     id: 'sched-reddit-servers-ama',
@@ -335,6 +339,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'S3 for Appwrite Storage',
     startsAt: '2026-09-03T09:00:00-07:00',
+    href: INIT_DAY_STREAM_HREFS[4],
   },
   {
     id: 'sched-reddit-s3-ama',
@@ -350,6 +355,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'Firewall, OAuth, and Domains launch stream',
     startsAt: '2026-09-04T09:00:00-07:00',
+    href: INIT_DAY_STREAM_HREFS[5],
   },
   {
     id: 'sched-reddit-recap-ama',
