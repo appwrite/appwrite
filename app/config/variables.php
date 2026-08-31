@@ -351,7 +351,7 @@ return [
             ],
             [
                 'name' => '_APP_REALTIME_SOCKET_BUFFER_SIZE',
-                'description' => 'Maximum bytes the Realtime server will hold per connection for a client that is not keeping up. A connection that exceeds it is disconnected and expected to reconnect, rather than growing the server\'s memory without limit. Defaults to 512KB.',
+                'description' => 'Maximum bytes the Realtime server will hold per connection for a client that is not keeping up. A connection that exceeds it is disconnected and expected to reconnect. Swoole\'s own default is 8MB per connection, which a few thousand stalled connections can turn into more memory than the container has. Defaults to 512KB.',
                 'introduction' => '1.9.0',
                 'default' => 524288,
                 'required' => false,

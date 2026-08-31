@@ -396,15 +396,18 @@ $statsDocument = null;
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0))
     ?: intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
-// The buffer cap bounds what a client that has stopped draining can make the reactor
-// hold on its behalf. Uncapped, the reactor buffers every undelivered frame in process
-// memory without limit while push() still reports success; that is what OOMKills
-// realtime containers. Worst case is now size x connections, so 512KB against ~1200
-// connections bounds the buffers at ~600MB. Raise it if legitimate clients on slow links
-// are being disconnected, lower it if containers still run out of memory.
+// Bounds what a client that has stopped draining can make the reactor hold on its
+// behalf. Swoole's own default is 8MB per connection, so ~1200 connections can ask for
+// 9.6GB before anything is refused; that is what OOMKills realtime containers. Exposure
+// is size x connections, so the library's 512KB default bounds it at ~600MB here. Raise
+// it if legitimate clients on slow links are being disconnected, lower it if containers
+// still run out of memory.
 $adapter = new Adapter\Swoole(
     port: System::getEnv('PORT', 80),
-    socketBufferSize: intval(System::getEnv('_APP_REALTIME_SOCKET_BUFFER_SIZE', 524288)),
+    socketBufferSize: intval(System::getEnv(
+        '_APP_REALTIME_SOCKET_BUFFER_SIZE',
+        Adapter\Swoole::DEFAULT_SOCKET_BUFFER_SIZE
+    )),
 );
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
