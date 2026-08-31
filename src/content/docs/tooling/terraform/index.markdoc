@@ -4,7 +4,7 @@ title: Terraform provider
 description: Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.
 ---
 
-The [Terraform provider for Appwrite](https://github.com/appwrite/terraform-provider-appwrite) lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **dedicated databases** (PostgreSQL, MySQL, and MongoDB), **DocumentsDB** and **VectorsDB**, **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, **projects**, **custom domains**, and more in `.tf` files, and apply those changes through [HashiCorp Terraform](https://www.terraform.io/). It is the official way to automate Appwrite project configuration alongside the rest of your stack.
+The [Terraform provider for Appwrite](https://github.com/appwrite/terraform-provider-appwrite) lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **dedicated databases** (PostgreSQL, MySQL, and MongoDB), **DocumentsDB** and **VectorsDB**, **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, **custom domains**, and more in `.tf` files, and apply those changes through [HashiCorp Terraform](https://www.terraform.io/). It is the official way to automate Appwrite project configuration alongside the rest of your stack.
 
 # Resources {% #resources %}
 
@@ -23,7 +23,6 @@ Resource types use the `appwrite_` prefix and match the [Terraform Registry](htt
 | Messaging | `appwrite_messaging_provider`, `appwrite_messaging_topic`, `appwrite_messaging_subscriber` |
 | Webhooks | `appwrite_webhook` |
 | Backups | `appwrite_backup_policy` |
-| Projects | `appwrite_project`, `appwrite_project_key` |
 | Custom domains | `appwrite_proxy_rule` |
 
 # Data sources {% #data-sources %}
@@ -119,9 +118,6 @@ Event delivery to your HTTP endpoints.
 {% /cards_item %}
 {% cards_item href="/docs/tooling/terraform/resources/backups" title="Backups" %}
 Backup policies where supported.
-{% /cards_item %}
-{% cards_item href="/docs/tooling/terraform/resources/projects" title="Projects" %}
-Projects and project API keys.
 {% /cards_item %}
 {% cards_item href="/docs/tooling/terraform/resources/domains" title="Custom domains" %}
 Proxy rules for sites and functions.

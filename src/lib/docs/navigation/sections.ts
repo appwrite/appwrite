@@ -2650,10 +2650,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               href: "/docs/tooling/terraform/resources/backups",
             },
             {
-              label: "Projects",
-              href: "/docs/tooling/terraform/resources/projects",
-            },
-            {
               label: "Custom domains",
               href: "/docs/tooling/terraform/resources/domains",
             },

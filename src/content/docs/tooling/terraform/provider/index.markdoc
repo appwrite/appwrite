@@ -53,10 +53,6 @@ You can supply credentials via environment variables instead of hard-coding them
 export APPWRITE_ENDPOINT="https://<REGION>.cloud.appwrite.io/v1"
 export APPWRITE_PROJECT_ID="project-id"
 export APPWRITE_API_KEY="api-key"
-
-# Only needed for organization-scoped resources
-export APPWRITE_ORGANIZATION_ID="organization-id"
-export APPWRITE_ORGANIZATION_API_KEY="organization-api-key"
 ```
 
 When an environment variable is set, the matching provider argument does not need to appear in the configuration. Values set directly in the `provider` block take precedence over the environment.
@@ -66,35 +62,8 @@ When an environment variable is set, the matching provider argument does not nee
 | `endpoint` | `APPWRITE_ENDPOINT` | yes | Appwrite API endpoint |
 | `project_id` | `APPWRITE_PROJECT_ID` | no | Default project ID for resources (omit if you set `project_id` on each resource) |
 | `api_key` | `APPWRITE_API_KEY` | yes | API key with permissions for the resources you manage |
-| `organization_id` | `APPWRITE_ORGANIZATION_ID` | no | Default organization ID for organization-scoped resources |
-| `organization_api_key` | `APPWRITE_ORGANIZATION_API_KEY` | no | Organization key for projects and project API keys. Falls back to `api_key` |
 | `self_signed` | - | no | Accept self-signed TLS certificates (Community Edition) |
 | `http_timeout_seconds` | - | no | How long to wait for a single API response. Defaults to 120 |
-
-# Organization credentials {% #organization-credentials %}
-
-Most resources live inside a project and authenticate with a project `api_key`. [Projects and project API keys](/docs/tooling/terraform/resources/projects) sit **above** a project, so they need an **organization** key instead — supplied as `organization_api_key`, with `organization_id` naming the organization.
-
-```hcl
-provider "appwrite" {
-  endpoint   = "https://<REGION>.cloud.appwrite.io/v1"
-  project_id = "project-id"
-  api_key    = var.appwrite_api_key
-
-  organization_id      = "organization-id"
-  organization_api_key = var.appwrite_organization_api_key
-}
-```
-
-`organization_api_key` falls back to `api_key` when omitted, for backwards compatibility. The provider recognises modern key prefixes and reports an actionable error when a resource is handed the wrong kind of credential; legacy unprefixed keys are validated by Appwrite itself.
-
-| Resource | Credential | Scopes |
-|----------|------------|--------|
-| `appwrite_project` | `organization_api_key` | `projects.read`, `projects.write` |
-| `appwrite_project_key` | `organization_api_key` | `keys.read`, `keys.write` |
-| Everything else | `api_key` | Per product, for example `rules.*` for proxy rules |
-
-Both `organization_id` and `project_id` can also be set per resource, which is what lets one configuration manage several organizations or projects at once.
 
 # Request timeouts {% #request-timeouts %}
 
@@ -130,7 +99,6 @@ Use a key with the scopes required for the resources you manage (for example Tab
 # Related {% #related %}
 
 - [Overview](/docs/tooling/terraform): full resource list
-- [Projects](/docs/tooling/terraform/resources/projects): projects and project API keys
 - [TablesDB](/docs/tooling/terraform/resources/databases): databases, tables, columns, indexes, and rows
 - [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
 - [DocumentsDB](/docs/tooling/terraform/resources/documentsdb) and [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): document and embedding collections

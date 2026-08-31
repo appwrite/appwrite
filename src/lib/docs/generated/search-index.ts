@@ -6321,7 +6321,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
-    "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **dedicated databases** (PostgreSQL, MySQL, and MongoDB), **DocumentsDB** and **VectorsDB**, **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, **projects**, **custom domains**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use…",
+    "excerpt": "The Terraform provider for Appwrite lets you declare **TablesDB** (databases, tables, columns, indexes, rows), **dedicated databases** (PostgreSQL, MySQL, and MongoDB), **DocumentsDB** and **VectorsDB**, **Storage** (buckets and files), **Auth** (users and teams), **Functions** (functions and variables), **Sites** (sites and variables), **Messaging** (providers, topics, subscribers), **webhooks**, **backup policies**, **custom domains**, and more in files, and apply those changes through HashiCorp Terraform. It is the official way to automate Appwrite project configuration alongside the rest of your stack. Resources Resource types use the…",
     "breadcrumbs": [
       "Tooling",
       "Getting started",
@@ -6425,17 +6425,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "Resources",
       "Messaging"
-    ]
-  },
-  {
-    "slug": "tooling/terraform/resources/projects",
-    "title": "Projects",
-    "description": "Provision Appwrite projects and manage project API keys with Terraform, including the organization credentials they require.",
-    "excerpt": "Most provider resources live **inside** a project. These two sit above it: creates the project itself within an organization, and manages a project's API keys. For full generated schemas, see the Terraform Registry: project and project_key. Resources | Resource | Purpose | |----------|---------| | | Create a project within an organization | | | Manage a project API key's name, scopes, and expiry | Both are **organization-scoped**, so they authenticate with (or ) rather than the project . Projects need…",
-    "breadcrumbs": [
-      "Tooling",
-      "Resources",
-      "Projects"
     ]
   },
   {

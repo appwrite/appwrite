@@ -4057,7 +4057,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Configuration",
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/auth",
@@ -4114,13 +4114,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
     "layout": "article",
     "readingTimeMinutes": 2
-  },
-  {
-    "slug": "tooling/terraform/resources/projects",
-    "title": "Projects",
-    "description": "Provision Appwrite projects and manage project API keys with Terraform, including the organization credentials they require.",
-    "layout": "article",
-    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/sites",

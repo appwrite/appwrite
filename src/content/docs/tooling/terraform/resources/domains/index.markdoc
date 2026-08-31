@@ -65,5 +65,4 @@ Some installations derive the rule ID as `md5(lower(domain))`, but others use ge
 
 - [Sites](/docs/tooling/terraform/resources/sites): sites you can put behind a domain
 - [Functions](/docs/tooling/terraform/resources/functions): functions you can put behind a domain
-- [Projects](/docs/tooling/terraform/resources/projects): projects and project API keys
 - [Configuration](/docs/tooling/terraform/provider): authentication and endpoints
