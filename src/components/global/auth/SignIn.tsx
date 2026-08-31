@@ -490,7 +490,7 @@ export function SignIn({
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="m@example.com"
+                          placeholder={t('Your email')}
                           {...field}
                         />
                       </FormControl>
@@ -509,6 +509,7 @@ export function SignIn({
                         <FormControl>
                           <Input
                             type={showPassword ? 'text' : 'password'}
+                            placeholder={t('Your password')}
                             autoComplete={
                               mode === 'sign-up'
                                 ? 'new-password'
