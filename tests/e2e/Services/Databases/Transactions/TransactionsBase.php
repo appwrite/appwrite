@@ -2669,11 +2669,11 @@ trait TransactionsBase
     }
 
     /**
-     * Commit bulkUpdate/bulkDelete with SDK query strings and decoded query arrays.
+     * Reject bulkUpdate/bulkDelete with decoded query arrays.
      */
-    public function testUpdateBulkOperationsWithArrayQueries(): void
+    public function testCreateBulkOperationsWithArrayQueries(): void
     {
-        // Test for SUCCESS
+        // Test for FAILURE
         $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2763,59 +2763,31 @@ trait TransactionsBase
                         'data' => ['name' => 'updated'],
                     ],
                 ],
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
                 [
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'bulkDelete',
                     'data' => [
-                        'queries' => [
-                            Query::equal('category', ['drop'])->toString(),
-                            Query::equal('name', ['drop_1', 'drop_2'])->toArray(),
-                        ],
+                        'queries' => [Query::equal('category', ['drop'])->toArray()],
                     ],
                 ],
             ]
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'transactionId' => $transactionId
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-
-        foreach ($response['body'][$this->getRecordResource()] as $doc) {
-            $this->assertEquals('keep', $doc['category']);
-            $this->assertEquals('updated', $doc['name']);
-        }
-
-        $response = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'commit' => true
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code'], \json_encode($response['body']));
-
-        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-
-        foreach ($response['body'][$this->getRecordResource()] as $doc) {
-            $this->assertEquals('keep', $doc['category']);
-            $this->assertEquals('updated', $doc['name']);
-        }
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
     }
 
     /**
