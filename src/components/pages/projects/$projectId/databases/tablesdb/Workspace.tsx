@@ -1395,6 +1395,7 @@ export function Workspace({
           <DatabaseBackupsNavLink
             projectId={projectId}
             databaseId={databaseId}
+            dbKind={DB_KIND}
             disabled={provisioning}
             disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             {...dbNav.backups(tableNavParams)}
@@ -1787,6 +1788,7 @@ export function Workspace({
               <DatabaseSectionSelector
                 projectId={projectId}
                 databaseId={databaseId}
+                dbKind={DB_KIND}
                 value={mobileSectionValue}
                 tablesLabel={dbLabels.databaseOverviewTabLabel}
                 tablesIcon={ContainerListIcon}

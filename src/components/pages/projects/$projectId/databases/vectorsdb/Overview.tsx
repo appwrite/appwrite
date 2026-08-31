@@ -1141,7 +1141,9 @@ export function Overview({
           </div>
         )}
 
-        {activeTab === 'backups' && <BackupsView databaseId={databaseId} />}
+        {activeTab === 'backups' && (
+          <BackupsView databaseId={databaseId} dbKind={DB_KIND} />
+        )}
 
         {activeTab === 'export-import' && (
           <ExportImportView databaseId={databaseId} />
