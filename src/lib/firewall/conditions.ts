@@ -392,6 +392,108 @@ export function serializeFirewallConditions(
     .filter((value): value is string => Boolean(value))
 }
 
+/** Query methods that nest other query objects in `values` (not leaf filters). */
+const COMPOUND_CONDITION_METHODS = new Set(['and', 'or'])
+
+/**
+ * Coerce a condition value for display without calling `String(object)`.
+ * Appwrite's SDK parses API JSON with json-bigint, which yields null-prototype
+ * objects; `String(nullProtoObject)` throws "Cannot convert object to primitive value".
+ */
+function coerceConditionValue(value: unknown): string {
+  if (value == null) return ''
+  switch (typeof value) {
+    case 'string':
+      return value
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+      return String(value)
+    case 'object':
+      try {
+        return JSON.stringify(value)
+      } catch {
+        return ''
+      }
+    default:
+      return ''
+  }
+}
+
+function coerceConditionValues(valuesRaw: unknown): string[] {
+  if (Array.isArray(valuesRaw)) {
+    return valuesRaw.map(coerceConditionValue).filter((value) => value.length > 0)
+  }
+  if (valuesRaw == null) return []
+  const value = coerceConditionValue(valuesRaw)
+  return value ? [value] : []
+}
+
+function readConditionRecord(
+  item: object,
+): { method: string; attribute: string; valuesRaw: unknown } {
+  const record = item as Record<string, unknown>
+  const method = coerceConditionValue(
+    record.method ?? record.operator ?? 'equal',
+  )
+  const attribute = coerceConditionValue(
+    record.attribute ?? record.field ?? record.key ?? '',
+  )
+  return {
+    method: method || 'equal',
+    attribute: attribute || 'condition',
+    valuesRaw: record.values ?? record.value,
+  }
+}
+
+/**
+ * Parse one condition entry into leaf conditions.
+ * Compound `and` / `or` queries are expanded so nested query objects are never
+ * passed through `String()` (which throws on json-bigint null-prototype objects).
+ */
+function parseConditionItem(item: unknown): ParsedFirewallCondition[] {
+  if (typeof item === 'string') {
+    try {
+      const parsed = JSON.parse(item) as unknown
+      if (parsed && typeof parsed === 'object') {
+        return parseConditionItem(parsed)
+      }
+      return [
+        {
+          attribute: 'condition',
+          operator: 'equal',
+          values: [item],
+        },
+      ]
+    } catch {
+      return [
+        {
+          attribute: 'condition',
+          operator: 'equal',
+          values: [item],
+        },
+      ]
+    }
+  }
+
+  if (!item || typeof item !== 'object') return []
+
+  const { method, attribute, valuesRaw } = readConditionRecord(item)
+
+  if (COMPOUND_CONDITION_METHODS.has(method)) {
+    const nested = Array.isArray(valuesRaw) ? valuesRaw : []
+    return nested.flatMap(parseConditionItem)
+  }
+
+  return [
+    {
+      attribute,
+      operator: method,
+      values: coerceConditionValues(valuesRaw),
+    },
+  ]
+}
+
 export function parseFirewallConditions(
   conditions: unknown,
 ): ParsedFirewallCondition[] {
@@ -410,48 +512,7 @@ export function parseFirewallConditions(
         ? Object.values(conditions as Record<string, unknown>)
         : []
 
-  return rawList
-    .map((item): ParsedFirewallCondition | null => {
-      if (typeof item === 'string') {
-        try {
-          const parsed = JSON.parse(item) as {
-            method?: string
-            attribute?: string
-            values?: unknown[]
-          }
-          if (!parsed.method || !parsed.attribute) return null
-          return {
-            attribute: parsed.attribute,
-            operator: parsed.method,
-            values: (parsed.values ?? []).map(String),
-          }
-        } catch {
-          return {
-            attribute: 'condition',
-            operator: 'equal',
-            values: [item],
-          }
-        }
-      }
-
-      if (item && typeof item === 'object') {
-        const record = item as Record<string, unknown>
-        const attribute = String(
-          record.attribute ?? record.field ?? record.key ?? 'condition',
-        )
-        const operator = String(record.method ?? record.operator ?? 'equal')
-        const valuesRaw = record.values ?? record.value
-        const values = Array.isArray(valuesRaw)
-          ? valuesRaw.map(String)
-          : valuesRaw != null
-            ? [String(valuesRaw)]
-            : []
-        return { attribute, operator, values }
-      }
-
-      return null
-    })
-    .filter((item): item is ParsedFirewallCondition => item != null)
+  return rawList.flatMap(parseConditionItem)
 }
 
 export function draftsFromParsedConditions(

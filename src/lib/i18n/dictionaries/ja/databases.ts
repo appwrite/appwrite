@@ -1641,8 +1641,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
     '現在のプライマリは {instance} です。書き込みトラフィックを移すには、読み取りレプリカを選択して昇格してください。',
   'Refreshing cluster members…': 'クラスタメンバーを更新中…',
   'Promote to primary': 'プライマリに昇格',
-  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
-    '{instance} をプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。フェイルオーバー完了まで書き込みが一時的に利用できない場合があります。',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes will still be available here while failover completes.':
+    '{instance} をプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。フェイルオーバー完了まで、書き込みは引き続きこちらで利用できます。',
   'Promote the selected read replica to primary? The current primary will become a read replica.':
     '選択した読み取りレプリカをプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。',
   'Failover started': 'フェイルオーバーを開始しました',

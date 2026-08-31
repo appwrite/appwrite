@@ -1702,8 +1702,8 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ה-primary הנוכחי הוא {instance}. בחרו read replica וקדמו אותו כדי להעביר תעבורת כתיבה.',
   'Refreshing cluster members…': 'מרענן חברי אשכול…',
   'Promote to primary': 'קידום ל-primary',
-  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
-    'לקדם את {instance} ל-primary? ה-primary הנוכחי יהפוך ל-read replica. ייתכן שכתיבות לא יהיו זמינות לזמן קצר עד לסיום ה-failover.',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes will still be available here while failover completes.':
+    'לקדם את {instance} ל-primary? ה-primary הנוכחי יהפוך ל-read replica. כתיבות יישארו זמינות כאן עד לסיום ה-failover.',
   'Promote the selected read replica to primary? The current primary will become a read replica.':
     'לקדם את read replica שנבחר ל-primary? ה-primary הנוכחי יהפוך ל-read replica.',
   'Failover started': 'Failover התחיל',
