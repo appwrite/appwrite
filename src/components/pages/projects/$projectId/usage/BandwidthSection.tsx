@@ -46,12 +46,15 @@ import {
 } from '@/lib/usage/usage-events-common'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
+  useOrganizationPlan,
+  useProject,
   useProjectBandwidthBreakdowns,
   useProjectBandwidthChartOnly,
   useCountryLookups,
   refetchProjectBandwidthUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
+import { canShowBandwidthUsageBreakdown } from '@/lib/usage/aggregate-only-metrics'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { Skeleton } from '@/components/ui/skeleton'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
@@ -464,7 +467,9 @@ export function BandwidthSection({
   const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BandwidthBreakdownDrawerState | null>(null)
-  const showBreakdown = true
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const showBreakdown = canShowBandwidthUsageBreakdown(organizationPlan)
   const { lookups: countryLookups } = useCountryLookups()
 
   const {

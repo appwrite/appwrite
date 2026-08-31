@@ -279,7 +279,8 @@ export const enCatalog = {
       heroImageAlt:
         'Appwrite console overview with usage charts, apps, and API keys', // pragma: allowlist secret
       startProject: 'Start project',
-      requestDemo: 'Request a demo',
+      viewDocs: 'View docs',
+      mcpIncluded: 'MCP included',
       toolsHeading: 'Optimized for the frameworks, languages and agents you love',
       productsHeadingLineOne: 'All the services you need',
       productsHeadingLineTwo: 'in one platform',

@@ -1841,6 +1841,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
     visibleProjectIds,
     features.usageStats && !skipProjectCardExtras,
+    organizationPlan,
   )
 
   const projectListPlatformIds = useMemo(() => {

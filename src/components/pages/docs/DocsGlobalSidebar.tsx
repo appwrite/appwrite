@@ -65,6 +65,7 @@ import {
   docsNavLinkClassName,
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
+import { isDomainsDocsPathname } from '@/lib/docs/domains-docs-feature'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isStorageS3DocsPathname } from '@/lib/docs/storage-s3-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
@@ -490,6 +491,10 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
+    if (!features.domains && isDomainsDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+      return
+    }
     if (!features.firewall && isFirewallDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
@@ -503,6 +508,7 @@ export function DocsGlobalSidebar({
     }
   }, [
     features.agent,
+    features.domains,
     features.firewall,
     features.partnersDocs,
     features.storageS3,

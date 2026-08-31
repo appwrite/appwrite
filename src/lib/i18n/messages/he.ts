@@ -295,7 +295,8 @@ export const heCatalog: EnCatalog = {
       heroImageAlt:
         'תצוגת הקונסול של Appwrite עם גרפי שימוש, אפליקציות ומפתחות API', // pragma: allowlist secret
       startProject: 'התחילו פרויקט',
-      requestDemo: 'בקשו דמו',
+      viewDocs: 'צפו בדוקומנטציה',
+      mcpIncluded: 'MCP כלול',
       toolsHeading: 'מותאם לפריימוורקים, לשפות ולסוכני ה-AI שאתם אוהבים',
       productsHeadingLineOne: 'כל השירותים שאתם צריכים',
       productsHeadingLineTwo: 'בפלטפורמה אחת',

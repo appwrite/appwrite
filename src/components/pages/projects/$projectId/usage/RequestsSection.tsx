@@ -24,12 +24,15 @@ import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
+  useOrganizationPlan,
+  useProject,
   useProjectRequestsBreakdowns,
   useProjectRequestsChartOnly,
   useCountryLookups,
   refetchProjectRequestsUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
+import { canShowRequestsUsageBreakdown } from '@/lib/usage/aggregate-only-metrics'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -354,7 +357,9 @@ export function RequestsSection({
   const { isSelfHosted } = useConsoleProfile()
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<RequestsBreakdownDrawerState | null>(null)
-  const showBreakdown = true
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const showBreakdown = canShowRequestsUsageBreakdown(organizationPlan)
   const { lookups: countryLookups } = useCountryLookups()
 
   const {

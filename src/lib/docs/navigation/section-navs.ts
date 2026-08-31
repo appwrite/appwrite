@@ -3,6 +3,9 @@ import {
   isAgentDocsHref,
 } from '../agent-docs-feature'
 import {
+  isDomainsDocsEnabled,
+} from '../domains-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsHref,
 } from '../firewall-docs-feature'
@@ -44,6 +47,9 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
   }
 
   let configs = Array.from(byPrefix.values())
+  if (!isDomainsDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/domains')
+  }
   if (!isFirewallDocsEnabled()) {
     configs = configs
       .filter((config) => config.prefix !== 'products/firewall')

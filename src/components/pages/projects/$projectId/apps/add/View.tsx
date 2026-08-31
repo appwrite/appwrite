@@ -46,6 +46,7 @@ import {
 import {
   APPLE_VARIANT_OPTIONS,
   FLUTTER_VARIANT_OPTIONS,
+  HOSTNAME_PRESETS,
   REACT_NATIVE_VARIANT_OPTIONS,
   WEB_FRAMEWORK_META,
   defaultVariantForKind,
@@ -518,13 +519,14 @@ APPWRITE_ENDPOINT="${endpoint}"`
   return (
     <WizardLayout
       title={t('Connect your app')}
-      headerBottom={<WizardProgress stage={wizardStage} />}
       fallbackPath={`/projects/${projectId}/apps`}
       fullscreen
-      useSidebar={useWizardSidebar}
-      sidebar={sidebar}
-      constrainWidth
+      useSidebar={false}
+      constrainWidth={false}
+      constrainFooterWidth
       maxWidth="max-w-7xl"
+      contentPadding={false}
+      fullscreenContentXClassName=""
       footerAlign="right"
       footer={
         step === 'configure' && configureStep === 'platform' ? (
@@ -593,107 +595,125 @@ APPWRITE_ENDPOINT="${endpoint}"`
         )
       }
     >
-      {step === 'configure' && configureStep === 'platform' ? (
-        <div className="w-full space-y-8">
-          <section className="space-y-3">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Choose your platform')}
-              </h3>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                {t('Web, mobile, or desktop - pick what matches your project.')}
-              </p>
-            </div>
-            <PlatformKindCards
-              value={kind}
-              onChange={handleKindChange}
-              disabled={createMutation.isPending}
-            />
-          </section>
-
-          {kind === 'web' ? (
-            <>
-              <div className="border-t border-border" />
-              <section className="space-y-3">
-                <div>
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Choose a web framework')}
-                  </h3>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    {t(
-                      'We match starters and AI prompts to the framework you pick.',
-                    )}
-                  </p>
-                </div>
-                <WebFrameworkCards
-                  value={framework}
-                  onChange={(k) =>
-                    updateSearch({
-                      framework: k,
-                      step: 'configure',
-                      platformId: undefined,
-                      configureStep: 'platform',
-                    })
-                  }
-                  disabled={createMutation.isPending}
-                />
-              </section>
-            </>
-          ) : null}
-
-          {variantTargetSection ? (
-            <>
-              <div className="border-t border-border" />
-              {variantTargetSection}
-            </>
-          ) : null}
+      <div className="flex w-full flex-col">
+        <div className="mx-auto w-full max-w-7xl px-6 pt-6">
+          <WizardProgress stage={wizardStage} />
         </div>
-      ) : step === 'configure' && configureStep === 'details' ? (
-        <div className="mx-auto w-full max-w-2xl space-y-6">
-          <SelectedPlatformCard
-            kind={kind}
-            variant={resolvedVariant}
-            framework={framework}
-            disabled={createMutation.isPending}
-            onChange={() => updateSearch({ configureStep: 'platform' })}
-          />
-          <form id="add-app-configure" onSubmit={handleSubmit} className="space-y-8">
-            <section className="space-y-4">
+        <div className="mt-8 border-t border-border" aria-hidden />
+        <div className="mx-auto w-full max-w-7xl px-6 pt-8 pb-6">
+          <div
+            className={cn(
+              useWizardSidebar && 'grid gap-8 lg:grid-cols-3',
+            )}
+          >
+            <div className={cn(useWizardSidebar && 'min-w-0 lg:col-span-2')}>
+              {step === 'configure' && configureStep === 'platform' ? (
+          <div className="w-full space-y-8">
+            <section className="space-y-3">
               <div>
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  {t('App details')}
+                  {t('Choose your platform')}
                 </h3>
                 <p className="mt-1 text-[13px] text-muted-foreground">
                   {t(
-                    'These values are sent to Appwrite when you register this app.', // pragma: allowlist secret
+                    'Web, mobile, or desktop - pick what matches your project.',
                   )}
                 </p>
               </div>
+              <PlatformKindCards
+                value={kind}
+                onChange={handleKindChange}
+                disabled={createMutation.isPending}
+              />
+            </section>
 
-              <div className="space-y-2">
-                <FieldLabelWithInfo
-                  htmlFor="add-app-name"
-                  required
-                  tooltip={getNameTooltip()}
-                >
-                  {t('Name')}
-                </FieldLabelWithInfo>
-                <Input
-                  id="add-app-name"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    if (!nameTouched) setNameTouched(true)
-                    if (nameError) setNameError(null)
-                  }}
-                  placeholder={defaultPlatformName}
-                  autoComplete="off"
-                  aria-invalid={nameError ? true : undefined}
-                />
-                {nameError && (
-                  <p className="text-[12px] text-destructive">{nameError}</p>
-                )}
-              </div>
+            {kind === 'web' ? (
+              <>
+                <div className="border-t border-border" />
+                <section className="space-y-3">
+                  <div>
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      {t('Choose a web framework')}
+                    </h3>
+                    <p className="mt-1 text-[13px] text-muted-foreground">
+                      {t(
+                        'We match starters and AI prompts to the framework you pick.',
+                      )}
+                    </p>
+                  </div>
+                  <WebFrameworkCards
+                    value={framework}
+                    onChange={(k) =>
+                      updateSearch({
+                        framework: k,
+                        step: 'configure',
+                        platformId: undefined,
+                        configureStep: 'platform',
+                      })
+                    }
+                    disabled={createMutation.isPending}
+                  />
+                </section>
+              </>
+            ) : null}
+
+            {variantTargetSection ? (
+              <>
+                <div className="border-t border-border" />
+                {variantTargetSection}
+              </>
+            ) : null}
+          </div>
+        ) : step === 'configure' && configureStep === 'details' ? (
+          <div className="mx-auto w-full max-w-2xl space-y-6">
+            <SelectedPlatformCard
+              kind={kind}
+              variant={resolvedVariant}
+              framework={framework}
+              disabled={createMutation.isPending}
+              onChange={() => updateSearch({ configureStep: 'platform' })}
+            />
+            <form
+              id="add-app-configure"
+              onSubmit={handleSubmit}
+              className="space-y-8"
+            >
+              <section className="space-y-4">
+                <div>
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    {t('App details')}
+                  </h3>
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    {t(
+                      'These values are sent to Appwrite when you register this app.', // pragma: allowlist secret
+                    )}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <FieldLabelWithInfo
+                    htmlFor="add-app-name"
+                    required
+                    tooltip={getNameTooltip()}
+                  >
+                    {t('Name')}
+                  </FieldLabelWithInfo>
+                  <Input
+                    id="add-app-name"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      if (!nameTouched) setNameTouched(true)
+                      if (nameError) setNameError(null)
+                    }}
+                    placeholder={defaultPlatformName}
+                    autoComplete="off"
+                    aria-invalid={nameError ? true : undefined}
+                  />
+                  {nameError && (
+                    <p className="text-[12px] text-destructive">{nameError}</p>
+                  )}
+                </div>
 
               {variantNeedsHostname(resolvedVariant) && (
                 <div className="space-y-2">
@@ -715,15 +735,34 @@ APPWRITE_ENDPOINT="${endpoint}"`
                     autoComplete="off"
                     aria-invalid={hostnameError ? true : undefined}
                   />
+                  <div className="flex flex-wrap gap-2">
+                    {HOSTNAME_PRESETS.map((preset) => {
+                      const selected = hostname.trim() === preset
+                      return (
+                        <Button
+                          key={preset}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            'h-8 text-[12px] font-normal',
+                            selected &&
+                              'border-foreground bg-muted text-foreground',
+                          )}
+                          aria-pressed={selected}
+                          onClick={() => {
+                            setHostname(preset)
+                            if (hostnameError) setHostnameError(null)
+                          }}
+                        >
+                          {preset}
+                        </Button>
+                      )
+                    })}
+                  </div>
                   {hostnameError ? (
                     <p className="text-[12px] text-destructive">{hostnameError}</p>
-                  ) : (
-                    <p className="text-[12px] text-muted-foreground">
-                      {t(
-                        'Origin your app will call Appwrite from (no protocol or port). Use localhost for local development.', // pragma: allowlist secret
-                      )}
-                    </p>
-                  )}
+                  ) : null}
                 </div>
               )}
 
@@ -931,6 +970,15 @@ APPWRITE_ENDPOINT="${endpoint}"`
           </div>
         </div>
       )}
+          </div>
+          {useWizardSidebar && sidebar ? (
+            <div className="self-start lg:sticky lg:top-6 lg:col-span-1">
+              {sidebar}
+            </div>
+          ) : null}
+        </div>
+        </div>
+      </div>
     </WizardLayout>
   )
 }

@@ -116,6 +116,10 @@ import {
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 import { getUsageChartIntervalsForPlan } from '@/lib/usage/chart-interval'
 import {
+  canShowBandwidthUsageBreakdown,
+  canShowRequestsUsageBreakdown,
+} from '@/lib/usage/aggregate-only-metrics'
+import {
   resolveUsageChartErrorCopy,
   shouldSuppressUsageChartRetry,
 } from '@/lib/usage/usage-history-errors'
@@ -246,6 +250,16 @@ export function View({ projectId, initialData }: ViewProps) {
     () => (usageStatsEnabled ? [...OVERVIEW_CHART_TAB_ORDER] : []),
     [usageStatsEnabled],
   )
+  const showRequestsUsageBreakdown =
+    canShowRequestsUsageBreakdown(organizationPlan)
+  const showBandwidthUsageBreakdown =
+    canShowBandwidthUsageBreakdown(organizationPlan)
+  const requestsOverviewChartRowClassName = overviewChartContentRowClassName(
+    showRequestsUsageBreakdown,
+  )
+  const bandwidthOverviewChartRowClassName = overviewChartContentRowClassName(
+    showBandwidthUsageBreakdown,
+  )
   const overviewChartRowClassName = overviewChartContentRowClassName()
 
   useEffect(() => {
@@ -270,7 +284,7 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     usageStatsEnabled,
     chartInterval,
-    activeTab === 'bandwidth',
+    activeTab === 'bandwidth' && showBandwidthUsageBreakdown,
     usageLogRetentionHours,
   )
 
@@ -287,7 +301,7 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     usageStatsEnabled,
     chartInterval,
-    activeTab === 'requests',
+    activeTab === 'requests' && showRequestsUsageBreakdown,
     usageLogRetentionHours,
   )
 
@@ -1051,7 +1065,7 @@ export function View({ projectId, initialData }: ViewProps) {
             {usageStatsEnabled ? (
             <div
               className={cn(
-                overviewChartRowClassName,
+                bandwidthOverviewChartRowClassName,
                 overviewChartTabPanelVisibilityClass(activeTab === 'bandwidth'),
               )}
               aria-hidden={activeTab !== 'bandwidth'}
@@ -1080,6 +1094,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                   />
                 </div>
+                  {showBandwidthUsageBreakdown ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1102,13 +1117,14 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                     />
                   </div>
+                  ) : null}
               </div>
             ) : null}
 
             {usageStatsEnabled ? (
             <div
               className={cn(
-                overviewChartRowClassName,
+                requestsOverviewChartRowClassName,
                 overviewChartTabPanelVisibilityClass(activeTab === 'requests'),
               )}
               aria-hidden={activeTab !== 'requests'}
@@ -1137,6 +1153,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                   />
                 </div>
+                  {showRequestsUsageBreakdown ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="h-full min-h-0 flex-1"
@@ -1159,6 +1176,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                     />
                   </div>
+                  ) : null}
               </div>
             ) : null}
 

@@ -4,6 +4,10 @@ import {
   isAgentDocsHref,
 } from '../agent-docs-feature'
 import {
+  isDomainsDocsEnabled,
+  isDomainsDocsHref,
+} from '../domains-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsHref,
 } from '../firewall-docs-feature'
@@ -50,6 +54,9 @@ function withoutHref(
 export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   let navigation =
     audience === 'partners' ? DOCS_PARTNERS_GLOBAL_NAV : DOCS_GLOBAL_NAV
+  if (!isDomainsDocsEnabled()) {
+    navigation = withoutHref(navigation, isDomainsDocsHref)
+  }
   if (audience === 'partners') return navigation
   if (!isFirewallDocsEnabled()) {
     navigation = withoutHref(navigation, isFirewallDocsHref)

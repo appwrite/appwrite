@@ -39,6 +39,7 @@ import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection
 import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bento/ProductBentoVisualDeferred'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
@@ -320,16 +321,23 @@ function HomePage() {
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
                 <MarketingSiteLink
-                  href="/enterprise"
-                  {...analyticsAttrs('home-request-demo')}
+                  href="/docs"
+                  {...analyticsAttrs('home-view-docs')}
                 >
-                  {homeCopy.requestDemo}
+                  {homeCopy.viewDocs}
                 </MarketingSiteLink>
               </Button>
             </div>
           </div>
 
-          <div className="relative z-[1] mt-12 w-full sm:mt-16">
+          <div className="relative z-[1] mt-8 flex justify-center sm:mt-10">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground">
+              <McpIcon className="size-3.5" />
+              <span>{homeCopy.mcpIncluded}</span>
+            </div>
+          </div>
+
+          <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-full px-3 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
               <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[20px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-1.5 pb-0 pt-1 sm:rounded-t-[28px] sm:px-4 dark:border-muted/30 dark:bg-muted/10">
                 <div className="relative z-10 flex h-8 shrink-0 items-center gap-2 text-start sm:h-10">

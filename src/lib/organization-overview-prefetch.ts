@@ -203,7 +203,14 @@ export async function prefetchOrganizationOverviewData(
     ),
   ]
   if (projectIds.length > 0) {
-    prefetchProjectListRequestsUsage(queryClient, projectIds)
+    const organizationPlan = queryClient.getQueryData(
+      organizationPlanQueryOptions(orgId).queryKey,
+    ) as Models.BillingPlan | undefined
+    prefetchProjectListRequestsUsage(
+      queryClient,
+      projectIds,
+      organizationPlan,
+    )
   }
 }
 

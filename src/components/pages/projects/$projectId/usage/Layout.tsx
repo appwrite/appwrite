@@ -101,6 +101,7 @@ import {
   isUsageFilterDimensionAllowed,
   USAGE_FILTER_EXCLUDED_ATTRIBUTES,
 } from '@/lib/usage/usage-filter-configs'
+import { canShowUsageCategoryFilters } from '@/lib/usage/aggregate-only-metrics'
 import {
   getUsageFilterQueriesForSurface,
   sanitizeUsageFilterMap,
@@ -445,10 +446,11 @@ function UsageLayoutContent({
     [usageFilterMap, categoryId, filterAvailability],
   )
   const usageFilterScope = getUsageSavedFilterScope(categoryId)
-  const showUsageFilters = categorySupportsUsageFilters(categoryId)
-
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const showUsageFilters =
+    categorySupportsUsageFilters(categoryId) &&
+    canShowUsageCategoryFilters(categoryId, organizationPlan)
   const { access } = useOrganizationScopes(project?.teamId)
   const canWriteFirewallRules = canWriteRules(access, features)
   const canApplyFiltersAsFirewallRule =
@@ -469,12 +471,18 @@ function UsageLayoutContent({
   )
 
   useEffect(() => {
+    if (!showUsageFilters) {
+      if (usageQueryParam) {
+        navigateUsageFilters(undefined)
+      }
+      return
+    }
     const sanitizedQuery =
       usageFilterMap.size > 0 ? mapToQueryParam(usageFilterMap) : undefined
     if (sanitizedQuery !== (usageQueryParam ?? undefined)) {
       navigateUsageFilters(sanitizedQuery)
     }
-  }, [navigateUsageFilters, usageFilterMap, usageQueryParam])
+  }, [navigateUsageFilters, showUsageFilters, usageFilterMap, usageQueryParam])
 
   const applyUsageFilter = useCallback(
     (
@@ -868,8 +876,8 @@ function UsageLayoutContent({
                     chartInterval,
                     onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,
-                    eventFilterQueries: usageEventFilterQueries,
-                    gaugeFilterQueries: usageGaugeFilterQueries,
+                    eventFilterQueries: showUsageFilters ? usageEventFilterQueries : undefined,
+                    gaugeFilterQueries: showUsageFilters ? usageGaugeFilterQueries : undefined,
                     filterColumns: usageFilterColumns,
                     filterScope: usageFilterScope,
                     onApplyFilter: applyUsageFilter,
