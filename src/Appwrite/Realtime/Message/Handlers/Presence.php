@@ -107,7 +107,7 @@ class Presence extends Action
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
 
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = $presence;
+        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
 
         $presenceState->triggerEvent(
             $queueForEvents,

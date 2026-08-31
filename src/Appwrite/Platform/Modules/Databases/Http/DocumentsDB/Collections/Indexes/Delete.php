@@ -35,7 +35,7 @@ class Delete extends IndexDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
-            ->label('scope', 'documentsdb.collections.write')
+            ->label('scope', 'documentsdb.indexes.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
