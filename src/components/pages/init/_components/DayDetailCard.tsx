@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type {
   LaunchEventDay,
   LaunchEventDayResource,
@@ -111,6 +112,53 @@ function DayTitle({ title }: { title: string }) {
   )
 }
 
+/** Links title / cover / description to a day resource (usually the lead blog post). */
+function DayPrimaryLink({
+  href,
+  className,
+  children,
+}: {
+  href: string
+  className?: string
+  children: ReactNode
+}) {
+  const isBlogLink = Boolean(parseBlogPagePath(href))
+  const isDocsLink = Boolean(parseDocsPagePath(href))
+  const resolved = useInitHref(href)
+
+  if (!resolved) {
+    return <div className={className}>{children}</div>
+  }
+
+  if (isBlogLink) {
+    return (
+      <BlogPageAnchor href={href} className={className}>
+        {children}
+      </BlogPageAnchor>
+    )
+  }
+
+  if (isDocsLink) {
+    return (
+      <DocsRouteLink href={href} className={className}>
+        {children}
+      </DocsRouteLink>
+    )
+  }
+
+  return (
+    <a
+      href={resolved.href}
+      {...(resolved.external
+        ? { target: '_blank', rel: 'noopener noreferrer' }
+        : {})}
+      className={className}
+    >
+      {children}
+    </a>
+  )
+}
+
 interface DayDetailCardProps {
   event: InitDisplayEvent
   day: LaunchEventDay
@@ -195,11 +243,22 @@ export function DayDetailCard({
   const otherResources = day.resources.filter(
     (resource) => resource.typeLabel.toLowerCase() !== 'blog',
   )
+  const primaryArticleHref = blogResources[0]?.href
   const hasListContent =
     blogResources.length > 0 ||
     scheduleItems.length > 0 ||
     otherResources.length > 0
   const footerVideos = day.footerVideos ?? []
+
+  const copyBlock = (
+    <div>
+      <DayTitle title={day.title} />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {day.longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual day={day} />
 
   return (
     <article
@@ -225,16 +284,29 @@ export function DayDetailCard({
 
       <div className="grid lg:grid-cols-2">
         <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
-          <div>
-            <DayTitle title={day.title} />
-            <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
-              {day.longDescription}
-            </p>
-          </div>
+          {primaryArticleHref ? (
+            <DayPrimaryLink
+              href={primaryArticleHref}
+              className="group block transition-opacity hover:opacity-90"
+            >
+              {copyBlock}
+            </DayPrimaryLink>
+          ) : (
+            copyBlock
+          )}
         </div>
 
         <div className="flex items-center p-6">
-          <DayVisual day={day} />
+          {primaryArticleHref ? (
+            <DayPrimaryLink
+              href={primaryArticleHref}
+              className="block w-full transition-opacity hover:opacity-90"
+            >
+              {visualBlock}
+            </DayPrimaryLink>
+          ) : (
+            visualBlock
+          )}
         </div>
       </div>
 

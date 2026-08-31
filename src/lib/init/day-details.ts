@@ -24,7 +24,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Discover Appwrite 2.0',
-      href: '/home',
+      href: '/blog/post/announcing-appwrite-2',
       external: false,
     },
     resources: [
