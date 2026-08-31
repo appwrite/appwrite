@@ -254,6 +254,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-console:
     logging:
       driver: json-file
@@ -349,6 +350,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:
@@ -513,6 +515,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
 
   appwrite-task-scheduler:
     entrypoint: schedule
@@ -767,6 +770,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-worker-builds:
     profiles:
       - separate

@@ -463,12 +463,14 @@ Http::init()
 
             // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
             // installation deploys just the engine backing the platform, so neither is on
-            // until an operator provisions that engine and says so. Closed to everyone --
+            // until an operator provisions that engine and says so. Embeddings is the same:
+            // its container is resource-heavy and off by default. Closed to everyone --
             // keys and privileged roles included -- rather than answering and then failing
-            // on the first write with the reason only in the logs.
+            // against an absent service with the reason only in the logs.
             $products = [
                 'documentsdb' => '_APP_DOCUMENTSDB',
                 'vectorsdb' => '_APP_VECTORSDB',
+                'embeddings' => '_APP_EMBEDDING',
             ];
             if (
                 isset($products[$namespace])

@@ -706,6 +706,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_EMBEDDING',
+                'description' => 'Enables the embeddings API, backed by the resource-heavy appwrite-embedding container. That container is off by default (it is behind the "embedding" Compose profile), so start it and add "embedding" to COMPOSE_PROFILES before enabling this; until then the /v1/embeddings routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
