@@ -1418,7 +1418,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
             }
 
-            /** @var array<string, Document> $presencesById */
+            /** @var array<string, true> $presencesById set of presence ids owned by this connection */
             $presencesById = $realtime->connections[$connection]['presences'] ?? [];
 
             if (
@@ -1441,7 +1441,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         }
 
                         $presenceIds = \array_keys($presencesById);
-                        $presences = \array_values($presencesById);
                         $dbForProject = getProjectDB($project);
 
                         $user = new User([]);
@@ -1461,16 +1460,16 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         /** @var UsagePublisher $publisherForUsage */
                         $publisherForUsage = $container->get('publisherForUsage');
 
-                        /** @var array<string, true> $deletedIds */
-                        $deletedIds = [];
+                        /** @var array<string, Document> $deletedPresences */
+                        $deletedPresences = [];
                         try {
                             $deletionCount = $dbForProject->getAuthorization()->skip(
-                                function () use ($dbForProject, $presenceIds, &$deletedIds): int {
+                                function () use ($dbForProject, $presenceIds, &$deletedPresences): int {
                                     return $dbForProject->deleteDocuments(
                                         'presenceLogs',
                                         [Query::equal('$id', $presenceIds)],
-                                        onNext: function (Document $deleted) use (&$deletedIds): void {
-                                            $deletedIds[$deleted->getId()] = true;
+                                        onNext: function (Document $deleted) use (&$deletedPresences): void {
+                                            $deletedPresences[$deleted->getId()] = $deleted;
                                         },
                                     );
                                 }
@@ -1480,16 +1479,18 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             Span::current()?->setError($th);
                             logError($th, 'realtimeOnClosePresenceDeletion', tags: [
                                 'projectId' => $projectId,
-                                'presences' => \count($presences)
+                                'presences' => \count($presenceIds)
                             ]);
                         }
 
                         $queueForEvents = getQueueForEvents();
                         $queueForRealtime = getQueueForRealtime();
-                        foreach ($presences as $presence) {
-                            if (!isset($deletedIds[$presence->getId()])) {
-                                continue;
-                            }
+                        foreach ($deletedPresences as $presence) {
+                            $presence->removeAttribute('$collection');
+                            $presence->removeAttribute('$tenant');
+                            $presence->removeAttribute('hostname');
+                            $presence->removeAttribute('permissionsHash');
+                            $presence->removeAttribute('userInternalId');
                             try {
                                 $presenceState->triggerEvent(
                                     $queueForEvents,
