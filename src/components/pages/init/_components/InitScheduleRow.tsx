@@ -106,11 +106,7 @@ export function InitScheduleRow({
           inlineWhenWide && 'sm:shrink-0',
         )}
       >
-        {showLive
-          ? t('Live now')
-          : showStartingSoon
-            ? t('Starting soon')
-            : formatScheduleTime(item.startsAt)}
+        {showLive ? t('Live now') : formatScheduleTime(item.startsAt)}
       </p>
     </div>
   )
