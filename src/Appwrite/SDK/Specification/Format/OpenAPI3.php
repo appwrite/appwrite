@@ -733,7 +733,6 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\JSON\ObjectValidator::class:
-                    case \Utopia\Validator\JSON\FCM::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
@@ -944,6 +943,17 @@ class OpenAPI3 extends Format
                         }
                         break;
                     default:
+                        // The cases above match on the concrete validator class, so a
+                        // validator that declares itself an object but is not listed
+                        // reaches here and would be published as a string. That is how
+                        // JSON\FCM narrowed serviceAccountJSON in every generated SDK.
+                        if ($validator->getType() === Validator::TYPE_OBJECT) {
+                            $node['schema']['type'] = 'object';
+                            $node['schema']['default'] = empty($param['default']) ? new \stdClass() : $param['default'];
+                            $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];

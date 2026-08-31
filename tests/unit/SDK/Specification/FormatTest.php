@@ -54,6 +54,7 @@ use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
 use Utopia\Platform\Enum;
+use Utopia\Validator;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -68,6 +69,56 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+
+/**
+ * Stands in for a validator that reports an object but has no case of its own in
+ * the OpenAPI3 parameter switch, which is the shape that regressed.
+ */
+class UnlistedObjectValidator extends Validator
+{
+    public function getDescription(): string
+    {
+        return 'Value must be an object';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    public function getType(): string
+    {
+        return self::TYPE_OBJECT;
+    }
+
+    public function isValid(mixed $value): bool
+    {
+        return \is_array($value) || $value instanceof \stdClass;
+    }
+}
+
+class UnlistedStringValidator extends Validator
+{
+    public function getDescription(): string
+    {
+        return 'Value must be a string';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    public function getType(): string
+    {
+        return self::TYPE_STRING;
+    }
+
+    public function isValid(mixed $value): bool
+    {
+        return \is_string($value);
+    }
+}
 
 class TestFormat extends Format
 {
@@ -1041,7 +1092,7 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiQuery['type']);
     }
 
-    public function testObjectValidatorsOutsideTheSwitchAreNotEmittedAsStrings(): void
+    public function testObjectValidatorsWithoutTheirOwnCaseAreNotEmittedAsStrings(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -1057,13 +1108,18 @@ final class FormatTest extends TestCase
                 responses: [],
             ))
             ->param('serviceAccountJSON', null, new Nullable(new FCM()), 'FCM service account JSON.', true)
-            ->param('bareServiceAccountJSON', null, new FCM(), 'FCM service account JSON.', true);
+            ->param('bareServiceAccountJSON', null, new FCM(), 'FCM service account JSON.', true)
+            ->param('unlistedObject', null, new UnlistedObjectValidator(), 'An object validator with no case of its own.', true)
+            ->param('unlistedString', null, new UnlistedStringValidator(), 'A string validator with no case of its own.', true);
 
         $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
         $properties = $spec['paths']['/tests/fcm']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         $this->assertSame('object', $properties['serviceAccountJSON']['type']);
         $this->assertSame('object', $properties['bareServiceAccountJSON']['type']);
+        $this->assertSame('object', $properties['unlistedObject']['type']);
+        $this->assertEquals(new \stdClass(), $properties['unlistedObject']['default']);
+        $this->assertSame('string', $properties['unlistedString']['type']);
     }
 
     public function testJsonAndNullableModelRulesEmitExpectedSchemas(): void
