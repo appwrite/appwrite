@@ -733,6 +733,7 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\JSON\ObjectValidator::class:
+                    case \Utopia\Validator\JSON\FCM::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];

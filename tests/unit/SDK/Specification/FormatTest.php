@@ -63,6 +63,7 @@ use Utopia\Validator\FloatValidator;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\FCM;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -1038,6 +1039,31 @@ final class FormatTest extends TestCase
         $openApiQuery = $openApi['paths']['/tests/graphql']['post']['requestBody']['content']['application/json']['schema']['properties']['query'];
 
         $this->assertSame('object', $openApiQuery['type']);
+    }
+
+    public function testObjectValidatorsOutsideTheSwitchAreNotEmittedAsStrings(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests/fcm'))
+            ->desc('Create FCM provider')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createFcmProvider',
+                description: 'Create FCM provider.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('serviceAccountJSON', null, new Nullable(new FCM()), 'FCM service account JSON.', true)
+            ->param('bareServiceAccountJSON', null, new FCM(), 'FCM service account JSON.', true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests/fcm']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertSame('object', $properties['serviceAccountJSON']['type']);
+        $this->assertSame('object', $properties['bareServiceAccountJSON']['type']);
     }
 
     public function testJsonAndNullableModelRulesEmitExpectedSchemas(): void
