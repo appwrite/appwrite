@@ -166,7 +166,7 @@ export function useInitOnlinePresence(
     ...consoleAccountQueryOptions(),
     enabled,
   })
-  const { data: localeData } = useQuery({
+  const { data: localeData, isFetched: localeFetched } = useQuery({
     queryKey: ['locale', 'console'],
     queryFn: fetchLocale,
     staleTime: LONG_STALE_TIME,
@@ -200,6 +200,8 @@ export function useInitOnlinePresence(
   /** Stable across heartbeats; reset when the user goes away. */
   const selfOnlineAtRef = useRef<string | null>(null)
   const [isReady, setIsReady] = useState(false)
+  const isReadyRef = useRef(isReady)
+  isReadyRef.current = isReady
   const [participantStatus, setParticipantStatusState] =
     useState<InitParticipantStatus>('online')
   const [isParticipantStatusUpdating, setIsParticipantStatusUpdating] =
@@ -210,6 +212,20 @@ export function useInitOnlinePresence(
   const [selfPresenceMapKey, setSelfPresenceMapKey] = useState<string | null>(null)
   /** Bumped when local activity refs change so the sidebar reflects hover state immediately. */
   const [activityDisplayVersion, setActivityDisplayVersion] = useState(0)
+
+  /**
+   * Only Init presence prefs should re-trigger bootstrap. Unrelated account pref
+   * writes (sidebar, cookies, etc.) used to cancel in-flight list loads and leave
+   * the online panel stuck on the skeleton until a hard refresh / cache clear.
+   */
+  const accountPresencePrefsSerialized = useMemo(() => {
+    if (!eventId || !account?.prefs) return ''
+    const prefs = readInitPresencePrefsFromAccountPrefs(
+      account.prefs as Record<string, unknown>,
+      eventId,
+    )
+    return prefs ? JSON.stringify(prefs) : ''
+  }, [account?.prefs, eventId])
 
   const presenceIdRef = useRef<string | null>(null)
   const upsertingRef = useRef(false)
@@ -679,7 +695,10 @@ export function useInitOnlinePresence(
       return
     }
 
-    if (!themeReady || !localeData) return
+    // Theme is required for presence metadata. Locale is preferred for GDPR
+    // defaults, but must not block forever (failed/slow locale left the list
+    // stuck on the skeleton after host / cache changes).
+    if (!themeReady || !localeFetched) return
 
     const bootstrapScope = `${eventId}:${accountUserId}`
     const isFreshBootstrap = bootstrapScopeRef.current !== bootstrapScope
@@ -697,6 +716,11 @@ export function useInitOnlinePresence(
       (fromAccount != null &&
         appliedPresencePrefsSourceRef.current !== 'account' &&
         !presencePrefsDirtyRef.current)
+
+    // Avoid cancelling an in-flight list load for no-op preference noise.
+    if (!isFreshBootstrap && !shouldApplyStoredPrefs && isReadyRef.current) {
+      return
+    }
 
     let startOnline = participantOnlineRef.current
     let startIdentityVisible = identityVisibleRef.current
@@ -733,25 +757,36 @@ export function useInitOnlinePresence(
     clearLegacyInitPresenceStorage()
 
     const bootstrap = async () => {
-      setIsReady(false)
-      const published = await publishPresenceRef.current(!startOnline, { refresh: false })
+      // Only show the skeleton for a new session/scope, or when a previous
+      // bootstrap was cancelled before lists hydrated. Soft prefs updates must
+      // not flip the panel back to loading.
+      const needsListHydration = isFreshBootstrap || !isReadyRef.current
+      if (needsListHydration) setIsReady(false)
+
+      const published = await publishPresenceRef.current(!startOnline, {
+        refresh: false,
+      })
       if (cancelled) return
 
       try {
-        await refreshLists(eventId)
-        if (!cancelled && published) {
-          // List queries can lag right after upsert; one follow-up fetch picks up everyone.
-          await new Promise<void>((resolve) => {
-            window.setTimeout(resolve, 500)
-          })
-          if (!cancelled) {
-            await refreshLists(eventId)
+        if (needsListHydration) {
+          await refreshLists(eventId)
+          if (!cancelled && published) {
+            // List queries can lag right after upsert; one follow-up fetch picks up everyone.
+            await new Promise<void>((resolve) => {
+              window.setTimeout(resolve, 500)
+            })
+            if (!cancelled) {
+              await refreshLists(eventId)
+            }
           }
         }
       } catch {
         if (published && !cancelled) {
           await publishPresenceRef.current(!startOnline, { refresh: false })
-          await refreshLists(eventId)
+          if (needsListHydration) {
+            await refreshLists(eventId)
+          }
         }
       } finally {
         if (!cancelled) setIsReady(true)
@@ -770,7 +805,16 @@ export function useInitOnlinePresence(
         themeActivityResetRef.current = null
       }
     }
-  }, [account?.prefs, accountUserId, enabled, eventId, identityHiddenByDefault, localeData, refreshLists, themeReady])
+  }, [
+    accountPresencePrefsSerialized,
+    accountUserId,
+    enabled,
+    eventId,
+    identityHiddenByDefault,
+    localeFetched,
+    refreshLists,
+    themeReady,
+  ])
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId || !isReady || !themeReady) return
