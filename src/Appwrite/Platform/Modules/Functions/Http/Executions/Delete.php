@@ -68,6 +68,7 @@ class Delete extends Base
             ->inject('queueForEvents')
             ->inject('authorization')
             ->inject('bus')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -81,6 +82,7 @@ class Delete extends Base
         Event $queueForEvents,
         Authorization $authorization,
         Bus $bus,
+        callable $locks,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -109,7 +111,7 @@ class Delete extends Base
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $locks, $schedule->getId()));
             if (!$cancelled) {
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
@@ -180,7 +182,7 @@ class Delete extends Base
                 throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
+            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $locks, $schedule->getId()));
             if (!$cancelled) {
                 throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
@@ -204,19 +206,29 @@ class Delete extends Base
         $response->noContent();
     }
 
-    private function cancelSchedule(Database $dbForPlatform, string $scheduleId): bool
+    /**
+     * @param callable(string, int, callable, float): mixed $locks
+     */
+    private function cancelSchedule(Database $dbForPlatform, callable $locks, string $scheduleId): bool
     {
-        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
-            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+        return $locks(
+            'lock:platform:schedules:' . $scheduleId,
+            30,
+            function () use ($dbForPlatform, $scheduleId): bool {
+                return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+                    $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-            // active=false is the scheduler's durable claim. Cancellation
-            // loses once that claim is committed, even if queue publication
-            // succeeds and the scheduler later fails to remove the schedule.
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
-                return false;
-            }
+                    // active=false is the scheduler's durable claim. Cancellation
+                    // loses once that claim is committed, even if queue publication
+                    // succeeds and the scheduler later fails to remove the schedule.
+                    if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                        return false;
+                    }
 
-            return $dbForPlatform->deleteDocument('schedules', $scheduleId);
-        });
+                    return $dbForPlatform->deleteDocument('schedules', $scheduleId);
+                });
+            },
+            10.0,
+        );
     }
 }
