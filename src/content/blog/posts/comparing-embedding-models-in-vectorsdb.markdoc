@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Comparing the embedding models available in VectorsDB"
-description: Compare the four text embedding models built into Appwrite VectorsDB on language coverage, input limit, training task, and vector dimension, and pick one before you create a collection.
-date: 2026-08-25
+description: Compare the text embedding models built into Appwrite VectorsDB on language coverage, input limit, training task, and vector dimension, and pick one before you create a collection.
+date: 2026-09-02
 cover: /images/blog/comparing-embedding-models-in-vectorsdb/cover.avif
 timeToRead: 9
 author: atharva
@@ -17,16 +17,18 @@ faqs:
   - question: "What happens if my text is longer than the model's limit?"
     answer: "The model truncates the input and embeds only the part that fits. Anything past the limit has no effect on the vector. Split long text into chunks, embed each chunk, and store one document per chunk."
   - question: "Do 768-dimensional models search better than 384-dimensional models?"
-    answer: "Not automatically. Dimension is capacity, not quality. `bge-small` produces 384-dimensional vectors and is trained for query-to-passage retrieval, which makes it a strong candidate for short English passages. Which model ranks your data best is something you have to measure on your own queries."
+    answer: "Not automatically. Dimension is capacity, not quality. `all-minilm` produces 384-dimensional vectors and is trained on sentence pairs, which makes it a strong candidate for short English text even though it stores half the numbers of a 768-dimensional model. Which model ranks your data best is something you have to measure on your own queries."
   - question: "Can I change the embedding model after I create a collection?"
     answer: "A collection's dimension is fixed at creation. You can switch to another model of the same dimension, but the vectors you already stored stay in the old model's coordinates, so you have to regenerate them. Moving to a different dimension means a new collection."
   - question: "Which model should I use for content that is not in English?"
-    answer: "`embedding-gemma`. It covers over 100 languages and matches across them, so a query in one language can find a document written in another. The other three models are English-only."
+    answer: "`embedding-gemma`, which is coming soon. It covers over 100 languages and matches across them, so a query in one language can find a document written in another. The other three models are English-only, so multilingual search waits for it to ship."
 ---
 
 A VectorsDB collection has a fixed dimension, and that number comes from the embedding model you plan to use. The model is the first thing you decide, before the collection exists. Changing it later always means re-embedding every document you stored, and changing to a model of another dimension means a new collection as well.
 
-Appwrite ships four text embedding models: `nomic-embed-text`, `embedding-gemma`, `all-minilm`, and `bge-small`. They are not four quality tiers of the same thing. They differ in how much text they accept, which languages they understand, and which task they were trained on, and those differences shape your search results more than the size of the vector does.
+Appwrite has four text embedding models. Two are available today, `nomic-embed-text` and `all-minilm`. Two more, `embedding-gemma` and `bge-small`, are coming soon, and `createTextEmbeddings` returns a `400` error for them until they ship.
+
+They are not four quality tiers of the same thing. They differ in how much text they accept, which languages they understand, and which task they were trained on, and those differences shape your search results more than the size of the vector does.
 
 # What the model choice decides
 
@@ -56,7 +58,7 @@ Three things to weigh against that:
 - **768 numbers per document.** Both the collection and every similarity comparison handle twice the numbers a 384-dimensional model would produce.
 - **Big chunks average out.** A document covering several unrelated topics collapses into one blurred vector, so test your chunk size against queries you expect rather than assuming bigger is better.
 
-# embedding-gemma
+# embedding-gemma (coming soon)
 
 `embedding-gemma` is Google's EmbeddingGemma, a 308M parameter model built on a Gemma 3 encoder. It produces 768-dimensional vectors and reads up to 2,048 tokens.
 
@@ -92,7 +94,7 @@ Two limits decide whether you can use it:
 
 Keep the inputs short. If your text is not short, pick a different model rather than working around this one.
 
-# bge-small
+# bge-small (coming soon)
 
 `bge-small` is BAAI's `bge-small-en-v1.5`. It produces 384-dimensional vectors, the same numbers per document as `all-minilm`, but reads up to 512 tokens, twice as much.
 
@@ -115,15 +117,15 @@ For English search over paragraph-length content, `bge-small` is the one to try 
 | Model | Dimension | Maximum input | Languages | Trained for |
 | --- | --- | --- | --- | --- |
 | `nomic-embed-text` | 768 | 8,192 tokens | English | General-purpose embedding of long text |
-| `embedding-gemma` | 768 | 2,048 tokens | 100+ | Multilingual and cross-lingual matching |
+| `embedding-gemma` (coming soon) | 768 | 2,048 tokens | 100+ | Multilingual and cross-lingual matching |
 | `all-minilm` | 384 | 256 tokens | English | Similarity between short pieces of text |
-| `bge-small` | 384 | 512 tokens | English | Matching a query against a passage |
+| `bge-small` (coming soon) | 384 | 512 tokens | English | Matching a query against a passage |
 
 Read the table by constraint, starting with the one you cannot change:
 
-- Your content is not all in English, or your users do not all write in the same language. Pick `embedding-gemma`. Language coverage beats every other consideration, because the other three models cannot connect text across languages at all.
+- Your content is not all in English, or your users do not all write in the same language. This one waits for `embedding-gemma`. Language coverage beats every other consideration, and none of the other three models connect text across languages at all.
 - Your documents are long and you want to index them whole. Pick `nomic-embed-text`. It is the only model that reads more than a few thousand tokens.
-- You are building search, where a person types a question and you return passages. Pick `bge-small`. It is trained for exactly that shape, and it stores half the numbers per document that the 768-dimensional models do.
+- You are building search, where a person types a question and you return passages. `bge-small` is trained for exactly that shape and stores half the numbers per document that the 768-dimensional models do, so it is worth revisiting when it ships. Until then, `nomic-embed-text` handles passages of any length, and `all-minilm` handles short ones at half the storage.
 - You are comparing short texts to each other, in volume, and index size matters. Pick `all-minilm`, and keep every input under a couple of sentences.
 
 If two of these apply at once, start by ruling out any model that fails your language requirement, since that one has no workaround. Chunking can usually settle the rest.

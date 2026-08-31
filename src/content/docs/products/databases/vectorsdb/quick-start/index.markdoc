@@ -49,7 +49,7 @@ Every model produces vectors of one fixed length, called the dimension. A collec
 ![Embedding model list](/images/docs/products/databases/vectorsdb/create-collection-model.avif)
 {% /only_light %}
 
-The list scrolls to a fourth model, `bge-small`, and to a **Custom dimension** option for a model you run yourself. Read what each one suits in [embeddings](/docs/products/databases/vectorsdb/embeddings).
+The list also holds a **Custom dimension** option for a model you run yourself. Two of the models in the list, `embedding-gemma` and `bge-small`, are coming soon: a collection takes their dimension, but `createTextEmbeddings` rejects them until they ship. Read what each one suits in [embeddings](/docs/products/databases/vectorsdb/embeddings).
 
 There are no columns to define. Every VectorsDB collection is provisioned with the same shape: an `embeddings` vector and an optional `metadata` object.
 

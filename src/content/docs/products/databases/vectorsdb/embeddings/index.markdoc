@@ -252,9 +252,11 @@ Appwrite ships with the following text embedding models. The `dimension` of a mo
 | Model | Dimension | Provider | Languages | Best for | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `nomic-embed-text` | 768 | Nomic AI | English | General-purpose retrieval over long English documents | **Default.** 8K context window, so long documents embed in one call. |
-| `embedding-gemma` | 768 | Google | 100+ | Multilingual search and cross-language retrieval | A query in one language matches content in another. |
+| `embedding-gemma` (coming soon) | 768 | Google | 100+ | Multilingual search and cross-language retrieval | A query in one language matches content in another. |
 | `all-minilm` | 384 | Sentence Transformers | English | High-volume workloads where speed and storage matter most | Fast to generate and cheap to store, at some cost to accuracy. |
-| `bge-small` | 384 | BAAI | English | Ranking and reranking short English passages | Tuned for ranking quality over speed. |
+| `bge-small` (coming soon) | 384 | BAAI | English | Ranking and reranking short English passages | Tuned for ranking quality over speed. |
+
+Models marked coming soon are not available yet. Passing one to `createTextEmbeddings` returns a `400` error until it ships.
 
 {% info title="Match the model to your collection dimension" %}
 Pick a model before you create your collection. In the Console you pick the model and the collection takes its dimension. Through an SDK you set `dimension` to the model's dimension. Every document in a collection uses vectors of the same length, so a collection only works with models that match its dimension.

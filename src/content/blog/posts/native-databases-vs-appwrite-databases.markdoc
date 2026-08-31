@@ -2,7 +2,7 @@
 layout: post
 title: "Native databases vs Appwrite databases: which one should you pick?"
 description: Appwrite offers two kinds of databases. This guide explains how TablesDB, DocumentsDB, and VectorsDB differ from native PostgreSQL and MySQL, and how to choose between them for your project.
-date: 2026-08-24
+date: 2026-09-01
 cover: /images/blog/native-databases-vs-appwrite-databases/cover.avif
 timeToRead: 8
 author: atharva

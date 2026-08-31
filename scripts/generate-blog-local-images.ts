@@ -176,6 +176,7 @@ async function generateHyperloopBCover(outputDir: string): Promise<void> {
 
   const png = await renderCoverImage(data)
   await writeAvifFromPng(outputDir, png)
+  await convertScreenshotSources(outputDir)
 }
 
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
