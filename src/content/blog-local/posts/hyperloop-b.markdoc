@@ -42,6 +42,8 @@ Every Appwrite product sits on top of it, which is why it shows up as a foundati
 
 # Why we named it Hyperloop B
 
+![Binyamin Yawitz (1991-2025)](/images/blog-local/hyperloop-b/binyamin.avif)
+
 > Hyperloop B is named in loving memory of Binyamin Yawitz (1991-2025), aka byawitz, who built the foundational work to bring Coroutines to Appwrite, but tragically passed before he could finish it.
 
 [Binyamin](/blog/author/binyamin-yawitz) was a Platform Engineer on the team. The engine that Appwrite 2.0 runs on began with his work, and it carries his name in his memory.

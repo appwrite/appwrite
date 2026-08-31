@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing Appwrite Firewall: traffic control for your project"
 description: Appwrite Firewall adds project-level traffic rules to Appwrite Cloud. Deny, bypass, challenge, rate limit, or redirect requests to your API, Functions, and Sites, with an impact preview before every change.
-date: 2026-08-06
+date: 2026-09-04
 cover: /images/blog-local/announcing-appwrite-firewall/cover.avif
 timeToRead: 6
 author: atharva

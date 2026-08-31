@@ -1611,6 +1611,7 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 - **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` (or `blog-local` for vibes-native posts) and set `cover:` in the post frontmatter. `scripts/generate-blog-local-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
 - **After adding or changing any cover**: run `bun run generate:cover-manifest`. This regenerates `src/lib/seo/cover-dimensions.json`, which the SEO helpers use to emit accurate `og:image:width` / `og:image:height`. The script warns about undersized covers; fix them with `bun run generate:content-covers` (upscales in place, aspect ratio preserved). The manifest is also regenerated during `bun run build`.
 - **Never** claim 1200x630 for a cover that has different dimensions; the manifest lookup handles this - do not hardcode dimensions in meta tags.
+- **Never add a per-post cover generator function.** A cover is a finished image that ships in `public/images/`, not code. Do not add a `generate<Post>Cover` function or an `IMAGE_GENERATORS` entry to `scripts/generate-blog-local-images.ts` for a new post, and never run that script for a slug whose cover already exists: the generator re-renders `cover.avif` and silently overwrites the shipped one. To convert an inline screenshot for a post without a generator, convert it outside the cover path and commit only the `.avif`.
 
 ### Article meta and structured data
 

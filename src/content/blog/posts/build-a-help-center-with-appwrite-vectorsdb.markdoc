@@ -15,7 +15,7 @@ faqs:
   - question: "Does VectorsDB generate the embeddings, or is a separate service necessary?"
     answer: "Appwrite generates the embeddings. Send an array of strings to Appwrite and it returns one vector for each string. A separate embedding provider is not necessary, and vectors from an external provider also work if their dimension matches the dimension of the collection."
   - question: "Which embedding model should a help center use?"
-    answer: "The Console offers nomic-embed-text and embedding-gemma at 768 components, and all-minilm and bge-small at 384. More components capture finer distinctions, and fewer components use less storage and keep search faster. A help center of a few hundred short articles in one language is well served by a 384 component model such as bge-small."
+    answer: "The Console lists nomic-embed-text and embedding-gemma at 768 components, and all-minilm and bge-small at 384. More components capture finer distinctions, and fewer components use less storage and keep search faster. A help center of a few hundred short articles in one language is well served by a 384 component model such as all-minilm."
   - question: "What does the distance value on a search result mean?"
     answer: "A vector query adds a $distance field to each document. For a cosine query, the value is the cosine distance between the query vector and the stored vector. Lower is closer, so subtract it from 1 to get a similarity between 0 and 1."
   - question: "Is an index required for vector search?"
@@ -39,9 +39,9 @@ Vector search closes that gap. Each article becomes a vector that holds its mean
 | Scope | Used for |
 | --- | --- |
 | `embeddings.write` | Turning text into vectors |
-| `documents.read` | Reading and searching articles |
-| `documents.write` | Publishing, editing, and deleting articles |
-| `collections.write` | Creating the vector index |
+| `vectorsdb.documents.read` | Reading and searching articles |
+| `vectorsdb.documents.write` | Publishing, editing, and deleting articles |
+| `vectorsdb.indexes.write` | Creating the vector index |
 | `sessions.write` | Signing an author in from the server |
 
 # Create the vector database
@@ -60,18 +60,20 @@ Select **Create database** to finish.
 
 Open the database and select **Create collection**. A vector collection does not ask for columns. It asks for an embedding model, because the model decides how many components every vector holds.
 
-![The create collection dialog with the bge-small embedding model selected](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-create-collection.avif)
+![The create collection dialog with the all-minilm embedding model selected](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-create-collection.avif)
 
 The dropdown offers four models:
 
 | Model | Components | Notes |
 | --- | --- | --- |
 | `nomic-embed-text` | 768 | General-purpose English embeddings with an 8K context window |
-| `embedding-gemma` | 768 | Multilingual embeddings for more than 100 languages |
 | `all-minilm` | 384 | Lightweight English embeddings for constrained workloads |
-| `bge-small` | 384 | Compact English embeddings with strong retrieval quality |
+| `embedding-gemma` (coming soon) | 768 | Multilingual embeddings for more than 100 languages |
+| `bge-small` (coming soon) | 384 | Compact English embeddings with strong retrieval quality |
 
-Choose **bge-small**. More components capture finer distinctions, and fewer components use less storage and keep search faster as the collection grows. A help center holds a few hundred short articles in one language, which 384 components describe well.
+Choose **all-minilm**. More components capture finer distinctions, and fewer components use less storage and keep search faster as the collection grows. A help center holds a few hundred short articles in one language, which 384 components describe well.
+
+`all-minilm` reads 256 tokens, around 190 English words, and drops the rest. Keep each article near that length, or split a longer one into sections and store each section as its own document.
 
 Name the collection `Articles` and select **Create**.
 
@@ -141,7 +143,7 @@ export const API_KEY = process.env.APPWRITE_API_KEY ?? ''
 export const DATABASE_ID = process.env.APPWRITE_DATABASE_ID ?? ''
 export const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID ?? ''
 
-export const EMBEDDING_MODEL = 'bge-small'
+export const EMBEDDING_MODEL = 'all-minilm'
 ```
 
 # Turn text into a vector

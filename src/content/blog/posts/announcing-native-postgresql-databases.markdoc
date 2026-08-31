@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing native PostgreSQL databases: The full engine, provisioned in minutes"
 description: Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.
-date: 2026-07-09
+date: 2026-09-01
 cover: /images/blog/announcing-native-postgresql-databases/cover.avif
 timeToRead: 6
 author: atharva

@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing DocumentsDB: Documents that evolve with your product"
 description: Store flexible JSON documents, query them with the Appwrite SDKs, and let your data model evolve with your product instead of ahead of it.
-date: 2026-07-09
+date: 2026-09-02
 cover: /images/blog/announcing-documentsdb/cover.avif
 timeToRead: 5
 author: atharva
