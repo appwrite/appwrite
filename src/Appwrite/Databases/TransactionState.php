@@ -463,7 +463,7 @@ class TransactionState
 
                 case 'bulkUpdate':
                     if (isset($data['queries']) && isset($data['data'])) {
-                        $queries = $this->parseStoredQueries($data['queries'] ?? []);
+                        $queries = Query::parseQueries($data['queries'] ?? []);
                         $updateData = $data['data'];
 
                         foreach ($state[$collectionId] ?? [] as $docId => $entry) {
@@ -520,7 +520,7 @@ class TransactionState
 
                 case 'bulkDelete':
                     if (isset($data['queries'])) {
-                        $queries = $this->parseStoredQueries($data['queries'] ?? []);
+                        $queries = Query::parseQueries($data['queries'] ?? []);
                         $filters = $this->extractFilters($queries);
 
                         foreach ($state[$collectionId] ?? [] as $docId => $entry) {
@@ -737,35 +737,5 @@ class TransactionState
         }
 
         return true;
-    }
-
-    /**
-     * Parse queries stored on a transaction log.
-     *
-     * Each query may be an SDK JSON string or an already-decoded
-     * `{method, attribute, values}` array.
-     *
-     * @param array<mixed> $queries
-     * @return array<Query>
-     * @throws Exception\Query
-     */
-    public function parseStoredQueries(array $queries): array
-    {
-        $parsed = [];
-
-        foreach ($queries as $query) {
-            if (\is_array($query)) {
-                $parsed[] = Query::parseQuery($query);
-                continue;
-            }
-
-            if (!\is_string($query)) {
-                throw new Exception\Query('Invalid query. Must be a string or array, got ' . \gettype($query));
-            }
-
-            $parsed[] = Query::parse($query);
-        }
-
-        return $parsed;
     }
 }

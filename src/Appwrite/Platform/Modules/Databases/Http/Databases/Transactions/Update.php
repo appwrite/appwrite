@@ -860,7 +860,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
-        $queries = $transactionState->parseStoredQueries($data['queries'] ?? []);
+        $queries = Query::parseQueries($data['queries'] ?? []);
         $updateData = new Document($data['data']);
 
         $dependentDocs = [];
@@ -982,7 +982,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
-        $queries = $transactionState->parseStoredQueries($data['queries'] ?? []);
+        $queries = Query::parseQueries($data['queries'] ?? []);
 
         $count = $dbForProject->deleteDocuments(
             $collectionId,
@@ -1007,5 +1007,4 @@ class Update extends Action
 
         return $count;
     }
-
 }
