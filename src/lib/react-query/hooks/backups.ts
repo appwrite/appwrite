@@ -105,7 +105,14 @@ export function backupPoliciesQueryOptions(
   dbKind?: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
+    queryKey: [
+      'backup-policies',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      backupResourceTypeForDbKind(dbKind),
+    ],
     queryFn: () => fetchBackupPolicies(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -138,6 +145,7 @@ export function backupArchivesQueryOptions(
       databaseId,
       page,
       limit,
+      backupResourceTypeForDbKind(dbKind),
     ],
     queryFn: () =>
       fetchBackupArchives(projectId!, databaseId!, page, limit, dbKind),
@@ -481,6 +489,7 @@ export function databaseRestoreMigrationsQueryOptions(
       'database',
       databaseId,
       'recent-migrations',
+      backupResourceTypeForDbKind(dbKind),
     ],
     queryFn: () =>
       fetchDatabaseRestoreMigrations(projectId!, databaseId!, dbKind),

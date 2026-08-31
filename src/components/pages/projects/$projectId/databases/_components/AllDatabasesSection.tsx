@@ -7,12 +7,14 @@ import {
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
   useMergedDatabaseSpecifications,
+  backupPoliciesQueryOptions,
   dedicatedBackupPoliciesQueryOptions,
   dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
 import { type Models } from '@appwrite.io/console'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
+  databaseRouteKindFromApiType,
   dedicatedDatabaseHomeLink,
   isDatabaseRouteKind,
   isDatabaseTypeFeatureEnabled,
@@ -121,18 +123,27 @@ function isListedDatabaseTypeUnavailable(
 }
 
 /**
- * Product DBs expose policies on `console.listDatabases` (`db.policies`).
- * Native dedicated DBs store policies on the engine API instead; those are
- * resolved separately and passed via `nativeHasBackupPolicyById`.
- * Returns `null` while a native policy lookup is still in flight (no warning flash).
+ * Resolve whether a database has backup policies using the same resourceType
+ * lookup as the backups view (`backupResourceTypeForDbKind`).
+ *
+ * - Native dedicated DBs: engine API via `nativeHasBackupPolicyById`
+ * - Product DBs: `listPolicies` via `productHasBackupPolicyById` (not the
+ *   embedded `console.listDatabases` policies, which can miss documentsdb /
+ *   vectorsdb policies when resourceType is wrong)
+ *
+ * Returns `null` while a lookup is still in flight (no warning flash).
  */
 function resolveHasBackupPolicy(
   db: DatabaseWithBackup,
   dedicated: Models.DedicatedDatabase | undefined,
   nativeHasBackupPolicyById: Map<string, boolean | null>,
+  productHasBackupPolicyById: Map<string, boolean | null>,
 ): boolean | null {
   if (dedicated && isNativeDedicatedDatabase(dedicated)) {
     return nativeHasBackupPolicyById.get(dedicated.$id) ?? null
+  }
+  if (productHasBackupPolicyById.has(db.$id)) {
+    return productHasBackupPolicyById.get(db.$id) ?? null
   }
   return db.hasBackupPolicy ?? false
 }
@@ -686,6 +697,13 @@ export function AllDatabasesSection({
     return items
   }, [databases, dedicatedById])
 
+  const productDatabasesOnPage = useMemo(() => {
+    return databases.filter((db) => {
+      const dedicated = dedicatedById.get(db.$id)
+      return !(dedicated && isNativeDedicatedDatabase(dedicated))
+    })
+  }, [databases, dedicatedById])
+
   const showBackups = features.databaseBackups
   const nativeBackupPolicyQueries = useQueries({
     queries: nativeDedicatedOnPage.map((dedicated) => ({
@@ -710,6 +728,31 @@ export function AllDatabasesSection({
     })
     return map
   }, [nativeBackupPolicyQueries, nativeDedicatedOnPage])
+
+  const productBackupPolicyQueries = useQueries({
+    queries: productDatabasesOnPage.map((db) => {
+      const dbKind = databaseRouteKindFromApiType(
+        db.apiType ?? db.databaseType,
+      )
+      return {
+        ...backupPoliciesQueryOptions(projectId, db.$id, dbKind),
+        enabled: showBackups && !!projectId && !!db.$id,
+      }
+    }),
+  })
+
+  const productHasBackupPolicyById = useMemo(() => {
+    const map = new Map<string, boolean | null>()
+    productDatabasesOnPage.forEach((db, index) => {
+      const query = productBackupPolicyQueries[index]
+      if (!query || query.isLoading || query.isPending) {
+        map.set(db.$id, null)
+        return
+      }
+      map.set(db.$id, (query.data?.policies?.length ?? 0) > 0)
+    })
+    return map
+  }, [productBackupPolicyQueries, productDatabasesOnPage])
 
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =
@@ -816,6 +859,7 @@ export function AllDatabasesSection({
                               db,
                               dedicated,
                               nativeHasBackupPolicyById,
+                              productHasBackupPolicyById,
                             ),
                             showBackups,
                           ) ? (
@@ -983,6 +1027,7 @@ export function AllDatabasesSection({
                   db,
                   dedicatedById.get(db.$id),
                   nativeHasBackupPolicyById,
+                  productHasBackupPolicyById,
                 )}
                 computeLabelOptions={computeLabelOptions}
               />
