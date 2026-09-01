@@ -108,6 +108,8 @@ abstract class Base extends TestCase
 
     protected static bool $supportsNamespaceListing = true;
 
+    protected static bool $reportsNamespaceKinds = true;
+
     /**
      * Whether the provider computes language stats out of band. GitHub does,
      * with no guaranteed turnaround, so a repository that still has none says
@@ -2109,9 +2111,11 @@ abstract class Base extends TestCase
         $this->assertArrayHasKey('total', $result);
         $this->assertNotEmpty($result['items']);
 
-        $kinds = array_column($result['items'], 'kind');
-        $this->assertContains('user', $kinds);
-        $this->assertContains('group', $kinds);
+        if (static::$reportsNamespaceKinds) {
+            $kinds = array_column($result['items'], 'kind');
+            $this->assertContains('user', $kinds);
+            $this->assertContains('group', $kinds);
+        }
 
         foreach ($result['items'] as $namespace) {
             $this->assertArrayHasKey('id', $namespace);

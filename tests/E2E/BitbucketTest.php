@@ -23,6 +23,9 @@ final class BitbucketTest extends Base
     // reports the account the token belongs to
     protected static bool $resolvesOwnerFromRepositoryId = false;
 
+    // Workspaces have no personal-vs-team distinction to report as 'kind'
+    protected static bool $reportsNamespaceKinds = false;
+
     // Accounts are looked up by uuid, not by handle
     protected static bool $supportsUserLookup = false;
 

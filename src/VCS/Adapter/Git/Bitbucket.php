@@ -380,8 +380,8 @@ class Bitbucket extends Git
     }
 
     /**
-     * A workspace carries no personal-vs-team flag, so the account's own uuid
-     * identifies the personal one.
+     * A workspace carries no personal-vs-team flag and nothing on the account
+     * identifies which one is personal, so every workspace reports as a group.
      *
      * @return array{items: array<array<string, mixed>>, total: int}
      */
@@ -407,10 +407,6 @@ class Bitbucket extends Git
             return ['items' => [], 'total' => 0];
         }
 
-        $user = $this->getAuthenticatedUser();
-        $accountUuid = (string) ($user['uuid'] ?? '');
-        $accountSlug = (string) ($user['username'] ?? ($user['nickname'] ?? ''));
-
         $namespaces = [];
         foreach (($responseBody['values'] ?? []) as $entry) {
             $workspace = \is_array($entry) && \is_array($entry['workspace'] ?? null)
@@ -423,14 +419,12 @@ class Bitbucket extends Git
             }
 
             $uuid = (string) ($workspace['uuid'] ?? '');
-            $personal = ($accountUuid !== '' && $uuid === $accountUuid)
-                || ($accountSlug !== '' && $slug === $accountSlug);
 
             $namespaces[] = [
                 'id' => $uuid !== '' ? $uuid : $slug,
                 'name' => (string) ($workspace['name'] ?? $slug),
                 'path' => $slug,
-                'kind' => $personal ? 'user' : 'group',
+                'kind' => 'group',
                 'avatarUrl' => (string) ($workspace['links']['avatar']['href'] ?? ''),
             ];
         }
