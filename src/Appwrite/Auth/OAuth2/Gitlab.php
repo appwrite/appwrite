@@ -231,7 +231,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Decode the JSON stored in appSecret
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
      *
      * @return array
      */
@@ -240,8 +241,13 @@ class Gitlab extends OAuth2
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
-            throw new \Exception('Invalid secret');
+            return ['clientSecret' => $this->appSecret];
         }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
         return $secret;
     }
 
@@ -256,6 +262,6 @@ class Gitlab extends OAuth2
         $defaultEndpoint = 'https://gitlab.com';
         $secret = $this->getAppSecret();
         $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
-        return empty($endpoint) ? $defaultEndpoint : $endpoint;
+        return empty($endpoint) ? $defaultEndpoint : \rtrim($endpoint, '/');
     }
 }
