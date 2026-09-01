@@ -20,9 +20,9 @@ A new database starts in a `provisioning` state and becomes `ready` within a few
 
 # Regions {% #regions %}
 
-Native databases run in Frankfurt (`fra`) and New York (`nyc`).
+Native databases are rolling out region by region, starting with Frankfurt (`fra`) and New York (`nyc`), and more regions are on the way.
 
-A native database lives in the same region as the project that owns it. There is no per-database region selector, so a project outside these regions cannot host one. Each database gets a unique hostname in the form `db-<hash>.<region>.appwrite.center`, and data does not leave the region.
+A native database lives in the same region as the project that owns it. There is no per-database region selector, so a project in a region that has not been enabled yet cannot host one. Each database gets a unique hostname in the form `db-<hash>.<region>.appwrite.center`, and data does not leave the region.
 
 # Feature overview {% #features %}
 
