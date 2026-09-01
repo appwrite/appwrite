@@ -19,10 +19,14 @@ use Appwrite\Utopia\Response\Model\AlgoPhpass;
 use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
+use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
+use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\FrameworkAdapter;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\Metric;
+use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
 use Appwrite\Utopia\Response\Model\PlatformApple;
@@ -33,20 +37,36 @@ use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TemplateFramework;
+use Appwrite\Utopia\Response\Model\TemplateSite;
+use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\Platform\Enum;
+use Utopia\Validator\AnyOf;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean as BooleanValidator;
+use Utopia\Validator\Domain;
+use Utopia\Validator\FloatValidator;
+use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class TestFormat extends Format
 {
@@ -68,6 +88,29 @@ class TestFormat extends Format
     public function arrayItemsSchema(mixed $example): array
     {
         return $this->getArrayItemsSchema($example);
+    }
+}
+
+class MixedValidator extends \Utopia\Validator
+{
+    public function getDescription(): string
+    {
+        return 'Mixed value';
+    }
+
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    public function isValid($value): bool
+    {
+        return true;
+    }
+
+    public function getType(): string
+    {
+        return self::TYPE_MIXED;
     }
 }
 
@@ -117,6 +160,139 @@ final class FormatTest extends TestCase
         $this->assertSame('HealthCheckStatus', (new HealthStatus())->getRules()['status']['enumSDKName']);
     }
 
+    public function testUnionWithAFreeStringBranchEmitsAnyOf(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('metrics', [], new AnyOf([
+                new ArrayList(new WhiteList(['alpha', 'beta'], true), 10),
+                new ArrayList(new Text(255), 10),
+            ]), 'Metric names.', false, enum: new Enum(name: 'TestMetric'));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $this->assertSame([
+            'type' => 'string',
+            'anyOf' => [
+                [
+                    'title' => 'TestMetric',
+                    'type' => 'string',
+                    'oneOf' => [
+                        ['type' => 'string', 'enum' => ['alpha'], 'title' => 'alpha'],
+                        ['type' => 'string', 'enum' => ['beta'], 'title' => 'beta'],
+                    ],
+                ],
+                ['type' => 'string'],
+            ],
+        ], $spec['paths']['/tests']['get']['parameters'][0]['schema']['items']);
+    }
+
+    public function testClosedEnumEmitsAnnotatedBranchesInRequestBody(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum(
+                name: 'TestKind',
+                map: ['basic' => 'Basic', 'advanced' => 'Advanced'],
+            ));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $kind = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['kind'];
+
+        $this->assertSame('TestKind', $kind['title']);
+        $this->assertSame([
+            ['type' => 'string', 'enum' => ['basic'], 'title' => 'Basic'],
+            ['type' => 'string', 'enum' => ['advanced'], 'title' => 'Advanced'],
+        ], $kind['oneOf']);
+        $this->assertSame('string', $kind['type']);
+        $this->assertArrayNotHasKey('x-enum-name', $kind);
+        $this->assertArrayNotHasKey('x-enum-keys', $kind);
+    }
+
+    public function testEnumNameMustNotOverlapServiceName(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum());
+
+        $format = new OpenAPI3(
+            new Container(),
+            [['name' => 'Kind', 'description' => 'Test kinds.']],
+            [$route],
+            [],
+            [],
+            0,
+            'console',
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Spec service name 'Kind' must not overlap enum 'kind'.");
+
+        $format->parse();
+    }
+
+    public function testResponseModelEnumEmitsAnnotatedBranches(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/health'))
+            ->desc('Get health')
+            ->label('sdk', new Method(
+                namespace: 'health',
+                group: null,
+                name: 'get',
+                description: 'Get health.',
+                auth: [],
+                responses: [new SDKResponse(code: Response::STATUS_CODE_OK, model: Response::MODEL_HEALTH_STATUS)],
+            ));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new HealthStatus()], [], 0, 'console'))->parse();
+        $status = $spec['components']['schemas']['healthStatus']['properties']['status'];
+
+        $this->assertSame('HealthCheckStatus', $status['title']);
+        $this->assertNotEmpty($status['oneOf']);
+        foreach ($status['oneOf'] as $branch) {
+            $this->assertSame('string', $branch['type']);
+            $this->assertCount(1, $branch['enum']);
+            $this->assertSame($branch['enum'][0], $branch['title']);
+        }
+        $this->assertArrayNotHasKey('x-enum-name', $status);
+    }
+
     public function testOpenApiCustomIdBodyFieldIncludesIdGeneratorMetadata(): void
     {
         Method::$processed = [];
@@ -136,10 +312,76 @@ final class FormatTest extends TestCase
 
         $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
 
-        $this->assertSame(
-            ['idGenerator' => 'ID.unique'],
-            $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId']['x-appwrite']
-        );
+        $userId = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId'];
+
+        $this->assertSame(['idGenerator' => 'ID.unique'], $userId['x-appwrite']);
+        $this->assertSame('<USER_ID>', $userId['example']);
+        $this->assertArrayNotHasKey('x-example', $userId);
+    }
+
+    public function testOpenApiExamplesUseNativeSchemaTypes(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('metadata', [], new Assoc(), 'Metadata.', example: '{"enabled":true}')
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', example: '["one","two"]')
+            ->param('singleLabel', [], new ArrayList(new Text(16)), 'Single label.', example: 'one')
+            ->param('count', 0, new Range(0, 100), 'Count.', example: '42')
+            ->param('ratio', 0, new Range(0, 10, Range::TYPE_FLOAT), 'Ratio.', example: '2.5')
+            ->param('enabled', false, new BooleanValidator(true), 'Enabled.', example: 'true')
+            ->param('text', '', new Text(64), 'Text.', example: '["one","two"]');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertEquals((object) ['enabled' => true], $properties['metadata']['example']);
+        $this->assertSame(['one', 'two'], $properties['labels']['example']);
+        $this->assertSame(['one'], $properties['singleLabel']['example']);
+        $this->assertSame(42, $properties['count']['example']);
+        $this->assertEqualsWithDelta(2.5, $properties['ratio']['example'], PHP_FLOAT_EPSILON);
+        $this->assertTrue($properties['enabled']['example']);
+        $this->assertSame('["one","two"]', $properties['text']['example']);
+    }
+
+    public function testArrayListItemTypesAreValidOpenApiTypes(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('percents', [], new ArrayList(new FloatValidator()), 'Percents.', optional: true)
+            ->param('counts', [], new ArrayList(new IntegerValidator()), 'Counts.', optional: true)
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
+            ->param('values', [], new ArrayList(new MixedValidator()), 'Values.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertSame(['type' => 'number', 'format' => 'double'], $properties['percents']['items']);
+        $this->assertSame(['type' => 'integer'], $properties['counts']['items']);
+        $this->assertSame(['type' => 'string'], $properties['labels']['items']);
+        $this->assertInstanceOf(\stdClass::class, $properties['values']['items']);
+        $this->assertSame('{}', json_encode($properties['values']['items']));
     }
 
     public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
@@ -271,10 +513,8 @@ final class FormatTest extends TestCase
         $get = $openApi['paths']['/tests/{testId}']['get'];
         $post = $openApi['paths']['/tests/{testId}']['post'];
 
-        $this->assertSame('testGetOrUpdateTestGet', $get['operationId']);
+        $this->assertSame('testGetOrUpdateTest', $get['operationId']);
         $this->assertSame('testGetOrUpdateTestPost', $post['operationId']);
-        $this->assertSame('getOrUpdateTest', $get['x-appwrite']['method']);
-        $this->assertSame('getOrUpdateTestPost', $post['x-appwrite']['method']);
         $this->assertSame('path', $get['parameters'][0]['in']);
         $this->assertSame('query', $get['parameters'][1]['in']);
         $this->assertArrayNotHasKey('requestBody', $get);
@@ -328,6 +568,95 @@ final class FormatTest extends TestCase
      * (`undefined: SessionId`) and a Python SDK that requested
      * `/account/sessions/None`.
      */
+    public function testObjectModelReferencesWithoutExamplesOmitExample(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $parent = new class () extends ResponseModel {
+            public function __construct()
+            {
+                $this->addRule('child', [
+                    'type' => 'childWithoutExample',
+                    'description' => 'Nested child.',
+                    'default' => null,
+                ]);
+            }
+
+            public function getName(): string
+            {
+                return 'Parent without example';
+            }
+
+            public function getType(): string
+            {
+                return 'parentWithoutExample';
+            }
+        };
+
+        $child = new class () extends ResponseModel {
+            public function getName(): string
+            {
+                return 'Child without example';
+            }
+
+            public function getType(): string
+            {
+                return 'childWithoutExample';
+            }
+        };
+
+        $route = (new Route('GET', '/v1/tests/parent'))
+            ->desc('Get parent')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getParent',
+                description: 'Get parent.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: 'parentWithoutExample',
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [$parent, $child], [], 0, 'console'))->parse();
+        $property = $openApi['components']['schemas']['parentWithoutExample']['properties']['child'];
+
+        $this->assertSame('object', $property['type']);
+        $this->assertArrayNotHasKey('example', $property);
+    }
+
+    public function testExplicitEmptyArrayExampleIsPreserved(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/error'))
+            ->desc('Get error')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getError',
+                description: 'Get error.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 500,
+                        model: Response::MODEL_ERROR_DEV,
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new ErrorDev()], [], 0, 'console'))->parse();
+        $trace = $openApi['components']['schemas']['errorDev']['properties']['trace'];
+
+        $this->assertSame('array', $trace['type']);
+        $this->assertSame([], $trace['example']);
+    }
+
     public function testOptionalPathParameterIsEmittedAsRequired(): void
     {
         Method::$processed = [];
@@ -411,6 +740,42 @@ final class FormatTest extends TestCase
             $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
             $this->assertArrayNotHasKey('items', $properties[$key], $key);
         }
+    }
+
+    public function testJsonArrayModelExamplesUseArraySchemas(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/migration'))
+            ->desc('Get migration')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getMigration',
+                description: 'Get migration.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_MIGRATION,
+                    ),
+                ],
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Migration()], [], 0, 'console'))->parse();
+        $resourceData = $openApi['components']['schemas']['migration']['properties']['resourceData'];
+
+        $this->assertSame('array', $resourceData['type']);
+        $this->assertSame(['type' => 'object'], $resourceData['items']);
+        $this->assertSame([
+            [
+                'resource' => 'Database',
+                'id' => 'public',
+                'status' => 'SUCCESS',
+                'message' => '',
+            ],
+        ], $resourceData['example']);
     }
 
     public function testArrayItemsSchemaInfersTypesFromJsonStringExamples(): void
@@ -534,6 +899,8 @@ final class FormatTest extends TestCase
             $this->assertSame('number', $default['items']['items']['type']);
             $this->assertSame('double', $default['items']['items']['format']);
         }
+
+        $this->assertSame([[1, 2], [3, 4], [5, 6]], $openApiRequestDefault['example']);
     }
 
     public function testPasswordFormatMarksOnlyExplicitPasswordFields(): void
@@ -565,10 +932,16 @@ final class FormatTest extends TestCase
         $openApiProperties = $openApi['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         $this->assertSame('password', $openApiProperties['password']['format']);
+        $this->assertSame('password', $openApiProperties['password']['example']);
+        $this->assertArrayNotHasKey('x-example', $openApiProperties['password']);
         $this->assertSame('password', $openApiProperties['nullablePassword']['format']);
-        $this->assertTrue($openApiProperties['nullablePassword']['x-nullable']);
+        $this->assertTrue($openApiProperties['nullablePassword']['nullable']);
         $this->assertArrayNotHasKey('format', $openApiProperties['name']);
-        $this->assertSame('password', $openApi['components']['schemas']['webhook']['properties']['authPassword']['format']);
+
+        $authPassword = $openApi['components']['schemas']['webhook']['properties']['authPassword'];
+        $this->assertSame('password', $authPassword['format']);
+        $this->assertSame('webhook-password', $authPassword['example']);
+        $this->assertArrayNotHasKey('x-example', $authPassword);
 
     }
 
@@ -667,7 +1040,7 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiQuery['type']);
     }
 
-    public function testJsonModelRulesKeepAdditionalPropertiesAndSkipNullable(): void
+    public function testJsonAndNullableModelRulesEmitExpectedSchemas(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -690,15 +1063,56 @@ final class FormatTest extends TestCase
 
         $models = [
             new Provider(),
+            new FrameworkAdapter(),
+            new TemplateFramework(),
+            new TemplateSite(),
+            new TemplateVariable(),
+            new UsageDataPoint(),
             new ErrorModel(),
         ];
+        $routes = [$route];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER,
+            Response::MODEL_TEMPLATE_FRAMEWORK,
+            Response::MODEL_TEMPLATE_SITE,
+            Response::MODEL_USAGE_DATA_POINT,
+        ] as $model) {
+            $routes[] = (new Route('GET', '/v1/tests/' . $model))
+                ->desc('Get test response model')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'get' . \ucfirst($model),
+                    description: 'Get test response model.',
+                    auth: [],
+                    responses: [
+                        new SDKResponse(
+                            code: 200,
+                            model: $model,
+                        ),
+                    ],
+                ));
+        }
+
+        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], 0, 'console'))->parse();
 
         $openApiOptions = $openApi['components']['schemas']['provider']['properties']['options'];
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER => 'fallbackFile',
+            Response::MODEL_TEMPLATE_FRAMEWORK => 'fallbackFile',
+            Response::MODEL_TEMPLATE_SITE => 'demoUrl',
+            Response::MODEL_USAGE_DATA_POINT => 'time',
+        ] as $model => $property) {
+            $schema = $openApi['components']['schemas'][$model];
+
+            $this->assertTrue($schema['properties'][$property]['nullable']);
+            $this->assertNotContains($property, $schema['required']);
+        }
     }
 
     public function testQueriesSubclassesEmitArrayOfStrings(): void
@@ -735,5 +1149,65 @@ final class FormatTest extends TestCase
             $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
             $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
         }
+    }
+
+    public function testZeroIsKeptAsADeclaredExample(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('min', 0, new Range(0, 100), 'Minimum.', example: '0')
+            ->param('label', '', new Text(64), 'Label.', example: '0');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        // "0" is falsy, so a truthiness check silently discards it and falls back
+        // to the validator default -- Range::getMin() here, and a <LABEL>
+        // placeholder for the string.
+        $this->assertSame(0, $properties['min']['example']);
+        $this->assertSame('0', $properties['label']['example']);
+    }
+
+    public function testValidatorsWithoutAnExampleFallBackToOne(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('key', '', new Key(), 'Column key.')
+            ->param('newKey', '', new Nullable(new Key()), 'New column key.', true)
+            ->param('domain', '', new Domain(), 'Domain name.')
+            ->param('background', '', new HexColor(), 'Background colour.');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        // Without a case of their own these validators fell through to the
+        // default arm, which leaves no example at all and renders as an empty
+        // literal in every generated SDK example.
+        $this->assertSame('<KEY>', $properties['key']['example']);
+        $this->assertSame('<NEW_KEY>', $properties['newKey']['example']);
+        $this->assertSame('example.com', $properties['domain']['example']);
+        $this->assertSame('FFFFFF', $properties['background']['example']);
     }
 }

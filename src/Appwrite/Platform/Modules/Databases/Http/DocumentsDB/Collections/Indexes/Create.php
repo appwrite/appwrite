@@ -38,7 +38,7 @@ class Create extends IndexCreate
             ->desc('Create index')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
-            ->label('scope', 'collections.write')
+            ->label('scope', 'documentsdb.indexes.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Certificate as CertificateEvent;
@@ -27,6 +28,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -109,13 +111,13 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
-            ), 'Build specification for the function deployments.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
+            ), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
@@ -138,6 +140,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -186,6 +189,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
 
@@ -435,6 +439,7 @@ class Create extends Base
                         'region' => $project->getAttribute('region')
                     ]))
                 );
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                 $ruleModel = new Rule();
                 $ruleCreate =

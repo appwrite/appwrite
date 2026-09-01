@@ -53,6 +53,7 @@ Http::init()
     ->inject('dbForProject')
     ->inject('auditContext')
     ->inject('project')
+    ->inject('projectIdFromPath')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
@@ -63,7 +64,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -109,6 +110,17 @@ Http::init()
          *     - Validate factor completion
          *     - Throw exception if factors incomplete
          */
+
+        // Bind project management authorization to the project in the path.
+        if ($projectIdFromPath !== '') {
+            $headerProjectId = $request->getHeaderLine('x-appwrite-project', '');
+
+            foreach ([$headerProjectId, $project->getId()] as $contextProjectId) {
+                if ($contextProjectId !== '' && $contextProjectId !== 'console' && $contextProjectId !== $projectIdFromPath) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+            }
+        }
 
         // Step 1: Check if project is empty
         if ($project->isEmpty()) {
@@ -293,8 +305,7 @@ Http::init()
 
             $projectId = $project->getId();
             if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
-                $projectId = explode('/', $uri)[3];
+                $projectId = $projectIdFromPath;
             }
 
             // Base scopes for admin users to allow listing teams and projects.
@@ -383,13 +394,16 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
                 $lock->tryWithKey(
-                    'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
-                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                        'projects',
-                        $project->getId(),
-                        new Document(['accessedAt' => DateTime::now()])
+                    'lock:platform:projects:'.$project->getId().':accessedAt',
+                    // updateDocument never uses cache, so skip the subqueries.
+                    fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument(
+                            'projects',
+                            $project->getId(),
+                            new Document(['accessedAt' => DateTime::now()])
+                        ),
+                        APP_PROJECTS_SUBQUERIES
                     )),
                     target: 'projects'
                 );
@@ -404,17 +418,28 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
-                    $dbForProject->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ]));
-                } else {
-                    $userInternalId = (string) ($user->getSequence() ?: $user->getId());
                     $lock->tryWithKey(
-                        'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
-                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                            'users',
-                            $user->getId(),
-                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        'lock:project:'.$project->getSequence().':users:'.$user->getSequence().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $dbForProject->skipFilters(
+                            fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                                'accessedAt' => $user->getAttribute('accessedAt')
+                            ])),
+                            APP_USERS_SUBQUERIES
+                        ),
+                        target: 'users'
+                    );
+                } else {
+                    $lock->tryWithKey(
+                        'lock:platform:'.$user->getSequence().':users:'.$user->getId().':accessedAt',
+                        // updateDocument never uses cache, so skip the subqueries.
+                        fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument(
+                                'users',
+                                $user->getId(),
+                                new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                            ),
+                            APP_USERS_SUBQUERIES
                         )),
                         target: 'users'
                     );
@@ -435,6 +460,22 @@ Http::init()
 
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
+
+            // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
+            // installation deploys just the engine backing the platform, so neither is on
+            // until an operator provisions that engine and says so. Closed to everyone --
+            // keys and privileged roles included -- rather than answering and then failing
+            // on the first write with the reason only in the logs.
+            $products = [
+                'documentsdb' => '_APP_DOCUMENTSDB',
+                'vectorsdb' => '_APP_VECTORSDB',
+            ];
+            if (
+                isset($products[$namespace])
+                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
+            ) {
+                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            }
 
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
@@ -506,6 +547,12 @@ Http::init()
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
+        $abuseLimit = $route->getLabel('abuse-limit', 0);
+        $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
+        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
+            $abuseLimit *= 100;
+        }
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
         $closestLimit = null;
@@ -516,7 +563,7 @@ Http::init()
             try {
                 $start = $request->getContentRangeStart();
                 $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+                $timeLimit = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600));
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())
@@ -528,7 +575,7 @@ Http::init()
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                     }
                 }
 
@@ -908,7 +955,7 @@ Http::shutdown()
 
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
                 }
             }
 
@@ -1207,9 +1254,13 @@ Http::shutdown()
             // we do not have a query operator for array merge keys
             $lock->tryWithKey(
                 'lock:platform:' . $project->getSequence() . ':onboarding',
-                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'onboarding' => $byMethod,
-                ]))),
+                // updateDocument never uses cache, so skip the subqueries.
+                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byMethod,
+                    ])),
+                    APP_PROJECTS_SUBQUERIES
+                )),
                 target: 'projects',
             );
         } catch (\Throwable) {

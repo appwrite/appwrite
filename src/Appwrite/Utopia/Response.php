@@ -39,6 +39,10 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
+    public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
+    public const MODEL_USAGE_METRIC = 'usageMetric';
+    public const MODEL_USAGE_EVENT_LIST = 'usageEventList';
+    public const MODEL_USAGE_GAUGE_LIST = 'usageGaugeList';
 
     // Database
     public const MODEL_DATABASE = 'database';
@@ -296,6 +300,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_BOX = 'oAuth2Box';
     public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
+    public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
@@ -327,6 +333,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health

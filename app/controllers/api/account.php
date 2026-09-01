@@ -3,7 +3,6 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
-use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -21,8 +20,8 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -43,6 +42,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
@@ -82,7 +82,7 @@ $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'r
 $oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
 $oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -161,6 +161,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         }
     }
 
+    $geoRecord = $geo->get($request->getIP());
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -692,6 +693,8 @@ Http::delete('/v1/account/sessions')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $currentSession->getId());
+        } else {
+            $queueForEvents->reset();
         }
 
         $response->noContent();
@@ -962,7 +965,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('hooks')
@@ -972,7 +975,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -997,6 +1000,7 @@ Http::post('/v1/account/sessions/email')
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
+        $geoRecord = $geo->get($request->getIP());
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1123,7 +1127,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1131,7 +1135,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, GeoRecord $geoRecord, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Geo $geo, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1183,6 +1187,7 @@ Http::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
 
+        $geoRecord = $geo->get($request->getIP());
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1290,7 +1295,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -1325,7 +1330,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -1491,7 +1496,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('dbForPlatform')
     ->inject('queueForEvents')
     ->inject('store')
@@ -1501,7 +1506,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1666,6 +1671,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
+            $identityWithMatchingUid = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+                Query::notEqual('userInternalId', $user->getSequence()),
+            ]);
+            if (!$identityWithMatchingUid->isEmpty()) {
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+            }
+
             if (!empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
@@ -1674,7 +1688,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
-
                 $userWithMatchingEmail = $dbForProject->find('users', [
                     Query::equal('email', [$email]),
                     Query::notEqual('$id', $userId),
@@ -1709,7 +1722,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        $createdUserId = '';
+        $newUser = null;
+        $newTarget = null;
+
         if ($user->isEmpty() && empty($providerEmail)) {
             if (!$identityByProvider->isEmpty()) {
                 $identityUser = $dbForProject->getDocument('users', $identityByProvider->getAttribute('userId'));
@@ -1765,7 +1780,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                     $user->removeAttribute('$sequence');
                     $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-                    $createdUserId = $user->getId();
+                    $newUser = $user;
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1796,7 +1811,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsFree' => null,
             ];
             $emails = [$email];
-            if ($user->isEmpty()) {
+            $canonicalize = false;
+            if ($user->isEmpty() && !empty($providerEmail)) {
                 try {
                     $parsedEmail = new Email($providerEmail);
                     $canonical = $parsedEmail->getCanonical();
@@ -1806,11 +1822,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     )
                         && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                         && $isVerified;
-                    $email = $canonicalize ? $canonical : $providerEmail;
-                    $emails = array_values(array_unique([$email, $providerEmail]));
+                    // Keep the provider domain for delivery (e.g. live.com must
+                    // not become outlook.com). Still canonicalize the local part
+                    // and include the full provider canonical in collision lookups.
+                    if ($canonicalize) {
+                        $canonicalLocal = \explode('@', $canonical, 2)[0];
+                        $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+                        $email = $canonicalLocal . '@' . $providerDomain;
+                    } else {
+                        $email = $providerEmail;
+                    }
+                    $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                     $emailMetadata = [
                         'emailCanonical' => $canonical,
-                        'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                        'emailIsCanonical' => \mb_strtolower($email) === $canonical,
                         'emailIsCorporate' => $parsedEmail->isCorporate(),
                         'emailIsDisposable' => $parsedEmail->isDisposable(),
                         'emailIsFree' => $parsedEmail->isFree(),
@@ -1821,7 +1846,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is a user with the same email
-            if ($user->isEmpty()) {
+            if ($user->isEmpty() && !empty($email)) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', $emails),
                 ]);
@@ -1834,7 +1859,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is an identity with the same email
-            if ($user->isEmpty()) {
+            if ($user->isEmpty() && !empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                 ]);
@@ -1857,19 +1882,21 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+                // When $canonicalize is true we already applied delivery-safe
+                // local-part normalization while preserving the provider domain.
+                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
-                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
                 }
 
@@ -1882,8 +1909,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::update(Role::user($userId)),
                             Permission::delete(Role::user($userId)),
                         ],
-                        'email' => $email,
-                        'emailVerification' => $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
+                        'email' => $email ?: null,
+                        'emailVerification' => !empty($email) && $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
                         'status' => true,
                         'password' => null,
                         'hash' => $proofForPassword->getHash()->getName(),
@@ -1909,17 +1936,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                     $user->removeAttribute('$sequence');
                     $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-                    $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $userDoc->getId(),
-                        'userInternalId' => $userDoc->getSequence(),
-                        'providerType' => MESSAGE_TYPE_EMAIL,
-                        'identifier' => $email,
-                    ]));
+                    $newUser = $userDoc;
+                    if (!empty($email)) {
+                        $newTarget = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $userDoc->getId(),
+                            'userInternalId' => $userDoc->getSequence(),
+                            'providerType' => MESSAGE_TYPE_EMAIL,
+                            'identifier' => $email,
+                        ]));
+                    }
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1953,11 +1983,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 )
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                     && $isVerified;
-                $email = $canonicalize ? $canonical : $providerEmail;
-                $emails = array_values(array_unique([$email, $providerEmail]));
+                // Keep the provider domain for delivery (e.g. live.com must
+                // not become outlook.com). Still canonicalize the local part
+                // and include the full provider canonical in collision lookups.
+                if ($canonicalize) {
+                    $canonicalLocal = \explode('@', $canonical, 2)[0];
+                    $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+                    $email = $canonicalLocal . '@' . $providerDomain;
+                } else {
+                    $email = $providerEmail;
+                }
+                $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
                 $emailMetadata = [
                     'emailCanonical' => $canonical,
-                    'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                    'emailIsCanonical' => \mb_strtolower($email) === $canonical,
                     'emailIsCorporate' => $parsedEmail->isCorporate(),
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
@@ -1978,7 +2017,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
+            // When $canonicalize is true we already applied delivery-safe
+            // local-part normalization while preserving the provider domain.
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
@@ -1998,6 +2039,29 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
             $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
             $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
+
+            try {
+                $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getSequence(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ]));
+            } catch (Duplicate) {
+                // The identifier unique index spans all users. Persisting the email while another
+                // user owns the target would leave this user unreachable by email messaging.
+                $existingTarget = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]));
+                if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+            }
         }
 
         $identity = $dbForProject->findOne('identities', [
@@ -2020,68 +2084,44 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
             }
 
-            $identity = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'userInternalId' => $user->getSequence(),
-                'userId' => $userId,
-                'provider' => $provider,
-                'providerUid' => $oauth2ID,
-                'providerEmail' => $providerEmail,
+            try {
+                $dbForProject->createDocument('identities', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
+                    ],
+                    'userInternalId' => $user->getSequence(),
+                    'userId' => $userId,
+                    'provider' => $provider,
+                    'providerUid' => $oauth2ID,
+                    'providerEmail' => $providerEmail,
+                    'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => $refreshToken,
+                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+                    'photo' => $oauth2->getUserPhoto($accessToken),
+                ]));
+            } catch (Duplicate) {
+                // The (provider, providerUid) unique index guards the same identity being connected to two users.
+                // A request that lost the race must not leave behind the user it just created.
+                if ($newUser !== null) {
+                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                        if ($newTarget !== null) {
+                            $dbForProject->deleteDocument('targets', $newTarget->getId());
+                        }
+                        $dbForProject->deleteDocument('users', $newUser->getId());
+                    });
+                }
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+            }
+        } else {
+            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-            ]);
-
-            try {
-                $identity = $dbForProject->createDocument('identities', $identity);
-            } catch (Duplicate $error) {
-                if (!empty($providerEmail)) {
-                    throw $error;
-                }
-
-                $userCreated = !empty($createdUserId);
-                if ($userCreated) {
-                    $authorization->skip(fn () => $dbForProject->deleteDocument('users', $createdUserId));
-                    $authorization->removeRole(Role::user($createdUserId)->toString());
-                }
-
-                $identity = $dbForProject->findOne('identities', [
-                    Query::equal('provider', [$provider]),
-                    Query::equal('providerUid', [$oauth2ID]),
-                ]);
-                if ($identity->isEmpty()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
-                }
-
-                $identityUserId = $identity->getAttribute('userId');
-                if (!$userCreated && $identityUserId !== $user->getId()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
-                }
-
-                if ($userCreated) {
-                    $identityUser = $dbForProject->getDocument('users', $identityUserId);
-                    if ($identityUser->isEmpty()) {
-                        $failureRedirect(Exception::USER_NOT_FOUND);
-                    }
-
-                    $user->setAttributes($identityUser->getArrayCopy());
-                    $authorization->addRole(Role::user($user->getId())->toString());
-                }
-            }
-        } else {
-            $identity
-                ->setAttribute('providerAccessToken', $accessToken)
-                ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
-                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
-                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+                // Refresh the photo URL on every login so expired CDN links self-heal.
+                'photo' => $oauth2->getUserPhoto($accessToken),
             ]));
         }
 
@@ -2145,6 +2185,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
+            $geoRecord = $geo->get($request->getIP());
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
@@ -2261,7 +2302,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -2384,7 +2425,7 @@ Http::post('/v1/account/tokens/magic-url')
 
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
 
@@ -2712,7 +2753,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         if ($phrase === true) {
-            $phrase = Phrase::generate();
+            $phrase = (new Phrase())->generate();
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
@@ -3053,7 +3094,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -3061,10 +3102,10 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -3104,7 +3145,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')

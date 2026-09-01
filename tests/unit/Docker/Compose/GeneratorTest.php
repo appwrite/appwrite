@@ -64,9 +64,34 @@ final class GeneratorTest extends TestCase
     {
         $compose = $this->render();
 
-        $this->assertArrayHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker', $compose['services']);
+        $this->assertArrayHasKey('appwrite-task-scheduler', $compose['services']);
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
+    }
+
+    public function testSelectsSeparateTopology(): void
+    {
+        $compose = $this->render([
+            'topology' => 'separate',
+        ]);
+
+        $this->assertSame(['combined'], $compose['services']['appwrite-worker']['profiles']);
+        $this->assertSame(['combined'], $compose['services']['appwrite-task-scheduler']['profiles']);
+        $this->assertArrayHasKey('appwrite-worker-screenshots', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-executions', $compose['services']);
+        $this->assertArrayHasKey('appwrite-worker-functions', $compose['services']);
+        $this->assertArrayHasKey('appwrite-task-scheduler-functions', $compose['services']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker-functions']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler-functions']);
+
+        foreach (['appwrite-worker-stats-usage', 'appwrite-worker-stats-resources', 'appwrite-task-stats-resources'] as $name) {
+            $this->assertArrayHasKey($name, $compose['services']);
+            $this->assertArrayNotHasKey('extends', $compose['services'][$name]);
+            $this->assertArrayNotHasKey('profiles', $compose['services'][$name]);
+        }
     }
 
     public function testKeepsMongoInitFiles(): void

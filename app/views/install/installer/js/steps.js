@@ -10,7 +10,8 @@
         INSTALLATION_STEPS,
         clampStep,
         isUpgradeMode,
-        getEnabledDatabases
+        getEnabledDatabases,
+        getTopology
     } = Context;
 
     const {
@@ -62,6 +63,16 @@
         update();
     };
 
+    const bindCheckboxToState = (input, key) => {
+        if (!input) return;
+        const update = () => {
+            formState[key] = input.checked;
+            dispatchStateChange?.(key);
+        };
+        input.addEventListener('change', update);
+        update();
+    };
+
     const lockDatabaseSelection = (root, lockedDatabase) => {
         if (lockedDatabase) {
             const radios = root.querySelectorAll('input[name="database"]');
@@ -103,12 +114,30 @@
         });
     };
 
+    // A hostname that no public certificate authority will issue for: loopback names,
+    // .local/.internal names, and bare IP literals. Those are served over plain HTTP, so
+    // the toggle follows the hostname instead of making the operator know this.
+    const servedOverPlainHttp = (value) => {
+        const host = (value || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+
+        if (host === '') return true;
+        if (host === 'localhost' || host.endsWith('.localhost')) return true;
+        if (host.endsWith('.local') || host.endsWith('.internal')) return true;
+        if (host === '::1' || host === '0.0.0.0') return true;
+        if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true;
+        if (host.includes(':') && /^[0-9a-f:]+$/.test(host)) return true;
+
+        return false;
+    };
+
     const hydrateStep1State = (root) => {
         State.setStateIfEmpty?.('appDomain', root.querySelector('#hostname')?.value);
         State.setStateIfEmpty?.('database', root.querySelector('input[name="database"]:checked')?.value);
+        State.setStateIfEmpty?.('topology', getTopology?.() || root.querySelector('input[name="topology"]:checked')?.value || 'combined');
         State.setStateIfEmpty?.('httpPort', root.querySelector('#http-port')?.value);
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
+        State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
         State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
@@ -125,6 +154,11 @@
         const sslEmail = root.querySelector('#ssl-email');
         if (sslEmail && formState.emailCertificates) sslEmail.value = formState.emailCertificates;
 
+        const forceHttps = root.querySelector('#force-https');
+        if (forceHttps && typeof formState.forceHttps === 'boolean') {
+            forceHttps.checked = formState.forceHttps;
+        }
+
         const assistantKey = root.querySelector('#assistant-openai-key');
         if (assistantKey && formState.assistantOpenAIKey) {
             assistantKey.value = formState.assistantOpenAIKey;
@@ -135,6 +169,16 @@
             if (radio) {
                 radio.checked = true;
                 updateDatabaseSelection?.(radio, root);
+            }
+        }
+
+        if (formState.topology) {
+            const radio = root.querySelector(`input[name="topology"][value="${formState.topology}"]`);
+            if (radio) {
+                radio.checked = true;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
             }
         }
     };
@@ -162,16 +206,46 @@
             bindDatabaseSelection(root);
         }
 
+        const topologyRadios = root.querySelectorAll('input[name="topology"]');
+        topologyRadios.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                formState.topology = radio.value;
+                const group = radio.closest('.selector-group');
+                group?.querySelectorAll('.selector-card').forEach((card) => card.classList.remove('selected'));
+                radio.closest('.selector-card')?.classList.add('selected');
+            });
+        });
+
         const hostname = root.querySelector('#hostname');
         const httpPort = root.querySelector('#http-port');
         const httpsPort = root.querySelector('#https-port');
         const sslEmail = root.querySelector('#ssl-email');
+        const forceHttps = root.querySelector('#force-https');
         const assistantKey = root.querySelector('#assistant-openai-key');
 
         bindInputToState(hostname, 'appDomain');
+
+        // Follow the hostname until the operator sets the toggle themselves, after which
+        // their choice stands however the hostname changes.
+        if (hostname && forceHttps) {
+            const followHostname = () => {
+                if (forceHttps.dataset.touched === 'true') return;
+                const https = !servedOverPlainHttp(hostname.value);
+                forceHttps.checked = https;
+                formState.forceHttps = https;
+            };
+
+            forceHttps.addEventListener('change', () => {
+                forceHttps.dataset.touched = 'true';
+            });
+            hostname.addEventListener('input', followHostname);
+            followHostname();
+        }
+
         bindInputToState(httpPort, 'httpPort');
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
+        bindCheckboxToState(forceHttps, 'forceHttps');
         bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);
@@ -270,11 +344,15 @@
     };
 
     const hydrateStep3State = (root) => {
+        State.setStateIfEmpty?.('accountName', root.querySelector('#account-name')?.value);
         State.setStateIfEmpty?.('accountEmail', root.querySelector('#account-email')?.value);
         State.setStateIfEmpty?.('accountPassword', root.querySelector('#account-password')?.value);
     };
 
     const applyStep3State = (root) => {
+        const accountName = root.querySelector('#account-name');
+        if (accountName && formState.accountName) accountName.value = formState.accountName;
+
         const email = root.querySelector('#account-email');
         if (email && formState.accountEmail) email.value = formState.accountEmail;
 
@@ -290,10 +368,12 @@
         hydrateStep3State(root);
         applyStep3State(root);
 
+        const accountName = root.querySelector('#account-name');
         const email = root.querySelector('#account-email');
         const password = root.querySelector('#account-password');
         const passwordToggle = root.querySelector('[data-password-toggle="account-password"]');
 
+        bindInputToState(accountName, 'accountName');
         bindInputToState(email, 'accountEmail');
         bindInputToState(password, 'accountPassword');
 
@@ -446,17 +526,25 @@
                 let valid = true;
                 const email = root?.querySelector('#account-email');
                 const password = root?.querySelector('#account-password');
+                const emailValue = email?.value.trim() ?? '';
+                const passwordValue = password?.value ?? '';
 
-                if (!email || !email.value.trim()) {
+                // The account is optional -- the installer skips creating one when either
+                // field is blank, and it can be created from the console afterwards. Half
+                // an account is still an error, since that reads as an attempt to make one.
+                if (emailValue === '' && passwordValue === '') {
+                    return true;
+                }
+
+                if (emailValue === '') {
                     setFieldError?.(email, 'This field is required');
                     valid = false;
-                } else if (!isValidEmail?.(email.value.trim())) {
+                } else if (!isValidEmail?.(emailValue)) {
                     setFieldError?.(email, 'Please enter a valid email address');
                     valid = false;
                 }
 
-                const passwordValue = password?.value ?? '';
-                if (!password || !/\S/.test(passwordValue)) {
+                if (!/\S/.test(passwordValue)) {
                     setFieldError?.(password, 'This field is required');
                     valid = false;
                 } else if (!isValidPassword?.(passwordValue)) {

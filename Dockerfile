@@ -68,7 +68,9 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/stats-resources && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
@@ -79,22 +81,27 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
+    chmod +x /usr/local/bin/usage-setup && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/queue-retry && \
     chmod +x /usr/local/bin/queue-count-failed && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
+    chmod +x /usr/local/bin/worker && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-jobs && \
     chmod +x /usr/local/bin/worker-screenshots && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
+    chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-stats-resources && \
+    chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

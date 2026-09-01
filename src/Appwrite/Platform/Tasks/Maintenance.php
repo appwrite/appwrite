@@ -71,21 +71,24 @@ class Maintenance extends Action
             $dateInterval  = DateInterval::createFromDateString('30 days');
             $before30days = (new DateTime())->sub($dateInterval);
 
-            $dbForPlatform->foreach(
-                'projects',
-                function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
-                    $publisherForDeletes->enqueue(new DeleteMessage(
-                        project: $project,
-                        type: DELETE_TYPE_MAINTENANCE,
-                        hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
-                    ));
-                },
-                [
-                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::limit(100),
-                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                    Query::orderAsc('teamInternalId'),
-                ]
+            $dbForPlatform->skipFilters(
+                fn () => $dbForPlatform->foreach(
+                    'projects',
+                    function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
+                        $publisherForDeletes->enqueue(new DeleteMessage(
+                            project: $project,
+                            type: DELETE_TYPE_MAINTENANCE,
+                            hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+                        ));
+                    },
+                    [
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                        Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                        Query::limit(1000),
+                    ]
+                ),
+                APP_PROJECTS_SUBQUERIES
             );
 
             $publisherForDeletes->enqueue(new DeleteMessage(

@@ -31,7 +31,7 @@ class Get extends IndexGet
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Get index')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'vectorsdb.indexes.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

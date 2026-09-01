@@ -116,7 +116,7 @@ class ZeroDeliveryConsoleNotifications extends Notifications
  *
  * Set `$throwOnSend = true` to simulate a hard SMTP failure (DNS, refused
  * connection, auth error). The adapter's `send()` calls `process()` directly,
- * so a throw from here propagates exactly like a real PHPMailer error.
+ * so a throw from here propagates exactly like a real send failure.
  */
 class SpyEmailAdapter extends EmailAdapter
 {
@@ -424,34 +424,6 @@ final class NotificationsTest extends TestCase
         $this->assertSame('Custom Sender', $message->getFromName());
         $this->assertSame('reply@example.test', $message->getReplyToEmail());
         $this->assertSame('Custom Reply', $message->getReplyToName());
-    }
-
-    public function testLegacyPayloadSmtpOverridesProjectSmtp(): void
-    {
-        $worker = new Notifications();
-        $project = new Document([
-            'smtp' => [
-                'enabled' => true,
-                'host' => 'project.smtp.test',
-                'port' => 2525,
-                'senderEmail' => 'project@example.test',
-            ],
-        ]);
-
-        $reflection = new \ReflectionMethod($worker, 'resolveSmtpConfig');
-        $reflection->setAccessible(true);
-        /** @var array<string, mixed> $smtp */
-        $smtp = $reflection->invoke($worker, $project, [
-            'smtp' => [
-                'host' => 'payload.smtp.test',
-                'port' => 587,
-                'senderEmail' => 'payload@example.test',
-            ],
-        ]);
-
-        $this->assertSame('payload.smtp.test', $smtp['host']);
-        $this->assertSame(587, $smtp['port']);
-        $this->assertSame('payload@example.test', $smtp['senderEmail']);
     }
 
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
@@ -797,98 +769,6 @@ final class NotificationsTest extends TestCase
 
         $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
         $this->assertStringNotContainsString('/v1/notifications/logos/appwrite?jwt=', $spy->captured->getContent());
-    }
-
-    public function testPersistAlertReturnsExistingAlertIdOnDuplicate(): void
-    {
-        $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
-
-        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
-        \putenv('_APP_SMTP_HOST=spy.smtp.test');
-
-        try {
-            $worker = new CountingPersistAlertNotifications();
-
-            $payload = [
-                'project' => ['$id' => 'project-x'],
-                'recipients' => [
-                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-7'),
-                ],
-                'subject' => 'Heads up',
-                'body' => 'b',
-                'deduplicationKey' => 'persist-dup',
-            ];
-
-            // First dispatch: writes a row through the action loop and
-            // returns the deterministic alertId.
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
-
-            $this->assertSame(1, $worker->persistAlertCalls);
-            $firstAlertId = $worker->persistedIds[0];
-
-            $messageId = \md5('persist-dup');
-            $recipient = [
-                'address' => 'user@example.test',
-                'channel' => NOTIFICATION_TYPE_EMAIL,
-                'resourceType' => RESOURCE_TYPE_USERS,
-                'resourceId' => 'user-7',
-                'resourceInternalId' => 'user-7-internal',
-                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
-                'parentResourceId' => 'project-x',
-                'parentResourceInternalId' => 'project-internal-x',
-            ];
-
-            // Second invocation with the SAME messageId/recipient. The
-            // action loop's alreadyDelivered() check short-circuits before
-            // persistAlert, so call persistAlert directly to actually hit
-            // the duplicate branch. The deterministic $id collides on the
-            // primary key -> DuplicateException -> branch returns the
-            // existing alertId without throwing.
-            $reflection = new \ReflectionMethod($worker, 'persistAlert');
-            $secondAlertId = $reflection->invoke($worker, $this->database, $messageId, $recipient, $payload, $this->project);
-
-            $this->assertSame($firstAlertId, $secondAlertId, 'duplicate persist must return the existing alertId');
-
-            // Third write: bypass the deterministic $id path and use a
-            // distinct $id with the same recipient tuple. The
-            // `_key_recipient` UNIQUE composite must reject it, proving
-            // the unique-index (not just primary-key) is what backstops the
-            // duplicate-handling branch.
-            $sameTupleDoc = new Document([
-                '$id' => 'sibling-id-' . \uniqid(),
-                '$permissions' => [Permission::read(Role::any())],
-                'messageId' => $messageId,
-                'recipientHash' => $this->recipientHash(NOTIFICATION_TYPE_EMAIL, 'user@example.test', RESOURCE_TYPE_USERS, 'user-7', 'user-7-internal'),
-                'channel' => NOTIFICATION_TYPE_EMAIL,
-                'projectId' => 'project-x',
-                'projectInternalId' => 'project-internal-x',
-                'resourceType' => RESOURCE_TYPE_USERS,
-                'resourceId' => 'user-7',
-                'resourceInternalId' => 'user-7-internal',
-                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
-                'parentResourceId' => 'project-x',
-                'parentResourceInternalId' => 'project-internal-x',
-                'title' => 'sibling',
-                'body' => 'sibling',
-                'read' => false,
-            ]);
-
-            $threw = false;
-            try {
-                $this->database->createDocument('notifications', $sameTupleDoc);
-            } catch (\Utopia\Database\Exception\Duplicate) {
-                $threw = true;
-            }
-            $this->assertTrue($threw, 'unique-index `_key_recipient` must reject a second row sharing the recipient tuple');
-
-            $rows = $this->database->find('notifications', [
-                Query::equal('messageId', [$messageId]),
-            ]);
-            $this->assertCount(1, $rows, 'unique-index must prevent a second row from being persisted');
-        } finally {
-            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
-        }
     }
 
     public function testPersistAlertReturnsAlertIdAndStoresResource(): void

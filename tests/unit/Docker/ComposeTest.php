@@ -25,7 +25,7 @@ final class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(14, $this->object->getServices());
+        $this->assertCount(15, $this->object->getServices());
         $this->assertSame('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertSame('', $this->object->getService('appwrite')->getImageVersion());
         $this->assertSame('3.6', $this->object->getService('traefik')->getImageVersion());
@@ -34,6 +34,7 @@ final class ComposeTest extends TestCase
         $this->assertSame('worker-mails', $this->object->getService('appwrite-worker-mails')->getEntrypoint());
         $this->assertSame('appwrite-worker-notifications', $this->object->getService('appwrite-worker-notifications')->getContainerName());
         $this->assertSame('worker-notifications', $this->object->getService('appwrite-worker-notifications')->getEntrypoint());
+        $this->assertSame('worker-executions', $this->object->getService('appwrite-worker-executions')->getEntrypoint());
     }
 
     public function testNetworks(): void

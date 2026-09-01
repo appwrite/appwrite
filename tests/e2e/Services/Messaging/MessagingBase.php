@@ -115,7 +115,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -208,7 +210,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -824,7 +828,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -912,7 +918,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -959,6 +967,59 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+    }
+
+    public function testCreateFCMProviderInvalidCredentials(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Invalid FCM',
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request. or null", $response['body']['message']);
+    }
+
+    public function testUpdateFCMProviderInvalidCredentials(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'FCM',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/fcm/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
     }
 
     public function testUpdateProviderMissingCredentialsThrows(): void
@@ -1208,6 +1269,10 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, \count($response['body']['topics']));
 
+        foreach ($response['body']['topics'] as $topic) {
+            $this->assertArrayNotHasKey('targets', $topic);
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1240,6 +1305,7 @@ trait MessagingBase
         $this->assertEquals(0, $response['body']['emailTotal']);
         $this->assertEquals(0, $response['body']['smsTotal']);
         $this->assertEquals(0, $response['body']['pushTotal']);
+        $this->assertArrayNotHasKey('targets', $response['body']);
     }
 
     public function testCreateSubscriber(): void
@@ -1373,6 +1439,33 @@ trait MessagingBase
 
             $this->assertEquals(201, $response['headers']['status-code']);
         }
+
+        // The topic's `targets` sub-query is internal and capped far below the subscriber count,
+        // so it must never surface. Endpoints that load a topic without running the filter have to
+        // stay indistinguishable from those that run it.
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(101, $response['body']['emailTotal']);
+        $this->assertArrayNotHasKey('targets', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::equal('$id', [$topic['$id']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(1, \count($response['body']['topics']));
+        $this->assertArrayNotHasKey('targets', $response['body']['topics'][0]);
     }
 
     public function testGetSubscriber(): void
@@ -1785,6 +1878,45 @@ trait MessagingBase
         $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
+    }
+
+    public function testCreateDraftPushWithData(): void
+    {
+        // A nested `data` object is sent as a JSON object and must round-trip
+        // intact (the controller normalizes the decoded stdClass to an array).
+        $data = [
+            'route' => '/home',
+            'meta' => [
+                'count' => 2,
+                'flags' => ['a', 'b'],
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'data' => $data,
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        $this->assertEquals($data, $response['body']['data']['data']);
+
+        $messageId = $response['body']['$id'];
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals($data, $message['body']['data']['data']);
     }
 
     public function testScheduledMessage(): void

@@ -422,7 +422,6 @@ abstract class Format
         return \array_filter([
             'propertyName' => $primaryKey,
             'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
-            'x-propertyNames' => $allKeys,
             'x-mapping' => $compoundMapping,
         ]);
     }
@@ -433,7 +432,7 @@ abstract class Format
             return \in_array($default, $schema['enum'], true);
         }
 
-        if (isset($schema['items']['enum'])) {
+        if (\is_array($schema['items'] ?? null) && isset($schema['items']['enum'])) {
             return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
         }
 

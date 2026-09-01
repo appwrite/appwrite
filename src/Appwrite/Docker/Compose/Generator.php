@@ -29,6 +29,20 @@ class Generator
         'enableAssistant' => 'appwrite-assistant',
     ];
 
+    private const array TOPOLOGY_SERVICE_GROUPS = [
+        'topology' => [
+            'default' => 'combined',
+            'modes' => [
+                'combined' => [
+                    'appwrite-worker',
+                    'appwrite-task-scheduler',
+                ],
+                'separate' => [],
+            ],
+            'profile' => 'separate',
+        ],
+    ];
+
     private const array LOCAL_VOLUME_PREPENDS = [
         'appwrite' => [
             'param' => 'hostPath',
@@ -46,6 +60,7 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
+        'topology' => 'combined',
     ];
 
     private const array DEPENDENCY_SELECTORS = [
@@ -132,6 +147,12 @@ class Generator
             }
         }
 
+        foreach (self::TOPOLOGY_SERVICE_GROUPS as $param => $config) {
+            if (!\array_key_exists($params[$param], $config['modes'])) {
+                $params[$param] = $config['default'];
+            }
+        }
+
         $params['hostPath'] = \rtrim((string)$params['hostPath'], '/');
 
         return $params;
@@ -169,6 +190,50 @@ class Generator
             if (empty($this->params[$param])) {
                 unset($services[$service]);
             }
+        }
+
+        foreach (self::TOPOLOGY_SERVICE_GROUPS as $param => $config) {
+            $selected = $this->params[$param];
+            $profile = $config['profile'];
+            $combined = $config['modes']['combined'];
+
+            if ($selected === 'separate') {
+                foreach ($services as &$service) {
+                    if (!\is_array($service)) {
+                        continue;
+                    }
+
+                    $base = $service['extends']['service'] ?? null;
+                    if (!\is_string($base) || !\in_array($base, $combined, true) || !isset($services[$base])) {
+                        continue;
+                    }
+
+                    $service = \array_replace_recursive($services[$base], $service);
+                    unset($service['extends'], $service['profiles']);
+                }
+                unset($service);
+            }
+
+            foreach ($services as $name => &$service) {
+                if (!\is_array($service)) {
+                    continue;
+                }
+
+                $profiles = $service['profiles'] ?? [];
+                if ($selected === 'combined' && \in_array($profile, $profiles, true)) {
+                    unset($services[$name]);
+                    continue;
+                }
+
+                if ($selected === 'separate') {
+                    if (\in_array($name, $combined, true)) {
+                        $service['profiles'] = ['combined'];
+                    } elseif (\in_array($profile, $profiles, true)) {
+                        unset($service['profiles']);
+                    }
+                }
+            }
+            unset($service);
         }
 
         return $services;

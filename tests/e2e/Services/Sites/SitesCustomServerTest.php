@@ -11,6 +11,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -23,6 +24,86 @@ final class SitesCustomServerTest extends Scope
     use SitesBase;
     use ProjectCustom;
     use SideServer;
+
+    private function waitForSiteLog(string $siteId, string $requestPath): array
+    {
+        $logs = [];
+        $start = \time();
+
+        while (\time() - $start < 120) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', [$requestPath])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+
+            if (!empty($logs['body']['executions'][0]['logs']) && !empty($logs['body']['executions'][0]['errors'])) {
+                return $logs['body']['executions'][0];
+            }
+
+            \usleep(500000);
+        }
+
+        $this->assertNotEmpty($logs['body']['executions'] ?? [], 'Site execution log was not available within timeout');
+        $this->assertNotEmpty($logs['body']['executions'][0]['logs'] ?? '', 'Site execution log content was not populated within timeout');
+
+        return $logs['body']['executions'][0];
+    }
+
+    public function testSSRLogsPersistAndCanBeManaged(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => ID::unique(),
+                'name' => 'SSR site logs',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $this->setupSiteDomain($siteId);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
+
+            $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $log = $this->waitForSiteLog($siteId, '/logs-inline');
+            $this->assertEquals($deploymentId, $log['deploymentId']);
+            $this->assertEquals('GET', $log['requestMethod']);
+            $this->assertStringContainsString('Log1', (string) $log['logs']);
+            $this->assertStringContainsString('Error1', (string) $log['errors']);
+
+            $logId = $log['$id'];
+            $stored = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $stored['headers']['status-code']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
 
     public function testListSpecs(): void
     {
@@ -278,6 +359,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('siteKey3', $secretVariable['body']['key']);
         $this->assertEquals('', $secretVariable['body']['value']);
         $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // A key that is not a valid env var name is refused
+        foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
+            $invalidVariable = $this->createVariable($siteId, [
+                'variableId' => ID::unique(),
+                'key' => $invalidKey,
+                'value' => 'siteValue',
+            ]);
+
+            $this->assertEquals(400, $invalidVariable['headers']['status-code'], 'Key ' . json_encode($invalidKey) . ' should be refused');
+        }
 
         $variable = $this->getVariable($siteId, $variable['body']['$id']);
 
@@ -737,6 +829,133 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals($deployment['body']['$createdAt'], $site['body']['deploymentCreatedAt']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testScopes(): void
+    {
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $siteId = $site['body']['$id'];
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        // Build-time key (APPWRITE_SITE_API_KEY) can call the API with granted scopes
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsStringIgnoringCase('200 OK', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"total":', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
+
+        $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=(\S+)/', $deployment['body']['buildLogs'], $matches));
+        $this->assertEphemeralKey($matches[1], ['users.read']);
+
+        // Runtime key (x-appwrite-key header) can call the API with granted scopes
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/api-key');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $body = $response['body'];
+        $this->assertIsArray($body);
+        $this->assertArrayHasKey('total', $body['users']);
+        $this->assertArrayHasKey('users', $body['users']);
+        $this->assertEphemeralKey($body['apiKey'], ['users.read']);
+
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read', 'teams.read'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update omitting scopes preserves them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update with empty scopes clears them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => [],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals([], $site['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    private function assertEphemeralKey(string $key, array $scopes): void
+    {
+        $prefix = API_KEY_EPHEMERAL . '_';
+        $this->assertStringStartsWith($prefix, $key);
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $payload = $jwt->decode(\substr($key, \strlen($prefix)));
+
+        // Editions force extra grants onto every site key through computeScopes
+        // (empty here, cloud adds proxy.invalidations.write), so a key must carry
+        // the user-granted scopes plus those grants and nothing else.
+        $granted = Config::getParam('computeScopes', [])['sites'] ?? [];
+
+        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
+        $this->assertEquals(\array_values(\array_unique(\array_merge($scopes, $granted))), $payload['scopes']);
     }
 
     public function testListSites(): void
@@ -1866,6 +2085,16 @@ final class SitesCustomServerTest extends Scope
         $this->assertCount(2, $deployments['body']['deployments']);
         $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $deployments = $this->listDeployments($siteId, [
+            'search' => 'deployment',
+        ]);
+
+        $this->assertEquals(400, $deployments['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $deployments['body']['type']);
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [

@@ -4,9 +4,11 @@ namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
@@ -21,6 +23,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Owns a deployment's lifecycle: upload bookkeeping, creating it and
@@ -133,6 +136,41 @@ readonly class Deployments
         return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
     }
 
+    /**
+     * Same as createFromUpload(), but builds from a repository on a VCS
+     * provider: a presigned archive URL when the provider hands those out, or
+     * a git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin).
+     *
+     * @param string $ref Branch, tag, or commit the deployment builds from
+     */
+    public function createFromVcs(
+        Document $resource,
+        Document $deployment,
+        Git $vcs,
+        string $owner,
+        string $repository,
+        string $ref,
+        string $rootDirectory = '',
+    ): Document {
+        if ($vcs->supportsRepositoryArchives()) {
+            return $this->createFromUrl(
+                $resource,
+                $deployment,
+                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $rootDirectory,
+                $vcs->getRepositoryPresignedUrlHeaders(),
+            );
+        }
+
+        return $this->submit($resource, $deployment, [
+            'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
+            'ref' => $ref,
+            'subdir' => $rootDirectory,
+            'headers' => $vcs->getRepositoryCloneHeaders(),
+        ]);
+    }
+
     private function submit(Document $resource, Document $deployment, ?array $source): Document
     {
         // The caller may have been holding this deployment for a while (the
@@ -176,11 +214,18 @@ readonly class Deployments
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
+            // A refused variable key is the owner's to fix, so the build log
+            // carries the actual reason; anything else stays a generic
+            // internal error.
+            $buildLogs = $error instanceof Exception && $error->getType() === Exception::VARIABLE_INVALID_KEY
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
             // Guarded like the transition above: a cancel that landed while the
             // job was being submitted must not be reported as a failure.
             $this->dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'failed',
-                'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                'buildLogs' => $buildLogs,
                 'buildEndedAt' => DateTime::now(),
             ]), [
                 Query::equal('$id', [$deployment->getId()]),
@@ -317,15 +362,25 @@ readonly class Deployments
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
 
-        // Source artifacts, both ending in /mnt/code/source:
-        //  - remote tarball ($source): templates (public codeload URL) and VCS
-        //    (a short-lived presigned URL). Git-forge archives wrap the tree in
-        //    a "{repo}-{ref}/" root the caller can't predict, so strip drops it
-        //    and subdir then extracts just the rootDirectory from the unwrapped
-        //    tree. Uploaded tarballs (the else branch) are flat — no strip.
+        // Source artifacts, all ending in /mnt/code/source:
+        //  - remote tarball ($source with url): templates (public codeload URL)
+        //    and VCS (a short-lived presigned URL). Git-forge archives wrap the
+        //    tree in a "{repo}-{ref}/" root the caller can't predict, so strip
+        //    drops it and subdir then extracts just the rootDirectory from the
+        //    unwrapped tree. Uploaded tarballs (the else branch) are flat — no
+        //    strip.
+        //  - git clone ($source with clone): a provider without archive
+        //    downloads; the sidecar clones over Git HTTPS and checks the tree
+        //    out directly, so there is no archive to unarchive — or to stat,
+        //    which is why this path reports no sourceSize.
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
-        if ($source !== null) {
+        if (isset($source['clone'])) {
+            $subdir = \trim($source['subdir'] ?? '', '/');
+            $sourceArtifacts = [
+                new CloneArtifact(id: 'source', in: $source['clone'], out: 'source', ref: $source['ref'] ?? '', subdir: $subdir, headers: $source['headers'] ?? []),
+            ];
+        } elseif ($source !== null) {
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
@@ -502,6 +557,18 @@ readonly class Deployments
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
     }
 
+    /**
+     * Scopes encoded into the resource's auto-generated ephemeral API keys
+     *
+     * @return array<string>
+     */
+    public static function scopes(Document $resource): array
+    {
+        $granted = Config::getParam('computeScopes', [])[$resource->getCollection()] ?? [];
+
+        return \array_values(\array_unique(\array_merge($resource->getAttribute('scopes', []), $granted)));
+    }
+
     protected static function runtime(Document $resource, string $version): array
     {
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
@@ -532,9 +599,22 @@ readonly class Deployments
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        // Keys that predate the VariableKey endpoint guard can hold bytes the
+        // orchestrator refuses in an env var name (a stray tab, UTF-16 text),
+        // which would reject the whole build job after submission. Refuse only
+        // what the cluster would refuse, before the job leaves this process.
+        foreach (\array_keys($vars) as $key) {
+            if (!VariableKey::isEnvVarName((string) $key)) {
+                throw new Exception(
+                    Exception::VARIABLE_INVALID_KEY,
+                    'Variable key ' . \json_encode((string) $key) . ' is not a valid environment variable name. Update or delete this variable, then retry the deployment.'
+                );
+            }
+        }
+
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', []),
+            'scopes' => static::scopes($resource),
         ]);
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';

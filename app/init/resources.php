@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -17,8 +18,10 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -30,6 +33,8 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -37,7 +42,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -91,7 +98,7 @@ $container->set('jobs', function () {
 $container->set('screenshots', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
-        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 60));
 
     return new ScreenshotsClient($client);
 }, []);
@@ -141,6 +148,11 @@ $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePubli
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
@@ -155,6 +167,32 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
+
+$container->set('usageConnection', function () {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'usage',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_USAGE', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+
+    $connection = System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection);
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new UsageConnection(
+        enabled: System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'disabled',
+        dsn: $connection,
+        client: $client,
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_TTL', 180),
+    );
+}, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
@@ -324,7 +362,12 @@ function getDevice(string $root, string $connection = ''): Device
     }
 }
 
-$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
+$container->set('geoClient', function () {
+    $endpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+    $secret = System::getEnv('_APP_GEO_SECRET', '');
+
+    return empty($endpoint) || empty($secret) ? null : GeoClient::pooled($endpoint, $secret);
+}, []);
 
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 

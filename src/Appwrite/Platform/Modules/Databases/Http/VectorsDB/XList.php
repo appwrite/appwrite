@@ -27,7 +27,7 @@ class XList extends DatabaseXList
             ->setHttpPath('/v1/vectorsdb')
             ->desc('List databases')
             ->groups(['api', 'database'])
-            ->label('scope', 'databases.read')
+            ->label('scope', 'vectorsdb.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',

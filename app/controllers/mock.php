@@ -104,6 +104,26 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
+/**
+ * Static profile picture for the mock OAuth2 user, served from the Appwrite
+ * container itself so the avatars OAuth2 provider can actually fetch it.
+ */
+Http::get('/v1/mock/tests/general/oauth2/photo')
+    ->desc('OAuth2 User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #00FF00 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
@@ -119,6 +139,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'User Name',
                 'email' => 'useroauth@localhost.test',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } elseif (\str_starts_with($token, 'without-profile-')) {
             $user = [
@@ -137,6 +158,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'Canonical Email User',
                 'email' => 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
@@ -163,6 +185,25 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
             'name' => 'User Name Unverified',
             'email' => 'useroauthunverified@localhost.test',
             'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
         ]);
     });
 

@@ -25,7 +25,7 @@ class Delete extends TransactionsDelete
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId')
             ->desc('Delete transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

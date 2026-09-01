@@ -28,7 +28,7 @@ class Create extends XList
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')
             ->desc('Create query')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'vectorsdb.documents.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
@@ -47,7 +47,7 @@ class Create extends XList
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('queries', [], new ArrayList(new Text(MAX_VECTOR_QUERY_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . MAX_VECTOR_QUERY_LENGTH . ' characters long.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 0 and 86400 (24 hours).', true)
