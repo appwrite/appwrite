@@ -64,7 +64,7 @@ class Get extends Action
         Document $project,
         array $platform
     ) {
-        $state = (string) \json_encode([
+        $state = \json_encode([
             'projectId' => $project->getId(),
             'success' => $success,
             'failure' => $failure,
