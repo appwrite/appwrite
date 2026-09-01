@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { Check, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +26,6 @@ import {
   useOrgAppUpdate,
 } from './_components/useOrgAppUpdate'
 import { DeleteAppCard } from './_components/DeleteAppCard'
-import { copyToClipboard } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -38,19 +36,6 @@ export function View() {
 
   const mapped = mapAppToMarketplaceApp(app, { organizationId: orgId })
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
-
-  const marketplaceUrl = `${
-    typeof window === 'undefined'
-      ? 'https://cloud.appwrite.io'
-      : window.location.origin
-  }/organizations/${orgId}/marketplace/${app.$id}`
-  const [copiedUrl, setCopiedUrl] = useState(false)
-
-  const handleCopyUrl = async () => {
-    await copyToClipboard('Marketplace URL', marketplaceUrl)
-    setCopiedUrl(true)
-    setTimeout(() => setCopiedUrl(false), 2000)
-  }
 
   const handleEnabledToggle = async (enabled: boolean) => {
     try {
@@ -166,58 +151,6 @@ export function View() {
           >
             {t('Update')}
           </Button>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Marketplace page')}
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Public listing page for this app in the marketplace.')}
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Input
-              value={marketplaceUrl}
-              readOnly
-              className="font-mono text-[13px]"
-              onFocus={(e) => e.currentTarget.select()}
-              aria-label={t('Marketplace page')}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 shrink-0 px-3"
-              onClick={() => void handleCopyUrl()}
-              aria-label={t('Copy')}
-            >
-              {copiedUrl ? (
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 shrink-0 px-3"
-              asChild
-            >
-              <a
-                href={marketplaceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('Open')}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            </Button>
-          </div>
         </div>
       </div>
 

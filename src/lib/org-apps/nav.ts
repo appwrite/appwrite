@@ -30,8 +30,6 @@ export function buildOrgAppSettingsNavItems(
         'listing',
         'enabled',
         'status',
-        'marketplace',
-        'url',
         'delete',
       ],
     },
@@ -79,7 +77,14 @@ export function buildOrgAppSettingsNavItems(
       icon: Palette,
       to: '/organizations/$orgId/apps/$appId/settings',
       params,
-      keywords: ['branding', 'logo', 'homepage', 'images'],
+      keywords: [
+        'branding',
+        'logo',
+        'homepage',
+        'images',
+        'marketplace',
+        'url',
+      ],
     },
   )
 
