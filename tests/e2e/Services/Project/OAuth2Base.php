@@ -16,6 +16,7 @@ trait OAuth2Base
     {
         $providers = [
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
+            'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'enabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],

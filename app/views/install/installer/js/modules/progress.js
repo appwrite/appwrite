@@ -374,6 +374,7 @@
             forceHttps: formState?.forceHttps === true,
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
+            accountName: (formState?.accountName || '').trim(),
             accountEmail: normalizedAccountEmail,
             accountPassword: normalizedAccountPassword,
             migrate: formState?.migrate ?? false

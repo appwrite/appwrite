@@ -8,22 +8,11 @@ use Tests\E2E\Client;
 trait AvatarsBase
 {
     /**
-     * Corner colour of the built-in static fallback avatar (#FD366E).
+     * Corner colour of every avatar Appwrite draws itself (#4F4F4F). The
+     * initials square and the static fallback share one neutral surface, so
+     * the corner says an image was drawn — never which provider drew it.
      */
-    private const PHOTO_FALLBACK_COLOR = ['r' => 253, 'g' => 54, 'b' => 110];
-
-    /**
-     * Corner colour of initials rendered for the name 'W W': the 'WW'
-     * initials deterministically pick the mint theme (#85DBD8).
-     */
-    private const PHOTO_INITIALS_COLOR = ['r' => 133, 'g' => 219, 'b' => 216];
-
-    /**
-     * Corner colour of initials rendered for the name '0', which
-     * deterministically picks the blue theme (#68A3FE). '0' is falsy in
-     * PHP, so it guards every gate against empty() semantics.
-     */
-    private const PHOTO_INITIALS_ZERO_COLOR = ['r' => 104, 'g' => 163, 'b' => 254];
+    private const PHOTO_SURFACE_COLOR = ['r' => 79, 'g' => 79, 'b' => 79];
 
     public function testGetCreditCard(): array
     {
@@ -602,7 +591,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
         ]);
@@ -610,12 +599,17 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        $this->assertGreaterThan(100000, strlen($response['body']));
+
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+        $this->assertSame(800, $image->getImageWidth());
+        $this->assertSame(600, $image->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => str_repeat('a', 512),
@@ -637,7 +631,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => 'invalid-headers-string',
@@ -648,7 +642,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => 123,
@@ -659,7 +653,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => true,
@@ -673,7 +667,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => ['value1', 'value2', 'value3'], // Indexed array
@@ -685,7 +679,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => ['User-Agent' => 'MyApp', 'value2', 'Accept' => 'text/html'], // Mixed array
@@ -696,7 +690,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => [], // Empty associative array should pass
@@ -707,7 +701,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => [
@@ -724,7 +718,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => [
@@ -739,7 +733,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1920,
             'viewportHeight' => 1080,
             'width' => 800,
@@ -753,7 +747,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1,
             'viewportHeight' => 1,
             'width' => 800,
@@ -767,7 +761,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1920,
             'viewportHeight' => 1080,
             'width' => 800,
@@ -804,7 +798,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 0, // Too small
             'viewportHeight' => 720,
             'width' => 800,
@@ -815,7 +809,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 2000, // Too large
             'viewportHeight' => 720,
             'width' => 800,
@@ -826,7 +820,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1280,
             'viewportHeight' => 0, // Too small
             'width' => 800,
@@ -837,7 +831,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1280,
             'viewportHeight' => 2000, // Too large
             'width' => 800,
@@ -851,7 +845,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => -1, // Invalid width (negative)
             'height' => 600,
         ]);
@@ -860,7 +854,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 3000, // Invalid height
         ]);
@@ -872,7 +866,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'sleep' => -1, // Negative sleep
@@ -882,7 +876,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'sleep' => 15, // Too large
@@ -895,7 +889,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'quality' => -2, // Too small
@@ -905,7 +899,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'quality' => 150, // Too large
@@ -918,7 +912,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'output' => 'invalid-format',
@@ -932,7 +926,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'theme' => 'dark',
@@ -945,7 +939,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'scale' => 2.0,
@@ -958,7 +952,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -971,7 +965,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'fullpage' => true,
@@ -984,7 +978,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'locale' => 'en-US',
@@ -997,7 +991,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'timezone' => 'America/New_York',
@@ -1010,7 +1004,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => 40.7128,
@@ -1025,7 +1019,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'touch' => true,
@@ -1038,7 +1032,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => [
@@ -1056,7 +1050,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 0,
             'height' => 0,
         ]);
@@ -1068,7 +1062,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'scale' => 1.5,
@@ -1135,7 +1129,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => str_repeat('A', 513), // Too long (max 512)
@@ -1146,7 +1140,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'fullpage' => 'invalid-boolean',
@@ -1157,7 +1151,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'locale' => 'en-US-very-long-locale-string',
@@ -1168,7 +1162,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'timezone' => 'Invalid/Timezone',
@@ -1179,7 +1173,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => 91, // Too high (max 90)
@@ -1190,7 +1184,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => -91, // Too low (min -90)
@@ -1201,7 +1195,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'longitude' => 181, // Too high (max 180)
@@ -1212,7 +1206,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'longitude' => -181, // Too low (min -180)
@@ -1223,7 +1217,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'accuracy' => 100001, // Too high (max 100000)
@@ -1234,7 +1228,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'accuracy' => -1, // Negative (min 0)
@@ -1245,7 +1239,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'touch' => 'invalid-boolean',
@@ -1256,7 +1250,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => 'invalid-permissions-string',
@@ -1269,7 +1263,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone'], // This should pass as it's a valid array
@@ -1280,7 +1274,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => [], // Empty array should pass
@@ -1291,7 +1285,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['invalid-permission', 'another-invalid'],
@@ -1302,7 +1296,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'invalid-permission'],
@@ -1313,7 +1307,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone', 'notifications'],
@@ -1324,7 +1318,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone'],
@@ -1561,7 +1555,7 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         /**
          * Test for FAILURE
@@ -1621,7 +1615,7 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // The explicit name replaces the authenticated user's photo sources —
         // the identity-photo case is covered in AvatarsCustomClientTest.
@@ -1634,7 +1628,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // '0' is falsy in PHP — it must still count as a provided name and
         // render as initials, never fall back to the user's photo sources.
@@ -1647,7 +1641,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertPhotoBackground(self::PHOTO_INITIALS_ZERO_COLOR, $response['body']);
+        $this->assertPhotoInitials($response['body']);
 
         // An empty name is allowed and behaves as if it was not passed.
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
@@ -1676,27 +1670,73 @@ trait AvatarsBase
     }
 
     /**
-     * Assert the avatar is the built-in static fallback. When ImageMagick
-     * runs under a security policy that blocks the SVG module the endpoint
-     * serves the fallback as raw SVG source instead of a rasterised PNG, so
-     * both encodings are accepted.
+     * Assert the avatar is generated initials.
+     *
+     * The surface alone cannot say so — the static fallback draws on the same
+     * grey — so this also asserts the person mark is absent.
+     */
+    private function assertPhotoInitials(string $blob): void
+    {
+        $this->assertPhotoBackground(self::PHOTO_SURFACE_COLOR, $blob);
+
+        $this->assertFalse(
+            $this->photoHasPersonMark($blob),
+            'Expected rendered initials but got the static fallback — the provider chain fell through.'
+        );
+    }
+
+    /**
+     * Assert the avatar is the built-in static fallback. When Imagick is
+     * missing entirely the endpoint serves the fallback as raw SVG source
+     * instead of a drawn PNG, so both encodings are accepted.
      */
     private function assertPhotoFallback(string $blob): void
     {
         if (\str_contains(\substr($blob, 0, 256), '<svg')) {
-            $this->assertStringContainsString('#FD366E', $blob);
+            $this->assertStringContainsString('#4F4F4F', $blob);
 
             return;
         }
 
-        $this->assertPhotoBackground(self::PHOTO_FALLBACK_COLOR, $blob);
+        $this->assertPhotoBackground(self::PHOTO_SURFACE_COLOR, $blob);
+
+        $this->assertTrue(
+            $this->photoHasPersonMark($blob),
+            'Expected the static fallback but the avatar carries no person mark.'
+        );
+    }
+
+    /**
+     * Whether the fallback's person mark is drawn.
+     *
+     * Samples down the mark's left shoulder, which is figure colour on the
+     * fallback and bare surface on initials — letters are centred and never
+     * reach that far down or out. Sampling a short run rather than one pixel
+     * keeps the check clear of the mark's edges at small sizes.
+     */
+    private function photoHasPersonMark(string $blob): bool
+    {
+        $image = new \Imagick();
+        $image->readImageBlob($blob);
+
+        $x = (int) \round($image->getImageWidth() * 0.34);
+        $to = (int) \round($image->getImageHeight() * 0.73);
+
+        for ($y = (int) \round($image->getImageHeight() * 0.68); $y <= $to; $y++) {
+            $color = $image->getImagePixelColor($x, $y)->getColor();
+
+            if ($color['r'] > 200 && $color['g'] > 200 && $color['b'] > 200) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Assert both top corners of an avatar match an expected background
      * colour. Corners are always background — initials are drawn in the
-     * centre and the fallback silhouette never reaches the top edge — so a
-     * corner sample tells apart which provider produced the image.
+     * centre and the person mark never reaches the top edge.
      */
     private function assertPhotoBackground(array $rgb, string $blob): void
     {

@@ -102,12 +102,21 @@ services:
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
       - _APP_CONSOLE_SCHEMA
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
+      - _APP_CONSOLE_GITLAB_APP_ID
+      - _APP_CONSOLE_GITLAB_SECRET
+      - _APP_CONSOLE_BITBUCKET_APP_ID
+      - _APP_CONSOLE_BITBUCKET_SECRET
+      - _APP_CONSOLE_GOOGLE_APP_ID
+      - _APP_CONSOLE_GOOGLE_SECRET
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_TEAM_EMAIL
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
@@ -140,6 +149,14 @@ services:
       - _APP_DB_SCHEMA_VECTORSDB
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -239,6 +256,8 @@ services:
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
       - _APP_LIMIT_DATABASE_BATCH
+      - _APP_DOCUMENTSDB
+      - _APP_VECTORSDB
   appwrite-console:
     logging:
       driver: json-file
@@ -301,6 +320,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -319,11 +339,21 @@ services:
       - _APP_DB_SCHEMA_VECTORSDB
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_LIMIT_DATABASE_BATCH
+      - _APP_DOCUMENTSDB
+      - _APP_VECTORSDB
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:
@@ -386,6 +416,14 @@ services:
       - _APP_DB_SCHEMA_VECTORSDB
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -482,6 +520,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_LIMIT_DATABASE_BATCH
+      - _APP_DOCUMENTSDB
+      - _APP_VECTORSDB
 
   appwrite-task-scheduler:
     entrypoint: schedule
@@ -650,6 +690,20 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -720,11 +774,21 @@ services:
       - _APP_DB_SCHEMA_VECTORSDB
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_LIMIT_DATABASE_BATCH
+      - _APP_DOCUMENTSDB
+      - _APP_VECTORSDB
   appwrite-worker-builds:
     profiles:
       - separate
@@ -1277,6 +1341,20 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
@@ -1610,7 +1688,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.3.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.3
     restart: unless-stopped
     user: root
     networks:
@@ -1624,9 +1702,6 @@ services:
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
-      # Sidecars ship with the service and move with it, so they share its tag.
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.3.0
-      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.3.0
 
   mariadb:
     image: mariadb:10.11

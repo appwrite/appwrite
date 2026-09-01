@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleDeleted;
-use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -20,6 +19,7 @@ use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\Cdn\Certificates\Provider;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -102,7 +102,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForCache,
-        CertificatesAdapter $certificates,
+        Provider $certificates,
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
@@ -232,7 +232,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForCache,
-        CertificatesAdapter $certificates,
+        Provider $certificates,
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
@@ -437,19 +437,14 @@ class Deletes extends Action
      */
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
-        // Temporarily accepting both 'fra' and 'default'
-        // When all migrated, only use _APP_REGION with 'default' as default value
-        $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!in_array('default', $regions)) {
-            $regions[] = 'default';
-        }
-
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', $regions),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
+                Query::orderDesc('resourceUpdatedAt'),
+                Query::orderDesc('$sequence'),
             ],
             $dbForPlatform,
             function (Document $document) use ($dbForPlatform, $getProjectDB) {
@@ -796,7 +791,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, CertificatesAdapter $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
 
         $projects = $dbForPlatform->find('projects', [
@@ -828,7 +823,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
@@ -1413,7 +1408,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project, Bus $bus, ?Store $executionStore = null): void
+    private function deleteSite(Database $dbForPlatform, callable $getProjectDB, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Bus $bus, ?Store $executionStore = null): void
     {
         $dbForProject = $getProjectDB($project);
         $siteId = $document->getId();
@@ -1498,7 +1493,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project, Executor $executor, Bus $bus, ?Store $executionStore = null): void
+    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Provider $certificates, Document $document, Document $project, Executor $executor, Bus $bus, ?Store $executionStore = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1703,7 +1698,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, CertificatesAdapter $certificates, Document $project, Executor $executor, Bus $bus): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1846,7 +1841,7 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates, Bus $bus): void
+    protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
         $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
