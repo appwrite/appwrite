@@ -65,7 +65,7 @@ export function mapAppToMarketplaceApp(
     description: app.description?.trim() || app.tagline?.trim() || app.name,
     shortDescription: app.tagline?.trim() || app.description?.trim() || app.name,
     category: resolveCategory(tags),
-    author: isOwned ? 'Your organization' : author,
+    author,
     featured: hasTag(labels, 'featured'),
     rank: resolveRank(labels),
     isOfficial,
