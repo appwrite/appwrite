@@ -33,7 +33,6 @@ import { useT } from '@/lib/i18n/translate'
 
 export type CreateMarketplaceAppInput = {
   name: string
-  slug: string
   shortDescription: string
   description: string
   category: MarketplaceAppCategory
@@ -44,14 +43,6 @@ interface CreateMarketplaceAppProps {
   onOpenChange: (open: boolean) => void
   onCreate: (input: CreateMarketplaceAppInput) => void | Promise<void>
   isSubmitting?: boolean
-}
-
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 export function CreateMarketplaceApp({
@@ -82,7 +73,6 @@ export function CreateMarketplaceApp({
     if (!name.trim() || !shortDescription.trim() || isSubmitting) return
     await onCreate({
       name: name.trim(),
-      slug: slugify(name),
       shortDescription: shortDescription.trim(),
       description: shortDescription.trim(),
       category,
