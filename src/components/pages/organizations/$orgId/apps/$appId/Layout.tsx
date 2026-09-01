@@ -53,7 +53,9 @@ export function Layout({ initialData }: LayoutProps = {}) {
 
   const handleBack = () => {
     if (!orgId) return
-    navigate({ to: '/organizations/$orgId/apps', params: { orgId } })
+    // Note: /organizations/$orgId/apps redirects to org settings; the real
+    // "My apps" list lives on the marketplace page.
+    navigate({ to: '/organizations/$orgId/marketplace', params: { orgId } })
   }
 
   if (!app && !initialData?.app && !isLoading) {

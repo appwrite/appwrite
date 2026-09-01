@@ -32,7 +32,7 @@ export function DeleteAppCard({ orgId, app }: DeleteAppCardProps) {
       await deleteMutation.mutateAsync(app.$id)
       toast.success(t('App deleted'))
       setDeleteDialogOpen(false)
-      navigate({ to: '/organizations/$orgId/apps', params: { orgId } })
+      navigate({ to: '/organizations/$orgId/marketplace', params: { orgId } })
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to delete app')))
     }
