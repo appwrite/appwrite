@@ -1,8 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  BookOpen,
+  // BookOpen and FileText back the commented-out sidebar links below.
+  // BookOpen,
   Compass,
-  FileText,
+  // FileText,
   LayoutGrid,
   Package,
   Plus,
@@ -58,7 +59,7 @@ export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
           icon: Compass,
           keywords: ['explore', 'overview', 'home', 'discover', 'featured'],
           description:
-            'Featured apps, popular integrations, and browse by category.',
+            'Official apps, suggested picks, and browse by category.',
         },
         {
           id: 'catalog',
@@ -103,19 +104,20 @@ export const MARKETPLACE_SIDEBAR_LINKS: MarketplaceLinkItem[] = [
     icon: Plus,
     action: 'add-app',
   },
-  {
-    id: 'docs',
-    label: 'Documentation',
-    icon: BookOpen,
-    href: '/docs',
-    external: true,
-  },
-  {
-    id: 'publisher-guidelines',
-    label: 'Publisher guidelines',
-    icon: FileText,
-    action: 'publisher-guidelines',
-  },
+  // Hidden for now, but kept for when the docs pages are ready.
+  // {
+  //   id: 'docs',
+  //   label: 'Documentation',
+  //   icon: BookOpen,
+  //   href: '/docs',
+  //   external: true,
+  // },
+  // {
+  //   id: 'publisher-guidelines',
+  //   label: 'Publisher guidelines',
+  //   icon: FileText,
+  //   action: 'publisher-guidelines',
+  // },
 ]
 
 export function getMarketplaceNavItem(

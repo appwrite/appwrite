@@ -291,6 +291,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Go to next page': '次のページへ',
   'Go to previous page': '前のページへ',
   'Hide code': 'コードを非表示',
+  Homepage: 'ホームページ',
   'Homepage URL': 'ホームページ URL',
   'Homepage:': 'ホームページ:',
   'Image URLs': '画像 URL',
@@ -756,6 +757,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
   'Failed to mount payment form. Please try again.': '支払いフォームの読み込みに失敗しました。もう一度お試しください。',
   'Featured apps, popular integrations, and browse by category.': '注目のアプリ、人気のインテグレーション、カテゴリ別閲覧。',
+  'Official apps, suggested picks, and browse by category.':
+    '公式アプリ、おすすめアプリ、カテゴリ別閲覧。',
   'Find integrations grouped by what they help you build.': '構築内容に応じてグループ分けされたインテグレーションを見つけましょう。',
   'For business accounts, enter your tax identification number': '法人アカウントの場合は、税務識別番号を入力してください',
   'For more details on our plans, visit our': 'プランの詳細については、次をご覧ください:',
@@ -943,7 +946,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Country: '国',
   Create: '作成',
   Created: '作成日',
-  Creators: 'クリエイター',
+  Contacts: '連絡先',
   Credits: 'クレジット',
   Current: '現在',
   Databases: 'データベース',
@@ -998,6 +1001,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   No: 'いいえ',
   None: 'なし',
   Official: '公式',
+  Suggested: 'おすすめ',
+  'Apps built and maintained by the Appwrite team.':
+    'Appwrite チームが開発・保守するアプリ。',
+  "Hand-picked apps we think you'll find useful.":
+    '役立つと思われる厳選アプリ。',
   Offline: 'オフライン',
   Online: 'オンライン',
   Open: '開く',

@@ -3,7 +3,6 @@ import {
   MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceApp,
   type MarketplaceAppCategory,
-  type MarketplaceAppCreator,
 } from './types'
 
 const CATEGORY_SET = new Set<string>(MARKETPLACE_CATEGORY_ORDER)
@@ -37,20 +36,6 @@ function resolveRank(tags: string[]): number | undefined {
   return undefined
 }
 
-function resolveCreators(contacts: string[]): MarketplaceAppCreator[] {
-  if (!contacts.length) return []
-  return contacts.map((contact) => {
-    const trimmed = contact.trim()
-    if (!trimmed) return { name: 'Contact' }
-    if (trimmed.includes('@')) {
-      const local = trimmed.split('@')[0] ?? trimmed
-      const name = local.replace(/[._-]+/g, ' ').trim() || trimmed
-      return { name, role: 'Contact' }
-    }
-    return { name: trimmed }
-  })
-}
-
 export function mapAppToMarketplaceApp(
   app: Models.App,
   options: {
@@ -60,12 +45,18 @@ export function mapAppToMarketplaceApp(
   },
 ): MarketplaceApp {
   const tags = app.tags ?? []
+  // Curation markers (official/verified/featured/rank) live in labels, which
+  // only Appwrite can set — tags are editable by the app owner.
+  const labels = app.labels ?? []
   const isOwned = app.teamId === options.organizationId
+  const isOfficial = hasTag(labels, 'official')
   const author =
     options.authorOverride ??
-    (app.teamId
-      ? (options.teamNamesById?.[app.teamId] ?? 'Community')
-      : 'Community')
+    (isOfficial
+      ? 'Appwrite'
+      : app.teamId
+        ? (options.teamNamesById?.[app.teamId] ?? 'Community')
+        : 'Community')
 
   return {
     $id: app.$id,
@@ -75,11 +66,11 @@ export function mapAppToMarketplaceApp(
     shortDescription: app.tagline?.trim() || app.description?.trim() || app.name,
     category: resolveCategory(tags),
     author: isOwned ? 'Your organization' : author,
-    creators: resolveCreators(app.contacts ?? []),
-    featured: hasTag(tags, 'featured'),
-    rank: resolveRank(tags),
-    isOfficial: hasTag(tags, 'official'),
-    isVerified: hasTag(tags, 'verified'),
+    featured: hasTag(labels, 'featured'),
+    rank: resolveRank(labels),
+    isOfficial,
+    isVerified: hasTag(labels, 'verified'),
+    isSuggested: hasTag(labels, 'suggested'),
     isOwned,
     status: app.enabled ? 'published' : 'draft',
     tags,

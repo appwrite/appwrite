@@ -300,7 +300,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create your first project to get started':
     'צרו את הפרויקט הראשון שלכם כדי להתחיל',
   Created: 'נוצר',
-  Creators: 'יוצרים',
+  Contacts: 'אנשי קשר',
   'Credit History': 'היסטוריית קרדיטים',
   'Credit expiration': 'תפוגת קרדיט',
   'Credit expires': 'הקרדיט פג בתאריך',
@@ -493,6 +493,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to upload logo': 'העלאת הלוגו נכשלה',
   'Failed to validate payment': 'אימות התשלום נכשל',
   'Failed to view invoice': 'הצגת החשבונית נכשלה',
+  'Official apps, suggested picks, and browse by category.':
+    'אפליקציות רשמיות, המלצות נבחרות ועיון לפי קטגוריה.',
   'Featured apps, popular integrations, and browse by category.':
     'אפליקציות מומלצות, אינטגרציות פופולריות ועיון לפי קטגוריה.',
   Feedback: 'משוב',
@@ -533,6 +535,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.':
     'ספקי בריאות, תוכניות בריאות, מסלקות בריאות ושותפיהם העסקיים שבונים אפליקציות תואמות HIPAA.',
   'Hide code': 'הסתרת קוד',
+  Homepage: 'דף הבית',
   'Homepage URL': 'כתובת דף הבית',
   'Homepage:': 'דף הבית:',
   'How users can get help with your app during OAuth2 consent.':
@@ -723,6 +726,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.':
     'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
   Official: 'רשמי',
+  Suggested: 'מומלצות',
+  'Apps built and maintained by the Appwrite team.':
+    'אפליקציות שנבנו ומתוחזקות על ידי צוות Appwrite.',
+  "Hand-picked apps we think you'll find useful.":
+    'אפליקציות נבחרות שלדעתנו תמצאו שימושיות.',
   Offline: 'לא מקוון',
   'One line summary': 'תקציר בשורה אחת',
   'One-time display': 'תצוגה חד-פעמית',

@@ -1,23 +1,30 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import type {
   MarketplaceApp,
   MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
-import { MARKETPLACE_CATEGORY_ORDER } from '@/lib/marketplace/types'
+import {
+  MARKETPLACE_TOTAL_CAP,
+  formatMarketplaceCount,
+} from '@/lib/marketplace/types'
 import {
   MARKETPLACE_SIDEBAR_LINKS,
   buildMarketplaceNavGroups,
-  countAppsForNav,
   getAppsForMarketplaceNav,
   getMarketplaceNavItem,
   type MarketplaceNavId,
   type MarketplaceLinkItem,
 } from '@/lib/marketplace/marketplace-nav'
 import {
+  MARKETPLACE_PAGE_SIZE,
   useCreateOrganizationApp,
   useMarketplaceCatalog,
+  useMarketplaceCatalogPage,
+  useMarketplaceLabeledApps,
+  useMarketplaceNavCounts,
   useOrganizationApps,
   useOrganizations,
 } from '@/lib/react-query/hooks'
@@ -83,52 +90,77 @@ export function View() {
   const navGroups = useMemo(() => buildMarketplaceNavGroups(), [])
   const [activeNavId, setActiveNavId] = useState<MarketplaceNavId>('explore')
   const [searchValue, setSearchValue] = useState('')
+  const [page, setPage] = useState(1)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const searchActive = searchValue.trim().length > 0
   const isExplore = activeNavId === 'explore'
+  const activeCategory = activeNavId.startsWith('category:')
+    ? (activeNavId.slice('category:'.length) as MarketplaceAppCategory)
+    : undefined
+  // Catalog and category pages are server-paginated; other lists paginate client-side.
+  const isBrowseNav = activeNavId === 'catalog' || activeCategory !== undefined
   const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
+
+  const {
+    apps: officialApps,
+    total: officialTotal,
+    isLoading: officialLoading,
+  } = useMarketplaceLabeledApps(orgId, 'official', { teamNamesById })
+  const {
+    apps: suggestedApps,
+    total: suggestedTotal,
+    isLoading: suggestedLoading,
+  } = useMarketplaceLabeledApps(orgId, 'suggested', { teamNamesById })
+  const { catalogTotal, categoryTotals } = useMarketplaceNavCounts(orgId)
+  const {
+    apps: browseApps,
+    total: browseTotal,
+    isLoading: browseLoading,
+    isFetching: browseFetching,
+  } = useMarketplaceCatalogPage(
+    orgId,
+    { category: activeCategory, page },
+    teamNamesById,
+  )
+
+  const handleNavChange = (navId: MarketplaceNavId) => {
+    setActiveNavId(navId)
+    setPage(1)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setPage(1)
+  }
+
+  // Snap back when the last page disappears (e.g. after a refetch shrinks the list).
+  useEffect(() => {
+    if (searchActive || !isBrowseNav || browseTotal === 0) return
+    const maxPage = Math.max(1, Math.ceil(browseTotal / MARKETPLACE_PAGE_SIZE))
+    if (page > maxPage) setPage(maxPage)
+  }, [searchActive, isBrowseNav, browseTotal, page])
 
   const listLoading =
     (catalogLoading || ownedLoading) &&
     catalogApps.length === 0 &&
     ownedApps.length === 0
-  const listFetching = catalogFetching || ownedFetching
+  const listFetching = catalogFetching || ownedFetching || browseFetching
 
   const filteredCatalog = useMemo(
     () => filterApps(catalogApps, searchValue),
     [catalogApps, searchValue],
   )
 
-  const featuredApps = useMemo(
-    () => filteredCatalog.filter((a) => a.featured),
-    [filteredCatalog],
-  )
-
-  const moreApps = useMemo(
-    () => filteredCatalog.filter((a) => !a.featured),
-    [filteredCatalog],
-  )
-
-  const categoryCounts = useMemo(() => {
-    const counts = Object.fromEntries(
-      MARKETPLACE_CATEGORY_ORDER.map((c) => [c, 0]),
-    ) as Record<MarketplaceAppCategory, number>
-    for (const app of catalogApps) {
-      counts[app.category] += 1
-    }
-    return counts
-  }, [catalogApps])
-
-  const displayedApps = useMemo(() => {
-    if (isExplore) {
-      return searchActive ? filteredCatalog : []
-    }
+  // Search runs client-side over the loaded catalog; browsing uses server pages.
+  const searchResults = useMemo(() => {
+    if (!searchActive) return []
+    if (isExplore) return filteredCatalog
     const base = getAppsForMarketplaceNav(activeNavId, catalogApps, ownedApps)
     return filterApps(base, searchValue)
   }, [
-    isExplore,
     searchActive,
+    isExplore,
     filteredCatalog,
     activeNavId,
     catalogApps,
@@ -136,16 +168,55 @@ export function View() {
     searchValue,
   ])
 
-  const getItemCount = (navId: MarketplaceNavId) => {
-    if (navId === 'explore') {
-      return searchActive
-        ? filteredCatalog.length
-        : countAppsForNav('catalog', catalogApps, ownedApps)
+  const listedApps = useMemo(() => {
+    if (searchActive) return searchResults
+    if (isExplore) return []
+    if (isBrowseNav) return browseApps
+    return getAppsForMarketplaceNav(activeNavId, catalogApps, ownedApps)
+  }, [
+    searchActive,
+    searchResults,
+    isExplore,
+    isBrowseNav,
+    browseApps,
+    activeNavId,
+    catalogApps,
+    ownedApps,
+  ])
+
+  // Server pages arrive pre-sliced; everything else is paginated client-side.
+  const listedTotal =
+    !searchActive && isBrowseNav ? browseTotal : listedApps.length
+  const displayedApps = useMemo(() => {
+    if (!searchActive && isBrowseNav) return listedApps
+    const start = (page - 1) * MARKETPLACE_PAGE_SIZE
+    return listedApps.slice(start, start + MARKETPLACE_PAGE_SIZE)
+  }, [searchActive, isBrowseNav, listedApps, page])
+
+  const getItemCount = (navId: MarketplaceNavId): string => {
+    if (searchActive) {
+      if (navId === 'explore') return String(filteredCatalog.length)
+      return String(
+        filterApps(
+          getAppsForMarketplaceNav(navId, catalogApps, ownedApps),
+          searchValue,
+        ).length,
+      )
     }
-    return filterApps(
-      getAppsForMarketplaceNav(navId, catalogApps, ownedApps),
-      searchValue,
-    ).length
+    if (navId === 'explore') {
+      // Explore shows the curated official + suggested sections only.
+      return formatMarketplaceCount(officialTotal + suggestedTotal)
+    }
+    if (navId === 'catalog') {
+      return formatMarketplaceCount(catalogTotal)
+    }
+    if (navId === 'my-apps') return String(ownedApps.length)
+    if (navId.startsWith('category:')) {
+      const category = navId.slice('category:'.length) as MarketplaceAppCategory
+      const total = categoryTotals?.[category]
+      return total === undefined ? '' : formatMarketplaceCount(total)
+    }
+    return ''
   }
 
   const handleCreateApp = async (input: CreateMarketplaceAppInput) => {
@@ -190,9 +261,7 @@ export function View() {
   }
 
   const exploreHasContent =
-    featuredApps.length > 0 ||
-    moreApps.length > 0 ||
-    MARKETPLACE_CATEGORY_ORDER.some((c) => categoryCounts[c] > 0)
+    officialApps.length > 0 || suggestedApps.length > 0 || catalogTotal > 0
 
   const emptyTitle = searchActive
     ? t('No apps match your search')
@@ -207,7 +276,12 @@ export function View() {
       : t('Published apps from other organizations will appear here.')
 
   const mainContent = () => {
-    if (listLoading) {
+    const exploreLoading =
+      (officialLoading || suggestedLoading) && !exploreHasContent
+    const browseLoading2 =
+      !searchActive && isBrowseNav && browseLoading && browseApps.length === 0
+
+    if (listLoading || browseLoading2 || (isExplore && exploreLoading)) {
       return (
         <div className="flex min-h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -230,12 +304,12 @@ export function View() {
       }
       return (
         <MarketplaceExplore
-          catalogApps={catalogApps}
-          featuredApps={featuredApps}
-          moreApps={moreApps}
-          categoryCounts={categoryCounts}
+          officialApps={officialApps}
+          suggestedApps={suggestedApps}
+          catalogTotal={catalogTotal}
+          categoryCounts={categoryTotals}
           onAppClick={openDetail}
-          onNavigate={setActiveNavId}
+          onNavigate={handleNavChange}
         />
       )
     }
@@ -278,6 +352,23 @@ export function View() {
             />
           ))}
         </div>
+        {listedTotal > MARKETPLACE_PAGE_SIZE && (
+          <Pagination
+            currentPage={page}
+            totalItems={listedTotal}
+            totalDisplay={
+              listedTotal >= MARKETPLACE_TOTAL_CAP
+                ? formatMarketplaceCount(listedTotal)
+                : undefined
+            }
+            pageSize={MARKETPLACE_PAGE_SIZE}
+            onPageChange={setPage}
+            onPageSizeChange={() => {}}
+            showPageSizeSelector={false}
+            itemLabel={t('apps')}
+            className="mt-6"
+          />
+        )}
       </div>
     )
   }
@@ -289,9 +380,9 @@ export function View() {
         links={MARKETPLACE_SIDEBAR_LINKS}
         activeNavId={activeNavId}
         activeItem={activeItem}
-        onNavChange={setActiveNavId}
+        onNavChange={handleNavChange}
         searchValue={searchValue}
-        onSearchChange={setSearchValue}
+        onSearchChange={handleSearchChange}
         getItemCount={getItemCount}
         onLinkAction={handleLinkAction}
       >

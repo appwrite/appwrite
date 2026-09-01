@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Ghost } from 'lucide-react'
 
 import { sdk } from '@/lib/appwrite/sdk'
+import { useAvatarEmailHash } from '@/lib/avatar-email-hash'
 import { cn } from '@/lib/utils'
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
@@ -25,6 +26,15 @@ interface PhotoAvatarProps {
    */
   useCurrentUser?: boolean
   /** Used only for initials fallback when the photo is unavailable. */
+  name?: string
+  size?: AvatarSize
+  className?: string
+}
+
+interface EmailAvatarProps {
+  /** Raw email address; hashed client-side so only the SHA-256 hash reaches the API. */
+  email?: string
+  /** Used for server-side initials and the local initials fallback. */
   name?: string
   size?: AvatarSize
   className?: string
@@ -136,6 +146,57 @@ export function PhotoAvatar({
 
   if (failed || !src) {
     return <InitialsAvatar name={name} size={size} className={className} />
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      width={pixels}
+      height={pixels}
+      decoding="async"
+      onError={() => setFailed(true)}
+      className={cn(
+        'shrink-0 rounded-full bg-zinc-200 object-cover dark:bg-accent',
+        sizeClasses[size],
+        className,
+      )}
+    />
+  )
+}
+
+/**
+ * Avatar for an email address without a known user ID, via
+ * `avatars.getPhoto({ emailHash })` (Gravatar/Libravatar lookup).
+ */
+export function EmailAvatar({
+  email,
+  name,
+  size = 'md',
+  className,
+}: EmailAvatarProps) {
+  const [failed, setFailed] = useState(false)
+  const emailHash = useAvatarEmailHash(email)
+  const pixels = sizePixels[size]
+
+  const src = useMemo(() => {
+    if (!emailHash) return null
+    return sdk.forConsole.avatars.getPhoto({
+      width: pixels,
+      height: pixels,
+      emailHash,
+      ...(name?.trim() ? { name: name.trim() } : {}),
+    })
+  }, [emailHash, name, pixels])
+
+  useEffect(() => {
+    setFailed(false)
+  }, [src])
+
+  if (failed || !src) {
+    return (
+      <InitialsAvatar name={name || email} size={size} className={className} />
+    )
   }
 
   return (

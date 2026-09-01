@@ -21,7 +21,8 @@ import {
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
-import { MarketplaceAppCreators } from '../_components/MarketplaceAppCreators'
+import { MarketplaceAppContacts } from '../_components/MarketplaceAppContacts'
+import { MarketplaceAppResourceLinks } from '../_components/MarketplaceAppResourceLinks'
 import { MarketplaceAppLogo } from '../_components/MarketplaceAppLogo'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -178,25 +179,8 @@ export function View({ initialData }: ViewProps = {}) {
             <p className="text-[13px] text-muted-foreground leading-relaxed">
               {mapped.description}
             </p>
-            {mapped.clientUri && (
-              <p className="text-[13px]">
-                <span className="text-muted-foreground">{t('Homepage:')} </span>
-                <a
-                  href={mapped.clientUri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground underline-offset-4 hover:underline"
-                >
-                  {mapped.clientUri}
-                </a>
-              </p>
-            )}
-            <div className="space-y-2">
-              <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                {t('Creators')}
-              </h4>
-              <MarketplaceAppCreators creators={mapped.creators} />
-            </div>
+            <MarketplaceAppResourceLinks app={mapped} />
+            <MarketplaceAppContacts contacts={mapped.contacts ?? []} />
           </div>
         </div>
       </div>

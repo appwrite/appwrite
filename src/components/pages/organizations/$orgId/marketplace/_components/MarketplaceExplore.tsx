@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
+  formatMarketplaceCount,
   type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
@@ -19,10 +20,14 @@ import { ChevronRight } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceExploreProps = {
-  catalogApps: MarketplaceApp[]
-  featuredApps: MarketplaceApp[]
-  moreApps: MarketplaceApp[]
-  categoryCounts: Record<MarketplaceAppCategory, number>
+  /** Appwrite-official apps shown in the top section. */
+  officialApps: MarketplaceApp[]
+  /** Apps with the `suggested` label shown under "Suggested". */
+  suggestedApps: MarketplaceApp[]
+  /** Server total of all published apps in the catalog. */
+  catalogTotal: number
+  /** Server totals per category; null while loading. */
+  categoryCounts: Record<MarketplaceAppCategory, number> | null
   onAppClick: (app: MarketplaceApp) => void
   onNavigate: (navId: MarketplaceNavId) => void
 }
@@ -90,40 +95,44 @@ function AppGrid({
 }
 
 export function MarketplaceExplore({
-  catalogApps,
-  featuredApps,
-  moreApps,
+  officialApps,
+  suggestedApps,
+  catalogTotal,
   categoryCounts,
   onAppClick,
   onNavigate,
 }: MarketplaceExploreProps) {
   const t = useT()
   const showViewAllCatalog =
-    catalogApps.length > featuredApps.length + moreApps.length
+    catalogTotal > officialApps.length + suggestedApps.length
 
   return (
     <div className="space-y-10 [&>section:not(:first-child)]:pt-4">
-      {featuredApps.length > 0 && (
+      {officialApps.length > 0 && (
         <section>
-          <AppGrid apps={featuredApps} onAppClick={onAppClick} />
+          <SectionHeader
+            title={t('Official')}
+            description={t('Apps built and maintained by the Appwrite team.')}
+          />
+          <AppGrid apps={officialApps} onAppClick={onAppClick} />
         </section>
       )}
 
       <section>
         <SectionHeader
-          title={t('More apps')}
-          description={t('Popular integrations from the marketplace catalog.')}
+          title={t('Suggested')}
+          description={t("Hand-picked apps we think you'll find useful.")}
           actionLabel={showViewAllCatalog ? t('View all apps') : undefined}
           onAction={
             showViewAllCatalog ? () => onNavigate('catalog') : undefined
           }
         />
-        {moreApps.length === 0 ? (
+        {suggestedApps.length === 0 ? (
           <p className="text-[13px] text-muted-foreground py-4">
             {t('No additional apps in the catalog yet.')}
           </p>
         ) : (
-          <AppGrid apps={moreApps} onAppClick={onAppClick} />
+          <AppGrid apps={suggestedApps} onAppClick={onAppClick} />
         )}
       </section>
 
@@ -137,7 +146,7 @@ export function MarketplaceExplore({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {MARKETPLACE_CATEGORY_ORDER.map((category) => {
             const Icon = MARKETPLACE_CATEGORY_ICONS[category]
-            const count = categoryCounts[category]
+            const count = categoryCounts?.[category]
             return (
               <button
                 key={category}
@@ -156,7 +165,9 @@ export function MarketplaceExplore({
                     {t(MARKETPLACE_CATEGORY_LABELS[category])}
                   </p>
                   <p className="text-[12px] text-muted-foreground mt-0.5">
-                    {count} {count !== 1 ? t('apps') : t('app')}
+                    {count === undefined
+                      ? ' '
+                      : `${formatMarketplaceCount(count)} ${count !== 1 ? t('apps') : t('app')}`}
                   </p>
                 </div>
               </button>
