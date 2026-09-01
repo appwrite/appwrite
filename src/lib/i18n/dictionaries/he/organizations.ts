@@ -158,7 +158,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
   Back: 'חזרה',
-  'Back to OAuth apps': 'חזרה לאפליקציות OAuth',
+  'Back to apps': 'חזרה לאפליקציות',
   'Back to domains': 'חזרה לדומיינים',
   'Backup methods': 'אמצעי תשלום לגיבוי',
   'Backup payment method updated': 'אמצעי התשלום לגיבוי עודכן',

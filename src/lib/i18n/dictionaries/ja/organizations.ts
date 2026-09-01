@@ -90,7 +90,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Auto renewal has been enabled': '自動更新を有効にしました',
   'Available balance': '利用可能残高',
   'Available credits': '利用可能なクレジット',
-  'Back to OAuth apps': 'OAuth アプリに戻る',
+  'Back to apps': 'アプリに戻る',
   'Back to domains': 'ドメインに戻る',
   'Backup methods': 'バックアップの支払い方法',
   'Backup payment method updated': 'バックアップの支払い方法を更新しました',

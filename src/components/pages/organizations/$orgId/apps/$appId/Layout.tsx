@@ -53,7 +53,7 @@ export function Layout({ initialData }: LayoutProps = {}) {
 
   const handleBack = () => {
     if (!orgId) return
-    navigate({ to: '/organizations/$orgId/settings/oauth-apps', params: { orgId } })
+    navigate({ to: '/organizations/$orgId/apps', params: { orgId } })
   }
 
   if (!app && !initialData?.app && !isLoading) {
@@ -123,7 +123,7 @@ export function Layout({ initialData }: LayoutProps = {}) {
                 size="sm"
                 className="h-7 w-7 p-0"
                 onClick={handleBack}
-                aria-label={t('Back to OAuth apps')}
+                aria-label={t('Back to apps')}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>

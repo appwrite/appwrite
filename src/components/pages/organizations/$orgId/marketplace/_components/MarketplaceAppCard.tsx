@@ -4,7 +4,6 @@ import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppBadges } from './MarketplaceAppBadges'
 import { MarketplaceAppLogo } from './MarketplaceAppLogo'
-import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceAppCardProps = {
   app: MarketplaceApp
@@ -12,7 +11,6 @@ type MarketplaceAppCardProps = {
 }
 
 export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
-  const t = useT()
   const CategoryIcon = MARKETPLACE_CATEGORY_ICONS[app.category]
   const logoUrl = resolveAppLogoDisplayUrl(app.logoUri, {
     width: 80,
@@ -30,10 +28,6 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       }
       iconColor={logoUrl ? 'bg-transparent p-0' : undefined}
       onClick={onClick}
-      statusLabel={
-        app.isOwned && app.status === 'draft' ? t('Draft') : undefined
-      }
-      status={app.isOwned && app.status === 'draft' ? 'info' : undefined}
     />
   )
 }

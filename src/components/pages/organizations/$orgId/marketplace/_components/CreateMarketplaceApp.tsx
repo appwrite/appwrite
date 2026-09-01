@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
   TooltipContent,
@@ -67,37 +66,25 @@ export function CreateMarketplaceApp({
   const currentTeamName =
     organizations.find((org) => org.$id === orgId)?.name ?? orgId ?? ''
   const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-  const [slugTouched, setSlugTouched] = useState(false)
   const [shortDescription, setShortDescription] = useState('')
-  const [description, setDescription] = useState('')
   const [category, setCategory] = useState<MarketplaceAppCategory>('devtools')
 
   useEffect(() => {
     if (!open) {
       setName('')
-      setSlug('')
-      setSlugTouched(false)
       setShortDescription('')
-      setDescription('')
       setCategory('devtools')
     }
   }, [open])
-
-  useEffect(() => {
-    if (!slugTouched && name) {
-      setSlug(slugify(name))
-    }
-  }, [name, slugTouched])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !shortDescription.trim() || isSubmitting) return
     await onCreate({
       name: name.trim(),
-      slug: slug.trim() || slugify(name),
+      slug: slugify(name),
       shortDescription: shortDescription.trim(),
-      description: description.trim() || shortDescription.trim(),
+      description: shortDescription.trim(),
       category,
     })
   }
@@ -163,21 +150,6 @@ export function CreateMarketplaceApp({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-slug">{t('Slug')}</Label>
-              <Input
-                id="marketplace-app-slug"
-                value={slug}
-                onChange={(e) => {
-                  setSlugTouched(true)
-                  setSlug(e.target.value)
-                }}
-                placeholder="my-integration"
-              />
-              <p className="text-[12px] text-muted-foreground">
-                {t('Used in the public listing URL')}
-              </p>
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="marketplace-app-category">{t('Category')}</Label>
               <Select
                 value={category}
@@ -208,19 +180,6 @@ export function CreateMarketplaceApp({
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
                 placeholder={t('One line summary')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="marketplace-app-description">
-                {t('Description')}
-              </Label>
-              <Textarea
-                id="marketplace-app-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('Full description for the listing page')}
-                rows={4}
-                className="resize-none"
               />
             </div>
           </div>
