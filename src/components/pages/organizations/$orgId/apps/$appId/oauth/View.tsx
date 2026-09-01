@@ -11,6 +11,7 @@ import {
 import { useOrganizationApp } from '@/lib/react-query/hooks'
 import { ClientIdField } from '../_components/ClientIdField'
 import {
+  listsEqual,
   nonEmptyList,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
@@ -36,6 +37,15 @@ export function View() {
     setRedirectUris(app.redirectUris ?? [])
     setPostLogoutRedirectUris(app.postLogoutRedirectUris ?? [])
   }, [app])
+
+  const oauthDirty =
+    clientType !== (app.type || 'confidential') ||
+    deviceFlow !== (app.deviceFlow ?? false) ||
+    !listsEqual(nonEmptyList(redirectUris), app.redirectUris ?? []) ||
+    !listsEqual(
+      nonEmptyList(postLogoutRedirectUris),
+      app.postLogoutRedirectUris ?? [],
+    )
 
   const handleUpdate = async () => {
     const uris = nonEmptyList(redirectUris)
@@ -101,7 +111,9 @@ export function View() {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || nonEmptyList(redirectUris).length === 0}
+          disabled={
+            isUpdating || nonEmptyList(redirectUris).length === 0 || !oauthDirty
+          }
           onClick={handleUpdate}
         >
           {t('Update')}

@@ -954,6 +954,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Compute: 'コンピュート',
   Confidential: '機密',
   'Client ID': 'クライアント ID',
+  'Last used': '最終使用',
+  'Never used': '未使用',
   Copy: 'コピー',
   Cost: 'コスト',
   Country: '国',

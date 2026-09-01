@@ -42,10 +42,6 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-function maskClientSecret(hint: string) {
-  return `client_secret_${'•'.repeat(18)}${hint}`
-}
-
 export function View() {
   const t = useT()
   const { orgId, appId } = useParams({ strict: false })
@@ -196,28 +192,37 @@ export function View() {
                           {t('Active')}
                         </Badge>
                       </div>
-                      <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                        <code
-                          className="rounded border border-border bg-muted/50 px-2.5 py-1 font-mono text-[12px] text-muted-foreground truncate max-w-full"
-                        >
-                          {maskClientSecret(secret.hint)}
-                        </code>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
-                          <span className="whitespace-nowrap">
-                            {t('Created')}{' '}
-                            <DateTooltip
-                              date={secret.$createdAt}
-                              className="text-[12px] text-muted-foreground"
-                            />
-                          </span>
-                          <CopyableId
-                            id={secret.$id}
-                            copyLabel="Secret ID"
-                            copyToastLabel="Secret ID"
-                            variant="inline"
-                            size="xs"
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+                        <span className="whitespace-nowrap">
+                          {t('Created')}{' '}
+                          <DateTooltip
+                            date={secret.$createdAt}
+                            className="text-[12px] text-muted-foreground"
                           />
-                        </div>
+                          {secret.createdByName
+                            ? ` ${t('by')} ${secret.createdByName}`
+                            : null}
+                        </span>
+                        <span className="whitespace-nowrap">
+                          {secret.lastAccessedAt ? (
+                            <>
+                              {t('Last used')}{' '}
+                              <DateTooltip
+                                date={secret.lastAccessedAt}
+                                className="text-[12px] text-muted-foreground"
+                              />
+                            </>
+                          ) : (
+                            t('Never used')
+                          )}
+                        </span>
+                        <CopyableId
+                          id={secret.$id}
+                          copyLabel="Secret ID"
+                          copyToastLabel="Secret ID"
+                          variant="inline"
+                          size="xs"
+                        />
                       </div>
                     </div>
                     <DropdownMenu>

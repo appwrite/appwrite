@@ -64,6 +64,12 @@ export function View() {
     setCategory(nextMapped.category)
   }, [app, orgId])
 
+  const detailsDirty =
+    trimOrEmpty(name) !== app.name ||
+    trimOrEmpty(tagline) !== (app.tagline ?? '') ||
+    trimOrEmpty(description) !== (app.description ?? '') ||
+    category !== mapped.category
+
   const handleUpdate = async () => {
     if (!trimOrEmpty(name)) return
     await submit({
@@ -141,7 +147,7 @@ export function View() {
           <Button
             size="sm"
             className="h-9 text-[13px]"
-            disabled={isUpdating || !trimOrEmpty(name)}
+            disabled={isUpdating || !trimOrEmpty(name) || !detailsDirty}
             onClick={handleUpdate}
           >
             {t('Update')}

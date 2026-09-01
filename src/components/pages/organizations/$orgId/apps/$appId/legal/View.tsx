@@ -28,6 +28,11 @@ export function View() {
     setDataDeletionUrl(app.dataDeletionUrl ?? '')
   }, [app])
 
+  const legalDirty =
+    trimOrEmpty(privacyPolicyUrl) !== (app.privacyPolicyUrl ?? '') ||
+    trimOrEmpty(termsUrl) !== (app.termsUrl ?? '') ||
+    trimOrEmpty(dataDeletionUrl) !== (app.dataDeletionUrl ?? '')
+
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
@@ -70,7 +75,7 @@ export function View() {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating}
+          disabled={isUpdating || !legalDirty}
           onClick={() =>
             submit({
               privacyPolicyUrl: trimOrEmpty(privacyPolicyUrl),
