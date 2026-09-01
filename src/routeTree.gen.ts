@@ -80,6 +80,7 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicMarketplaceAppIdRouteImport } from './routes/_public/marketplace.$appId'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -774,6 +775,11 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicMarketplaceAppIdRoute = PublicMarketplaceAppIdRouteImport.update({
+  id: '/marketplace/$appId',
+  path: '/marketplace/$appId',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicGitAuthorizeContributorRoute =
   PublicGitAuthorizeContributorRouteImport.update({
     id: '/git/authorize-contributor',
@@ -3093,6 +3099,7 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3494,6 +3501,7 @@ export interface FileRoutesByTo {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3862,6 +3870,7 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/_public/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -4271,6 +4280,7 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/marketplace/$appId'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4672,6 +4682,7 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/marketplace/$appId'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -5039,6 +5050,7 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
+    | '/_public/marketplace/$appId'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -5889,6 +5901,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/marketplace/$appId': {
+      id: '/_public/marketplace/$appId'
+      path: '/marketplace/$appId'
+      fullPath: '/marketplace/$appId'
+      preLoaderRoute: typeof PublicMarketplaceAppIdRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/git/authorize-contributor': {
@@ -9992,6 +10011,7 @@ interface PublicRouteChildren {
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
+  PublicMarketplaceAppIdRoute: typeof PublicMarketplaceAppIdRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -10015,6 +10035,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
+  PublicMarketplaceAppIdRoute: PublicMarketplaceAppIdRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }

@@ -6,21 +6,17 @@ import { copyToClipboard } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
 
 /** Public marketplace listing URL for an app, with copy and open actions. */
-export function MarketplaceUrlCard({
-  orgId,
-  appId,
-}: {
-  orgId: string
-  appId: string
-}) {
+export function MarketplaceUrlCard({ appId }: { appId: string }) {
   const t = useT()
   const [copied, setCopied] = useState(false)
 
+  // Org-agnostic share link: /marketplace/$appId resolves the visitor's own
+  // organization, so the URL works for people outside this org too.
   const marketplaceUrl = `${
     typeof window === 'undefined'
       ? 'https://cloud.appwrite.io'
       : window.location.origin
-  }/organizations/${orgId}/marketplace/${appId}`
+  }/marketplace/${appId}`
 
   const handleCopy = async () => {
     await copyToClipboard('Marketplace URL', marketplaceUrl)

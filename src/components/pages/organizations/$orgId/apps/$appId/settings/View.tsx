@@ -10,7 +10,7 @@ export function View() {
 
   return (
     <div className="space-y-4">
-      <MarketplaceUrlCard orgId={orgId} appId={app.$id} />
+      <MarketplaceUrlCard appId={app.$id} />
       <BrandingCard orgId={orgId} app={app} />
     </div>
   )
