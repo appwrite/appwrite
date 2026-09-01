@@ -108,10 +108,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'App deleted': 'האפליקציה נמחקה',
   'App logo preview': 'תצוגה מקדימה של לוגו האפליקציה',
   'App not found': 'האפליקציה לא נמצאה',
-  'App published': 'האפליקציה פורסמה',
+  'App enabled': 'האפליקציה הופעלה',
+  'App disabled': 'האפליקציה הושבתה',
+  'App status': 'סטטוס האפליקציה',
   'App settings': 'הגדרות אפליקציה',
   'App settings sections': 'מקטעי הגדרות אפליקציה',
-  'App unpublished': 'פרסום האפליקציה בוטל',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': // pragma: allowlist secret
     'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
   'Apply coupon': 'החלת קופון',
@@ -862,10 +863,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לקוחות ציבוריים דורשים PKCE. לקוחות חסויים משתמשים בסוד לקוח.',
   'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.':
     'לקוחות ציבוריים משתמשים ב-PKCE ואינם דורשים סודות OAuth. עברו ללקוח חסוי בלשונית לקוח OAuth אם אתם זקוקים לאימות סוד בצד השרת.',
-  Publish: 'פרסום',
-  Published: 'פורסם',
-  'Published apps appear in the marketplace catalog for other organizations.':
-    'אפליקציות שפורסמו מופיעות בקטלוג המרקטפלייס עבור ארגונים אחרים.',
+  'Marketplace page': 'דף המרקטפלייס',
+  'Public listing page for this app in the marketplace.':
+    'דף הרישום הציבורי של האפליקציה במרקטפלייס.',
+  'Control whether this app is available in the marketplace.':
+    'קבעו האם האפליקציה זמינה במרקטפלייס.',
   'Published apps from other organizations will appear here.':
     'אפליקציות שפורסמו על ידי ארגונים אחרים יופיעו כאן.',
   'Publisher guidelines': 'הנחיות למפרסמים',
@@ -1043,9 +1045,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'They will not be able to join the organization.':
     'הם לא יוכלו להצטרף לארגון.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
-  'This app is a draft and not listed publicly.':
-    'האפליקציה הזו היא טיוטה ואינה מוצגת באופן ציבורי.',
-  'This app is visible in the marketplace.': 'האפליקציה הזו מוצגת במרקטפלייס.',
+  'This app is enabled and available in the marketplace.':
+    'האפליקציה מופעלת וזמינה במרקטפלייס.',
+  'This app is disabled and hidden from the marketplace.':
+    'האפליקציה מושבתת ומוסתרת מהמרקטפלייס.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
   'This entire organization will be deleted, including all of its projects and resources.':

@@ -148,6 +148,15 @@ export function CreateMarketplaceApp({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="marketplace-app-short">{t('Tagline')}</Label>
+              <Input
+                id="marketplace-app-short"
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                placeholder={t('One line summary')}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="marketplace-app-category">{t('Category')}</Label>
               <Select
                 value={category}
@@ -170,15 +179,6 @@ export function CreateMarketplaceApp({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="marketplace-app-short">{t('Tagline')}</Label>
-              <Input
-                id="marketplace-app-short"
-                value={shortDescription}
-                onChange={(e) => setShortDescription(e.target.value)}
-                placeholder={t('One line summary')}
-              />
             </div>
           </div>
 
