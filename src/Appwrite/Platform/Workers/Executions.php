@@ -107,7 +107,9 @@ class Executions extends Action
             if ($this->isPending($execution)) {
                 $this->create($dbForProject, $execution);
             } else {
-                $dbForProject->upsertDocument('executions', $execution);
+                // upsertDocuments without a callback skips the sequence fetch that
+                // upsertDocument always pays for; nothing here reads the result back.
+                $dbForProject->upsertDocuments('executions', [$execution]);
             }
         }
     }
