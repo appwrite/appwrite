@@ -93,6 +93,9 @@ class Bitbucket extends Git
 
     protected string $accessToken;
 
+    /** @var array<string, mixed>|null */
+    private ?array $authenticatedUser = null;
+
     /**
      * Global Headers
      *
@@ -373,6 +376,68 @@ class Bitbucket extends Git
         return [
             'items' => $repositories,
             'total' => (int) ($responseBody['size'] ?? \count($repositories)),
+        ];
+    }
+
+    /**
+     * A workspace carries no personal-vs-team flag, so the account's own uuid
+     * identifies the personal one.
+     *
+     * @return array{items: array<array<string, mixed>>, total: int}
+     */
+    public function listNamespaces(int $page, int $per_page, string $search = ''): array
+    {
+        $url = "/user/workspaces?page={$page}&pagelen={$per_page}";
+
+        if ($search !== '' && $search !== '0') {
+            $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], $search);
+            $url .= '&q=' . urlencode("slug~\"{$escaped}\"");
+        }
+
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => $this->authorizationHeader()]);
+
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = $responseHeaders['status-code'] ?? 0;
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to list namespaces: HTTP {$statusCode}", $statusCode);
+        }
+
+        $responseBody = $response['body'] ?? [];
+        if (!\is_array($responseBody)) {
+            return ['items' => [], 'total' => 0];
+        }
+
+        $user = $this->getAuthenticatedUser();
+        $accountUuid = (string) ($user['uuid'] ?? '');
+        $accountSlug = (string) ($user['username'] ?? ($user['nickname'] ?? ''));
+
+        $namespaces = [];
+        foreach (($responseBody['values'] ?? []) as $entry) {
+            $workspace = \is_array($entry) && \is_array($entry['workspace'] ?? null)
+                ? $entry['workspace']
+                : [];
+
+            $slug = (string) ($workspace['slug'] ?? '');
+            if ($slug === '') {
+                continue;
+            }
+
+            $uuid = (string) ($workspace['uuid'] ?? '');
+            $personal = ($accountUuid !== '' && $uuid === $accountUuid)
+                || ($accountSlug !== '' && $slug === $accountSlug);
+
+            $namespaces[] = [
+                'id' => $uuid !== '' ? $uuid : $slug,
+                'name' => (string) ($workspace['name'] ?? $slug),
+                'path' => $slug,
+                'kind' => $personal ? 'user' : 'group',
+                'avatarUrl' => (string) ($workspace['links']['avatar']['href'] ?? ''),
+            ];
+        }
+
+        return [
+            'items' => $namespaces,
+            'total' => (int) ($responseBody['size'] ?? \count($namespaces)),
         ];
     }
 
@@ -1328,6 +1393,10 @@ class Bitbucket extends Git
      */
     protected function getAuthenticatedUser(): array
     {
+        if ($this->authenticatedUser !== null) {
+            return $this->authenticatedUser;
+        }
+
         $response = $this->call(self::METHOD_GET, '/user', ['Authorization' => $this->authorizationHeader()]);
 
         $responseHeaders = $response['headers'] ?? [];
@@ -1338,7 +1407,7 @@ class Bitbucket extends Git
 
         $responseBody = $response['body'] ?? [];
 
-        return \is_array($responseBody) ? $responseBody : [];
+        return $this->authenticatedUser = \is_array($responseBody) ? $responseBody : [];
     }
 
     /**
