@@ -11,18 +11,6 @@ type MarketplaceAppCardProps = {
   onClick?: () => void
 }
 
-function statusVariant(
-  status: MarketplaceApp['status'],
-): 'success' | 'info' {
-  if (status === 'published') return 'success'
-  return 'info'
-}
-
-function statusLabel(status: MarketplaceApp['status']): string {
-  if (status === 'published') return 'Published'
-  return 'Draft'
-}
-
 export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
   const t = useT()
   const CategoryIcon = MARKETPLACE_CATEGORY_ICONS[app.category]
@@ -42,8 +30,10 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       }
       iconColor={logoUrl ? 'bg-transparent p-0' : undefined}
       onClick={onClick}
-      statusLabel={app.isOwned ? t(statusLabel(app.status)) : undefined}
-      status={app.isOwned ? statusVariant(app.status) : undefined}
+      statusLabel={
+        app.isOwned && app.status === 'draft' ? t('Draft') : undefined
+      }
+      status={app.isOwned && app.status === 'draft' ? 'info' : undefined}
     />
   )
 }
