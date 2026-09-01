@@ -9,6 +9,7 @@ import {
   OAuth2ClientTypePicker,
 } from '@/components/global/shared/OAuth2ClientTypePicker'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
+import { ClientIdField } from '../_components/ClientIdField'
 import {
   nonEmptyList,
   useOrgAppUpdate,
@@ -59,6 +60,7 @@ export function View() {
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
+        <ClientIdField clientId={app.$id} />
         <OAuth2ClientTypePicker
           value={clientType}
           onChange={setClientType}

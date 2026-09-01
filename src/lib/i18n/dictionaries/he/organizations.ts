@@ -263,6 +263,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Contact for price': 'צרו קשר לקבלת מחיר',
   'Contact sales': 'צרו קשר עם צוות המכירות',
   'Copied to clipboard': 'הועתק ללוח',
+  'Client ID': 'מזהה לקוח',
   Copy: 'העתקה',
   'Copy ID': 'העתקת מזהה',
   'Copy as JSON': 'העתקה כ-JSON',

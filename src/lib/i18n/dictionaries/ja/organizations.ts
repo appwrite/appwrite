@@ -945,6 +945,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Compliance: 'コンプライアンス',
   Compute: 'コンピュート',
   Confidential: '機密',
+  'Client ID': 'クライアント ID',
   Copy: 'コピー',
   Cost: 'コスト',
   Country: '国',

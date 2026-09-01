@@ -29,6 +29,7 @@ import {
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { ClientIdField } from '../_components/ClientIdField'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import {
@@ -145,6 +146,7 @@ export function View() {
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
+          <ClientIdField clientId={app.$id} />
           <Alert className="border-border bg-muted/30">
             <Lock className="h-4 w-4 text-muted-foreground" />
             <AlertTitle className="text-[13px] font-medium text-foreground">
