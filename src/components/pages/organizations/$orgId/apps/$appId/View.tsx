@@ -161,7 +161,7 @@ export function View() {
             {t('App status')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Control whether this app is available in the marketplace.')}
+            {t('Control whether this app can be used to authorize users.')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -171,8 +171,8 @@ export function View() {
               <Label htmlFor="app-general-enabled">{t('Enabled')}</Label>
               <p className="text-[12px] text-muted-foreground mt-1">
                 {app.enabled
-                  ? t('This app is enabled and available in the marketplace.')
-                  : t('This app is disabled and hidden from the marketplace.')}
+                  ? t('This app is enabled and can authorize users.')
+                  : t('This app is disabled and cannot authorize users.')}
               </p>
             </div>
             <Switch

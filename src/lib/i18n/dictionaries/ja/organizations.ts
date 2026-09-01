@@ -563,10 +563,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Terms of service': '利用規約',
   'The target plan allows': '対象プランでは次が許可されます',
   'This action cannot be undone.': 'この操作は元に戻せません。',
-  'This app is enabled and available in the marketplace.':
-    'このアプリは有効で、マーケットプレイスで利用できます。',
-  'This app is disabled and hidden from the marketplace.':
-    'このアプリは無効で、マーケットプレイスに表示されません。',
+  'This app is enabled and can authorize users.':
+    'このアプリは有効で、ユーザーを認可できます。',
+  'This app is disabled and cannot authorize users.':
+    'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.': 'この組織にはプロジェクトがありません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
@@ -823,8 +823,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Marketplace page': 'マーケットプレイスページ',
   'Public listing page for this app in the marketplace.':
     'マーケットプレイスにおけるこのアプリの公開ページ。',
-  'Control whether this app is available in the marketplace.':
-    'マーケットプレイスでこのアプリを利用可能にするかを設定します。',
+  'Control whether this app can be used to authorize users.':
+    'このアプリでユーザーを認可できるかを設定します。',
   'Published apps from other organizations will appear here.': '他の組織が公開したアプリがここに表示されます。',
   'Purchase could not be completed. Please try again.': '購入を完了できませんでした。もう一度お試しください。',
   'Redirect URIs and client type for OAuth2 and OpenID Connect.': 'OAuth2 と OpenID Connect のリダイレクト URI とクライアントタイプ。',

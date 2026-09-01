@@ -868,8 +868,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Marketplace page': 'דף המרקטפלייס',
   'Public listing page for this app in the marketplace.':
     'דף הרישום הציבורי של האפליקציה במרקטפלייס.',
-  'Control whether this app is available in the marketplace.':
-    'קבעו האם האפליקציה זמינה במרקטפלייס.',
+  'Control whether this app can be used to authorize users.':
+    'קבעו האם ניתן להשתמש באפליקציה לאימות משתמשים.',
   'Published apps from other organizations will appear here.':
     'אפליקציות שפורסמו על ידי ארגונים אחרים יופיעו כאן.',
   'Publisher guidelines': 'הנחיות למפרסמים',
@@ -1047,10 +1047,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'They will not be able to join the organization.':
     'הם לא יוכלו להצטרף לארגון.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
-  'This app is enabled and available in the marketplace.':
-    'האפליקציה מופעלת וזמינה במרקטפלייס.',
-  'This app is disabled and hidden from the marketplace.':
-    'האפליקציה מושבתת ומוסתרת מהמרקטפלייס.',
+  'This app is enabled and can authorize users.':
+    'האפליקציה מופעלת ויכולה לאמת משתמשים.',
+  'This app is disabled and cannot authorize users.':
+    'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
   'This entire organization will be deleted, including all of its projects and resources.':
