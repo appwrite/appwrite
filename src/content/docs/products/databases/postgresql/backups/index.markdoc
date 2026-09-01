@@ -28,7 +28,14 @@ Every database gets a default backup policy when it is provisioned, so you have 
 
 A policy defines a schedule and a retention period in days. In the Console, open your database's **Backups** page and click **Create policy**, then pick a preset schedule or add a custom policy with its own schedule and retention.
 
-Your plan decides which schedules and retention periods a policy can use, so a schedule the API rejects on one plan may be accepted on another.
+Your plan decides how many policies you can create, which schedules they can run on, and how long they can retain backups:
+
+| Plan  | Policies  | Schedule          | Retention   |
+|-------|-----------|-------------------|-------------|
+| Pro   | 1         | Daily             | 7 days      |
+| Scale | Unlimited | Any cron schedule | 1-36500 days |
+
+On the Pro plan the values are fixed, so the default daily policy created with the database is the only one you get. Requesting a different schedule or retention returns an error.
 
 You can also create a policy with a Server SDK:
 
@@ -263,7 +270,7 @@ curl -X POST \
 | `policyId`  | custom ID or `unique()`             | Policy identifier                             |
 | `name`      | text                                | Display name                                  |
 | `schedule`  | cron expression                     | When backups run, for example `0 3 * * *`     |
-| `retention` | Set by your plan                    | How long backups from this policy are kept    |
+| `retention` | 7 days on Pro, 1-36500 on Scale     | How long backups from this policy are kept    |
 
 List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. The number of policies you can create depends on your plan.
 
@@ -1331,6 +1338,6 @@ Like a backup restore, a PITR restore is in-place: the database is unavailable w
 
 | Limit            | Value          |
 |------------------|-----------------|
-| Backup retention | Set by your plan |
+| Backup retention | 7 days on Pro, 1-36500 days on Scale |
 | PITR retention   | 1 - 35 days     |
-| Backup policies  | Plan-dependent  |
+| Backup policies  | 1 on Pro, unlimited on Scale |

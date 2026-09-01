@@ -95,7 +95,7 @@ The following limits apply per database:
 |--------------------------------|-----------------------------------------------------------|
 | High availability replicas     | 0 - 5                                                     |
 | IP allowlist entries           | 100                                                       |
-| Backup retention               | Set by your plan                                          |
+| Backup retention               | 7 days on Pro, 1 - 36,500 days on Scale                   |
 | Point-in-time recovery window  | 1 - 35 days                                               |
 | Extensions installed           | 50                                                        |
 | Max simultaneous connections   | 10,000 platform cap, lower on smaller specifications      |
