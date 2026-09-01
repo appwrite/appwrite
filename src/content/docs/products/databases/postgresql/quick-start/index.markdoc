@@ -8,6 +8,10 @@ You can create a PostgreSQL database and run your first query in a few minutes.
 
 # Create a database {% #create %}
 
+{% info title="Available regions" %}
+Native databases run in Frankfurt (`fra`) and New York (`nyc`). A database takes the region of the project that owns it and there is no per-database region selector, so create your project in one of these regions before you start.
+{% /info %}
+
 1. In your project, go to **Databases**.
 2. Click **Create database**.
 3. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
