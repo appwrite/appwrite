@@ -59,7 +59,13 @@ $console = [
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
         'gitlabEnabled' => true,
-        'gitlabSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
+        // Auth\OAuth2\Gitlab reads its endpoint out of a JSON-encoded secret, so
+        // _APP_CONSOLE_GITLAB_ENDPOINT travels with the credential. Stays empty when
+        // unconfigured so account.php keeps reporting the provider as disabled.
+        'gitlabSecret' => empty(System::getEnv('_APP_CONSOLE_GITLAB_SECRET', '')) ? '' : \json_encode([
+            'clientSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
+            'endpoint' => System::getEnv('_APP_CONSOLE_GITLAB_ENDPOINT', 'https://gitlab.com'),
+        ]),
         'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
         'bitbucketEnabled' => true,
         'bitbucketSecret' => System::getEnv('_APP_CONSOLE_BITBUCKET_SECRET', ''),

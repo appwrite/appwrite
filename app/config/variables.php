@@ -296,6 +296,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_GITLAB_ENDPOINT',
+                'description' => 'URL of the GitLab instance used for signing in to the Appwrite console, for self-hosted GitLab. This is separate from _APP_VCS_GITLAB_ENDPOINT, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => 'https://gitlab.com',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_BITBUCKET_APP_ID',
                 'description' => 'Bitbucket OAuth consumer key used for signing in to the Appwrite console. You can find it in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_ID, which powers repository integration rather than console sign-in.',
                 'introduction' => '2.0.0',
@@ -1568,6 +1577,15 @@ return [
                 'description' => 'Secret used to validate incoming Gitea webhook payloads.',
                 'introduction' => '2.0.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_ENDPOINT',
+                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser.',
+                'introduction' => '2.0.0',
+                'default' => 'https://gitlab.com',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

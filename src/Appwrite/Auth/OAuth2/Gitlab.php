@@ -11,8 +11,9 @@ use Appwrite\Auth\OAuth2;
  * Shared with the "Sign in with GitLab" account-login OAuth2 provider, which
  * stores its secret as JSON ({"clientSecret": "...", "endpoint": "..."}) to
  * support self-hosted GitLab per-project. The VCS flow (see app/config/vcs.php)
- * only supports official gitlab.com, but still encodes to that same JSON
- * shape so getAppSecret()/getEndpoint() stay correct for both consumers.
+ * and the console project (see app/config/console.php) encode to that same JSON
+ * shape, taking their endpoint from _APP_VCS_GITLAB_ENDPOINT and
+ * _APP_CONSOLE_GITLAB_ENDPOINT respectively.
  */
 class Gitlab extends OAuth2
 {
