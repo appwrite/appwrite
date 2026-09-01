@@ -105,6 +105,21 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   },
 }
 
+/** Always available for Git connect. Extra providers (GitLab, Bitbucket, Origin) are flag-gated. */
+export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
+
+/**
+ * Connect/authorize providers shown in Git installation UI.
+ * Existing installations of a hidden provider still render; only new OAuth
+ * connect actions are filtered.
+ */
+export function getVisibleVcsOAuthProviders(
+  extraVcsOAuth: boolean,
+): VcsProviderMeta[] {
+  if (extraVcsOAuth) return Object.values(VCS_PROVIDERS)
+  return [VCS_PROVIDERS[DEFAULT_VCS_OAUTH_PROVIDER]]
+}
+
 /**
  * Resolve provider metadata for display (icon, label), defaulting to GitHub
  * for unknown/legacy values. Safe for cosmetic rendering, but never use this

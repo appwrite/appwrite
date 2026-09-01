@@ -28,6 +28,11 @@ export interface RuntimeConfig {
    * ('' = profile default, off).
    */
   extraOAuthLogin: string
+  /**
+   * Override for extra Git (VCS) OAuth connect providers
+   * ('' = profile default, off).
+   */
+  extraVcsOAuth: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
@@ -119,6 +124,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
     extraOAuthLogin: read('VITE_CONSOLE_EXTRA_OAUTH_LOGIN'),
+    extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }

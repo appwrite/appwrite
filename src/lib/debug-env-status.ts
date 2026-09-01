@@ -93,6 +93,12 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
       'Override extra console OAuth login/signup (Google, GitLab, Bitbucket, Cursor)',
   },
   {
+    key: 'VITE_CONSOLE_EXTRA_VCS_OAUTH',
+    group: 'Runtime',
+    description:
+      'Override extra Git VCS OAuth connect (GitLab, Bitbucket, Origin)',
+  },
+  {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
     group: 'Runtime',
     description: 'Pre-launch lock (only /init; unset = off)',
@@ -233,6 +239,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
     VITE_CONSOLE_EXTRA_OAUTH_LOGIN: isNonEmpty(config.extraOAuthLogin),
+    VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }
 }

@@ -48,6 +48,12 @@ export type ConsoleProfileFeatures = {
    * Cursor). GitHub is always shown.
    */
   extraOAuthLogin: boolean
+  /**
+   * Extra Git (VCS) OAuth connect providers (GitLab, Bitbucket, Origin).
+   * GitHub is always shown. Existing installations of a hidden provider still
+   * render; only new connect actions are gated.
+   */
+  extraVcsOAuth: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization OAuth apps */
@@ -122,6 +128,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
   extraOAuthLogin: 'Extra OAuth login',
+  extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
@@ -176,6 +183,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountMfa: true,
       accountIdentities: true,
       extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: true,
       oauthApps: false,
       oauth2Server: true,
@@ -218,6 +226,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountMfa: false,
       accountIdentities: false,
       extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: false,
       oauthApps: false,
       oauth2Server: false,
@@ -504,7 +513,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN,
+ * VITE_CONSOLE_EXTRA_VCS_OAUTH), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -528,6 +538,10 @@ function applyEnvFeatureOverrides(
   const extraOAuthLogin = parseEnvFeatureOverride(config.extraOAuthLogin)
   if (extraOAuthLogin !== null) {
     next = { ...next, extraOAuthLogin }
+  }
+  const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
+  if (extraVcsOAuth !== null) {
+    next = { ...next, extraVcsOAuth }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {
