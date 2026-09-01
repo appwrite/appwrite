@@ -1,20 +1,19 @@
 ---
 layout: post
-title: "Announcing native PostgreSQL databases: The full engine, provisioned in minutes"
+title: "Announcing native PostgreSQL databases: the full engine, provisioned in minutes"
 description: Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.
 date: 2026-09-01
 cover: /images/blog/announcing-native-postgresql-databases/cover.avif
 timeToRead: 6
-author: atharva
+author: jake-barnby
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is a native PostgreSQL database in Appwrite?"
     answer: "It is a managed PostgreSQL instance provisioned on dedicated compute for your Appwrite project. You get the raw engine with its own hostname, credentials, and TLS, and you connect with psql or any PostgreSQL driver. There is no Appwrite abstraction layer between your code and the database."
   - question: "How is a native database different from Appwrite Databases like TablesDB?"
-    answer: "Appwrite databases such as TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite SDKs and platform APIs, with document permissions and platform features built in. A native PostgreSQL database is the engine itself: you bring your own ORM, migrations, and drivers, and Appwrite manages the infrastructure underneath."
+    answer: "Appwrite databases such as TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite SDKs and platform APIs, with row permissions and platform features built in. A native PostgreSQL database is the engine itself: you bring your own ORM, migrations, and drivers, and Appwrite manages the infrastructure underneath."
   - question: "Can I use the Appwrite SDK to read and write data in a native PostgreSQL database?"
     answer: "No. Data in a native database is accessed with standard PostgreSQL clients, drivers, and ORMs rather than the Appwrite SDKs. That is the point of the product: your existing PostgreSQL code and tooling work unchanged."
   - question: "Which PostgreSQL versions are supported?"
@@ -22,10 +21,10 @@ faqs:
   - question: "What infrastructure features are included?"
     answer: "Scheduled backups and point-in-time recovery, database branches, high availability with up to five replicas, online compute resizing, storage autoscaling, IP allowlists, a connection pooler, and maintenance windows. Extensions like PostGIS and pgvector can be installed per database."
   - question: "How much does a native PostgreSQL database cost?"
-    answer: "Compute specifications start at $10 per month for 1 vCPU and 1 GB of memory and scale up to 8 vCPU and 64 GB. Storage and bandwidth allowances are included per tier, with overages and optional add-ons like high availability replicas and point-in-time recovery billed on top."
+    answer: "Compute specifications start at $10 per month for 1 vCPU and 1 GB of memory and scale up to 8 vCPU and 64 GB. Every Pro plan includes $10 in database credits each month, which covers the entry specification in full. Storage and bandwidth allowances are included per tier, with overages and optional add-ons like high availability replicas and point-in-time recovery billed on top."
 ---
 
-Some projects outgrow abstractions. You want `psql`, your own migrations, an ORM you chose yourself, and the thirty years of tooling that surround PostgreSQL, without also taking on provisioning, backups, failover, and patching.
+Some workloads outgrow the abstraction over them. You want `psql`, your own migrations, the ORM you already picked, and the extensions your queries depend on, without taking on provisioning, backups, failover, and patching.
 
 Today we are announcing **native PostgreSQL databases** in Appwrite. You pick a compute specification, Appwrite provisions the engine in your project's region, and you connect to it like any PostgreSQL server, because it is one.
 
@@ -54,13 +53,13 @@ A native database gets its own hostname, credentials, and TLS out of the box:
 psql "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
 ```
 
-From there, everything you know applies. Prisma, Drizzle, Django, Rails, Spring Boot, EF Core, and GORM work against it with no Appwrite-specific configuration, and we ship [integration guides](/docs/products/databases/postgresql/integrations/prisma) for each. Extensions like PostGIS, pgvector, and pg_trgm install per database.
+Prisma, Drizzle, Django, Rails, Spring Boot, EF Core, and GORM run against it with no Appwrite-specific configuration, and we ship [integration guides](/docs/products/databases/postgresql/integrations/prisma) for each. Extensions like PostGIS, pgvector, and pg_trgm install per database.
 
-This is a different product from [Appwrite Databases](/docs/products/databases). TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite SDKs with platform permissions built in. A native PostgreSQL database has no Appwrite layer between your code and the engine, and the Appwrite SDKs do not manage its data. Your drivers do.
+This is a different product from [Appwrite Databases](/docs/products/databases). TablesDB, DocumentsDB, and VectorsDB are reached through Appwrite SDKs with platform permissions built in. A native PostgreSQL database has no Appwrite layer between your code and the engine, and the Appwrite SDKs do not manage its data. Your drivers do.
 
 # Managed infrastructure features
 
-Appwrite manages the operational work that self-hosting PostgreSQL would put on your team:
+Appwrite runs the operational work that self-hosting PostgreSQL would put on your team:
 
 - **[Backups and point-in-time recovery.](/docs/products/databases/postgresql/backups)** Scheduled and manual backups, plus continuous archiving that can restore to any moment inside the retention window.
 - **[Branches.](/docs/products/databases/postgresql/branches)** Ephemeral copies of your database created from a storage snapshot, ideal for previews and testing against production-shaped data.
@@ -71,7 +70,7 @@ Appwrite manages the operational work that self-hosting PostgreSQL would put on 
 
 # SQL tooling in the Console
 
-The Console treats the database as a first-class SQL environment. The SQL editor runs queries with formatting and explain plans, the Monitor tab tracks compute, connections, storage, and workload, and the active connections view surfaces what `pg_stat_activity` knows with actions to cancel or terminate sessions.
+You do not have to leave the Console to work with the database. The SQL editor runs queries with formatting and explain plans, the [Monitor tab](/docs/products/databases/postgresql/monitoring) charts compute, connections, storage, and workload, and the **Connections** tab lists what `pg_stat_activity` reports, with actions to cancel a running query or terminate a session.
 
 ![The SQL editor in the Appwrite Console](/images/docs/products/databases/postgresql/dark/sql-editor.avif)
 
@@ -79,10 +78,16 @@ The Console treats the database as a first-class SQL environment. The SQL editor
 
 Specifications run from **$10 per month** (1 vCPU, 1 GB memory, 10 GB storage) to **$699 per month** (8 vCPU, 64 GB memory, 3 TB storage), each with included storage and bandwidth. High availability replicas and point-in-time recovery are add-ons, priced as a percentage of the tier. The full table lives in the [documentation](/docs/products/databases/postgresql#specifications).
 
+Every Pro plan also comes with **$10 in database credits each month**. That covers the entry specification in full, so a Pro organization can run a PostgreSQL database on Appwrite without paying anything beyond the plan.
+
 # Get started
 
 Native PostgreSQL databases are available on Appwrite Cloud today on dedicated infrastructure.
 
+# Resources
+
 - [PostgreSQL documentation](/docs/products/databases/postgresql)
 - [Quick start](/docs/products/databases/postgresql/quick-start)
-
+- [Backups and point-in-time recovery](/docs/products/databases/postgresql/backups)
+- [Scaling](/docs/products/databases/postgresql/scaling)
+- [Monitoring](/docs/products/databases/postgresql/monitoring)
