@@ -1005,8 +1005,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   No: 'いいえ',
   None: 'なし',
   Official: '公式',
-  'App makers can contact us to get their integration published.':
-    'アプリ開発者はお問い合わせいただければ、インテグレーションの公開をご案内します。',
+  'We invite app makers to contact us and get your integrations published.':
+    'アプリ開発者の方は、ぜひお問い合わせのうえインテグレーションを公開してください。',
   'Add your first app to get started.':
     '最初のアプリを追加して始めましょう。',
   Offline: 'オフライン',

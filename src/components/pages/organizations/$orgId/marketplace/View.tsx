@@ -257,7 +257,9 @@ export function View() {
     ? t('Try adjusting or clearing your search.')
     : activeNavId === 'my-apps'
       ? t('Add your first app to get started.')
-      : t('App makers can contact us to get their integration published.')
+      : t(
+          'We invite app makers to contact us and get your integrations published.',
+        )
 
   const mainContent = () => {
     const browseLoading2 =

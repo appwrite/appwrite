@@ -730,8 +730,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.':
     'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
   Official: 'רשמי',
-  'App makers can contact us to get their integration published.':
-    'יוצרי אפליקציות מוזמנים לפנות אלינו כדי לפרסם את האינטגרציה שלהם.',
+  'We invite app makers to contact us and get your integrations published.':
+    'אנחנו מזמינים יוצרי אפליקציות לפנות אלינו ולפרסם את האינטגרציות שלהם.',
   'Add your first app to get started.':
     'הוסיפו את האפליקציה הראשונה שלכם כדי להתחיל.',
   Offline: 'לא מקוון',
