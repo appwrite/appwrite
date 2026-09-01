@@ -198,7 +198,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "appwrite-now-speaks-postgresql",
     "href": "/blog/post/appwrite-now-speaks-postgresql",
-    "title": "Appwrite now speaks PostgreSQL",
+    "title": "Appwrite now speaks Postgres",
     "description": "Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.",
     "date": "2026-09-01",
     "lastUpdated": "2026-09-01",

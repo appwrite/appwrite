@@ -82,7 +82,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Explore PostgreSQL',
-      href: '/docs/products/databases',
+      href: '/docs/products/databases/postgresql',
       external: false,
     },
     resources: [
@@ -97,7 +97,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day2-docs',
         typeLabel: 'Docs',
         title: 'PostgreSQL documentation',
-        href: '/docs/products/databases',
+        href: '/docs/products/databases/postgresql',
         actionLabel: 'Visit docs',
       },
     ],

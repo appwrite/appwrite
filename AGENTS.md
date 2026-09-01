@@ -1119,7 +1119,7 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **day 1** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → day `1`).
+- Default is **day 2** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → day `2`).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.

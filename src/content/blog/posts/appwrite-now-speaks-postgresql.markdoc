@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Appwrite now speaks PostgreSQL"
+title: "Appwrite now speaks Postgres"
 description: Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.
 date: 2026-09-01
 cover: /images/blog/appwrite-now-speaks-postgresql/cover.avif
