@@ -1584,7 +1584,27 @@ final class FunctionsCustomServerTest extends Scope
         $response = $this->createDuplicateDeployment($functionId, $deploymentId);
 
         $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
+        $duplicateId = $response['body']['$id'] ?? '';
+        $this->assertNotEmpty($duplicateId);
+
+        $this->assertEventually(function () use ($functionId, $duplicateId) {
+            $deployment = $this->getDeployment($functionId, $duplicateId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        // Duplicates activate when their build completes. Restore the shared
+        // fixture before later execution tests reuse its cached deployment ID.
+        $response = $this->updateFunctionDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $duplicateId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $this->cleanupFunction($otherFunctionId);
     }
