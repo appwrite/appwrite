@@ -15,6 +15,8 @@ SQL is declarative: a query describes the result you want, and the database's pl
 
 This page walks through each statement, plus the querying patterns you reach for daily: filtering, aggregation, pagination, and upserts.
 
+{% partial file="postgresql-running-examples.md" /%}
+
 # Setup {% #setup %}
 
 The examples below work against a small product catalog. Create and seed it first:

@@ -6,6 +6,8 @@ description: Model relationships with foreign keys and combine PostgreSQL tables
 
 Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice.
 
+{% partial file="postgresql-running-examples.md" /%}
+
 # Setup {% #setup %}
 
 The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed them first:

@@ -12,6 +12,8 @@ PostgreSQL controls access in three layers:
 
 Your database's primary `admin` role can create additional roles, so you can give every service and teammate exactly the access it needs instead of sharing one all-powerful login.
 
+{% partial file="postgresql-running-examples.md" /%}
+
 # Setup {% #setup %}
 
 The examples below protect a documents table whose rows belong to different owners. Create and seed it as `admin`, the role your database comes with:
@@ -108,7 +110,7 @@ ERROR:  new row violates row-level security policy for table "documents"
 A cross-tenant `UPDATE ... WHERE owner = 'app_grace'` doesn't error; it matches zero visible rows and does nothing. The application can't leak what it can't see.
 
 {% info title="Table owners bypass RLS" %}
-RLS does not apply to the table's owner, so queries as `admin` still see every row. That's usually what you want for migrations and support tooling. To subject the owner to policies too, run `ALTER TABLE documents FORCE ROW LEVEL SECURITY;`.
+RLS does not apply to a table's owner, so `admin` sees every row in the tables it owns, which is usually what you want for migrations and support tooling. `admin` is not exempt in general: it is created without `BYPASSRLS`, so policies do apply to it on tables owned by another role. To subject the owner to policies too, run `ALTER TABLE documents FORCE ROW LEVEL SECURITY;`.
 {% /info %}
 
 RLS also composes with privileges rather than replacing them: `reporting` can still `SELECT`, but sees zero rows because no row matches `owner = 'reporting'`. Add a second, permissive policy for roles that legitimately need everything:
@@ -131,7 +133,18 @@ CREATE POLICY tenant_by_setting ON documents
     WITH CHECK (owner = current_setting('app.current_tenant', true));
 ```
 
-The application runs `SET app.current_tenant = '...'` after taking a connection from the pool, and every query in that session is automatically scoped. Whichever variant you choose, the isolation lives in the database: a forgotten `WHERE` clause in application code returns no one else's data instead of everyone's.
+Set the variable and run the query inside one explicit transaction, with `set_config`'s third argument set to `true` so the setting is transaction-local:
+
+```sql
+BEGIN;
+SELECT set_config('app.current_tenant', 'app_ada', true);
+SELECT * FROM documents;
+COMMIT;
+```
+
+This matters because connections reach the database through a pooler running in transaction mode by default. A session-level `SET` is not guaranteed to still apply on the next statement, since that statement can land on a different backend connection. Scoping the setting to a transaction keeps it with the queries it protects. If you need session-level settings to persist across statements, switch the pooler to session mode or connect on the direct port.
+
+Whichever variant you choose, the isolation lives in the database: a forgotten `WHERE` clause in application code returns no one else's data instead of everyone's.
 
 # Use Appwrite Auth as the tenant identity {% #appwrite-auth %}
 
@@ -155,12 +168,16 @@ export async function listDocuments(jwt) {
 
     const conn = await pool.connect();
     try {
-        // Scope every query in this session to the verified user.
-        await conn.query("SELECT set_config('app.current_tenant', $1, false)", [user.$id]);
+        // Scope the setting to the transaction so it stays with the query.
+        await conn.query('BEGIN');
+        await conn.query("SELECT set_config('app.current_tenant', $1, true)", [user.$id]);
         const result = await conn.query('SELECT * FROM documents');
+        await conn.query('COMMIT');
         return result.rows;
+    } catch (err) {
+        await conn.query('ROLLBACK');
+        throw err;
     } finally {
-        await conn.query('RESET app.current_tenant');
         conn.release();
     }
 }
@@ -170,4 +187,4 @@ With `owner` columns storing Appwrite user IDs, the `tenant_by_setting` policy a
 
 # What the primary role can do {% #admin-role %}
 
-The `admin` role you receive with the database owns your schema and can create roles (`CREATEROLE`), but it is not a superuser: instance-level settings, replication, and other managed responsibilities stay with the platform. Network-level restrictions such as IP allowlists are configured separately; see [Network security](/docs/products/databases/postgresql/network-security).
+The `admin` role you receive with the database owns the database and the `public` schema, and can create roles (`CREATEROLE`) and databases (`CREATEDB`). It is not a superuser: instance-level settings, replication, and other managed responsibilities stay with the platform. Network-level restrictions such as IP allowlists are configured separately; see [Network security](/docs/products/databases/postgresql/network-security).

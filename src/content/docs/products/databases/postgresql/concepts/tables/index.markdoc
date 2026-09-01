@@ -18,6 +18,8 @@ The examples on this page build up pieces of a small store schema: customers, pr
 Column types are standard PostgreSQL types, not Appwrite-specific ones. This page covers the types most schemas need; the full list is in the [PostgreSQL data types documentation](https://www.postgresql.org/docs/current/datatype.html).
 {% /info %}
 
+{% partial file="postgresql-running-examples.md" /%}
+
 # Create a table {% #create %}
 
 `CREATE TABLE` names the table and declares each column with its type and the rules it must obey:
@@ -33,7 +35,7 @@ CREATE TABLE customers (
 
 This declaration packs in the most common column features:
 
-- `GENERATED ALWAYS AS IDENTITY` makes the database assign an auto-incrementing value. Prefer it over the older `serial` shorthand, which creates a separate sequence with looser ownership semantics.
+- `GENERATED ALWAYS AS IDENTITY` makes the database assign an auto-incrementing value. Prefer it over the older `serial` shorthand, which creates a separate sequence with looser ownership semantics. The Console table editor creates `bigserial` keys, so tables you make there use the older form.
 - `PRIMARY KEY` uniquely identifies each row and creates an index automatically.
 - `NOT NULL` rejects missing values, and `UNIQUE` rejects duplicates.
 - `DEFAULT now()` fills the column when an insert doesn't provide a value.
@@ -53,7 +55,7 @@ The critical distinction is exact versus approximate:
 - **numeric** stores decimal values exactly: 0.1 + 0.2 is 0.3.
 - **double precision** stores binary approximations: the same sum comes back as 0.30000000000000004.
 
-Always use `numeric` for money. A price column like `numeric(10, 2)` holds up to 8 digits before the decimal point and exactly 2 after; plain `numeric` with no qualifiers accepts values of any precision.
+Always use `numeric` for money. A price column like `numeric(10, 2)` holds up to 8 digits before the decimal point and exactly 2 after. Plain `numeric` with no qualifiers accepts values of any precision, though the Console requires a precision when you add a numeric column, so you get `numeric(10, 0)` unless you change it.
 
 # Text types {% #text %}
 
@@ -220,5 +222,5 @@ ALTER TABLE customers DROP COLUMN phone_number;
 Adding a nullable column or one with a constant default doesn't rewrite the table, so it's fast at any size, though it still takes a brief exclusive lock and waits for in-flight queries. Adding `NOT NULL` to an existing column scans the table to validate existing rows, so on large tables do it during a quiet period.
 
 {% info title="Full type catalog" %}
-PostgreSQL ships many more specialized types: network addresses (`inet`, `cidr`, `macaddr`), geometric types (`point`, `polygon`, `circle`), bit strings, ranges, and full-text search types (`tsvector`, `tsquery`). Run `\dTS` in `psql` or query `pg_type` to list what your database supports, and see the [extensions page](/docs/products/databases/postgresql/extensions) for types added by extensions such as `vector`.
+PostgreSQL ships more types beyond these. Network addresses (`inet`, `cidr`, `macaddr`) and bit strings are available in the Console column picker alongside the types above. Geometric types (`point`, `polygon`, `circle`), ranges, and full-text search types (`tsvector`, `tsquery`) are available in SQL. Run `\dTS` in `psql` or query `pg_type` to list what your database supports, and see the [extensions page](/docs/products/databases/postgresql/extensions) for types added by extensions such as `vector`.
 {% /info %}

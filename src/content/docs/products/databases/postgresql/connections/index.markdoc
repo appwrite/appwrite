@@ -239,29 +239,33 @@ The response includes the connection fields alongside the database configuration
   "connectionPort": 5432,
   "connectionUser": "admin",
   "connectionPassword": "<password>",
-  "connectionString": "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+  "connectionString": "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/db-<hash>?sslmode=require",
+  "ssl": true,
+  "credentialGeneration": 1
 }
 ```
 
-The primary user is `admin` and the database name is generated per database.
+The primary user is `admin`. The database name on the wire is the first label of the hostname, so a database at `db-abc123def456.fra.appwrite.center` is reached as `db-abc123def456`.
 
 # Connect with psql {% #psql %}
 
 Pass the connection string, or the individual values, to `psql`. The Console credentials dialog also has a **psql** tab with the command ready to copy.
 
 ```bash
-psql "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+psql "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/db-<hash>?sslmode=require"
 ```
 
 Or with individual flags:
 
 ```bash
-psql -h db-<hash>.<region>.appwrite.center -p 5432 -U admin -d <database>
+PGSSLMODE=require psql -h db-<hash>.<region>.appwrite.center -p 5432 -U admin -d db-<hash>
 ```
 
 # Rotate the primary password {% #rotate %}
 
-If your password is compromised, or your security policy requires regular rotation, you can issue a new password for the primary user. The change is applied atomically in the engine, and the response carries the new connection details. Existing sessions stay alive until they disconnect, then have to authenticate with the new password. The API key needs the `databases.write` scope.
+If your password is compromised, or your security policy requires regular rotation, you can issue a new password for the primary user. You can do this from the Console, in the **Credentials** dialog, or through the API.
+
+Rotation is asynchronous. The request returns an operation rather than the updated database. Poll `listOperations` until that operation reaches a terminal status, then fetch the database again to read the new connection details. Existing sessions stay alive until they disconnect, then have to authenticate with the new password. The API key needs the `databases.write` scope.
 
 {% multicode %}
 ```server-nodejs
@@ -274,7 +278,7 @@ const client = new Client()
 
 const postgresql = new Postgresql(client);
 
-const database = await postgresql.updateCredentials({
+const operation = await postgresql.updateCredentials({
     databaseId: '<DATABASE_ID>',
 });
 ```
@@ -288,7 +292,7 @@ const client = new Client()
 
 const postgresql = new Postgresql(client);
 
-const database = await postgresql.updateCredentials({
+const operation = await postgresql.updateCredentials({
     databaseId: '<DATABASE_ID>',
 });
 ```
@@ -305,7 +309,7 @@ $client = (new Client())
 
 $postgresql = new Postgresql($client);
 
-$database = $postgresql->updateCredentials(databaseId: '<DATABASE_ID>');
+$operation = $postgresql->updateCredentials(databaseId: '<DATABASE_ID>');
 ```
 ```server-python
 from appwrite.client import Client
@@ -318,7 +322,7 @@ client.set_key('<YOUR_API_KEY>')
 
 postgresql = Postgresql(client)
 
-database = postgresql.update_credentials(database_id='<DATABASE_ID>')
+operation = postgresql.update_credentials(database_id='<DATABASE_ID>')
 ```
 ```server-ruby
 require 'appwrite'
@@ -332,7 +336,7 @@ client = Client.new
 
 postgresql = Postgresql.new(client)
 
-database = postgresql.update_credentials(database_id: '<DATABASE_ID>')
+operation = postgresql.update_credentials(database_id: '<DATABASE_ID>')
 ```
 ```server-dotnet
 using Appwrite;
@@ -345,7 +349,7 @@ Client client = new Client()
 
 Postgresql postgresql = new Postgresql(client);
 
-var database = await postgresql.UpdateCredentials(databaseId: "<DATABASE_ID>");
+var operation = await postgresql.UpdateCredentials(databaseId: "<DATABASE_ID>");
 ```
 ```server-dart
 import 'package:dart_appwrite/dart_appwrite.dart';
@@ -357,7 +361,7 @@ Client client = Client()
 
 Postgresql postgresql = Postgresql(client);
 
-final database = await postgresql.updateCredentials(
+final operation = await postgresql.updateCredentials(
     databaseId: '<DATABASE_ID>',
 );
 ```
@@ -372,7 +376,7 @@ val client = Client()
 
 val postgresql = Postgresql(client)
 
-val database = postgresql.updateCredentials(
+val operation = postgresql.updateCredentials(
     databaseId = "<DATABASE_ID>",
 )
 ```
@@ -386,7 +390,7 @@ let client = Client()
 
 let postgresql = Postgresql(client)
 
-let database = try await postgresql.updateCredentials(
+let operation = try await postgresql.updateCredentials(
     databaseId: "<DATABASE_ID>"
 )
 ```
@@ -425,7 +429,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    let database = postgresql.update_credentials("<DATABASE_ID>").await?;
+    let operation = postgresql.update_credentials("<DATABASE_ID>").await?;
 
     Ok(())
 }
@@ -449,7 +453,7 @@ curl -X PATCH \
 
 The primary `admin` role owns the default database. For applications that need narrower access, such as a read-only reporting user or a write-only ingestion user, create additional PostgreSQL roles from the **Roles** tab of your database in the Console. The list shows each role's login, role-creation, and database-creation privileges, its connection limit, and its role memberships.
 
-Roles are standard PostgreSQL roles, so `GRANT` and `REVOKE` statements in the [SQL editor](/docs/products/databases/postgresql/quick-start#first-queries) or `psql` work on them like on any PostgreSQL server. The `postgres` superuser is managed by Appwrite and cannot be modified.
+Roles are standard PostgreSQL roles, so `GRANT` and `REVOKE` statements in the [SQL editor](/docs/products/databases/postgresql/quick-start#first-queries) or `psql` work on them like on any PostgreSQL server. Through the SQL API, `GRANT` and `REVOKE` are rejected unless you add them to the database's allowed statements. The `postgres` superuser is managed by Appwrite and cannot be modified.
 
 # TLS {% #tls %}
 
@@ -516,12 +520,14 @@ func main() {
 }
 ```
 ```server-rust
-use tokio_postgres::NoTls;
+use postgres_native_tls::MakeTlsConnector;
+use native_tls::TlsConnector;
 
 #[tokio::main]
-async fn main() -> Result<(), tokio_postgres::Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
-    let (client, connection) = tokio_postgres::connect(&url, NoTls).await?;
+    let tls = MakeTlsConnector::new(TlsConnector::new()?);
+    let (client, connection) = tokio_postgres::connect(&url, tls).await?;
 
     tokio::spawn(async move {
         if let Err(e) = connection.await {
