@@ -48,12 +48,10 @@ export function View() {
     )
 
   const handleUpdate = async () => {
-    const uris = nonEmptyList(redirectUris)
-    if (uris.length === 0) return
     await submit({
       type: clientType,
       deviceFlow,
-      redirectUris: uris,
+      redirectUris: nonEmptyList(redirectUris),
       postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
     })
   }
@@ -111,9 +109,7 @@ export function View() {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={
-            isUpdating || nonEmptyList(redirectUris).length === 0 || !oauthDirty
-          }
+          disabled={isUpdating || !oauthDirty}
           onClick={handleUpdate}
         >
           {t('Update')}
