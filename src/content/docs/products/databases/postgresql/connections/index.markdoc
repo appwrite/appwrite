@@ -453,7 +453,7 @@ curl -X PATCH \
 
 The primary `admin` role owns the default database. For applications that need narrower access, such as a read-only reporting user or a write-only ingestion user, create additional PostgreSQL roles from the **Roles** tab of your database in the Console. The list shows each role's login, role-creation, and database-creation privileges, its connection limit, and its role memberships.
 
-Roles are standard PostgreSQL roles, so `GRANT` and `REVOKE` statements in the [SQL editor](/docs/products/databases/postgresql/quick-start#first-queries) or `psql` work on them like on any PostgreSQL server. Through the SQL API, `GRANT` and `REVOKE` are rejected unless you add them to the database's allowed statements. The `postgres` superuser is managed by Appwrite and cannot be modified.
+Roles are standard PostgreSQL roles, so `GRANT` and `REVOKE` statements in the [SQL editor](/docs/products/databases/postgresql/quick-start#first-queries) or `psql` work on them like on any PostgreSQL server. Through the SQL API, `GRANT` and `REVOKE` are rejected unless you add them to the database's `sqlApiAllowedStatements`. The `postgres` superuser is managed by Appwrite and cannot be modified.
 
 # TLS {% #tls %}
 
