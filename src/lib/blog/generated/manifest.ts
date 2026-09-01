@@ -205,7 +205,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 6,
     "author": "jake-barnby",
     "category": "announcement",
-    "featured": false,
+    "featured": true,
     "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },
@@ -276,7 +276,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "eldad-fux",
     "category": "product, announcement",
-    "featured": true,
+    "featured": false,
     "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
