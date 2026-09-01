@@ -58,7 +58,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Specific projects': '特定のプロジェクト',
   'An error occurred': 'エラーが発生しました',
   'App ID': 'アプリ ID',
-  'App created as draft': 'アプリを下書きとして作成しました',
+  'App created': 'アプリを作成しました',
   'App deleted': 'アプリを削除しました',
   'App logo preview': 'アプリロゴのプレビュー',
   'App not found': 'アプリが見つかりません',
@@ -734,7 +734,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Coupon not found. Please check the code and try again.': 'クーポンが見つかりません。コードを確認してもう一度お試しください。',
   'Create a new organization to manage your projects and organization members.': 'プロジェクトと組織メンバーを管理する新しい組織を作成します。',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.': 'サーバーサイドでのトークン交換を伴う認可コードなど、機密の OAuth フロー用のシークレットを作成します。',
-  'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.': 'マーケットプレイス用の OAuth2 アプリを作成します。公開するまでは下書きとして保存されます。',
+  'Create an OAuth2 app listing for the marketplace.':
+    'マーケットプレイス用の OAuth2 アプリを作成します。',
   'Create an app to share it with other organizations on the marketplace.': 'マーケットプレイスで他の組織と共有するアプリを作成します。',
   'Create your first domain to get started': '開始するには最初のドメインを作成してください',
   'Create your first project to get started': '開始するには最初のプロジェクトを作成してください',

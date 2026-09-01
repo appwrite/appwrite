@@ -97,9 +97,7 @@ export function CreateMarketplaceApp({
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Create app')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t(
-              'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.',
-            )}
+            {t('Create an OAuth2 app listing for the marketplace.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

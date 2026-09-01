@@ -578,7 +578,7 @@ export type CreateOrganizationAppInput = {
   description?: string
   category?: string
   redirectUri?: string
-  /** Defaults to false (marketplace draft). Pass true for Sign in with Appwrite setup. */
+  /** Defaults to true. Pass false to create as a disabled draft. */
   enabled?: boolean
 }
 
@@ -614,7 +614,7 @@ export function useCreateOrganizationApp(
         tagline,
         tags,
         teamId: organizationId,
-        enabled: input.enabled ?? false,
+        enabled: input.enabled ?? true,
         type: 'confidential',
       })
     },

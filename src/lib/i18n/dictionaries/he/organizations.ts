@@ -104,7 +104,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Analyst: 'אנליסט',
   Analytics: 'אנליטיקה',
   'App ID': 'מזהה אפליקציה',
-  'App created as draft': 'האפליקציה נוצרה כטיוטה',
+  'App created': 'האפליקציה נוצרה',
   'App deleted': 'האפליקציה נמחקה',
   'App logo preview': 'תצוגה מקדימה של לוגו האפליקציה',
   'App not found': 'האפליקציה לא נמצאה',
@@ -293,8 +293,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create a project first': 'צרו פרויקט תחילה',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
     'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
-  'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.':
-    'צרו דף אפליקציית OAuth2 למרקטפלייס. הדף נשמר כטיוטה עד שתפרסמו אותו.',
+  'Create an OAuth2 app listing for the marketplace.':
+    'צרו דף אפליקציית OAuth2 למרקטפלייס.',
   'Create an app to share it with other organizations on the marketplace.':
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',

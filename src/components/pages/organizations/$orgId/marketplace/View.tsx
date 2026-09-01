@@ -208,7 +208,7 @@ export function View() {
     try {
       const app = await createAppMutation.mutateAsync(input)
       setCreateDialogOpen(false)
-      toast.success(t('App created as draft'))
+      toast.success(t('App created'))
       if (orgId && app?.$id) {
         navigate({
           to: '/organizations/$orgId/apps/$appId',
