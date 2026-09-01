@@ -9,7 +9,6 @@ author: jake-barnby
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is a native PostgreSQL database in Appwrite?"
     answer: "It is a managed PostgreSQL instance provisioned on dedicated compute for your Appwrite project. You get the raw engine with its own hostname, credentials, and TLS, and you connect with psql or any PostgreSQL driver. There is no Appwrite abstraction layer between your code and the database."
