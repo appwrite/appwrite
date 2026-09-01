@@ -174,7 +174,7 @@ export function CreateMarketplaceApp({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-short">{t('Short description')}</Label>
+              <Label htmlFor="marketplace-app-short">{t('Tagline')}</Label>
               <Input
                 id="marketplace-app-short"
                 value={shortDescription}
