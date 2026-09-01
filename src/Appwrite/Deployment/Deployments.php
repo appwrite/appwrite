@@ -22,6 +22,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
@@ -53,6 +54,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private Device $deviceForBuilds,
     ) {
     }
 
@@ -182,7 +184,7 @@ readonly class Deployments
 
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
-            'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            'buildPath' => $this->devicePath($deployment),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -476,7 +478,20 @@ readonly class Deployments
     }
 
     /**
-     * The build output path on the builds volume, declared at submission.
+     * The deployment's buildPath: where the artifact lives on the builds
+     * device, which is what the executor, the download endpoint and the
+     * deletes worker read. Matches buildPath() on the local device; a remote
+     * device (S3 and friends) keys it under its own root, bucket included.
+     */
+    public function devicePath(Document $deployment): string
+    {
+        return $this->deviceForBuilds->getPath($deployment->getId() . '/' . static::artifact());
+    }
+
+    /**
+     * The build output path on the builds volume. On the local device this is
+     * also the deployment's buildPath; on a remote device (S3 and friends) the
+     * buildPath is a device path and the Jobs worker moves the artifact there.
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {

@@ -6,9 +6,14 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
+use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 
 final class DeploymentsTest extends TestCase
 {
@@ -126,6 +131,40 @@ final class DeploymentsTest extends TestCase
         ]);
 
         $this->assertSame(['users.read'], Deployments::scopes($site));
+    }
+
+    private function deployments(Device $deviceForBuilds): Deployments
+    {
+        return new Deployments(
+            new Jobs(),
+            $this->createStub(Database::class),
+            new Document(['$id' => 'project1']),
+            ['apiHostname' => 'localhost'],
+            $deviceForBuilds,
+        );
+    }
+
+    public function testDevicePathOnLocalDeviceIsTheVolumePath(): void
+    {
+        $deployments = $this->deployments(new Local(APP_STORAGE_BUILDS . '/app-project1'));
+
+        $this->assertSame(
+            Deployments::buildPath('project1', 'deployment1'),
+            $deployments->devicePath(new Document(['$id' => 'deployment1']))
+        );
+    }
+
+    public function testDevicePathOnRemoteDeviceIsKeyedUnderTheDeviceRoot(): void
+    {
+        // An S3-compatible endpoint folds the bucket into the device root (see
+        // getDevice()), so the artifact key is not the volume path.
+        $device = new S3('appwrite' . APP_STORAGE_BUILDS . '/app-project1', 'key', 'secret', 'http://minio:9000', 'us-east-1');
+        $deployments = $this->deployments($device);
+
+        $path = $deployments->devicePath(new Document(['$id' => 'deployment1']));
+
+        $this->assertSame('appwrite' . APP_STORAGE_BUILDS . '/app-project1/deployment1/' . Deployments::artifact(), $path);
+        $this->assertNotSame(Deployments::buildPath('project1', 'deployment1'), $path);
     }
 
     private function buildPayload(array $vars): array
