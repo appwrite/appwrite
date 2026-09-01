@@ -218,11 +218,6 @@ function sanitizeAppId(value: string): string {
   return cleaned
 }
 
-export function defaultMarketplaceRedirectUri(): string {
-  if (typeof window === 'undefined') return 'https://cloud.appwrite.io/oauth2/consent'
-  return `${window.location.origin}/oauth2/consent`
-}
-
 export type UpdateOrganizationAppInput = {
   appId: string
   name: string
@@ -608,9 +603,11 @@ export function useCreateOrganizationApp(
       return await sdk.forConsole.apps.create({
         appId,
         name: input.name.trim(),
-        redirectUris: [
-          input.redirectUri?.trim() || defaultMarketplaceRedirectUri(),
-        ],
+        // No implicit consent-URL fallback: apps start with no allowed
+        // redirect URIs unless the caller provides one.
+        redirectUris: input.redirectUri?.trim()
+          ? [input.redirectUri.trim()]
+          : [],
         description,
         tagline,
         tags,
