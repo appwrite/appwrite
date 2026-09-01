@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
 import {
   buildMarketplaceAppTags,
@@ -136,10 +135,6 @@ export function View() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>{t('App ID')}</Label>
-            <CopyableId id={app.$id} />
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
