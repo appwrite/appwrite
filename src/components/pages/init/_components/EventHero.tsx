@@ -165,6 +165,10 @@ function CollapsedHeroBar({
     <div
       ref={barRef}
       aria-hidden={!visible}
+      // opacity + translate leave the day buttons and Watch link in the tab
+      // order, so keyboard users hit six invisible stops on a fixed bar the
+      // browser cannot scroll into view. aria-hidden alone does not remove them.
+      inert={!visible ? true : undefined}
       className={cn(
         'fixed z-[15] overflow-hidden border-b border-border',
         'bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',

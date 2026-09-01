@@ -45,6 +45,9 @@ function Shell({
       constrainWidth
       maxWidth="max-w-4xl"
       footerAlign="right"
+      // Match the rest of the app: fade the scrollbar in instead of parking a
+      // permanent track down the side of the note.
+      contentWrapperClassName="overlay-scrollbar"
       skipInitialFieldFocus
       onClose={onSkip}
       footer={<SkipFooter onSkip={onSkip} />}
@@ -139,7 +142,7 @@ export function CommunitySupportWizardContent({
     <Shell onSkip={onSkip}>
       <div className="space-y-8">
         <TeamNote />
-        <div className="grid gap-3 md:grid-cols-3 md:grid-rows-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:grid-rows-2">
           <ShareOnXCard
             featured
             onAction={onAction}
