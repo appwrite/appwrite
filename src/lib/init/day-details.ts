@@ -316,7 +316,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'PostgreSQL AMA',
     startsAt: '2026-09-01T14:30:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w4p34s/native_postgresql_databases_are_here_and_were/',
   },
   {
     id: 'sched-yt-servers',
