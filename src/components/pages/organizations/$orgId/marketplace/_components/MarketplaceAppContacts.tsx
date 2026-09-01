@@ -1,5 +1,5 @@
 import { Mail } from 'lucide-react'
-import { EmailAvatar, InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceAppContactsProps = {
@@ -23,14 +23,9 @@ export function MarketplaceAppContacts({
           const isEmail = contact.includes('@')
           const body = (
             <>
-              {isEmail ? (
-                <EmailAvatar
-                  email={contact}
-                  name={contact}
-                  size="sm"
-                  className="shrink-0"
-                />
-              ) : (
+              {/* Contact addresses are company inboxes, so their avatars are
+                  generic placeholders — only named contacts get one. */}
+              {!isEmail && (
                 <InitialsAvatar name={contact} size="sm" className="shrink-0" />
               )}
               <p className="min-w-0 flex-1 text-[13px] font-medium text-foreground truncate">
