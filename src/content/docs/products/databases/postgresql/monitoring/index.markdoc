@@ -18,10 +18,9 @@ Every native database ships with built-in observability: live metrics in the Con
 Open your database and select the **Monitor** tab. The view is organized into sections:
 
 - **Overview**: key health indicators at a glance, including connection usage against your limit, storage used, cache hit ratio, uptime, and commit/rollback counts
-- **Compute**: CPU and memory usage over time
-- **Connections**: connection counts by state and by application
-- **Storage**: disk usage and growth
-- **Workload**: query throughput and activity
+- **Compute**: CPU, memory, queries per second, and disk IOPS over time
+- **Connections**: connection counts over time, a breakdown by state and by application, and session signals for idle-in-transaction and long-running queries
+- **Storage**: disk usage and growth, largest tables, dead tuples, and sequential scans
 
 Use the date range picker to zoom into an incident window, and **Refresh metrics** to pull the latest samples.
 
@@ -42,7 +41,7 @@ You can filter by state (**Active**, **Idle**, **Idle in transaction**, **Long-r
 
 # Database health {% #status %}
 
-Poll the database status for live health information: readiness, uptime, connection counts, replica state, and storage volumes. Use it from deploy pipelines to wait for the database, or from your own monitoring:
+Poll the database status for live health information. The response carries a `health` field, one of `healthy`, `degraded`, `unhealthy`, or `unknown`, alongside uptime, connection counts, replica and replication state, and storage volumes. Use it from deploy pipelines to wait for the database, or from your own monitoring:
 
 {% multicode %}
 ```server-nodejs
@@ -232,4 +231,4 @@ For the database lifecycle state (`ready`, `scaling`, `restoring`, and friends),
 
 # Explain a query {% #explain %}
 
-The Console's **SQL editor** tab has an **Explain** button that shows the execution plan for the query in the editor, without leaving the browser. Use it to check whether a slow query uses your indexes before reaching for `EXPLAIN ANALYZE` in `psql`.
+The Console's **SQL editor** tab has an **Explain** button that shows the execution plan for the query in the editor, without leaving the browser. Use it to check whether a slow query uses your indexes. To see measured timings rather than estimates, prefix the query with `EXPLAIN ANALYZE` before pressing **Explain**, which runs the query and reports what it actually did.

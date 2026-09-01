@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Branches
-description: Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.
+description: Create a short-lived, isolated copy of your PostgreSQL database from a storage snapshot. Use branches for previews, migrations, and testing.
 ---
 
 A branch is a short-lived, isolated copy of your database. It has its own endpoint and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back.
@@ -19,7 +19,7 @@ Use cases:
 
 # How it works {% #how %}
 
-Creating a branch takes a fast `CHECKPOINT` on the parent, snapshots the parent's storage volume with a near-instant copy-on-write operation, and provisions a branch instance from the snapshot on the same engine version with its own isolated storage. Branch compute is fixed and lightweight, enough to validate a change rather than carry production load, and is not configurable. The parent and the branch share storage at the moment of branching; storage cost grows as the two diverge.
+Creating a branch snapshots the parent's storage volume and provisions a branch instance from that snapshot, on the same engine version, with its own isolated storage. PostgreSQL snapshots are crash-consistent, so the parent is never frozen and takes no write pause. Branch compute is fixed and lightweight, enough to validate a change rather than carry production load, and is not configurable. Provisioning is asynchronous and usually takes a few minutes, because the storage provider finalizes the snapshot before the branch instance starts.
 
 # Create a branch {% #create %}
 
@@ -241,7 +241,9 @@ Both fields are optional:
 | `branchId` | auto-generated     | Custom ID (`a-z`, `A-Z`, `0-9`, `.`, `-`, `_`, max 36 chars)          |
 | `ttl`      | `86400` (24 hours) | Lifetime in seconds before the branch expires (min 300, max 604800)   |
 
-The call is asynchronous and returns immediately while the branch provisions in the background. When the TTL elapses, the branch and its storage are removed automatically.
+The call is asynchronous and returns immediately while the branch provisions in the background. Every branch has a TTL. Leaving `ttl` out gives you 24 hours, and the longest branch you can create is 7 days, so a branch is never a permanent resource.
+
+The value you send as `branchId` is stored as the branch name. The list response returns a separate generated `branchId`, so look up a branch by its `name` rather than by the value you passed.
 
 # List branches and connect {% #list %}
 
@@ -635,13 +637,13 @@ curl -X DELETE \
 
 # Billing {% #billing %}
 
-A branch runs on fixed, lightweight compute, so its cost is dominated by storage. The snapshot is free at the moment of branching; storage cost accumulates as the branch's data diverges from the parent. There is no separate branch line item, branches roll into your regular database storage and compute totals.
+A branch is billed for the parent's full provisioned storage from the moment it is created, pro-rated for how long the branch exists. Divergence is not measured, so a branch you never write to costs the same as one you rewrite completely. Short-lived branches are therefore much cheaper than long-lived ones. There is no separate branch line item, branches roll into your regular database storage totals.
 
 # Use case: a development copy of production {% #dev-prod %}
 
-Branches also separate daily development from production without maintaining seed scripts. Create a long-lived branch from the production database and point local and staging environments at the branch's hostname. Developers query production-shaped data, and every write stays on the branch, so production is never at risk from a bad migration or a careless `DELETE`.
+Branches also separate daily development from production without maintaining seed scripts. Create a branch from the production database and point local and staging environments at the branch's hostname. Developers query production-shaped data, and every write stays on the branch, so production is never at risk from a bad migration or a careless `DELETE`.
 
-Branch data diverges from the parent from the moment of branching. To refresh, delete the branch and create a new one with the same `branchId`; the new branch starts from the parent's current state. Set a `ttl` if the branch should clean itself up, or omit it for a permanent development copy.
+Because a branch expires after 7 days at most, treat this as a recurring refresh rather than a standing environment. Delete the branch and create a new one with the same name on a schedule that suits your team. Each new branch starts from the parent's current state, which also keeps the development data from drifting far from production.
 
 # Use case: per-PR preview database {% #ci-example %}
 
@@ -666,7 +668,7 @@ jobs:
             -H "X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{"branchId": "pr-${{ github.event.number }}", "ttl": 604800}' \
-            https://<REGION>.cloud.appwrite.io/v1/postgresql/${{ vars.DATABASE_ID }}/branches || true
+            https://<REGION>.cloud.appwrite.io/v1/postgresql/${{ vars.DATABASE_ID }}/branches
 
   teardown:
     if: github.event.action == 'closed'
@@ -680,4 +682,4 @@ jobs:
             https://<REGION>.cloud.appwrite.io/v1/postgresql/${{ vars.DATABASE_ID }}/branches/pr-${{ github.event.number }}
 ```
 
-The `|| true` on the create call makes the workflow idempotent: if the branch already exists, the call is a no-op.
+Branch creation does not deduplicate by name. Calling it twice with the same `branchId` provisions a second branch, so reopening a pull request leaves you with two. Delete the existing branch before recreating it, or list branches first and skip creation when one already matches.

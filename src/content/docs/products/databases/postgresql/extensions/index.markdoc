@@ -6,7 +6,9 @@ description: Install and manage PostgreSQL extensions like PostGIS, pgvector, an
 
 PostgreSQL exposes a rich extension ecosystem: PostGIS for geospatial data, pgvector for embeddings, pg_trgm for fuzzy search, and more. Native PostgreSQL databases on Appwrite support extensions at no extra cost.
 
-You manage extensions from the Console under your database's **Settings** > **Extensions**, or programmatically with a [Server SDK](/docs/sdks#server) and an [API key](/docs/partners/project/api-keys) with the `databases.write` scope. You cannot manage extensions from client SDKs. Extensions change the database itself, so only trusted callers can manage them.
+Extensions change the database itself, so only trusted callers can manage them. You cannot manage extensions from client SDKs: the API needs a [Server SDK](/docs/sdks#server) and an [API key](/docs/partners/project/api-keys). Installing and removing an extension needs the `databases.write` scope, and listing extensions needs `databases.read`.
+
+# Install an extension {% #install %}
 
 {% only_dark %}
 ![Extensions catalog in database settings](/images/docs/products/databases/postgresql/dark/settings-extensions.avif)
@@ -15,9 +17,9 @@ You manage extensions from the Console under your database's **Settings** > **Ex
 ![Extensions catalog in database settings](/images/docs/products/databases/postgresql/settings-extensions.avif)
 {% /only_light %}
 
-# Install an extension {% #install %}
+In the Console, open your database's **Settings** > **Extensions**, find the extension in the catalog, click **Install**, and confirm. The database must be in the `ready` state.
 
-Pass the extension name as it appears in the [extension catalog](#list). The install runs asynchronously: the request returns immediately and a worker runs `CREATE EXTENSION` inside the database, typically within a few seconds. The database must be in the `ready` state.
+You can also install an extension with a Server SDK. Pass the extension name as it appears in the [extension catalog](#list). The install runs asynchronously: the request returns immediately and a worker runs `CREATE EXTENSION` inside the database in the background.
 
 {% multicode %}
 ```server-nodejs
@@ -215,11 +217,18 @@ curl -X POST \
 ```
 {% /multicode %}
 
-Requesting an extension that is not available fails with an error listing the supported extension names.
+Requesting an extension that is not available fails with an error naming the extension you asked for. Call [list extensions](#list) to see what this database can install.
 
 # List extensions {% #list %}
 
-Lists the extensions installed on the database and the extensions available to install:
+{% only_dark %}
+![Extensions catalog filtered to installed extensions](/images/docs/products/databases/postgresql/dark/settings-extensions-installed.avif)
+{% /only_dark %}
+{% only_light %}
+![Extensions catalog filtered to installed extensions](/images/docs/products/databases/postgresql/settings-extensions-installed.avif)
+{% /only_light %}
+
+In the Console, the extensions catalog filters by **All**, **Installed**, and **In progress**. The API returns both sets at once, the extensions installed on the database and the extensions available to install:
 
 {% multicode %}
 ```server-nodejs
@@ -405,18 +414,35 @@ curl -X GET \
 ```
 {% /multicode %}
 
-The response contains two arrays of extension names:
+The response contains two arrays of extension names, plus a `metadata` array describing each one:
 
 ```json
 {
   "installed": ["plpgsql", "vector"],
-  "available": ["postgis", "pg_trgm", "pgcrypto", "hstore", "citext", "..."]
+  "available": ["postgis", "pg_trgm", "pgcrypto", "hstore", "citext", "..."],
+  "metadata": [
+    {
+      "key": "vector",
+      "name": "pgvector",
+      "description": "Vector data type and similarity search for embeddings",
+      "category": "Search"
+    }
+  ]
 }
 ```
 
-The available list is reported by the engine for your PostgreSQL version, so it always reflects what can actually be installed on your database.
+The available list starts from what the engine reports for your PostgreSQL version, minus extensions Appwrite does not offer, so it reflects what you can actually install on this database.
 
 # Remove an extension {% #remove %}
+
+{% only_dark %}
+![Uninstall extension confirmation](/images/docs/products/databases/postgresql/dark/settings-extensions-uninstall.avif)
+{% /only_dark %}
+{% only_light %}
+![Uninstall extension confirmation](/images/docs/products/databases/postgresql/settings-extensions-uninstall.avif)
+{% /only_light %}
+
+In the Console, click **Uninstall** on an installed extension and confirm. You can also remove it with a Server SDK:
 
 {% multicode %}
 ```server-nodejs
@@ -610,7 +636,7 @@ curl -X DELETE \
 ```
 {% /multicode %}
 
-If there are objects that depend on the extension (tables, indexes, columns), the drop fails. Drop the dependents first, or run `DROP EXTENSION ... CASCADE` yourself through SQL to acknowledge what gets removed.
+Uninstalling always cascades. Any object that depends on the extension is dropped with it, including tables, columns, and indexes that use its types or functions. Check what depends on an extension before you remove it, and take a [backup](/docs/products/databases/postgresql/backups) first if the data matters.
 
 # Common extensions {% #common %}
 
@@ -633,7 +659,7 @@ List the extensions on your database for the full catalog available to it.
 
 | Limit                           | Value      |
 |---------------------------------|------------|
-| Maximum extensions per database | 50         |
+| Maximum extensions per database | 50 (enforced in the Console) |
 | Extension install and uninstall | Free       |
 
 Extensions are installed at their default version for your database's PostgreSQL major version.

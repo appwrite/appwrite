@@ -84,6 +84,10 @@ Every Pro plan also comes with **$10 in database credits each month**. That cove
 
 Native PostgreSQL databases are available on Appwrite Cloud today on dedicated infrastructure.
 
+{% info title="Available regions" %}
+We are rolling native databases out region by region, starting with Frankfurt (`fra`) and New York (`nyc`). More regions are on the way. A database takes the region of the project that owns it, so create your project in one of these regions to try them.
+{% /info %}
+
 # Resources
 
 - [PostgreSQL documentation](/docs/products/databases/postgresql)
