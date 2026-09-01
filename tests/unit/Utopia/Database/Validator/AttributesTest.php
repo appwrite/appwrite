@@ -160,6 +160,33 @@ final class AttributesTest extends TestCase
             ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
             Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT])
         );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT])
+        );
+
+        // None of the numeric endpoints takes a size. A size sent inline must not
+        // narrow the column below the range the same definition declares.
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 4])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 8, 'min' => 0, 'max' => 100])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT, 'size' => 4])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'size' => 4])
+        );
     }
 
     public function testNumericBoundsMustFitTheType(): void

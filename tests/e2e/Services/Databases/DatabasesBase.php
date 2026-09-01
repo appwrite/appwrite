@@ -1255,6 +1255,9 @@ trait DatabasesBase
                 ['key' => 'total', 'type' => Database::VAR_BIGINT],
                 ['key' => 'ratio', 'type' => Database::VAR_FLOAT],
                 ['key' => 'bounded', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
+                // The numeric endpoints take no size, so this one cannot narrow the
+                // column below the int64 range the definition still declares
+                ['key' => 'sized', 'type' => Database::VAR_INTEGER, 'size' => 4],
             ],
         ]);
 
@@ -1270,6 +1273,8 @@ trait DatabasesBase
             $byKey[$attribute['key']] = $attribute;
         }
 
+        $this->assertSame(\PHP_INT_MIN, $byKey['sized']['min']);
+        $this->assertSame(\PHP_INT_MAX, $byKey['sized']['max']);
         $this->assertSame(\PHP_INT_MIN, $byKey['counter']['min']);
         $this->assertSame(\PHP_INT_MAX, $byKey['counter']['max']);
         $this->assertSame(\PHP_INT_MIN, $byKey['total']['min']);
@@ -1288,12 +1293,14 @@ trait DatabasesBase
             'data' => [
                 'counter' => 5000000000,
                 'total' => \PHP_INT_MAX,
+                'sized' => 5000000000,
             ],
         ]);
 
         $this->assertEquals(201, $record['headers']['status-code']);
         $this->assertSame(5000000000, $record['body']['counter']);
         $this->assertSame(\PHP_INT_MAX, $record['body']['total']);
+        $this->assertSame(5000000000, $record['body']['sized']);
 
         // A value outside a declared bound is still refused
         $rejected = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [

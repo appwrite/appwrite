@@ -22,8 +22,10 @@ class Attribute
         Database::VAR_TEXT => 65535,
         Database::VAR_MEDIUMTEXT => 16777215,
         Database::VAR_LONGTEXT => 2147483647,
-        // Bytes, the width createBigIntColumn hardcodes
+        // Bytes, the widths createBigIntColumn and createFloatColumn hardcode.
+        // Every adapter maps these two types without consulting the size.
         Database::VAR_BIGINT => 8,
+        Database::VAR_FLOAT => 0,
     ];
 
     /**
@@ -93,10 +95,12 @@ class Attribute
             $size = self::FORMAT_SIZES[$format] ?? $size;
         }
 
-        if ($type === Database::VAR_INTEGER && $size < 1) {
-            // Same width createIntegerColumn picks: the 4 byte column only holds a
-            // range that fits INT32, and a bound left out means the int64 edge,
-            // which does not.
+        if ($type === Database::VAR_INTEGER) {
+            // Same width createIntegerColumn picks. That endpoint takes no size at
+            // all, so a size sent inline is ignored rather than left to promise a
+            // range the column cannot hold: the 4 byte column only holds a range
+            // that fits INT32, and a bound left out means the int64 edge, which
+            // does not.
             $min = $attribute['min'] ?? \PHP_INT_MIN;
             $max = $attribute['max'] ?? \PHP_INT_MAX;
             $fitsInt32 = \is_int($min) && \is_int($max) && $min >= -2147483648 && $max <= 2147483647;
