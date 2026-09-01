@@ -101,7 +101,7 @@ export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
 export const MARKETPLACE_SIDEBAR_LINKS: MarketplaceLinkItem[] = [
   {
     id: 'add-app',
-    label: 'Add app',
+    label: 'Create app',
     icon: Plus,
     action: 'add-app',
   },

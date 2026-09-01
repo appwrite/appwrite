@@ -55,6 +55,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Add alert': 'הוספת התראה',
   'Add another member': 'הוספת חבר נוסף',
   'Add app': 'הוספת אפליקציה',
+  'Create app': 'יצירת אפליקציה',
+  Team: 'צוות',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'האפליקציה נוצרת בצוות הנוכחי שלכם. החליפו צוות כדי ליצור אותה בצוות אחר.',
   'Add backup': 'הוספת גיבוי',
   'Add billing address': 'הוספת כתובת חיוב',
   'Add credits': 'הוספת קרדיטים',

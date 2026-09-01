@@ -87,7 +87,7 @@ export function View() {
           {...analyticsAttrs('create-marketplace-app')}
         >
           <Plus className="me-1.5 h-3.5 w-3.5" />
-          {t('Add app')}
+          {t('Create app')}
         </Button>
       </div>
 
@@ -102,7 +102,7 @@ export function View() {
               onClick={() => setCreateDialogOpen(true)}
               {...analyticsAttrs('create-marketplace-app')}
             >
-              {t('Add app')}
+              {t('Create app')}
             </Button>
           }
           variant="card"

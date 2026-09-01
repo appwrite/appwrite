@@ -284,7 +284,7 @@ export function View() {
                 onClick={() => setCreateDialogOpen(true)}
                 {...analyticsAttrs('create-marketplace-app')}
               >
-                {t('Add app')}
+                {t('Create app')}
               </Button>
             ) : undefined
           }

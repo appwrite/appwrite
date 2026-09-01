@@ -21,6 +21,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Add alert': 'アラートを追加',
   'Add another member': '別のメンバーを追加',
   'Add app': 'アプリを追加',
+  'Create app': 'アプリを作成',
+  Team: 'チーム',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'アプリは現在のチームに作成されます。別のチームに作成するには、チームを切り替えてください。',
   'Add at least one project to grant access.': 'アクセスを許可するには、プロジェクトを1つ以上追加してください。',
   'Add backup': 'バックアップを追加',
   'Add billing address': '請求先住所を追加',

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useParams } from '@tanstack/react-router'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Info } from 'lucide-react'
+import { useOrganizations } from '@/lib/react-query/hooks'
 import {
   Select,
   SelectContent,
@@ -53,6 +62,10 @@ export function CreateMarketplaceApp({
   isSubmitting = false,
 }: CreateMarketplaceAppProps) {
   const t = useT()
+  const { orgId } = useParams({ strict: false })
+  const { organizations } = useOrganizations()
+  const currentTeamName =
+    organizations.find((org) => org.$id === orgId)?.name ?? orgId ?? ''
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
@@ -95,7 +108,7 @@ export function CreateMarketplaceApp({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{t('Add app')}</DialogTitle>
+          <DialogTitle>{t('Create app')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
               'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.',
@@ -106,6 +119,36 @@ export function CreateMarketplaceApp({
 
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0 space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="marketplace-app-team">{t('Team')}</Label>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={t(
+                          'The app is created in your current team. Switch teams to create it in another team.',
+                        )}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Info className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-64 text-[12px]">
+                      {t(
+                        'The app is created in your current team. Switch teams to create it in another team.',
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="marketplace-app-team"
+                value={currentTeamName}
+                disabled
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="marketplace-app-name">{t('Name')}</Label>
               <Input
@@ -188,7 +231,7 @@ export function CreateMarketplaceApp({
               {t('Cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit || isSubmitting}>
-              {t('Add app')}
+              {t('Create app')}
             </Button>
           </div>
         </form>
