@@ -307,6 +307,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'PostgreSQL deep dive',
     // Day 2 runs later than the rest of the week.
     startsAt: '2026-09-01T13:30:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[2],
   },
   {
@@ -323,6 +324,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'VectorsDB, DocumentsDB & MySQL deep dive',
     startsAt: '2026-09-02T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[3],
   },
   {
@@ -339,6 +341,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'S3 for Appwrite Storage',
     startsAt: '2026-09-03T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[4],
   },
   {
@@ -355,6 +358,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'Firewall, OAuth, and Domains launch stream',
     startsAt: '2026-09-04T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[5],
   },
   {

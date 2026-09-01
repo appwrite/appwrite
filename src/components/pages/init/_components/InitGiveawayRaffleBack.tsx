@@ -4,9 +4,11 @@ import { buildInitSpinningGiveawayRaffleActivity } from '@/lib/init/init-presenc
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { Loader2, Sparkles, Trophy, X } from 'lucide-react'
+import { Loader2, RefreshCw, Sparkles, Trophy, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import {
   computeRaffleWheelRotation,
@@ -21,6 +23,7 @@ interface InitGiveawayRaffleBackProps {
   giveaway: LaunchEventDailyPrize
   participants: LaunchEventOnlineUser[]
   loadingParticipants: boolean
+  onReloadParticipants: () => void | Promise<void>
   onClose: () => void
 }
 
@@ -28,8 +31,10 @@ export function InitGiveawayRaffleBack({
   giveaway,
   participants,
   loadingParticipants,
+  onReloadParticipants,
   onClose,
 }: InitGiveawayRaffleBackProps) {
+  const t = useT()
   const prizeImageSrc = useInitThemeImageSrc(
     giveaway.visual?.imageSrcLight ?? '',
     giveaway.visual?.imageSrcDark ?? '',
@@ -53,6 +58,7 @@ export function InitGiveawayRaffleBack({
   }, [isSpinning, setTransientActivity])
 
   const canRaffle = participants.length > 0 && !isSpinning && !loadingParticipants
+  const canReload = !isSpinning && !loadingParticipants
 
   const handleRaffle = useCallback(() => {
     if (!canRaffle) return
@@ -117,11 +123,33 @@ export function InitGiveawayRaffleBack({
             <InitGiveawayRaffleWheel participants={participants} rotation={rotation} />
           )}
 
-          <p className="text-center text-[12px] text-muted-foreground">
-            {loadingParticipants
-              ? 'Loading online participants…'
-              : `${participants.length} participant${participants.length === 1 ? '' : 's'} online`}
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-[12px] text-muted-foreground">
+              {loadingParticipants
+                ? t('Loading online participants…')
+                : `${participants.length} ${
+                    participants.length === 1
+                      ? t('participant online')
+                      : t('participants online')
+                  }`}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
+              disabled={!canReload}
+              onClick={() => {
+                void onReloadParticipants()
+              }}
+            >
+              <RefreshCw
+                className={cn('size-3.5', loadingParticipants && 'animate-spin')}
+                aria-hidden
+              />
+              {t('Reload list')}
+            </Button>
+          </div>
 
           <Button
             type="button"
@@ -172,11 +200,11 @@ export function InitGiveawayRaffleBack({
             {winner ? (
               <div className="flex items-center gap-3">
                 <PhotoAvatar
-                  userId={winner.id}
+                  userId={winner.ownerId ?? winner.id}
                   size="md"
                   className="rounded-full"
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-cta)]">
                     <Trophy className="size-3.5" aria-hidden />
                     Winner
@@ -184,6 +212,12 @@ export function InitGiveawayRaffleBack({
                   <p className="truncate text-[15px] font-semibold text-foreground">
                     {formatInitPresenceDisplayName(winner.name)}
                   </p>
+                  <CopyableId
+                    id={winner.ownerId ?? winner.id}
+                    size="xs"
+                    maxWidth={140}
+                    copyToastLabel="User ID"
+                  />
                 </div>
               </div>
             ) : (

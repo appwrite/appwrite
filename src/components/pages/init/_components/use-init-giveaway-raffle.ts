@@ -159,6 +159,7 @@ export function useInitGiveawayRaffle(
     loadingParticipants,
     openForDay,
     openGrandPrizeReveal,
+    reloadParticipants: loadParticipants,
     close,
     raffleDays: GIVEAWAY_RAFFLE_DAYS,
   }

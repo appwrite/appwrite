@@ -669,6 +669,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
   'Live now': 'בשידור חי',
+  'Loading online participants…': 'טוען משתתפים אונליין…',
   'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
@@ -787,6 +788,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Partner Tiers': 'דרגות שותפים',
   'Partner with one of the fastest growing dev tool companies': 'שתפו פעולה עם אחת מחברות כלי הפיתוח הצומחות במהירות',
   'Partners Program': 'תוכנית השותפים',
+  'participant online': 'משתתף אונליין',
+  'participants online': 'משתתפים אונליין',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות אימות.',
   'Password policies': 'מדיניות סיסמאות',
   'Password protected': 'מוגן בסיסמה',
@@ -877,6 +880,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Recovery codes': 'קודי שחזור',
   'Redirect': 'הפניה',
   'Redo': 'ביצוע מחדש',
+  'Reload list': 'טעינת הרשימה מחדש',
   'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.': // pragma: allowlist secret
     'צמצמו ריבוי ספקים ותקורת אינטגרציות. Appwrite מאחדת את שירותי ה-backend שצוותי ארגון צריכים כדי לבנות, לפרוס ולהגן על אפליקציות מודרניות בלי ללהטט בין חוזים או לתפור ספקים יחד.', // pragma: allowlist secret
   'Region': 'אזור',
