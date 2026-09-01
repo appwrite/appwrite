@@ -6,8 +6,6 @@ description: Group PostgreSQL statements into atomic transactions. Covers COMMIT
 
 A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state.
 
-{% partial file="postgresql-running-examples.md" /%}
-
 # How a transaction works {% #how-it-works %}
 
 Think of a transaction as a private draft of the database that only your connection can see:

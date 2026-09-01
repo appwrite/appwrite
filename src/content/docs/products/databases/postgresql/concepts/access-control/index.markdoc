@@ -12,8 +12,6 @@ PostgreSQL controls access in three layers:
 
 Your database's primary `admin` role can create additional roles, so you can give every service and teammate exactly the access it needs instead of sharing one all-powerful login.
 
-{% partial file="postgresql-running-examples.md" /%}
-
 # Setup {% #setup %}
 
 The examples below protect a documents table whose rows belong to different owners. Create and seed it as `admin`, the role your database comes with:

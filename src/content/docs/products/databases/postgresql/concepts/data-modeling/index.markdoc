@@ -6,8 +6,6 @@ description: Design PostgreSQL schemas with normalization, decide when to denorm
 
 Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it.
 
-{% partial file="postgresql-running-examples.md" /%}
-
 # The problem with one big table {% #problem %}
 
 Start with an orders table designed the way a spreadsheet would be:

@@ -6,8 +6,6 @@ description: Speed up PostgreSQL queries with B-tree, composite, partial, and ex
 
 An index is a lookup structure the database maintains next to a table so it can find rows without scanning everything; the default B-tree kind keeps its entries sorted. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL.
 
-{% partial file="postgresql-running-examples.md" /%}
-
 # Setup {% #setup %}
 
 Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to give the query planner a real choice to make:

@@ -18,8 +18,6 @@ The examples on this page build up pieces of a small store schema: customers, pr
 Column types are standard PostgreSQL types, not Appwrite-specific ones. This page covers the types most schemas need; the full list is in the [PostgreSQL data types documentation](https://www.postgresql.org/docs/current/datatype.html).
 {% /info %}
 
-{% partial file="postgresql-running-examples.md" /%}
-
 # Create a table {% #create %}
 
 `CREATE TABLE` names the table and declares each column with its type and the rules it must obey:
