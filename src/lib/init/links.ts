@@ -21,10 +21,10 @@ export const INIT_YOUTUBE_CHANNEL_HREF = 'https://www.youtube.com/@Appwrite'
  */
 export const INIT_DAY_STREAM_HREFS: Record<number, string | undefined> = {
   1: 'https://www.youtube.com/watch?v=FaEmdOwzQMw',
-  2: undefined,
-  3: undefined,
-  4: undefined,
-  5: undefined,
+  2: 'https://www.youtube.com/watch?v=Rq4WNPvqWes',
+  3: 'https://www.youtube.com/watch?v=0UHYLAtWBMo',
+  4: 'https://www.youtube.com/watch?v=N4bz33uSiko',
+  5: 'https://www.youtube.com/watch?v=LYq0qtyQmJk',
 }
 
 export type ResolvedInitHref = {
