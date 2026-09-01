@@ -147,12 +147,15 @@ export function useInitialLoader() {
 
   const skipStaticLoader = isAuthRoute || isInstantPublicRoute || isMarketingRoute
 
-  // Include "/" so the branded loader shows until redirect; don't count root as "first page"
+  // Include "/" so the branded loader shows until redirect; don't count root as "first page".
+  // "/marketplace" is a redirect-only share URL into the console — without it the
+  // branded loader hid on mount and the hop flashed a second, unbranded loader.
   const shouldShowLoader = useMemo(
     () =>
       !skipStaticLoader &&
       (location.pathname === '/' ||
         location.pathname.startsWith('/protected') ||
+        location.pathname.startsWith('/marketplace') ||
         location.pathname.startsWith('/organizations') ||
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
