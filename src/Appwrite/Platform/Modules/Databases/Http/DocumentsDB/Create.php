@@ -29,7 +29,7 @@ class Create extends DatabaseCreate
             ->desc('Create database')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].create')
-            ->label('scope', 'databases.write')
+            ->label('scope', 'documentsdb.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')

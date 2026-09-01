@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
+                'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',
@@ -251,6 +260,78 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_GITHUB_APP_ID',
+                'description' => 'GitHub OAuth app client ID used for signing in to the Appwrite console. You can find it in your GitHub OAuth application details. This is separate from _APP_VCS_GITHUB_APP_ID, which powers repository integration rather than console sign-in and holds the numeric GitHub App ID instead of an OAuth client ID.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITHUB_SECRET',
+                'description' => 'GitHub OAuth app client secret used for signing in to the Appwrite console. You can generate secrets in your GitHub OAuth application settings. This is separate from _APP_VCS_GITHUB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_APP_ID',
+                'description' => 'GitLab OAuth application ID used for signing in to the Appwrite console. You can find it in your GitLab application details. This is separate from _APP_VCS_GITLAB_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_SECRET',
+                'description' => 'GitLab OAuth application secret used for signing in to the Appwrite console. You can generate one in your GitLab application settings. This is separate from _APP_VCS_GITLAB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_APP_ID',
+                'description' => 'Bitbucket OAuth consumer key used for signing in to the Appwrite console. You can find it in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_SECRET',
+                'description' => 'Bitbucket OAuth consumer secret used for signing in to the Appwrite console. You can find it alongside the consumer key in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_APP_ID',
+                'description' => 'Google OAuth 2.0 client ID used for signing in to the Appwrite console. You can create one in the Google Cloud Console under APIs & Services > Credentials. Unlike the other console sign-in providers, Google has no _APP_VCS_ counterpart, as it is not a repository host.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_SECRET',
+                'description' => 'Google OAuth 2.0 client secret used for signing in to the Appwrite console. You can find it alongside the client ID in the Google Cloud Console under APIs & Services > Credentials.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',
@@ -342,7 +423,7 @@ return [
             ],
             [
                 'name' => '_APP_WORKER_PER_CORE',
-                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
                 'required' => false,
@@ -471,6 +552,159 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
+                'description' => 'Engine backing DocumentsDB. Only MongoDB is supported. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_DOCUMENTSDB',
+                'description' => 'DocumentsDB server host name address. Requires a reachable MongoDB. Default value is: mongodb.',
+                'introduction' => '2.0.0',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_DOCUMENTSDB',
+                'description' => 'DocumentsDB server TCP port. Default value is: 27017.',
+                'introduction' => '2.0.0',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_DOCUMENTSDB',
+                'description' => 'DocumentsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_DOCUMENTSDB',
+                'description' => 'DocumentsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_ADAPTER_VECTORSDB',
+                'description' => 'Engine backing VectorsDB. Only PostgreSQL is supported. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST_VECTORSDB',
+                'description' => 'VectorsDB server host name address. Requires a reachable PostgreSQL. Default value is: postgresql.',
+                'introduction' => '2.0.0',
+                'default' => 'postgresql',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT_VECTORSDB',
+                'description' => 'VectorsDB server TCP port. Default value is: 5432.',
+                'introduction' => '2.0.0',
+                'default' => '5432',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA_VECTORSDB',
+                'description' => 'VectorsDB schema name. Falls back to _APP_DB_SCHEMA when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER_VECTORSDB',
+                'description' => 'VectorsDB server user name. Falls back to _APP_DB_USER when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS_VECTORSDB',
+                'description' => 'VectorsDB server user password. Falls back to _APP_DB_PASS when empty.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
+                'description' => 'Full DocumentsDB connection string, overriding the _APP_DB_*_DOCUMENTSDB values. Format: db_main=mongodb://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE_VECTORSDB',
+                'description' => 'Full VectorsDB connection string, overriding the _APP_DB_*_VECTORSDB values. Format: db_main=postgresql://user:pass@host:port/schema.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_DATABASE_BATCH',
+                'description' => 'Maximum number of rows or documents accepted by a single bulk database operation (createRows, upsertRows, updateRows, deleteRows and their document equivalents). Raising it increases memory use and query size per request, so tune it to what your database can handle. Default value is: 100.',
+                'introduction' => '2.0.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCUMENTSDB',
+                'description' => 'Enables the DocumentsDB API, which runs on MongoDB. The installer does not deploy MongoDB, so provision one and point the _APP_DB_*_DOCUMENTSDB variables at it before enabling this; until then the /v1/documentsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VECTORSDB',
+                'description' => 'Enables the VectorsDB API, which runs on PostgreSQL. The installer does not deploy a PostgreSQL for it, so provision one and point the _APP_DB_*_VECTORSDB variables at it before enabling this; until then the /v1/vectorsdb routes return a service disabled error. Default value is: disabled.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
         ],
     ],

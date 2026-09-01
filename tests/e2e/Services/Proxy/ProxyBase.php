@@ -205,6 +205,27 @@ trait ProxyBase
         $this->assertEquals(400, $rule['headers']['status-code']);
     }
 
+    public function testCreateAPIRuleFoldsDomainCase(): void
+    {
+        $domain = \uniqid() . '-Case.Custom.LOCALHOST';
+        $canonical = \strtolower($domain);
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule));
+        $this->assertEquals($canonical, $rule['body']['domain']);
+
+        // Re-read, so this pins what was persisted rather than how the create
+        // response was shaped. The stored value is what the delete path and the
+        // certificate providers are handed.
+        $fetched = $this->getRule($rule['body']['$id']);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($canonical, $fetched['body']['domain']);
+
+        // Deleting a mixed-case rule is the path that broke: a non-canonical
+        // stored domain must not stop the rule from being removed.
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
     public function testCreateRedirectRule(): void
     {
         $domain = \uniqid() . '-redirect.custom.localhost';

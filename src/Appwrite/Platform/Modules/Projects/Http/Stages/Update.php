@@ -87,9 +87,14 @@ class Update extends Action
                     'at' => DateTime::now(),
                     'actorType' => $this->resolveActorType($apiKey, $user, $mode),
                 ];
-                $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'onboarding' => $byMethod,
-                ]));
+
+                $project = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byMethod,
+                    ])),
+                    APP_PROJECTS_SUBQUERIES
+                );
+
                 $byMethod = $project->getAttribute('onboarding', []);
                 $row = \is_array($byMethod[$stageId] ?? null) ? $byMethod[$stageId] : null;
             }

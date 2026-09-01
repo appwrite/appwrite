@@ -57,7 +57,16 @@ $console = [
     'oAuthProviders' => [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
+        'gitlabEnabled' => true,
+        'gitlabSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
+        'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
+        'bitbucketEnabled' => true,
+        'bitbucketSecret' => System::getEnv('_APP_CONSOLE_BITBUCKET_SECRET', ''),
+        'bitbucketAppid' => System::getEnv('_APP_CONSOLE_BITBUCKET_APP_ID', ''),
+        'googleEnabled' => true,
+        'googleSecret' => System::getEnv('_APP_CONSOLE_GOOGLE_SECRET', ''),
+        'googleAppid' => System::getEnv('_APP_CONSOLE_GOOGLE_APP_ID', ''),
     ],
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
 ];

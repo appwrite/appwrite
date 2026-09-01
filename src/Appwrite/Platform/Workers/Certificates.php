@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
-use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -19,6 +18,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
+use Utopia\Cdn\Certificates\Provider;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -78,7 +78,7 @@ class Certificates extends Action
      * @param Realtime $queueForRealtime
      * @param Certificate $publisherForCertificates
      * @param Log $log
-     * @param CertificatesAdapter $certificates
+     * @param Provider $certificates
      * @param array $plan
      * @param ValidatorAuthorization $authorization
      * @return void
@@ -95,7 +95,7 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Certificate $publisherForCertificates,
         Log $log,
-        CertificatesAdapter $certificates,
+        Provider $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
         Bus $bus,
@@ -222,7 +222,7 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Log $log
-     * @param CertificatesAdapter $certificates
+     * @param Provider $certificates
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
@@ -246,7 +246,7 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Log $log,
-        CertificatesAdapter $certificates,
+        Provider $certificates,
         ValidatorAuthorization $authorization,
         Bus $bus,
         bool $skipRenewCheck = false,
@@ -322,7 +322,7 @@ class Certificates extends Action
                 $this->validateDomain($rule, $domain, $log, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
+                if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
                     Console::info("Skipping, renew isn't required");
                     return;
                 }

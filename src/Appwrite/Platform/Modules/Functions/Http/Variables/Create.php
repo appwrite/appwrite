@@ -5,17 +5,16 @@ namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -61,15 +60,13 @@ class Create extends Base
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Variable ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
-            ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
+            ->param('key', null, new VariableKey(Database::LENGTH_KEY), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -82,9 +79,7 @@ class Create extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject,
-        Database $dbForPlatform,
-        Document $project,
-        Authorization $authorization
+        Document $project
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -115,18 +110,6 @@ class Create extends Base
 
         $function->setAttribute('live', false);
         $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
-
-        // Inform scheduler to pull the latest changes
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-            'schedule' => $schedule->getAttribute('schedule'),
-            'active' => $schedule->getAttribute('active'),
-        ])));
 
         $queueForEvents->setParam('variableId', $variable->getId());
 

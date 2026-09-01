@@ -2717,6 +2717,41 @@ trait DatabasesBase
             $missingId['body']['type']
         );
 
+        /**
+         * Test for FAILURE
+         * Omitted `data` (and no documents/rows) or JSON `data: null` must 400,
+         * not TypeError 500. DocumentsDB allows empty documents.
+         */
+        $missingDataCases = [
+            [
+                $this->getRecordIdParam() => ID::unique(),
+            ],
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => null,
+            ],
+        ];
+        $missingDataType = $this->getRecordIdParam() === 'documentId'
+            ? Exception::DOCUMENT_MISSING_DATA
+            : Exception::ROW_MISSING_DATA;
+
+        foreach ($missingDataCases as $payload) {
+            $missingData = $this->client->call(
+                Client::METHOD_POST,
+                $this->getRecordUrl($databaseId, $data['moviesId']),
+                $headers,
+                $payload
+            );
+
+            $this->assertNotEquals(500, $missingData['headers']['status-code']);
+            if ($this->getDatabaseType() === 'documentsdb') {
+                $this->assertEquals(201, $missingData['headers']['status-code']);
+            } else {
+                $this->assertEquals(400, $missingData['headers']['status-code']);
+                $this->assertEquals($missingDataType, $missingData['body']['type']);
+            }
+        }
+
         $documentId = ID::unique();
         $invalid = $this->client->call(
             Client::METHOD_POST,
@@ -2803,6 +2838,57 @@ trait DatabasesBase
         );
 
         $this->assertEquals(404, $bulkNotCreated['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         * Bulk create with only documents/rows (no `data` key) must still work.
+         * Use a dedicated collection: movies has a relationship (bulk create is
+         * rejected), and books is shared with fulltext search fixtures.
+         */
+        $bulkCollection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Bulk without data key',
+            $this->getSecurityParam() => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bulkCollection['headers']['status-code']);
+        $bulkCollectionId = $bulkCollection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $bulkCollectionId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $bulkCollectionId);
+        }
+
+        $bulkDocumentId = ID::unique();
+        $bulkCreated = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $bulkCollectionId),
+            $headers,
+            [
+                $this->getRecordResource() => [
+                    [
+                        '$id' => $bulkDocumentId,
+                        'title' => 'Bulk without data key',
+                    ],
+                ],
+            ]
+        );
+
+        $this->assertEquals(201, $bulkCreated['headers']['status-code']);
+        $this->assertEquals(1, $bulkCreated['body']['total']);
+        $this->assertEquals('Bulk without data key', $bulkCreated['body'][$this->getRecordResource()][0]['title']);
     }
 
     public function testUpsertDocument(): void
@@ -7631,14 +7717,21 @@ trait DatabasesBase
             $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
         }
 
+        // The fixture is ~12MB, just under Swoole's 12MiB package_max_length /
+        // output_buffer_size. Ten concurrent HTTP creates of that size never
+        // complete under paratest (curl: 0 bytes, 120s) — isolated they take ~1s
+        // each. A 1MiB slice plus contains() still exceeds statement_timeout=1ms
+        // (notEqual on 1MiB returned 200 on DocumentsDB).
+        $longtext = substr(file_get_contents(__DIR__ . '/../../../resources/longtext.txt'), 0, 1024 * 1024);
+
         for ($i = 0; $i < 10; $i++) {
-            $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 $this->getRecordIdParam() => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $longtext,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -7646,6 +7739,7 @@ trait DatabasesBase
                     Permission::delete(Role::user($this->getUser()['$id'])),
                 ]
             ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
@@ -7654,7 +7748,7 @@ trait DatabasesBase
             'x-appwrite-timeout' => 1,
         ], $this->getHeaders()), [
             'queries' => [
-                Query::notEqual('longtext', 'appwrite')->toString(),
+                Query::contains('longtext', ['needle-that-does-not-exist'])->toString(),
             ],
         ]);
 
