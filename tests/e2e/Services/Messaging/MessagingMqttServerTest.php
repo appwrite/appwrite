@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Messaging;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -20,7 +21,12 @@ use Utopia\Messaging\Messages\Push;
  *
  * Blocked accounts are refused at CONNECT (CONNACK 0x87); the subscribe authorizer
  * re-checks as defense in depth. (Topic-existence authorization is still pending.)
+ *
+ * Grouped `mqtt` because it needs the broker container (appwrite-mqtt:1883): the
+ * standard e2e stacks exclude this group, and a dedicated lane that runs the broker
+ * selects it with --group mqtt.
  */
+#[Group('mqtt')]
 final class MessagingMqttServerTest extends Scope
 {
     use ProjectCustom;
@@ -141,7 +147,10 @@ final class MessagingMqttServerTest extends Scope
 
         // Publish from a separate OS process so it runs while consume() blocks. The
         // broker only fans out to already-connected subscribers, so the publisher waits.
-        $autoload = \dirname(__DIR__, 4) . '/vendor/autoload.php';
+        // Resolve the autoloader from the running one rather than a fixed relative depth,
+        // so it works both standalone (repo vendor/) and vendored inside another project
+        // (e.g. cloud's vendor/appwrite/server-ce, whose own vendor/ is not installed).
+        $autoload = \dirname((new \ReflectionClass(\Composer\Autoload\ClassLoader::class))->getFileName(), 2) . '/autoload.php';
         $publisher = \tempnam(\sys_get_temp_dir(), 'mqtt-pub-') . '.php';
         \file_put_contents($publisher, <<<'PHP'
             <?php
