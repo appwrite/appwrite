@@ -1,9 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start'
-import {
-  getCanonicalHostRedirectUrl,
-  getRequestHostFromHeaders,
-  shouldRedirectToCanonicalHost,
-} from '@/lib/seo/indexing'
+import { getCanonicalHostRedirectResponse } from '@/lib/seo/indexing'
 
 /**
  * Permanent (301) redirects from www.appwrite.io and new.appwrite.io to
@@ -17,10 +13,10 @@ export const hostCanonicalMiddleware = createMiddleware({
     return next()
   }
 
-  const host = getRequestHostFromHeaders(request.headers, request.url)
-  if (!shouldRedirectToCanonicalHost(host)) {
-    return next()
+  const redirect = getCanonicalHostRedirectResponse(request)
+  if (redirect) {
+    throw redirect
   }
 
-  throw Response.redirect(getCanonicalHostRedirectUrl(request.url), 301)
+  return next()
 })
