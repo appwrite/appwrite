@@ -808,11 +808,12 @@ final class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Env variable is Appwrite", (string) $response['body']);
-        $this->assertStringNotContainsString("Variable not found", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Env variable is Appwrite', (string) $response['body']);
+            $this->assertStringNotContainsString('Variable not found', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
