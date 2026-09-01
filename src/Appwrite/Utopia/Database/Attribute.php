@@ -22,6 +22,8 @@ class Attribute
         Database::VAR_TEXT => 65535,
         Database::VAR_MEDIUMTEXT => 16777215,
         Database::VAR_LONGTEXT => 2147483647,
+        // Bytes, the width createBigIntColumn hardcodes
+        Database::VAR_BIGINT => 8,
     ];
 
     /**
@@ -89,6 +91,16 @@ class Attribute
             $size = self::SIZES[$type];
         } elseif ($size < 1) {
             $size = self::FORMAT_SIZES[$format] ?? $size;
+        }
+
+        if ($type === Database::VAR_INTEGER && $size < 1) {
+            // Same width createIntegerColumn picks: the 4 byte column only holds a
+            // range that fits INT32, and a bound left out means the int64 edge,
+            // which does not.
+            $min = $attribute['min'] ?? \PHP_INT_MIN;
+            $max = $attribute['max'] ?? \PHP_INT_MAX;
+            $fitsInt32 = \is_int($min) && \is_int($max) && $min >= -2147483648 && $max <= 2147483647;
+            $size = $fitsInt32 ? 4 : 8;
         }
 
         return [
