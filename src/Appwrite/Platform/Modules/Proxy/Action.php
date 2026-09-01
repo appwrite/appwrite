@@ -7,6 +7,7 @@ use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Appwrite\Smtp\DomainVerification;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -32,7 +33,7 @@ class Action extends PlatformAction
         try {
             return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
         } catch (Duplicate) {
-            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
+            if (! $this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
             }
         }
@@ -56,8 +57,9 @@ class Action extends PlatformAction
         $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
             $existingRule = $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$rule->getAttribute('domain', '')]),
+                Query::equal('protocol', [$rule->getAttribute('protocol', 'http')]),
             ]);
-            if (!$existingRule->isEmpty()) {
+            if (! $existingRule->isEmpty()) {
                 return $existingRule;
             }
 
@@ -78,7 +80,7 @@ class Action extends PlatformAction
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-        if (!$project->isEmpty()) {
+        if (! $project->isEmpty()) {
             return false;
         }
 
@@ -91,10 +93,10 @@ class Action extends PlatformAction
     /**
      * Ensures domain is not in the deny list and is a valid domain
      *
-     * @param string $domain Domain to validate
-     * @param array $platform Platform configuration which has internal domains
+     * @param  string  $domain  Domain to validate
+     * @param  array  $platform  Platform configuration which has internal domains
+     *
      * @throws Exception
-     * @return void
      */
     protected function validateDomainRestrictions(string $domain, array $platform): void
     {
@@ -131,7 +133,7 @@ class Action extends PlatformAction
 
         $validator = new ValidatorDomain($restrictions);
 
-        if (!$validator->isValid($domain)) {
+        if (! $validator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
@@ -158,16 +160,15 @@ class Action extends PlatformAction
     /**
      * Verify or re-verify a rule
      *
-     * @param Document $rule Rule to verify
-     * @param Log|null $log Log instance to add timings to
-     * @return void
+     * @param  Document  $rule  Rule to verify
+     * @param  Log|null  $log  Log instance to add timings to
      */
     protected function verifyRule(Document $rule, ?Log $log = null): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
         $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
         $servers = \array_map('trim', \explode(',', $dnsEnv));
-        $dnsServers = \array_filter($servers, fn ($server) => !empty($server));
+        $dnsServers = \array_filter($servers, fn ($server) => ! empty($server));
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 
@@ -175,17 +176,17 @@ class Action extends PlatformAction
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain is not valid.');
         }
 
-        if (!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain ' . $domain->get() . ' does not resolve to a known public apex domain.');
+        if (! $domain->isKnown() || $domain->isTest()) {
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain '.$domain->get().' does not resolve to a known public apex domain.');
         }
 
         // Ensure CAA won't block certificate issuance
         $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
-        if (!empty($caaTarget)) {
+        if (! empty($caaTarget)) {
             $validationStart = \microtime(true);
             $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
-            if (!$validator->isValid($domain->get())) {
-                if (!\is_null($log)) {
+            if (! $validator->isValid($domain->get())) {
+                if (! \is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                     $log->addTag('dnsDomain', $domain->get());
                 }
@@ -267,13 +268,21 @@ class Action extends PlatformAction
         $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
 
         $validationStart = \microtime(true);
-        if (!$validator->isValid($domain->get())) {
-            if (!\is_null($log)) {
+        if (! $validator->isValid($domain->get())) {
+            if (! \is_null($log)) {
                 $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());
             }
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
+    }
+
+    /**
+     * Verify ownership and mail routing for an SMTP rule.
+     */
+    protected function verifySmtpRule(Document $rule, ?Log $log = null): void
+    {
+        (new DomainVerification($this->dnsValidatorClass))->verify($rule, $log);
     }
 
     protected function isAppwriteOwned(string $domain): bool

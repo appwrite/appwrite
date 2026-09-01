@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Smtp\DownloadUrl;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -28,6 +29,7 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 
 class Functions extends Action
@@ -60,6 +62,7 @@ class Functions extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
+            ->inject('deviceForFunctions')
             ->inject('locks')
             ->callback($this->action(...));
     }
@@ -77,6 +80,7 @@ class Functions extends Action
         Log $log,
         Executor $executor,
         callable $getIsResourceBlocked,
+        Device $deviceForFunctions,
         callable $locks
     ): void {
         $this->locks = $locks;
@@ -106,13 +110,14 @@ class Functions extends Action
         try {
             $this->updateProjectAccess($project, $dbForPlatform);
         } catch (\Throwable $th) {
-            Console::warning('Failed to record project access: ' . $th->getMessage());
+            Console::warning('Failed to record project access: '.$th->getMessage());
         }
 
         $events = $functionMessage->events;
         $data = $functionMessage->body;
+        $bodyPath = $functionMessage->bodyPath;
         $eventData = $functionMessage->payload;
-        $platform = !empty($functionMessage->platform) ? $functionMessage->platform : Config::getParam('platform', []);
+        $platform = ! empty($functionMessage->platform) ? $functionMessage->platform : Config::getParam('platform', []);
         $function = $functionMessage->function ?? new Document();
         $functionId = $functionMessage->functionId ?? '';
         $user = $functionMessage->user ?? new Document();
@@ -124,7 +129,7 @@ class Functions extends Action
 
         $execution = $functionMessage->execution ?? new Document();
         $scheduleId = $execution->getAttribute('scheduleId', '');
-        if ($type === 'schedule' && !empty($scheduleId)) {
+        if ($type === 'schedule' && ! empty($scheduleId)) {
             $this->enqueueScheduledExecution(
                 dbForPlatform: $dbForPlatform,
                 project: $project,
@@ -132,14 +137,15 @@ class Functions extends Action
                 functionId: $functionId,
                 enqueue: fn (FunctionMessage $message) => $publisherForFunctions->enqueue($message),
             );
+
             return;
         }
 
-        if ($user->isEmpty() && !empty($userId)) {
+        if ($user->isEmpty() && ! empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
         }
 
-        if (empty($jwt) && !$user->isEmpty()) {
+        if (empty($jwt) && ! $user->isEmpty()) {
             $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
             $jwt = $jwtObj->encode([
@@ -151,7 +157,7 @@ class Functions extends Action
             return;
         }
 
-        if ($function->isEmpty() && !empty($functionId)) {
+        if ($function->isEmpty() && ! empty($functionId)) {
             $function = $dbForProject->getDocument('functions', $functionId);
         }
 
@@ -159,11 +165,11 @@ class Functions extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        if (empty($events) && !$function->isEmpty()) {
+        if (empty($events) && ! $function->isEmpty()) {
             Span::add('function.id', $function->getId());
         }
 
-        if (!empty($events)) {
+        if (! empty($events)) {
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -179,15 +185,16 @@ class Functions extends Action
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 
-                Console::log('Fetched ' . $sum . ' functions...');
+                Console::log('Fetched '.$sum.' functions...');
 
                 foreach ($functions as $function) {
-                    if (!array_intersect($events, $function->getAttribute('events', []))) {
+                    if (! array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
 
                     if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
-                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                        Console::log('Function '.$function->getId().' is blocked, skipping execution.');
+
                         continue;
                     }
 
@@ -196,7 +203,7 @@ class Functions extends Action
                      */
                     $function = $dbForProject->getDocument('functions', $function->getId());
 
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+                    Console::success('Iterating function: '.$function->getAttribute('name'));
 
                     $this->execute(
                         log: $log,
@@ -208,13 +215,13 @@ class Functions extends Action
                         bus: $bus,
                         project: $project,
                         function: $function,
-                        executor:  $executor,
+                        executor: $executor,
                         trigger: 'event',
                         path: '/',
                         method: 'POST',
                         headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
+                            'user-agent' => 'Appwrite/'.APP_VERSION_STABLE,
+                            'content-type' => 'application/json',
                         ],
                         platform: $platform,
                         data: null,
@@ -224,14 +231,16 @@ class Functions extends Action
                         eventData: \json_encode($eventData) ?: null,
                         executionId: null,
                     );
-                    Console::success('Triggered function: ' . $events[0]);
+                    Console::success('Triggered function: '.$events[0]);
                 }
             }
+
             return;
         }
 
         if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
-            Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+            Console::log('Function '.$function->getId().' is blocked, skipping execution.');
+
             return;
         }
 
@@ -252,7 +261,7 @@ class Functions extends Action
                     bus: $bus,
                     project: $project,
                     function: $function,
-                    executor:  $executor,
+                    executor: $executor,
                     trigger: 'http',
                     path: $path,
                     method: $method,
@@ -288,13 +297,88 @@ class Functions extends Action
                     bus: $bus,
                     project: $project,
                     function: $function,
-                    executor:  $executor,
+                    executor: $executor,
                     trigger: 'schedule',
                     path: $path,
                     method: $method,
                     headers: $headers,
                     platform: $platform,
                     data: $data,
+                    user: $user,
+                    jwt: $jwt,
+                    event: null,
+                    eventData: null,
+                    executionId: $execution->getId()
+                );
+                break;
+            case 'email':
+                $execution = new Document($payload['execution'] ?? []);
+                if ($bodyPath === ''
+                    || ! str_starts_with(
+                        $bodyPath,
+                        rtrim($deviceForFunctions->getPath('smtp'), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR
+                    )
+                    || ! $deviceForFunctions->exists($bodyPath)) {
+                    throw new AppwriteException(
+                        AppwriteException::GENERAL_ARGUMENT_INVALID,
+                        'SMTP execution payload was not found in storage.'
+                    );
+                }
+
+                $email = json_decode((string) $deviceForFunctions->read($bodyPath), true);
+                if (! is_array($email)
+                    || ! is_string($email['deliveryId'] ?? null)
+                    || ! is_string($email['projectId'] ?? null)) {
+                    throw new AppwriteException(
+                        AppwriteException::GENERAL_ARGUMENT_INVALID,
+                        'SMTP execution payload is invalid.'
+                    );
+                }
+
+                foreach (($email['attachments'] ?? []) as $index => $attachment) {
+                    if (! is_array($attachment) || ! is_string($attachment['path'] ?? null)) {
+                        continue;
+                    }
+                    $fileId = is_string($attachment['id'] ?? null) ? $attachment['id'] : 'attachment-'.$index;
+                    $email['attachments'][$index]['url'] = DownloadUrl::create([
+                        'deliveryId' => $email['deliveryId'],
+                        'fileId' => $fileId,
+                        'projectId' => $email['projectId'],
+                        'path' => $attachment['path'],
+                        'contentType' => is_string($attachment['contentType'] ?? null) ? $attachment['contentType'] : 'application/octet-stream',
+                        'filename' => is_string($attachment['name'] ?? null) ? $attachment['name'] : 'attachment',
+                    ]);
+                    unset($email['attachments'][$index]['path']);
+                }
+                if (is_array($email['raw'] ?? null) && is_string($email['raw']['path'] ?? null)) {
+                    $email['raw']['url'] = DownloadUrl::create([
+                        'deliveryId' => $email['deliveryId'],
+                        'fileId' => 'raw',
+                        'projectId' => $email['projectId'],
+                        'path' => $email['raw']['path'],
+                        'contentType' => 'message/rfc822',
+                        'filename' => 'message.eml',
+                    ]);
+                    unset($email['raw']['path']);
+                }
+
+                $this->execute(
+                    log: $log,
+                    dbForProject: $dbForProject,
+                    queueForWebhooks: $queueForWebhooks,
+                    publisherForFunctions: $publisherForFunctions,
+                    queueForRealtime: $queueForRealtime,
+                    queueForEvents: $queueForEvents,
+                    bus: $bus,
+                    project: $project,
+                    function: $function,
+                    executor: $executor,
+                    trigger: 'email',
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    platform: $platform,
+                    data: json_encode($email, JSON_THROW_ON_ERROR),
                     user: $user,
                     jwt: $jwt,
                     event: null,
@@ -311,7 +395,7 @@ class Functions extends Action
         $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
             $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+            if ($schedule->isEmpty() || ! $schedule->getAttribute('active', false)) {
                 return new Document();
             }
 
@@ -333,6 +417,7 @@ class Functions extends Action
         if (empty($functionId)) {
             Console::error("Missing functionId for scheduled execution {$execution->getId()}, skipping");
             $dbForPlatform->deleteDocument('schedules', $scheduleId);
+
             return false;
         }
 
@@ -351,7 +436,7 @@ class Functions extends Action
             ));
             $published = true;
 
-            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+            if (! $dbForPlatform->deleteDocument('schedules', $scheduleId)) {
                 throw new \RuntimeException('Failed to remove claimed execution schedule');
             }
 
@@ -360,7 +445,7 @@ class Functions extends Action
             // A failed publish releases the claim for a later retry. Once the
             // publish succeeds, keep the schedule inactive even if cleanup
             // fails so another worker cannot publish it again.
-            if (!$published) {
+            if (! $published) {
                 $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
                     'resourceUpdatedAt' => DateTime::now(),
                     'active' => true,
@@ -372,7 +457,7 @@ class Functions extends Action
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
     {
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $now = DateTime::now();
@@ -401,14 +486,6 @@ class Functions extends Action
     }
 
     /**
-     * @param string $message
-     * @param Document $function
-     * @param string $trigger
-     * @param string $path
-     * @param string $method
-     * @param Document $user
-     * @param string|null $jwt
-     * @param string|null $event
      * @throws \Exception
      */
     private function fail(
@@ -473,27 +550,6 @@ class Functions extends Action
         ));
     }
 
-    /**
-     * @param Log $log
-     * @param Database $dbForProject
-     * @param FunctionPublisher $publisherForFunctions
-     * @param Realtime $queueForRealtime
-     * @param Event $queueForEvents
-     * @param Document $project
-     * @param Document $function
-     * @param Executor $executor
-     * @param string $trigger
-     * @param string $path
-     * @param string $method
-     * @param array $headers
-     * @param string|null $data
-     * @param Document|null $user
-     * @param string|null $jwt
-     * @param string|null $event
-     * @param string|null $eventData
-     * @param string|null $executionId
-     * @return void
-     */
     private function execute(
         Log $log,
         Database $dbForProject,
@@ -534,18 +590,21 @@ class Functions extends Action
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+
             return;
         }
 
@@ -553,7 +612,7 @@ class Functions extends Action
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
-        if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
+        if (! \array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new AppwriteException(
                 AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED,
                 \sprintf('Runtime "%s" is not supported', $function->getAttribute('runtime', '')),
@@ -566,11 +625,11 @@ class Functions extends Action
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => Deployments::scopes($function)
+            'scopes' => Deployments::scopes($function),
         ]);
 
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
-        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL.'_'.$apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId();
@@ -590,7 +649,7 @@ class Functions extends Action
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
             if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
-                $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
 
@@ -631,7 +690,7 @@ class Functions extends Action
                 'APPWRITE_FUNCTION_EVENT_DATA' => $body,
                 'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'],
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'],
             ]);
         }
 
@@ -716,7 +775,7 @@ class Functions extends Action
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                    $headersFiltered[] = ['name' => $key, 'value' => $value];
                 }
             }
 
@@ -727,7 +786,7 @@ class Functions extends Action
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
                 $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+                $logs = $warningMessage.\substr($logs, -$maxContentLength);
             }
 
             // Truncate errors if they exceed the limit
@@ -738,7 +797,7 @@ class Functions extends Action
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
                 $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+                $errors = $warningMessage.\substr($errors, -$maxContentLength);
             }
 
             /** Update execution status */
@@ -756,7 +815,7 @@ class Functions extends Action
                 ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('responseStatusCode', 500)
-                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
+                ->setAttribute('errors', $th->getMessage().'\nError Code: '.$th->getCode());
 
             $error = $th->getMessage();
             $errorCode = $th->getCode();
@@ -806,10 +865,10 @@ class Functions extends Action
             ->from($queueForEvents)
             ->trigger();
 
-        if (!empty($error)) {
+        if (! empty($error)) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
-                'Function execution failed: ' . $error,
+                'Function execution failed: '.$error,
                 $errorCode
             );
         }

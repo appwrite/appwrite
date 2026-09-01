@@ -6,17 +6,17 @@ class Rules extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'domain',
+        'protocol',
         'type',
         'trigger',
         'deploymentResourceType',
         'deploymentResourceId',
         'deploymentId',
-        'deploymentVcsProviderBranch'
+        'deploymentVcsProviderBranch',
     ];
 
     /**
      * Expression constructor
-     *
      */
     public function __construct()
     {

@@ -521,7 +521,7 @@ $platformCollections = [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => new \stdClass(),
+                'default' => new stdClass(),
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
             ],
@@ -675,7 +675,7 @@ $platformCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -1429,8 +1429,8 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [], //TODO: use json filter
-            ]
+                'filters' => [], // TODO: use json filter
+            ],
         ],
         'indexes' => [
             [
@@ -1440,7 +1440,7 @@ $platformCollections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
-        ]
+        ],
     ],
 
     'rules' => [
@@ -1478,6 +1478,28 @@ $platformCollections = [
                 'signed' => true,
                 'required' => true,
                 'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('protocol'), // 'http', 'smtp'
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => 'http',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('verificationToken'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
                 'array' => false,
                 'filters' => [],
             ],
@@ -1667,11 +1689,11 @@ $platformCollections = [
                 'orders' => [],
             ],
             [
-                '$id' => ID::custom('_key_domain'),
+                '$id' => ID::custom('_key_domain_protocol'),
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['domain'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'attributes' => ['domain', 'protocol'],
+                'lengths' => [Database::LENGTH_KEY, 16],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_projectInternalId'),
@@ -1912,7 +1934,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('installationInternalId'),
@@ -1934,7 +1956,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('projectInternalId'),
@@ -1956,7 +1978,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('resourceId'),
@@ -1989,7 +2011,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('providerPullRequestIds'),
@@ -2084,7 +2106,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('installationInternalId'),
@@ -2106,7 +2128,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('projectInternalId'),
@@ -2128,7 +2150,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('providerCommentId'),
@@ -2139,7 +2161,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('providerPullRequestId'),
@@ -2150,7 +2172,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('providerBranch'),
@@ -2161,7 +2183,7 @@ $platformCollections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
         ],
         'indexes' => [
@@ -2229,7 +2251,7 @@ $platformCollections = [
         '$id' => ID::custom('vcsCommentLocks'),
         'name' => 'vcsCommentLocks',
         'attributes' => [],
-        'indexes' => []
+        'indexes' => [],
     ],
 
     'reports' => [

@@ -46,7 +46,7 @@ class Create extends Action
                 namespace: 'proxy',
                 group: 'rules',
                 name: 'createAPIRule',
-                description: <<<EOT
+                description: <<<'EOT'
                 Create a new proxy rule for serving Appwrite's API on custom domain.
 
                 Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
@@ -56,7 +56,7 @@ class Create extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_PROXY_RULE,
-                    )
+                    ),
                 ]
             ))
             ->label('abuse-limit', 10)
@@ -109,13 +109,14 @@ class Create extends Action
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'domain' => $domain,
+            'protocol' => 'http',
             'status' => $status,
             'type' => 'api',
             'trigger' => 'manual',
             'certificateId' => '',
             'search' => implode(' ', [$ruleId, $domain]),
             'owner' => $owner,
-            'region' => $project->getAttribute('region')
+            'region' => $project->getAttribute('region'),
         ]);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {

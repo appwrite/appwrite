@@ -39,9 +39,10 @@ class SSL extends Action
 
     public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, Bus $bus): void
     {
-        $domain = new Domain(!empty($domain) ? $domain : '');
-        if (!$domain->isKnown() || $domain->isTest()) {
-            Console::error('Domain is not known or is a test domain: ' . $domain->get());
+        $domain = new Domain(! empty($domain) ? $domain : '');
+        if (! $domain->isKnown() || $domain->isTest()) {
+            Console::error('Domain is not known or is a test domain: '.$domain->get());
+
             return;
         }
 
@@ -52,6 +53,7 @@ class SSL extends Action
             ? $dbForPlatform->getDocument('rules', md5($domain->get()))
             : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
+                Query::equal('protocol', ['http']),
             ]);
 
         if ($rule->isEmpty()) {
@@ -90,12 +92,12 @@ class SSL extends Action
                 'projectInternalId' => $console->getSequence(),
                 'search' => implode(' ', [$ruleId, $domain->get()]),
                 'owner' => $owner,
-                'region' => $console->getAttribute('region')
+                'region' => $console->getAttribute('region'),
             ]));
 
             $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
-            Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
+            Console::info('Rule '.$rule->getId().' created for domain: '.$domain->get());
         } else {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'status' => RULE_STATUS_CERTIFICATE_GENERATING,
@@ -103,7 +105,7 @@ class SSL extends Action
 
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-            Console::info('Updated existing rule ' . $rule->getId() . ' for domain: ' . $domain->get());
+            Console::info('Updated existing rule '.$rule->getId().' for domain: '.$domain->get());
         }
 
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
@@ -114,6 +116,6 @@ class SSL extends Action
             skipRenewCheck: $skipCheck,
         ));
 
-        Console::success('Scheduled a job to issue a TLS certificate for domain: ' . $domain->get());
+        Console::success('Scheduled a job to issue a TLS certificate for domain: '.$domain->get());
     }
 }

@@ -28,7 +28,6 @@ class V25 extends Migration
     /**
      * Migrate Collections.
      *
-     * @return void
      * @throws Exception|Throwable
      */
     private function migrateCollections(): void
@@ -101,6 +100,36 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'rules':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, ['protocol', 'verificationToken']);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create SMTP rule attributes in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+
+                        $domainProtocolIndexCreated = false;
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_domain_protocol');
+                            $domainProtocolIndexCreated = true;
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_domain_protocol\" from {$id}: {$th->getMessage()}");
+                        }
+
+                        if ($domainProtocolIndexCreated) {
+                            try {
+                                $this->dbForProject->deleteIndex($id, '_key_domain');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to delete index \"_key_domain\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'installations':
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
@@ -159,7 +188,7 @@ class V25 extends Migration
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {
-                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                            Console::warning('Failed to create attributes "'.\implode(', ', $attributes)."\" in collection {$id}: {$th->getMessage()}");
                         }
 
                         $this->dbForProject->purgeCachedCollection($id);
@@ -181,7 +210,7 @@ class V25 extends Migration
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {
-                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                            Console::warning('Failed to create attributes "'.\implode(', ', $attributes)."\" in collection {$id}: {$th->getMessage()}");
                         }
 
                         $indexes = [
@@ -243,7 +272,7 @@ class V25 extends Migration
         $split = false;
 
         if ($parentResourceId === '') {
-            if (!\str_contains($resourceId, ':')) {
+            if (! \str_contains($resourceId, ':')) {
                 return $document;
             }
 
@@ -263,7 +292,7 @@ class V25 extends Migration
         $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document);
         if (
             $split
-            && (!isset($internalIds['parentResourceInternalId']) || !isset($internalIds['resourceInternalId']))
+            && (! isset($internalIds['parentResourceInternalId']) || ! isset($internalIds['resourceInternalId']))
         ) {
             return $document;
         }
@@ -305,12 +334,13 @@ class V25 extends Migration
             if (
                 $database->isEmpty()
                 || $database->getSequence() === ''
-                || !$this->predatesMigration($database, $migration)
+                || ! $this->predatesMigration($database, $migration)
             ) {
                 return [];
             }
         } catch (Throwable $th) {
             Console::warning("Failed to resolve parent internal ID for migration {$migration->getId()}: {$th->getMessage()}");
+
             return [];
         }
 
@@ -319,9 +349,9 @@ class V25 extends Migration
         ];
 
         try {
-            $resource = $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId);
+            $resource = $this->dbForProject->getDocument('database_'.$database->getSequence(), $resourceId);
             if (
-                !$resource->isEmpty()
+                ! $resource->isEmpty()
                 && $resource->getSequence() !== ''
                 && $this->predatesMigration($resource, $migration)
             ) {

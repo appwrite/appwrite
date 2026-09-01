@@ -34,6 +34,19 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])
+            ->addRule('protocol', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Ingress protocol for the rule. Possible values are "http" or "smtp".',
+                'default' => 'http',
+                'example' => 'http',
+                'enum' => ['http', 'smtp'],
+            ])
+            ->addRule('verificationToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token required in the Appwrite DNS TXT record when verifying an SMTP domain.',
+                'default' => '',
+                'example' => 'b4fd43ad80714fef92490c5f9e2f612e',
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Action definition for the rule. Possible values are "api", "deployment", or "redirect"',
@@ -103,14 +116,11 @@ class Rule extends Model
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
-            ])
-        ;
+            ]);
     }
 
     /**
      * Get Name
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -119,8 +129,6 @@ class Rule extends Model
 
     /**
      * Get Type
-     *
-     * @return string
      */
     public function getType(): string
     {

@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Domains\Domain as Domain;
+use Utopia\Domains\Domain;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -41,7 +41,7 @@ class Get extends Action
                 namespace: 'console',
                 group: null,
                 name: 'getResource',
-                description: <<<EOT
+                description: <<<'EOT'
                 Check if a resource ID is available.
                 EOT,
                 auth: [AuthType::ADMIN],
@@ -49,7 +49,7 @@ class Get extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
                         model: Response::MODEL_NONE,
-                    )
+                    ),
                 ],
                 contentType: ContentType::NONE,
             ))
@@ -106,7 +106,7 @@ class Get extends Action
 
             $validator = new DomainValidator($restrictions);
 
-            if (!$validator->isValid($value)) {
+            if (! $validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
             }
 
@@ -131,13 +131,15 @@ class Get extends Action
 
             $document = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
+                Query::equal('protocol', ['http']),
             ]));
 
-            if (!$document->isEmpty()) {
+            if (! $document->isEmpty()) {
                 throw new Exception(Exception::RESOURCE_ALREADY_EXISTS);
             }
 
             $response->noContent();
+
             return;
         }
 

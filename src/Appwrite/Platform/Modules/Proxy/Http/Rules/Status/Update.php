@@ -47,15 +47,15 @@ class Update extends Action
                 namespace: 'proxy',
                 group: 'rules',
                 name: 'updateRuleStatus',
-                description: <<<EOT
-                If not succeeded yet, retry verification process of a proxy rule domain. This endpoint triggers domain verification by checking DNS records. If verification is successful, a TLS certificate will be automatically provisioned for the domain asynchronously in the background.
+                description: <<<'EOT'
+                If not succeeded yet, retry verification of a proxy rule domain. HTTP rules provision a TLS certificate after DNS verification. SMTP rules verify their MX destination and ownership TXT record without provisioning an HTTP certificate.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PROXY_RULE,
-                    )
+                    ),
                 ]
             ))
             ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
@@ -92,6 +92,29 @@ class Update extends Action
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+
+            return;
+        }
+
+        if ($rule->getAttribute('protocol', 'http') === 'smtp') {
+            try {
+                $this->verifySmtpRule($rule, $log);
+                $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'logs' => '',
+                    'status' => RULE_STATUS_VERIFIED,
+                ])));
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            } catch (Exception $err) {
+                $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    '$updatedAt' => DateTime::now(),
+                    'logs' => $err->getMessage(),
+                ])));
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                throw $err;
+            }
+
+            $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+
             return;
         }
 
@@ -106,7 +129,7 @@ class Update extends Action
 
             $certificateId = $rule->getAttribute('certificateId', '');
             // Reset logs for the associated certificate.
-            if (!empty($certificateId)) {
+            if (! empty($certificateId)) {
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
                     'logs' => '',
                 ])));
@@ -128,7 +151,7 @@ class Update extends Action
             ]),
         ));
 
-        if (!empty($certificate)) {
+        if (! empty($certificate)) {
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 

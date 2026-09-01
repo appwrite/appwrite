@@ -26,7 +26,7 @@ return function (Container $container): void {
     $getProjectId = static function (Request $request): string {
         $projectId = $request->getHeaderLine('x-appwrite-project', '');
 
-        if (!empty($projectId)) {
+        if (! empty($projectId)) {
             return $projectId;
         }
 
@@ -39,7 +39,7 @@ return function (Container $container): void {
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
         $projectId = $getProjectId($request);
 
-        if (!empty($projectId) && $project->getId() !== $projectId) {
+        if (! empty($projectId) && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
 
@@ -85,12 +85,13 @@ return function (Container $container): void {
 
             return $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
+                Query::equal('protocol', ['http']),
             ]);
         });
 
         $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
 
-        if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
+        if (! $permitsCurrentProject && ! $rule->isEmpty() && ! empty($rule->getAttribute('projectId', ''))) {
             $trustedProjects = [];
             foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
                 if (empty($trustedProject)) {
@@ -105,7 +106,7 @@ return function (Container $container): void {
             }
         }
 
-        if (!$permitsCurrentProject) {
+        if (! $permitsCurrentProject) {
             return new Document();
         }
 
@@ -116,19 +117,19 @@ return function (Container $container): void {
         $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
         $key = $project->find('secret', $devKey, 'devKeys');
 
-        if (!$key) {
+        if (! $key) {
             return new Document([]);
         }
 
         $expire = $key->getAttribute('expire');
-        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+        if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
             return new Document([]);
         }
 
         $dbForPlatform = $getDbForPlatform($authorization);
         $accessedAt = $key->getAttribute('accessedAt', 0);
 
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
             $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
                 'accessedAt' => $key->getAttribute('accessedAt'),
@@ -142,7 +143,7 @@ return function (Container $container): void {
         if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
 
-            if (!\in_array($sdk, $sdks, true)) {
+            if (! \in_array($sdk, $sdks, true)) {
                 $sdks[] = $sdk;
                 $key->setAttribute('sdks', $sdks);
                 $key->setAttribute('accessedAt', DatabaseDateTime::now());
@@ -177,12 +178,11 @@ return function (Container $container): void {
     $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization) use ($findDevKey, $findRule) {
         $devKey = $findDevKey($request, $project, $servers, $authorization);
 
-        if (!$devKey->isEmpty()) {
+        if (! $devKey->isEmpty()) {
             return new URL();
         }
 
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
-
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
         $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
 
@@ -191,7 +191,7 @@ return function (Container $container): void {
         }
 
         $rule = $findRule($request, $project, $authorization);
-        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', ''))) {
             $allowedHostnames[] = $rule->getAttribute('domain', '');
         }
 
@@ -199,14 +199,14 @@ return function (Container $container): void {
         $refererHostname = \parse_url($request->getReferer(), PHP_URL_HOST);
         $hostname = $originHostname ?: $refererHostname;
 
-        if ($request->getMethod() === 'OPTIONS' && !empty($hostname)) {
+        if ($request->getMethod() === 'OPTIONS' && ! empty($hostname)) {
             $allowedHostnames[] = $hostname;
         }
 
         $allowedSchemes = [...($platform['schemas'] ?? [])];
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console') {
             $allowedSchemes[] = 'exp';
-            $allowedSchemes[] = 'appwrite-callback-' . $project->getId();
+            $allowedSchemes[] = 'appwrite-callback-'.$project->getId();
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
@@ -224,22 +224,22 @@ return function (Container $container): void {
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
 
-        $store->setKey('a_session_' . $project->getId());
+        $store->setKey('a_session_'.$project->getId());
         if ($mode === APP_MODE_ADMIN) {
-            $store->setKey('a_session_' . $console->getId());
+            $store->setKey('a_session_'.$console->getId());
         }
 
         $store->decode(
             $request->getCookie(
                 $store->getKey(),
-                $request->getCookie($store->getKey() . '_legacy', '')
+                $request->getCookie($store->getKey().'_legacy', '')
             )
         );
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
             $sessionHeader = $request->getHeaderLine('x-appwrite-session', '');
 
-            if (!empty($sessionHeader)) {
+            if (! empty($sessionHeader)) {
                 $store->decode($sessionHeader);
             }
         }
@@ -256,7 +256,7 @@ return function (Container $container): void {
         } else {
             if ($project->isEmpty()) {
                 $user = new User([]);
-            } elseif (!empty($store->getProperty('id', ''))) {
+            } elseif (! empty($store->getProperty('id', ''))) {
                 if ($project->getId() === 'console') {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
@@ -268,16 +268,16 @@ return function (Container $container): void {
         }
 
         if (
-            !$user
+            ! $user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
         ) {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
-        if (!empty($authJWT) && !$project->isEmpty()) {
-            if (!$user->isEmpty()) {
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string) ($request->getParam('jwt', '')));
+        if (! empty($authJWT) && ! $project->isEmpty()) {
+            if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
@@ -286,11 +286,11 @@ return function (Container $container): void {
             try {
                 $payload = $jwt->decode($authJWT);
             } catch (JWTException $error) {
-                throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
+                throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. '.$error->getMessage());
             }
 
             $jwtUserId = $payload['userId'] ?? '';
-            if (!empty($jwtUserId)) {
+            if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -301,7 +301,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) {
                 $user = new User([]);
             }
         }
@@ -309,22 +309,22 @@ return function (Container $container): void {
         $accountKey = $request->getHeaderLine('x-appwrite-key', '');
         $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
 
-        if (!empty($accountKeyUserId) && !empty($accountKey)) {
-            if (!$user->isEmpty()) {
+        if (! empty($accountKeyUserId) && ! empty($accountKey)) {
+            if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
-            if (!$accountKeyUser->isEmpty()) {
+            if (! $accountKeyUser->isEmpty()) {
                 $key = $accountKeyUser->find(
                     key: 'secret',
                     find: $accountKey,
                     subject: 'keys'
                 );
 
-                if (!empty($key)) {
+                if (! empty($key)) {
                     $expire = $key->getAttribute('expire');
-                    if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                    if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
                         throw new Exception(Exception::ACCOUNT_KEY_EXPIRED);
                     }
 
@@ -340,15 +340,15 @@ return function (Container $container): void {
     }, ['request', 'project', 'console', 'authorization']);
 
     $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
-        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+        if ($user->isEmpty() || ! $user->getAttribute('impersonator', false)) {
             return new Document();
         }
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string) ($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string) ($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string) ($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -360,11 +360,11 @@ return function (Container $container): void {
         $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
 
         $targetUser = null;
-        if (!empty($impersonateUserId)) {
+        if (! empty($impersonateUserId)) {
             $targetUser = $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
-        } elseif (!empty($impersonateEmail)) {
+        } elseif (! empty($impersonateEmail)) {
             $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
-        } elseif (!empty($impersonatePhone)) {
+        } elseif (! empty($impersonatePhone)) {
             $targetUser = $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
         }
 
@@ -386,20 +386,20 @@ return function (Container $container): void {
             return $user;
         }
 
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string) ($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string) ($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string) ($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
 
         $mode = $getMode($request, $project);
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
         $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
 
-        if (!empty($impersonateUserId)) {
+        if (! empty($impersonateUserId)) {
             return $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
-        } elseif (!empty($impersonateEmail)) {
+        } elseif (! empty($impersonateEmail)) {
             return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
-        } elseif (!empty($impersonatePhone)) {
+        } elseif (! empty($impersonatePhone)) {
             return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
         }
 

@@ -20,6 +20,7 @@ final class Func extends Base
         public readonly array $payload = [],
         public readonly array $events = [],
         public readonly string $body = '',
+        public readonly string $bodyPath = '',
         public readonly string $path = '',
         public readonly array $headers = [],
         public readonly string $method = '',
@@ -48,7 +49,7 @@ final class Func extends Base
 
     public function toArray(): array
     {
-        $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
+        $platform = ! empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
             'project' => $this->project?->getArrayCopy(),
@@ -62,6 +63,7 @@ final class Func extends Base
             'payload' => $this->payload,
             'events' => $this->events,
             'body' => $this->body,
+            'bodyPath' => $this->bodyPath,
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
@@ -72,17 +74,18 @@ final class Func extends Base
     public static function fromArray(array $data): static
     {
         return new self(
-            project: !empty($data['project']) ? new Document($data['project']) : null,
-            user: !empty($data['user']) ? new Document($data['user']) : null,
+            project: ! empty($data['project']) ? new Document($data['project']) : null,
+            user: ! empty($data['user']) ? new Document($data['user']) : null,
             userId: $data['userId'] ?? null,
-            function: !empty($data['function']) ? new Document($data['function']) : null,
+            function: ! empty($data['function']) ? new Document($data['function']) : null,
             functionId: $data['functionId'] ?? null,
-            execution: !empty($data['execution']) ? new Document($data['execution']) : null,
+            execution: ! empty($data['execution']) ? new Document($data['execution']) : null,
             type: $data['type'] ?? '',
             jwt: $data['jwt'] ?? '',
             payload: $data['payload'] ?? [],
             events: $data['events'] ?? [],
             body: $data['body'] ?? '',
+            bodyPath: $data['bodyPath'] ?? '',
             path: $data['path'] ?? '',
             headers: $data['headers'] ?? [],
             method: $data['method'] ?? '',

@@ -1,7 +1,9 @@
 <?php
 
 use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
@@ -96,11 +98,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
         $oauthProvider = $payload['provider'];
         $secret = $payload['secret'];
-    } catch (\Ahc\Jwt\JWTException) {
+    } catch (JWTException) {
         // Not a JWT — use secret as-is (non-OAuth flows)
     }
 
-    /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
+    /** @var User $userFromRequest */
     $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
@@ -110,7 +112,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $verifiedToken = $userFromRequest->tokenVerify(null, $secret, $proofForToken)
         ?: $userFromRequest->tokenVerify(null, $secret, $proofForCode);
 
-    if (!$verifiedToken) {
+    if (! $verifiedToken) {
         // Could mean invalid/expired JWT, or expired secret
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
@@ -151,7 +153,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Query::equal('provider', [$oauthProvider]),
         ]));
 
-        if (!$identity->isEmpty()) {
+        if (! $identity->isEmpty()) {
             $providerCredentials = [
                 'providerUid' => $identity->getAttribute('providerUid'),
                 'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
@@ -185,7 +187,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'connectionUsageType' => $geoRecord->getConnectionUsageType(),
             'connectionOrganization' => $geoRecord->getConnectionOrganization(),
             'isp' => $geoRecord->getIsp(),
-            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration),
         ],
         $providerCredentials,
         $detector->getOS(),
@@ -237,7 +239,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'emailVerification' => $user->getAttribute('emailVerification'),
             'phoneVerification' => $user->getAttribute('phoneVerification'),
         ]));
-    } catch (\Throwable $th) {
+    } catch (Throwable $th) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
@@ -257,7 +259,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setProperty('secret', $sessionSecret)
         ->encode();
 
-    if (!$domainVerification) {
+    if (! $domainVerification) {
         $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
     }
 
@@ -265,18 +267,17 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $protocol = $request->getProtocol();
 
     $response
-        ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
-        ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ->addCookie($store->getKey().'_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, null)
+        ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'))
         ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-    $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+    $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
     $session
         ->setAttribute('current', true)
         ->setAttribute('countryName', $countryName)
         ->setAttribute('expire', $expire)
-        ->setAttribute('secret', $encoded)
-    ;
+        ->setAttribute('secret', $encoded);
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -299,7 +300,7 @@ Http::post('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -319,15 +320,15 @@ Http::post('/v1/account')
     ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
 
         $email = \strtolower($email);
-        if ('console' === $project->getId()) {
+        if ($project->getId() === 'console') {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitelistEmails) && !(new EmailWhitelist($whitelistEmails))->isValid($email)) {
+            if (! empty($whitelistEmails) && ! (new EmailWhitelist($whitelistEmails))->isValid($email)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
-            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
+            if (! empty($whitelistIPs) && ! \in_array($request->getIP(), $whitelistIPs)) {
                 throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
             }
         }
@@ -338,7 +339,7 @@ Http::post('/v1/account')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
-                if ('console' === $project->getId()) {
+                if ($project->getId() === 'console') {
                     throw new Exception(Exception::USER_CONSOLE_COUNT_EXCEEDED);
                 }
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
@@ -349,14 +350,14 @@ Http::post('/v1/account')
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
+        if (! $identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST);
             /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
-            if (!$personalDataValidator->isValid($password)) {
+            if (! $personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
@@ -384,7 +385,7 @@ Http::post('/v1/account')
                 'emailIsDisposable' => $parsedEmail->isDisposable(),
                 'emailIsFree' => $parsedEmail->isFree(),
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
@@ -400,7 +401,7 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
@@ -425,7 +426,7 @@ Http::post('/v1/account')
                 'reset' => false,
                 'name' => $name,
                 'mfa' => false,
-                'prefs' => new \stdClass(),
+                'prefs' => new stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
@@ -458,7 +459,7 @@ Http::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if (!$existingTarget->isEmpty()) {
+                if (! $existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -491,7 +492,7 @@ Http::get('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -521,7 +522,7 @@ Http::delete('/v1/account')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -540,7 +541,7 @@ Http::delete('/v1/account')
         if ($project->getId() === 'console') {
             $memberships = $targetUser->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                if (!$membership->getAttribute('confirm', false)) {
+                if (! $membership->getAttribute('confirm', false)) {
                     continue;
                 }
 
@@ -583,7 +584,7 @@ Http::get('/v1/account/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION_LIST,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -594,13 +595,12 @@ Http::get('/v1/account/sessions')
     ->inject('proofForToken')
     ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
-
         $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
-            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
@@ -632,7 +632,7 @@ Http::delete('/v1/account/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -658,21 +658,21 @@ Http::delete('/v1/account/sessions')
             /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
-            if (!$domainVerification) {
+            if (! $domainVerification) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
             }
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+                ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
                 $response
-                    ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
-                    ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                    ->addCookie($store->getKey().'_legacy', '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, null)
+                    ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
                 $currentSession = $session;
@@ -714,7 +714,7 @@ Http::get('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -734,15 +734,15 @@ Http::get('/v1/account/sessions/:sessionId')
         foreach ($sessions as $session) {
             /** @var Document $session */
             if ($sessionId === $session->getId()) {
-                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+                $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('secret', $session->getAttribute('secret', ''))
-                ;
+                    ->setAttribute('secret', $session->getAttribute('secret', ''));
 
                 $response->dynamic($session, Response::MODEL_SESSION);
+
                 return;
             }
         }
@@ -767,7 +767,7 @@ Http::delete('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -809,15 +809,15 @@ Http::delete('/v1/account/sessions/:sessionId')
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+                    ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-                if (!$domainVerification) {
+                if (! $domainVerification) {
                     $response->addHeader('X-Fallback-Cookies', \json_encode([]));
                 }
 
                 $response
-                    ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
-                    ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                    ->addCookie($store->getKey().'_legacy', '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, null)
+                    ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'));
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -834,6 +834,7 @@ Http::delete('/v1/account/sessions/:sessionId')
             ));
 
             $response->noContent();
+
             return;
         }
 
@@ -858,7 +859,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -899,13 +900,13 @@ Http::patch('/v1/account/sessions/:sessionId')
         $refreshToken = $session->getAttribute('providerRefreshToken', '');
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if (!empty($refreshToken) && ($className === null || !\class_exists($className))) {
+        if (! empty($refreshToken) && ($className === null || ! \class_exists($className))) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         if ($className !== null && \class_exists($className)) {
-            $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+            $appId = $project->getAttribute('oAuthProviders', [])[$provider.'Appid'] ?? '';
+            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider.'Secret'] ?? '{}';
 
             $oauth2 = new $className($appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
@@ -923,8 +924,7 @@ Http::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
-        ;
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -949,7 +949,7 @@ Http::post('/v1/account/sessions/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -985,11 +985,11 @@ Http::post('/v1/account/sessions/email')
 
         $userProofForPassword = ProofsPassword::createHash($profile->getAttribute('hash', $proofForPassword->getHash()->getName()), $profile->getAttribute('hashOptions', $proofForPassword->getHash()->getOptions()));
 
-        if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !$userProofForPassword->verify($password, $profile->getAttribute('password'))) {
+        if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || ! $userProofForPassword->verify($password, $profile->getAttribute('password'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        if (false === $profile->getAttribute('status')) { // Account is blocked
+        if ($profile->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
@@ -1025,7 +1025,7 @@ Http::post('/v1/account/sessions/email')
                 'connectionUsageType' => $geoRecord->getConnectionUsageType(),
                 'connectionOrganization' => $geoRecord->getConnectionOrganization(),
                 'isp' => $geoRecord->getIsp(),
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1061,30 +1061,27 @@ Http::post('/v1/account/sessions/email')
             ->setProperty('secret', $secret)
             ->encode();
 
-        if (!$domainVerification) {
+        if (! $domainVerification) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
         }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->addCookie($store->getKey().'_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, null)
+            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', $encoded)
-        ;
+            ->setAttribute('secret', $encoded);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         $bus->dispatch(new SessionCreated(
             user: $user->getArrayCopy(),
@@ -1115,7 +1112,7 @@ Http::post('/v1/account/sessions/anonymous')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -1138,7 +1135,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Geo $geo, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
-        if ('console' === $project->getId()) {
+        if ($project->getId() === 'console') {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
         }
 
@@ -1171,7 +1168,7 @@ Http::post('/v1/account/sessions/anonymous')
             'reset' => false,
             'name' => null,
             'mfa' => false,
-            'prefs' => new \stdClass(),
+            'prefs' => new stdClass(),
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
@@ -1211,7 +1208,7 @@ Http::post('/v1/account/sessions/anonymous')
                 'connectionUsageType' => $geoRecord->getConnectionUsageType(),
                 'connectionOrganization' => $geoRecord->getConnectionOrganization(),
                 'isp' => $geoRecord->getIsp(),
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1230,33 +1227,30 @@ Http::post('/v1/account/sessions/anonymous')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         $encoded = $store
             ->setProperty('id', $user->getId())
             ->setProperty('secret', $secret)
             ->encode();
 
-        if (!$domainVerification) {
+        if (! $domainVerification) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
         }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->addCookie($store->getKey().'_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, null)
+            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', $encoded)
-        ;
+            ->setAttribute('secret', $encoded);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1279,7 +1273,7 @@ Http::post('/v1/account/sessions/token')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -1309,7 +1303,7 @@ Http::post('/v1/account/sessions/token')
 Http::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
@@ -1322,7 +1316,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::HTML,
         // Preview SDK builds show the whole surface, so they do not hide.
@@ -1330,10 +1324,10 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: '.\implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (! $node['mock'])))).'.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' scopes are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1341,52 +1335,52 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
+        $callbackBase = $protocol.'://'.$request->getHostname();
         if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         }
 
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
+        $callback = $callbackBase.'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider.'Enabled'] ?? false;
 
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        if (! $providerEnabled) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your '.APP_NAME.' console to continue.');
         }
 
-        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider.'Secret'] ?? '{}';
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+        if (! empty($appSecret) && isset($appSecret['version'])) {
+            $key = System::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.');
         }
 
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if ($className === null || !\class_exists($className)) {
+        if ($className === null || ! \class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $host = $platform['consoleHostname'] ?? '';
-        $redirectBase = $protocol . '://' . $host;
+        $redirectBase = $protocol.'://'.$host;
         if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
+            $redirectBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $redirectBase .= ':' . $port;
+            $redirectBase .= ':'.$port;
         }
 
         if (empty($success)) {
-            $success = $redirectBase . $oauthDefaultSuccess;
+            $success = $redirectBase.$oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $redirectBase . $oauthDefaultFailure;
+            $failure = $redirectBase.$oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -1404,7 +1398,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
 Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Get OAuth2 callback')
     ->groups(['account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
@@ -1418,11 +1412,11 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
+        $callbackBase = $protocol.'://'.$request->getHostname();
         if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         }
 
         $params = $request->getParams();
@@ -1432,14 +1426,14 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query($params));
+            ->redirect($callbackBase.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                .\http_build_query($params));
     });
 
 Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Create OAuth2 callback')
     ->groups(['account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
@@ -1454,11 +1448,11 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
+        $callbackBase = $protocol.'://'.$request->getHostname();
         if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         }
 
         $params = $request->getParams();
@@ -1468,14 +1462,14 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query($params));
+            ->redirect($callbackBase.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                .\http_build_query($params));
     });
 
 Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('audits.event', 'session.create')
@@ -1509,35 +1503,35 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
+        $callbackBase = $protocol.'://'.$request->getHostname();
         if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         }
 
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $callbackBase.'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
-        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider.'Secret'] ?? '{}';
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider.'Enabled'] ?? false;
 
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if ($className === null || !\class_exists($className)) {
+        if ($className === null || ! \class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $providers = Config::getParam('oAuthProviders') ?? [];
         $providerName = $providers[$provider]['name'] ?? '';
 
-        /** @var Appwrite\Auth\OAuth2 $oauth2 */
+        /** @var OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
-        if (!empty($state)) {
+        if (! empty($state)) {
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
-            } catch (\Throwable $exception) {
+            } catch (Throwable $exception) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
@@ -1549,14 +1543,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($redirectValidator instanceof Redirect) {
             $domains = \array_filter([
                 parse_url($state['success'], PHP_URL_HOST) ?? '',
-                parse_url($state['failure'], PHP_URL_HOST) ?? ''
+                parse_url($state['failure'], PHP_URL_HOST) ?? '',
             ], fn ($domain) => \is_string($domain) && $domain !== '');
 
-            if (!empty($domains)) {
+            if (! empty($domains)) {
                 $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
                     Query::equal('domain', \array_values(\array_unique($domains))),
+                    Query::equal('protocol', ['http']),
                     Query::equal('projectInternalId', [$project->getSequence()]),
-                    Query::limit(2)
+                    Query::limit(2),
                 ]));
 
                 foreach ($rules as $rule) {
@@ -1567,26 +1562,26 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if ($devKey->isEmpty() && !$redirectValidator->isValid($state['success'])) {
+        if ($devKey->isEmpty() && ! $redirectValidator->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if ($devKey->isEmpty() && !empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
+        if ($devKey->isEmpty() && ! empty($state['failure']) && ! $redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
         $failure = [];
-        if (!empty($state['failure'])) {
+        if (! empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
-            if (!empty($failure)) {
+            if (! empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
                 $query['error'] = json_encode([
                     'message' => $exception->getMessage(),
                     'type' => $exception->getType(),
-                    'code' => !\is_null($code) ? $code : $exception->getCode(),
+                    'code' => ! \is_null($code) ? $code : $exception->getCode(),
                 ]);
                 // Mirror success path: default OAuth failure relay needs project to deep-link
                 // back into the native app via appwrite-callback-{project}://
@@ -1600,14 +1595,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw $exception;
         });
 
-        if (!$providerEnabled) {
-            $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        if (! $providerEnabled) {
+            $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your '.APP_NAME.' console to continue.');
         }
 
-        if (!empty($error)) {
-            $message = 'The ' . $providerName . ' OAuth2 provider returned an error: ' . $error;
-            if (!empty($error_description)) {
-                $message .= ': ' . $error_description;
+        if (! empty($error)) {
+            $message = 'The '.$providerName.' OAuth2 provider returned an error: '.$error;
+            if (! empty($error_description)) {
+                $message .= ': '.$error_description;
             }
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, $message);
         }
@@ -1616,8 +1611,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
         }
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+        if (! empty($appSecret) && isset($appSecret['version'])) {
+            $key = System::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1648,19 +1643,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
         $userParam = $request->getParam('user');
-        if (!empty($nameOAuth)) {
+        if (! empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif ($userParam !== null) {
             $userDecoded = \json_decode($userParam, true);
             if (isset($userDecoded['name']['firstName']) && isset($userDecoded['name']['lastName'])) {
-                $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
+                $name = $userDecoded['name']['firstName'].' '.$userDecoded['name']['lastName'];
             }
         }
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
 
         // Check if this identity is connected to a different user
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             $userId = $user->getId();
 
             $identityWithMatchingUid = $dbForProject->findOne('identities', [
@@ -1668,16 +1663,16 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('providerUid', [$oauth2ID]),
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
-            if (!$identityWithMatchingUid->isEmpty()) {
+            if (! $identityWithMatchingUid->isEmpty()) {
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
-            if (!empty($providerEmail)) {
+            if (! empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
+                if (! $identityWithMatchingEmail->isEmpty()) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
 
@@ -1685,7 +1680,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('email', [$email]),
                     Query::notEqual('$id', $userId),
                 ]);
-                if (!empty($userWithMatchingEmail)) {
+                if (! empty($userWithMatchingEmail)) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
             }
@@ -1697,7 +1692,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
+            if (! $currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                 $dbForProject->purgeCachedDocument('users', $user->getId());
             }
@@ -1708,7 +1703,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
             ]);
-            if (!$session->isEmpty()) {
+            if (! $session->isEmpty()) {
                 $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
             }
         }
@@ -1724,7 +1719,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('providerUid', [$oauth2ID]),
             ]);
 
-            if (!$identity->isEmpty()) {
+            if (! $identity->isEmpty()) {
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
@@ -1737,7 +1732,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             ];
             $emails = [$email];
             $canonicalize = false;
-            if ($user->isEmpty() && !empty($providerEmail)) {
+            if ($user->isEmpty() && ! empty($providerEmail)) {
                 try {
                     $parsedEmail = new Email($providerEmail);
                     $canonical = $parsedEmail->getCanonical();
@@ -1753,7 +1748,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if ($canonicalize) {
                         $canonicalLocal = \explode('@', $canonical, 2)[0];
                         $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
-                        $email = $canonicalLocal . '@' . $providerDomain;
+                        $email = $canonicalLocal.'@'.$providerDomain;
                     } else {
                         $email = $providerEmail;
                     }
@@ -1765,18 +1760,18 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailIsDisposable' => $parsedEmail->isDisposable(),
                         'emailIsFree' => $parsedEmail->isFree(),
                     ];
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
                 }
             }
 
             // If user is not found, check if there is a user with the same email
-            if ($user->isEmpty() && !empty($email)) {
+            if ($user->isEmpty() && ! empty($email)) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', $emails),
                 ]);
-                if (!$userWithEmail->isEmpty()) {
-                    if (!$isVerified) {
+                if (! $userWithEmail->isEmpty()) {
+                    if (! $isVerified) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
@@ -1784,12 +1779,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is an identity with the same email
-            if ($user->isEmpty() && !empty($providerEmail)) {
+            if ($user->isEmpty() && ! empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                 ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
-                    if (!$isVerified) {
+                if (! $identityWithMatchingEmail->isEmpty()) {
+                    if (! $isVerified) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
@@ -1807,21 +1802,21 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+                if (! empty($email) && (($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
                 // When $canonicalize is true we already applied delivery-safe
                 // local-part normalization while preserving the provider domain.
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
+                if (! empty($email) && (($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && ! $canonicalize) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+                if (! empty($email) && (($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
-                if (!empty($email) && (($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                if (! empty($email) && (($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
                 }
 
@@ -1835,7 +1830,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($userId)),
                         ],
                         'email' => $email ?: null,
-                        'emailVerification' => !empty($email) && $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
+                        'emailVerification' => ! empty($email) && $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
                         'status' => true,
                         'password' => null,
                         'hash' => $proofForPassword->getHash()->getName(),
@@ -1845,7 +1840,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'reset' => false,
                         'name' => $name,
                         'mfa' => false,
-                        'prefs' => new \stdClass(),
+                        'prefs' => new stdClass(),
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
@@ -1862,7 +1857,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $user->removeAttribute('$sequence');
                     $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
                     $newUser = $userDoc;
-                    if (!empty($email)) {
+                    if (! empty($email)) {
                         $newTarget = $dbForProject->createDocument('targets', new Document([
                             '$permissions' => [
                                 Permission::read(Role::user($user->getId())),
@@ -1884,11 +1879,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $authorization->addRole(Role::user($user->getId())->toString());
         $authorization->addRole(Role::users()->toString());
 
-        if (false === $user->getAttribute('status')) { // Account is blocked
+        if ($user->getAttribute('status') === false) { // Account is blocked
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+        if (empty($user->getAttribute('email')) && ! empty($providerEmail)) {
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -1914,7 +1909,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if ($canonicalize) {
                     $canonicalLocal = \explode('@', $canonical, 2)[0];
                     $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
-                    $email = $canonicalLocal . '@' . $providerDomain;
+                    $email = $canonicalLocal.'@'.$providerDomain;
                 } else {
                     $email = $providerEmail;
                 }
@@ -1926,7 +1921,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
                 ];
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
             }
 
@@ -1934,7 +1929,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('email', $emails),
                 Query::notEqual('$id', $user->getId()),
             ]);
-            if (!empty($userWithMatchingEmail)) {
+            if (! empty($userWithMatchingEmail)) {
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
@@ -1944,7 +1939,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             // When $canonicalize is true we already applied delivery-safe
             // local-part normalization while preserving the provider domain.
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
+            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && ! $canonicalize) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
@@ -1952,7 +1947,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -1998,12 +1993,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
 
-            if (!empty($providerEmail)) {
+            if (! empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
-                if (!empty($identitiesWithMatchingEmail)) {
+                if (! empty($identitiesWithMatchingEmail)) {
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     /** Return a generic bad request to prevent exposing existing accounts */
                 }
@@ -2094,8 +2089,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setEvent('users.[userId].tokens.[tokenId].create')
                 ->setParam('userId', $user->getId())
-                ->setParam('tokenId', $token->getId())
-            ;
+                ->setParam('tokenId', $token->getId());
 
             // Wrap secret in a JWT that also carries the provider name
             $jwtEncoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 60, 0);
@@ -2119,11 +2113,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
+                'factors' => [Type::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
                 'latitude' => $geoRecord->getLatitude(),
@@ -2137,7 +2131,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'connectionUsageType' => $geoRecord->getConnectionUsageType(),
                 'connectionOrganization' => $geoRecord->getConnectionOrganization(),
                 'isp' => $geoRecord->getIsp(),
-                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration),
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -2153,15 +2147,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setProperty('secret', $secret)
                 ->encode();
 
-            if (!$domainVerification) {
+            if (! $domainVerification) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION))
-            ;
+                ->setPayload($response->output($session, Response::MODEL_SESSION));
 
             // TODO: Remove this deprecated workaround - support only token
             if ($state['success']['path'] == $oauthDefaultSuccess) {
@@ -2172,8 +2165,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $response
-                ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
-                ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                ->addCookie($store->getKey().'_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, null)
+                ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'));
         }
 
         if (isset($sessionUpgrade) && isset($session)) {
@@ -2201,14 +2194,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($state['success'])
-        ;
+            ->redirect($state['success']);
     });
 
 Http::get('/v1/account/tokens/oauth2/:provider')
     ->desc('Create OAuth2 token')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'sessions.write')
     ->label('sdk', new Method(
         namespace: 'account',
@@ -2220,17 +2212,17 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::HTML,
         type: MethodType::WEBAUTH,
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: '.\implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (! $node['mock'])))).'.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' scopes are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -2238,54 +2230,54 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
+        $callbackBase = $protocol.'://'.$request->getHostname();
         if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
+            $callbackBase .= ':'.$port;
         }
 
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
+        $callback = $callbackBase.'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider.'Enabled'] ?? false;
 
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        if (! $providerEnabled) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your '.APP_NAME.' console to continue.');
         }
 
-        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider.'Secret'] ?? '{}';
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+        if (! empty($appSecret) && isset($appSecret['version'])) {
+            $key = System::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.');
         }
 
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if ($className === null || !\class_exists($className)) {
+        if ($className === null || ! \class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $host = $platform['consoleHostname'] ?? '';
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
-        $redirectBase = $protocol . '://' . $host;
+        $redirectBase = $protocol.'://'.$host;
         if ($protocol === 'https' && $port !== '443') {
-            $redirectBase .= ':' . $port;
+            $redirectBase .= ':'.$port;
         } elseif ($protocol === 'http' && $port !== '80') {
-            $redirectBase .= ':' . $port;
+            $redirectBase .= ':'.$port;
         }
 
         if (empty($success)) {
-            $success = $redirectBase . $oauthDefaultSuccess;
+            $success = $redirectBase.$oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $redirectBase . $oauthDefaultFailure;
+            $failure = $redirectBase.$oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
@@ -2321,7 +2313,7 @@ Http::post('/v1/account/tokens/magic-url')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -2348,14 +2340,12 @@ Http::post('/v1/account/tokens/magic-url')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-
         if ($phrase === true) {
             $phrase = (new Phrase())->generate();
         }
 
-
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
-        if (!$result->isEmpty()) {
+        if (! $result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -2372,7 +2362,7 @@ Http::post('/v1/account/tokens/magic-url')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
+            if (! $identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -2396,7 +2386,7 @@ Http::post('/v1/account/tokens/magic-url')
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
                 ];
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
@@ -2412,7 +2402,7 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2433,7 +2423,7 @@ Http::post('/v1/account/tokens/magic-url')
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'mfa' => false,
-                'prefs' => new \stdClass(),
+                'prefs' => new stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
@@ -2483,11 +2473,11 @@ Http::post('/v1/account/tokens/magic-url')
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $host = $platform['consoleHostname'] ?? '';
             $port = $request->getPort();
-            $callbackBase = $protocol . '://' . $host;
+            $callbackBase = $protocol.'://'.$host;
             if ($protocol === 'https' && $port !== '443') {
-                $callbackBase .= ':' . $port;
+                $callbackBase .= ':'.$port;
             } elseif ($protocol === 'http' && $port !== '80') {
-                $callbackBase .= ':' . $port;
+                $callbackBase .= ':'.$port;
             }
             $url = $legacyConsolePaths
                 ? "{$callbackBase}/console/auth/magic-url"
@@ -2498,30 +2488,30 @@ Http::post('/v1/account/tokens/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $tokenSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        $subject = $locale->getText("emails.magicSession.subject");
-        $preview = $locale->getText("emails.magicSession.preview");
+        $subject = $locale->getText('emails.magicSession.subject');
+        $preview = $locale->getText('emails.magicSession.preview');
 
         $customTemplate =
-            $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
-            $project->getAttribute('templates', [])['email.magicSession-' . $locale->fallback] ?? [];
+            $project->getAttribute('templates', [])['email.magicSession-'.$locale->default] ??
+            $project->getAttribute('templates', [])['email.magicSession-'.$locale->fallback] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
         $agentDevice = $detector->getDevice();
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
+        $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-magic-url.tpl');
         $message
-            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
-            ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
-            ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
-            ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
-            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
+            ->setParam('{{hello}}', $locale->getText('emails.magicSession.hello'))
+            ->setParam('{{optionButton}}', $locale->getText('emails.magicSession.optionButton'))
+            ->setParam('{{buttonText}}', $locale->getText('emails.magicSession.buttonText'))
+            ->setParam('{{optionUrl}}', $locale->getText('emails.magicSession.optionUrl'))
+            ->setParam('{{clientInfo}}', $locale->getText('emails.magicSession.clientInfo'))
+            ->setParam('{{thanks}}', $locale->getText('emails.magicSession.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.magicSession.signature'));
 
-        if (!empty($phrase)) {
-            $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
+        if (! empty($phrase)) {
+            $message->setParam('{{securityPhrase}}', $locale->getText('emails.magicSession.securityPhrase'));
         } else {
             $message->setParam('{{securityPhrase}}', '');
         }
@@ -2532,40 +2522,40 @@ Http::post('/v1/account/tokens/magic-url')
         $smtpEnabled = $smtp['enabled'] ?? false;
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server');
         $replyToEmail = '';
         $replyToName = '';
         $smtpConfig = [];
 
         if ($smtpEnabled) {
-            if (!empty($smtp['senderEmail'])) {
+            if (! empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
             }
-            if (!empty($smtp['senderName'])) {
+            if (! empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
             // Includes backwards compatibility: fall back to legacy `replyTo` key
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
-            if (!empty($smtpReplyToEmail)) {
+            if (! empty($smtpReplyToEmail)) {
                 $replyToEmail = $smtpReplyToEmail;
             }
-            if (!empty($smtp['replyToName'])) {
+            if (! empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
 
-            if (!empty($customTemplate)) {
-                if (!empty($customTemplate['senderEmail'])) {
+            if (! empty($customTemplate)) {
+                if (! empty($customTemplate['senderEmail'])) {
                     $senderEmail = $customTemplate['senderEmail'];
                 }
-                if (!empty($customTemplate['senderName'])) {
+                if (! empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
                 // Includes backwards compatibility: fall back to legacy `replyTo` key
                 $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
-                if (!empty($customReplyToEmail)) {
+                if (! empty($customReplyToEmail)) {
                     $replyToEmail = $customReplyToEmail;
                 }
-                if (!empty($customTemplate['replyToName'])) {
+                if (! empty($customTemplate['replyToName'])) {
                     $replyToName = $customTemplate['replyToName'];
                 }
 
@@ -2600,7 +2590,7 @@ Http::post('/v1/account/tokens/magic-url')
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
-            'phrase' => !empty($phrase) ? $phrase : '',
+            'phrase' => ! empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
         ];
@@ -2623,7 +2613,7 @@ Http::post('/v1/account/tokens/magic-url')
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-        if (!empty($phrase)) {
+        if (! empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
         }
 
@@ -2650,7 +2640,7 @@ Http::post('/v1/account/tokens/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -2682,7 +2672,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
-        if (!$result->isEmpty()) {
+        if (! $result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -2699,7 +2689,7 @@ Http::post('/v1/account/tokens/email')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
+            if (! $identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 /** Return a generic bad request to prevent exposing existing accounts */
             }
@@ -2724,7 +2714,7 @@ Http::post('/v1/account/tokens/email')
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
                 ];
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
@@ -2740,7 +2730,7 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
-            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
@@ -2760,7 +2750,7 @@ Http::post('/v1/account/tokens/email')
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
-                'prefs' => new \stdClass(),
+                'prefs' => new stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
@@ -2792,7 +2782,7 @@ Http::post('/v1/account/tokens/email')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if (!$existingTarget->isEmpty()) {
+                if (! $existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -2825,37 +2815,37 @@ Http::post('/v1/account/tokens/email')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $subject = $locale->getText("emails.otpSession.subject");
-        $preview = $locale->getText("emails.otpSession.preview");
-        $heading = $locale->getText("emails.otpSession.heading");
+        $subject = $locale->getText('emails.otpSession.subject');
+        $preview = $locale->getText('emails.otpSession.preview');
+        $heading = $locale->getText('emails.otpSession.heading');
 
         $customTemplate =
-            $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ??
-            $project->getAttribute('templates', [])['email.otpSession-' . $locale->fallback] ?? [];
+            $project->getAttribute('templates', [])['email.otpSession-'.$locale->default] ??
+            $project->getAttribute('templates', [])['email.otpSession-'.$locale->fallback] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
-        if (!$validator->isValid($smtpBaseTemplate)) {
+        if (! $validator->isValid($smtpBaseTemplate)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
         }
 
-        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+        $bodyTemplate = __DIR__.'/../../config/locale/templates/'.$smtpBaseTemplate.'.tpl';
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
         $agentDevice = $detector->getDevice();
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+        $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-otp.tpl');
         $message
-            ->setParam('{{hello}}', $locale->getText("emails.otpSession.hello"))
-            ->setParam('{{description}}', $locale->getText("emails.otpSession.description"))
-            ->setParam('{{clientInfo}}', $locale->getText("emails.otpSession.clientInfo"))
-            ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
+            ->setParam('{{hello}}', $locale->getText('emails.otpSession.hello'))
+            ->setParam('{{description}}', $locale->getText('emails.otpSession.description'))
+            ->setParam('{{clientInfo}}', $locale->getText('emails.otpSession.clientInfo'))
+            ->setParam('{{thanks}}', $locale->getText('emails.otpSession.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.otpSession.signature'));
 
-        if (!empty($phrase)) {
-            $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
+        if (! empty($phrase)) {
+            $message->setParam('{{securityPhrase}}', $locale->getText('emails.otpSession.securityPhrase'));
         } else {
             $message->setParam('{{securityPhrase}}', '');
         }
@@ -2866,40 +2856,40 @@ Http::post('/v1/account/tokens/email')
         $smtpEnabled = $smtp['enabled'] ?? false;
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server');
         $replyToEmail = '';
         $replyToName = '';
         $smtpConfig = [];
 
         if ($smtpEnabled) {
-            if (!empty($smtp['senderEmail'])) {
+            if (! empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
             }
-            if (!empty($smtp['senderName'])) {
+            if (! empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
             // Includes backwards compatibility: fall back to legacy `replyTo` key
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
-            if (!empty($smtpReplyToEmail)) {
+            if (! empty($smtpReplyToEmail)) {
                 $replyToEmail = $smtpReplyToEmail;
             }
-            if (!empty($smtp['replyToName'])) {
+            if (! empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
 
-            if (!empty($customTemplate)) {
-                if (!empty($customTemplate['senderEmail'])) {
+            if (! empty($customTemplate)) {
+                if (! empty($customTemplate['senderEmail'])) {
                     $senderEmail = $customTemplate['senderEmail'];
                 }
-                if (!empty($customTemplate['senderName'])) {
+                if (! empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
                 // Includes backwards compatibility: fall back to legacy `replyTo` key
                 $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
-                if (!empty($customReplyToEmail)) {
+                if (! empty($customReplyToEmail)) {
                     $replyToEmail = $customReplyToEmail;
                 }
-                if (!empty($customTemplate['replyToName'])) {
+                if (! empty($customTemplate['replyToName'])) {
                     $replyToName = $customTemplate['replyToName'];
                 }
 
@@ -2935,7 +2925,7 @@ Http::post('/v1/account/tokens/email')
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
-            'phrase' => !empty($phrase) ? $phrase : '',
+            'phrase' => ! empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
         ];
@@ -2972,7 +2962,7 @@ Http::post('/v1/account/tokens/email')
         $queueForEvents
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
-        if (!empty($phrase)) {
+        if (! empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
         }
 
@@ -2999,7 +2989,7 @@ Http::put('/v1/account/sessions/magic-url')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
         deprecated: new Deprecated(
@@ -3051,7 +3041,7 @@ Http::put('/v1/account/sessions/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
         deprecated: new Deprecated(
@@ -3100,7 +3090,7 @@ Http::post('/v1/account/tokens/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3129,7 +3119,7 @@ Http::post('/v1/account/tokens/phone')
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-        if (!$result->isEmpty()) {
+        if (! $result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -3159,7 +3149,7 @@ Http::post('/v1/account/tokens/phone')
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
-                'prefs' => new \stdClass(),
+                'prefs' => new stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
@@ -3233,14 +3223,14 @@ Http::post('/v1/account/tokens/phone')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($sendSMS) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+            $message = Template::fromFile(__DIR__.'/../../config/locale/templates/sms-base.tpl');
 
             $projectName = $project->getAttribute('name');
             if ($project->getId() === 'console') {
                 $projectName = $platform['platformName'];
             }
 
-            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent = Template::fromString($locale->getText('sms.verification.body'));
             $messageContent
                 ->setParam('{{project}}', $projectName)
                 ->setParam('{{secret}}', $secret);
@@ -3265,7 +3255,7 @@ Http::post('/v1/account/tokens/phone')
             ));
 
             $countryCode = CallingCode::fromPhoneNumber($phone);
-            if (!empty($countryCode)) {
+            if (! empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
@@ -3304,7 +3294,7 @@ Http::post('/v1/account/jwts')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_JWT,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3318,13 +3308,13 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
-        if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
+        if (! empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        if (!$sessionId) {
+        if (! $sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
@@ -3336,7 +3326,7 @@ Http::post('/v1/account/jwts')
                 'jwt' => $jwt->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $sessionId,
-                ])
+                ]),
             ]), Response::MODEL_JWT);
     });
 
@@ -3354,7 +3344,7 @@ Http::get('/v1/account/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3384,7 +3374,7 @@ Http::patch('/v1/account/name')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3424,7 +3414,7 @@ Http::patch('/v1/account/password')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3443,7 +3433,7 @@ Http::patch('/v1/account/password')
     ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
-        if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        if (! empty($user->getAttribute('passwordUpdate')) && ! $userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -3454,7 +3444,7 @@ Http::patch('/v1/account/password')
 
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $hash);
-            if (!$validator->isValid($password)) {
+            if (! $validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
@@ -3464,7 +3454,7 @@ Http::patch('/v1/account/password')
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
-            if (!$personalDataValidator->isValid($password)) {
+            if (! $personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
@@ -3483,7 +3473,7 @@ Http::patch('/v1/account/password')
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate && !empty($current)) {
+        if ($invalidate && ! empty($current)) {
             foreach ($sessions as $session) {
                 /** @var Document $session */
                 if ($session->getId() !== $current) {
@@ -3516,7 +3506,7 @@ Http::patch('/v1/account/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3539,8 +3529,8 @@ Http::patch('/v1/account/email')
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
 
         if (
-            !empty($passwordUpdate) &&
-            !$userProofForPassword->verify($password, $user->getAttribute('password'))
+            ! empty($passwordUpdate) &&
+            ! $userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -3556,7 +3546,7 @@ Http::patch('/v1/account/email')
             Query::equal('providerEmail', [$email]),
             Query::notEqual('userInternalId', $user->getSequence()),
         ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
+        if (! $identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST);
             /** Return a generic bad request to prevent exposing existing accounts */
         }
@@ -3579,7 +3569,7 @@ Http::patch('/v1/account/email')
                 'emailIsDisposable' => $parsedEmail->isDisposable(),
                 'emailIsFree' => $parsedEmail->isFree(),
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
@@ -3595,7 +3585,7 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && ! $emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
@@ -3606,8 +3596,7 @@ Http::patch('/v1/account/email')
             ->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical'])
             ->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate'])
             ->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable'])
-            ->setAttribute('emailIsFree', $emailMetadata['emailIsFree'])
-        ;
+            ->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
 
         if (empty($passwordUpdate)) {
             $user
@@ -3621,7 +3610,7 @@ Http::patch('/v1/account/email')
             Query::equal('identifier', [$email]),
         ]));
 
-        if (!$target->isEmpty()) {
+        if (! $target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -3629,7 +3618,7 @@ Http::patch('/v1/account/email')
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+            if ($oldTarget instanceof Document && ! $oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -3660,7 +3649,7 @@ Http::patch('/v1/account/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3672,8 +3661,8 @@ Http::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-                ->inject('proofForPassword')
-->inject('authorization')
+    ->inject('proofForPassword')
+    ->inject('authorization')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3681,8 +3670,8 @@ Http::patch('/v1/account/phone')
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
 
         if (
-            !empty($passwordUpdate) &&
-            !$userProofForPassword->verify($password, $user->getAttribute('password'))
+            ! empty($passwordUpdate) &&
+            ! $userProofForPassword->verify($password, $user->getAttribute('password'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -3693,7 +3682,7 @@ Http::patch('/v1/account/phone')
             Query::equal('identifier', [$phone]),
         ]));
 
-        if (!$target->isEmpty()) {
+        if (! $target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -3701,8 +3690,7 @@ Http::patch('/v1/account/phone')
 
         $user
             ->setAttribute('phone', $phone)
-            ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
-        ;
+            ->setAttribute('phoneVerification', false); // After this user needs to confirm phone number again
 
         if (empty($passwordUpdate)) {
             $user
@@ -3716,7 +3704,7 @@ Http::patch('/v1/account/phone')
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+            if ($oldTarget instanceof Document && ! $oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -3746,7 +3734,7 @@ Http::patch('/v1/account/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -3784,7 +3772,7 @@ Http::patch('/v1/account/status')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3806,15 +3794,14 @@ Http::patch('/v1/account/status')
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
-        if (!$domainVerification) {
+        if (! $domainVerification) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
         $protocol = $request->getProtocol();
         $response
-            ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
+            ->addCookie($store->getKey().'_legacy', '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, null)
+            ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ($protocol == 'https'), true, Config::getParam('cookieSamesite'));
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -3837,7 +3824,7 @@ Http::post('/v1/account/recovery')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -3874,7 +3861,7 @@ Http::post('/v1/account/recovery')
 
         $user->setAttributes($profile->getArrayCopy());
 
-        if (false === $profile->getAttribute('status')) { // Account is blocked
+        if ($profile->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
@@ -3915,69 +3902,69 @@ Http::post('/v1/account/recovery')
             $projectName = $platform['platformName'];
         }
 
-        $body = $locale->getText("emails.recovery.body");
-        $subject = $locale->getText("emails.recovery.subject");
-        $preview = $locale->getText("emails.recovery.preview");
+        $body = $locale->getText('emails.recovery.body');
+        $subject = $locale->getText('emails.recovery.subject');
+        $preview = $locale->getText('emails.recovery.preview');
         $customTemplate =
-            $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ??
-            $project->getAttribute('templates', [])['email.recovery-' . $locale->fallback] ?? [];
+            $project->getAttribute('templates', [])['email.recovery-'.$locale->default] ??
+            $project->getAttribute('templates', [])['email.recovery-'.$locale->fallback] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
-        if (!$validator->isValid($smtpBaseTemplate)) {
+        if (! $validator->isValid($smtpBaseTemplate)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
         }
 
-        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+        $bodyTemplate = __DIR__.'/../../config/locale/templates/'.$smtpBaseTemplate.'.tpl';
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+        $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-inner-base.tpl');
         $message
             ->setParam('{{body}}', $body, escapeHtml: false)
-            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
-            ->setParam('{{buttonText}}', $locale->getText("emails.recovery.buttonText"))
-            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
+            ->setParam('{{hello}}', $locale->getText('emails.recovery.hello'))
+            ->setParam('{{footer}}', $locale->getText('emails.recovery.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.recovery.thanks'))
+            ->setParam('{{buttonText}}', $locale->getText('emails.recovery.buttonText'))
+            ->setParam('{{signature}}', $locale->getText('emails.recovery.signature'));
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server');
         $replyToEmail = '';
         $replyToName = '';
         $smtpConfig = [];
 
         if ($smtpEnabled) {
-            if (!empty($smtp['senderEmail'])) {
+            if (! empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
             }
-            if (!empty($smtp['senderName'])) {
+            if (! empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
             // Includes backwards compatibility: fall back to legacy `replyTo` key
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
-            if (!empty($smtpReplyToEmail)) {
+            if (! empty($smtpReplyToEmail)) {
                 $replyToEmail = $smtpReplyToEmail;
             }
-            if (!empty($smtp['replyToName'])) {
+            if (! empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
 
-            if (!empty($customTemplate)) {
-                if (!empty($customTemplate['senderEmail'])) {
+            if (! empty($customTemplate)) {
+                if (! empty($customTemplate['senderEmail'])) {
                     $senderEmail = $customTemplate['senderEmail'];
                 }
-                if (!empty($customTemplate['senderName'])) {
+                if (! empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
                 // Includes backwards compatibility: fall back to legacy `replyTo` key
                 $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
-                if (!empty($customReplyToEmail)) {
+                if (! empty($customReplyToEmail)) {
                     $replyToEmail = $customReplyToEmail;
                 }
-                if (!empty($customTemplate['replyToName'])) {
+                if (! empty($customTemplate['replyToName'])) {
                     $replyToName = $customTemplate['replyToName'];
                 }
 
@@ -4005,7 +3992,7 @@ Http::post('/v1/account/recovery')
             'redirect' => $url,
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
-            'team' => ''
+            'team' => '',
         ];
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
@@ -4068,7 +4055,7 @@ Http::put('/v1/account/recovery')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4085,9 +4072,9 @@ Http::put('/v1/account/recovery')
     ->inject('hooks')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-->inject('authorization')
+    ->inject('authorization')
     ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
-        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        /** @var User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -4096,7 +4083,7 @@ Http::put('/v1/account/recovery')
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken);
 
-        if (!$verifiedToken) {
+        if (! $verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -4110,7 +4097,7 @@ Http::put('/v1/account/recovery')
 
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $hash);
-            if (!$validator->isValid($password)) {
+            if (! $validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
@@ -4178,7 +4165,7 @@ Http::post('/v1/account/verifications/email')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_TOKEN,
-                )
+                ),
             ],
             contentType: ContentType::JSON,
         ),
@@ -4192,7 +4179,7 @@ Http::post('/v1/account/verifications/email')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_TOKEN,
-                )
+                ),
             ],
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
@@ -4200,7 +4187,7 @@ Http::post('/v1/account/verifications/email')
                 replaceWith: 'account.createEmailVerification'
             ),
             public: false,
-        )
+        ),
     ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
@@ -4267,32 +4254,31 @@ Http::post('/v1/account/verifications/email')
             $projectName = $platform['platformName'];
         }
 
-
-        $body = $locale->getText("emails.verification.body");
-        $preview = $locale->getText("emails.verification.preview");
-        $subject = $locale->getText("emails.verification.subject");
-        $heading = $locale->getText("emails.verification.heading");
+        $body = $locale->getText('emails.verification.body');
+        $preview = $locale->getText('emails.verification.preview');
+        $subject = $locale->getText('emails.verification.subject');
+        $heading = $locale->getText('emails.verification.heading');
 
         $customTemplate =
-            $project->getAttribute('templates', [])['email.verification-' . $locale->default] ??
-            $project->getAttribute('templates', [])['email.verification-' . $locale->fallback] ?? [];
+            $project->getAttribute('templates', [])['email.verification-'.$locale->default] ??
+            $project->getAttribute('templates', [])['email.verification-'.$locale->fallback] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
-        if (!$validator->isValid($smtpBaseTemplate)) {
+        if (! $validator->isValid($smtpBaseTemplate)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
         }
 
-        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+        $bodyTemplate = __DIR__.'/../../config/locale/templates/'.$smtpBaseTemplate.'.tpl';
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+        $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-inner-base.tpl');
         $message
             ->setParam('{{body}}', $body, escapeHtml: false)
-            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
-            ->setParam('{{buttonText}}', $locale->getText("emails.verification.buttonText"))
-            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
+            ->setParam('{{hello}}', $locale->getText('emails.verification.hello'))
+            ->setParam('{{footer}}', $locale->getText('emails.verification.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.verification.thanks'))
+            ->setParam('{{buttonText}}', $locale->getText('emails.verification.buttonText'))
+            ->setParam('{{signature}}', $locale->getText('emails.verification.signature'));
 
         $body = $message->render();
 
@@ -4300,40 +4286,40 @@ Http::post('/v1/account/verifications/email')
         $smtpEnabled = $smtp['enabled'] ?? false;
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server');
         $replyToEmail = '';
         $replyToName = '';
         $smtpConfig = [];
 
         if ($smtpEnabled) {
-            if (!empty($smtp['senderEmail'])) {
+            if (! empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
             }
-            if (!empty($smtp['senderName'])) {
+            if (! empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
             // Includes backwards compatibility: fall back to legacy `replyTo` key
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
-            if (!empty($smtpReplyToEmail)) {
+            if (! empty($smtpReplyToEmail)) {
                 $replyToEmail = $smtpReplyToEmail;
             }
-            if (!empty($smtp['replyToName'])) {
+            if (! empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
 
-            if (!empty($customTemplate)) {
-                if (!empty($customTemplate['senderEmail'])) {
+            if (! empty($customTemplate)) {
+                if (! empty($customTemplate['senderEmail'])) {
                     $senderEmail = $customTemplate['senderEmail'];
                 }
-                if (!empty($customTemplate['senderName'])) {
+                if (! empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
                 // Includes backwards compatibility: fall back to legacy `replyTo` key
                 $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
-                if (!empty($customReplyToEmail)) {
+                if (! empty($customReplyToEmail)) {
                     $replyToEmail = $customReplyToEmail;
                 }
-                if (!empty($customTemplate['replyToName'])) {
+                if (! empty($customTemplate['replyToName'])) {
                     $replyToName = $customTemplate['replyToName'];
                 }
 
@@ -4424,7 +4410,7 @@ Http::put('/v1/account/verifications/email')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_TOKEN,
-                )
+                ),
             ],
             contentType: ContentType::JSON
         ),
@@ -4438,7 +4424,7 @@ Http::put('/v1/account/verifications/email')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_TOKEN,
-                )
+                ),
             ],
             contentType: ContentType::JSON,
             deprecated: new Deprecated(
@@ -4446,7 +4432,7 @@ Http::put('/v1/account/verifications/email')
                 replaceWith: 'account.updateEmailVerification'
             ),
             public: false,
-        )
+        ),
     ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
@@ -4459,7 +4445,7 @@ Http::put('/v1/account/verifications/email')
     ->inject('proofForToken')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
-        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        /** @var User $profile */
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
@@ -4468,7 +4454,7 @@ Http::put('/v1/account/verifications/email')
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
 
-        if (!$verifiedToken) {
+        if (! $verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -4514,7 +4500,7 @@ Http::post('/v1/account/verifications/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON,
     ))
@@ -4532,7 +4518,7 @@ Http::post('/v1/account/verifications/phone')
     ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
-                ->inject('authorization')
+    ->inject('authorization')
     ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -4584,9 +4570,9 @@ Http::post('/v1/account/verifications/phone')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($sendSMS) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+            $message = Template::fromFile(__DIR__.'/../../config/locale/templates/sms-base.tpl');
 
-            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent = Template::fromString($locale->getText('sms.verification.body'));
             $messageContent
                 ->setParam('{{project}}', $project->getAttribute('name'))
                 ->setParam('{{secret}}', $secret);
@@ -4611,7 +4597,7 @@ Http::post('/v1/account/verifications/phone')
             ));
 
             $countryCode = CallingCode::fromPhoneNumber($phone);
-            if (!empty($countryCode)) {
+            if (! empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
@@ -4647,7 +4633,7 @@ Http::put('/v1/account/verifications/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4662,7 +4648,7 @@ Http::put('/v1/account/verifications/phone')
     ->inject('proofForCode')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
-        /** @var Appwrite\Utopia\Database\Documents\User  $profile */
+        /** @var User $profile */
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
@@ -4671,7 +4657,7 @@ Http::put('/v1/account/verifications/phone')
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_PHONE, $secret, $proofForCode);
 
-        if (!$verifiedToken) {
+        if (! $verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -4691,8 +4677,7 @@ Http::put('/v1/account/verifications/phone')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -4714,7 +4699,7 @@ Http::post('/v1/account/targets/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4736,7 +4721,7 @@ Http::post('/v1/account/targets/push')
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
-        if (!$target->isEmpty()) {
+        if (! $target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -4756,15 +4741,15 @@ Http::post('/v1/account/targets/push')
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
                 ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getSequence() : null,
+                'providerId' => ! empty($providerId) ? $providerId : null,
+                'providerInternalId' => ! empty($providerId) ? $provider->getSequence() : null,
                 'providerType' => MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'sessionId' => $session->getId(),
                 'sessionInternalId' => $session->getSequence(),
                 'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}",
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4798,7 +4783,7 @@ Http::put('/v1/account/targets/:targetId/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
@@ -4868,7 +4853,7 @@ Http::delete('/v1/account/targets/:targetId/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -4922,11 +4907,11 @@ Http::get('/v1/account/identities')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_IDENTITY_LIST,
-            )
+            ),
         ],
         contentType: ContentType::JSON
     ))
-    ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
@@ -4946,7 +4931,7 @@ Http::get('/v1/account/identities')
 
         if ($cursor !== false) {
             $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -4992,7 +4977,7 @@ Http::delete('/v1/account/identities/:identityId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))

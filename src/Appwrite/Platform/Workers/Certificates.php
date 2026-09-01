@@ -108,7 +108,7 @@ class Certificates extends Action
 
         $certificateMessage = \Appwrite\Event\Message\Certificate::fromArray($payload);
         $document = $certificateMessage->domain;
-        $domain   = new Domain($document->getAttribute('domain', ''));
+        $domain = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
         $validationDomain = $certificateMessage->validationDomain;
@@ -126,22 +126,11 @@ class Certificates extends Action
                 break;
 
             default:
-                throw new Exception('Invalid action: ' . $action);
+                throw new Exception('Invalid action: '.$action);
         }
     }
 
     /**
-     * @param Domain $domain
-     * @param Database $dbForPlatform
-     * @param Event $queueForEvents
-     * @param Webhook $queueForWebhooks
-     * @param FunctionPublisher $publisherForFunctions
-     * @param Realtime $queueForRealtime
-     * @param Certificate $publisherForCertificates
-     * @param Log $log
-     * @param ValidatorAuthorization $authorization
-     * @param string|null $validationDomain
-     * @return void
      * @throws \Utopia\Database\Exception
      * @throws NotFound
      * @throws \Utopia\Database\Exception\Query
@@ -164,16 +153,18 @@ class Certificates extends Action
             ? $dbForPlatform->getDocument('rules', md5($domain->get()))
             : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
+                Query::equal('protocol', ['http']),
                 Query::limit(1),
             ]);
 
         // Skip if rule is not desired state (created but not verified yet).
         if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
-            Console::warning('Domain verification for ' . $rule->getAttribute('domain', '') . ' is not needed.');
+            Console::warning('Domain verification for '.$rule->getAttribute('domain', '').' is not needed.');
+
             return;
         }
 
-        Console::info('Domain verification for ' . $rule->getAttribute('domain', '') . ' started.');
+        Console::info('Domain verification for '.$rule->getAttribute('domain', '').' started.');
 
         try {
             // Verify DNS records
@@ -184,7 +175,7 @@ class Certificates extends Action
 
             Console::success('Domain verification succeeded.');
         } catch (AppwriteException $err) {
-            Console::warning('Domain verification failed: ' . $err->getMessage());
+            Console::warning('Domain verification failed: '.$err->getMessage());
             $date = \date('H:i:s');
             $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
@@ -288,12 +279,14 @@ class Certificates extends Action
             ? $dbForPlatform->getDocument('rules', md5($domain->get()))
             : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
+                Query::equal('protocol', ['http']),
                 Query::limit(1),
             ]);
 
         // Rule not found (or) not in the expected state
-        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
-            Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
+        if ($rule->isEmpty() || ! \in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
+            Console::warning('Certificate generation for '.$domain->get().' is skipped as the associated rule is either empty or not in the expected state.');
+
             return;
         }
 
@@ -318,12 +311,13 @@ class Certificates extends Action
             $rule->setAttribute('certificateId', $certificate->getId());
 
             // Validate domain and DNS records. Skip if job is forced
-            if (!$skipRenewCheck) {
+            if (! $skipRenewCheck) {
                 $this->validateDomain($rule, $domain, $log, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
                     Console::info("Skipping, renew isn't required");
+
                     return;
                 }
             }
@@ -384,10 +378,10 @@ class Certificates extends Action
     /**
      * Save certificate data to database.
      *
-     * @param Document $rule Rule associated with the domain
-     * @param Document $certificate Certificate document that we need to save
-     * @param Database $dbForPlatform Database connection for console
-     * @return Document
+     * @param  Document  $rule  Rule associated with the domain
+     * @param  Document  $certificate  Certificate document that we need to save
+     * @param  Database  $dbForPlatform  Database connection for console
+     *
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Conflict
@@ -419,14 +413,12 @@ class Certificates extends Action
      * - when renew creates new document? It might?
      * - overall makes it more reliable
      *
-     * @param Document $rule Rule document that is affected by new certificate
-     * @param Database $dbForPlatform Database connection for console
-     * @param Event $queueForEvents Event publisher for events
-     * @param Webhook $queueForWebhooks Webhook publisher for webhooks
-     * @param FunctionPublisher $publisherForFunctions Function publisher for functions
-     * @param Realtime $queueForRealtime Realtime publisher for realtime events
-     *
-     * @return void
+     * @param  Document  $rule  Rule document that is affected by new certificate
+     * @param  Database  $dbForPlatform  Database connection for console
+     * @param  Event  $queueForEvents  Event publisher for events
+     * @param  Webhook  $queueForWebhooks  Webhook publisher for webhooks
+     * @param  FunctionPublisher  $publisherForFunctions  Function publisher for functions
+     * @param  Realtime  $queueForRealtime  Realtime publisher for realtime events
      */
     protected function updateRuleAndSendEvents(
         Document $rule,
@@ -491,18 +483,17 @@ class Certificates extends Action
      * - Domain needs to be public and valid (prevents NFT domains that are not supported)
      * - Domain must have proper DNS record
      *
-     * @param Document $rule Rule to validate
-     * @param Domain $domain Domain to validate
-     * @param Log $log Logger for adding metrics
-     * @param string|null $validationDomain Override for main domain check
+     * @param  Document  $rule  Rule to validate
+     * @param  Domain  $domain  Domain to validate
+     * @param  Log  $log  Logger for adding metrics
+     * @param  string|null  $validationDomain  Override for main domain check
      *
-     * @return void
      * @throws Exception
      */
     private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
-        $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+        $isMainDomain = ! isset($mainDomain) || $domain->get() === $mainDomain;
         $isAppwriteOwned = $rule->getAttribute('owner') === 'Appwrite';
 
         // Skip DNS verification for the main domain and Appwrite-owned subdomains
@@ -517,7 +508,7 @@ class Certificates extends Action
         try {
             $this->verifyRule($rule, $log);
         } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
+            $msg = $err->getMessage()."\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";
             $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
             throw new AppwriteException($err->getType(), $msg);
@@ -532,7 +523,7 @@ class Certificates extends Action
     private function getMainDomain(): ?string
     {
         $envDomain = System::getEnv('_APP_DOMAIN', '');
-        if (!empty($envDomain) && $envDomain !== 'localhost') {
+        if (! empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
         }
 
@@ -542,24 +533,22 @@ class Certificates extends Action
     /**
      * Method to make sure information about error is delivered to administrator.
      *
-     * @param string $domain Domain that caused the error
-     * @param string $errorMessage Verbose error message
-     * @param int $attempt How many times it failed already
-     * @param MailPublisher $publisherForMails
-     * @param array $plan
-     * @return void
+     * @param  string  $domain  Domain that caused the error
+     * @param  string  $errorMessage  Verbose error message
+     * @param  int  $attempt  How many times it failed already
+     *
      * @throws Exception
      */
     private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan): void
     {
         // Log error into console
-        Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
+        Console::warning('Cannot renew domain ('.$domain.') on attempt no. '.$attempt.' certificate: '.$errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback('en');
 
         // Send mail to administrator mail
-        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
+        $template = Template::fromFile(__DIR__.'/../../../../app/config/locale/templates/email-certificate-failed.tpl');
         $template->setParam('{{domain}}', $domain);
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
@@ -578,15 +567,15 @@ class Certificates extends Action
             'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
         ];
 
-        $subject = $locale->getText("emails.certificate.subject");
-        $preview = $locale->getText("emails.certificate.preview");
+        $subject = $locale->getText('emails.certificate.subject');
+        $preview = $locale->getText('emails.certificate.preview');
 
         $publisherForMails->enqueue(new MailMessage(
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,
             template: MAIL_TEMPLATE_CERTIFICATE_FAILED,
-            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+            bodyTemplate: __DIR__.'/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $body,
             preview: $preview,
             variables: $emailVariables,

@@ -51,9 +51,13 @@ use Utopia\Validator\Hostname;
 class Migrations extends Action
 {
     protected ?Database $dbForProject;
+
     protected ?Database $dbForPlatform;
+
     protected ?Device $deviceForMigrations;
+
     protected ?Device $deviceForFiles;
+
     protected ?Document $project;
 
     protected ?Document $sourceProject = null;
@@ -64,9 +68,10 @@ class Migrations extends Action
     protected mixed $getDatabasesDB;
 
     /**
-     * @var callable(Document $databaseDSN): Database
+     * @var callable(Document): Database
      */
     protected mixed $getProjectDB;
+
     protected array $plan = [];
 
     /**
@@ -209,37 +214,38 @@ class Migrations extends Action
             // Trust DB fast path only when the source URL targets this cluster's host
             // (env-configured or this project's verified custom API domain).
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
-            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
-            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+            $publicDomain = parse_url('http://'.System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
+            $internalHost = parse_url('http://'.System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
 
             $allowedHosts = array_filter([
                 $publicDomain,
-                $publicDomain !== '' ? '*.' . $publicDomain : null,
+                $publicDomain !== '' ? '*.'.$publicDomain : null,
                 $internalHost,
             ]);
 
-            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+            if (is_string($sourceHost) && ! $this->sourceProject->isEmpty()) {
                 $rule = $this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
+                    Query::equal('protocol', ['http']),
                     Query::equal('type', ['api']),
                     Query::equal('status', [RULE_STATUS_VERIFIED]),
                     Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
                 ]);
-                if (!$rule->isEmpty()) {
+                if (! $rule->isEmpty()) {
                     $allowedHosts[] = $sourceHost;
                 }
             }
 
             $isLocalEndpoint = is_string($sourceHost)
-                && !empty($allowedHosts)
+                && ! empty($allowedHosts)
                 && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
 
-            $isLocalSource = !$this->sourceProject->isEmpty()
+            $isLocalSource = ! $this->sourceProject->isEmpty()
                 && $isLocalEndpoint
-                && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
+                && (! $isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
@@ -249,8 +255,7 @@ class Migrations extends Action
                 throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
         }
-        $getDatabasesDB = fn (Document $database): Database =>
-                $this->getDatabasesDBForProject($database);
+        $getDatabasesDB = fn (Document $database): Database => $this->getDatabasesDBForProject($database);
         $queries = [];
         if ($source === SourceAppwrite::getName() && in_array($destination, [DestinationCSV::getName(), DestinationJSON::getName()])) {
             $queries = Query::parseQueries($migrationOptions['queries'] ?? []);
@@ -469,7 +474,7 @@ class Migrations extends Action
             'scopes' => $this->getAPIKeyScopes(),
         ]);
 
-        return API_KEY_EPHEMERAL . '_' . $apiKey;
+        return API_KEY_EPHEMERAL.'_'.$apiKey;
     }
 
     /**
@@ -502,7 +507,7 @@ class Migrations extends Action
                 throw new \Exception('_APP_MIGRATION_HOST is not set');
             }
 
-            $endpoint = 'http://' . $host . '/v1';
+            $endpoint = 'http://'.$host.'/v1';
 
             $credentials = $migration->getAttribute('credentials', []);
 
@@ -559,9 +564,10 @@ class Migrations extends Action
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
 
-            if (!empty($sourceErrors) || ! empty($destinationErrors)) {
+            if (! empty($sourceErrors) || ! empty($destinationErrors)) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
+
                 return;
             }
 
@@ -576,9 +582,9 @@ class Migrations extends Action
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
-            Console::error('Message: ' . $th->getMessage());
-            Console::error('File: ' . $th->getFile());
-            Console::error('Line: ' . $th->getLine());
+            Console::error('Message: '.$th->getMessage());
+            Console::error('File: '.$th->getFile());
+            Console::error('Line: '.$th->getLine());
             Console::error($th->getTraceAsString());
 
             $migration->setAttribute('status', 'failed');
@@ -655,7 +661,7 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 if ($migration->getAttribute('status', '') === 'failed') {
-                    Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
+                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
                     $source?->error();
                     $destination?->error();
@@ -722,14 +728,6 @@ class Migrations extends Action
 
     /**
      * Handle actions to be performed when a CSV export migration is successfully completed
-     *
-     * @param Document $project
-     * @param Document $migration
-     * @param MailPublisher $publisherForMails
-     * @param Realtime $queueForRealtime
-     * @param array $platform
-     * @param Authorization $authorization
-     * @return void
      */
     protected function handleDataExportComplete(
         Document $project,
@@ -741,7 +739,7 @@ class Migrations extends Action
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
-        $filename = $options['filename'] ?? 'export_' . \time();
+        $filename = $options['filename'] ?? 'export_'.\time();
         $user = $this->resolveExportUser($migration);
 
         $bucket = $this->dbForPlatform->getDocument('buckets', $bucketId);
@@ -750,7 +748,7 @@ class Migrations extends Action
         }
 
         $extension = $migration->getAttribute('destination') === DestinationJSON::getName() ? '.json' : '.csv';
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $migration->getId() . $extension);
+        $path = $this->deviceForFiles->getPath($bucketId.'/'.$migration->getId().$extension);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
@@ -791,11 +789,11 @@ class Migrations extends Action
         }
 
         $permissions = [];
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             $permissions[] = Permission::read(Role::user($user->getId()));
         }
 
-        $this->dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), new Document([
+        $this->dbForPlatform->createDocument('bucket_'.$bucket->getSequence(), new Document([
             '$id' => $fileId,
             '$permissions' => $permissions,
             'bucketId' => $bucket->getId(),
@@ -815,7 +813,7 @@ class Migrations extends Action
             'openSSLTag' => null,
             'openSSLIV' => null,
             'search' => \implode(' ', [$fileId, $filename]),
-            'metadata' => ['content_type' => $mime]
+            'metadata' => ['content_type' => $mime],
         ]));
 
         Console::info("Created file document in bucket: $fileId");
@@ -862,25 +860,27 @@ class Migrations extends Action
         }
 
         if ($userInternalId === null || $userInternalId === '') {
-            Console::warning('Finalizing export without a user permission for migration ' . $migration->getId() . ': no initiating user.');
+            Console::warning('Finalizing export without a user permission for migration '.$migration->getId().': no initiating user.');
+
             return new Document([]);
         }
 
         $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
-        if (!$valid) {
+        if (! $valid) {
             $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            Console::error($error->getMessage().' Migration: '.$migration->getId());
             $this->reportError($error, $migration);
+
             return new Document([]);
         }
 
         $user = $this->dbForPlatform->findOne('users', [
-            Query::equal('$sequence', [$userInternalId])
+            Query::equal('$sequence', [$userInternalId]),
         ]);
 
         if ($user->isEmpty()) {
             $error = new \RuntimeException('Initiating user not found for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            Console::error($error->getMessage().' Migration: '.$migration->getId());
             $this->reportError($error, $migration);
         }
 
@@ -912,17 +912,17 @@ class Migrations extends Action
                 sizeMB: $sizeMB,
             );
         } catch (\Throwable $error) {
-            Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
+            Console::error('Failed to send the export notification for migration '.$migration->getId().': '.$error->getMessage());
             $this->reportError($error, $migration);
         }
     }
 
     /**
-     * @param array<string, mixed> $extras
+     * @param  array<string, mixed>  $extras
      */
     protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
     {
-        if (!\is_callable($this->logError)) {
+        if (! \is_callable($this->logError)) {
             return;
         }
 
@@ -930,7 +930,7 @@ class Migrations extends Action
             ($this->logError)(
                 $error,
                 'appwrite-worker',
-                'appwrite-queue-' . self::getName(),
+                'appwrite-queue-'.self::getName(),
                 [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source', ''),
@@ -939,22 +939,19 @@ class Migrations extends Action
                 ]
             );
         } catch (\Throwable $loggingError) {
-            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+            Console::error('Failed to report the migration error: '.$loggingError->getMessage());
         }
     }
 
     /**
      * Send CSV export notification email
      *
-     * @param bool $success Whether the export was successful
-     * @param Document $project
-     * @param Document $user The user who triggered the operation
-     * @param array $options Migration options
-     * @param MailPublisher $publisherForMails
-     * @param array $platform
-     * @param string $downloadUrl Download URL for successful exports
-     * @param float $sizeMB File size in MB for failed exports
-     * @return void
+     * @param  bool  $success  Whether the export was successful
+     * @param  Document  $user  The user who triggered the operation
+     * @param  array  $options  Migration options
+     * @param  string  $downloadUrl  Download URL for successful exports
+     * @param  float  $sizeMB  File size in MB for failed exports
+     *
      * @throws \Exception
      */
     protected function sendExportEmail(
@@ -968,12 +965,13 @@ class Migrations extends Action
         string $downloadUrl = '',
         float $sizeMB = 0.0,
     ): void {
-        if (!($options['notify'] ?? false)) {
+        if (! ($options['notify'] ?? false)) {
             return;
         }
 
         if ($user->isEmpty()) {
             Console::warning("User not found for CSV export notification: {$user->getSequence()}");
+
             return;
         }
 
@@ -996,8 +994,8 @@ class Migrations extends Action
 
         // Build email body using appropriate template
         $templatePath = $success
-            ? __DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl'
-            : __DIR__ . '/../../../../app/config/locale/templates/email-export-failed.tpl';
+            ? __DIR__.'/../../../../app/config/locale/templates/email-inner-base.tpl'
+            : __DIR__.'/../../../../app/config/locale/templates/email-export-failed.tpl';
 
         $message = Template::fromFile($templatePath)
             ->setParam('{{body}}', $body, escapeHtml: false)
@@ -1009,7 +1007,7 @@ class Migrations extends Action
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
             ->setParam('{{type}}', $exportType)
-            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+            ->setParam('{{size}}', $success ? '' : (string) $sizeMB);
 
         if ($success) {
             $message
@@ -1038,7 +1036,7 @@ class Migrations extends Action
             name: $user->getAttribute('name', $user->getAttribute('email')),
             subject: $subject,
             template: MAIL_TEMPLATE_DATA_EXPORT,
-            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+            bodyTemplate: __DIR__.'/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $emailBody,
             preview: $preview,
             variables: $emailVariables,
@@ -1046,15 +1044,11 @@ class Migrations extends Action
             platform: $platform,
         ));
 
-        Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
+        Console::info("CSV export {$emailType} notification email sent to ".$user->getAttribute('email'));
     }
 
     /**
      * Sanitize migration errors, removing sensitive information like stack traces
-     *
-     * @param array $sourceErrors
-     * @param array $destinationErrors
-     * @return array
      */
     protected function sanitizeErrors(
         array $sourceErrors,

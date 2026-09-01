@@ -8,8 +8,12 @@ use Appwrite\Platform\Modules\Proxy\Http\Rules\Function\Create as CreateFunction
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Get as GetRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect\Create as CreateRedirectRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Site\Create as CreateSiteRule;
+use Appwrite\Platform\Modules\Proxy\Http\Rules\SMTP\Create as CreateSMTPRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Status\Update as UpdateRuleStatus;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\XList as ListRules;
+use Appwrite\Platform\Modules\Proxy\Http\SMTP\Files\Get as GetSMTPFile;
+use Appwrite\Platform\Modules\Proxy\Http\SMTP\Messages\Create as CreateSMTPMessage;
+use Appwrite\Platform\Modules\Proxy\Http\SMTP\RecipientResolutions\Create as CreateSMTPRecipientResolution;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -22,10 +26,16 @@ class Http extends Service
         $this->addAction(CreateAPIRule::getName(), new CreateAPIRule());
         $this->addAction(CreateSiteRule::getName(), new CreateSiteRule());
         $this->addAction(CreateFunctionRule::getName(), new CreateFunctionRule());
+        $this->addAction(CreateSMTPRule::getName(), new CreateSMTPRule());
         $this->addAction(CreateRedirectRule::getName(), new CreateRedirectRule());
         $this->addAction(GetRule::getName(), new GetRule());
         $this->addAction(ListRules::getName(), new ListRules());
         $this->addAction(DeleteRule::getName(), new DeleteRule());
         $this->addAction(UpdateRuleStatus::getName(), new UpdateRuleStatus());
+
+        // SMTP gateway ingress
+        $this->addAction(CreateSMTPRecipientResolution::getName(), new CreateSMTPRecipientResolution());
+        $this->addAction(CreateSMTPMessage::getName(), new CreateSMTPMessage());
+        $this->addAction(GetSMTPFile::getName(), new GetSMTPFile());
     }
 }

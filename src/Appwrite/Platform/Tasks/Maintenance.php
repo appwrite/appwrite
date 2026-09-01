@@ -40,17 +40,17 @@ class Maintenance extends Action
     public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes): void
     {
         Console::title('Maintenance V1');
-        Console::success(APP_NAME . ' maintenance process v1 has started');
+        Console::success(APP_NAME.' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
-        $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
+        $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); // 100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
-        $now = new \DateTime();
+        $now = new DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
+        $next = new DateTime($now->format("Y-m-d $jobInitTime"));
         $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
@@ -58,7 +58,7 @@ class Maintenance extends Action
          * If time passed for the target day.
          */
         if ($delay <= 0) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
+            $next->add(DateInterval::createFromDateString('1 days'));
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
@@ -68,7 +68,7 @@ class Maintenance extends Action
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
             // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
+            $dateInterval = DateInterval::createFromDateString('30 days');
             $before30days = (new DateTime())->sub($dateInterval);
 
             $dbForPlatform->skipFilters(
@@ -94,7 +94,7 @@ class Maintenance extends Action
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
-                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new DateTime(), -1 * $usageStatsRetentionHourly),
             ));
 
             $this->notifyDeleteConnections($publisherForDeletes);
@@ -105,7 +105,7 @@ class Maintenance extends Action
         };
 
         if ($type === 'loop') {
-            Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
+            Console::info('Setting loop start time to '.$next->format('Y-m-d H:i:s.v').'. Delaying for '.$delay.' seconds.');
 
             Console::loop(function () use ($action) {
                 $action();
@@ -119,7 +119,7 @@ class Maintenance extends Action
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_REALTIME,
-            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -60),
+            datetime: DatabaseDateTime::addSeconds(new DateTime(), -60),
         ));
     }
 
@@ -141,10 +141,11 @@ class Maintenance extends Action
 
         if (\count($documents) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
+
             return;
         }
 
-        Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
+        Console::info("[{$time}] Found ".\count($documents).' certificates for renewal, scheduling jobs.');
 
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
@@ -155,7 +156,8 @@ class Maintenance extends Action
                 $dbForPlatform->getDocument('rules', md5($domain)) :
                     $dbForPlatform->findOne('rules', [
                         Query::equal('domain', [$domain]),
-                        Query::limit(1)
+                        Query::equal('protocol', ['http']),
+                        Query::limit(1),
                     ]);
 
             if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
@@ -165,7 +167,7 @@ class Maintenance extends Action
             // Respect the operator opt-out. If Appwrite would not auto-issue this
             // subdomain today, it must not auto-renew it either. Keep the owner
             // gate so custom-domain renewals are never skipped.
-            if ($rule->getAttribute('owner') === 'Appwrite' && !$certificateIssuer->isAutoIssueEnabled($rule)) {
+            if ($rule->getAttribute('owner') === 'Appwrite' && ! $certificateIssuer->isAutoIssueEnabled($rule)) {
                 continue;
             }
 
@@ -187,7 +189,7 @@ class Maintenance extends Action
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
-            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+            datetime: DatabaseDateTime::addSeconds(new DateTime(), -1 * $interval),
         ));
     }
 
@@ -195,7 +197,7 @@ class Maintenance extends Action
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
-            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+            datetime: DatabaseDateTime::addSeconds(new DateTime(), -1 * $interval),
         ));
     }
 }

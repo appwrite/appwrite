@@ -21,6 +21,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Smtp\Storage as SmtpStorage;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
@@ -178,8 +179,8 @@ $container->set('usageConnection', function () {
     ));
 
     $defaultConnection = 'http://appwrite:'
-        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
-        . '@clickhouse:8123/appwrite';
+        .rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        .'@clickhouse:8123/appwrite';
 
     $connection = System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection);
     if ($connection === '') {
@@ -245,8 +246,9 @@ $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
     $database = null;
 
     return function (?Document $project = null) use ($databaseFactory, &$database) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+        if ($database !== null && $project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getSequence());
+
             return $database;
         }
 
@@ -281,21 +283,21 @@ $container->set('redis', function () {
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
-    $redis = new \Redis();
+    $redis = new Redis();
     @$redis->pconnect($host, (int) $port);
     if ($pass) {
         $redis->auth($pass);
     }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
 });
 
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
+    fn (Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
 ), ['pools']);
 
-$container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
+$container->set('timelimit', fn (Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
@@ -317,8 +319,8 @@ function getDevice(string $root, string $connection = ''): Device
             $accessSecret = $dsn->getPassword() ?? '';
             $bucket = $dsn->getPath() ?? '';
             $region = $dsn->getParam('region');
-        } catch (\Throwable $e) {
-            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        } catch (Throwable $e) {
+            Console::warning($e->getMessage().'Invalid DSN. Defaulting to Local device.');
         }
     } else {
         $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
@@ -343,7 +345,7 @@ function getDevice(string $root, string $connection = ''): Device
         case DeviceType::AwsS3:
             $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
             if (! empty($endpoint)) {
-                $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+                $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '').\ltrim($root, '/');
 
                 return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
             }
@@ -368,6 +370,12 @@ $container->set('geoClient', function () {
 
     return empty($endpoint) || empty($secret) ? null : GeoClient::pooled($endpoint, $secret);
 }, []);
+
+$container->set(
+    'storageForSmtp',
+    fn () => new SmtpStorage(),
+    []
+);
 
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 
