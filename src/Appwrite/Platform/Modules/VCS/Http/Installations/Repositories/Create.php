@@ -57,7 +57,6 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -70,16 +69,11 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Document $user,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForPlatform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

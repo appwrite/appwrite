@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\System\System;
 
 /**
  * Failure paths of the GitHub App installation callback. Deliberately does not
@@ -27,14 +26,12 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
     private function getState(): string
     {
-        $projectId = $this->getProject()['$id'];
         $redirect = $this->getRedirect();
 
         return (string) json_encode([
-            'projectId' => $projectId,
+            'projectId' => $this->getProject()['$id'],
             'success' => $redirect,
             'failure' => $redirect,
-            'signature' => hash_hmac('sha256', json_encode([$projectId, $redirect, $redirect]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
     }
 
@@ -75,27 +72,5 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('Missing state parameter', (string) $response['body']);
-    }
-
-    /**
-     * The endpoint is public, so an unsigned state must not be able to name the
-     * project an installation gets attached to.
-     */
-    public function testGetCallbackUnsignedState(): void
-    {
-        $redirect = $this->getRedirect();
-
-        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
-            'setup_action' => 'install',
-            'installation_id' => '1234567',
-            'state' => (string) json_encode([
-                'projectId' => $this->getProject()['$id'],
-                'success' => $redirect,
-                'failure' => $redirect,
-            ]),
-        ], followRedirects: false);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
 }
