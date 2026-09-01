@@ -90,7 +90,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day2-blog',
         typeLabel: 'Blog',
         title: 'PostgreSQL comes to Appwrite',
-        href: '/blog/post/announcing-native-postgresql-databases',
+        href: '/blog/post/appwrite-now-speaks-postgresql',
         actionLabel: 'Read article',
       },
       {
