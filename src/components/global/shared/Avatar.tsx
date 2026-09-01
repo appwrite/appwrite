@@ -84,7 +84,7 @@ export function InitialsAvatar({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-medium text-zinc-600 dark:bg-accent dark:text-muted-foreground',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 font-medium leading-none text-zinc-600 dark:bg-accent dark:text-muted-foreground',
         sizeClasses[size],
         className,
       )}
@@ -153,7 +153,7 @@ export function PhotoAvatar({
   return (
     <span
       className={cn(
-        'relative inline-flex shrink-0 rounded-full bg-zinc-200 dark:bg-accent',
+        'relative flex shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-accent',
         sizeClasses[size],
         className,
       )}
@@ -175,7 +175,7 @@ export function PhotoAvatar({
         }}
         onError={() => setFailed(true)}
         className={cn(
-          'relative z-[1] h-full w-full rounded-full object-cover motion-reduce:transition-none',
+          'relative z-[1] h-full w-full min-h-0 min-w-0 rounded-full object-cover motion-reduce:transition-none',
           'transition-opacity duration-300 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',
         )}
