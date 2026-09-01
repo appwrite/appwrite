@@ -596,9 +596,10 @@ export function useCreateOrganizationApp(
       const appId = input.slug?.trim()
         ? sanitizeAppId(input.slug) || ID.unique()
         : ID.unique()
+      // ?? (not ||) so an explicit empty description stays empty.
       const description = (
-        input.description ||
-        input.shortDescription ||
+        input.description ??
+        input.shortDescription ??
         input.name
       ).trim()
       const tagline = (input.shortDescription || input.name).trim()

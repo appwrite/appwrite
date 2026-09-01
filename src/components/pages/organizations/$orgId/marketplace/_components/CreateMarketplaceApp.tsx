@@ -74,7 +74,8 @@ export function CreateMarketplaceApp({
     await onCreate({
       name: name.trim(),
       shortDescription: shortDescription.trim(),
-      description: shortDescription.trim(),
+      // Only the tagline is set on creation; the description starts empty.
+      description: '',
       category,
     })
   }
