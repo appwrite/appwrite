@@ -59,6 +59,8 @@ export type MarketplaceApp = {
   type?: string
   deviceFlow?: boolean
   teamId?: string
+  /** Empty when the app does not allow installation. */
+  installationScopes: string[]
 }
 
 export const MARKETPLACE_CATEGORY_LABELS: Record<

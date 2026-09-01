@@ -161,12 +161,14 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              <Button
-                disabled={installMutation.isPending}
-                onClick={() => installMutation.mutate()}
-              >
-                {t('Install app')}
-              </Button>
+              {mapped.installationScopes.length > 0 && (
+                <Button
+                  disabled={installMutation.isPending}
+                  onClick={() => installMutation.mutate()}
+                >
+                  {t('Install app')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
