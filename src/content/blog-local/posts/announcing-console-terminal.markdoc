@@ -7,7 +7,7 @@ cover: /images/blog-local/announcing-console-terminal/cover.avif
 timeToRead: 7
 author: eldad-fux
 category: product, announcement
-featured: true
+featured: false
 faqs:
   - question: "What is Appwrite Terminal?"
     answer: "Appwrite Terminal is a built-in terminal panel at the bottom of every project in the Appwrite Console. It runs the Appwrite CLI (version 22.1.2) in your browser using an in-memory Node.js runtime, so you can call `appwrite` commands against the project you are viewing without installing the CLI locally or switching to another window."

@@ -196,18 +196,17 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "announcing-native-postgresql-databases",
-    "href": "/blog/post/announcing-native-postgresql-databases",
-    "title": "Announcing native PostgreSQL databases: The full engine, provisioned in minutes",
+    "slug": "appwrite-now-speaks-postgresql",
+    "href": "/blog/post/appwrite-now-speaks-postgresql",
+    "title": "Appwrite now speaks Postgres",
     "description": "Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.",
     "date": "2026-09-01",
     "lastUpdated": "2026-09-01",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog/announcing-native-postgresql-databases/cover.avif",
+    "featured": true,
+    "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },
   {
@@ -277,7 +276,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "eldad-fux",
     "category": "product, announcement",
-    "featured": true,
+    "featured": false,
     "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
     "hasCover": true
   },

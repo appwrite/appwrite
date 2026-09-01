@@ -82,22 +82,22 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Explore PostgreSQL',
-      href: '/docs/products/databases',
+      href: '/docs/products/databases/postgresql',
       external: false,
     },
     resources: [
       {
         id: 'day2-blog',
         typeLabel: 'Blog',
-        title: 'PostgreSQL comes to Appwrite',
-        href: '/blog/post/announcing-native-postgresql-databases',
+        title: 'Appwrite now speaks Postgres',
+        href: '/blog/post/appwrite-now-speaks-postgresql',
         actionLabel: 'Read article',
       },
       {
         id: 'day2-docs',
         typeLabel: 'Docs',
         title: 'PostgreSQL documentation',
-        href: '/docs/products/databases',
+        href: '/docs/products/databases/postgresql',
         actionLabel: 'Visit docs',
       },
     ],

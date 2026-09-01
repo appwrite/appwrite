@@ -483,8 +483,10 @@ export function MarketingProductsMobileNav() {
   const { pathname } = useLocation()
   const activeNavItemId = useMemo(() => getActiveNavItemId(pathname), [pathname])
 
+  // No horizontal padding on the accordion: the trigger's own px-3 has to line
+  // up with the sibling MarketingMobileNavLink rows, which sit flush in the nav.
   return (
-    <Accordion type="single" collapsible className="px-1">
+    <Accordion type="single" collapsible>
       <AccordionItem value="products" className="border-none">
         <AccordionTrigger
           className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground"

@@ -91,6 +91,7 @@ import {
 } from './src/lib/runtime-config-shared.ts'
 import {
   applyNoIndexResponseHeaders,
+  getCanonicalHostRedirectResponse,
   getRequestHostFromHeaders,
   isSeoIndexableHost,
 } from './src/lib/seo/indexing.ts'
@@ -175,6 +176,11 @@ function htmlResponse(
   html: string,
   headers: Record<string, string>,
 ): Response {
+  // Prerendered HTML (/init, marketing pages) is served from Bun routes and
+  // never reaches TanStack host-canonical middleware.
+  const canonicalRedirect = getCanonicalHostRedirectResponse(req)
+  if (canonicalRedirect) return canonicalRedirect
+
   return withSeoIndexingHeaders(
     req,
     new Response(injectRuntimeConfig(html), { headers }),
@@ -869,6 +875,9 @@ async function initializeServer() {
       // get the runtime config stamped in (the SSR shell emits a placeholder).
       '/*': async (req: Request) => {
         try {
+          const canonicalRedirect = getCanonicalHostRedirectResponse(req)
+          if (canonicalRedirect) return canonicalRedirect
+
           const url = new URL(req.url)
           // Missing hashed build assets must not fall through to the SPA HTML
           // shell. Browsers reject HTML as a module script (MIME type error),

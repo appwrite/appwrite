@@ -542,13 +542,18 @@ export function ConsoleHeader({
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] p-0">
-                <SheetHeader className="border-b border-border px-4 py-4">
+                <SheetHeader className="shrink-0 border-b border-border px-4 py-4">
                   <SheetTitle className="text-start">
                     <AppwriteWordmark className="h-5" aria-label="Appwrite" />
                   </SheetTitle>
                 </SheetHeader>
+                {/* The sheet is a fixed, full-height flex column with no scroll
+                    port of its own, so the nav owns the overflow - otherwise the
+                    expanded Products panel runs past the viewport unreachably.
+                    Block, not flex: as flex items the h-10 rows shrink to fit a
+                    short viewport instead of letting the nav scroll. */}
                 <nav
-                  className="flex flex-col p-2 text-start"
+                  className="overlay-scrollbar overscroll-y-contain min-h-0 flex-1 overflow-y-auto p-2 text-start"
                   aria-label={headerCopy.marketingNav.websiteNavigation}
                 >
                   {marketingNavItems.map((item) =>
