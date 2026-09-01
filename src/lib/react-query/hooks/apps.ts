@@ -63,6 +63,8 @@ export async function fetchOrganizationAppsRaw(organizationId: string) {
 function marketplaceBaseQueries() {
   return [
     Query.equal('enabled', true),
+    // Every marketplace list only shows Appwrite-curated official apps.
+    Query.contains('labels', 'official'),
     // DCR-registered OAuth clients must never surface in marketplace
     // listings. The isNull branch keeps unlabeled apps included (notContains
     // alone drops rows with empty labels).

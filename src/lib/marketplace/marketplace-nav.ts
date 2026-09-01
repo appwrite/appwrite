@@ -1,10 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  // BookOpen and FileText back the commented-out sidebar links below.
+  // BookOpen and FileText back the commented-out sidebar links below;
+  // LayoutGrid backs the commented-out Catalog nav item.
   // BookOpen,
   Compass,
   // FileText,
-  LayoutGrid,
+  // LayoutGrid,
   Package,
   Plus,
 } from 'lucide-react'
@@ -58,16 +59,16 @@ export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
           label: 'Explore',
           icon: Compass,
           keywords: ['explore', 'overview', 'home', 'discover', 'featured'],
-          description:
-            'Official apps, suggested picks, and browse by category.',
+          description: 'Browse official apps, or explore by category.',
         },
-        {
-          id: 'catalog',
-          label: 'Catalog',
-          icon: LayoutGrid,
-          keywords: ['catalog', 'browse', 'all', 'integrations'],
-          description: 'Explore all apps available in the marketplace.',
-        },
+        // Hidden for now — Explore already lists every published app.
+        // {
+        //   id: 'catalog',
+        //   label: 'Catalog',
+        //   icon: LayoutGrid,
+        //   keywords: ['catalog', 'browse', 'all', 'integrations'],
+        //   description: 'Explore all apps available in the marketplace.',
+        // },
       ],
     },
     {

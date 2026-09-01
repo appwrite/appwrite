@@ -757,8 +757,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
   'Failed to mount payment form. Please try again.': '支払いフォームの読み込みに失敗しました。もう一度お試しください。',
   'Featured apps, popular integrations, and browse by category.': '注目のアプリ、人気のインテグレーション、カテゴリ別閲覧。',
-  'Official apps, suggested picks, and browse by category.':
-    '公式アプリ、おすすめアプリ、カテゴリ別閲覧。',
+  'Browse official apps, or explore by category.':
+    '公式アプリを閲覧、またはカテゴリ別に探索。',
   'Find integrations grouped by what they help you build.': '構築内容に応じてグループ分けされたインテグレーションを見つけましょう。',
   'For business accounts, enter your tax identification number': '法人アカウントの場合は、税務識別番号を入力してください',
   'For more details on our plans, visit our': 'プランの詳細については、次をご覧ください:',
@@ -1001,11 +1001,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   No: 'いいえ',
   None: 'なし',
   Official: '公式',
-  Suggested: 'おすすめ',
-  'Apps built and maintained by the Appwrite team.':
-    'Appwrite チームが開発・保守するアプリ。',
-  "Hand-picked apps we think you'll find useful.":
-    '役立つと思われる厳選アプリ。',
+  'App makers can contact us to get their integration published.':
+    'アプリ開発者はお問い合わせいただければ、インテグレーションの公開をご案内します。',
+  'Add your first app to get started.':
+    '最初のアプリを追加して始めましょう。',
   Offline: 'オフライン',
   Online: 'オンライン',
   Open: '開く',

@@ -23,7 +23,6 @@ import {
   useCreateOrganizationApp,
   useMarketplaceCatalog,
   useMarketplaceCatalogPage,
-  useMarketplaceLabeledApps,
   useMarketplaceNavCounts,
   useOrganizationApps,
   useOrganizations,
@@ -98,20 +97,12 @@ export function View() {
   const activeCategory = activeNavId.startsWith('category:')
     ? (activeNavId.slice('category:'.length) as MarketplaceAppCategory)
     : undefined
-  // Catalog and category pages are server-paginated; other lists paginate client-side.
-  const isBrowseNav = activeNavId === 'catalog' || activeCategory !== undefined
+  // Explore, catalog, and category pages are server-paginated; other lists
+  // paginate client-side.
+  const isBrowseNav =
+    isExplore || activeNavId === 'catalog' || activeCategory !== undefined
   const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
 
-  const {
-    apps: officialApps,
-    total: officialTotal,
-    isLoading: officialLoading,
-  } = useMarketplaceLabeledApps(orgId, 'official', { teamNamesById })
-  const {
-    apps: suggestedApps,
-    total: suggestedTotal,
-    isLoading: suggestedLoading,
-  } = useMarketplaceLabeledApps(orgId, 'suggested', { teamNamesById })
   const { catalogTotal, categoryTotals } = useMarketplaceNavCounts(orgId)
   const {
     apps: browseApps,
@@ -170,13 +161,11 @@ export function View() {
 
   const listedApps = useMemo(() => {
     if (searchActive) return searchResults
-    if (isExplore) return []
     if (isBrowseNav) return browseApps
     return getAppsForMarketplaceNav(activeNavId, catalogApps, ownedApps)
   }, [
     searchActive,
     searchResults,
-    isExplore,
     isBrowseNav,
     browseApps,
     activeNavId,
@@ -203,11 +192,7 @@ export function View() {
         ).length,
       )
     }
-    if (navId === 'explore') {
-      // Explore shows the curated official + suggested sections only.
-      return formatMarketplaceCount(officialTotal + suggestedTotal)
-    }
-    if (navId === 'catalog') {
+    if (navId === 'explore' || navId === 'catalog') {
       return formatMarketplaceCount(catalogTotal)
     }
     if (navId === 'my-apps') return String(ownedApps.length)
@@ -260,57 +245,29 @@ export function View() {
     }
   }
 
-  const exploreHasContent =
-    officialApps.length > 0 || suggestedApps.length > 0 || catalogTotal > 0
-
   const emptyTitle = searchActive
     ? t('No apps match your search')
     : activeNavId === 'my-apps'
       ? t('No apps published yet')
-      : t('No apps in this section')
+      : isExplore
+        ? t('Marketplace is empty')
+        : t('No apps in this section')
 
   const emptyDescription = searchActive
     ? t('Try adjusting or clearing your search.')
     : activeNavId === 'my-apps'
-      ? t('Add your first app to share it with other organizations.')
-      : t('Published apps from other organizations will appear here.')
+      ? t('Add your first app to get started.')
+      : t('App makers can contact us to get their integration published.')
 
   const mainContent = () => {
-    const exploreLoading =
-      (officialLoading || suggestedLoading) && !exploreHasContent
     const browseLoading2 =
       !searchActive && isBrowseNav && browseLoading && browseApps.length === 0
 
-    if (listLoading || browseLoading2 || (isExplore && exploreLoading)) {
+    if (listLoading || browseLoading2) {
       return (
         <div className="flex min-h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      )
-    }
-
-    if (isExplore && !searchActive) {
-      if (!exploreHasContent) {
-        return (
-          <EmptyState
-            icon={Store}
-            title={t('Marketplace is empty')}
-            description={t(
-              'Apps will appear here when other organizations publish listings.',
-            )}
-            variant="card"
-          />
-        )
-      }
-      return (
-        <MarketplaceExplore
-          officialApps={officialApps}
-          suggestedApps={suggestedApps}
-          catalogTotal={catalogTotal}
-          categoryCounts={categoryTotals}
-          onAppClick={openDetail}
-          onNavigate={handleNavChange}
-        />
       )
     }
 
@@ -368,6 +325,14 @@ export function View() {
             itemLabel={t('apps')}
             className="mt-6"
           />
+        )}
+        {isExplore && !searchActive && (
+          <div className="mt-10">
+            <MarketplaceExplore
+              categoryCounts={categoryTotals}
+              onNavigate={handleNavChange}
+            />
+          </div>
         )}
       </div>
     )

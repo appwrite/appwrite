@@ -493,8 +493,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to upload logo': 'העלאת הלוגו נכשלה',
   'Failed to validate payment': 'אימות התשלום נכשל',
   'Failed to view invoice': 'הצגת החשבונית נכשלה',
-  'Official apps, suggested picks, and browse by category.':
-    'אפליקציות רשמיות, המלצות נבחרות ועיון לפי קטגוריה.',
+  'Browse official apps, or explore by category.':
+    'עיינו באפליקציות רשמיות או חקרו לפי קטגוריה.',
   'Featured apps, popular integrations, and browse by category.':
     'אפליקציות מומלצות, אינטגרציות פופולריות ועיון לפי קטגוריה.',
   Feedback: 'משוב',
@@ -726,11 +726,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.':
     'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
   Official: 'רשמי',
-  Suggested: 'מומלצות',
-  'Apps built and maintained by the Appwrite team.':
-    'אפליקציות שנבנו ומתוחזקות על ידי צוות Appwrite.',
-  "Hand-picked apps we think you'll find useful.":
-    'אפליקציות נבחרות שלדעתנו תמצאו שימושיות.',
+  'App makers can contact us to get their integration published.':
+    'יוצרי אפליקציות מוזמנים לפנות אלינו כדי לפרסם את האינטגרציה שלהם.',
+  'Add your first app to get started.':
+    'הוסיפו את האפליקציה הראשונה שלכם כדי להתחיל.',
   Offline: 'לא מקוון',
   'One line summary': 'תקציר בשורה אחת',
   'One-time display': 'תצוגה חד-פעמית',
