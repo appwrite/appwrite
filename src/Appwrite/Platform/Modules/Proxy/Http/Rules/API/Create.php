@@ -87,6 +87,11 @@ class Create extends Action
         Authorization $authorization,
         Bus $bus,
     ) {
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
+
         $this->validateDomainRestrictions($domain, $platform);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

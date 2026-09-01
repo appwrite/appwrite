@@ -101,12 +101,21 @@ services:
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
       - _APP_CONSOLE_SCHEMA
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
+      - _APP_CONSOLE_GITLAB_APP_ID
+      - _APP_CONSOLE_GITLAB_SECRET
+      - _APP_CONSOLE_BITBUCKET_APP_ID
+      - _APP_CONSOLE_BITBUCKET_SECRET
+      - _APP_CONSOLE_GOOGLE_APP_ID
+      - _APP_CONSOLE_GOOGLE_SECRET
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_TEAM_EMAIL
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
@@ -310,6 +319,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -1711,7 +1721,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.7.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.3
     restart: unless-stopped
     user: root
     networks:
@@ -1725,9 +1735,6 @@ services:
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
-      # Sidecars ship with the service and move with it, so they share its tag.
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:1.7.2
-      - WORKLOAD_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/workload-sidecar:1.7.2
 
   mariadb:
     image: mariadb:10.11

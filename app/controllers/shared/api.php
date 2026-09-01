@@ -461,15 +461,18 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
-            // An operator turns a database product off when its engine is not deployed,
-            // so the route is unavailable to everyone, keys and privileged roles included.
-            $productToggles = [
+            // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
+            // installation deploys just the engine backing the platform, so neither is on
+            // until an operator provisions that engine and says so. Closed to everyone --
+            // keys and privileged roles included -- rather than answering and then failing
+            // on the first write with the reason only in the logs.
+            $products = [
                 'documentsdb' => '_APP_DOCUMENTSDB',
                 'vectorsdb' => '_APP_VECTORSDB',
             ];
             if (
-                isset($productToggles[$namespace])
-                && System::getEnv($productToggles[$namespace], 'enabled') !== 'enabled'
+                isset($products[$namespace])
+                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -544,6 +547,12 @@ Http::init()
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
+        $abuseLimit = $route->getLabel('abuse-limit', 0);
+        $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
+        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
+            $abuseLimit *= 100;
+        }
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
         $closestLimit = null;
@@ -554,7 +563,7 @@ Http::init()
             try {
                 $start = $request->getContentRangeStart();
                 $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+                $timeLimit = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600));
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())

@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
+                'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',
@@ -251,6 +260,78 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_GITHUB_APP_ID',
+                'description' => 'GitHub OAuth app client ID used for signing in to the Appwrite console. You can find it in your GitHub OAuth application details. This is separate from _APP_VCS_GITHUB_APP_ID, which powers repository integration rather than console sign-in and holds the numeric GitHub App ID instead of an OAuth client ID.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITHUB_SECRET',
+                'description' => 'GitHub OAuth app client secret used for signing in to the Appwrite console. You can generate secrets in your GitHub OAuth application settings. This is separate from _APP_VCS_GITHUB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_APP_ID',
+                'description' => 'GitLab OAuth application ID used for signing in to the Appwrite console. You can find it in your GitLab application details. This is separate from _APP_VCS_GITLAB_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_SECRET',
+                'description' => 'GitLab OAuth application secret used for signing in to the Appwrite console. You can generate one in your GitLab application settings. This is separate from _APP_VCS_GITLAB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_APP_ID',
+                'description' => 'Bitbucket OAuth consumer key used for signing in to the Appwrite console. You can find it in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_SECRET',
+                'description' => 'Bitbucket OAuth consumer secret used for signing in to the Appwrite console. You can find it alongside the consumer key in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_APP_ID',
+                'description' => 'Google OAuth 2.0 client ID used for signing in to the Appwrite console. You can create one in the Google Cloud Console under APIs & Services > Credentials. Unlike the other console sign-in providers, Google has no _APP_VCS_ counterpart, as it is not a repository host.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_SECRET',
+                'description' => 'Google OAuth 2.0 client secret used for signing in to the Appwrite console. You can find it alongside the client ID in the Google Cloud Console under APIs & Services > Credentials.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',
@@ -342,7 +423,7 @@ return [
             ],
             [
                 'name' => '_APP_WORKER_PER_CORE',
-                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
                 'required' => false,
@@ -609,20 +690,20 @@ return [
             ],
             [
                 'name' => '_APP_DOCUMENTSDB',
-                'description' => 'Enables the DocumentsDB API. It runs on MongoDB, so the installation needs a reachable MongoDB while this is enabled. Set to disabled to leave MongoDB out; the /v1/documentsdb routes then return a service disabled error. Default value is: enabled.',
+                'description' => 'Enables the DocumentsDB API, which runs on MongoDB. The installer does not deploy MongoDB, so provision one and point the _APP_DB_*_DOCUMENTSDB variables at it before enabling this; until then the /v1/documentsdb routes return a service disabled error. Default value is: disabled.',
                 'introduction' => '2.0.0',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
-                'question' => 'Enable DocumentsDB? It requires MongoDB (Y/n)',
+                'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_VECTORSDB',
-                'description' => 'Enables the VectorsDB API. It runs on PostgreSQL, so the installation needs a reachable PostgreSQL while this is enabled. Set to disabled to leave PostgreSQL out; the /v1/vectorsdb routes then return a service disabled error. Default value is: enabled.',
+                'description' => 'Enables the VectorsDB API, which runs on PostgreSQL. The installer does not deploy a PostgreSQL for it, so provision one and point the _APP_DB_*_VECTORSDB variables at it before enabling this; until then the /v1/vectorsdb routes return a service disabled error. Default value is: disabled.',
                 'introduction' => '2.0.0',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
-                'question' => 'Enable VectorsDB? It requires PostgreSQL (Y/n)',
+                'question' => '',
                 'filter' => ''
             ],
         ],

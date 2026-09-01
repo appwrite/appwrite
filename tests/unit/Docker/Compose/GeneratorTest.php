@@ -25,8 +25,6 @@ final class GeneratorTest extends TestCase
         $compose = $this->render([
             'database' => 'mariadb',
             'enableAssistant' => false,
-            'enableDocumentsDB' => false,
-            'enableVectorsDB' => false,
         ]);
 
         $this->assertArrayHasKey('mariadb', $compose['services']);
@@ -39,10 +37,7 @@ final class GeneratorTest extends TestCase
 
     public function testDefaultsToPostgreSQL(): void
     {
-        $compose = $this->render([
-            'enableDocumentsDB' => false,
-            'enableVectorsDB' => false,
-        ]);
+        $compose = $this->render();
 
         $this->assertArrayHasKey('postgresql', $compose['services']);
         $this->assertArrayNotHasKey('mongodb', $compose['services']);
@@ -50,64 +45,6 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-postgresql', $compose['volumes']);
         $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
         $this->assertArrayNotHasKey('appwrite-mariadb', $compose['volumes']);
-    }
-
-    public function testEnabledProductsAddTheirEngine(): void
-    {
-        $compose = $this->render([
-            'database' => 'mariadb',
-            'enableDocumentsDB' => true,
-            'enableVectorsDB' => true,
-        ]);
-
-        $this->assertArrayHasKey('mariadb', $compose['services']);
-        $this->assertArrayHasKey('mongodb', $compose['services'], 'DocumentsDB runs on MongoDB');
-        $this->assertArrayHasKey('postgresql', $compose['services'], 'VectorsDB runs on PostgreSQL');
-        $this->assertArrayHasKey('appwrite-mongodb', $compose['volumes']);
-        $this->assertArrayHasKey('appwrite-postgresql', $compose['volumes']);
-    }
-
-    public function testDisabledProductDropsItsEngine(): void
-    {
-        $compose = $this->render([
-            'database' => 'postgresql',
-            'enableDocumentsDB' => false,
-            'enableVectorsDB' => true,
-        ]);
-
-        $this->assertArrayNotHasKey('mongodb', $compose['services']);
-        $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
-        $this->assertArrayHasKey('postgresql', $compose['services'], 'still the platform engine');
-    }
-
-    public function testProductReusesThePlatformEngine(): void
-    {
-        $compose = $this->render([
-            'database' => 'mongodb',
-            'enableDocumentsDB' => true,
-            'enableVectorsDB' => false,
-        ]);
-
-        $engines = \array_intersect(
-            ['postgresql', 'mariadb', 'mongodb'],
-            \array_keys($compose['services'])
-        );
-
-        $this->assertSame(['mongodb'], \array_values($engines), 'DocumentsDB reuses MongoDB rather than adding a second engine');
-        $this->assertArrayNotHasKey('postgresql', $compose['services']);
-    }
-
-    public function testPlatformEngineSurvivesItsProductBeingDisabled(): void
-    {
-        $compose = $this->render([
-            'database' => 'mongodb',
-            'enableDocumentsDB' => false,
-            'enableVectorsDB' => false,
-        ]);
-
-        $this->assertArrayHasKey('mongodb', $compose['services'], 'selected as the platform engine');
-        $this->assertArrayHasKey('appwrite-mongodb', $compose['volumes']);
-        $this->assertArrayNotHasKey('postgresql', $compose['services']);
     }
 
     public function testTogglesAssistantService(): void

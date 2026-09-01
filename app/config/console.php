@@ -64,6 +64,9 @@ $console = [
         'bitbucketEnabled' => true,
         'bitbucketSecret' => System::getEnv('_APP_CONSOLE_BITBUCKET_SECRET', ''),
         'bitbucketAppid' => System::getEnv('_APP_CONSOLE_BITBUCKET_APP_ID', ''),
+        'googleEnabled' => true,
+        'googleSecret' => System::getEnv('_APP_CONSOLE_GOOGLE_SECRET', ''),
+        'googleAppid' => System::getEnv('_APP_CONSOLE_GOOGLE_APP_ID', ''),
     ],
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
 ];

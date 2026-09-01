@@ -19,9 +19,8 @@
         forceHttps: null,
         opensslKey: null,
         assistantOpenAIKey: null,
-        topology: 'combined',
-        documentsDB: null,
-        vectorsDB: null,
+        topology: null,
+        accountName: null,
         accountEmail: null,
         accountPassword: null
     };
@@ -49,15 +48,13 @@
         setStateIfEmpty('httpsPort', data.defaultHttpsPort);
         setStateIfEmpty('emailCertificates', data.defaultEmailCertificates);
         setStateIfEmpty('forceHttps', data.defaultForceHttps === 'true');
-        setStateIfEmpty('documentsDB', data.defaultDocumentsdb !== 'false');
-        setStateIfEmpty('vectorsDB', data.defaultVectorsdb !== 'false');
         setStateIfEmpty('opensslKey', data.defaultSecretKey);
         setStateIfEmpty('assistantOpenAIKey', data.defaultAssistantOpenaiKey);
         if (data.lockedDatabase) {
             formState.database = data.lockedDatabase;
         }
         if (data.topology === 'combined' || data.topology === 'separate') {
-            formState.topology = data.topology;
+            setStateIfEmpty('topology', data.topology);
         }
         if (!isUpgradeMode?.()) {
             setStateIfEmpty('database', data.defaultDatabase);
