@@ -135,7 +135,10 @@ export function CreateMarketplaceApp({
                         <Info className="h-3.5 w-3.5" aria-hidden />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-64 text-[12px]">
+                    <TooltipContent
+                      side="top"
+                      className="max-w-64 text-[12px] text-pretty"
+                    >
                       {t(
                         'The app is created in your current team. Switch teams to create it in another team.',
                       )}
