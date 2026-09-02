@@ -28,31 +28,40 @@ import { localizeMysqlIndexAlgorithmLabel } from '@/lib/i18n/resource-status-lab
 type MysqlIndexAlgorithmSelectorProps = {
   value: MysqlIndexAlgorithm
   onChange: (value: MysqlIndexAlgorithm) => void
+  compact?: boolean
+  id?: string
 }
 
 export function MysqlIndexAlgorithmSelector({
   value,
   onChange,
+  compact = false,
+  id = 'index-algorithm',
 }: MysqlIndexAlgorithmSelectorProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
   const selected = getMysqlIndexAlgorithmDefinition(value)
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <Label htmlFor="index-algorithm" className="text-[12px] font-medium">
-          Algorithm <span className="text-destructive">*</span>
-        </Label>
+    <div className={cn(!compact && 'space-y-3')}>
+      <div className={cn(!compact && 'space-y-2')}>
+        {compact ? null : (
+          <Label htmlFor={id} className="text-[12px] font-medium">
+            Algorithm <span className="text-destructive">*</span>
+          </Label>
+        )}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
-              id="index-algorithm"
+              id={id}
               type="button"
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="h-9 w-full justify-between gap-2 text-[13px] font-normal"
+              className={cn(
+                'w-full justify-between gap-2 font-normal',
+                compact ? 'h-8 text-[12px]' : 'h-9 text-[13px]',
+              )}
             >
               <span className="truncate">
                 {localizeMysqlIndexAlgorithmLabel(value, t)}
@@ -110,17 +119,19 @@ export function MysqlIndexAlgorithmSelector({
         </Popover>
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/20 px-3 py-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('About this algorithm')}
-        </p>
-        <p className="mt-2 text-[12px] font-medium text-foreground">
-          {t(selected.label)}
-        </p>
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          {selected.description}
-        </p>
-      </div>
+      {compact ? null : (
+        <div className="rounded-lg border border-border bg-muted/20 px-3 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('About this algorithm')}
+          </p>
+          <p className="mt-2 text-[12px] font-medium text-foreground">
+            {t(selected.label)}
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            {selected.description}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

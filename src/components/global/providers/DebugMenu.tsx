@@ -2052,6 +2052,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
+                'Database PITR restore',
+                'Restore PITR button on backups and the restore card in dedicated DB PITR settings.',
+                'databasePitrRestore',
+                profileId,
+                features.databasePitrRestore,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
                 'Console user verification',
                 'Require email verification after signup; redirect to verify-email page on cloud.',
                 'userVerification',
@@ -2529,6 +2537,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsPostgres,
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
+    features.databasePitrRestore,
     features.userVerification,
     features.extraOAuthLogin,
     features.extraVcsOAuth,

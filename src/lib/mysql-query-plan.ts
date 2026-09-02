@@ -1,4 +1,5 @@
 import type { DedicatedDatabaseQueryExplanation } from '@/lib/databases/dedicated-engine'
+import { stringifyJsonForDisplay } from '@/lib/json-display'
 
 export type MysqlQueryPlanNodeVariant =
   | 'index'
@@ -450,7 +451,7 @@ function formatRawPlanForDisplay(
   const payload = resolveExplainPayload(explanation)
   if (payload != null) {
     try {
-      return JSON.stringify(payload, null, 2)
+      return stringifyJsonForDisplay(payload, 2)
     } catch {
       /* fall through */
     }

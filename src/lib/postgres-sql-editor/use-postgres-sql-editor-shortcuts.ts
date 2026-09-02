@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import {
   POSTGRES_SQL_CLOSE_TAB_SHORTCUT_COMBOS,
+  POSTGRES_SQL_ANALYZE_SHORTCUT_COMBOS,
   POSTGRES_SQL_EXPLAIN_SHORTCUT_COMBOS,
   POSTGRES_SQL_FORMAT_SHORTCUT_COMBOS,
   POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_COMBOS,
@@ -103,6 +104,10 @@ export function usePostgresSqlEditorShortcuts(
     if (actions.canExplain) actions.explain()
   }, [actions])
 
+  const analyze = useCallback(() => {
+    if (actions.canAnalyze) actions.analyze()
+  }, [actions])
+
   const save = useCallback(() => {
     if (actions.canSave) actions.save()
   }, [actions])
@@ -140,6 +145,7 @@ export function usePostgresSqlEditorShortcuts(
 
   useWorkbenchModShortcut(POSTGRES_SQL_RUN_SHORTCUT_COMBOS, run, enabled)
   useWorkbenchModShortcut(POSTGRES_SQL_EXPLAIN_SHORTCUT_COMBOS, explain, enabled)
+  useWorkbenchModShortcut(POSTGRES_SQL_ANALYZE_SHORTCUT_COMBOS, analyze, enabled)
   useWorkbenchModShortcut(POSTGRES_SQL_SAVE_SHORTCUT_COMBOS, save, enabled)
   useWorkbenchModShortcut(POSTGRES_SQL_NEW_TAB_SHORTCUT_COMBOS, createTab, enabled)
   useWorkbenchModShortcut(

@@ -200,6 +200,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   "Couldn't refresh databases": 'データベースを更新できませんでした',
   "Couldn't refresh dedicated databases": '専用データベースを更新できませんでした',
   'Covering index columns stored in the index but not used for lookups.': 'インデックスに格納されているがルックアップには使用されないカバリングインデックス列。',
+  'Optional WHERE predicate, for example deleted_at IS NULL.': '任意の WHERE 条件。例: deleted_at IS NULL。',
   'CPU usage': 'CPU 使用率',
   'Create': '作成',
   'Create a collection to store JSON documents with flexible schemas.': '柔軟なスキーマで JSON ドキュメントを保存するコレクションを作成します。',
@@ -913,6 +914,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Previous': '前へ',
   'Previous page': '前のページ',
   'Price': '価格',
+  'PK': 'PK',
   'Primary key': 'プライマリキー',
   'Optional SQL expression, for example': '任意の SQL 式。例:',
   'Must be valid SQL for this column type, for example':
@@ -1407,6 +1409,16 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Select a schema to visualize': '可視化するスキーマを選択',
   'Run': '実行',
   'Explain': '説明',
+  'Analyze': 'Analyze',
+  'Analyzing query…': 'クエリを分析中…',
+  'Analyze failed': '分析に失敗しました',
+  'Explain failed': '説明に失敗しました',
+  'Query failed': 'クエリに失敗しました',
+  'Explaining query…': 'クエリを説明中…',
+  'Write SQL before analyzing a query.': '分析する前に SQL を記述してください。',
+  'Executes the query and shows actual timings.': 'クエリを実行し、実際の実行時間を表示します。',
+  'Estimated plan only. The query was not executed.': '推定プランのみです。クエリは実行されていません。',
+  'Query was executed. Timings show actual performance.': 'クエリを実行しました。時間は実際のパフォーマンスを示します。',
   'Format SQL': 'SQL のフォーマット',
   'Off': 'オフ',
   'Billed at': '課金額',
@@ -1999,4 +2011,54 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'write': '書き込み',
   'used': '使用中',
   'Write IOPS latest': '最新の書き込み IOPS',
+  'Restore to a point in time': '特定時点への復元',
+  'Choose a moment inside the recovery window. The target database is unavailable while restoring, and everything after that moment is discarded.':
+    'リカバリウィンドウ内の時点を選びます。復元中は対象データベースを利用できず、その時点より後のデータは破棄されます。',
+  'Recovery window': 'リカバリウィンドウ',
+  'Earliest': '最も早い時点',
+  'Latest': '最も遅い時点',
+  'No recovery window is available yet. Continuous archiving has to capture its first segment after PITR is enabled.':
+    'まだリカバリウィンドウはありません。PITR を有効にしたあと、連続アーカイブが最初のセグメントを取り込む必要があります。',
+  'Restore time': '復元時刻',
+  'Use latest': '最新を使う',
+  'Choose a time between the earliest and latest recovery points.':
+    '最も早いリカバリポイントと最も遅いリカバリポイントの間の時刻を選んでください。',
+  'Overwrite this database in place. This cannot be undone.':
+    'このデータベースをその場で上書きします。この操作は元に戻せません。',
+  'Another database': '別のデータベース',
+  'Restore into a ready database with the same engine and version.':
+    '同じエンジンとバージョンの準備済みデータベースへ復元します。',
+  'Target database': '復元先データベース',
+  'No other ready database with the same engine and version is available.':
+    '同じエンジンとバージョンの準備済みデータベースはほかにありません。',
+  'Select a database': 'データベースを選択',
+  'I understand that the selected database will be permanently replaced with data from this point in time.':
+    '選択したデータベースがこの時点のデータで完全に置き換えられることを理解しています。',
+  'I understand that all current database data will be permanently replaced, and everything after this time will be discarded.':
+    '現在のデータベースデータが完全に置き換えられ、この時刻より後のデータは破棄されることを理解しています。',
+  'Failed to restore to this point in time': 'この時点への復元に失敗しました',
+  'Choose a restore time inside the recovery window.':
+    'リカバリウィンドウ内の復元時刻を選んでください。',
+  'Restore PITR': 'PITR 復元',
+  'Enable PITR first to restore to a specific moment.':
+    '特定の時点へ復元するには、先に PITR を有効にしてください。',
+  'Could not load the recovery window. Try again in a moment.':
+    'リカバリウィンドウを読み込めませんでした。しばらくしてから再試行してください。',
+  'Loading recovery window...': 'リカバリウィンドウを読み込み中...',
+  'Target time': '対象時刻',
+  'Backup': 'バックアップ',
+  'Start restore': '復元を開始',
+  'Database changes are recorded continuously, so you can restore to any moment in the recovery window.':
+    'データベースの変更は継続的に記録されるため、リカバリウィンドウ内の任意の時点へ復元できます。',
+  'Restore available from': '復元可能な開始時点',
+  'Latest restore available at': '復元可能な最新時点',
+  'Time zone': 'タイムゾーン',
+  "You'll pick the date and time when you start.":
+    '開始後に日付と時刻を選べます。',
+  'Time of recovery': '復元の時刻',
+  'Recovery available': '復元可能',
+  'This time is before the earliest recovery point.':
+    'この時刻は最も早いリカバリポイントより前です。',
+  'This time is after the latest recovery point.':
+    'この時刻は最も遅いリカバリポイントより後です。',
 }

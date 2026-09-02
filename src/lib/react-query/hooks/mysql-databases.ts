@@ -2212,9 +2212,15 @@ export function useExplainMysqlSql(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (query: string) => {
+    mutationFn: ({
+      query,
+      analyze,
+    }: {
+      query: string
+      analyze?: boolean
+    }) => {
       requireOperationalDatabase(queryClient, projectId, databaseId)
-      return explainMysqlDatabaseQuery(projectId, databaseId, query)
+      return explainMysqlDatabaseQuery(projectId, databaseId, query, analyze)
     },
   })
 }

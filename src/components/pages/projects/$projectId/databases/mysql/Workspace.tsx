@@ -182,10 +182,31 @@ export function MysqlSqlWorkbenchContent({
     setActiveTabResult(null, null, 'explain', null)
 
     try {
-      const explanation = await explainSql.mutateAsync(trimmed)
+      const explanation = await explainSql.mutateAsync({ query: trimmed })
       setActiveTabResult(null, null, 'explain', explanation)
     } catch (error) {
       setActiveTabResult(null, error, 'explain', null)
+    }
+  }, [
+    editorActiveTab.sql,
+    explainSql,
+    setActiveTabResult,
+  ])
+
+  const handleAnalyzeSql = useCallback(async () => {
+    const trimmed = editorActiveTab.sql.trim()
+    if (!trimmed) return
+
+    setActiveTabResult(null, null, 'analyze', null)
+
+    try {
+      const explanation = await explainSql.mutateAsync({
+        query: trimmed,
+        analyze: true,
+      })
+      setActiveTabResult(null, null, 'analyze', explanation)
+    } catch (error) {
+      setActiveTabResult(null, error, 'analyze', null)
     }
   }, [
     editorActiveTab.sql,
@@ -217,6 +238,7 @@ export function MysqlSqlWorkbenchContent({
 
   const tableRowsPanel = selectedTable ? (
     <ReadOnlyDataSpreadsheet
+      className="h-full min-h-0 flex-1"
       variant="studio"
       showRowNumbers
       enableColumnResize
@@ -275,6 +297,7 @@ export function MysqlSqlWorkbenchContent({
         onRenameTab={renameTab}
         onRun={handleRunSql}
         onExplain={handleExplainSql}
+        onAnalyze={handleAnalyzeSql}
         isRunning={executeSql.isPending}
         isExplaining={explainSql.isPending}
         error={editorActiveTab.error ?? executeSql.error ?? explainSql.error}

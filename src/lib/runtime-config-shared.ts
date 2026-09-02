@@ -23,6 +23,8 @@ export interface RuntimeConfig {
   cookieBanner: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /** Override for dedicated database PITR restore UI ('' = profile default). */
+  databasePitrRestore: string
   /**
    * Override for extra console OAuth login/signup providers
    * ('' = profile default, off).
@@ -123,6 +125,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     extraOAuthLogin: read('VITE_CONSOLE_EXTRA_OAUTH_LOGIN'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),

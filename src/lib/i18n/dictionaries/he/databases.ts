@@ -200,6 +200,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Couldn\'t refresh databases': 'לא ניתן היה לרענן את מסדי הנתונים',
   'Couldn\'t refresh dedicated databases': 'לא ניתן היה לרענן את מסדי הנתונים הייעודיים',
   'Covering index columns stored in the index but not used for lookups.': 'עמודות covering השמורות באינדקס אך אינן משמשות לחיפושים.',
+  'Optional WHERE predicate, for example deleted_at IS NULL.': 'ביטוי WHERE אופציונלי, לדוגמה deleted_at IS NULL.',
   'CPU usage': 'שימוש ב-CPU',
   'Create': 'יצירה',
   'Create a collection to store JSON documents with flexible schemas.': 'צרו אוסף לאחסון מסמכי JSON עם סכימות גמישות.',
@@ -957,6 +958,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Previous': 'הקודם',
   'Previous page': 'העמוד הקודם',
   'Price': 'מחיר',
+  'PK': 'PK',
   'Primary key': 'מפתח ראשי',
   'Optional SQL expression, for example': 'ביטוי SQL אופציונלי, לדוגמה',
   'Must be valid SQL for this column type, for example':
@@ -1528,6 +1530,16 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Select a schema to visualize': 'בחרו סכימה להצגה',
   'Run': 'הרצה',
   'Explain': 'Explain',
+  'Analyze': 'Analyze',
+  'Analyzing query…': 'מנתח שאילתה…',
+  'Analyze failed': 'הניתוח נכשל',
+  'Explain failed': 'הסבר השאילתה נכשל',
+  'Query failed': 'השאילתה נכשלה',
+  'Explaining query…': 'מסביר שאילתה…',
+  'Write SQL before analyzing a query.': 'כתבו SQL לפני ניתוח שאילתה.',
+  'Executes the query and shows actual timings.': 'מריץ את השאילתה ומציג זמני ביצוע בפועל.',
+  'Estimated plan only. The query was not executed.': 'תוכנית משוערת בלבד. השאילתה לא הורצה.',
+  'Query was executed. Timings show actual performance.': 'השאילתה הורצה. הזמנים משקפים ביצועים בפועל.',
   'Format SQL': 'עיצוב SQL',
   'Off': 'כבוי',
   'Billed at': 'חיוב ב-',
@@ -2061,4 +2073,56 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Write IOPS latest': 'IOPS כתיבה אחרון',
   "We couldn't fetch usage data from the server. Check your connection and try again.":
     'לא הצלחנו לטעון נתוני שימוש מהשרת. בדקו את החיבור ונסו שוב.',
+  'Restore to a point in time': 'שחזור לנקודת זמן',
+  'Choose a moment inside the recovery window. The target database is unavailable while restoring, and everything after that moment is discarded.':
+    'בחרו רגע בתוך חלון השחזור. מסד הנתונים היעד אינו זמין בזמן השחזור, וכל מה שאחרי הרגע הזה נמחק.',
+  'Recovery window': 'חלון שחזור',
+  'Earliest': 'המוקדם ביותר',
+  'Latest': 'המאוחר ביותר',
+  'No recovery window is available yet. Continuous archiving has to capture its first segment after PITR is enabled.':
+    'עדיין אין חלון שחזור. אחרי הפעלת PITR, הארכיוון הרציף צריך ללכוד את המקטע הראשון.',
+  'Restore time': 'זמן שחזור',
+  'Use latest': 'שימוש במאוחר ביותר',
+  'Choose a time between the earliest and latest recovery points.':
+    'בחרו זמן בין נקודות השחזור המוקדמת והמאוחרת.',
+  'Overwrite this database in place. This cannot be undone.':
+    'שכתבו את מסד הנתונים הזה במקום. לא ניתן לבטל פעולה זו.',
+  'Another database': 'מסד נתונים אחר',
+  'Restore into a ready database with the same engine and version.':
+    'שחזרו למסד נתונים מוכן עם אותו מנוע ואותה גרסה.',
+  'Target database': 'מסד נתונים יעד',
+  'No other ready database with the same engine and version is available.':
+    'אין מסד נתונים מוכן אחר עם אותו מנוע ואותה גרסה.',
+  'Select a database': 'בחירת מסד נתונים',
+  'I understand that the selected database will be permanently replaced with data from this point in time.':
+    'ברור לי שמסד הנתונים שנבחר יוחלף לצמיתות בנתונים מנקודת הזמן הזו.',
+  'I understand that all current database data will be permanently replaced, and everything after this time will be discarded.':
+    'ברור לי שכל הנתונים הנוכחיים במסד הנתונים יוחלפו לצמיתות, וכל מה שאחרי הזמן הזה יימחק.',
+  'Failed to restore to this point in time': 'השחזור לנקודת הזמן הזו נכשל',
+  'Choose a restore time inside the recovery window.':
+    'בחרו זמן שחזור בתוך חלון השחזור.',
+  'Restore PITR': 'שחזור PITR',
+  'Enable PITR first to restore to a specific moment.':
+    'הפעילו PITR קודם כדי לשחזר לרגע מסוים.',
+  'Could not load the recovery window. Try again in a moment.':
+    'לא הצלחנו לטעון את חלון השחזור. נסו שוב בעוד רגע.',
+  'Loading recovery window...': 'טוען את חלון השחזור...',
+  'Target time': 'זמן יעד',
+  'Backup': 'גיבוי',
+  "You don't have permission to change database settings.":
+    'אין לכם הרשאה לשנות הגדרות של מסד הנתונים.',
+  'Start restore': 'התחלת שחזור',
+  'Database changes are recorded continuously, so you can restore to any moment in the recovery window.':
+    'שינויים במסד הנתונים נרשמים באופן רציף, כך שאפשר לשחזר לכל רגע בחלון השחזור.',
+  'Restore available from': 'שחזור זמין מ-',
+  'Latest restore available at': 'שחזור אחרון זמין ב-',
+  'Time zone': 'אזור זמן',
+  "You'll pick the date and time when you start.":
+    'את התאריך והשעה תבחרו אחרי שתתחילו.',
+  'Time of recovery': 'שעת השחזור',
+  'Recovery available': 'שחזור זמין',
+  'This time is before the earliest recovery point.':
+    'הזמן הזה מוקדם מנקודת השחזור המוקדמת ביותר.',
+  'This time is after the latest recovery point.':
+    'הזמן הזה מאוחר מנקודת השחזור המאוחרת ביותר.',
 }

@@ -485,6 +485,18 @@ function invalidateRestorationListCaches(
     'database',
     databaseId,
   ])
+  invalidateQueryKey(queryClient, [
+    'dedicated-restorations',
+    'project',
+    projectId,
+    databaseId,
+  ])
+  invalidateQueryKey(queryClient, [
+    'dedicated-pitr-windows',
+    'project',
+    projectId,
+    databaseId,
+  ])
 }
 
 function mergeRestorationPayloadIntoCache(

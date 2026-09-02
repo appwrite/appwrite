@@ -223,6 +223,7 @@ export const ANALYTICS_ACTIONS = {
   'create-dns-record': 'Create DNS Record Clicked',
   'invite-org-member': 'Invite Org Member Clicked',
   'create-backup-policy': 'Create Backup Policy Clicked',
+  'restore-pitr': 'Restore PITR Clicked',
   'import-data': 'Import Data Clicked',
   'create-marketplace-app': 'Create Marketplace App Clicked',
   'add-website': 'Add Website Clicked',

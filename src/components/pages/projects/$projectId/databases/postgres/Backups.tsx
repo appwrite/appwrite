@@ -9,6 +9,7 @@ import {
   POSTGRES_BACKUPS_PAGE_SIZE,
   usePostgresBackupPolicies,
   usePostgresBackups,
+  usePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -79,6 +80,8 @@ import {
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
+import { RestorePitrButton } from '../_components/RestorePitr'
+import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import {
   Tooltip,
@@ -162,6 +165,8 @@ export function View({ projectId, databaseId }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
+  const { database } = usePostgresDatabase(projectId, databaseId)
+  const { canWrite } = useDatabaseAdminOperationsAccess()
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const backupPoliciesLimit = getBackupPoliciesPlanLimit(organizationPlan)
   const planName = resolveOrganizationPlanDisplayLabel({
@@ -587,15 +592,26 @@ export function View({ projectId, databaseId }: ViewProps) {
             <h3 className="text-[15px] font-semibold text-foreground">
               {t('Backups')}
             </h3>
-            <Button
-              variant="brandCta"
-              onClick={() => setCreateManualBackupDialogOpen(true)}
-              size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Manual backup')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {database ? (
+                <RestorePitrButton
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  database={database}
+                  engine="postgresql"
+                  canWrite={canWrite}
+                />
+              ) : null}
+              <Button
+                variant="brandCta"
+                onClick={() => setCreateManualBackupDialogOpen(true)}
+                size="sm"
+                className="h-8 gap-1.5 text-[12px] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('Manual backup')}
+              </Button>
+            </div>
           </div>
           <div className="flex-1">
             {isBackupsActuallyLoading ? (
