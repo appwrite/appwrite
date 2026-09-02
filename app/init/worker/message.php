@@ -204,7 +204,6 @@ return function (Container $container): void {
             if ($span !== null) {
                 $span->setError($error);
                 $span->set('project.id', $project->getId());
-                $span->set('error.namespace', $namespace);
                 $span->set('error.action', $action);
                 foreach (($extras ?? []) as $key => $value) {
                     if (\is_scalar($value) || $value === null) {

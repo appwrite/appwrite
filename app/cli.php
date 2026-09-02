@@ -188,11 +188,6 @@ $container->set('logError', function () {
 
         // Tasks run outside a request span; open one so the failure reaches the exporters.
         $span = Span::current() ?? Span::init($action);
-        $span->set('error.namespace', $namespace);
-        $span->set('error.code', $error->getCode());
-        if ($error->getPrevious() !== null) {
-            $span->set('error.previous', $error->getPrevious()->getMessage());
-        }
         $span->finish(error: $error);
     };
 }, []);

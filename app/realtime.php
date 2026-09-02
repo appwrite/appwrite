@@ -428,7 +428,6 @@ if (!function_exists('logError')) {
 
         $span->setError($error);
         $span->set('error.publish', $publish);
-        $span->set('error.code', $error->getCode());
         $span->set('error.action', $action);
         $span->set('project.id', $project?->getId() ?: 'n/a');
         $span->set('user.id', $user?->getId() ?: 'n/a');

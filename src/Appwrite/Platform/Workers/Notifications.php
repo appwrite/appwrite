@@ -96,7 +96,7 @@ class Notifications extends Action
                 }
             } catch (Throwable $error) {
                 Span::add('channel', $channel);
-                Span::add('error.message', $error->getMessage());
+                Span::add('channel.error', $error->getMessage());
                 $failure ??= $error;
             }
         }

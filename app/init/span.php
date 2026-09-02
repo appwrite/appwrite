@@ -55,7 +55,7 @@ if ($loggingConfig !== '') {
             throw new \InvalidArgumentException('Only the sentry:// scheme is supported');
         }
 
-        $tags = ['project.id', 'user.id', 'http.method', 'http.path', 'http.hostname', 'http.locale', 'error.type', 'error.code', 'type', 'domain', 'function.id', 'deployment.id', 'database.id', 'channel', 'lock.target'];
+        $tags = ['project.id', 'user.id', 'http.method', 'http.path', 'http.hostname', 'http.locale', 'type', 'domain', 'function.id', 'deployment.id', 'database.id', 'channel', 'lock.target'];
         $exporters[] = new Sentry(
             dsn: 'https://' . $dsn->getPassword() . '@' . $dsn->getHost() . '/' . $dsn->getUser(),
             environment: System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging',

@@ -502,8 +502,6 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         } catch (\Throwable $_th) {
             // All good, user is optional information
         }
-
-        Span::add('error.code', $th->getCode());
         Span::add('http.hostname', $request->getHostname());
         Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
 

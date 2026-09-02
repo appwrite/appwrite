@@ -1327,7 +1327,6 @@ Http::error()
         }
 
         Span::add('error.publish', $publish);
-        Span::add('error.code', $error->getCode());
         Span::add('http.hostname', $request->getHostname());
         Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
         if (Span::current()?->get('project.id') === null) {

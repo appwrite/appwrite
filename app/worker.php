@@ -154,7 +154,6 @@ $worker
     ->action(function (Throwable $error, Document $project) {
         Span::current()?->setError($error);
         Span::add('project.id', $project->getId());
-        Span::add('error.code', $error->getCode());
 
         Console::error('[Error] Type: ' . get_class($error));
         Console::error('[Error] Message: ' . $error->getMessage());

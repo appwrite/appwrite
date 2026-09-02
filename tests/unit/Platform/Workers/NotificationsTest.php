@@ -497,7 +497,7 @@ final class NotificationsTest extends TestCase
         }
 
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $this->span->get('channel'));
-        $this->assertSame('boom', $this->span->get('error.message'));
+        $this->assertSame('boom', $this->span->get('channel.error'));
 
         $rows = $this->database->find('notifications');
         $this->assertCount(0, $rows, 'failed dispatch must not persist alert');
