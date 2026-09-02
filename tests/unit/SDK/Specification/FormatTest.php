@@ -23,6 +23,7 @@ use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\FrameworkAdapter;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Migration;
@@ -36,6 +37,10 @@ use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TemplateFramework;
+use Appwrite\Utopia\Response\Model\TemplateSite;
+use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -1035,7 +1040,7 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiQuery['type']);
     }
 
-    public function testJsonModelRulesKeepAdditionalPropertiesAndSkipNullable(): void
+    public function testJsonAndNullableModelRulesEmitExpectedSchemas(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -1058,15 +1063,56 @@ final class FormatTest extends TestCase
 
         $models = [
             new Provider(),
+            new FrameworkAdapter(),
+            new TemplateFramework(),
+            new TemplateSite(),
+            new TemplateVariable(),
+            new UsageDataPoint(),
             new ErrorModel(),
         ];
+        $routes = [$route];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER,
+            Response::MODEL_TEMPLATE_FRAMEWORK,
+            Response::MODEL_TEMPLATE_SITE,
+            Response::MODEL_USAGE_DATA_POINT,
+        ] as $model) {
+            $routes[] = (new Route('GET', '/v1/tests/' . $model))
+                ->desc('Get test response model')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'get' . \ucfirst($model),
+                    description: 'Get test response model.',
+                    auth: [],
+                    responses: [
+                        new SDKResponse(
+                            code: 200,
+                            model: $model,
+                        ),
+                    ],
+                ));
+        }
+
+        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], 0, 'console'))->parse();
 
         $openApiOptions = $openApi['components']['schemas']['provider']['properties']['options'];
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER => 'fallbackFile',
+            Response::MODEL_TEMPLATE_FRAMEWORK => 'fallbackFile',
+            Response::MODEL_TEMPLATE_SITE => 'demoUrl',
+            Response::MODEL_USAGE_DATA_POINT => 'time',
+        ] as $model => $property) {
+            $schema = $openApi['components']['schemas'][$model];
+
+            $this->assertTrue($schema['properties'][$property]['nullable']);
+            $this->assertNotContains($property, $schema['required']);
+        }
     }
 
     public function testQueriesSubclassesEmitArrayOfStrings(): void

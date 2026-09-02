@@ -11,6 +11,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class StatsResources extends Action
@@ -47,6 +48,10 @@ class StatsResources extends Action
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
         Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
+            Span::init('stats_resources_task');
+            $projectsQueued = 0;
+            $projectsFailed = 0;
+
             // Nothing here may end the loop. An exception escaping this closure
             // ends Console::loop, and the process then stays alive and idle: it
             // never exits, so restartPolicy never fires, and with no liveness
@@ -56,6 +61,7 @@ class StatsResources extends Action
             // Ready for weeks while queueing nothing.
             try {
                 if (!$usageConnection->isReady()) {
+                    Span::add('stats_resources_task.skipped', 'usage_schema_not_ready');
                     Console::error('stats resources: usage schema is not ready, skipping cycle');
                     return;
                 }
@@ -75,13 +81,28 @@ class StatsResources extends Action
                     Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                     Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                ], function ($project) use ($publisherForStatsResources): void {
-                    $publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project));
+                ], function ($project) use ($publisherForStatsResources, &$projectsQueued, &$projectsFailed): void {
+                    // enqueue() swallows a publish failure, reporting it only to
+                    // Console and returning false — as it does when stats are off.
+                    if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project)) === false) {
+                        $projectsFailed++;
+                        return;
+                    }
+
+                    $projectsQueued++;
                 });
             } catch (\Throwable $th) {
                 // Cost a cycle, not the process: the next tick retries in full.
+                Span::add('stats_resources_task.error', $th->getMessage());
                 Console::error('stats resources: cycle failed, retrying next interval: ' . $th->getMessage());
+            } finally {
+                // An unfinished span exports nothing, including the early return.
+                Span::add('stats_resources_task.projects_queued', $projectsQueued);
+                Span::add('stats_resources_task.projects_failed', $projectsFailed);
+                Span::current()?->finish();
             }
-        }, $interval);
+        }, $interval, 0, function (\Throwable $th) {
+            Span::current()?->finish(error: $th);
+        });
     }
 }

@@ -94,7 +94,10 @@ class Create extends Action
             throw new Exception($this->getInvalidValueException(), $validator->getDescription());
         }
 
-        $size = $max > 2147483647 ? 8 : 4;
+        // The 4 byte column only holds a range that fits INT32. min counts: a
+        // column bounded below -2147483648 has to be able to store that value,
+        // and with min left out the bound is PHP_INT_MIN.
+        $size = $min >= -2147483648 && $max <= 2147483647 ? 4 : 8;
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,

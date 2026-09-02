@@ -461,6 +461,22 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
+            // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
+            // installation deploys just the engine backing the platform, so neither is on
+            // until an operator provisions that engine and says so. Closed to everyone --
+            // keys and privileged roles included -- rather than answering and then failing
+            // on the first write with the reason only in the logs.
+            $products = [
+                'documentsdb' => '_APP_DOCUMENTSDB',
+                'vectorsdb' => '_APP_VECTORSDB',
+            ];
+            if (
+                isset($products[$namespace])
+                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
+            ) {
+                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            }
+
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
