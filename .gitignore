@@ -11,3 +11,4 @@ composer.phar
 .DS_Store
 Thumbs.db
 .env
+composer.lock
