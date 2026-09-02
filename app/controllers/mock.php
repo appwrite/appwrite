@@ -336,6 +336,51 @@ Http::get('/v1/mock/github/callback')
         ]);
     });
 
+Http::get('/v1/mock/github/request')
+    ->desc('Create installation request document, standing in for the request callback whose OAuth code cannot be faked')
+    ->groups(['mock', 'api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID of the project the installation was requested for')
+    ->param('requester', '', new Text(256), 'Provider login of the account that requested the installation')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $requester, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $teamId = $project->getAttribute('teamId', '');
+
+        $request = $dbForPlatform->createDocument('installationRequests', new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'projectId' => $projectId,
+            'projectInternalId' => $project->getSequence(),
+            'provider' => 'github',
+            'requester' => $requester,
+            'status' => 'requested',
+        ]));
+
+        $response->json([
+            'requestId' => $request->getId(),
+        ]);
+    });
+
 Http::shutdown()
     ->groups(['mock'])
     ->inject('response')

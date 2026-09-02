@@ -170,6 +170,34 @@ class Get extends Action
                 ]));
             }
         } else {
+            // A member's request carries an OAuth code even though nothing was
+            // installed; the requester's login is what later matches the
+            // installation webhook back to this project.
+            if ($setupAction === 'request' && !empty($code)) {
+                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                $requester = $oauth2->getUserSlug($oauth2->getAccessToken($code));
+
+                if (!empty($requester)) {
+                    $request = $dbForPlatform->findOne('installationRequests', [
+                        Query::equal('projectInternalId', [$project->getSequence()]),
+                        Query::equal('provider', ['github']),
+                        Query::equal('requester', [$requester]),
+                    ]);
+
+                    if ($request->isEmpty()) {
+                        $dbForPlatform->createDocument('installationRequests', new Document([
+                            '$id' => ID::unique(),
+                            '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $projectId),
+                            'projectId' => $projectId,
+                            'projectInternalId' => $project->getSequence(),
+                            'provider' => 'github',
+                            'requester' => $requester,
+                            'status' => 'requested',
+                        ]));
+                    }
+                }
+            }
+
             $error = $setupAction === 'request'
                 ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
                 : 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.';

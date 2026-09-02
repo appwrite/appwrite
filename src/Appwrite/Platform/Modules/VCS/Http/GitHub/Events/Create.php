@@ -86,7 +86,7 @@ class Create extends Action
 
         foreach ($parsedPayloads as $parsedPayload) {
             match ($event) {
-                GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $payload, $dbForPlatform, $authorization, $getProjectDB),
                 GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 default => null,
@@ -103,13 +103,62 @@ class Create extends Action
 
     protected function handleInstallationEvent(
         array $parsedPayload,
+        string $payload,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
     ) {
+        if ($parsedPayload["action"] === "created") {
+            // The adapter drops the requester, so read it off the raw payload.
+            // It is only present when the installation started as a member's
+            // request; its login is what ties the approval back to the pending
+            // request documents, which the user then confirms from the Console.
+            $requester = \json_decode($payload, true)['requester']['login'] ?? '';
+
+            if (empty($requester)) {
+                return;
+            }
+
+            $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', [
+                Query::equal('provider', ['github']),
+                Query::equal('requester', [$requester]),
+                Query::equal('status', ['requested']),
+                Query::limit(1000),
+            ]));
+
+            foreach ($requests as $request) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('installationRequests', $request->getId(), new Document([
+                    'providerInstallationId' => $parsedPayload["installationId"],
+                    'organization' => $parsedPayload["userName"],
+                    'status' => 'ready',
+                ])));
+            }
+
+            return;
+        }
+
         if ($parsedPayload["action"] !== "deleted") {
             return;
         }
+
+        $requestCursor = null;
+        do {
+            $requestQueries = [
+                Query::equal('providerInstallationId', [$parsedPayload["installationId"]]),
+                Query::equal('provider', ['github']),
+                Query::limit(1000),
+            ];
+            if ($requestCursor !== null) {
+                $requestQueries[] = Query::cursorAfter($requestCursor);
+            }
+            $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', $requestQueries));
+
+            foreach ($requests as $request) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
+            }
+
+            $requestCursor = \end($requests) ?: null;
+        } while (\count($requests) === 1000);
 
         $providerInstallationId = $parsedPayload["installationId"];
 

@@ -103,6 +103,12 @@ class V25 extends Migration
 
                 case 'installations':
                     if ($collectionType === 'console') {
+                        try {
+                            $this->createCollection('installationRequests');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create collection \"installationRequests\": {$th->getMessage()}");
+                        }
+
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
                                 $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);

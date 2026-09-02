@@ -167,6 +167,8 @@ class Exception extends \Exception
 
     /** VCS */
     public const string INSTALLATION_NOT_FOUND = 'installation_not_found';
+    public const string INSTALLATION_REQUEST_NOT_FOUND = 'installation_request_not_found';
+    public const string INSTALLATION_REQUEST_NOT_READY = 'installation_request_not_ready';
     public const string PROVIDER_REPOSITORY_NOT_FOUND = 'provider_repository_not_found';
     public const string REPOSITORY_NOT_FOUND = 'repository_not_found';
     public const string PROVIDER_CONTRIBUTION_CONFLICT = 'provider_contribution_conflict';
