@@ -11,11 +11,9 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\System\System;
 
 /**
- * Signature verification on the GitHub App installation state. The callback is
- * public, so a state whose projectId or redirect URLs were changed in transit
- * has to be rejected before anything is trusted. Deliberately does not use
- * VCSGitHubBase: nothing here reaches GitHub, so it must also run on
- * installations that have no GitHub App configured.
+ * Signature verification on the GitHub App installation state. Deliberately
+ * does not use VCSGitHubBase: nothing here reaches GitHub, so it must also run
+ * on installations that have no GitHub App configured.
  */
 final class VCSGitHubStateConsoleClientTest extends Scope
 {
@@ -51,10 +49,8 @@ final class VCSGitHubStateConsoleClientTest extends Scope
     }
 
     /**
-     * The signature check sits before everything else, so an untampered state
-     * passing through to the redirect is the proof it was accepted. Completing
-     * an installation is not possible here: without GitHub App credentials the
-     * flow cannot go further, so the redirect stands in for the happy path.
+     * Without GitHub App credentials the flow cannot go past the callback, so
+     * an untampered state reaching the redirect stands in for the happy path.
      */
     public function testGetCallbackSignedState(): void
     {
@@ -89,8 +85,6 @@ final class VCSGitHubStateConsoleClientTest extends Scope
     {
         $redirect = $this->getRedirect();
 
-        // Every signed value changed after signing: the project an installation
-        // would attach to, and both redirect targets.
         $tampered = [
             ['projectId' => 'victim-project'],
             ['success' => 'https://evil.example/steal'],
@@ -115,8 +109,6 @@ final class VCSGitHubStateConsoleClientTest extends Scope
     {
         $redirect = $this->getRedirect();
 
-        // A signature captured from another project's authorize response must
-        // not validate someone else's state.
         $state = $this->signState($this->getProject()['$id'], $redirect, $redirect);
         $state['signature'] = $this->signState('victim-project', $redirect, $redirect)['signature'];
 
