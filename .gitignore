@@ -1,3 +1,4 @@
 /vendor/
 .phpunit*
 .idea
+composer.lock

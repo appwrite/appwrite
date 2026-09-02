@@ -8,7 +8,7 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && docker-php-ext-install pcntl \
     && apk del .build-deps
 
-COPY composer.json composer.lock ./
+COPY composer.json ./
 COPY vendor ./vendor
 COPY src ./src
 COPY tests ./tests
