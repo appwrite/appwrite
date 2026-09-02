@@ -13,3 +13,12 @@ export {
   PROJECT_CHANNELS,
   REALTIME_EVENTS,
 } from './constants'
+export {
+  handleDedicatedDatabaseRealtimeEvents,
+  isDedicatedDatabaseRealtimeSignal,
+} from './dedicated-database-cache'
+export { waitForDatabaseRealtimeEvent } from './wait-for-database-realtime'
+export {
+  mergeMigrationPayloadIntoCache,
+  migrationStatusFromRestorationStatus,
+} from './migration-cache'

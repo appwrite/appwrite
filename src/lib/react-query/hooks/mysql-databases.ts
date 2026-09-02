@@ -146,10 +146,6 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
-import {
-  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
-  shouldPollDedicatedDatabaseStatus,
-} from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
 import {
@@ -1555,37 +1551,9 @@ export function useMysqlDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
 ) {
-  const queryClient = useQueryClient()
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    ...mysqlDatabaseQueryOptions(projectId, databaseId),
-    refetchInterval: (query) =>
-      shouldPollDedicatedDatabaseStatus(query.state.data?.status)
-        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
-        : false,
-  })
-
-  // Keep list/selector badges in sync when detail polling sees a status change.
-  useEffect(() => {
-    if (!projectId || !databaseId || !data?.status) return
-    const nextStatus = data.status
-    queryClient.setQueryData(
-      ['dedicated-databases', 'project', projectId],
-      (
-        prev:
-          | { databases: Models.DedicatedDatabase[]; total: number }
-          | undefined,
-      ) => {
-        if (!prev?.databases?.length) return prev
-        let changed = false
-        const databases = prev.databases.map((db) => {
-          if (db.$id !== databaseId || db.status === nextStatus) return db
-          changed = true
-          return { ...db, status: nextStatus }
-        })
-        return changed ? { ...prev, databases } : prev
-      },
-    )
-  }, [data?.status, databaseId, projectId, queryClient])
+  const { data, isLoading, error, refetch, isFetching } = useQuery(
+    mysqlDatabaseQueryOptions(projectId, databaseId),
+  )
 
   return { database: data ?? null, isLoading, error, refetch, isFetching }
 }

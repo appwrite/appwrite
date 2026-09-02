@@ -64,6 +64,12 @@ import {
 } from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
+import {
+  BACKUPS_VIEW_CONTAINER,
+  backupsViewArchivesColumnClass,
+  backupsViewGridClass,
+  backupsViewPoliciesColumnClass,
+} from '../_components/backups-view-container'
 import { useT } from '@/lib/i18n/translate'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
@@ -413,13 +419,14 @@ export function View({ projectId, databaseId }: ViewProps) {
       ) : null}
       <div
         className={cn(
+          BACKUPS_VIEW_CONTAINER,
           'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
           !showPlanLimitWarning && 'mt-4 sm:mt-6',
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-        <div className="lg:col-span-1 flex flex-col">
+      <div className={backupsViewGridClass}>
+        <div className={backupsViewPoliciesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -575,7 +582,7 @@ export function View({ projectId, databaseId }: ViewProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col">
+        <div className={backupsViewArchivesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-[15px] font-semibold text-foreground">
               {t('Backups')}

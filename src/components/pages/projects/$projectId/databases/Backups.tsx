@@ -11,8 +11,15 @@ import {
   useBackupArchives,
   useDatabaseRestoreMigrations,
   enrichRestorationTargetOptions,
+  databaseRestoreMigrationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { RestoreProgressBanner } from './_components/RestoreProgressBanner'
+import {
+  BACKUPS_VIEW_CONTAINER,
+  backupsViewArchivesColumnClass,
+  backupsViewGridClass,
+  backupsViewPoliciesColumnClass,
+} from './_components/backups-view-container'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -419,14 +426,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
             : [enrichedRestoration, ...prev],
         )
         queryClient.setQueryData<Models.BackupRestoration[]>(
-          [
-            'restorations',
-            'project',
+          databaseRestoreMigrationsQueryOptions(
             projectId,
-            'database',
             databaseId,
-            'recent-migrations',
-          ],
+            dbKind,
+          ).queryKey,
           (previous) => {
             const list = previous ?? []
             if (
@@ -607,6 +611,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
       ) : null}
       <div
         className={cn(
+          BACKUPS_VIEW_CONTAINER,
           'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
           visibleRestorations.length === 0 &&
             !showPlanLimitWarning &&
@@ -614,9 +619,9 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+      <div className={backupsViewGridClass}>
         {/* Policies Section */}
-        <div className="lg:col-span-1 flex flex-col">
+        <div className={backupsViewPoliciesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -775,7 +780,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         </div>
 
         {/* Backups Section */}
-        <div className="lg:col-span-2 flex flex-col">
+        <div className={backupsViewArchivesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">

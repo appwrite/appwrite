@@ -1,19 +1,5 @@
 import type { HeaderAlertVariant } from '@/components/global/shared/HeaderAlertBar'
 
-export const DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS = 5000
-
-/** Statuses that resolve on their own; keep polling until they leave this set. */
-const DEDICATED_DATABASE_TRANSITIONAL_STATUSES = new Set([
-  'provisioning',
-  'scaling',
-  'restoring',
-  'upgrading',
-  'migrating',
-  'pausing',
-  'resuming',
-  'deleting',
-])
-
 export type DedicatedDatabaseStatusBadgeVariant =
   | 'success'
   | 'warning'
@@ -95,13 +81,6 @@ export function isDedicatedDatabaseProvisioning(
 export const DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE =
   'Available once the database is ready.'
 
-export function shouldPollDedicatedDatabaseStatus(
-  status: string | null | undefined,
-): boolean {
-  const normalized = coerceTrimmedString(status).toLowerCase()
-  return !!normalized && DEDICATED_DATABASE_TRANSITIONAL_STATUSES.has(normalized)
-}
-
 export function dedicatedDatabaseStatusBadgeVariant(
   status: string | null | undefined,
 ): DedicatedDatabaseStatusBadgeVariant {
@@ -109,7 +88,6 @@ export function dedicatedDatabaseStatusBadgeVariant(
     case 'ready':
       return 'success'
     case 'provisioning':
-    case 'scaling':
     case 'restoring':
     case 'upgrading':
     case 'migrating':
@@ -117,6 +95,8 @@ export function dedicatedDatabaseStatusBadgeVariant(
     case 'resuming':
     case 'deleting':
       return 'warning'
+    case 'scaling':
+      return 'info'
     case 'failed':
     case 'deleted':
       return 'error'

@@ -6041,24 +6041,6 @@ export function ColumnsSpreadsheet({
     return keys
   }, [tableIndexes])
 
-  const hasPendingColumnStatuses = useMemo(
-    () =>
-      apiColumns.some((col) =>
-        isTableColumnStatusPending(
-          (col as { status?: string }).status,
-        ),
-      ),
-    [apiColumns],
-  )
-
-  useEffect(() => {
-    if (!hasPendingColumnStatuses) return
-    const intervalId = window.setInterval(() => {
-      void refetchColumns()
-    }, 2000)
-    return () => window.clearInterval(intervalId)
-  }, [hasPendingColumnStatuses, refetchColumns])
-
   const navigateColumnsList = (updates: { page?: number; limit?: number }) => {
     navigate({
       search: (prev: Record<string, unknown>) => {
