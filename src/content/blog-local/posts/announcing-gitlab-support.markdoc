@@ -2,13 +2,12 @@
 layout: post
 title: "Announcing GitLab support for Appwrite Sites and Functions"
 description: Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.
-date: 2026-09-02
+date: 2026-09-03
 cover: /images/blog-local/announcing-gitlab-support/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: announcement
 featured: false
-draft: true
 callToAction: true
 faqs:
   - question: "Can Appwrite deploy from a GitLab repository?"
@@ -18,7 +17,7 @@ faqs:
   - question: "Do I need to mirror my GitLab repository to GitHub?"
     answer: "No. Appwrite talks to GitLab directly. Mirroring was the old workaround for getting GitLab code onto Appwrite, and it is no longer necessary for Sites or Functions."
   - question: "Do merge requests get preview deployments?"
-    answer: "Pushes to a branch other than your production branch create a deployment that is built but not activated, and Appwrite generates a [preview link](/docs/products/sites/previews) for it. Only members of your Appwrite organization can open that link. Deployment details link back to the originating merge request on GitLab."
+    answer: "Pushes to a branch other than your production branch create a deployment that is built but not activated, and Appwrite generates a [preview link](/docs/products/sites/previews) for it. Only members of your Appwrite organization can open that link. Appwrite also reports a commit status on GitLab for each push and comments on the merge request with the deployment status, build logs, preview URL, and a QR code for every preview it triggered."
   - question: "Can one Appwrite project use GitLab and GitHub at the same time?"
     answer: "Yes. Connections are per provider, and a project can hold several at once. Owners from every connected provider appear together in one repository picker, and different Sites and Functions in the same project can deploy from different providers."
   - question: "Can I create a new GitLab repository from the Appwrite Console?"
@@ -40,6 +39,7 @@ Today, we are announcing **GitLab support** across Appwrite Sites and Functions.
 - **Repository creation inside a group.** Create a new GitLab project from the wizard and choose the namespace it lands in, rather than creating it on GitLab first and coming back.
 - **Push to deploy.** Commits to your production branch build and activate. Commits to any other branch build and produce a preview link.
 - **Links that resolve to GitLab.** Deployment details link to the right commit, branch, and merge request on `gitlab.com`, using GitLab's URL shapes rather than GitHub's.
+- **Commit statuses and merge request comments.** Every commit gets a status on GitLab that turns green or red with the Appwrite build. Merge requests get a comment listing every preview the push triggered, with build status, logs, the preview URL, and a QR code.
 
 Everything else about a deployment stays where it was. Branch filters, path filters, install and build commands, root directories, and output directories are configured per Site or Function and do not care which provider is behind the repository.
 
@@ -72,6 +72,8 @@ Once a repository is connected, the workflow is the one you already know from [D
 3. Appwrite creates a deployment, builds it, and activates it.
 
 Pushes to your production branch, usually `main`, replace the active deployment and serve on your primary domain. Pushes to any other branch build without activating and generate a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open. Reviewing a merge request becomes a matter of opening its preview link rather than pulling the branch and running it locally.
+
+You do not have to leave GitLab to find that link, or to know whether the build behind it succeeded. Appwrite reports a commit status for every push, green when the build passes and red when it fails, and posts a comment on the merge request listing every preview the push triggered, across Sites, Functions, and any other Appwrite project connected to the same repository. Each entry shows the deployment status and links to the build logs and the preview URL, with a QR code for opening the preview on a phone.
 
 Branch filters and path filters narrow what triggers a build, which matters more on GitLab than it might sound. Monorepos are common there, and a path filter keeps a push to `docs/` from rebuilding a site that only depends on `apps/web/`.
 

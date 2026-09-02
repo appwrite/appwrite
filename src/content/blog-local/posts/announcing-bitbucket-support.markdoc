@@ -8,7 +8,6 @@ timeToRead: 6
 author: aditya-oberai
 category: announcement
 featured: false
-draft: true
 callToAction: true
 faqs:
   - question: "Can Appwrite deploy from a Bitbucket repository?"
@@ -16,7 +15,7 @@ faqs:
   - question: "Which Bitbucket workspaces can Appwrite see?"
     answer: "The workspaces your Bitbucket account has access to. A workspace is Bitbucket's owner concept, equivalent to a GitHub organization, and each one appears as a selectable owner in the repository picker alongside owners from any other connected provider."
   - question: "Do Bitbucket pull requests get preview deployments?"
-    answer: "Pushes to a branch other than your production branch create a deployment that is built but not activated, along with a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open. Deployment details link back to the pull request on Bitbucket."
+    answer: "Pushes to a branch other than your production branch create a deployment that is built but not activated, along with a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open. Appwrite also reports a commit status on Bitbucket for each push and comments on the pull request with the deployment status, build logs, preview URL, and a QR code for every preview it triggered."
   - question: "Where do commit and pull request links on a deployment point?"
     answer: "To Bitbucket, using Bitbucket's own URL shapes. Commits resolve under `/commits/`, a branch under `/src/<branch>`, and a pull request under `/pull-requests/<id>` rather than GitHub's `/pull/<id>`. Where the provider behind a repository cannot be determined, the Console leaves the control unlinked instead of guessing at a host."
   - question: "Can one Appwrite project use Bitbucket and GitHub at the same time?"
@@ -39,6 +38,7 @@ Connect a Bitbucket workspace, pick a repository, and pushes build and deploy ex
 - **Workspaces as owners.** Every workspace your account can reach shows up as a selectable owner in the repository picker.
 - **Push to deploy.** Production branch pushes build and activate. Other branches build and get a preview link.
 - **Links that resolve to Bitbucket.** Commits, branches, and pull requests link to `bitbucket.org` using Bitbucket's URL shapes.
+- **Commit statuses and pull request comments.** Every commit gets a status on Bitbucket that turns green or red with the Appwrite build. Pull requests get a comment listing every preview the push triggered, with build status, logs, the preview URL, and a QR code.
 
 # Connecting a Bitbucket workspace
 
@@ -57,6 +57,8 @@ The deployment workflow is documented in full under [Deploy from Git](/docs/prod
 3. Appwrite creates a deployment, builds it, and activates it.
 
 Pushes to a non-production branch build without activating and produce a [preview link](/docs/products/sites/previews) restricted to members of your Appwrite organization, which is the useful thing to paste into a pull request for review.
+
+You will rarely need to paste it, though. Appwrite reports a commit status for every push, green when the build passes and red when it fails, and posts a comment on the pull request listing every preview the push triggered, across Sites, Functions, and any other Appwrite project connected to the same repository. Each entry shows the deployment status and links to the build logs and the preview URL, with a QR code for opening the preview on a phone.
 
 Build triggers work the same way too. Branch filters limit which branches deploy automatically, and path filters limit which file changes count.
 

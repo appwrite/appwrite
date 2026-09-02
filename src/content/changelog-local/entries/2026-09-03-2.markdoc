@@ -11,6 +11,8 @@ Every Bitbucket workspace your account can reach appears as a selectable owner i
 
 Commit, branch, and pull request links resolve to Bitbucket's own URL shapes rather than GitHub's, and repositories are recognized by their URL as well as their recorded provider, so connections made before this release resolve correctly too.
 
+Every commit also receives a commit status on Bitbucket, green when the Appwrite build succeeds and red when it fails, so a pull request shows deployment health without leaving Bitbucket. Appwrite comments on the pull request as well, listing every preview the push triggered across your Sites, Functions, and projects, with the deployment status, a link to the build logs, the preview URL, and a QR code that opens the preview on a phone.
+
 {% arrow_link href="/blog/post/announcing-bitbucket-support" %}
 Read the announcement
 {% /arrow_link %}

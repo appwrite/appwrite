@@ -151,13 +151,6 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         actionLabel: 'Read article',
       },
       {
-        id: 'day3-gitlab-blog',
-        typeLabel: 'Blog',
-        title: 'GitLab comes to Appwrite',
-        href: '/blog/post/announcing-gitlab-support',
-        actionLabel: 'Read article',
-      },
-      {
         id: 'day3-docs',
         typeLabel: 'Docs',
         title: 'Databases documentation',
@@ -191,6 +184,13 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         typeLabel: 'Blog',
         title: 'S3 support for Appwrite Storage',
         href: '/blog/post/announcing-s3-api',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-gitlab-blog',
+        typeLabel: 'Blog',
+        title: 'GitLab comes to Appwrite',
+        href: '/blog/post/announcing-gitlab-support',
         actionLabel: 'Read article',
       },
       {

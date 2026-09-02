@@ -116,8 +116,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-gitlab-support",
+    "href": "/blog/post/announcing-gitlab-support",
+    "title": "Announcing GitLab support for Appwrite Sites and Functions",
+    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
+    "date": "2026-09-03",
+    "lastUpdated": "2026-09-03",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
@@ -147,21 +160,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "cover": "/images/blog/announcing-documentsdb/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-gitlab-support",
-    "href": "/blog/post/announcing-gitlab-support",
-    "title": "Announcing GitLab support for Appwrite Sites and Functions",
-    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
-    "date": "2026-09-02",
-    "lastUpdated": "2026-09-02",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
