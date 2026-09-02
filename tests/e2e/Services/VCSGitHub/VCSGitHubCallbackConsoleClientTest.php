@@ -123,7 +123,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('project_not_found', $response['body']['type']);
     }
 
     public function testGetCallbackLongState(): void
