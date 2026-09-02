@@ -6,9 +6,10 @@ import { acceptCookieBannerIfPresent } from './helpers/cookie-banner'
 /**
  * `/impersonate/$userId` deep link against a real backend.
  *
- * Runs only when the signed-in e2e account carries the `impersonator` flag
- * (operators on staging / cloud); otherwise the suite is skipped. The target
- * is any other console user visible to the operator through `users.list`.
+ * The operator suite runs only when the signed-in e2e account carries the
+ * `impersonator` flag (operators on staging / cloud); the target is any other
+ * console user visible through `users.list`. The non-operator suite covers the
+ * standard e2e account and asserts the redirect back to `/account`.
  */
 
 const IMPERSONATE_HEADER = 'x-appwrite-impersonate-user-id'
@@ -59,6 +60,38 @@ async function readOperatorContext(page: import('@playwright/test').Page) {
     return { account, candidates: list.users ?? [] }
   }, env.VITE_APPWRITE_ENDPOINT)
 }
+
+test.describe('impersonation deep link (non-operator account)', () => {
+  test('is sent straight to /account', async ({ page }) => {
+    await page.goto('/account', { waitUntil: 'domcontentloaded' })
+    await acceptCookieBannerIfPresent(page)
+    await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
+
+    const { account } = await readOperatorContext(page)
+    test.skip(
+      !!account.impersonator,
+      'e2e account is an operator; covered by the operator suite',
+    )
+
+    const targetLookup = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        appwriteApiPath(response.url()) === `/users/${account.$id}`,
+      { timeout: 45_000 },
+    )
+
+    await page.goto(`/impersonate/${account.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    // The backend refuses the console users API for non-operators.
+    expect((await targetLookup).status()).toBe(401)
+    await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
+    await expect(
+      page.getByRole('button', { name: 'Start impersonation' }),
+    ).toHaveCount(0)
+  })
+})
 
 test.describe('impersonation deep link (operator account)', () => {
   let operator: ConsoleUser
