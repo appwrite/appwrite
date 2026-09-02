@@ -18,6 +18,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.TradeshiftBox]: 'Tradeshift Sandbox',
   [OAuthProvider.Oidc]: 'OpenID Connect',
   [OAuthProvider.Fusionauth]: 'FusionAuth',
+  [OAuthProvider.Huggingface]: 'Hugging Face',
   [OAuthProvider.Keycloak]: 'Keycloak',
 }
 
@@ -34,6 +35,7 @@ export function getOAuth2ProviderIconPath(providerId: string): string {
   const map: Record<string, string> = {
     [OAuthProvider.Discord]: 'discord-simple.svg',
     [OAuthProvider.Fusionauth]: 'auth0.svg',
+    [OAuthProvider.Huggingface]: 'hugging-face.svg',
     [OAuthProvider.Keycloak]: 'auth0.svg',
     [OAuthProvider.Kick]: 'twitch.svg',
     [OAuthProvider.X]: 'x.svg',
