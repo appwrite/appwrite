@@ -33,6 +33,7 @@ export const DEDICATED_DATABASE_REALTIME_ENGINES = [
   'postgresql',
   'postgres',
   'mysql',
+  'mariadb',
   'mongodb',
   'mongo',
   'tablesdb',
@@ -63,7 +64,97 @@ function normalizeEngine(engine: string): string {
   const key = engine.toLowerCase().trim()
   if (key === 'postgres') return 'postgresql'
   if (key === 'mongo') return 'mongodb'
+  if (key === 'mariadb') return 'mysql'
   return key
+}
+
+/** Canonical realtime engine prefix for waits, cache keys, and event matching. */
+export function normalizeDedicatedRealtimeEngine(engine: string): string {
+  return normalizeEngine(engine)
+}
+
+const PRODUCT_API_TO_COMPUTE_ENGINE: Record<string, string> = {
+  vectorsdb: 'postgresql',
+  documentsdb: 'mongodb',
+  tablesdb: 'mysql',
+}
+
+const COMPUTE_ENGINE_SHORTHANDS: Record<string, readonly string[]> = {
+  postgresql: ['postgres'],
+  mongodb: ['mongo'],
+  mysql: ['mariadb'],
+}
+
+function addComputeEngineAliases(
+  aliases: Set<string>,
+  computeEngine: string,
+): void {
+  const normalized = normalizeEngine(computeEngine)
+  aliases.add(normalized)
+  for (const shorthand of COMPUTE_ENGINE_SHORTHANDS[normalized] ?? []) {
+    aliases.add(shorthand)
+  }
+}
+
+/**
+ * Realtime `{engine}` prefixes that refer to the same dedicated database.
+ * Product APIs (vectorsdb, documentsdb, tablesdb) may emit events on their
+ * compute engine prefix (postgresql, mongodb, mysql) instead.
+ */
+export function resolveDedicatedRealtimeEngineAliases(engine: string): string[] {
+  const normalized = normalizeEngine(engine)
+  const aliases = new Set<string>([normalized, engine.toLowerCase().trim()])
+
+  addComputeEngineAliases(aliases, normalized)
+
+  for (const [productApi, computeEngine] of Object.entries(
+    PRODUCT_API_TO_COMPUTE_ENGINE,
+  )) {
+    const compute = normalizeEngine(computeEngine)
+    if (normalized === productApi) {
+      addComputeEngineAliases(aliases, compute)
+      continue
+    }
+    if (normalized === compute || aliases.has(compute)) {
+      aliases.add(productApi)
+    }
+  }
+
+  return [...aliases]
+}
+
+export function isDedicatedDatabaseLifecycleEvent(
+  parsed: ParsedDedicatedDatabaseEvent,
+): boolean {
+  return (
+    !parsed.resource &&
+    (parsed.action === 'create' ||
+      parsed.action === 'update' ||
+      parsed.action === 'delete')
+  )
+}
+
+export function findDedicatedDatabaseScopedEvent(
+  events: string[],
+  databaseId: string,
+  engineAliases: string[],
+  options?: { lifecycleOnly?: boolean },
+): ParsedDedicatedDatabaseEvent | null {
+  const aliasSet = new Set(engineAliases.map(normalizeEngine))
+  let fallback: ParsedDedicatedDatabaseEvent | null = null
+
+  for (const event of events) {
+    const parsed = parseDedicatedDatabaseEvent(event)
+    if (!parsed || parsed.databaseId !== databaseId) continue
+    if (!aliasSet.has(normalizeEngine(parsed.engine))) continue
+
+    if (isDedicatedDatabaseLifecycleEvent(parsed)) {
+      return parsed
+    }
+    if (!fallback) fallback = parsed
+  }
+
+  return options?.lifecycleOnly ? null : fallback
 }
 
 function engineToProductRouteKind(engine: string): DatabaseRouteKind | null {
@@ -72,6 +163,20 @@ function engineToProductRouteKind(engine: string): DatabaseRouteKind | null {
   if (key === 'documentsdb') return 'documentsdb'
   if (key === 'vectorsdb') return 'vectorsdb'
   return null
+}
+
+function resolveProductRouteKindsForPayload(
+  payload: Record<string, unknown>,
+  engine?: string,
+): DatabaseRouteKind[] {
+  const api =
+    typeof payload.api === 'string' ? payload.api.trim().toLowerCase() : ''
+  if (api === 'vectorsdb' || api === 'documentsdb' || api === 'tablesdb') {
+    return [api]
+  }
+
+  const fromEngine = engine ? engineToProductRouteKind(engine) : null
+  return fromEngine ? [fromEngine] : []
 }
 
 function isDedicatedDatabaseEngineEvent(event: string): boolean {
@@ -256,10 +361,7 @@ export function mergeDedicatedDatabasePayloadIntoCache(
     )
   }
 
-  const productKind = engine ? engineToProductRouteKind(engine) : null
-  const productKinds: DatabaseRouteKind[] = productKind
-    ? [productKind]
-    : ['tablesdb', 'documentsdb', 'vectorsdb']
+  const productKinds = resolveProductRouteKindsForPayload(payload, engine)
 
   for (const dbKind of productKinds) {
     queryClient.setQueryData(
@@ -477,6 +579,20 @@ function invalidateExtensionCaches(
   ])
 }
 
+function invalidateNativeDatabaseDetailCaches(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+): void {
+  for (const queryKey of [
+    ['postgres-database', 'project', projectId, databaseId],
+    ['mysql-database', 'project', projectId, databaseId],
+    ['mongo-database', 'project', projectId, databaseId],
+  ] as const) {
+    invalidateQueryKey(queryClient, queryKey)
+  }
+}
+
 function invalidateReplicaCaches(
   queryClient: QueryClient,
   projectId: string,
@@ -546,6 +662,24 @@ export function handleDedicatedDatabaseRealtimeEvents(
         invalidateQueryKey(queryClient, ['databases', 'project', projectId])
       } else {
         invalidateReplicaCaches(queryClient, projectId, databaseId)
+        invalidateQueryKey(queryClient, [
+          'dedicated-databases',
+          'project',
+          projectId,
+        ])
+        invalidateQueryKey(queryClient, [
+          'database',
+          'project',
+          projectId,
+          databaseId,
+        ])
+        invalidateQueryKey(queryClient, [
+          'dedicated-database',
+          'project',
+          projectId,
+          databaseId,
+        ])
+        invalidateNativeDatabaseDetailCaches(queryClient, projectId, databaseId)
       }
       continue
     }

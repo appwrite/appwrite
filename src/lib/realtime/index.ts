@@ -16,6 +16,8 @@ export {
 export {
   handleDedicatedDatabaseRealtimeEvents,
   isDedicatedDatabaseRealtimeSignal,
+  normalizeDedicatedRealtimeEngine,
+  resolveDedicatedRealtimeEngineAliases,
 } from './dedicated-database-cache'
 export { waitForDatabaseRealtimeEvent } from './wait-for-database-realtime'
 export {

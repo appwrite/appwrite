@@ -46,6 +46,7 @@ import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-w
 import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
 import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import { waitForDatabaseRealtimeEvent } from '@/lib/realtime/wait-for-database-realtime'
+import { normalizeDedicatedRealtimeEngine } from '@/lib/realtime/dedicated-database-cache'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
 import {
   normalizePostgresExecutionResult,
@@ -209,10 +210,7 @@ function dedicatedRealtimeEngineForSource(
     | { type: 'engine'; engine: string },
 ): string {
   if (source.type === 'engine') {
-    const key = source.engine.trim().toLowerCase()
-    if (key === 'postgres') return 'postgresql'
-    if (key === 'mongo') return 'mongodb'
-    return key
+    return normalizeDedicatedRealtimeEngine(source.engine)
   }
   return computeApiForDatabaseType(routeKindToDatabaseType(source.dbKind))
 }
@@ -266,28 +264,23 @@ export async function waitForDedicatedDatabaseReady(
   const engine = dedicatedRealtimeEngineForSource(source)
 
   try {
-    const payload = await waitForDatabaseRealtimeEvent({
+    await waitForDatabaseRealtimeEvent({
       projectId,
       databaseId,
       engine,
+      lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
-      predicate: (next) => {
-        const status = typeof next.status === 'string' ? next.status : null
-        return (
-          isDatabaseLifecycleReady(status) || isDatabaseLifecycleFailed(status)
-        )
-      },
     })
-    const status = typeof payload.status === 'string' ? payload.status : null
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      source,
+    ).catch(() => null)
+    const status = database?.status ?? null
     if (isDatabaseLifecycleFailed(status)) {
       return false
     }
     if (source.type === 'engine' && isDatabaseLifecycleReady(status)) {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        source,
-      ).catch(() => null)
       if (database) {
         await ensureConsoleSqlApiStatements(
           projectId,
@@ -352,19 +345,21 @@ export async function waitForCreatedDatabaseLifecycleReady(
   const engine = dedicatedRealtimeEngineForKind(kind)
 
   try {
-    const payload = await waitForDatabaseRealtimeEvent({
+    await waitForDatabaseRealtimeEvent({
       projectId,
       databaseId,
       engine,
+      lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
-      predicate: (next) => {
-        const status = typeof next.status === 'string' ? next.status : null
-        return (
-          isDatabaseLifecycleReady(status) || isDatabaseLifecycleFailed(status)
-        )
-      },
     })
-    const status = typeof payload.status === 'string' ? payload.status : null
+    const database = await getProductDatabase(
+      projectSdk,
+      kind.backend,
+      databaseId,
+    ).catch(() => null)
+    const status = database
+      ? readProductDatabaseLifecycleStatus(database)
+      : null
     if (isDatabaseLifecycleFailed(status)) {
       return false
     }
@@ -1456,14 +1451,42 @@ export async function waitForCreatedDatabaseHaReady(
   }
 
   try {
-    const payload = await waitForDatabaseRealtimeEvent({
+    await waitForDatabaseRealtimeEvent({
       projectId,
       databaseId,
       engine: dedicatedRealtimeEngineForKind(kind),
+      lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
-      predicate: matchesHaReady,
     })
-    return matchesHaReady(payload)
+
+    if (kind.type === 'native') {
+      const database = await fetchDedicatedDatabaseById(
+        projectId,
+        databaseId,
+        {
+          type: 'engine',
+          engine:
+            kind.engine === 'postgres'
+              ? 'postgresql'
+              : kind.engine === 'mongo'
+                ? 'mongodb'
+                : 'mysql',
+        },
+      ).catch(() => null)
+      return Boolean(
+        database && matchesHaReady(database as Record<string, unknown>),
+      )
+    }
+
+    const projectSdk = sdk.forProject(projectId)
+    const database = await getProductDatabase(
+      projectSdk,
+      kind.backend,
+      databaseId,
+    ).catch(() => null)
+    return Boolean(
+      database && matchesHaReady(database as Record<string, unknown>),
+    )
   } catch {
     return false
   }
@@ -1509,14 +1532,29 @@ export async function waitForCreatedDatabasePitrReady(
   }
 
   try {
-    const payload = await waitForDatabaseRealtimeEvent({
+    await waitForDatabaseRealtimeEvent({
       projectId,
       databaseId,
       engine: dedicatedRealtimeEngineForKind(kind),
+      lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
-      predicate: matchesPitrReady,
     })
-    return matchesPitrReady(payload)
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      },
+    ).catch(() => null)
+    return Boolean(
+      database && matchesPitrReady(database as Record<string, unknown>),
+    )
   } catch {
     return false
   }
@@ -1661,8 +1699,11 @@ export async function updateProductDatabaseSpecification(
  *
  * `dbKindOrType` may be a product route kind (`tablesdb` / `documentsdb` /
  * `vectorsdb`) or a native engine type (`postgresql` / `mysql` / `mongodb`).
- * Native types must not fall through to TablesDB — that is what broke context-
- * menu delete for Postgres (settings used `postgresql.delete` directly).
+ * Pass the product type for product-owned DBs, never the backing engine.
+ * VectorsDB is postgres-backed and DocumentsDB is mongo-backed; sending the
+ * engine here deletes via postgresql/mongo and 404s. Native types must not
+ * fall through to TablesDB — that is what broke context-menu delete for
+ * Postgres (settings used `postgresql.delete` directly).
  */
 export async function deleteProjectDatabase(
   projectId: string,

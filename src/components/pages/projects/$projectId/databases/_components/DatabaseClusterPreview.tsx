@@ -285,6 +285,7 @@ function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
       return 'bg-emerald-500 dark:bg-emerald-400'
     case 'provisioning':
     case 'starting':
+      return 'bg-blue-500 dark:bg-blue-400'
     case 'pending':
       return 'bg-amber-500 dark:bg-amber-400'
     case 'scaling':
@@ -629,11 +630,11 @@ function CompactClusterNode({
                   'text-[10px] font-medium leading-none',
                   status === 'removing'
                     ? 'text-muted-foreground'
-                    : status === 'adding'
+                    : status === 'adding' ||
+                        status === 'provisioning' ||
+                        status === 'starting'
                       ? 'text-blue-700 dark:text-blue-400'
-                      : status === 'provisioning' ||
-                          status === 'starting' ||
-                          status === 'pending'
+                      : status === 'pending'
                         ? 'text-amber-700 dark:text-amber-400'
                         : 'text-muted-foreground',
                 )}

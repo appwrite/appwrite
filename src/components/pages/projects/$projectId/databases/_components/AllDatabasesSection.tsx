@@ -14,6 +14,7 @@ import {
 import { type Models } from '@appwrite.io/console'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
+  databaseOwnerTypeForMutation,
   databaseRouteKindFromApiType,
   dedicatedDatabaseHomeLink,
   isDatabaseRouteKind,
@@ -358,9 +359,10 @@ function AllDatabasesGridCardShell({
       database={{
         $id: db.$id,
         name: db.name,
-        // Prefer engine / raw API type so native DBs are not coerced to tablesdb.
-        databaseType:
-          dedicated?.engine ?? db.apiType ?? db.databaseType,
+        databaseType: databaseOwnerTypeForMutation(
+          { apiType: db.apiType, databaseType: db.databaseType },
+          dedicated,
+        ),
       }}
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}

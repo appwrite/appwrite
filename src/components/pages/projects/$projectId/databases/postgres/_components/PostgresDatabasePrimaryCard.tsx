@@ -117,11 +117,11 @@ function expandClusterMembers(
 
 function getMemberStatusVariant(
   status: string,
-): 'success' | 'warning' | 'error' | 'info' {
+): 'success' | 'warning' | 'error' | 'info' | 'processing' {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') return 'success'
   if (normalized === 'provisioning' || normalized === 'starting') {
-    return 'warning'
+    return 'processing'
   }
   if (normalized === 'failed') return 'error'
   // Legacy API values (pre-15.3)

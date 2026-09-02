@@ -277,6 +277,30 @@ export function isNativeDedicatedDatabase(
   return !isProductOwnedDedicatedDatabase(db)
 }
 
+/**
+ * Type to pass into delete / context-menu routing.
+ *
+ * Product-owned dedicated DBs (VectorsDB, DocumentsDB, dedicated TablesDB)
+ * share a backing engine (postgres / mongo / mysql). That engine must not
+ * win over `api` / product `type`, or mutations hit the native engine
+ * endpoint and 404.
+ */
+export function databaseOwnerTypeForMutation(
+  hints: {
+    apiType?: string | null
+    databaseType?: string | null
+  },
+  dedicated?: Pick<DedicatedDatabaseLinkInput, 'api' | 'engine'> | null,
+): string | undefined {
+  if (dedicated && isProductOwnedDedicatedDatabase(dedicated)) {
+    return dedicated.api || hints.apiType || hints.databaseType || undefined
+  }
+  if (dedicated && isNativeDedicatedDatabase(dedicated)) {
+    return dedicated.engine || hints.apiType || hints.databaseType || undefined
+  }
+  return hints.apiType || hints.databaseType || undefined
+}
+
 export function needsDedicatedProductTypeLookup(
   _db: DedicatedDatabaseLinkInput,
 ): boolean {

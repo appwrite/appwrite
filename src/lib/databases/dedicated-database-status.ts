@@ -5,6 +5,7 @@ export type DedicatedDatabaseStatusBadgeVariant =
   | 'warning'
   | 'error'
   | 'info'
+  | 'processing'
   | 'inactive'
 
 /**
@@ -95,6 +96,8 @@ export function dedicatedDatabaseStatusBadgeVariant(
     case 'ready':
       return 'success'
     case 'provisioning':
+    case 'starting':
+      return 'processing'
     case 'restoring':
     case 'upgrading':
     case 'migrating':

@@ -6,8 +6,10 @@
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
 import { PROJECT_CHANNELS } from './constants'
 import {
+  findDedicatedDatabaseScopedEvent,
+  isDedicatedDatabaseLifecycleEvent,
   parseDedicatedDatabaseEvent,
-  type ParsedDedicatedDatabaseEvent,
+  resolveDedicatedRealtimeEngineAliases,
 } from './dedicated-database-cache'
 import { registerConsoleRealtimeListener } from './console-hub'
 import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
@@ -16,31 +18,16 @@ export type WaitForDatabaseRealtimeOptions = {
   projectId: string
   databaseId: string
   engine: string
-  /** Extra check on the merged payload (status, replicas, etc.). */
+  /** Defaults to {@link resolveDedicatedRealtimeEngineAliases}(engine). */
+  engineAliases?: string[]
+  /**
+   * When true, resolve on database lifecycle events (`{engine}.{id}.create|update|delete`)
+   * even when the payload is missing or incomplete. Callers should re-fetch status from the API.
+   */
+  lifecycleOnly?: boolean
+  /** Extra check on the merged payload (status, replicas, etc.). Ignored when lifecycleOnly matches. */
   predicate?: (payload: Record<string, unknown>) => boolean
   timeoutMs?: number
-}
-
-function normalizeEngine(engine: string): string {
-  const key = engine.toLowerCase().trim()
-  if (key === 'postgres') return 'postgresql'
-  if (key === 'mongo') return 'mongodb'
-  return key
-}
-
-function eventMatchesDatabaseScope(
-  events: string[],
-  scope: Pick<WaitForDatabaseRealtimeOptions, 'databaseId' | 'engine'>,
-): ParsedDedicatedDatabaseEvent | null {
-  const normalizedEngine = normalizeEngine(scope.engine)
-  for (const event of events) {
-    const parsed = parseDedicatedDatabaseEvent(event)
-    if (!parsed) continue
-    if (parsed.databaseId !== scope.databaseId) continue
-    if (normalizeEngine(parsed.engine) !== normalizedEngine) continue
-    return parsed
-  }
-  return null
 }
 
 function readPayload(
@@ -67,6 +54,23 @@ function isForProject(
   return false
 }
 
+function isRelevantForDatabaseWait(
+  projectId: string,
+  databaseId: string,
+  channels: string[],
+  events: string[],
+  payload: Record<string, unknown> | null,
+): boolean {
+  if (
+    events.some(
+      (event) => parseDedicatedDatabaseEvent(event)?.databaseId === databaseId,
+    )
+  ) {
+    return true
+  }
+  return isForProject(projectId, channels, payload)
+}
+
 /**
  * Resolves when a matching database realtime event arrives, or rejects on timeout.
  */
@@ -77,6 +81,8 @@ export async function waitForDatabaseRealtimeEvent(
     projectId,
     databaseId,
     engine,
+    engineAliases = resolveDedicatedRealtimeEngineAliases(engine),
+    lifecycleOnly = false,
     predicate,
     timeoutMs = 9 * 60 * 1000,
   } = options
@@ -91,10 +97,7 @@ export async function waitForDatabaseRealtimeEvent(
       if (settled) return
       settled = true
       if (timeoutId) clearTimeout(timeoutId)
-      await Promise.all([
-        unregisterMain?.(),
-        unregisterRegional?.(),
-      ])
+      await Promise.all([unregisterMain?.(), unregisterRegional?.()])
       if (result === 'resolve') {
         resolve(value as Record<string, unknown>)
       } else {
@@ -108,17 +111,47 @@ export async function waitForDatabaseRealtimeEvent(
 
     const handler = (response: RealtimeResponseEvent<unknown>) => {
       const payload = readPayload(response)
-      if (!isForProject(projectId, response.channels, payload)) return
+      if (
+        !isRelevantForDatabaseWait(
+          projectId,
+          databaseId,
+          response.channels,
+          response.events,
+          payload,
+        )
+      ) {
+        return
+      }
 
-      const match = eventMatchesDatabaseScope(response.events, {
+      const lifecycleMatch = findDedicatedDatabaseScopedEvent(
+        response.events,
         databaseId,
-        engine,
-      })
-      if (!match) return
-      if (predicate && payload && !predicate(payload)) return
-      if (predicate && !payload) return
+        engineAliases,
+        { lifecycleOnly: true },
+      )
 
-      void finish('resolve', payload ?? { $id: databaseId })
+      if (lifecycleOnly && lifecycleMatch) {
+        void finish('resolve', payload ?? { $id: databaseId })
+        return
+      }
+
+      const match = findDedicatedDatabaseScopedEvent(
+        response.events,
+        databaseId,
+        engineAliases,
+      )
+      if (!match) return
+
+      if (isDedicatedDatabaseLifecycleEvent(match)) {
+        if (!predicate || (payload && predicate(payload))) {
+          void finish('resolve', payload ?? { $id: databaseId })
+        }
+        return
+      }
+
+      if (predicate && payload && predicate(payload)) {
+        void finish('resolve', payload)
+      }
     }
 
     const channels = [...PROJECT_CHANNELS]
