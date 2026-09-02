@@ -1621,7 +1621,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.4
+    image: openruntimes/executor:0.29.0
     restart: unless-stopped
     networks:
       - appwrite
@@ -1667,7 +1667,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.8.3
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.9.2
     restart: unless-stopped
     user: root
     networks:
