@@ -468,8 +468,7 @@ readonly class Deployments
      * (see storage()) build.sh wrote it onto the builds volume, which on the
      * local device already is the buildPath; on a remote device (S3 and
      * friends) it is moved off the volume onto the device here. A strategy
-     * whose artifacts already land on the device — Cloud uploads them from
-     * the sidecar — overrides this with a no-op.
+     * whose artifacts already land on the device overrides this with a no-op.
      */
     public function store(Document $deployment): void
     {
