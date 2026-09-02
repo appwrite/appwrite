@@ -1,6 +1,7 @@
 import type { Page, Route } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
+import { appwriteApiPath } from './helpers/appwrite-url'
 
 /**
  * `/impersonate/$userId` deep link (HelpScout triage notes → Console).
@@ -34,7 +35,7 @@ type MockUser = {
   impersonatorUserId?: string
 }
 
-function user(overrides: MockUser) {
+function mockUserResponse(overrides: MockUser) {
   const now = new Date().toISOString()
   return {
     $createdAt: now,
@@ -73,14 +74,6 @@ type ApiScenario = {
   account: MockUser | null
 }
 
-function apiPath(route: Route): string {
-  const url = new URL(route.request().url())
-  const base = new URL(env.VITE_APPWRITE_ENDPOINT).pathname.replace(/\/$/, '')
-  return url.pathname.startsWith(base)
-    ? url.pathname.slice(base.length)
-    : url.pathname
-}
-
 function corsHeaders(route: Route): Record<string, string> {
   const request = route.request()
   const origin = request.headers()['origin'] ?? 'http://localhost:4173'
@@ -112,7 +105,7 @@ async function mockAppwriteApi(page: Page, scenario: ApiScenario) {
         body: JSON.stringify(body),
       })
 
-    const path = apiPath(route)
+    const path = appwriteApiPath(request.url())
 
     if (request.method() === 'GET' && path === '/account') {
       if (!scenario.account) return json(401, UNAUTHORIZED)
@@ -122,10 +115,13 @@ async function mockAppwriteApi(page: Page, scenario: ApiScenario) {
         // Server resolves `targetUser`; the operator is only reported by id.
         return json(
           200,
-          user({ ...TARGET, impersonatorUserId: scenario.account.$id }),
+          mockUserResponse({
+            ...TARGET,
+            impersonatorUserId: scenario.account.$id,
+          }),
         )
       }
-      return json(200, user(scenario.account))
+      return json(200, mockUserResponse(scenario.account))
     }
 
     if (request.method() === 'GET' && path === '/account/prefs') {
@@ -133,7 +129,7 @@ async function mockAppwriteApi(page: Page, scenario: ApiScenario) {
     }
 
     if (request.method() === 'GET' && path === `/users/${TARGET.$id}`) {
-      return json(200, user(TARGET))
+      return json(200, mockUserResponse(TARGET))
     }
 
     return json(404, NOT_FOUND)
@@ -164,7 +160,7 @@ test.describe('impersonation deep link (mocked API)', () => {
     const impersonatedAccountRequest = page.waitForRequest(
       (request) =>
         request.method() === 'GET' &&
-        apiPathOf(request.url()) === '/account' &&
+        appwriteApiPath(request.url()) === '/account' &&
         request.headers()[IMPERSONATE_HEADER] === TARGET.$id,
       { timeout: 30_000 },
     )
@@ -201,7 +197,7 @@ test.describe('impersonation deep link (mocked API)', () => {
     const plainAccountRequest = page.waitForRequest(
       (request) =>
         request.method() === 'GET' &&
-        apiPathOf(request.url()) === '/account' &&
+        appwriteApiPath(request.url()) === '/account' &&
         !request.headers()[IMPERSONATE_HEADER],
       { timeout: 30_000 },
     )
@@ -252,13 +248,3 @@ test.describe('impersonation deep link (mocked API)', () => {
     expect(redirect).toBe(`/impersonate/${TARGET.$id}`)
   })
 })
-
-function apiPathOf(url: string): string {
-  const base = new URL(env.VITE_APPWRITE_ENDPOINT)
-  const parsed = new URL(url)
-  if (parsed.origin !== base.origin) return parsed.pathname
-  const basePath = base.pathname.replace(/\/$/, '')
-  return parsed.pathname.startsWith(basePath)
-    ? parsed.pathname.slice(basePath.length)
-    : parsed.pathname
-}

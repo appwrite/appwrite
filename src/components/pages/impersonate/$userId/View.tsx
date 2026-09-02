@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Loader2, UserRound } from 'lucide-react'
+import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { sdk } from '@/lib/appwrite/sdk'
 import {
   ACCOUNT_PATH_AFTER_IMPERSONATION,
   resolveConsoleImpersonationOperator,
@@ -16,10 +16,17 @@ import {
 import { beginConsoleImpersonation } from '@/lib/console-impersonation-start'
 import { useT } from '@/lib/i18n/translate'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
+import { consoleUserQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+
+export type ImpersonateInitialData = {
+  /** `null` when the loader could not resolve the user (unknown id, not an operator, signed out). */
+  target: Models.User | null
+}
 
 type ViewProps = {
   userId: string
+  initialData?: ImpersonateInitialData
 }
 
 /**
@@ -27,7 +34,7 @@ type ViewProps = {
  * triage notes). Operators see who they are about to impersonate and confirm before
  * the Console switches identity; everyone else is sent back to `/account`.
  */
-export function View({ userId }: ViewProps) {
+export function View({ userId, initialData }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
   const { account: rawAccount } = useAuth()
@@ -44,17 +51,11 @@ export function View({ userId }: ViewProps) {
     }
   }, [account, isOperator, navigate])
 
-  const {
-    data: target,
-    error: targetError,
-    isPending: isTargetPending,
-  } = useQuery({
-    queryKey: ['console', 'users', 'impersonation-target', userId],
-    queryFn: () => sdk.forConsole.users.get(userId),
+  const { data: targetFromHook, error: targetError } = useQuery({
+    ...consoleUserQueryOptions(userId),
     enabled: isOperator,
-    retry: false,
-    staleTime: 30 * 1000,
   })
+  const target = targetFromHook ?? initialData?.target ?? undefined
 
   const operator = resolveConsoleImpersonationOperator(account)
   const operatorLabel =
@@ -69,7 +70,7 @@ export function View({ userId }: ViewProps) {
       ? t('That user is already the active Console session.')
       : isOwnOperatorAccount
         ? t('You cannot impersonate your own operator account.')
-        : targetError
+        : targetError && !target
           ? getErrorMessage(targetError, t('Could not load this user.'))
           : null
 
@@ -91,14 +92,10 @@ export function View({ userId }: ViewProps) {
   }
 
   if (!account || !isOperator) {
-    return (
-      <div className="flex h-[100dvh] items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return null
   }
 
-  const targetLabel = target?.name || target?.email || target?.$id || userId
+  const targetLabel = target?.name || target?.email || userId
 
   return (
     <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10">
@@ -108,7 +105,7 @@ export function View({ userId }: ViewProps) {
             <div className="flex flex-col items-center gap-4 text-center">
               <Badge variant="pending" className="shrink-0 text-[10px]">
                 <UserRound className="size-3" aria-hidden />
-                {t('Operator')}
+                {t('Operator access')}
               </Badge>
               <div className="space-y-1">
                 <h1 className="text-2xl font-semibold tracking-tight">
@@ -123,44 +120,32 @@ export function View({ userId }: ViewProps) {
             </div>
 
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-              {isTargetPending && !targetError ? (
-                <div className="flex h-10 w-full items-center justify-center">
-                  <Loader2
-                    className="h-5 w-5 animate-spin text-muted-foreground"
-                    aria-hidden
+              <InitialsAvatar
+                name={targetLabel}
+                size="sm"
+                className="shrink-0"
+              />
+              <div className="min-w-0 flex-1 text-start">
+                <p className="truncate text-[13px] font-medium text-foreground">
+                  {target?.name || '-'}
+                </p>
+                <p className="truncate text-[12px] text-muted-foreground">
+                  {target?.email || '-'}
+                </p>
+                <div className="mt-1">
+                  <CopyableId
+                    id={userId}
+                    size="xs"
+                    maxWidth={260}
+                    className="max-w-full"
                   />
-                  <span className="sr-only">{t('Loading user')}</span>
                 </div>
-              ) : (
-                <>
-                  <InitialsAvatar
-                    name={targetLabel}
-                    size="sm"
-                    className="shrink-0"
-                  />
-                  <div className="min-w-0 flex-1 text-start">
-                    <p className="truncate text-[13px] font-medium text-foreground">
-                      {target?.name || '-'}
-                    </p>
-                    <p className="truncate text-[12px] text-muted-foreground">
-                      {target?.email || '-'}
-                    </p>
-                    <div className="mt-1">
-                      <CopyableId
-                        id={userId}
-                        size="xs"
-                        maxWidth={260}
-                        className="max-w-full"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
 
             {operatorLabel ? (
               <p className="text-center text-[12px] text-muted-foreground">
-                {t('Operator')}{' '}
+                {t('Operator account')}{' '}
                 <span className="text-foreground">{operatorLabel}</span>
               </p>
             ) : null}
@@ -176,9 +161,7 @@ export function View({ userId }: ViewProps) {
                 type="button"
                 className="w-full"
                 onClick={handleConfirm}
-                disabled={
-                  !target || !!blockingMessage || isStarting || isTargetPending
-                }
+                disabled={!target || !!blockingMessage || isStarting}
               >
                 {isStarting ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

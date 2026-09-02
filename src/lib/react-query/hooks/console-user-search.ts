@@ -47,3 +47,16 @@ export function consoleUsersImpersonationSearchQueryOptions(
     retry: false,
   })
 }
+
+/**
+ * Single console user (project = console) for the `/impersonate/$userId` deep
+ * link. Shared by the route loader and the View so the first paint has data.
+ */
+export function consoleUserQueryOptions(userId: string) {
+  return queryOptions({
+    queryKey: ['console', 'users', 'detail', userId],
+    queryFn: () => sdk.forConsole.users.get(userId),
+    staleTime: 30 * 1000,
+    retry: false,
+  })
+}

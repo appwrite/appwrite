@@ -1,26 +1,41 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { View } from '@/components/pages/impersonate/View'
+import { View } from '@/components/pages/impersonate/$userId/View'
+import { consoleUserQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/impersonate/$userId')({
   head: () => ({ meta: [{ title: pageTitle('Impersonate user') }] }),
+  loader: async ({ params, context }) => {
+    if (typeof window === 'undefined') return undefined
+
+    const { userId } = params
+    const { queryClient } = context
+
+    try {
+      const target = await queryClient.ensureQueryData(
+        consoleUserQueryOptions(userId),
+      )
+      return { target }
+    } catch {
+      // Signed out, not an operator, or unknown id: RequireAuth / the View decide.
+      return { target: null }
+    }
+  },
   component: ImpersonatePage,
 })
 
 function ImpersonatePage() {
   const { userId } = Route.useParams()
+  const loaderData = Route.useLoaderData()
 
   return (
-    <RequireAuth
-      loadingComponent={
-        <div className="flex h-[100dvh] items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      }
-    >
-      <View userId={userId} />
+    <RequireAuth>
+      <View
+        key={`impersonate-${userId}`}
+        userId={userId}
+        initialData={loaderData ? { target: loaderData.target } : undefined}
+      />
     </RequireAuth>
   )
 }
