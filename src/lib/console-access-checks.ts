@@ -140,11 +140,24 @@ export function canCreatePlatform(
   return whenOrgRoles(access, features, access.canWritePlatforms)
 }
 
+/** Auth/end-user `domains.write`. Not granted to console owners. Use `canWriteProjectDomains` for Settings → Custom domains. */
 export function canWriteDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteDomains)
+}
+
+/**
+ * Project custom domains (API / Functions / Sites proxy rules).
+ * Console owner and developer roles include `rules.write`, not `domains.write`.
+ * `domains.write` is an Auth/end-user scope and is not granted to org owners.
+ */
+export function canWriteProjectDomains(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteRules)
 }
 
 export function canWriteWebhooks(
