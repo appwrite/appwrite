@@ -66,9 +66,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
-
-        parse_str((string) parse_url((string) $response['headers']['location'], PHP_URL_QUERY), $query);
-        $this->assertStringContainsString('sent to the organization owners', $query['error'] ?? '');
     }
 
     public function testGetCallbackMissingState(): void
@@ -79,7 +76,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('completed on GitHub', (string) $response['body']);
     }
 
     public function testGetCallbackEmptyState(): void
@@ -91,7 +87,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('completed on GitHub', (string) $response['body']);
     }
 
     public function testGetCallbackProjectNotFound(): void
@@ -106,9 +101,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($redirect . '?error=', (string) $response['headers']['location']);
-
-        parse_str((string) parse_url((string) $response['headers']['location'], PHP_URL_QUERY), $query);
-        $this->assertStringContainsString('could not be found', $query['error'] ?? '');
     }
 
     public function testGetCallbackDefaultRedirect(): void

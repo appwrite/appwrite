@@ -165,11 +165,12 @@ class Get extends Action
             // GitHub sends setup_action=install on a completed installation,
             // update from the app's Configure page, and request when a member
             // asked the owners for approval. install and update should always
-            // carry an installation_id, so reaching this branch with them (or
-            // any unrecognized value) is treated as the permissions case.
+            // carry an installation_id, so without one they mean the caller
+            // lacked permission to install.
             $error = match ($setupAction) {
                 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
-                default => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
+                'install', 'update', '' => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
+                default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
             };
 
             if (!empty($redirectFailure)) {
