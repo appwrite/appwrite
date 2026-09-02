@@ -109,10 +109,8 @@ class Create extends Action
         callable $getProjectDB,
     ) {
         if ($parsedPayload["action"] === "created") {
-            // The adapter drops the requester, so read it off the raw payload.
-            // It is only present when the installation started as a member's
-            // request; its login is what ties the approval back to the pending
-            // request documents, which the user then confirms from the Console.
+            // The adapter drops the requester, which is only present when the
+            // installation started as a member's request; read it off the raw payload.
             $requester = \json_decode($payload, true)['requester']['login'] ?? '';
 
             if (empty($requester)) {
@@ -141,24 +139,15 @@ class Create extends Action
             return;
         }
 
-        $requestCursor = null;
-        do {
-            $requestQueries = [
-                Query::equal('providerInstallationId', [$parsedPayload["installationId"]]),
-                Query::equal('provider', ['github']),
-                Query::limit(1000),
-            ];
-            if ($requestCursor !== null) {
-                $requestQueries[] = Query::cursorAfter($requestCursor);
-            }
-            $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', $requestQueries));
+        $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', [
+            Query::equal('providerInstallationId', [$parsedPayload["installationId"]]),
+            Query::equal('provider', ['github']),
+            Query::limit(1000),
+        ]));
 
-            foreach ($requests as $request) {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
-            }
-
-            $requestCursor = \end($requests) ?: null;
-        } while (\count($requests) === 1000);
+        foreach ($requests as $request) {
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
+        }
 
         $providerInstallationId = $parsedPayload["installationId"];
 

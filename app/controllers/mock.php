@@ -355,7 +355,7 @@ Http::get('/v1/mock/github/request')
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project with the requested ID could not be found.');
         }
 
         $teamId = $project->getAttribute('teamId', '');

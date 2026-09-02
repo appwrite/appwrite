@@ -63,7 +63,11 @@ class Update extends Action
     ) {
         $request = $dbForPlatform->getDocument('installationRequests', $requestId);
 
-        if ($request->isEmpty() || $request->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($request->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
+        }
+
+        if ($request->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
         }
 
@@ -93,7 +97,9 @@ class Update extends Action
             ]));
         }
 
-        $dbForPlatform->deleteDocument('installationRequests', $request->getId());
+        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation request from DB');
+        }
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     }
