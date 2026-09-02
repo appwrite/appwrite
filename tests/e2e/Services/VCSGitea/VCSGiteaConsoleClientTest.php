@@ -523,6 +523,14 @@ final class VCSGiteaConsoleClientTest extends Scope
             $this->assertEquals(404, $response['headers']['status-code'], $method . ' ' . $path);
             $this->assertEquals('installation_not_found', $response['body']['type'], $method . ' ' . $path);
         }
+
+        // On the owning project the guard must pass; whatever the provider
+        // answers about the dummy repository, it is not installation_not_found.
+        foreach ($probes as [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $this->getTenantHeaders($a), $params);
+
+            $this->assertNotEquals('installation_not_found', $response['body']['type'] ?? '', $method . ' ' . $path);
+        }
     }
 
     public function testInvitedMemberCanUseInstallation(): void
