@@ -114,7 +114,7 @@ final class VCSGiteaConsoleClientTest extends Scope
      * Walk the full OAuth2 dance against the local Gitea and return the
      * resulting installation, asserting every hop on the way.
      */
-    private function createInstallationHelper(?string $projectId = null, ?array $headers = null, string $username = self::GITEA_USERNAME, string $password = self::GITEA_PASSWORD): array
+    private function createInstallationHelper(?string $projectId = null, ?array $headers = null, string $username = self::GITEA_USERNAME, string $password = self::GITEA_PASSWORD, bool $redirects = true): array
     {
         $projectId ??= $this->getProject()['$id'];
         $headers ??= $this->getHeaders();
@@ -128,10 +128,10 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
             'x-appwrite-project' => $projectId,
-        ], $headers), [
+        ], $headers), $redirects ? [
             'success' => $consoleUrl,
             'failure' => $consoleUrl,
-        ], true, false);
+        ] : [], true, false);
 
         $this->assertEquals(301, $authorize['headers']['status-code']);
 
@@ -336,6 +336,133 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code'], \json_encode($execution['body']));
         $this->assertEquals('completed', $execution['body']['status'] ?? '', \json_encode($execution['body']));
         $this->assertEquals($output, $execution['body']['responseBody'] ?? '');
+    }
+
+    private function buildGiteaState(string $projectId, string $success, string $failure): string
+    {
+        return (string) \json_encode([
+            'projectId' => $projectId,
+            'success' => $success,
+            'failure' => $failure,
+            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return array<string, mixed>
+     */
+    private function callGiteaCallbackHelper(array $params): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/vcs/gitea/callback', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params, true, false);
+    }
+
+    public function testCreateInstallationWithoutState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithEmptyState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => '']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithTamperedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['projectId'] = 'victim-project';
+
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => (string) \json_encode($state),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithoutCode(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        // Signed state, no code: the failure redirect carries the error as a query string
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithEmptyRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Authorize signs empty redirect URLs when none were given, so the
+        // callback has to fall back to the computed console URL instead of
+        // redirecting nowhere.
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, '', ''),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/console/project-default-' . $projectId . '/settings/git-installations?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithInvalidState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => 'not-json']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithUnknownProject(): void
+    {
+        $consoleUrl = 'http://localhost/console/project-default-missing/settings/git-installations';
+
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => $this->buildGiteaState('missing-project', $consoleUrl, $consoleUrl),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithLongState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        // Past the old 2048 cap: redirect URLs are not length-limited, so the
+        // authorize endpoint can produce a state this size itself.
+        $failure = $consoleUrl . '?pad=' . \str_repeat('a', 2400);
+
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $failure),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($failure, (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithoutRedirects(): void
+    {
+        // Authorize signs empty success and failure URLs when none are given;
+        // the helper asserts the callback still lands on the console default
+        // rather than redirecting to an empty location.
+        $installation = $this->createInstallationHelper(redirects: false);
+
+        $this->assertNotEmpty($installation['$id']);
     }
 
     /**
