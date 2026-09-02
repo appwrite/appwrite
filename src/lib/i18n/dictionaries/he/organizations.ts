@@ -96,6 +96,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
   Amount: 'סכום',
+  'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
   Analyst: 'אנליסט',
   Analytics: 'אנליטיקה',
@@ -760,6 +761,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Payment authorized': 'התשלום אושר',
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
+  'Payment has been successfully processed': 'התשלום עובד בהצלחה',
   'Payment failed': 'התשלום נכשל',
   'Payment failed - organization has restricted access':
     'התשלום נכשל, לארגון יש גישה מוגבלת',
@@ -914,6 +916,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Retry: 'ניסיון חוזר',
   'Retry Verification': 'אימות מחדש',
   'Retry payment': 'ניסיון תשלום חוזר',
+  'Retry your payment to avoid service interruptions with your projects.':
+    'נסו שוב את התשלום כדי למנוע הפרעות בשירות בפרויקטים שלכם.',
   'Retry verification': 'אימות מחדש',
   'Retrying...': 'מנסה שוב...',
   'Review charges before you complete payment.':
@@ -973,6 +977,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Served by Appwrite': 'מוגש על ידי Appwrite', // pragma: allowlist secret
   'Server-side only': 'צד שרת בלבד',
   'Set a monthly spending limit': 'הגדירו מגבלת הוצאה חודשית',
+  'Set as default payment method': 'הגדירו כאמצעי התשלום הראשי',
   'Setting up your organization': 'מגדיר את הארגון שלכם',
   Settings: 'הגדרות',
   'Short description': 'תיאור קצר',

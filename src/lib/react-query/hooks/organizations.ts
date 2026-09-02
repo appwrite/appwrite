@@ -21,6 +21,8 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { confirmPayment } from '@/lib/utils/stripe'
+import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import {
   hasProjectSpecificRoles,
@@ -1182,12 +1184,47 @@ export async function retryInvoicePayment(params: {
   organizationId: string
   invoiceId: string
   paymentMethodId: string
+  providerMethodId?: string
 }) {
-  return await sdk.forConsole.organizations.createInvoicePayment({
+  const invoice = await sdk.forConsole.organizations.createInvoicePayment({
     organizationId: params.organizationId,
     invoiceId: params.invoiceId,
     paymentMethodId: params.paymentMethodId,
   })
+
+  const status = invoice.status?.toLowerCase() ?? ''
+  if (status !== 'succeeded' && status !== 'paid' && status !== 'cancelled') {
+    if (invoice.clientSecret) {
+      let stripePaymentMethodId = params.providerMethodId
+      if (!stripePaymentMethodId) {
+        try {
+          stripePaymentMethodId = await resolveStripeProviderMethodId({
+            organizationId: params.organizationId,
+            paymentMethodId: params.paymentMethodId,
+          })
+        } catch {
+          try {
+            const method = await sdk.forConsole.account.getPaymentMethod({
+              paymentMethodId: params.paymentMethodId,
+            })
+            stripePaymentMethodId = method.providerMethodId || undefined
+          } catch {
+            stripePaymentMethodId = undefined
+          }
+        }
+      }
+      await confirmPayment({
+        clientSecret: invoice.clientSecret,
+        paymentMethod: stripePaymentMethodId,
+      })
+    }
+    await sdk.forConsole.organizations.validateInvoice({
+      organizationId: params.organizationId,
+      invoiceId: params.invoiceId,
+    })
+  }
+
+  return invoice
 }
 
 /**
@@ -2509,13 +2546,16 @@ export function useRetryInvoicePayment() {
   return useMutation({
     mutationFn: retryInvoicePayment,
     onSuccess: (_, variables) => {
-      // Invalidate invoices query
       queryClient.invalidateQueries({
         queryKey: ['invoices', 'organization', variables.organizationId],
       })
-      // Invalidate organization query
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: organizationFailedInvoicePresenceQueryOptions(
+          variables.organizationId,
+        ).queryKey,
       })
     },
   })

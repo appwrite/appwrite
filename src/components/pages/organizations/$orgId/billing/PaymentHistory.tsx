@@ -9,14 +9,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { type Invoice } from '@/lib/utils/mock-data'
-import { formatCurrency, formatDate, asOrganizationPaymentRefs } from './utils'
+import { formatCurrency, formatDate } from './utils'
 import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
 import {
   useOrganizationInvoices,
-  useOrganizationById,
-  useOrganizationPaymentMethod,
-  useRetryInvoicePayment,
-  resolvePaymentMethodIdForInvoiceRetry,
 } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -26,6 +22,7 @@ import { toast } from 'sonner'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { useT } from '@/lib/i18n/translate'
+import { RetryPayment, type RetryPaymentInvoice } from './RetryPayment'
 
 const ITEMS_PER_PAGE = 5
 
@@ -118,16 +115,9 @@ export function PaymentHistory() {
   const [displayedPage, setDisplayedPage] = useState(0)
 
   const queryClient = useQueryClient()
-  const { organization } = useOrganizationById(orgId)
-  const orgPaymentRefs = organization
-    ? asOrganizationPaymentRefs(organization)
-    : null
-  const primaryPaymentMethod = useOrganizationPaymentMethod(
-    orgId,
-    orgPaymentRefs?.paymentMethodId ?? undefined,
+  const [retryInvoice, setRetryInvoice] = useState<RetryPaymentInvoice | null>(
+    null,
   )
-  const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
-  const retryPaymentMutation = useRetryInvoicePayment()
 
   const handleAuthorizeInvoice = async (invoice: Invoice) => {
     if (!invoice.clientSecret) {
@@ -152,42 +142,13 @@ export function PaymentHistory() {
     }
   }
 
-  const handleRetryInvoicePayment = async (invoice: Invoice) => {
-    if (!orgId || !organization) return
-    try {
-      const paymentMethodId = await resolvePaymentMethodIdForInvoiceRetry({
-        organization: asOrganizationPaymentRefs(organization),
-        primaryPaymentMethodFailed: primaryFailed,
-      })
-      if (!paymentMethodId) {
-        // Fall back to Stripe authorize when the invoice still has a usable
-        // clientSecret; otherwise tell the user to add a payment method.
-        if (invoice.clientSecret) {
-          await handleAuthorizeInvoice(invoice)
-          return
-        }
-        toast.error(
-          t('No payment method available. Please add a payment method first.'),
-        )
-        return
-      }
-      await retryPaymentMutation.mutateAsync({
-        organizationId: orgId,
-        invoiceId: invoice.$id,
-        paymentMethodId,
-      })
-      toast.success(t('Payment retry initiated'))
-      await queryClient.invalidateQueries({
-        queryKey: ['invoices', 'organization', orgId],
-      })
-      await queryClient.invalidateQueries({
-        queryKey: ['organization', orgId],
-      })
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('Failed to retry payment'),
-      )
-    }
+  const handleRetryInvoicePayment = (invoice: Invoice) => {
+    setRetryInvoice({
+      $id: invoice.$id,
+      amount: invoice.amount,
+      currency: invoice.currency,
+      dueAt: invoice.dueDate,
+    })
   }
 
   const {
@@ -287,6 +248,7 @@ export function PaymentHistory() {
   }
 
   return (
+    <>
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
@@ -324,10 +286,6 @@ export function PaymentHistory() {
                 key={invoice.$id}
                 invoice={invoice}
                 orgId={orgId}
-                isRetrying={
-                  retryPaymentMutation.isPending &&
-                  retryPaymentMutation.variables?.invoiceId === invoice.$id
-                }
                 onAuthorize={() => handleAuthorizeInvoice(invoice)}
                 onRetryPayment={
                   invoice.status === 'failed' || invoice.status === 'overdue'
@@ -464,15 +422,25 @@ export function PaymentHistory() {
         </div>
       </div>
     </div>
+    {orgId && (
+      <RetryPayment
+        open={!!retryInvoice}
+        onOpenChange={(open) => {
+          if (!open) setRetryInvoice(null)
+        }}
+        organizationId={orgId}
+        invoice={retryInvoice}
+      />
+    )}
+    </>
   )
 }
 
 interface InvoiceRowProps {
   invoice: Invoice
   orgId?: string
-  isRetrying?: boolean
   onAuthorize: () => Promise<void>
-  onRetryPayment?: () => Promise<void> | void
+  onRetryPayment?: () => void
   onViewInvoice: (invoiceId: string) => Promise<void>
   onDownloadInvoice: (invoiceId: string) => Promise<void>
 }
@@ -480,7 +448,6 @@ interface InvoiceRowProps {
 function InvoiceRow({
   invoice,
   orgId,
-  isRetrying,
   onAuthorize,
   onRetryPayment,
   onViewInvoice,
@@ -523,7 +490,7 @@ function InvoiceRow({
     }
   }
 
-  const rowBusy = isViewing || isDownloading || isAuthorizing || !!isRetrying
+  const rowBusy = isViewing || isDownloading || isAuthorizing
 
   return (
     <tr className="hover:bg-accent/50 transition-colors">
