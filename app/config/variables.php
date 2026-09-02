@@ -1242,7 +1242,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
-                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible (`_APP_STORAGE_S3_ENDPOINT` set): `s3://ACCESS_KEY:SECRET@localhost?region=REGION&url=http%3A%2F%2Fminio%3A9000` — leave the bucket out of the DSN path; Appwrite keys objects under `BUCKET/` already, so the executor must not add it to the endpoint",
                 'introduction' => '1.9.5',
                 'default' => 'local://localhost',
                 'required' => false,

@@ -23,6 +23,8 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
@@ -458,6 +460,33 @@ readonly class Deployments
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
+    }
+
+    /**
+     * Bring a finished build's artifact to the deployment's buildPath, once
+     * the job has exited and delivered its artifacts. With the volume strategy
+     * (see storage()) build.sh wrote it onto the builds volume, which on the
+     * local device already is the buildPath; on a remote device (S3 and
+     * friends) it is moved off the volume onto the device here. A strategy
+     * whose artifacts already land on the device — Cloud uploads them from
+     * the sidecar — overrides this with a no-op.
+     */
+    public function store(Document $deployment): void
+    {
+        if ($this->deviceForBuilds->getType() === DeviceType::Local) {
+            return;
+        }
+
+        $source = static::buildPath($this->project->getId(), $deployment->getId());
+        $target = (string) $deployment->getAttribute('buildPath', '');
+        $local = new Local();
+        if ($target === '' || ! $local->exists($source)) {
+            return;
+        }
+
+        if ($local->copy($source, $target, $this->deviceForBuilds)) {
+            $local->delete($source);
+        }
     }
 
     /**

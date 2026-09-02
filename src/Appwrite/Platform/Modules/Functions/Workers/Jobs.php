@@ -28,8 +28,6 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 
 /**
@@ -90,6 +88,7 @@ class Jobs extends Action
             ->inject('platform')
             ->inject('plan')
             ->inject('bus')
+            ->inject('deployments')
             ->callback($this->action(...));
     }
 
@@ -112,6 +111,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): void {
         $event = JobsMessage::fromArray($message->getPayload());
 
@@ -120,7 +120,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $deployments): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -138,10 +138,10 @@ class Jobs extends Action
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
+                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
             };
 
             // Console realtime on every callback (log stream + status).
@@ -229,6 +229,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): Document {
         return $deployment;
     }
@@ -278,6 +279,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): Document {
         if (($data['artifactId'] ?? '') === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
@@ -286,7 +288,7 @@ class Jobs extends Action
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
         }
 
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
@@ -327,6 +329,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
@@ -334,7 +337,7 @@ class Jobs extends Action
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
     }
 
     /**
@@ -355,10 +358,11 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
     }
 
     /**
@@ -379,6 +383,7 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
+        Deployments $deployments,
     ): Document {
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
             return $deployment; // already finalized
@@ -403,18 +408,11 @@ class Jobs extends Action
             }
         }
 
-        // The build job wrote its artifact onto the shared builds volume (see
-        // Deployments::storage()). On a remote device (S3 and friends) the
-        // executor and the download endpoint read buildPath through that
-        // device, so move the artifact off the volume onto it first.
+        // The build job wrote its artifact where the storage strategy put it;
+        // bring it to buildPath before checking for it.
+        $deployments->store($deployment);
+
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path !== '' && $deviceForBuilds->getType() !== DeviceType::Local) {
-            $local = new Local();
-            $source = Deployments::buildPath($project->getId(), $deploymentId);
-            if ($local->exists($source) && $local->copy($source, $path, $deviceForBuilds)) {
-                $local->delete($source);
-            }
-        }
         if ($path === '' || ! $deviceForBuilds->exists($path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
