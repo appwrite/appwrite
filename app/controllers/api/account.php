@@ -3869,7 +3869,18 @@ Http::post('/v1/account/recovery')
         ]);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            // Mitigate User Enumeration by returning a mock success response
+            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
+            $mockToken = new Document([
+                '$id' => ID::unique(),
+                'userId' => ID::unique(),
+                'type' => TOKEN_TYPE_RECOVERY,
+                'secret' => '',
+                'expire' => $expire,
+            ]);
+            return $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($mockToken, Response::MODEL_TOKEN);
         }
 
         $user->setAttributes($profile->getArrayCopy());
