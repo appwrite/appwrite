@@ -40,7 +40,7 @@
         "utopia-php/servers": "^0.4",
         "utopia-php/pools": "^2.0",
         "utopia-php/telemetry": "^0.4",
-        "utopia-php/validators": "^0.6"
+        "utopia-php/validators": "^1.0"
     },
     "require-dev": {
         "ext-redis": "*",
