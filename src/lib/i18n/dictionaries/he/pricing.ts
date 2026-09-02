@@ -44,6 +44,7 @@ export const hePricingDictionary: Record<string, string> = {
   '100 origin images / month': '100 תמונות מקור / חודש',
   '100 per project': '100 לפרויקט',
   '100 rows / request': '100 שורות / בקשה',
+  '10M / model / month': '10M / מודל / חודש',
   '1000': '1000',
   '1000 / month': '1000 / חודש',
   '15 minutes': '15 דקות',
@@ -53,6 +54,7 @@ export const hePricingDictionary: Record<string, string> = {
   '16 GB': '16 GB',
   '16-core (dedicated)': '16 ליבות (ייעודי)',
   '1750K / month': '1750K / חודש',
+  '1M / model / month': '1M / מודל / חודש',
   '2 (Shared resources)': '2 (משאבים משותפים)',
   '2 GB': '2 GB',
   '2 per project': '2 לפרויקט',
@@ -99,6 +101,7 @@ export const hePricingDictionary: Record<string, string> = {
   '8-core (dedicated)': '8 ליבות (ייעודי)',
   'Add-ons': 'תוספות',
   'Additional messages': 'הודעות נוספות',
+  'Additional embedding tokens': 'טוקנים נוספים ל-embedding',
   'Advanced': 'מתקדם',
   'Available across all Appwrite services, with 200+ global PoP locations for low-latency delivery across Backend API, Serverless Functions, Storage files, and hosted websites.': // pragma: allowlist secret
     'זמין בכל שירותי Appwrite, עם יותר מ-200 מיקומי PoP גלובליים להגשה בזמן תגובה נמוך דרך Backend API, פונקציות Serverless, קבצי אחסון ואתרים מאוחסנים.',
@@ -108,6 +111,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Bring your own Cloud': 'Bring your own Cloud',
   'Community support': 'תמיכת קהילה',
   'Compute tiers from $10/mo': 'רמות מחשוב החל מ-$10/חודש',
+  'Embedding tokens': 'טוקנים ל-embedding',
   'Custom rules': 'כללים מותאמים',
   'Daily backups stored for 7 days': 'גיבויים יומיים נשמרים ל-7 ימים',
   'Dedicated priority queues for build jobs': 'תורים בעדיפות ייעודיים לעבודות build',
@@ -120,10 +124,15 @@ export const hePricingDictionary: Record<string, string> = {
     'פחות מערכות לשלב, לאבטח ולתחזק',
   'Firewall': 'Firewall',
   'Firewall rules': 'כללי חומת אש',
+  'Text embedding tokens are metered per model. Free plans are capped and stop generating embeddings once the cap is reached.':
+    'טוקנים ל-embedding נמדדים לכל מודל בנפרד. בתוכניות החינמיות יש תקרה, וכשמגיעים אליה יצירת embeddings נעצרת.',
+  'nomic-embed-text is $0.10 per 1M tokens and all-minilm is $0.05 per 1M tokens, billed per started million above the plan allowance.':
+    'nomic-embed-text עולה $0.10 לכל 1M טוקנים ו-all-minilm עולה $0.05 לכל 1M טוקנים, בחיוב לכל מיליון שהתחיל מעל המכסה של התוכנית.',
   'Fixed monthly compute tiers with reserved CPU, memory, and connections. See Database pricing for tier details and add-ons.':
     'רמות מחשוב חודשיות קבועות עם CPU, זיכרון וחיבורים שמורים. לפרטי רמות ותוספות, ראו תמחור מסדי נתונים.',
   'Free projects are paused after 1 week of inactivity. Limit of 2 projects.':
     'פרויקטים חינמיים מושהים לאחר שבוע של חוסר פעילות. מגבלה של 2 פרויקטים.',
+  'From $0.05 per 1M tokens': 'החל מ-$0.05 לכל 1M טוקנים',
   'From $10/mo per database': 'החל מ-$10/חודש לכל מסד נתונים',
   'Go to the Appwrite Console and select the organization you wish to view. Here, you will find a usage tab with an overview of all your project\'s usage stats.': // pragma: allowlist secret
     'עברו לקונסולת Appwrite ובחרו את הארגון שברצונכם לצפות בו. כאן תמצאו לשונית שימוש עם סקירה של נתוני השימוש בכל הפרויקטים שלכם.',

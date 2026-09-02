@@ -201,6 +201,20 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: 'Custom'
                 },
                 {
+                    title: 'Embedding tokens',
+                    free: '1M / model / month',
+                    pro: '10M / model / month',
+                    enterprise: 'Custom',
+                    info: 'Text embedding tokens are metered per model. Free plans are capped and stop generating embeddings once the cap is reached.'
+                },
+                {
+                    title: 'Additional embedding tokens',
+                    free: '-',
+                    pro: 'From $0.05 per 1M tokens',
+                    enterprise: 'Custom',
+                    info: 'nomic-embed-text is $0.10 per 1M tokens and all-minilm is $0.05 per 1M tokens, billed per started million above the plan allowance.'
+                },
+                {
                     title: 'Dedicated databases',
                     free: '-',
                     pro: 'Compute tiers from $10/mo',

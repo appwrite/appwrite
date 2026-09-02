@@ -58,6 +58,10 @@ Learn how to transform images dynamically with Appwrite.
 {% cards_item href="/docs/advanced/billing/database-reads-and-writes" title="Database Reads and Writes" %}
 Learn how Appwrite handles database reads and writes.
 {% /cards_item %}
+
+{% cards_item href="/docs/advanced/billing/embeddings" title="Text Embeddings" %}
+Learn how Appwrite meters and bills text embedding tokens per model.
+{% /cards_item %}
 {% /cards %}
 
 # Service level agreements {% #slas %}

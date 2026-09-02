@@ -68,6 +68,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Database Reads and Writes',
             href: '/docs/advanced/billing/database-reads-and-writes',
           },
+          {
+            label: 'Text Embeddings',
+            href: '/docs/advanced/billing/embeddings',
+          },
         ],
       },
       {
