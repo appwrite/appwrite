@@ -1785,6 +1785,26 @@ trait TransactionsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Created via normal route', $response['body']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => 'doc_unknown_txn',
+            'data' => [
+                'name' => 'Unknown transaction',
+                'counter' => 1,
+                'category' => 'test'
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
@@ -2267,6 +2287,27 @@ trait TransactionsBase
             $this->assertEquals("Bulk created {$i}", $response['body']['name']);
             $this->assertEquals('bulk_created', $response['body']['category']);
         }
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordResource() => [
+                [
+                    '$id' => 'bulk_unknown_txn',
+                    'name' => 'Unknown transaction',
+                    'category' => 'bulk_unknown'
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
