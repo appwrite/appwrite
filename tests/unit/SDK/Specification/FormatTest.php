@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
@@ -1209,5 +1210,115 @@ final class FormatTest extends TestCase
         $this->assertSame('<NEW_KEY>', $properties['newKey']['example']);
         $this->assertSame('example.com', $properties['domain']['example']);
         $this->assertSame('FFFFFF', $properties['background']['example']);
+    }
+
+    public function testExplicitMethodParametersAreTheSdkMethodList(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = $this->createDocumentsRoute(
+            createDocument: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documentId', optional: false),
+                new Parameter('data', optional: false),
+                new Parameter('permissions', optional: true),
+                new Parameter('transactionId', optional: true),
+            ],
+            createDocuments: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documents', optional: false),
+                new Parameter('transactionId', optional: true),
+            ],
+        );
+
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+
+        $this->assertContains('transactionId', $methods['createDocument']);
+        $this->assertContains('transactionId', $methods['createDocuments']);
+    }
+
+    public function testOmittedMethodParametersAreDroppedFromTheSdkMethodList(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = $this->createDocumentsRoute(
+            createDocument: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documentId', optional: false),
+                new Parameter('data', optional: false),
+                new Parameter('permissions', optional: true),
+            ],
+            createDocuments: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documents', optional: false),
+            ],
+        );
+
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+
+        $this->assertNotContains('transactionId', $methods['createDocument']);
+        $this->assertNotContains('transactionId', $methods['createDocuments']);
+    }
+
+    /**
+     * @param list<Parameter> $createDocument
+     * @param list<Parameter> $createDocuments
+     */
+    private function createDocumentsRoute(array $createDocument, array $createDocuments): Route
+    {
+        return (new Route('POST', '/v1/documentsdb/:databaseId/collections/:collectionId/documents'))
+            ->desc('Create document')
+            ->label('sdk', [
+                new Method(
+                    namespace: 'documentsDB',
+                    group: 'documents',
+                    name: 'createDocument',
+                    description: 'Create document.',
+                    auth: [AuthType::ADMIN],
+                    responses: [],
+                    parameters: $createDocument,
+                ),
+                new Method(
+                    namespace: 'documentsDB',
+                    group: 'documents',
+                    name: 'createDocuments',
+                    description: 'Create documents.',
+                    auth: [AuthType::ADMIN],
+                    responses: [],
+                    parameters: $createDocuments,
+                ),
+            ])
+            ->param('databaseId', '', new Text(256), 'Database ID.')
+            ->param('collectionId', '', new Text(256), 'Collection ID.')
+            ->param('documentId', '', new Text(256), 'Document ID.', true)
+            ->param('data', [], new JSON(), 'Document data.', true)
+            ->param('permissions', null, new Nullable(new Text(256)), 'Permissions.', true)
+            ->param('documents', [], new JSON(), 'Documents.', true)
+            ->param('transactionId', null, new Nullable(new Text(256)), 'Transaction ID.', true);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function sdkMethods(array $openApi): array
+    {
+        $path = '/documentsdb/{databaseId}/collections/{collectionId}/documents';
+        $this->assertArrayHasKey($path, $openApi['paths']);
+
+        $methods = [];
+        foreach ($openApi['paths'][$path]['post']['x-appwrite']['methods'] as $method) {
+            $methods[$method['name']] = $method['parameters'];
+        }
+
+        $this->assertArrayHasKey('createDocument', $methods);
+        $this->assertArrayHasKey('createDocuments', $methods);
+
+        return $methods;
     }
 }
