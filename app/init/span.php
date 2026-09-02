@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Utopia\DSN\DSN;
 use Utopia\Span\Exporter\Pretty;
 use Utopia\Span\Exporter\Sentry;
@@ -45,8 +46,8 @@ $exporters = [
 ];
 
 // `_APP_LOGGING_CONFIG`: a `sentry://PROJECT_ID:KEY@HOST/` DSN ships spans that
-// carry an error to Sentry. Handlers mark expected client errors with
-// `error.publish=false` so only server-side failures are exported.
+// carry an error to Sentry. Expected client errors stay out: an AppwriteException
+// decides through its `publish` flag, anything else only when the code is 0 or 5xx.
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 if ($loggingConfig !== '') {
     try {
@@ -55,14 +56,37 @@ if ($loggingConfig !== '') {
             throw new \InvalidArgumentException('Only the sentry:// scheme is supported');
         }
 
-        $tags = ['project.id', 'user.id', 'http.method', 'http.path', 'http.hostname', 'http.locale', 'type', 'domain', 'function.id', 'deployment.id', 'database.id', 'channel', 'lock.target'];
         $exporters[] = new Sentry(
+            sampler: static function (Span $span): bool {
+                $error = $span->getError();
+                if ($error instanceof AppwriteException) {
+                    return $error->isPublishable();
+                }
+
+                return $error === null || $error->getCode() === 0 || $error->getCode() >= 500;
+            },
             dsn: 'https://' . $dsn->getPassword() . '@' . $dsn->getHost() . '/' . $dsn->getUser(),
             environment: System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging',
             release: System::getEnv('_APP_VERSION', 'UNKNOWN'),
             serverName: System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname() ?: null),
-            classifier: static fn (string $key): SentryField => \in_array($key, $tags, true) ? SentryField::Tag : SentryField::Context,
-            sampler: static fn (Span $span): bool => $span->get('error.publish') !== false,
+            classifier: static fn (string $key): SentryField => match ($key) {
+                'project.id',
+                'user.id',
+                'http.method',
+                'http.path',
+                'http.hostname',
+                'http.locale',
+                'http.service',
+                'error.action',
+                'type',
+                'domain',
+                'function.id',
+                'deployment.id',
+                'database.id',
+                'channel',
+                'lock.target' => SentryField::Tag,
+                default => SentryField::Context,
+            },
         );
     } catch (\Throwable $th) {
         \error_log('Invalid _APP_LOGGING_CONFIG, error reporting is disabled: ' . $th->getMessage());

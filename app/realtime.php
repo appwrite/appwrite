@@ -411,15 +411,6 @@ $server = new Server($adapter);
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
-        // Match HTTP semantics (app/controllers/general.php): AppwriteException uses its
-        // configured publish flag; everything else publishes only for code 0 or >= 500.
-        // Expected client errors (e.g. Utopia DB Authorization) stay out of the exporters.
-        if ($error instanceof AppwriteException) {
-            $publish = $error->isPublishable();
-        } else {
-            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
-        }
-
         // Server callbacks (pub/sub, stats) run outside a connection span; open one
         // so the failure still reaches the exporters.
         $span = Span::current();
@@ -427,7 +418,6 @@ if (!function_exists('logError')) {
         $span ??= Span::init($action);
 
         $span->setError($error);
-        $span->set('error.publish', $publish);
         $span->set('error.action', $action);
         $span->set('project.id', $project?->getId() ?: 'n/a');
         $span->set('user.id', $user?->getId() ?: 'n/a');
