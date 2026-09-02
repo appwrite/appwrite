@@ -121,16 +121,21 @@ class Create extends Action
                 Query::equal('provider', ['github']),
                 Query::equal('requester', [$requester]),
                 Query::equal('status', ['requested']),
-                Query::limit(1000),
+                Query::limit(2),
             ]));
 
-            foreach ($requests as $request) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('installationRequests', $request->getId(), new Document([
-                    'providerInstallationId' => $parsedPayload["installationId"],
-                    'organization' => $parsedPayload["userName"],
-                    'status' => 'ready',
-                ])));
+            // The webhook does not say which request the owner approved, so a
+            // requester with pending requests in several projects is ambiguous
+            // and none of them is marked until the extras are withdrawn.
+            if (\count($requests) !== 1) {
+                return;
             }
+
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('installationRequests', $requests[0]->getId(), new Document([
+                'providerInstallationId' => $parsedPayload["installationId"],
+                'organization' => $parsedPayload["userName"],
+                'status' => 'ready',
+            ])));
 
             return;
         }

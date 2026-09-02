@@ -195,4 +195,25 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
 
         $this->assertNull($this->findRequest($requestId));
     }
+
+    public function testCreateEventIgnoresAmbiguousApproval(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+
+        $otherProject = $this->getProject(true)['$id'];
+        $other = $this->client->call(Client::METHOD_GET, '/mock/github/request', $this->getRequestHeaders($otherProject), [
+            'projectId' => $otherProject,
+            'requester' => $requester,
+        ]);
+        $this->assertEquals(200, $other['headers']['status-code']);
+
+        $this->approveOnProvider($requester, 424248, 'request-test-org7');
+
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('requested', $request['status'] ?? '');
+
+        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders($otherProject));
+        $this->assertEquals('requested', $requests['body']['requests'][0]['status'] ?? '');
+    }
 }

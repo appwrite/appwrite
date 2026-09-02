@@ -75,6 +75,12 @@ class Update extends Action
             throw new Exception(Exception::INSTALLATION_REQUEST_NOT_READY);
         }
 
+        // Consuming the request first makes it the lock: a concurrent confirm,
+        // or an uninstall sweep that already removed it, stops here.
+        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
+            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
+        }
+
         $provider = $request->getAttribute('provider');
         $providerInstallationId = $request->getAttribute('providerInstallationId');
 
@@ -97,9 +103,6 @@ class Update extends Action
             ]));
         }
 
-        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation request from DB');
-        }
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     }
