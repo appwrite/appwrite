@@ -18,7 +18,7 @@ use Utopia\Usage\UsageQuery;
  * sample. The caller's loop interval controls freshness only -- one run emits
  * every whole bucket in the elapsed window.
  *
- * Shared by the self-hosted and Cloud `stats-resources` tasks so both editions
+ * Shared by the self-hosted and Cloud `stats-calculations` tasks so both editions
  * fold the same way; the two differ in how they schedule it and how they report
  * failures, not in the arithmetic.
  */

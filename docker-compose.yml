@@ -85,6 +85,8 @@ services:
       - _APP_POOL_SIZE_USAGE
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_CALCULATIONS_QUEUE_NAME
+      - _APP_STATS_EVENTS_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_EDITION
@@ -390,11 +392,13 @@ services:
       - _APP_POOL_SIZE_USAGE
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_CALCULATIONS_QUEUE_NAME
+      - _APP_STATS_EVENTS_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      - _APP_WORKER_MAX_COROUTINES=79
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -544,6 +548,8 @@ services:
       - _APP_POOL_SIZE_USAGE
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_CALCULATIONS_QUEUE_NAME
+      - _APP_STATS_EVENTS_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
@@ -581,21 +587,29 @@ services:
     entrypoint: worker-stats-usage
     container_name: appwrite-worker-stats-usage
 
-  appwrite-worker-stats-resources:
+  appwrite-worker-stats-calculations:
     profiles:
       - separate
     extends:
       service: appwrite-worker
-    entrypoint: worker-stats-resources
-    container_name: appwrite-worker-stats-resources
+    entrypoint: worker-stats-calculations
+    container_name: appwrite-worker-stats-calculations
 
-  appwrite-task-stats-resources:
+  appwrite-worker-stats-events:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-stats-events
+    container_name: appwrite-worker-stats-events
+
+  appwrite-task-stats-calculations:
     profiles:
       - separate
     extends:
       service: appwrite-task-scheduler
-    entrypoint: stats-resources
-    container_name: appwrite-task-stats-resources
+    entrypoint: stats-calculations
+    container_name: appwrite-task-stats-calculations
 
   appwrite-worker-webhooks:
     profiles:

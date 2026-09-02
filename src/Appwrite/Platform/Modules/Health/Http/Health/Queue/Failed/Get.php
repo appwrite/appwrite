@@ -47,6 +47,8 @@ class Get extends Base
                 System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME),
                 System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME),
                 System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME),
+                System::getEnv('_APP_STATS_CALCULATIONS_QUEUE_NAME', Event::STATS_CALCULATIONS_QUEUE_NAME),
+                System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME),
                 System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME),
                 System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME),
                 System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME),
@@ -65,6 +67,7 @@ class Get extends Base
             ->inject('publisherForMails')
             ->inject('publisherForFunctions')
             ->inject('publisherForStatsResources')
+            ->inject('publisherForStatsEvents')
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('publisherForCertificates')
@@ -86,6 +89,7 @@ class Get extends Base
         MailPublisher $publisherForMails,
         FunctionPublisher $publisherForFunctions,
         StatsResourcesPublisher $publisherForStatsResources,
+        StatsResourcesPublisher $publisherForStatsEvents,
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $publisherForCertificates,
@@ -103,6 +107,8 @@ class Get extends Base
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $publisherForAudits,
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $publisherForFunctions,
+            System::getEnv('_APP_STATS_CALCULATIONS_QUEUE_NAME', Event::STATS_CALCULATIONS_QUEUE_NAME) => $publisherForStatsResources,
+            System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME) => $publisherForStatsEvents,
             System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsResources,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,

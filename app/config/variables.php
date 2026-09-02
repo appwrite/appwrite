@@ -18,7 +18,7 @@ return [
             ],
             [
                 'name' => '_APP_EDITION',
-                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage and stats-resources queues, so their producers are disabled for this edition.',
+                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage, stats-calculations and stats-events queues, so their producers are disabled for this edition.',
                 'introduction' => '',
                 'default' => 'self-hosted',
                 'required' => false,
@@ -1828,8 +1828,26 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STATS_CALCULATIONS_QUEUE_NAME',
+                'description' => 'Queue name for the hourly per-project full-count fan-out.',
+                'introduction' => '',
+                'default' => 'v1-stats-calculations',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATS_EVENTS_QUEUE_NAME',
+                'description' => 'Queue name for real-time usage gauge ingestion.',
+                'introduction' => '',
+                'default' => 'v1-stats-events',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
-                'description' => 'Queue name for usage resource gauge ingestion.',
+                'description' => 'Deprecated. Use _APP_STATS_CALCULATIONS_QUEUE_NAME. Kept so existing installs still recognise the old name on the health failed-jobs endpoint.',
                 'introduction' => '',
                 'default' => 'v1-stats-resources',
                 'required' => false,

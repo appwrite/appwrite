@@ -87,7 +87,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker-functions']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler-functions']);
 
-        foreach (['appwrite-worker-stats-usage', 'appwrite-worker-stats-resources', 'appwrite-task-stats-resources'] as $name) {
+        foreach (['appwrite-worker-stats-usage', 'appwrite-worker-stats-calculations', 'appwrite-worker-stats-events', 'appwrite-task-stats-calculations'] as $name) {
             $this->assertArrayHasKey($name, $compose['services']);
             $this->assertArrayNotHasKey('extends', $compose['services'][$name]);
             $this->assertArrayNotHasKey('profiles', $compose['services'][$name]);

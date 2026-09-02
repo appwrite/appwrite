@@ -68,6 +68,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/stats-calculations && \
     chmod +x /usr/local/bin/stats-resources && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
@@ -100,6 +101,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-stats-calculations && \
+    chmod +x /usr/local/bin/worker-stats-events && \
     chmod +x /usr/local/bin/worker-stats-resources && \
     chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks

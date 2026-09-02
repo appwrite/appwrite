@@ -149,9 +149,16 @@ $container->set('publisherForMigrations', fn (Publisher $publisher) => new Migra
     new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
 ), ['publisher']);
 
+// Kept as publisherForStatsResources because the inherited stats task and
+// Cloud's Schedule path still inject that name. The list is the calculations
+// queue; real-time gauges use publisherForStatsEvents.
 $container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
+    new Queue(System::getEnv('_APP_STATS_CALCULATIONS_QUEUE_NAME', Event::STATS_CALCULATIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForStatsEvents', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('usageConnection', function () {
