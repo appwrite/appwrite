@@ -45,7 +45,6 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
@@ -54,6 +53,7 @@ use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -870,7 +870,7 @@ final class FormatTest extends TestCase
                 auth: [],
                 responses: [],
             ))
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value.', true);
+            ->param('default', null, new Nullable(new Spatial(ColumnType::Linestring->value)), 'Default value.', true);
 
         $modelRoute = (new Route('GET', '/v1/tests/spatial-model'))
             ->desc('Get spatial test')

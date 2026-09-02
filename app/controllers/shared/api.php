@@ -35,6 +35,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
@@ -380,8 +381,8 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if ($isAdminProjectRequest && empty($apiKey)) {
-            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
             if (! $authorization->isValid($input)) {
@@ -574,9 +575,14 @@ Http::init()
                     ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
                 foreach ($request->getParams() as $key => $value) {
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                    if ($value === null || $value === '' || $value === []) {
+                        continue;
                     }
+                    $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+                    if ($encoded === false || $encoded === '') {
+                        continue;
+                    }
+                    $timeLimit->setParam('{param-' . $key . '}', $encoded);
                 }
 
                 $abuse = new Abuse($timeLimit);
@@ -714,7 +720,7 @@ Http::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+                    $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getRead()));
                     if (! $fileSecurity && ! $valid && ! $isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
@@ -954,9 +960,14 @@ Http::shutdown()
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
+                if ($value === null || $value === '' || $value === []) {
+                    continue;
                 }
+                $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+                if ($encoded === false || $encoded === '') {
+                    continue;
+                }
+                $timeLimit->setParam('{param-' . $key . '}', $encoded);
             }
 
             $abuse = new Abuse($timeLimit);

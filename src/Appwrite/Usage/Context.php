@@ -212,6 +212,16 @@ class Context
     }
 
     /**
+     * Add a document to reduce
+     */
+    public function addReduce(Document $document): self
+    {
+        $this->reduce[] = $document;
+
+        return $this;
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function getMetrics(): array

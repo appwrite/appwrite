@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -541,7 +542,7 @@ class Deletes extends Action
         $date = DateTime::addSeconds(new \DateTime(), -self::PROCESSING_STUCK_RETENTION_SECONDS);
 
         $queries = [
-            Query::select($this->selects),
+            Query::select([...$this->selects, 'attemptId', 'status', 'stage']),
             Query::equal('status', ['processing']),
             Query::lessThan('$updatedAt', $date),
         ];
@@ -552,9 +553,7 @@ class Deletes extends Action
             $dbForProject,
             function (Document $migration) use ($dbForProject, $project) {
                 try {
-                    $dbForProject->updateDocument('migrations', $migration->getId(), new Document([
-                        'status' => 'failed'
-                    ]));
+                    (new Claim($dbForProject))->expire($migration);
                 } catch (Throwable $th) {
                     Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }

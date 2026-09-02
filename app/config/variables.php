@@ -1151,9 +1151,9 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 2700 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 900 seconds.',
                 'introduction' => '1.7.0',
-                'default' => '2700',
+                'default' => '900',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1875,6 +1875,15 @@ return [
         'category' => 'Migrations',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_MIGRATIONS_CLAIM_ENABLED',
+                'description' => 'Enables generation-safe migration claims. Operators must first run the 2.0.0 V26 schema migration, then roll out claim-aware workers while this stays disabled, and only then enable producers.',
+                'introduction' => '2.0.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_MIGRATION_HOST',
                 'description' => 'Internal hostname the migrations worker uses to reach this instance\'s API (for migrations and CSV/JSON imports & exports). Defaults to \'appwrite\', the API service name in the standard Docker Compose setup. Only change this for non-standard deployments.',

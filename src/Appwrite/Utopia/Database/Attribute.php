@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Database;
 
 use Utopia\Database\Database;
+use Utopia\Query\Schema\ColumnType;
 
 /**
  * Shared definition of the attribute types the API exposes.
@@ -19,9 +20,9 @@ class Attribute
      * @var array<string, int>
      */
     public const SIZES = [
-        Database::VAR_TEXT => 65535,
-        Database::VAR_MEDIUMTEXT => 16777215,
-        Database::VAR_LONGTEXT => 2147483647,
+        ColumnType::Text->value => 65535,
+        ColumnType::MediumText->value => 16777215,
+        ColumnType::LongText->value => 2147483647,
     ];
 
     /**
@@ -46,19 +47,20 @@ class Attribute
     public static function types(): array
     {
         return [
-            Database::VAR_STRING,
-            Database::VAR_VARCHAR,
-            Database::VAR_TEXT,
-            Database::VAR_MEDIUMTEXT,
-            Database::VAR_LONGTEXT,
-            Database::VAR_INTEGER,
-            Database::VAR_BIGINT,
-            Database::VAR_FLOAT,
-            Database::VAR_BOOLEAN,
-            Database::VAR_DATETIME,
-            Database::VAR_POINT,
-            Database::VAR_LINESTRING,
-            Database::VAR_POLYGON,
+            ColumnType::String->value,
+            ColumnType::Varchar->value,
+            ColumnType::Text->value,
+            ColumnType::MediumText->value,
+            ColumnType::LongText->value,
+            ColumnType::Integer->value,
+            ColumnType::BigInteger->value,
+            'bigint',
+            ColumnType::Double->value,
+            ColumnType::Boolean->value,
+            ColumnType::Datetime->value,
+            ColumnType::Point->value,
+            ColumnType::Linestring->value,
+            ColumnType::Polygon->value,
             ...\array_keys(self::FORMAT_SIZES),
         ];
     }
@@ -76,9 +78,13 @@ class Attribute
         $type = $attribute['type'] ?? '';
         $format = $attribute['format'] ?? '';
 
+        if ($type === ColumnType::BigInteger->value) {
+            $type = 'bigint';
+        }
+
         if (isset(self::FORMAT_SIZES[$type])) {
             $format = $type;
-            $type = Database::VAR_STRING;
+            $type = ColumnType::String->value;
         }
 
         $size = $attribute['size'] ?? 0;

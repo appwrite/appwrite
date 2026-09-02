@@ -98,6 +98,8 @@ class Get extends Action
             $attribute->setAttribute($key, $option);
         }
 
+        self::applyFormatOptions($attribute);
+
         $model = $this->getModel($type, $format);
 
         $attribute->setAttribute('encrypt', in_array('encrypt', $filters));

@@ -75,6 +75,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator;
@@ -1422,7 +1423,7 @@ Http::error()
                         }
 
                         // logical queries - recursively format nested queries
-                        if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                        if (in_array($method, [QueryMethod::And->value, QueryMethod::Or->value], true)) {
                             $nested = [];
                             foreach ($values as $nestedArray) {
                                 if (is_array($nestedArray)) {
@@ -1436,26 +1437,26 @@ Http::error()
                         }
 
                         // select - show selected attributes
-                        if ($method === Query::TYPE_SELECT) {
+                        if ($method === QueryMethod::Select->value) {
                             $attributes = array_values(array_filter($values, 'is_string'));
                             return [$method => $attributes];
                         }
 
                         // pagination
                         if (in_array($method, [
-                            Query::TYPE_LIMIT,
-                            Query::TYPE_OFFSET,
-                            Query::TYPE_CURSOR_AFTER,
-                            Query::TYPE_CURSOR_BEFORE
+                            QueryMethod::Limit->value,
+                            QueryMethod::Offset->value,
+                            QueryMethod::CursorAfter->value,
+                            QueryMethod::CursorBefore->value,
                         ], true)) {
                             return [$method => []];
                         }
 
                         // orders
                         if (in_array($method, [
-                            Query::TYPE_ORDER_DESC,
-                            Query::TYPE_ORDER_ASC,
-                            Query::TYPE_ORDER_RANDOM
+                            QueryMethod::OrderDesc->value,
+                            QueryMethod::OrderAsc->value,
+                            QueryMethod::OrderRandom->value,
                         ], true)) {
                             return [$method => !empty($attribute) ? [$attribute] : []];
                         }

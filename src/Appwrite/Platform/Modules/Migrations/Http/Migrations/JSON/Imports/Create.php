@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\JSON\Imports;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -81,6 +81,7 @@ class Create extends Action
             ->inject('deviceForMigrations')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -100,8 +101,12 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForMigrations,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
+
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -182,6 +187,7 @@ class Create extends Action
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
+            'attemptId' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => JSONSource::getName(),
@@ -208,11 +214,12 @@ class Create extends Action
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        $publisherForMigrations->enqueue(new MigrationMessage(
+        $migration = $claim->initial(
             project: $project,
             migration: $migration,
             platform: $platform,
-        ));
+            publisher: $publisherForMigrations,
+        );
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

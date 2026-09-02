@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -85,8 +86,8 @@ class XList extends Action
         $vcs = $vcsFactory->fromInstallation($installation);
 
         $queries = Query::parseQueries($queries);
-        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
-        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Limit));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Offset));
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 20;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;

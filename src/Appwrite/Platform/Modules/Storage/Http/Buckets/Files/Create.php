@@ -26,6 +26,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -86,7 +87,7 @@ class Create extends Action
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('folder', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
             ->inject('request')
             ->inject('response')
@@ -127,14 +128,14 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getCreate()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ];
 
         // Map aggregate permissions to into the set of individual permissions they represent.
@@ -145,7 +146,7 @@ class Create extends Action
             $permissions = [];
             if (!empty($user->getId()) && !$isPrivilegedUser) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                 }
             }
         }
@@ -153,10 +154,10 @@ class Create extends Action
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (\Utopia\Database\Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -246,7 +247,6 @@ class Create extends Action
         $lockKey = 'storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId;
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
-        $completed = false;
 
         $mergeUploadMetadata = function (array $stored, array $current): array {
             $merged = \array_merge($stored, $current);
@@ -264,72 +264,6 @@ class Create extends Action
 
             return $merged;
         };
-
-        try {
-            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
-                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-                if (!$file->isEmpty()) {
-                    $chunks = $file->getAttribute('chunksTotal', 1);
-                    $uploaded = $file->getAttribute('chunksUploaded', 0);
-                    $metadata = $file->getAttribute('metadata', []);
-
-                    if ($uploaded === $chunks) {
-                        if (empty($contentRange)) {
-                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                        }
-
-                        $response
-                            ->setStatusCode(Response::STATUS_CODE_OK)
-                            ->dynamic($file, Response::MODEL_FILE);
-
-                        $completed = true;
-                        return;
-                    }
-                }
-
-                if ($file->isEmpty()) {
-                    $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
-
-                    if (!empty($contentRange)) {
-                        $doc = new Document([
-                            '$id' => ID::custom($fileId),
-                            '$permissions' => $permissions,
-                            'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getSequence(),
-                            'name' => $fileName,
-                            'folder' => $folder,
-                            'path' => $path,
-                            'signature' => '',
-                            'mimeType' => '',
-                            'sizeOriginal' => $fileSize,
-                            'sizeActual' => 0,
-                            'algorithm' => '',
-                            'comment' => '',
-                            'chunksTotal' => $chunks,
-                            'chunksUploaded' => 0,
-                            'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => $metadata,
-                        ]);
-
-                        try {
-                            $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
-                        } catch (DuplicateException) {
-                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                        } catch (NotFoundException) {
-                            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-                        }
-                    }
-                }
-            }, timeout: 120.0);
-        } catch (LockContention) {
-            $response->addHeader('Retry-After', '5');
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
-        }
-
-        if ($completed) {
-            $queueForEvents->reset();
-            return;
-        }
 
         $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
@@ -517,20 +451,74 @@ class Create extends Action
         };
 
         try {
-            $chunksUploaded = $deviceForFiles->upload(
-                $deviceForLocal->read($fileTmpName),
-                $path,
-                $metadata['content_type'] ?? '',
-                $chunk,
-                $chunks,
-                $metadata
-            );
+            $locks($lockKey, 600, function () use ($authorization, $bucket, $chunk, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $deviceForLocal, $fileId, $fileName, $fileSize, $fileTmpName, $finalizeUpload, $folder, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
+                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                if (!$file->isEmpty()) {
+                    $chunks = $file->getAttribute('chunksTotal', 1);
+                    $uploaded = $file->getAttribute('chunksUploaded', 0);
+                    $metadata = $mergeUploadMetadata($metadata, $file->getAttribute('metadata', []));
 
-            if (empty($chunksUploaded)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
-            }
+                    if ($uploaded === $chunks) {
+                        if (empty($contentRange)) {
+                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                        }
 
-            $locks($lockKey, 600, fn () => $finalizeUpload($chunksUploaded), timeout: 120.0);
+                        $queueForEvents->reset();
+                        $response
+                            ->setStatusCode(Response::STATUS_CODE_OK)
+                            ->dynamic($file, Response::MODEL_FILE);
+
+                        return;
+                    }
+                } else {
+                    $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+
+                    if (!empty($contentRange)) {
+                        $doc = new Document([
+                            '$id' => ID::custom($fileId),
+                            '$permissions' => $permissions,
+                            'bucketId' => $bucket->getId(),
+                            'bucketInternalId' => $bucket->getSequence(),
+                            'name' => $fileName,
+                            'folder' => $folder,
+                            'path' => $path,
+                            'signature' => '',
+                            'mimeType' => '',
+                            'sizeOriginal' => $fileSize,
+                            'sizeActual' => 0,
+                            'algorithm' => '',
+                            'comment' => '',
+                            'chunksTotal' => $chunks,
+                            'chunksUploaded' => 0,
+                            'search' => implode(' ', [$fileId, $fileName]),
+                            'metadata' => $metadata,
+                        ]);
+
+                        try {
+                            $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                        } catch (DuplicateException) {
+                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                        } catch (NotFoundException) {
+                            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                        }
+                    }
+                }
+
+                $chunksUploaded = $deviceForFiles->upload(
+                    $deviceForLocal->read($fileTmpName),
+                    $path,
+                    $metadata['content_type'] ?? '',
+                    $chunk,
+                    $chunks,
+                    $metadata
+                );
+
+                if (empty($chunksUploaded)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
+                }
+
+                $finalizeUpload($chunksUploaded);
+            }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');

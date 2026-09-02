@@ -75,7 +75,7 @@ final class InMemoryConnection implements Connection
     public function rightPushMany(string $queue, array $payloads): bool
     {
         foreach ($payloads as $payload) {
-            $this->lists[$queue][] = $payload;
+            $this->rightPush($queue, $payload);
         }
 
         return true;
@@ -112,12 +112,8 @@ final class InMemoryConnection implements Connection
      */
     public function leftPushMany(string $queue, array $payloads): bool
     {
-        $this->lists[$queue] ??= [];
-
-        // Reversed, so the batch keeps its order once each payload has been pushed
-        // onto the head — the same result as one LPUSH with every payload.
-        foreach (\array_reverse($payloads) as $payload) {
-            array_unshift($this->lists[$queue], $payload);
+        foreach ($payloads as $payload) {
+            $this->leftPush($queue, $payload);
         }
 
         return true;

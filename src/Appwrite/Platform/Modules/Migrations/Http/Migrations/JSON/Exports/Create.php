@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\JSON\Exports;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -75,6 +75,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -93,8 +94,12 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
+
         try {
             $parsedQueries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -137,6 +142,7 @@ class Create extends Action
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
+            'attemptId' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => AppwriteSource::getName(),
@@ -163,11 +169,12 @@ class Create extends Action
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        $publisherForMigrations->enqueue(new MigrationMessage(
+        $migration = $claim->initial(
             project: $project,
             migration: $migration,
             platform: $platform,
-        ));
+            publisher: $publisherForMigrations,
+        );
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

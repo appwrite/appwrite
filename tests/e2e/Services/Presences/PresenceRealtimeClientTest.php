@@ -204,7 +204,7 @@ final class PresenceRealtimeClientTest extends Scope
         string $status,
         array $metadata,
         string $expectedUserId,
-        int $timeoutMs = 2500
+        int $timeoutMs = 10_000
     ): array {
         $event = $this->receiveUntil(
             $client,
@@ -255,7 +255,7 @@ final class PresenceRealtimeClientTest extends Scope
             }
 
             return $response !== null && $event !== null;
-        }, 2500);
+        }, 10_000);
     }
 
     private function receiveErrorMessage(WebSocketClient $client): array

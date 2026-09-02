@@ -18,6 +18,9 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Exception as QueryLibException;
+use Utopia\Query\Exception\UnsupportedException;
+use Utopia\Query\Exception\ValidationException;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -89,20 +92,28 @@ class Get extends Action
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         try {
             $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
+        $queries = $this->resolveJoinCollections(
+            $queries,
+            $dbForProject,
+            $database,
+            $collection,
+            $authorization,
+            $isAPIKey || $isPrivilegedUser,
+        );
+
         try {
-            $selects = Query::groupByType($queries)['selections'];
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $selects = Query::groupByType($queries)->selections;
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
             // Use transaction-aware document retrieval if transactionId is provided
@@ -115,26 +126,15 @@ class Get extends Action
                 // has no selects, disable relationship looping on documents!
                 $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (QueryException|UnsupportedException|ValidationException|QueryLibException $e) {
+            $this->mapQueryFailure($e);
         }
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
-        $operations = 0;
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-            operations: $operations
-        );
-
+        $operations = 1;
         $usage
             ->setResource('database')
             ->setResourceInternalId((string) $database->getSequence())

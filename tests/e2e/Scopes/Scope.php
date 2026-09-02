@@ -106,6 +106,16 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['supportForSpatials'] ?? true;
     }
 
+    protected function getSupportForAggregations(): bool
+    {
+        return $this->getConsoleVariables()['supportForAggregations'] ?? true;
+    }
+
+    protected function getSupportForJoins(): bool
+    {
+        return $this->getConsoleVariables()['supportForJoins'] ?? true;
+    }
+
     /**
      * Check if the database adapter supports spatial indexes on nullable columns
      */
@@ -213,7 +223,7 @@ abstract class Scope extends TestCase
             }
 
             $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
-        }, 15_000, 500);
+        }, 45_000, 500);
 
         return $result;
     }

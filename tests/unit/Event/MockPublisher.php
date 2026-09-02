@@ -18,6 +18,9 @@ class MockPublisher implements Publisher
         return true;
     }
 
+    /**
+     * @param list<array<string, mixed>> $payloads
+     */
     public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
     {
         foreach ($payloads as $payload) {

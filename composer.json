@@ -50,6 +50,22 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/audit"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/abuse"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
         }
     ],
     "require": {
@@ -68,9 +84,9 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "2.0.*",
+        "utopia-php/abuse": "dev-feat-query-lib as 2.0.0",
         "utopia-php/agents": "2.*",
-        "utopia-php/audit": "^4.0",
+        "utopia-php/audit": "dev-feat-query-lib as 4.0.0",
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
@@ -79,7 +95,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "^7.0.0",
+        "utopia-php/database": "dev-feat-query-lib as 7.0.0",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "^3.0",
         "utopia-php/emails": "0.8.*",
@@ -93,7 +109,7 @@
         "utopia-php/lock": "0.3.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
-        "utopia-php/migration": "^2.0.0",
+        "utopia-php/migration": "dev-feat-query-lib as 2.0.0",
         "utopia-php/platform": "1.0.0-rc18",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",

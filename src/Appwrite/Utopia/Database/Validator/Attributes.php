@@ -7,6 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
@@ -129,7 +130,7 @@ class Attributes extends Validator
             ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
 
             // Validate spatial type support
-            if (\in_array($type, Database::SPATIAL_TYPES) && !$this->supportForSpatialAttributes) {
+            if (\in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportForSpatialAttributes) {
                 $this->message = "Spatial attributes are not supported by the current database";
                 return false;
             }
@@ -141,7 +142,7 @@ class Attributes extends Validator
 
             // Validate size for the types that take one. The remaining string
             // types (text, mediumtext, longtext) are fixed width.
-            if (\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
+            if (\in_array($type, [ColumnType::String->value, ColumnType::Varchar->value])) {
                 if ($size < 1 || $size > APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH) {
                     $this->message = "Invalid or missing size for string attribute '" . $attribute['key'] . "'. Size must be between 1 and " . APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH;
                     return false;
@@ -151,7 +152,7 @@ class Attributes extends Validator
             // Validate format if provided
             if ($format !== '') {
                 // Format is only allowed for sized string types
-                if (!\in_array($type, [Database::VAR_STRING, Database::VAR_VARCHAR])) {
+                if (!\in_array($type, [ColumnType::String->value, ColumnType::Varchar->value])) {
                     $this->message = "Format is only allowed for string type for attribute '" . $attribute['key'] . "'";
                     return false;
                 }
@@ -180,7 +181,7 @@ class Attributes extends Validator
             }
 
             // Validate signed only for integer/bigint/float types
-            if (isset($attribute['signed']) && !in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, 'bigint', ColumnType::Float->value, ColumnType::Double->value])) {
                 $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
@@ -199,7 +200,7 @@ class Attributes extends Validator
 
             // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, 'bigint', ColumnType::Float->value, ColumnType::Double->value])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
@@ -214,11 +215,11 @@ class Attributes extends Validator
             // Validate default value matches attribute type
             if (isset($attribute['default'])) {
                 switch ($type) {
-                    case Database::VAR_STRING:
-                    case Database::VAR_VARCHAR:
-                    case Database::VAR_TEXT:
-                    case Database::VAR_MEDIUMTEXT:
-                    case Database::VAR_LONGTEXT:
+                    case ColumnType::String->value:
+                    case ColumnType::Varchar->value:
+                    case ColumnType::Text->value:
+                    case ColumnType::MediumText->value:
+                    case ColumnType::LongText->value:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for string attribute '" . $attribute['key'] . "' must be a string";
                             return false;
@@ -255,7 +256,7 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_INTEGER:
+                    case ColumnType::Integer->value:
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be an integer";
                             return false;
@@ -272,7 +273,8 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_BIGINT:
+                    case ColumnType::BigInteger->value:
+                    case 'bigint':
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
                             return false;
@@ -289,7 +291,8 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_FLOAT:
+                    case ColumnType::Float->value:
+                    case ColumnType::Double->value:
                         if (!is_float($attribute['default']) && !is_int($attribute['default'])) {
                             $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be a number";
                             return false;
@@ -306,14 +309,14 @@ class Attributes extends Validator
                         }
                         break;
 
-                    case Database::VAR_BOOLEAN:
+                    case ColumnType::Boolean->value:
                         if (!is_bool($attribute['default'])) {
                             $this->message = "Default value for boolean attribute '" . $attribute['key'] . "' must be a boolean";
                             return false;
                         }
                         break;
 
-                    case Database::VAR_DATETIME:
+                    case ColumnType::Datetime->value:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for datetime attribute '" . $attribute['key'] . "' must be a string in ISO 8601 format";
                             return false;

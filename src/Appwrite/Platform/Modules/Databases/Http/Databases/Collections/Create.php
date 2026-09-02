@@ -9,11 +9,14 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Attribute;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Attribute;
+use Utopia\Database\Capability;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -22,11 +25,13 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
@@ -138,8 +143,8 @@ class Create extends Action
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes()
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter())
         );
 
         if (!$attributesValidator->isValid($attributes)) {
@@ -148,7 +153,7 @@ class Create extends Action
         }
 
         foreach ($attributes as $attribute) {
-            if (($attribute['type'] ?? '') === Database::VAR_RELATIONSHIP) {
+            if (($attribute['type'] ?? '') === ColumnType::Relationship->value) {
                 $dbForProject->deleteDocument($databaseKey, $collection->getId());
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
             }
@@ -193,21 +198,21 @@ class Create extends Action
             [],
             $dbForDatabases->getAdapter()->getMaxIndexLength(),
             $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForDatabases->getAdapter()->getSupportForVectors(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObjectIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForTrigramIndex(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForIndex(),
-            $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
-            $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
-            $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject(),
+            $dbForDatabases->getAdapter()->supports(Capability::IndexArray),
+            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
+            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
+            $dbForDatabases->getAdapter()->supports(Capability::Vectors),
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
+            $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
+            $dbForDatabases->getAdapter()->supports(Capability::Index),
+            $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
+            $dbForDatabases->getAdapter()->supports(Capability::Fulltext),
+            $dbForDatabases->getAdapter()->supports(Capability::TTLIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::Objects),
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -218,13 +223,13 @@ class Create extends Action
         }
 
         try {
-            $dbForDatabases->createCollection(
+            $dbForDatabases->createCollection(new Collection(
                 id: $collectionKey,
                 attributes: $collectionAttributes,
                 indexes: $collectionIndexes,
                 permissions: $permissions,
-                documentSecurity: $documentSecurity
-            );
+                documentSecurity: $documentSecurity,
+            ));
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
@@ -274,16 +279,14 @@ class Create extends Action
     }
 
     /**
-     * Build attribute Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @return array{collection: Attribute, document: Document}
      */
     protected function buildAttributeDocument(
         Document $database,
         Document $collection,
         array $attribute,
     ): array {
-        ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
+        ['type' => $type, 'format' => $format, 'size' => $size] = AttributeDefinition::resolve($attribute);
 
         $key = $attribute['key'];
         $required = $attribute['required'] ?? false;
@@ -298,19 +301,20 @@ class Create extends Action
         }
 
         if (isset($attribute['min']) || isset($attribute['max'])) {
-            $format = match($type) {
-                Database::VAR_INTEGER => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                Database::VAR_BIGINT => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+            $format = match ($type) {
+                ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
+                ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
+            $isInteger = $type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value || $type === 'bigint';
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $attribute['min'] ?? ($isInteger ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
+                'max' => $attribute['max'] ?? ($isInteger ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
             ];
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Attribute::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,
@@ -350,9 +354,7 @@ class Create extends Action
     }
 
     /**
-     * Build index Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @return array{collection: Index, document: Document}
      */
     protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
@@ -379,7 +381,7 @@ class Create extends Action
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
 
-                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+                    if ($dbForDatabases->getAdapter()->supports(Capability::DefinedAttributes)) {
                         // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
                         throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
                     }
@@ -391,7 +393,7 @@ class Create extends Action
             }
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Index::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,

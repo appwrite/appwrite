@@ -19,6 +19,7 @@ use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
@@ -116,6 +117,8 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
         throw new Exception('Console is not ready yet. Please try again later.');
     }
 
+    $dbForPlatform->addHook(new Permissions());
+
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
@@ -165,6 +168,8 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
             ->setGlobalCollections($logsCollections)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        $database->addHook(new Permissions());
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
