@@ -72,16 +72,16 @@ class Get extends Action
         if ($project->isEmpty()) {
             $error = 'Project with the ID from state could not be found.';
 
-            if (empty($redirectFailure)) {
-                throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+            if (!empty($redirectFailure)) {
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
             }
 
-            $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-            $response
-                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                ->addHeader('Pragma', 'no-cache')
-                ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-            return;
+            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
         $region = $project->getAttribute('region', 'default');
@@ -166,16 +166,16 @@ class Get extends Action
                 ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
                 : 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.';
 
-            if (empty($redirectFailure)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+            if (!empty($redirectFailure)) {
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
+                $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
             }
 
-            $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-            $response
-                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                ->addHeader('Pragma', 'no-cache')
-                ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-            return;
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
         $response
