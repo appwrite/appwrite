@@ -260,6 +260,87 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_GITHUB_APP_ID',
+                'description' => 'GitHub OAuth app client ID used for signing in to the Appwrite console. You can find it in your GitHub OAuth application details. This is separate from _APP_VCS_GITHUB_APP_ID, which powers repository integration rather than console sign-in and holds the numeric GitHub App ID instead of an OAuth client ID.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITHUB_SECRET',
+                'description' => 'GitHub OAuth app client secret used for signing in to the Appwrite console. You can generate secrets in your GitHub OAuth application settings. This is separate from _APP_VCS_GITHUB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_APP_ID',
+                'description' => 'GitLab OAuth application ID used for signing in to the Appwrite console. You can find it in your GitLab application details. This is separate from _APP_VCS_GITLAB_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_SECRET',
+                'description' => 'GitLab OAuth application secret used for signing in to the Appwrite console. You can generate one in your GitLab application settings. This is separate from _APP_VCS_GITLAB_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GITLAB_ENDPOINT',
+                'description' => 'URL of the GitLab instance used for signing in to the Appwrite console, for self-hosted GitLab. Defaults to https://gitlab.com when unset. This is separate from _APP_VCS_GITLAB_ENDPOINT, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_APP_ID',
+                'description' => 'Bitbucket OAuth consumer key used for signing in to the Appwrite console. You can find it in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_BITBUCKET_SECRET',
+                'description' => 'Bitbucket OAuth consumer secret used for signing in to the Appwrite console. You can find it alongside the consumer key in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_SECRET, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_APP_ID',
+                'description' => 'Google OAuth 2.0 client ID used for signing in to the Appwrite console. You can create one in the Google Cloud Console under APIs & Services > Credentials. Unlike the other console sign-in providers, Google has no _APP_VCS_ counterpart, as it is not a repository host.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_GOOGLE_SECRET',
+                'description' => 'Google OAuth 2.0 client secret used for signing in to the Appwrite console. You can find it alongside the client ID in the Google Cloud Console under APIs & Services > Credentials.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',
@@ -351,7 +432,7 @@ return [
             ],
             [
                 'name' => '_APP_WORKER_PER_CORE',
-                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
                 'required' => false,
@@ -1494,6 +1575,15 @@ return [
             [
                 'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_ENDPOINT',
+                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser. Defaults to https://gitlab.com when unset.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

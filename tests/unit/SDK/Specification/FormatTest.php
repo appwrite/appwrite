@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
@@ -23,6 +24,7 @@ use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\FrameworkAdapter;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Migration;
@@ -36,6 +38,10 @@ use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TemplateFramework;
+use Appwrite\Utopia\Response\Model\TemplateSite;
+use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -1035,7 +1041,7 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiQuery['type']);
     }
 
-    public function testJsonModelRulesKeepAdditionalPropertiesAndSkipNullable(): void
+    public function testJsonAndNullableModelRulesEmitExpectedSchemas(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -1058,15 +1064,56 @@ final class FormatTest extends TestCase
 
         $models = [
             new Provider(),
+            new FrameworkAdapter(),
+            new TemplateFramework(),
+            new TemplateSite(),
+            new TemplateVariable(),
+            new UsageDataPoint(),
             new ErrorModel(),
         ];
+        $routes = [$route];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER,
+            Response::MODEL_TEMPLATE_FRAMEWORK,
+            Response::MODEL_TEMPLATE_SITE,
+            Response::MODEL_USAGE_DATA_POINT,
+        ] as $model) {
+            $routes[] = (new Route('GET', '/v1/tests/' . $model))
+                ->desc('Get test response model')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'get' . \ucfirst($model),
+                    description: 'Get test response model.',
+                    auth: [],
+                    responses: [
+                        new SDKResponse(
+                            code: 200,
+                            model: $model,
+                        ),
+                    ],
+                ));
+        }
+
+        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], 0, 'console'))->parse();
 
         $openApiOptions = $openApi['components']['schemas']['provider']['properties']['options'];
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+
+        foreach ([
+            Response::MODEL_FRAMEWORK_ADAPTER => 'fallbackFile',
+            Response::MODEL_TEMPLATE_FRAMEWORK => 'fallbackFile',
+            Response::MODEL_TEMPLATE_SITE => 'demoUrl',
+            Response::MODEL_USAGE_DATA_POINT => 'time',
+        ] as $model => $property) {
+            $schema = $openApi['components']['schemas'][$model];
+
+            $this->assertTrue($schema['properties'][$property]['nullable']);
+            $this->assertNotContains($property, $schema['required']);
+        }
     }
 
     public function testQueriesSubclassesEmitArrayOfStrings(): void
@@ -1163,5 +1210,115 @@ final class FormatTest extends TestCase
         $this->assertSame('<NEW_KEY>', $properties['newKey']['example']);
         $this->assertSame('example.com', $properties['domain']['example']);
         $this->assertSame('FFFFFF', $properties['background']['example']);
+    }
+
+    public function testExplicitMethodParametersAreTheSdkMethodList(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = $this->createDocumentsRoute(
+            createDocument: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documentId', optional: false),
+                new Parameter('data', optional: false),
+                new Parameter('permissions', optional: true),
+                new Parameter('transactionId', optional: true),
+            ],
+            createDocuments: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documents', optional: false),
+                new Parameter('transactionId', optional: true),
+            ],
+        );
+
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+
+        $this->assertContains('transactionId', $methods['createDocument']);
+        $this->assertContains('transactionId', $methods['createDocuments']);
+    }
+
+    public function testOmittedMethodParametersAreDroppedFromTheSdkMethodList(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = $this->createDocumentsRoute(
+            createDocument: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documentId', optional: false),
+                new Parameter('data', optional: false),
+                new Parameter('permissions', optional: true),
+            ],
+            createDocuments: [
+                new Parameter('databaseId', optional: false),
+                new Parameter('collectionId', optional: false),
+                new Parameter('documents', optional: false),
+            ],
+        );
+
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+
+        $this->assertNotContains('transactionId', $methods['createDocument']);
+        $this->assertNotContains('transactionId', $methods['createDocuments']);
+    }
+
+    /**
+     * @param list<Parameter> $createDocument
+     * @param list<Parameter> $createDocuments
+     */
+    private function createDocumentsRoute(array $createDocument, array $createDocuments): Route
+    {
+        return (new Route('POST', '/v1/documentsdb/:databaseId/collections/:collectionId/documents'))
+            ->desc('Create document')
+            ->label('sdk', [
+                new Method(
+                    namespace: 'documentsDB',
+                    group: 'documents',
+                    name: 'createDocument',
+                    description: 'Create document.',
+                    auth: [AuthType::ADMIN],
+                    responses: [],
+                    parameters: $createDocument,
+                ),
+                new Method(
+                    namespace: 'documentsDB',
+                    group: 'documents',
+                    name: 'createDocuments',
+                    description: 'Create documents.',
+                    auth: [AuthType::ADMIN],
+                    responses: [],
+                    parameters: $createDocuments,
+                ),
+            ])
+            ->param('databaseId', '', new Text(256), 'Database ID.')
+            ->param('collectionId', '', new Text(256), 'Collection ID.')
+            ->param('documentId', '', new Text(256), 'Document ID.', true)
+            ->param('data', [], new JSON(), 'Document data.', true)
+            ->param('permissions', null, new Nullable(new Text(256)), 'Permissions.', true)
+            ->param('documents', [], new JSON(), 'Documents.', true)
+            ->param('transactionId', null, new Nullable(new Text(256)), 'Transaction ID.', true);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function sdkMethods(array $openApi): array
+    {
+        $path = '/documentsdb/{databaseId}/collections/{collectionId}/documents';
+        $this->assertArrayHasKey($path, $openApi['paths']);
+
+        $methods = [];
+        foreach ($openApi['paths'][$path]['post']['x-appwrite']['methods'] as $method) {
+            $methods[$method['name']] = $method['parameters'];
+        }
+
+        $this->assertArrayHasKey('createDocument', $methods);
+        $this->assertArrayHasKey('createDocuments', $methods);
+
+        return $methods;
     }
 }
