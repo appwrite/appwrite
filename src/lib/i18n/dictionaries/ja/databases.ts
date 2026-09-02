@@ -45,6 +45,9 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'リテラルまたは SQL 式。例: now() や gen_random_uuid()。',
   'A value or SQL expression, for example CURRENT_TIMESTAMP.':
     '値または SQL 式。例: CURRENT_TIMESTAMP。',
+  'Document permissions grant extra access on top of collection permissions, they are not required in addition to them.': 'ドキュメント権限はコレクション権限に追加のアクセスを付与するものであり、コレクション権限と併せて必要になるわけではありません。',
+  'either document permissions or collection permissions': 'ドキュメント権限またはコレクション権限のいずれかがあれば十分です',
+  'either row permissions or table permissions': '行権限またはテーブル権限のいずれかがあれば十分です',
   'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
     '値をそのまま入力するか、CURRENT_TIMESTAMP のような SQL 式を入力してください。',
   'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
@@ -96,8 +99,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'backups selected': 'バックアップを選択',
   'Beta': 'ベータ',
   'Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.': '1 分あたりのディスクからのブロック読み取り数。キャッシュヒット率の低下とともにディスク読み取りが増加すると、メモリ不足の兆候となる場合があります。',
-  'both collection permissions and document permissions': 'コレクション権限とドキュメント権限の両方',
-  'both table permissions and row permissions': 'テーブル権限と行権限の両方',
   'Bucket': 'バケット',
   'Buckets': 'バケット',
   'Buffer cache effectiveness from pg_stat_database block reads and hits.': 'pg_stat_database のブロック読み取りとヒットから算出したバッファキャッシュの効率。',
@@ -236,6 +237,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Preparing workspace': 'ワークスペースを準備中',
   'Preparing your database workspace.': 'データベースワークスペースを準備中です。',
   'Provisioning compute': 'コンピュートをプロビジョニング中',
+  'Row permissions grant extra access on top of table permissions, they are not required in addition to them.': '行権限はテーブル権限に追加のアクセスを付与するものであり、テーブル権限と併せて必要になるわけではありません。',
   'Setting up backups': 'バックアップを設定中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
@@ -1184,8 +1186,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Thursday': '木曜日',
   'Tier': 'ティア',
   'Time': '時間',
-  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.': 'ドキュメントにアクセスするために必要です。ドキュメント権限はコレクション権限の代替ではなく、追加のレイヤーです。',
-  'to access rows. Row permissions are an additional layer, not an alternative to table permissions.': '行にアクセスするために必要です。行権限はテーブル権限の代替ではなく、追加のレイヤーです。',
   'to enable automated backups.': '自動バックアップを有効にするには。',
   'Top tables by on-disk size, including indexes and TOAST data.': 'インデックスと TOAST データを含む、オンディスクサイズ別の上位テーブル。',
   'Total': '合計',
@@ -1242,6 +1242,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Visual': 'ビジュアル',
   'Visualizer': 'ビジュアライザー',
   'Wait': '待機',
+  'When document security is enabled, users can access a document if they have': 'ドキュメントセキュリティが有効な場合、ユーザーがドキュメントにアクセスするには、',
+  'When row security is enabled, users can access a row if they have': '行セキュリティが有効な場合、ユーザーが行にアクセスするには、',
   'Will be stored as': '次のように保存されます',
   'Wait event': '待機イベント',
   'Wednesday': '水曜日',
@@ -1249,8 +1251,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Weeks': '週',
   'What is a DSN?': 'DSN とは?',
   'What is psql?': 'psql とは?',
-  'When document security is enabled, users need': 'ドキュメントセキュリティが有効な場合、ユーザーには',
-  'When row security is enabled, users need': '行セキュリティが有効な場合、ユーザーには',
   'Workload': 'ワークロード',
   'Write operations': '書き込み操作',
   'Write SQL before explaining a query.': 'クエリを説明する前に SQL を記述してください。',

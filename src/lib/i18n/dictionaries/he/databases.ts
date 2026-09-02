@@ -45,6 +45,9 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ערך קבוע או ביטוי SQL, לדוגמה now() או gen_random_uuid().',
   'A value or SQL expression, for example CURRENT_TIMESTAMP.':
     'ערך או ביטוי SQL, לדוגמה CURRENT_TIMESTAMP.',
+  'Document permissions grant extra access on top of collection permissions, they are not required in addition to them.': 'הרשאות מסמך מעניקות גישה נוספת מעבר להרשאות האוסף, אין צורך בשתיהן יחד.',
+  'either document permissions or collection permissions': 'הרשאות מסמך או הרשאות אוסף',
+  'either row permissions or table permissions': 'הרשאות שורה או הרשאות טבלה',
   'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
     'הזינו ערך כמו שהוא, או ביטוי SQL כגון CURRENT_TIMESTAMP.',
   'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
@@ -96,8 +99,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'backups selected': 'גיבויים נבחרו',
   'Beta': 'בטא',
   'Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.': 'בלוקים הנקראים מהדיסק בדקה. עלייה בקריאות מהדיסק לצד ירידה ביחס הפגיעות במטמון (cache hit) עשויה להעיד על מחסור בזיכרון.',
-  'both collection permissions and document permissions': 'גם להרשאות אוסף וגם להרשאות מסמך',
-  'both table permissions and row permissions': 'גם להרשאות טבלה וגם להרשאות שורה',
   'Bucket': 'באקט',
   'Buckets': 'באקטים',
   'Buffer cache effectiveness from pg_stat_database block reads and hits.': 'יעילות מטמון הבאפרים לפי קריאות בלוקים ופגיעות מטמון (hits) מתוך pg_stat_database.',
@@ -236,6 +237,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Preparing workspace': 'מכין את סביבת העבודה',
   'Preparing your database workspace.': 'מכין את סביבת העבודה של מסד הנתונים.',
   'Provisioning compute': 'מספק compute',
+  'Row permissions grant extra access on top of table permissions, they are not required in addition to them.': 'הרשאות שורה מעניקות גישה נוספת מעבר להרשאות הטבלה, אין צורך בשתיהן יחד.',
   'Setting up backups': 'מגדיר גיבויים',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
@@ -1227,8 +1229,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Thursday': 'חמישי',
   'Tier': 'רמה',
   'Time': 'זמן',
-  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.': 'כדי לגשת למסמכים. הרשאות מסמך הן שכבה נוספת, לא חלופה להרשאות אוסף.',
-  'to access rows. Row permissions are an additional layer, not an alternative to table permissions.': 'כדי לגשת לשורות. הרשאות שורה הן שכבה נוספת, לא חלופה להרשאות טבלה.',
   'to enable automated backups.': 'כדי להפעיל גיבויים אוטומטיים.',
   'Top tables by on-disk size, including indexes and TOAST data.': 'הטבלאות המובילות לפי גודל בדיסק, כולל אינדקסים ונתוני TOAST.',
   'Total': 'סה"כ',
@@ -1285,6 +1285,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Visual': 'חזותי',
   'Visualizer': 'תרשים סכימה',
   'Wait': 'המתנה',
+  'When document security is enabled, users can access a document if they have': 'כאשר אבטחת מסמכים מופעלת, משתמשים יכולים לגשת למסמך אם יש להם',
+  'When row security is enabled, users can access a row if they have': 'כאשר אבטחת שורות מופעלת, משתמשים יכולים לגשת לשורה אם יש להם',
   'Will be stored as': 'יישמר כ-',
   'Wait event': 'אירוע המתנה',
   'Wednesday': 'רביעי',
@@ -1292,8 +1294,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Weeks': 'שבועות',
   'What is a DSN?': 'מה זה DSN?',
   'What is psql?': 'מה זה psql?',
-  'When document security is enabled, users need': 'כאשר אבטחת מסמכים מופעלת, משתמשים זקוקים',
-  'When row security is enabled, users need': 'כאשר אבטחת שורות מופעלת, משתמשים זקוקים',
   'Workload': 'עומס עבודה',
   'Write operations': 'פעולות כתיבה',
   'Write SQL before explaining a query.': 'כתבו SQL לפני הסבר שאילתה.',

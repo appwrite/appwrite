@@ -7078,20 +7078,23 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   // State for Security
   const [tableRowSecurity, setTableRowSecurity] = useState<boolean | null>(null)
 
+  // Server permissions we last synced into local state. Without this, the effect
+  // below would re-run on every local edit and immediately overwrite it.
+  const syncedPermissionsRef = useRef<string | null>(null)
+
   // Initialize state from table data
   useEffect(() => {
     if (tableData) {
-      // Always sync permissions from table data to ensure we have the latest
       const tablePerms = tableData.$permissions || []
-      // Only update if permissions actually changed (avoid unnecessary re-renders)
-      const currentPermsStr = JSON.stringify([...tablePermissions].sort())
-      const newPermsStr = JSON.stringify([...tablePerms].sort())
-      if (currentPermsStr !== newPermsStr) {
+      // Only sync when the server value changed (initial load, or after a save)
+      const serverPermsStr = JSON.stringify([...tablePerms].sort())
+      if (syncedPermissionsRef.current !== serverPermsStr) {
+        syncedPermissionsRef.current = serverPermsStr
         setTablePermissions(tablePerms)
       }
       if (tableRowSecurity === null) setTableRowSecurity(tableData.rowSecurity)
     }
-  }, [tableData, tablePermissions, tableRowSecurity])
+  }, [tableData, tableRowSecurity])
 
   // Helper to check if arrays are different
   const arraysEqual = (a: string[], b: string[]) => {
@@ -7227,9 +7230,9 @@ export function TableSecurity({ table }: SpreadsheetProps) {
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                {t('When row security is enabled, users need')}{' '}
-                <strong>{t('both table permissions and row permissions')}</strong>{' '}
-                {t('to access rows. Row permissions are an additional layer, not an alternative to table permissions.')}
+                {t('When row security is enabled, users can access a row if they have')}{' '}
+                <strong>{t('either row permissions or table permissions')}</strong>.{' '}
+                {t('Row permissions grant extra access on top of table permissions, they are not required in addition to them.')}
               </p>
               <p className="text-[13px] text-muted-foreground">
                 <strong>{t('Create operations')}</strong>{' '}
