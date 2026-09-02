@@ -227,6 +227,14 @@ return [
         'description' => 'Access to create, update, and delete document database documents',
         'category' => 'Databases',
     ],
+    'documentsdb.indexes.read' => [
+        'description' => 'Access to read document database collection indexes',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete document database collection indexes',
+        'category' => 'Databases',
+    ],
 
     // VectorsDB
     'vectorsdb.read' => [
@@ -251,6 +259,14 @@ return [
     ],
     'vectorsdb.documents.write' => [
         'description' => 'Access to create, update, and delete vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.read' => [
+        'description' => 'Access to read vector database collection indexes',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete vector database collection indexes',
         'category' => 'Databases',
     ],
 

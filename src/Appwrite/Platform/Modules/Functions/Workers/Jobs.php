@@ -559,6 +559,13 @@ class Jobs extends Action
      * buildStartedAt (stamped by the first log callback) can be missing when a
      * terminal callback finalizes first — fall back to the deployment's
      * creation time rather than reporting 0.
+     *
+     * Clamped to _APP_COMPUTE_BUILD_TIMEOUT, the same ceiling Deployments hands
+     * the jobs-service as timeoutSeconds. Neither bound above is the
+     * orchestrator's: a build that waited for a runner without streaming a log
+     * line never got buildStartedAt, so the fallback measures its whole queue
+     * wait — and this value is what bills, at memory x duration x cpus. No job
+     * outlives the timeout, so nothing past it can have been build time.
      */
     private function duration(Document $deployment): int
     {
@@ -573,7 +580,14 @@ class Jobs extends Action
             return 0;
         }
 
-        return (int) \ceil(\max(0.0, \microtime(true) - $started));
+        $elapsed = (int) \ceil(\max(0.0, \microtime(true) - $started));
+
+        // Set by the operator on every deployed environment; guarded so a 0 or
+        // negative value leaves the measurement alone rather than zeroing every
+        // build's duration.
+        $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+
+        return $timeout > 0 ? \min($timeout, $elapsed) : $elapsed;
     }
 
     /**
