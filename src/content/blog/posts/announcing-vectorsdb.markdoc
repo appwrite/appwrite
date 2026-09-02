@@ -5,11 +5,10 @@ description: Store embeddings, generate them from text with built-in models, and
 date: 2026-09-02
 cover: /images/blog/announcing-vectorsdb/cover.avif
 timeToRead: 6
-author: atharva
+author: arnab-chatterjee
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is Appwrite VectorsDB?"
     answer: "VectorsDB is an Appwrite database for vector embeddings and similarity search. Every collection is created with a fixed dimension, documents hold an embeddings vector plus optional JSON metadata, and an HNSW index keeps similarity search fast as the collection grows."

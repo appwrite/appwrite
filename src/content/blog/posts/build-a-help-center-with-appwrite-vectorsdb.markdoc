@@ -8,7 +8,6 @@ timeToRead: 11
 author: atharva
 category: tutorial
 featured: false
-draft: true
 faqs:
   - question: "How is semantic search different from keyword search in a help center?"
     answer: "Keyword search matches the words in the question against the words in the article. Semantic search compares meaning instead. A reader who asks about a rejected card finds the article about a declined payment, even though the two phrases share no words."

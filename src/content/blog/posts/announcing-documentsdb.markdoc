@@ -5,11 +5,10 @@ description: Store flexible JSON documents, query them with the Appwrite SDKs, a
 date: 2026-09-02
 cover: /images/blog/announcing-documentsdb/cover.avif
 timeToRead: 5
-author: atharva
+author: arnab-chatterjee
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is Appwrite DocumentsDB?"
     answer: "DocumentsDB is an Appwrite database for schemaless documents. Collections hold flexible JSON, so you can add or change fields as your application grows without defining columns or running schema migrations. You work with it through the Appwrite SDKs and APIs, with the same permissions, queries, and pagination used across Appwrite Databases."
