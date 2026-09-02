@@ -43,6 +43,8 @@ Today, we are announcing **GitLab support** across Appwrite Sites and Functions.
 
 Everything else about a deployment stays where it was. Branch filters, path filters, install and build commands, root directories, and output directories are configured per Site or Function and do not care which provider is behind the repository.
 
+> A special thanks to [Jayesh Somani](https://github.com/jaysomani) from our community, who went far beyond a typical contribution and made the GitLab integration possible.
+
 # Connecting a GitLab account
 
 Open a project and go to **Settings** > **Git configuration**. Alongside **Connect GitHub**, you will now see **Connect GitLab**. Choosing it sends you through GitLab's OAuth consent screen and returns you to the Console with the connection saved to the project.
