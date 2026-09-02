@@ -33,6 +33,6 @@
     "require": {
         "php": ">=8.5",
         "utopia-php/di": "^0.3",
-        "utopia-php/validators": "^0.6"
+        "utopia-php/validators": "^1.0"
     }
 }
