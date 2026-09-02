@@ -6,13 +6,16 @@ export type EmbeddingDimensionPresetId =
   | EmbeddingModel
   | typeof EMBEDDING_DIMENSION_CUSTOM
 
-export const EMBEDDING_DIMENSION_PRESETS: {
+export type EmbeddingDimensionPreset = {
   id: EmbeddingModel
   label: string
   vendor: string
   dimension: number
   description: string
-}[] = [
+  comingSoon?: boolean
+}
+
+export const EMBEDDING_DIMENSION_PRESETS: EmbeddingDimensionPreset[] = [
   {
     id: EmbeddingModel.Nomicembedtext,
     label: 'nomic-embed-text',
@@ -28,6 +31,7 @@ export const EMBEDDING_DIMENSION_PRESETS: {
     dimension: 768,
     description:
       'Multilingual embeddings for 100+ languages, optimized for edge deployment.',
+    comingSoon: true,
   },
   {
     id: EmbeddingModel.Allminilm,
@@ -44,8 +48,19 @@ export const EMBEDDING_DIMENSION_PRESETS: {
     dimension: 384,
     description:
       'Compact English embeddings with strong retrieval quality at low memory cost.',
+    comingSoon: true,
   },
 ]
+
+export function isEmbeddingDimensionPresetSelectable(
+  preset: EmbeddingDimensionPreset,
+): boolean {
+  return !preset.comingSoon
+}
+
+export function getSelectableEmbeddingDimensionPresets(): EmbeddingDimensionPreset[] {
+  return EMBEDDING_DIMENSION_PRESETS.filter(isEmbeddingDimensionPresetSelectable)
+}
 
 export const DEFAULT_EMBEDDING_DIMENSION_PRESET = EmbeddingModel.Nomicembedtext
 
