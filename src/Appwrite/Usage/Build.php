@@ -32,6 +32,13 @@ final class Build
         $buildDuration = (int) $deployment->getAttribute('buildDuration', 0) * 1000;
         $mbSeconds = (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus);
 
+        // Without a start stamp buildDuration falls back to wall clock since the
+        // deployment was created, which would bill queue wait as build compute.
+        if (empty($deployment->getAttribute('buildStartedAt'))) {
+            $buildDuration = 0;
+            $mbSeconds = 0;
+        }
+
         // Per-resource breakdown now travels as resource dimensions on the
         // Context (resolved to resourceType + resourceId in the usage pipeline)
         // instead of per-{resourceInternalId} metric-name templates.

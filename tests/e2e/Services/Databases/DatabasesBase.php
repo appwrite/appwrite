@@ -1223,6 +1223,177 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * An inline numeric definition on create collection has to produce the same
+     * document the dedicated endpoints write: the full width of the type when no
+     * bounds are given, on a column wide enough to hold it.
+     */
+    public function testCreateCollectionInlineNumericRange(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Counters',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+            $schemaResource => [
+                ['key' => 'counter', 'type' => Database::VAR_INTEGER],
+                ['key' => 'total', 'type' => Database::VAR_BIGINT],
+                ['key' => 'ratio', 'type' => Database::VAR_FLOAT],
+                ['key' => 'bounded', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
+                // The numeric endpoints take no size, so this one cannot narrow the
+                // column below the int64 range the definition still declares
+                ['key' => 'sized', 'type' => Database::VAR_INTEGER, 'size' => 4],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+
+        $byKey = [];
+        foreach ($schema['body'][$schemaResource] as $attribute) {
+            $byKey[$attribute['key']] = $attribute;
+        }
+
+        $this->assertSame(\PHP_INT_MIN, $byKey['sized']['min']);
+        $this->assertSame(\PHP_INT_MAX, $byKey['sized']['max']);
+        $this->assertSame(\PHP_INT_MIN, $byKey['counter']['min']);
+        $this->assertSame(\PHP_INT_MAX, $byKey['counter']['max']);
+        $this->assertSame(\PHP_INT_MIN, $byKey['total']['min']);
+        $this->assertSame(\PHP_INT_MAX, $byKey['total']['max']);
+        $this->assertSame(-\PHP_FLOAT_MAX, $byKey['ratio']['min']);
+        $this->assertSame(\PHP_FLOAT_MAX, $byKey['ratio']['max']);
+
+        // A bound that was asked for is kept as asked for
+        $this->assertSame(0, $byKey['bounded']['min']);
+        $this->assertSame(100, $byKey['bounded']['max']);
+
+        // The bounds are only honest if the column is that wide. 5e9 overflows the
+        // 4 byte column an implied INT32 range would have produced.
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'counter' => 5000000000,
+                'total' => \PHP_INT_MAX,
+                'sized' => 5000000000,
+            ],
+        ]);
+
+        $this->assertEquals(201, $record['headers']['status-code']);
+        $this->assertSame(5000000000, $record['body']['counter']);
+        $this->assertSame(\PHP_INT_MAX, $record['body']['total']);
+        $this->assertSame(5000000000, $record['body']['sized']);
+
+        // A value outside a declared bound is still refused
+        $rejected = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['bounded' => 101],
+        ]);
+
+        $this->assertEquals(400, $rejected['headers']['status-code']);
+
+        // Same type, same collection, through the dedicated endpoint: the two paths
+        // have to agree on what "no bounds" means
+        $dedicated = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId, 'integer'), $headers, [
+            'key' => 'dedicated',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $dedicated['headers']['status-code']);
+        $this->assertSame($byKey['counter']['min'], $dedicated['body']['min']);
+        $this->assertSame($byKey['counter']['max'], $dedicated['body']['max']);
+    }
+
+    /**
+     * A JSON number past PHP_INT_MAX decodes to a float. The dedicated endpoints
+     * refuse it; an inline definition used to store it, leaving formatOptions
+     * holding 9.223372036854776e+18 on a column typed as an integer.
+     */
+    public function testCreateCollectionInlineBoundBeyondInt64(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+        $containerId = ID::unique();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Overflowing Bounds',
+            $schemaResource => [
+                // What a client that cannot hold an int64 sends back after reading
+                // the default bounds off an existing column
+                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
+            ],
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertStringContainsString("Attribute 'counter'", (string) $container['body']['message']);
+
+        // The rejected definition must not leave a collection behind
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertEquals(404, $missing['headers']['status-code']);
+
+        // A bound sent as a string is not an integer either
+        $stringBound = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'String Bounds',
+            $schemaResource => [
+                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => '9223372036854776000'],
+            ],
+        ]);
+
+        $this->assertEquals(400, $stringBound['headers']['status-code']);
+        $this->assertStringContainsString("Attribute 'counter'", (string) $stringBound['body']['message']);
+
+        // The dedicated endpoint is the reference: it refuses the same bound
+        $valid = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Dedicated Bounds',
+        ]);
+
+        $this->assertEquals(201, $valid['headers']['status-code']);
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $valid['body']['$id'], 'integer'), $headers, [
+            'key' => 'counter',
+            'required' => false,
+            'max' => 9223372036854776000,
+        ]);
+
+        $this->assertEquals(400, $attribute['headers']['status-code']);
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $valid['body']['$id']), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+        $this->assertEquals(0, $schema['body']['total']);
+    }
+
     public function testListAttributes(): void
     {
         if (!$this->getSupportForAttributes()) {

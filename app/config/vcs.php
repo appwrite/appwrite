@@ -8,6 +8,7 @@ use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -55,8 +56,8 @@ return [
             'clientSecret' => $clientSecret,
             'endpoint' => $endpoint,
         ]), ''),
-        // Only official gitlab.com is supported -- fixed, not configurable.
-        'endpoint' => 'https://gitlab.com',
+        // Defaults to gitlab.com; self-hosted installs point _APP_VCS_GITLAB_ENDPOINT at their own instance.
+        'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
         'variables' => [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],

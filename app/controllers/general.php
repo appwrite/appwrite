@@ -582,7 +582,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
-                default => "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$startCommand\"",
+                default => "nohup helpers/start.sh \"$startCommand\"",
             };
 
             $entrypoint = match ($type) {
