@@ -38,14 +38,14 @@
         "utopia-php/di": "^0.3",
         "utopia-php/lock": "^0.3",
         "utopia-php/servers": "^0.4",
-        "utopia-php/pools": "^2.0",
+        "utopia-php/pools": "^2.1",
         "utopia-php/telemetry": "^0.4",
         "utopia-php/validators": "^1.0"
     },
     "require-dev": {
         "ext-redis": "*",
         "swoole/ide-helper": "4.8.8",
-        "utopia-php/nats": "^1.0.0",
+        "utopia-php/nats": "^1.2",
         "workerman/workerman": "^4.0"
     },
     "suggest": {
