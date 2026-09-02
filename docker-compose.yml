@@ -170,19 +170,35 @@ services:
     environment:
       - GITLAB_ROOT_PASSWORD=${GITLAB_ROOT_PASSWORD:-;asiweml@562}
       - GITLAB_ROOT_EMAIL=${GITLAB_ROOT_EMAIL:-utopia@example.com}
-      - GITLAB_OMNIBUS_CONFIG=external_url 'http://127.0.0.1:13003'; nginx['listen_port'] = 80; gitlab_rails['initial_root_password'] = ENV['GITLAB_ROOT_PASSWORD']; gitlab_rails['gitlab_signup_enabled'] = false; gitlab_rails['allow_local_requests_from_web_hooks_and_services'] = true;
+      - >-
+        GITLAB_OMNIBUS_CONFIG=external_url 'http://127.0.0.1:13003';
+        nginx['listen_port'] = 80;
+        gitlab_rails['initial_root_password'] = ENV['GITLAB_ROOT_PASSWORD'];
+        gitlab_rails['gitlab_signup_enabled'] = false;
+        gitlab_rails['allow_local_requests_from_web_hooks_and_services'] = true;
+        puma['worker_processes'] = 0;
+        sidekiq['concurrency'] = 10;
+        prometheus_monitoring['enable'] = false;
+        prometheus['enable'] = false;
+        alertmanager['enable'] = false;
+        gitlab_exporter['enable'] = false;
+        node_exporter['enable'] = false;
+        postgres_exporter['enable'] = false;
+        redis_exporter['enable'] = false;
+        puma['exporter_enabled'] = false;
+        sidekiq['metrics_enabled'] = false;
+        gitlab_kas['enable'] = false;
     volumes:
       - gitlab-data:/var/opt/gitlab
     ports:
       - "13003:80"
     healthcheck:
-      # A single successful check only means nginx answered, not that the API
-      # underneath it can serve requests, so require 3 in a row before
-      # depends_on: condition: service_healthy (gitlab-bootstrap below) proceeds.
-      test: ["CMD-SHELL", "for i in 1 2 3; do curl -f http://localhost/-/health || exit 1; sleep 10; done"]
-      interval: 30s
-      timeout: 45s
-      retries: 5
+      # Readiness checks Rails and its dependencies (PostgreSQL, Redis and
+      # Gitaly), unlike /-/health, which only says the app server answered.
+      test: ["CMD-SHELL", "curl --fail --silent 'http://localhost/-/readiness?all=1' > /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
       start_period: 300s
 
   gitlab-bootstrap:
