@@ -184,7 +184,7 @@ readonly class Deployments
 
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
-            'buildPath' => $this->devicePath($deployment),
+            'buildPath' => $this->deviceForBuilds->getPath($deployment->getId() . '/' . static::artifact()),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -475,17 +475,6 @@ readonly class Deployments
     public static function outputDirectory(string $projectId, string $deploymentId): string
     {
         return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}";
-    }
-
-    /**
-     * The deployment's buildPath: where the artifact lives on the builds
-     * device, which is what the executor, the download endpoint and the
-     * deletes worker read. Matches buildPath() on the local device; a remote
-     * device (S3 and friends) keys it under its own root, bucket included.
-     */
-    public function devicePath(Document $deployment): string
-    {
-        return $this->deviceForBuilds->getPath($deployment->getId() . '/' . static::artifact());
     }
 
     /**
