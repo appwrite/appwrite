@@ -410,4 +410,41 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/console/project-default-' . $projectId . '/settings/git-installations?error=', (string) $response['headers']['location']);
     }
+
+    public function testCreateInstallationWithInvalidState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => 'not-json']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithUnknownProject(): void
+    {
+        $consoleUrl = 'http://localhost/console/project-default-missing/settings/git-installations';
+
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => $this->buildGiteaState('missing-project', $consoleUrl, $consoleUrl),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithLongState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        // Past the old 2048 cap: redirect URLs are not length-limited, so the
+        // authorize endpoint can produce a state this size itself.
+        $failure = $consoleUrl . '?pad=' . \str_repeat('a', 2400);
+
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $failure),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($failure, (string) $response['headers']['location']);
+    }
 }
