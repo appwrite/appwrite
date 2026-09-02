@@ -297,9 +297,9 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_GITLAB_ENDPOINT',
-                'description' => 'URL of the GitLab instance used for signing in to the Appwrite console, for self-hosted GitLab. This is separate from _APP_VCS_GITLAB_ENDPOINT, which powers repository integration rather than console sign-in.',
+                'description' => 'URL of the GitLab instance used for signing in to the Appwrite console, for self-hosted GitLab. Defaults to https://gitlab.com when unset. This is separate from _APP_VCS_GITLAB_ENDPOINT, which powers repository integration rather than console sign-in.',
                 'introduction' => '2.0.0',
-                'default' => 'https://gitlab.com',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1583,9 +1583,9 @@ return [
             ],
             [
                 'name' => '_APP_VCS_GITLAB_ENDPOINT',
-                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser.',
+                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser. Defaults to https://gitlab.com when unset.',
                 'introduction' => '2.0.0',
-                'default' => 'https://gitlab.com',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
