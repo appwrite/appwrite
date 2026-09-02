@@ -61,10 +61,4 @@ Increment and decrement numeric fields without race conditions.
 {% cards_item href="/docs/products/databases/documentsdb/timestamp-overrides" title="Timestamp overrides" %}
 Set custom creation and update timestamps during imports.
 {% /cards_item %}
-{% cards_item href="/docs/products/databases/documentsdb/json-imports" title="JSON imports" %}
-Import documents from JSON files.
-{% /cards_item %}
-{% cards_item href="/docs/products/databases/documentsdb/json-exports" title="JSON exports" %}
-Export collections to JSON files.
-{% /cards_item %}
 {% /cards %}

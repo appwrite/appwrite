@@ -7,7 +7,7 @@ description: Connect a Next.js App Router application to an Appwrite native MySQ
 An Appwrite native MySQL database works with standard MySQL drivers and ORMs, so a [Next.js](https://nextjs.org/) App Router application can query it from server-side code. Point your driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and keep all database access on the server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and Appwrite generates the database name for each database.
+You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
 {% /info %}
 
 # Where to connect {% #where %}
@@ -35,14 +35,14 @@ npm install mysql2
 Put the connection strings in your environment and never commit them. For local development, use `.env.local`, which Next.js loads automatically and the default `create-next-app` template excludes from Git:
 
 ```env
-DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
-DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 MYSQL_SSL="true"
 ```
 
-`DATABASE_URL` points at the [connection pooler](/docs/products/databases/mysql/connection-pooling) port (`6033`) for runtime traffic, and `DIRECT_URL` points at the MySQL engine port (`3306`) for migrations and schema changes. The connection string returned by Appwrite uses the engine port, so change only the port when you connect through the pooler. If your specification does not include the pooler, use the direct connection string for `DATABASE_URL` too.
+`DATABASE_URL` points at the [connection pooler](/docs/products/databases/mysql/connection-pooling) port (`6033`) for runtime traffic, and `DIRECT_URL` points at the MySQL engine port (`3306`) for migrations and schema changes. The connection string returned by Appwrite uses the engine port, so change only the port when you connect through the pooler.
 
-Appwrite Cloud serves MySQL over TLS. The examples below use `MYSQL_SSL="true"` to make `mysql2` request TLS and verify the server certificate with the runtime's trusted CAs. For full certificate verification controls or mTLS, see the [Network security](/docs/products/databases/mysql/network-security) page.
+Appwrite Cloud serves MySQL over TLS. The examples below use `MYSQL_SSL="true"` to make `mysql2` request TLS and verify the server certificate with the runtime's trusted CAs. For certificate verification controls, see the [Network security](/docs/products/databases/mysql/network-security) page.
 
 # Create a table for the examples {% #table %}
 

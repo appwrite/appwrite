@@ -15,7 +15,7 @@ Routine maintenance that can briefly affect the database runs inside a weekly wi
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -31,7 +31,7 @@ await mysql.updateMaintenance({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -50,7 +50,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -67,7 +67,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -85,7 +85,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -102,7 +102,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -118,7 +118,7 @@ await mysql.UpdateMaintenance(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -135,7 +135,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -151,7 +151,7 @@ mysql.updateMaintenance(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -172,7 +172,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -192,7 +192,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -212,7 +212,7 @@ curl -X PATCH \
       "day": "sun",
       "hourUtc": 3
   }' \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/maintenance
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/maintenance
 ```
 {% /multicode %}
 
@@ -227,7 +227,7 @@ You can upgrade the MySQL version online, such as from 8.0 to 8.4. A second inst
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -242,7 +242,7 @@ await mysql.createUpgrade({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -260,7 +260,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -276,7 +276,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -293,7 +293,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -309,7 +309,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -324,7 +324,7 @@ await mysql.CreateUpgrade(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -340,7 +340,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -355,7 +355,7 @@ mysql.createUpgrade(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -375,7 +375,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -395,7 +395,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -414,7 +414,7 @@ curl -X POST \
   -d '{
       "targetVersion": "8.4"
   }' \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/upgrades
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/upgrades
 ```
 {% /multicode %}
 
@@ -427,7 +427,7 @@ A paused database stops its compute but keeps its storage, configuration, and cr
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -442,7 +442,7 @@ await mysql.update({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -460,7 +460,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -476,7 +476,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -493,7 +493,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -509,7 +509,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -524,7 +524,7 @@ await mysql.Update(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -540,7 +540,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -555,7 +555,7 @@ mysql.update(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -576,7 +576,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -599,7 +599,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -618,7 +618,7 @@ curl -X PATCH \
   -d '{
       "status": "paused"
   }' \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
 ```
 {% /multicode %}
 

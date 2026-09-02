@@ -288,10 +288,11 @@ Content-Type: application/json
 X-Appwrite-Project: <PROJECT_ID>
 ```
 ```bash
-appwrite documents-db list-documents \
+appwrite documentsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"equal","attribute":"title","values":["Avatar","Lord of the Rings"]}' '{"method":"greaterThan","attribute":"year","values":[1999]}'
+    --queries '{"method":"equal","attribute":"title","values":["Avatar","Lord of the Rings"]}' \
+    --queries '{"method":"greaterThan","attribute":"year","values":[1999]}'
 ```
 {% /multicode %}
 
@@ -1052,6 +1053,142 @@ appwrite documentsdb list-documents \
 ```
 {% /multicode %}
 
+## Field existence {% #field-existence %}
+
+Documents in a collection do not share a schema, so a field can be present in some documents and absent in others. These operators filter on presence rather than value.
+
+### Exists {% #exists %}
+
+Returns documents that have the given fields, regardless of their value. Pass one or more field names.
+
+{% multicode %}
+```client-web
+Query.exists(["email"])
+```
+```client-flutter
+Query.exists(["email"])
+```
+```client-react-native
+Query.exists(["email"])
+```
+```client-apple
+Query.exists(["email"])
+```
+```client-android-kotlin
+Query.exists(listOf("email"))
+```
+```client-android-java
+Query.exists(Arrays.asList("email"))
+```
+```server-python
+Query.exists(["email"])
+```
+```server-ruby
+Query.exists(["email"])
+```
+```server-deno
+Query.exists(["email"])
+```
+```server-nodejs
+Query.exists(["email"])
+```
+```server-php
+Query::exists(["email"])
+```
+```server-dotnet
+Query.Exists(new List<string> { "email" })
+```
+```server-go
+query.Exists([]interface{}{"email"})
+```
+```server-dart
+Query.exists(["email"])
+```
+```server-swift
+Query.exists(["email"])
+```
+```server-kotlin
+Query.exists(listOf("email"))
+```
+```server-rust
+Query::exists(vec!["email"]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"exists","values":["email"]}'
+```
+```http
+{"method":"exists","values":["email"]}
+```
+{% /multicode %}
+### Not exists {% #not-exists %}
+
+Returns documents that do not have the given fields.
+
+{% multicode %}
+```client-web
+Query.notExists(["email"])
+```
+```client-flutter
+Query.notExists(["email"])
+```
+```client-react-native
+Query.notExists(["email"])
+```
+```client-apple
+Query.notExists(["email"])
+```
+```client-android-kotlin
+Query.notExists(listOf("email"))
+```
+```client-android-java
+Query.notExists(Arrays.asList("email"))
+```
+```server-python
+Query.not_exists(["email"])
+```
+```server-ruby
+Query.not_exists(["email"])
+```
+```server-deno
+Query.notExists(["email"])
+```
+```server-nodejs
+Query.notExists(["email"])
+```
+```server-php
+Query::notExists(["email"])
+```
+```server-dotnet
+Query.NotExists(new List<string> { "email" })
+```
+```server-go
+query.NotExists([]interface{}{"email"})
+```
+```server-dart
+Query.notExists(["email"])
+```
+```server-swift
+Query.notExists(["email"])
+```
+```server-kotlin
+Query.notExists(listOf("email"))
+```
+```server-rust
+Query::not_exists(vec!["email"]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notExists","values":["email"]}'
+```
+```http
+{"method":"notExists","values":["email"]}
+```
+{% /multicode %}
 ## String operations {% #string-operations %}
 
 ### Starts with {% #starts-with %}
@@ -1758,6 +1895,272 @@ appwrite documentsdb list-documents \
 ```
 {% /multicode %}
 
+### Regex {% #regex %}
+
+Returns documents where the field matches a regular expression.
+
+{% multicode %}
+```client-web
+Query.regex("title", "^Iron")
+```
+```client-flutter
+Query.regex("title", "^Iron")
+```
+```client-react-native
+Query.regex("title", "^Iron")
+```
+```client-apple
+Query.regex("title", "^Iron")
+```
+```client-android-kotlin
+Query.regex("title", "^Iron")
+```
+```client-android-java
+Query.regex("title", "^Iron")
+```
+```server-python
+Query.regex("title", "^Iron")
+```
+```server-ruby
+Query.regex("title", "^Iron")
+```
+```server-deno
+Query.regex("title", "^Iron")
+```
+```server-nodejs
+Query.regex("title", "^Iron")
+```
+```server-php
+Query::regex("title", "^Iron")
+```
+```server-dotnet
+Query.Regex("title", "^Iron")
+```
+```server-go
+query.Regex("title", "^Iron")
+```
+```server-dart
+Query.regex("title", "^Iron")
+```
+```server-swift
+Query.regex("title", "^Iron")
+```
+```server-kotlin
+Query.regex("title", "^Iron")
+```
+```server-rust
+Query::regex("title", "^Iron").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"regex","attribute":"title","values":["^Iron"]}'
+```
+```http
+{"method":"regex","attribute":"title","values":["^Iron"]}
+```
+{% /multicode %}
+## Array operators {% #array-operators %}
+
+### Contains any {% #contains-any %}
+
+Returns documents where the array field contains at least one of the given values.
+
+{% multicode %}
+```client-web
+Query.containsAny("genres", ["action", "drama"])
+```
+```client-flutter
+Query.containsAny("genres", ["action", "drama"])
+```
+```client-react-native
+Query.containsAny("genres", ["action", "drama"])
+```
+```client-apple
+Query.containsAny("genres", value: ["action", "drama"])
+```
+```client-android-kotlin
+Query.containsAny("genres", listOf("action", "drama"))
+```
+```client-android-java
+Query.containsAny("genres", Arrays.asList("action", "drama"))
+```
+```server-python
+Query.contains_any("genres", ["action", "drama"])
+```
+```server-ruby
+Query.contains_any("genres", ["action", "drama"])
+```
+```server-deno
+Query.containsAny("genres", ["action", "drama"])
+```
+```server-nodejs
+Query.containsAny("genres", ["action", "drama"])
+```
+```server-php
+Query::containsAny("genres", ["action", "drama"])
+```
+```server-dotnet
+Query.ContainsAny("genres", new List<string> { "action", "drama" })
+```
+```server-go
+query.ContainsAny("genres", []interface{}{"action", "drama"})
+```
+```server-dart
+Query.containsAny("genres", ["action", "drama"])
+```
+```server-swift
+Query.containsAny("genres", value: ["action", "drama"])
+```
+```server-kotlin
+Query.containsAny("genres", listOf("action", "drama"))
+```
+```server-rust
+Query::contains_any("genres", vec!["action", "drama"]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"containsAny","attribute":"genres","values":["action","drama"]}'
+```
+```http
+{"method":"containsAny","attribute":"genres","values":["action","drama"]}
+```
+{% /multicode %}
+### Contains all {% #contains-all %}
+
+Returns documents where the array field contains every one of the given values.
+
+{% multicode %}
+```client-web
+Query.containsAll("genres", ["action", "drama"])
+```
+```client-flutter
+Query.containsAll("genres", ["action", "drama"])
+```
+```client-react-native
+Query.containsAll("genres", ["action", "drama"])
+```
+```client-apple
+Query.containsAll("genres", value: ["action", "drama"])
+```
+```client-android-kotlin
+Query.containsAll("genres", listOf("action", "drama"))
+```
+```client-android-java
+Query.containsAll("genres", Arrays.asList("action", "drama"))
+```
+```server-python
+Query.contains_all("genres", ["action", "drama"])
+```
+```server-ruby
+Query.contains_all("genres", ["action", "drama"])
+```
+```server-deno
+Query.containsAll("genres", ["action", "drama"])
+```
+```server-nodejs
+Query.containsAll("genres", ["action", "drama"])
+```
+```server-php
+Query::containsAll("genres", ["action", "drama"])
+```
+```server-dotnet
+Query.ContainsAll("genres", new List<string> { "action", "drama" })
+```
+```server-go
+query.ContainsAll("genres", []interface{}{"action", "drama"})
+```
+```server-dart
+Query.containsAll("genres", ["action", "drama"])
+```
+```server-swift
+Query.containsAll("genres", value: ["action", "drama"])
+```
+```server-kotlin
+Query.containsAll("genres", listOf("action", "drama"))
+```
+```server-rust
+Query::contains_all("genres", vec!["action", "drama"]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"containsAll","attribute":"genres","values":["action","drama"]}'
+```
+```http
+{"method":"containsAll","attribute":"genres","values":["action","drama"]}
+```
+{% /multicode %}
+### Element match {% #elem-match %}
+
+Returns documents where at least one element of an array of embedded objects matches all of the nested queries.
+
+{% multicode %}
+```client-web
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```client-flutter
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```client-react-native
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```client-apple
+Query.elemMatch("reviews", queries: [Query.greaterThan("rating", value: 4)])
+```
+```client-android-kotlin
+Query.elemMatch("reviews", listOf(Query.greaterThan("rating", 4)))
+```
+```client-android-java
+Query.elemMatch("reviews", Arrays.asList(Query.greaterThan("rating", 4)))
+```
+```server-python
+Query.elem_match("reviews", [Query.greater_than("rating", 4)])
+```
+```server-ruby
+Query.elem_match("reviews", [Query.greater_than("rating", 4)])
+```
+```server-deno
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```server-nodejs
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```server-php
+Query::elemMatch("reviews", [Query::greaterThan("rating", 4)])
+```
+```server-dotnet
+Query.ElemMatch("reviews", new List<string> { Query.GreaterThan("rating", 4) })
+```
+```server-go
+query.ElemMatch("reviews", []string{query.GreaterThan("rating", 4)})
+```
+```server-dart
+Query.elemMatch("reviews", [Query.greaterThan("rating", 4)])
+```
+```server-swift
+Query.elemMatch("reviews", queries: [Query.greaterThan("rating", value: 4)])
+```
+```server-kotlin
+Query.elemMatch("reviews", listOf(Query.greaterThan("rating", 4)))
+```
+```server-rust
+Query::elem_match("reviews", vec![Query::greater_than("rating", 4)]).to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"elemMatch","attribute":"reviews","values":[{"method":"greaterThan","attribute":"rating","values":[4]}]}'
+```
+```http
+{"method":"elemMatch","attribute":"reviews","values":[{"method":"greaterThan","attribute":"rating","values":[4]}]}
+```
+{% /multicode %}
 ## Logical operators {% #logical-operators %}
 
 ### AND {% #and %}
@@ -2132,6 +2535,72 @@ appwrite documentsdb list-documents \
 ```
 {% /multicode %}
 
+### Order random {% #order-random %}
+
+Returns documents in a random order.
+
+{% multicode %}
+```client-web
+Query.orderRandom()
+```
+```client-flutter
+Query.orderRandom()
+```
+```client-react-native
+Query.orderRandom()
+```
+```client-apple
+Query.orderRandom()
+```
+```client-android-kotlin
+Query.orderRandom()
+```
+```client-android-java
+Query.orderRandom()
+```
+```server-python
+Query.order_random()
+```
+```server-ruby
+Query.order_random()
+```
+```server-deno
+Query.orderRandom()
+```
+```server-nodejs
+Query.orderRandom()
+```
+```server-php
+Query::orderRandom()
+```
+```server-dotnet
+Query.OrderRandom()
+```
+```server-go
+query.OrderRandom()
+```
+```server-dart
+Query.orderRandom()
+```
+```server-swift
+Query.orderRandom()
+```
+```server-kotlin
+Query.orderRandom()
+```
+```server-rust
+Query::order_random().to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderRandom"}'
+```
+```http
+{"method":"orderRandom"}
+```
+{% /multicode %}
 ## Pagination {% #pagination %}
 
 ### Limit {% #limit %}
@@ -2541,6 +3010,72 @@ appwrite documentsdb list-documents \
 ```
 {% /multicode %}
 
+### Created between {% #created-between %}
+
+Returns documents created between the two given dates.
+
+{% multicode %}
+```client-web
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-flutter
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-react-native
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-apple
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-android-kotlin
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-android-java
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-python
+Query.created_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-ruby
+Query.created_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-deno
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-nodejs
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-php
+Query::createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-dotnet
+Query.CreatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-go
+query.CreatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-dart
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-swift
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-kotlin
+Query.createdBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-rust
+Query::created_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"between","attribute":"$createdAt","values":["2025-01-01T00:00:00Z","2025-12-31T23:59:59Z"]}'
+```
+```http
+{"method":"between","attribute":"$createdAt","values":["2025-01-01T00:00:00Z","2025-12-31T23:59:59Z"]}
+```
+{% /multicode %}
 ### Updated before {% #updated-before %}
 
 Returns documents updated before the given date.
@@ -2672,6 +3207,72 @@ appwrite documentsdb list-documents \
 ```
 ```http
 {"method":"updatedAfter","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+### Updated between {% #updated-between %}
+
+Returns documents updated between the two given dates.
+
+{% multicode %}
+```client-web
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-flutter
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-react-native
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-apple
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-android-kotlin
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```client-android-java
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-python
+Query.updated_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-ruby
+Query.updated_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-deno
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-nodejs
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-php
+Query::updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-dotnet
+Query.UpdatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-go
+query.UpdatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-dart
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-swift
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-kotlin
+Query.updatedBetween("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z")
+```
+```server-rust
+Query::updated_between("2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z").to_string()
+```
+```bash
+appwrite documentsdb list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"between","attribute":"$updatedAt","values":["2025-01-01T00:00:00Z","2025-12-31T23:59:59Z"]}'
+```
+```http
+{"method":"between","attribute":"$updatedAt","values":["2025-01-01T00:00:00Z","2025-12-31T23:59:59Z"]}
 ```
 {% /multicode %}
 # Complex queries {% #complex-queries %}

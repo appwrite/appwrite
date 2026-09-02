@@ -1196,14 +1196,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Timestamp overrides',
             href: '/docs/products/databases/documentsdb/timestamp-overrides',
           },
-          {
-            label: 'JSON imports',
-            href: '/docs/products/databases/documentsdb/json-imports',
-          },
-          {
-            label: 'JSON exports',
-            href: '/docs/products/databases/documentsdb/json-exports',
-          },
         ],
       },
     ],

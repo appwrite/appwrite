@@ -30,7 +30,7 @@ ADO.NET providers use key/value connection strings rather than a URL. Store the 
 ```json
 {
   "ConnectionStrings": {
-    "Default": "Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=Required"
+    "Default": "Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=default;User=admin.<hash>;Password=<password>;SslMode=Required"
   }
 }
 ```
@@ -38,7 +38,7 @@ ADO.NET providers use key/value connection strings rather than a URL. Store the 
 The Appwrite MySQL host accepts TLS connections on port `3306`. `SslMode=Required` encrypts the connection. For full certificate and hostname verification, use `SslMode=VerifyFull`:
 
 ```text
-Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=VerifyFull
+Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=default;User=admin.<hash>;Password=<password>;SslMode=VerifyFull
 ```
 
 # Configure the DbContext {% #dbcontext %}
@@ -96,7 +96,7 @@ The `MigrationsHistoryTable` option keeps EF Core's migration tracking table pre
 
 # Run migrations {% #migrate %}
 
-Migrations need a session connection and full DDL privileges, so run them against the direct MySQL host on port `3306`, not the [pooler](/docs/products/databases/mysql/connection-pooling). The primary `admin` user owns the database.
+Migrations need a session connection and full DDL privileges, so run them against the direct MySQL host on port `3306`, not the [pooler](/docs/products/databases/mysql/connection-pooling). The `admin.<hash>` user owns the database.
 
 Create the first migration, then apply it:
 
@@ -136,7 +136,7 @@ public record CreateUser(string Email);
 Connector/NET has connection pooling enabled by default. Each process keeps its own pool keyed on the connection string, so a long-running ASP.NET server usually connects directly to MySQL and tunes the provider pool with connection string options:
 
 ```text
-Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=Required;Max Pool Size=50
+Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=default;User=admin.<hash>;Password=<password>;SslMode=Required;Max Pool Size=50
 ```
 
 Keep the sum across all your processes under the engine's connection limit for the database's specification.
@@ -144,7 +144,7 @@ Keep the sum across all your processes under the engine's connection limit for t
 If you run many short-lived instances that each open their own provider pool, route runtime traffic through the Appwrite [connection pooler](/docs/products/databases/mysql/connection-pooling) on port `6033`:
 
 ```text
-Server=db-<hash>.<region>.appwrite.center;Port=6033;Database=<database>;User=admin;Password=<password>;SslMode=Required;Max Pool Size=20
+Server=db-<hash>.<region>.appwrite.center;Port=6033;Database=default;User=admin.<hash>;Password=<password>;SslMode=Required;Max Pool Size=20
 ```
 
 Keep migrations and administrative jobs on the direct port `3306`. The pooler defaults to **transaction mode**, which does not hold a backend connection across statements. If your application relies on session state such as server-side prepared statements, user variables, or temporary tables, switch the pooler to **session mode**, see the [pooler](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
@@ -173,6 +173,6 @@ Pool modes, ports, and read/write splitting for serverless workloads.
 Ephemeral database copies for preview environments and CI.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
-TLS modes, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}

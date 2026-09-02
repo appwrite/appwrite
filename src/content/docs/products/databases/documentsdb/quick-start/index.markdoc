@@ -6,7 +6,13 @@ description: Get started with Appwrite DocumentsDB. Follow a step-by-step guide 
 
 
 {% section #create-database step=1 title="Create database" %}
-Head to your [Appwrite Console](https://cloud.appwrite.io/console/) and click **Create database**. Name it `Oscar` and choose **DocumentsDB** as the database type.
+{% only_dark %}
+![Create database](/images/docs/databases/documentsdb/dark/create-database.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database](/images/docs/databases/documentsdb/create-database.avif)
+{% /only_light %}
+Head to your [Appwrite Console](https://appwrite.io/console), open your project, and navigate to the **Databases** page. Click **Create database**, name it `Oscar`, and choose **DocumentsDB** as the database type.
 Optionally, add a custom database ID. Select your preferred tier, then click **Create database**.
 {% /section %}
 
