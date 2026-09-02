@@ -25,19 +25,23 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         return 'http://localhost/console/project-default-' . $this->getProject()['$id'] . '/settings/git-installations';
     }
 
-    private function getState(): string
+    // Signed like the authorize endpoint does: harmless while the callback
+    // does not verify signatures, green once it does.
+    private function buildState(string $projectId, string $success, string $failure): string
     {
-        $projectId = $this->getProject()['$id'];
-        $redirect = $this->getRedirect();
-
-        // Signed like the authorize endpoint does: harmless while the callback
-        // does not verify signatures, green once it does.
         return (string) json_encode([
             'projectId' => $projectId,
-            'success' => $redirect,
-            'failure' => $redirect,
-            'signature' => hash_hmac('sha256', json_encode([$projectId, $redirect, $redirect]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'success' => $success,
+            'failure' => $failure,
+            'signature' => hash_hmac('sha256', json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
+    }
+
+    private function getState(): string
+    {
+        $redirect = $this->getRedirect();
+
+        return $this->buildState($this->getProject()['$id'], $redirect, $redirect);
     }
 
     /**
@@ -62,6 +66,9 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
+
+        parse_str((string) parse_url((string) $response['headers']['location'], PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('sent to the organization owners', $query['error'] ?? '');
     }
 
     public function testGetCallbackMissingState(): void
@@ -73,5 +80,45 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('completed on GitHub', (string) $response['body']);
+    }
+
+    public function testGetCallbackEmptyState(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'install',
+            'installation_id' => '1234567',
+            'state' => '',
+        ], followRedirects: false);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('completed on GitHub', (string) $response['body']);
+    }
+
+    public function testGetCallbackProjectNotFound(): void
+    {
+        $redirect = $this->getRedirect();
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'install',
+            'installation_id' => '1234567',
+            'state' => $this->buildState('missing-project', $redirect, $redirect),
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($redirect . '?error=', (string) $response['headers']['location']);
+
+        parse_str((string) parse_url((string) $response['headers']['location'], PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('could not be found', $query['error'] ?? '');
+    }
+
+    public function testGetCallbackDefaultRedirect(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'request',
+            'state' => $this->buildState($this->getProject()['$id'], '', ''),
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
     }
 }
