@@ -7,7 +7,7 @@ description: Use Drizzle ORM with an Appwrite native MySQL database. Configure m
 Appwrite's native MySQL database is a standard MySQL engine, so [Drizzle ORM](https://orm.drizzle.team/) works against it with no Appwrite-specific configuration. Point Drizzle's mysql2 driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
 {% /info %}
 
 # Set the connection string {% #connection-string %}
@@ -15,7 +15,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection string in your environment. Never commit it:
 
 ```env
-DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
 Connections on Appwrite Cloud are encrypted with TLS. If your runtime or mysql2 configuration does not infer TLS from the connection string, configure mysql2 to require TLS. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
@@ -75,7 +75,7 @@ npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
 
-`generate` diffs your schema against the last snapshot and writes a timestamped `.sql` file into the `out` directory. `migrate` applies any pending files to the database. Point Drizzle Kit at the direct engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection. The primary `admin` user owns the generated database and can run schema changes.
+`generate` diffs your schema against the last snapshot and writes a timestamped `.sql` file into the `out` directory. `migrate` applies any pending files to the database. Point Drizzle Kit at the direct engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection. The `admin.<hash>` user owns the `default` database and can run schema changes.
 
 For prototypes or preview databases where you do not need committed SQL migration files, Drizzle Kit can push the current schema directly:
 
@@ -112,20 +112,20 @@ const recent = await db
   .limit(10);
 ```
 
-On long-running servers, create the `db` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse it, and use the pooler when your database specification includes it.
+On long-running servers, create the `db` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse it, and use the pooler for runtime traffic.
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. If your database specification includes the [connection pooler](/docs/products/databases/mysql/connection-pooling), route runtime traffic through it by connecting on port `6033` on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
 
 Keep `drizzle.config.ts` and the startup migrator pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
 
 ```env
 # Runtime: pooler port
-DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
 
 # Migrations & introspection: direct connection to the engine
-DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
 The Drizzle Kit config then reads the direct URL:

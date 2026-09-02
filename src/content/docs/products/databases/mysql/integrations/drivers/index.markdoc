@@ -7,7 +7,7 @@ description: Connect to an Appwrite native MySQL database from Node.js with mysq
 A native MySQL database works with standard Node.js drivers that speak the MySQL wire protocol. The [Connections](/docs/products/databases/mysql/connections#drivers) page shows the smallest query. This guide covers driver pools, TLS verification, serverless connection management, and common connection errors.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and the connection values returned by the database object: host, port, username, password, and database name. Store the password in an environment variable and keep it out of source control.
+You'll need a native MySQL database in a `ready` state and the connection values returned by the database object: host, port, username, and password. The username is `admin.<hash>` and the database name is `default`. Store the password in an environment variable and keep it out of source control.
 {% /info %}
 
 # Raw driver, ORM, or SQL API? {% #choosing %}
@@ -33,9 +33,9 @@ import process from 'node:process';
 const pool = mysql.createPool({
   host: 'db-<hash>.<region>.appwrite.center',
   port: 3306,
-  user: 'admin',
+  user: 'admin.<hash>',
   password: process.env.DB_PASSWORD,
-  database: '<database>',
+  database: 'default',
   ssl: { rejectUnauthorized: true },
   waitForConnections: true,
   connectionLimit: 10,
@@ -79,9 +79,9 @@ import process from 'node:process';
 const pool = mysql.createPool({
   host: 'db-<hash>.<region>.appwrite.center',
   port: 3306,
-  user: 'admin',
+  user: 'admin.<hash>',
   password: process.env.DB_PASSWORD,
-  database: '<database>',
+  database: 'default',
   ssl: { rejectUnauthorized: true },
   waitForConnections: true,
   connectionLimit: 10,
@@ -129,9 +129,9 @@ import process from 'node:process';
 const pool = mariadb.createPool({
   host: 'db-<hash>.<region>.appwrite.center',
   port: 3306,
-  user: 'admin',
+  user: 'admin.<hash>',
   password: process.env.DB_PASSWORD,
-  database: '<database>',
+  database: 'default',
   ssl: true,
   connectionLimit: 10,
   connectTimeout: 5000,
@@ -181,8 +181,6 @@ Connections on Appwrite Cloud are encrypted with TLS, terminated at the edge and
 
 The database hostname uses a certificate signed by a public CA, so Node.js can verify it with the built-in trust store in standard runtimes. Use a custom CA bundle only for images that do not include one, or when your organization requires a pinned bundle.
 
-For mTLS, where the client also presents a certificate, see the [Network security](/docs/products/databases/mysql/network-security) page. Add the client `key` and `cert` alongside `ca` in the same `ssl` object.
-
 # Pool sizing {% #pool-sizing %}
 
 Pool sizing is a connection budget. Each connection in `connectionLimit`, across every running instance, counts against your specification's connection cap. A single app server with `connectionLimit: 10` is usually modest. Ten replicas with `connectionLimit: 50` each can open 500 connections and exhaust smaller specifications.
@@ -220,6 +218,6 @@ Pool modes, ports, and read/write splitting for serverless workloads.
 Run SQL over HTTPS with no TCP connection for edge runtimes and scripts.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
-TLS, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}

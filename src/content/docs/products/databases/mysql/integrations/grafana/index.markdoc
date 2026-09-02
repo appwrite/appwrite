@@ -7,12 +7,12 @@ description: Connect Grafana to an Appwrite native MySQL database as a data sour
 An Appwrite [native MySQL database](/docs/products/databases/mysql) exposes a standard managed MySQL 8.4 or 8.0 engine, so [Grafana](https://grafana.com/) connects to it through the built-in **MySQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with your database credentials, and query your tables to build dashboards and alerts.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. Call `mysql.get()` from the Appwrite API to read `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and Appwrite generates the database name for each database. See [Connections](/docs/products/databases/mysql/connections) to retrieve the values.
+You'll need a native MySQL database in a `ready` state and its credentials. Call `mysql.get()` from the Appwrite API to read `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. The username is `admin.<hash>`, and the database name is `default`. See [Connections](/docs/products/databases/mysql/connections) to retrieve the values.
 {% /info %}
 
 # Protect dashboard credentials {% #credentials %}
 
-Grafana can execute any SQL allowed by the data source user. Keep panel queries read-only, avoid saving write statements in dashboards, and restrict network access to trusted Grafana hosts with an [IP allowlist](/docs/products/databases/mysql/network-security#ip-allowlist). If your deployment has a secondary MySQL user with only `SELECT` privileges, use that user for Grafana.
+Grafana can execute any SQL allowed by the data source user. Keep panel queries read-only, avoid saving write statements in dashboards, and restrict network access to trusted Grafana hosts with an [IP allowlist](/docs/products/databases/mysql/network-security#ip-allowlist).
 
 # Choose a connection target {% #target %}
 
@@ -27,8 +27,8 @@ In Grafana, open **Connections** > **Data sources** > **Add data source** and se
 | Field | Value |
 | --- | --- |
 | **Host URL** | `db-<hash>.<region>.appwrite.center:3306` |
-| **Database** | `<database>` |
-| **Username** | `admin` |
+| **Database** | `default` |
+| **Username** | `admin.<hash>` |
 | **Password** | `<password>` |
 
 Regions are `fra`, `nyc`, `sfo`, `sgp`, `syd`, and `tor`. Appwrite Cloud encrypts connections to the public hostname with TLS. Grafana's MySQL data source uses MySQL-specific TLS fields such as `tlsAuthWithCACert`, `tlsSkipVerify`, and TLS certificate values in `secureJsonData`.
@@ -48,9 +48,9 @@ datasources:
   - name: Appwrite native MySQL
     type: mysql
     url: db-<hash>.<region>.appwrite.center:3306
-    user: admin
+    user: admin.<hash>
     jsonData:
-      database: <database>
+      database: default
       maxOpenConns: 5
       maxIdleConns: 2
       maxIdleConnsAuto: true
@@ -60,7 +60,7 @@ datasources:
     editable: false
 ```
 
-The MySQL data source uses `type: mysql`, keeps the database name under `jsonData.database`, and reads the password from `secureJsonData.password`. Grafana expands `$GRAFANA_DB_PASSWORD` from the process environment when it loads the provisioning file. Add Grafana's MySQL TLS fields if your deployment requires explicit TLS configuration. See the [MySQL data source](https://grafana.com/docs/grafana/latest/datasources/mysql/configure/) docs for every available field.
+The MySQL data source uses `type: mysql`, keeps the database name, `default`, under `jsonData.database`, and reads the password from `secureJsonData.password`. Grafana expands `$GRAFANA_DB_PASSWORD` from the process environment when it loads the provisioning file. Add Grafana's MySQL TLS fields if your deployment requires explicit TLS configuration. See the [MySQL data source](https://grafana.com/docs/grafana/latest/datasources/mysql/configure/) docs for every available field.
 
 # Build a panel {% #panel %}
 

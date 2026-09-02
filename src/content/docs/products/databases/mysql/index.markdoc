@@ -75,7 +75,7 @@ The Storage and Bandwidth columns are the monthly allowances included with each 
 |----------------------------|---------------------------------|
 | Storage overage            | $0.125 per GB per month        |
 | Bandwidth overage          | $0.08 per GB per month         |
-| High availability replica  | 50% of the tier price, per replica |
+| High availability replica  | 100% of the tier price, per replica |
 | Point-in-time recovery     | 20% of the tier price          |
 
 You can [resize between tiers](/docs/products/databases/mysql/scaling) as your workload changes.

@@ -7,7 +7,7 @@ description: Use GORM with an Appwrite native MySQL database in Go. Build the My
 A native MySQL database is a standard MySQL engine, so [GORM](https://gorm.io/) talks to it through the regular MySQL driver. Build a go-sql-driver DSN from the credentials returned by Appwrite, hand it to `gorm.io/driver/mysql`, and use models, `AutoMigrate`, and the query API as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the hostname, password, and generated database name. The primary user is `admin`.
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the hostname, username, and password. The username is `admin.<hash>` and the database name is `default`.
 {% /info %}
 
 # Build the DSN {% #dsn %}
@@ -17,16 +17,17 @@ Keep the password out of source and read the connection details from the environ
 ```env
 DB_HOST="db-<hash>.<region>.appwrite.center"
 DB_PORT="3306"
-DB_NAME="<database>"
+DB_NAME="default"
+DB_USER="admin.<hash>"
 DB_PASSWORD="<password>"
 DB_TLS="true"
 ```
 
-GORM's MySQL driver uses [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) DSNs. The wire format is `admin:<password>@tcp(db-<hash>.<region>.appwrite.center:3306)/<database>?parseTime=true&tls=true`. Use `mysql.Config` to format the DSN so passwords and database names are escaped correctly:
+GORM's MySQL driver uses [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) DSNs. The wire format is `admin.<hash>:<password>@tcp(db-<hash>.<region>.appwrite.center:3306)/default?parseTime=true&tls=true`. Use `mysql.Config` to format the DSN so passwords and database names are escaped correctly:
 
 ```go
 cfg := mysqlcfg.Config{
-    User:      "admin",
+    User:      "admin.<hash>",
     Passwd:    os.Getenv("DB_PASSWORD"),
     Net:       "tcp",
     Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
@@ -39,8 +40,6 @@ dsn := cfg.FormatDSN()
 ```
 
 `parseTime=true` lets the driver scan MySQL `DATE`, `DATETIME`, and `TIMESTAMP` values into Go `time.Time` values. Keep `DB_TLS=true` for Appwrite Cloud connections. Local development environments that terminate no TLS can set `DB_TLS=false`.
-
-For mTLS, see the [Network security](/docs/products/databases/mysql/network-security) page.
 
 # Open a connection {% #open %}
 
@@ -72,7 +71,7 @@ func (User) TableName() string {
 
 func main() {
     cfg := mysqlcfg.Config{
-        User:      "admin",
+        User:      "admin.<hash>",
         Passwd:    os.Getenv("DB_PASSWORD"),
         Net:       "tcp",
         Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
@@ -108,7 +107,7 @@ Connect to the direct engine port (`3306`) for a long-running server and cap the
 
 ```go
 cfg := mysqlcfg.Config{
-    User:              "admin",
+    User:              "admin.<hash>",
     Passwd:            os.Getenv("DB_PASSWORD"),
     Net:               "tcp",
     Addr:              net.JoinHostPort(os.Getenv("DB_HOST"), "6033"),
@@ -141,13 +140,13 @@ if err := db.AutoMigrate(&User{}); err != nil {
 }
 ```
 
-`AutoMigrate` creates the table if it's missing and adds any missing columns and indexes. It does not drop columns or change existing column types, so it's convenient in development but not a substitute for versioned migrations in production. Run schema changes against the direct engine port because DDL needs a session-level connection. The primary `admin` user owns the generated database and can run schema changes.
+`AutoMigrate` creates the table if it's missing and adds any missing columns and indexes. It does not drop columns or change existing column types, so it's convenient in development but not a substitute for versioned migrations in production. Run schema changes against the direct engine port because DDL needs a session-level connection. The `admin.<hash>` user owns the `default` database and can run schema changes.
 
 For versioned migrations, [golang-migrate](https://github.com/golang-migrate/migrate) runs ordered up/down files. Point it at the direct engine port:
 
 ```bash
 migrate -path ./migrations \
-  -database "mysql://admin:$DB_PASSWORD@tcp($DB_HOST:$DB_PORT)/$DB_NAME?tls=$DB_TLS&x-migrations-table=gorm_schema_migrations" \
+  -database "mysql://$DB_USER:$DB_PASSWORD@tcp($DB_HOST:$DB_PORT)/$DB_NAME?tls=$DB_TLS&x-migrations-table=gorm_schema_migrations" \
   up
 ```
 
@@ -186,14 +185,14 @@ if err := db.Raw(
 }
 ```
 
-The same connection rules apply: use the direct port for migrations and session-level features, and use the pooler for high fan-out runtime queries when your database specification includes it.
+The same connection rules apply: use the direct port for migrations and session-level features, and use the pooler for high fan-out runtime queries.
 
 # Use a branch for previews and CI {% #branches %}
 
 [Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
 
 1. Create a branch from the API and read its `connectionString`.
-2. Export the branch host, password, and database name into the environment your tests read.
+2. Export the branch host, username, and password into the environment your tests read.
 3. Run `migrate ... up` or `AutoMigrate`, then run your test suite against the branch's direct port.
 4. Delete the branch when the job finishes.
 

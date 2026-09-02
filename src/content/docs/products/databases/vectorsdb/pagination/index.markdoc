@@ -380,7 +380,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"limit","values":[25]}' '{"method":"offset","values":[25]}'
+    --queries '{"method":"limit","values":[25]}' \
+    --queries '{"method":"offset","values":[25]}'
 ```
 {% /multicode %}
 
@@ -765,7 +766,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"limit","values":[25]}' '{"method":"cursorAfter","values":["<LAST_DOCUMENT_ID>"]}'
+    --queries '{"method":"limit","values":[25]}' \
+    --queries '{"method":"cursorAfter","values":["<LAST_DOCUMENT_ID>"]}'
 ```
 {% /multicode %}
 

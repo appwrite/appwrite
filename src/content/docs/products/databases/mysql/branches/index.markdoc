@@ -460,7 +460,7 @@ curl -X GET \
 A branch gets its own hostname, and reuses the parent's username and password because it is a snapshot copy of the parent's storage. The port is the standard `3306`; branches have no connection pooler. Connect with the branch's `connectionString` straight from the response:
 
 ```bash
-mysql --defaults-extra-file=<(printf '[client]\npassword=%s\n' "$BRANCH_PASSWORD") -h <branch host> -P 3306 -u admin -D <branch database>
+mysql --defaults-extra-file=<(printf '[client]\npassword=%s\n' "$BRANCH_PASSWORD") -h <branch host> -P 3306 -u admin.<hash> -D <branch database>
 ```
 
 # Delete a branch {% #delete %}
