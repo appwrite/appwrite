@@ -6,7 +6,7 @@ description: Configure the per-database connection pooler to serve many short-li
 
 MySQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections.
 
-The pooler runs next to your database and is reachable on port `6033` on the same hostname. Your application connects to the pooler exactly like it would connect to MySQL directly, same credentials, same TLS. The pooler is available on specifications that run on dedicated compute; the smallest specifications run on shared capacity and do not include it.
+The pooler runs next to your database and is reachable on port `6033` on the same hostname. Your application connects to the pooler exactly like it would connect to MySQL directly, same credentials, same TLS. The pooler is available on every specification.
 
 # Pool modes {% #modes %}
 
@@ -256,7 +256,7 @@ curl -X PATCH \
 Take your normal connection string and change the port to `6033`:
 
 ```bash
-mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>
+mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default?ssl=true
 ```
 
 Point your application's runtime traffic at the pooler port. Keep migrations and long-lived administrative sessions on the direct port `3306`, schema changes and tools like `mysqldump` expect session semantics and can misbehave in transaction mode.

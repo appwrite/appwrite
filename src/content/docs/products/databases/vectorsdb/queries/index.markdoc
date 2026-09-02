@@ -301,7 +301,8 @@ X-Appwrite-Project: <YOUR_PROJECT_ID>
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi","drama"]}' '{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}'
+    --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi","drama"]}' \
+    --queries '{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}'
 ```
 {% /multicode %}
 

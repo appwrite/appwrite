@@ -3542,6 +3542,28 @@ export function mergeUsageChartFiltersIntoPrefs(
   }
 }
 
+/** Full key: `console.firewall.trafficLive` - live traffic chart polling when true. */
+export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE = 'console.firewall.trafficLive'
+
+export function parseFirewallTrafficLiveUpdatesEnabled(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]) ??
+    true
+  )
+}
+
+export function mergeFirewallTrafficLiveUpdatesIntoPrefs(
+  prefs: UserPrefs,
+  enabled: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]: enabled,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Service list view mode (account prefs, one key per page across all projects)
 // ---------------------------------------------------------------------------

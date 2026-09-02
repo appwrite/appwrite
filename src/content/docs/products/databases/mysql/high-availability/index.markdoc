@@ -6,7 +6,7 @@ description: Run up to five read replicas with asynchronous, synchronous, or quo
 
 A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling), and take over automatically when the primary becomes unhealthy.
 
-High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas.
+High availability is available on every specification. The maximum number of replicas depends on your plan.
 
 # How it works {% #how-it-works %}
 
@@ -31,7 +31,7 @@ Set the replica count and replication mode on the database through the API:
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -47,7 +47,7 @@ await mysql.update({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -66,7 +66,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -83,7 +83,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -101,7 +101,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -118,7 +118,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -134,7 +134,7 @@ await mysql.Update(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -151,7 +151,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -167,7 +167,7 @@ mysql.update(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -189,7 +189,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -213,7 +213,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -233,7 +233,7 @@ curl -X PATCH \
       "replicas": 2,
       "syncMode": "sync"
   }' \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
 ```
 {% /multicode %}
 
@@ -248,7 +248,7 @@ You can check each replica's role, health, and replication lag:
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -262,7 +262,7 @@ const replicas = await mysql.getReplicas({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -279,7 +279,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -294,7 +294,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -310,7 +310,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -325,7 +325,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -339,7 +339,7 @@ var replicas = await mysql.GetReplicas(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -354,7 +354,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -368,7 +368,7 @@ val replicas = mysql.getReplicas(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -387,7 +387,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -408,7 +408,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -423,7 +423,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl -X GET \
   -H "X-Appwrite-Project: <PROJECT_ID>" \
   -H "X-Appwrite-Key: <YOUR_API_KEY>" \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/replicas
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/replicas
 ```
 {% /multicode %}
 
@@ -442,7 +442,7 @@ Trigger a failover yourself, for example to test your application's recovery beh
 import { Client, Mysql } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -456,7 +456,7 @@ await mysql.createFailover({
 import { Client, Mysql } from "npm:node-appwrite";
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -473,7 +473,7 @@ use Appwrite\Client;
 use Appwrite\Services\Mysql;
 
 $client = (new Client())
-    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     ->setProject('<PROJECT_ID>')
     ->setKey('<YOUR_API_KEY>');
 
@@ -488,7 +488,7 @@ from appwrite.client import Client
 from appwrite.services.mysql import Mysql
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
 client.set_project('<PROJECT_ID>')
 client.set_key('<YOUR_API_KEY>')
 
@@ -504,7 +504,7 @@ require 'appwrite'
 include Appwrite
 
 client = Client.new
-    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
     .set_project('<PROJECT_ID>')
     .set_key('<YOUR_API_KEY>')
 
@@ -519,7 +519,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -533,7 +533,7 @@ await mysql.CreateFailover(
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
     .setKey('<YOUR_API_KEY>');
 
@@ -548,7 +548,7 @@ import io.appwrite.Client
 import io.appwrite.services.Mysql
 
 val client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -562,7 +562,7 @@ mysql.createFailover(
 import Appwrite
 
 let client = Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
     .setKey("<YOUR_API_KEY>")
 
@@ -581,7 +581,7 @@ import (
 
 func main() {
     client := appwrite.NewClient(
-        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
         appwrite.WithProject("<PROJECT_ID>"),
         appwrite.WithKey("<YOUR_API_KEY>"),
     )
@@ -601,7 +601,7 @@ use appwrite::services::mysql::Mysql;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new()
-        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
         .set_project("<PROJECT_ID>")
         .set_key("<YOUR_API_KEY>");
 
@@ -616,7 +616,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl -X POST \
   -H "X-Appwrite-Project: <PROJECT_ID>" \
   -H "X-Appwrite-Key: <YOUR_API_KEY>" \
-  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/failovers
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/failovers
 ```
 {% /multicode %}
 

@@ -7,7 +7,7 @@ description: Use Laravel and Eloquent with an Appwrite native MySQL database. Co
 A native MySQL database is a standard MySQL engine, so [Laravel](https://laravel.com/docs) works against it with no Appwrite-specific configuration. Point the `mysql` connection in `config/database.php` at the credentials from the [Connections](/docs/products/databases/mysql/connections) page, then use Eloquent, the query builder, migrations, and queues as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL databases](/docs/products/databases/mysql) to create one. To retrieve credentials, call [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) and use the returned hostname, port, username, password, and database name. The primary username is `admin`, and the database name is generated per database.
+You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL databases](/docs/products/databases/mysql) to create one. To retrieve credentials, call [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) and use the returned hostname, port, username, and password. The username is `admin.<hash>`, and the database name is `default`.
 {% /info %}
 
 # Configure the connection {% #connection %}
@@ -18,8 +18,8 @@ Laravel reads database credentials from `.env`. Fetch them with [`mysql.get()`](
 DB_CONNECTION=mysql
 DB_HOST=db-<hash>.<region>.appwrite.center
 DB_PORT=3306
-DB_DATABASE=<database>
-DB_USERNAME=admin
+DB_DATABASE=default
+DB_USERNAME=admin.<hash>
 DB_PASSWORD=<password>
 DB_CHARSET=utf8mb4
 DB_COLLATION=utf8mb4_unicode_ci
@@ -79,7 +79,7 @@ php artisan migrate
 php artisan migrate --force
 ```
 
-Run `migrate` against the **direct** MySQL port (`3306`), not the pooler. Migrations issue DDL and schema inspection queries that should use a stable backend connection. The primary `admin` user owns the database and can run schema changes.
+Run `migrate` against the **direct** MySQL port (`3306`), not the pooler. Migrations issue DDL and schema inspection queries that should use a stable backend connection. The `admin.<hash>` user owns the database and can run schema changes.
 
 # Query with Eloquent {% #query %}
 
@@ -129,8 +129,8 @@ A **serverless** or per-request deployment (Vercel, AWS Lambda, Cloud Run) opens
 # Runtime: pooled, transaction mode
 DB_HOST=db-<hash>.<region>.appwrite.center
 DB_PORT=6033
-DB_DATABASE=<database>
-DB_USERNAME=admin
+DB_DATABASE=default
+DB_USERNAME=admin.<hash>
 DB_PASSWORD=<password>
 DB_CHARSET=utf8mb4
 DB_COLLATION=utf8mb4_unicode_ci
@@ -138,8 +138,8 @@ DB_COLLATION=utf8mb4_unicode_ci
 # Migrations and schema operations: direct MySQL port
 DB_DIRECT_HOST=db-<hash>.<region>.appwrite.center
 DB_DIRECT_PORT=3306
-DB_DIRECT_DATABASE=<database>
-DB_DIRECT_USERNAME=admin
+DB_DIRECT_DATABASE=default
+DB_DIRECT_USERNAME=admin.<hash>
 DB_DIRECT_PASSWORD=<password>
 ```
 
@@ -212,6 +212,6 @@ Pool modes, ports, and read/write splitting for serverless workloads.
 Ephemeral database copies for preview environments and CI.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
-TLS modes, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}

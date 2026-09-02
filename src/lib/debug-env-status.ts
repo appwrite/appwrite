@@ -69,7 +69,7 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_PLAUSIBLE_SCRIPT_SRC',
     group: 'Runtime',
     description:
-      'Upstream Plausible script URL (proxied via /r/v.js and /r/e)',
+      'Upstream Plausible script URL (proxied via /r/v.js?v=… and /r/e)',
   },
   {
     key: 'VITE_CONSOLE_USER_VERIFICATION',
@@ -85,6 +85,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_CONSOLE_BLOG_DRAFTS',
     group: 'Runtime',
     description: 'Override draft blog post visibility',
+  },
+  {
+    key: 'VITE_CONSOLE_DATABASE_PITR_RESTORE',
+    group: 'Runtime',
+    description: 'Override dedicated database PITR restore UI',
   },
   {
     key: 'VITE_CONSOLE_EXTRA_OAUTH_LOGIN',
@@ -238,6 +243,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
+    VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_EXTRA_OAUTH_LOGIN: isNonEmpty(config.extraOAuthLogin),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),

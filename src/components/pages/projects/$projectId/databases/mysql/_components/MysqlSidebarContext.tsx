@@ -54,7 +54,7 @@ export type SqlEditorTab = {
   result: Models.DedicatedDatabaseExecution | null
   explainResult: DedicatedDatabaseQueryExplanation | null
   error: unknown
-  resultKind?: 'query' | 'explain'
+  resultKind?: 'query' | 'explain' | 'analyze'
 }
 
 type MysqlSidebarContextValue = {
@@ -91,7 +91,7 @@ type MysqlSidebarContextValue = {
   setActiveTabResult: (
     result: Models.DedicatedDatabaseExecution | null,
     error?: unknown,
-    resultKind?: 'query' | 'explain',
+    resultKind?: 'query' | 'explain' | 'analyze',
     explainResult?: DedicatedDatabaseQueryExplanation | null,
   ) => void
 }
@@ -448,18 +448,18 @@ export function MysqlSidebarProvider({
     (
       result: Models.DedicatedDatabaseExecution | null,
       error: unknown = null,
-      resultKind: 'query' | 'explain' = 'query',
+      resultKind: 'query' | 'explain' | 'analyze' = 'query',
       explainResult: DedicatedDatabaseQueryExplanation | null = null,
     ) => {
+      const isPlanResult = resultKind === 'explain' || resultKind === 'analyze'
       setEditorTabState((prev) => ({
         ...prev,
         tabs: prev.tabs.map((tab) =>
           tab.id === prev.activeTabId
             ? {
                 ...tab,
-                result: resultKind === 'explain' ? null : result,
-                explainResult:
-                  resultKind === 'explain' ? explainResult : null,
+                result: isPlanResult ? null : result,
+                explainResult: isPlanResult ? explainResult : null,
                 error,
                 resultKind,
               }

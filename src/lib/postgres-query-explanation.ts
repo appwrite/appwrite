@@ -6,6 +6,7 @@ import {
   normalizePostgresExecutionResult,
 } from '@/lib/postgres-execution-values'
 import { executionResultRows, peelLeadingPostgresSqlComments } from '@/lib/postgres-sql'
+import { sanitizeJsonValue, stringifyJsonForDisplay } from '@/lib/json-display'
 
 export function preparePostgresQueryForExplanation(sql: string): {
   query: string
@@ -66,7 +67,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function parseExplainPlanValue(value: unknown): Record<string, unknown>[] {
   if (Array.isArray(value)) {
-    return value.filter(isPlainObject)
+    return value
+      .filter(isPlainObject)
+      .map((entry) => sanitizeJsonValue(entry) as Record<string, unknown>)
   }
 
   if (typeof value === 'string') {
@@ -74,14 +77,14 @@ function parseExplainPlanValue(value: unknown): Record<string, unknown>[] {
     if (!trimmed) return []
     try {
       const parsed: unknown = JSON.parse(trimmed)
-      return parseExplainPlanValue(parsed)
+      return parseExplainPlanValue(sanitizeJsonValue(parsed))
     } catch {
       return []
     }
   }
 
   if (isPlainObject(value)) {
-    return [value]
+    return [sanitizeJsonValue(value) as Record<string, unknown>]
   }
 
   return []
@@ -105,7 +108,7 @@ function parseExplainExecution(
     typeof planValue === 'string'
       ? planValue
       : plan.length > 0
-        ? JSON.stringify(plan, null, 2)
+        ? stringifyJsonForDisplay(plan, 2)
         : formatPostgresExecutionCellValue(planValue)
 
   if (plan.length === 0 && !raw.trim()) {

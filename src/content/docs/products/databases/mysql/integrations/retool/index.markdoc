@@ -4,7 +4,7 @@ title: Retool
 description: Connect Retool to an Appwrite native MySQL database to build internal and admin tools. Fetch connection details with the API, configure the MySQL resource with TLS, and allow Retool Cloud network access when needed.
 ---
 
-An Appwrite [native MySQL database](/docs/products/databases/mysql) exposes a standard MySQL connection, so [Retool](https://retool.com/) connects to it through the built-in **MySQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels.
+An Appwrite [native MySQL database](/docs/products/databases/mysql) exposes a standard MySQL connection, so [Retool](https://retool.com/) connects to it through the built-in **MySQL** resource. Use the database hostname and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels.
 
 {% info title="Before you start" %}
 You'll need a native MySQL database in a `ready` state, an Appwrite API key with `databases.read`, and permission to create resources in Retool. Fetch connection details by calling `mysql.get()`, which returns `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. See [Connections](/docs/products/databases/mysql/connections) for the full flow.
@@ -12,9 +12,9 @@ You'll need a native MySQL database in a `ready` state, an Appwrite API key with
 
 # Choose credentials {% #credentials %}
 
-The primary user is `admin`, and the database name is generated for each database. The connection string has this form: `mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>`.
+The username is `admin.<hash>`, and the database name is `default`. The connection string has this form: `mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?ssl=true`.
 
-Use the returned `admin` credentials for the Retool resource and keep access limited through Retool resource permissions, Appwrite network controls, TLS, and narrowly scoped queries. Retool stores resource credentials server-side, so app users query through the Retool resource instead of connecting to MySQL from the browser.
+Use the returned `admin.<hash>` credentials for the Retool resource and keep access limited through Retool resource permissions, Appwrite network controls, TLS, and narrowly scoped queries. Retool stores resource credentials server-side, so app users query through the Retool resource instead of connecting to MySQL from the browser.
 
 # Create the MySQL resource {% #resource %}
 
@@ -26,10 +26,10 @@ In **Resource credentials**, either paste the Appwrite connection string or fill
 |----------------|-------|
 | Host | `db-<hash>.<region>.appwrite.center` |
 | Port | `3306` |
-| Database name | `<database>` |
+| Database name | `default` |
 | Connection options | Optional MySQL query parameters, such as `timezone=UTC` or `connectTimeout=10000` |
 | Authentication | **Username and password** |
-| Username | `admin` |
+| Username | `admin.<hash>` |
 | Password | The value from `connectionPassword` |
 
 In **Advanced options**, choose an outbound region if your Retool organization uses regional egress and you want the resource traffic to originate near your Appwrite database.
@@ -40,7 +40,7 @@ Click **Test connection**. If the test succeeds, click **Create resource**.
 
 # Pick the connection path {% #connection-path %}
 
-For most Retool apps, connect directly to MySQL on port `3306`. Appwrite's MySQL pooler listens on port `6033` only on specifications that include connection pooling. If your database has the [connection pooler](/docs/products/databases/mysql/connection-pooling) enabled and your Retool queries rely on session-level state such as server-side prepared statements, user variables, or temporary tables, configure the pooler in **session** mode for that Retool resource.
+For most Retool apps, connect directly to MySQL on port `3306`. Appwrite's MySQL [connection pooler](/docs/products/databases/mysql/connection-pooling) listens on port `6033`. If your Retool queries rely on session-level state such as server-side prepared statements, user variables, or temporary tables, set the pooler to **session** mode. The mode applies to every client of the database, not only Retool.
 
 {% arrow_link href="/docs/products/databases/mysql/connection-pooling#modes" %}
 Compare pooler modes

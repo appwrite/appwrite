@@ -20,6 +20,13 @@ export const POSTGRES_SQL_EXPLAIN_SHORTCUT_COMBOS = [
   'control+shift+e',
 ] as const
 
+export const POSTGRES_SQL_ANALYZE_SHORTCUT_RAW = 'mod+shift+a'
+
+export const POSTGRES_SQL_ANALYZE_SHORTCUT_COMBOS = [
+  'meta+shift+a',
+  'control+shift+a',
+] as const
+
 export const POSTGRES_SQL_SAVE_SHORTCUT_RAW = 'mod+s'
 
 export const POSTGRES_SQL_SAVE_SHORTCUT_COMBOS = [
@@ -90,6 +97,11 @@ export const POSTGRES_SQL_EDITOR_SHORTCUTS: readonly PostgresSqlEditorShortcutRe
       id: 'postgres-sql.explain',
       description: 'Explain',
       raw: POSTGRES_SQL_EXPLAIN_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.analyze',
+      description: 'Analyze',
+      raw: POSTGRES_SQL_ANALYZE_SHORTCUT_RAW,
     },
     {
       id: 'postgres-sql.save',

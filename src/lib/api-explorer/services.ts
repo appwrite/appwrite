@@ -41,6 +41,7 @@ export const API_SERVICE_ORDER = [
   'advisor',
   'documentsDB',
   'vectorsDB',
+  'embeddings',
   'postgresql',
   'mysql',
   'mongo',
@@ -67,6 +68,7 @@ export type ConsoleOnlyDatabaseApiService =
 export const FEATURE_GATED_DATABASE_API_SERVICES = [
   'documentsDB',
   'vectorsDB',
+  'embeddings',
   ...CONSOLE_ONLY_DATABASE_API_SERVICES,
 ] as const
 
@@ -100,6 +102,7 @@ export const API_EXPLORER_PRODUCT_GROUPS: ApiExplorerProductGroupDefinition[] =
         'tablesDB',
         'documentsDB',
         'vectorsDB',
+        'embeddings',
         'postgresql',
         'mysql',
         'mongo',
@@ -164,7 +167,9 @@ export function getFeatureGatedDatabaseApiServices(
 ): FeatureGatedDatabaseApiService[] {
   const services: FeatureGatedDatabaseApiService[] = []
   if (features.dedicatedDbsDocumentsDB) services.push('documentsDB')
-  if (features.dedicatedDbsVectorsDB) services.push('vectorsDB')
+  if (features.dedicatedDbsVectorsDB) {
+    services.push('vectorsDB', 'embeddings')
+  }
   if (features.nativeDbsPostgres) services.push('postgresql')
   if (features.nativeDbsMySQL) services.push('mysql')
   if (features.nativeDbsMongo) services.push('mongo')
@@ -239,6 +244,7 @@ export const API_SERVICE_LABELS: Record<string, string> = {
   advisor: 'Advisor',
   documentsDB: 'DocumentsDB',
   vectorsDB: 'VectorsDB',
+  embeddings: 'Embeddings',
   postgresql: 'PostgreSQL',
   mysql: 'MySQL',
   mongo: 'MongoDB',

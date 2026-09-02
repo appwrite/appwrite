@@ -495,19 +495,6 @@ export function databaseRestoreMigrationsQueryOptions(
       fetchDatabaseRestoreMigrations(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: 15 * 1000,
-    refetchInterval: (query) => {
-      const items = query.state.data
-      if (
-        items?.some((r) =>
-          IN_PROGRESS_RESTORATION_STATUSES.includes(
-            r.status as (typeof IN_PROGRESS_RESTORATION_STATUSES)[number],
-          ),
-        )
-      ) {
-        return 5000
-      }
-      return false
-    },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,

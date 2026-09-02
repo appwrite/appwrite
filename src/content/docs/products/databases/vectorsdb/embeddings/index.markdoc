@@ -258,6 +258,8 @@ Appwrite ships with the following text embedding models. The `dimension` of a mo
 
 Models marked coming soon are not available yet. Passing one to `createTextEmbeddings` returns a `400` error until it ships.
 
+Embedding usage is metered in tokens and priced per model. See [Text Embeddings billing](/docs/advanced/billing/embeddings) for plan allowances and rates.
+
 {% info title="Match the model to your collection dimension" %}
 Pick a model before you create your collection. In the Console you pick the model and the collection takes its dimension. Through an SDK you set `dimension` to the model's dimension. Every document in a collection uses vectors of the same length, so a collection only works with models that match its dimension.
 {% /info %}

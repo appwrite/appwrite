@@ -8,6 +8,7 @@ import {
   Play,
   Plus,
   Redo2,
+  Timer,
   Undo2,
   X,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import {
 import {
   MYSQL_SQL_CLOSE_TAB_SHORTCUT_RAW,
   MYSQL_SQL_EXPLAIN_SHORTCUT_RAW,
+  MYSQL_SQL_ANALYZE_SHORTCUT_RAW,
   MYSQL_SQL_FORMAT_SHORTCUT_RAW,
   MYSQL_SQL_JUMP_TAB_PICKER_SHORTCUT_RAW,
   MYSQL_SQL_NEW_TAB_SHORTCUT_RAW,
@@ -86,6 +88,28 @@ const MYSQL_SQL_EDITOR_ACTIONS: CommandEntry[] = [
       ),
     perform: (ctx) => {
       getMysqlSqlEditorActions()?.explain()
+      ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'mysql.sql.analyze',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'Analyze',
+    description: 'Execute the query and show actual timings in the plan',
+    icon: Timer,
+    shortcut: MYSQL_SQL_ANALYZE_SHORTCUT_RAW,
+    keywords: ['sql', 'explain', 'analyze', 'plan', 'mysql', 'timing'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getMysqlSqlEditorActions()?.canAnalyze,
+    disabledReason: () =>
+      disabledReasonWhen(
+        getMysqlSqlEditorActions()?.canAnalyze,
+        'Write SQL before analyzing a query.',
+      ),
+    perform: (ctx) => {
+      getMysqlSqlEditorActions()?.analyze()
       ctx.closeCommandCenter()
     },
   },

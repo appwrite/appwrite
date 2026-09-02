@@ -165,7 +165,6 @@ export function MysqlDatabaseReplicasCard({
       databaseId,
       source,
       fetchReplicas,
-      fetchReplicas ? 5000 : false,
     )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,

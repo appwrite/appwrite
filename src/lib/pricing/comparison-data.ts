@@ -177,6 +177,32 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: 'Custom'
                 },
                 {
+                    title: 'Text embeddings (Nomic)',
+                    free: '1M tokens / month',
+                    pro: '10M tokens / month',
+                    enterprise: 'Custom',
+                    info: 'Tokens processed by the Nomic (768 dim) text embedding model. Each model has its own monthly allowance.'
+                },
+                {
+                    title: 'Additional Nomic embeddings',
+                    free: '-',
+                    pro: '$0.10 per 1M tokens',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Text embeddings (MiniLM)',
+                    free: '1M tokens / month',
+                    pro: '10M tokens / month',
+                    enterprise: 'Custom',
+                    info: 'Tokens processed by the MiniLM (384 dim) text embedding model. Each model has its own monthly allowance.'
+                },
+                {
+                    title: 'Additional MiniLM embeddings',
+                    free: '-',
+                    pro: '$0.05 per 1M tokens',
+                    enterprise: 'Custom'
+                },
+                {
                     title: 'Backups',
                     free: '-',
                     pro: 'Daily',
@@ -199,6 +225,20 @@ export const comparisonTables: ComparisonTable[] = [
                     free: '100 rows / request',
                     pro: '1,000 rows / request',
                     enterprise: 'Custom'
+                },
+                {
+                    title: 'Embedding tokens',
+                    free: '1M / model / month',
+                    pro: '10M / model / month',
+                    enterprise: 'Custom',
+                    info: 'Text embedding tokens are metered per model. Free plans are capped and stop generating embeddings once the cap is reached.'
+                },
+                {
+                    title: 'Additional embedding tokens',
+                    free: '-',
+                    pro: 'From $0.05 per 1M tokens',
+                    enterprise: 'Custom',
+                    info: 'nomic-embed-text is $0.10 per 1M tokens and all-minilm is $0.05 per 1M tokens, billed per started million above the plan allowance.'
                 },
                 {
                     title: 'Dedicated databases',

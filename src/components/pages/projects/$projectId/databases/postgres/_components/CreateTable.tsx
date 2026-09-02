@@ -20,6 +20,11 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   buildPostgresColumnCommentSql,
   buildPostgresCreateIndexSql,
   buildPostgresIndexCommentSql,
@@ -36,6 +41,7 @@ import {
 } from '@/lib/postgres-column-types'
 import {
   createDefaultPostgresIndexFormState,
+  getPostgresIndexAlgorithmDefinition,
   validatePostgresIndexFormState,
   type PostgresIndexFormState,
 } from '@/lib/postgres-index-metadata'
@@ -654,7 +660,7 @@ export function CreateTable({
       onOpenChange={onOpenChange}
       title="Create table"
       description="Define columns and create the table."
-      maxWidth="sm:max-w-3xl"
+      maxWidth="sm:max-w-5xl"
     >
       <>
         <div className="border-t border-border" />
@@ -717,8 +723,8 @@ export function CreateTable({
                 {t('Columns')}
               </h4>
               <div className="overflow-x-auto rounded-lg border border-border">
-                <div className="min-w-[760px]">
-                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
+                <div className="min-w-[820px]">
+                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(260px,1.6fr)_44px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
                     <span aria-hidden="true" />
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t('Name')}
@@ -729,9 +735,17 @@ export function CreateTable({
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t('Default value')}
                     </span>
-                    <span className="whitespace-nowrap text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t('Primary key')}
-                    </span>
+                      <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="flex cursor-help justify-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                          tabIndex={0}
+                        >
+                          {t('PK')}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{t('Primary key')}</TooltipContent>
+                    </Tooltip>
                     <span aria-hidden="true" />
                   </div>
                   <div
@@ -770,7 +784,7 @@ export function CreateTable({
                           <div
                             data-column-row
                             className={cn(
-                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(200px,1.2fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
+                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(260px,1.6fr)_44px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
                               isDragging && 'opacity-35',
                               isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]',
                             )}
@@ -960,31 +974,29 @@ export function CreateTable({
                 ) : null}
               </div>
               <CollapsibleContent className="mt-3 space-y-3">
-                <p className="text-[12px] text-muted-foreground">
-                  {t(
-                    'Indexes are optional, but adding the most common ones now can improve query performance immediately.',
-                  )}
-                </p>
                 {indexes.map((index, indexPosition) => {
                   const keyColumns = index.formState.columns
                   const includeCandidates = normalizedColumnNames.filter(
                     (columnName) => !keyColumns.includes(columnName),
                   )
+                  const algorithm = getPostgresIndexAlgorithmDefinition(
+                    index.formState.algorithm,
+                  )
 
                   return (
                     <div
                       key={index.id}
-                      className="rounded-lg border border-border bg-card/50 p-3 space-y-3"
+                      className="rounded-lg border border-border bg-card/50 p-4 space-y-4"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-[12px] font-medium text-foreground">
+                        <span className="text-[13px] font-semibold text-foreground">
                           {t('Index')} {indexPosition + 1}
                         </span>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 text-[11px]"
+                          className="h-8 text-[12px]"
                           onClick={() =>
                             setIndexes((current) =>
                               current.filter((entry) => entry.id !== index.id),
@@ -994,63 +1006,74 @@ export function CreateTable({
                           {t('Remove')}
                         </Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor={`index-name-${index.id}`}
-                          className="text-[12px] font-medium"
-                        >
-                          {t('Name')} <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id={`index-name-${index.id}`}
-                          value={index.formState.name}
-                          onChange={(event) =>
-                            setIndexes((current) =>
-                              current.map((entry) =>
-                                entry.id === index.id
-                                  ? {
-                                      ...entry,
-                                      formState: {
-                                        ...entry.formState,
-                                        name: event.target.value,
-                                      },
-                                    }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          placeholder="idx_users_email"
-                        />
-                      </div>
-                      <PostgresIndexAlgorithmSelector
-                        value={index.formState.algorithm}
-                        onChange={(algorithm) =>
-                          setIndexes((current) =>
-                            current.map((entry) =>
-                              entry.id === index.id
-                                ? {
-                                    ...entry,
-                                    formState: {
-                                      ...entry.formState,
-                                      algorithm,
-                                      columns:
-                                        algorithm === 'hash' &&
-                                        entry.formState.columns.length > 1
-                                          ? entry.formState.columns.slice(0, 1)
-                                          : entry.formState.columns,
-                                    },
-                                  }
-                                : entry,
-                            ),
-                          )
-                        }
-                      />
-                      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2">
-                        <div>
-                          <Label className="text-[12px] font-medium">
-                            {t('Unique')}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-2 min-w-0">
+                          <Label
+                            htmlFor={`index-name-${index.id}`}
+                            className="text-[12px] font-medium"
+                          >
+                            {t('Name')} <span className="text-destructive">*</span>
                           </Label>
+                          <Input
+                            id={`index-name-${index.id}`}
+                            value={index.formState.name}
+                            onChange={(event) =>
+                              setIndexes((current) =>
+                                current.map((entry) =>
+                                  entry.id === index.id
+                                    ? {
+                                        ...entry,
+                                        formState: {
+                                          ...entry.formState,
+                                          name: event.target.value,
+                                        },
+                                      }
+                                    : entry,
+                                ),
+                              )
+                            }
+                            placeholder="idx_users_email"
+                          />
                         </div>
+                        <div className="space-y-2 min-w-0">
+                          <Label
+                            htmlFor={`index-algorithm-${index.id}`}
+                            className="text-[12px] font-medium"
+                          >
+                            {t('Algorithm')}
+                          </Label>
+                          <PostgresIndexAlgorithmSelector
+                            id={`index-algorithm-${index.id}`}
+                            compact
+                            value={index.formState.algorithm}
+                            onChange={(algorithm) =>
+                              setIndexes((current) =>
+                                current.map((entry) =>
+                                  entry.id === index.id
+                                    ? {
+                                        ...entry,
+                                        formState: {
+                                          ...entry.formState,
+                                          algorithm,
+                                          columns:
+                                            algorithm === 'hash' &&
+                                            entry.formState.columns.length > 1
+                                              ? entry.formState.columns.slice(0, 1)
+                                              : entry.formState.columns,
+                                        },
+                                      }
+                                    : entry,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[12px] leading-relaxed text-muted-foreground">
+                        {t(algorithm.description)}
+                      </p>
+                      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                        <Label className="text-[12px] font-medium">{t('Unique')}</Label>
                         <Switch
                           checked={index.formState.unique}
                           onCheckedChange={(unique) =>
@@ -1089,7 +1112,7 @@ export function CreateTable({
                               return (
                                 <label
                                   key={columnName}
-                                  className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/40"
+                                  className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-muted/40"
                                 >
                                   <Checkbox
                                     checked={isSelected}
@@ -1118,7 +1141,7 @@ export function CreateTable({
                                       )
                                     }
                                   />
-                                  <span className="flex-1 text-[12px]">
+                                  <span className="flex-1 font-mono text-[12px]">
                                     {columnName}
                                   </span>
                                   {isSelected ? (
@@ -1139,7 +1162,12 @@ export function CreateTable({
                         >
                           {t('Condition')}
                         </Label>
-                        <Textarea
+                        <p className="text-[11px] text-muted-foreground">
+                          {t(
+                            'Optional WHERE predicate, for example deleted_at IS NULL.',
+                          )}
+                        </p>
+                        <Input
                           id={`index-condition-${index.id}`}
                           value={index.formState.condition}
                           onChange={(event) =>
@@ -1157,8 +1185,7 @@ export function CreateTable({
                               ),
                             )
                           }
-                          rows={2}
-                          className="min-h-[80px] resize-y font-mono"
+                          className="font-mono"
                           placeholder="deleted_at IS NULL"
                         />
                       </div>
@@ -1166,6 +1193,11 @@ export function CreateTable({
                         <Label className="text-[12px] font-medium">
                           {t('Include columns')}
                         </Label>
+                        <p className="text-[11px] text-muted-foreground">
+                          {t(
+                            'Covering index columns stored in the index but not used for lookups.',
+                          )}
+                        </p>
                         {includeCandidates.length === 0 ? (
                           <p className="text-[12px] text-muted-foreground">
                             {t('Select key columns first.')}
@@ -1175,7 +1207,7 @@ export function CreateTable({
                             {includeCandidates.map((columnName) => (
                               <label
                                 key={columnName}
-                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/40"
+                                className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-muted/40"
                               >
                                 <Checkbox
                                   checked={index.formState.includeColumns.includes(
@@ -1201,7 +1233,9 @@ export function CreateTable({
                                     )
                                   }
                                 />
-                                <span className="text-[12px]">{columnName}</span>
+                                <span className="font-mono text-[12px]">
+                                  {columnName}
+                                </span>
                               </label>
                             ))}
                           </div>
@@ -1214,7 +1248,7 @@ export function CreateTable({
                         >
                           {t('Comment')}
                         </Label>
-                        <Textarea
+                        <Input
                           id={`index-comment-${index.id}`}
                           value={index.formState.comment}
                           onChange={(event) =>
@@ -1232,8 +1266,6 @@ export function CreateTable({
                               ),
                             )
                           }
-                          rows={2}
-                          className="min-h-[80px] resize-y"
                           placeholder={t('Describe what this index is for')}
                         />
                       </div>

@@ -142,15 +142,21 @@ import {
 } from '@/lib/usage/usage-filter-queries'
 import { useUsageSectionFilterQueries } from '@/hooks/use-usage-section-filter-queries'
 
-function normalizeDateRangeKey(dateRange: DateRange | undefined): {
+function normalizeDateRangeKey(
+  dateRange: DateRange | undefined,
+  dateRangePresetId?: string | null,
+): {
   rangeKeyPart: string
   getBounds: () => { from: Date; to: Date }
   refetchOnMountRolling: boolean
 } {
-  const rangeKeyPart = getUsageChartQueryRangeKeyPart(dateRange)
+  const rangeKeyPart = getUsageChartQueryRangeKeyPart(
+    dateRange,
+    dateRangePresetId,
+  )
   return {
     rangeKeyPart,
-    getBounds: () => resolveUsageChartFetchBounds(dateRange),
+    getBounds: () => resolveUsageChartFetchBounds(dateRange, dateRangePresetId),
     refetchOnMountRolling: shouldRefetchUsageChartOnMount(rangeKeyPart),
   }
 }
@@ -324,9 +330,10 @@ export function firewallTrafficOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  dateRangePresetId?: string | null,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
-    normalizeDateRangeKey(dateRange)
+    normalizeDateRangeKey(dateRange, dateRangePresetId)
 
   return queryOptions({
     queryKey: [
@@ -361,6 +368,7 @@ export function useProjectFirewallTrafficOverview(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  dateRangePresetId?: string | null,
 ) {
   return useQuery({
     ...firewallTrafficOverviewQueryOptions(
@@ -368,6 +376,7 @@ export function useProjectFirewallTrafficOverview(
       dateRange,
       interval,
       logRetentionHours,
+      dateRangePresetId,
     ),
     enabled: !!projectId,
   })
@@ -3010,6 +3019,7 @@ function realtimeConnectionsChartQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -3046,7 +3056,12 @@ function realtimeMessagesChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeMessagesOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3082,7 +3097,12 @@ function realtimeBandwidthChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeBandwidthOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3099,7 +3119,8 @@ export function useProjectRealtimeConnectionsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries()
+  const { filterQueries, logRetentionHours } =
+    useUsageSectionFilterQueries('gauges')
 
   return useQuery({
     ...realtimeConnectionsChartQueryOptions(
@@ -3107,6 +3128,7 @@ export function useProjectRealtimeConnectionsChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3126,6 +3148,7 @@ export function useProjectRealtimeMessagesChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3145,6 +3168,7 @@ export function useProjectRealtimeBandwidthChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })

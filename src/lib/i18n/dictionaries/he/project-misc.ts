@@ -2214,6 +2214,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Summary: 'סיכום',
   'Supabase endpoint': 'נקודת קצה של Supabase',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'צוותים',
   'Test email sent to': 'אימייל בדיקה נשלח אל',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2740,4 +2741,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'Merge request',
   'Pull request': 'Pull request',
   'Failed to approve deployment': 'אישור הפריסה נכשל',
+  'Pause live updates': 'השהיית עדכונים חיים',
+  'Pause live updates to refresh manually':
+    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Resume live updates': 'חידוש עדכונים חיים',
+  'Updating…': 'מתעדכן…',
+  Paused: 'מושהה',
 }

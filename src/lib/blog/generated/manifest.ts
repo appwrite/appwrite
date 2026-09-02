@@ -128,10 +128,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-documentsdb/cover.avif",
     "hasCover": true
   },
@@ -143,10 +142,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-native-mysql-databases/cover.avif",
     "hasCover": true
   },
@@ -158,10 +156,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-vectorsdb/cover.avif",
     "hasCover": true
   },
@@ -191,7 +188,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "ai",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/vectorsdb-use-cases/cover.avif",
     "hasCover": true
   },
@@ -220,7 +216,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "comparisons",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/native-databases-vs-appwrite-databases/cover.avif",
     "hasCover": true
   },
@@ -318,7 +313,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
-    "draft": true,
     "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
     "hasCover": true
   },
@@ -376,7 +370,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
   },

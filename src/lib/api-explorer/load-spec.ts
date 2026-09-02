@@ -4,7 +4,8 @@ import { LATEST_EXAMPLES_VERSION } from '@/lib/docs/references/reference-version
 
 /**
  * Numbered console OpenAPI used for native DB engines (postgresql / mysql / mongo).
- * The floating `latest` console folder may still ship the legacy `/compute` surface.
+ * The floating `latest` console folder may still ship the legacy `/compute` surface;
+ * parse-time normalization rewrites that to the per-engine SDK paths.
  */
 const NUMBERED_CONSOLE_SPEC_LOADERS: Record<
   string,
@@ -76,7 +77,8 @@ function consoleSpecHasNativeDatabaseServices(spec: OpenApiSpec): boolean {
       if (
         tags.includes('postgresql') ||
         tags.includes('mysql') ||
-        tags.includes('mongo')
+        tags.includes('mongo') ||
+        tags.includes('compute')
       ) {
         return true
       }
