@@ -61,6 +61,10 @@ import {
   collectUsageResourceBreakdownItems,
 } from '@/lib/usage/usage-resources-breakdown'
 import { useUsageResourceBreakdownLookups } from '@/lib/react-query/hooks'
+import {
+  getDatabaseMonitorEmptyMessage,
+  resolveDatabaseCreatedAt,
+} from '@/lib/databases/database-monitor-empty-state'
 
 type MonitorSection = { id: string; label: string }
 
@@ -190,6 +194,13 @@ export function DatabaseMonitorView({
     (database as { replicas?: number | null } | null)?.replicas ?? null
   const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
+  const databaseCreatedAt = resolveDatabaseCreatedAt(
+    (database as { createdAt?: string | null } | null) ?? dedicated,
+  )
+  const usageChartEmptyMessage = getDatabaseMonitorEmptyMessage(
+    databaseCreatedAt,
+    'No data for this date range',
+  )
 
   useEffect(() => {
     if (selectedOrdinal > replicaCount) {
@@ -380,6 +391,7 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -412,6 +424,7 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
               </>
@@ -440,6 +453,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -468,6 +482,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -497,6 +512,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -525,6 +541,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -551,6 +568,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -590,6 +608,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                   {iopsDualPoints.length > 0 ? (
                     <p className="mt-2 text-[12px] text-muted-foreground">

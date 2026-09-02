@@ -78,6 +78,13 @@ export function isDedicatedDatabaseProvisioning(
   return normalized === 'provisioning' || normalized === 'starting'
 }
 
+export function isDedicatedDatabaseDeleting(
+  status: string | null | undefined,
+): boolean {
+  const normalized = coerceTrimmedString(status).toLowerCase()
+  return normalized === 'deleting' || normalized === 'deleted'
+}
+
 export const DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE =
   'Available once the database is ready.'
 

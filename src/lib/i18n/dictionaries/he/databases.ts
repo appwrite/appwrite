@@ -2039,6 +2039,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No memory metrics for this date range': 'אין מדדי זיכרון לטווח תאריכים זה',
   'No QPS metrics for this date range': 'אין מדדי QPS לטווח תאריכים זה',
   'No storage metrics for this date range': 'אין מדדי אחסון לטווח תאריכים זה',
+  'Metrics are still being collected for this newly created database. Charts will populate within a few minutes once the instance is ready.':
+    'מדדים עדיין נאספים עבור מסד הנתונים החדש. הגרפים יתמלאו תוך מספר דקות, לאחר שהמופע יהיה מוכן.',
   'qps': 'qps',
   'Queries per second': 'שאילתות לשנייה',
   'Queries per second handled by this database instance.':

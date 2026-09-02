@@ -1979,6 +1979,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'No QPS metrics for this date range': 'この期間の QPS メトリクスはありません',
   'No storage metrics for this date range':
     'この期間のストレージメトリクスはありません',
+  'Metrics are still being collected for this newly created database. Charts will populate within a few minutes once the instance is ready.':
+    '新しく作成したデータベースのメトリクスを収集中です。インスタンスの準備が整うと、数分以内にチャートにデータが表示されます。',
   'qps': 'qps',
   'Queries per second': '1秒あたりのクエリ数',
   'Queries per second handled by this database instance.':
