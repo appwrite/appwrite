@@ -960,7 +960,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   'viewing': '閲覧中',
   'Visit the community': 'コミュニティを訪問',
   'Volume discounts': 'ボリューム割引',
-  'Volume discounts are available in case you handle the bill for your clients.': 'クライアントの請求を代行する場合、ボリューム割引が利用可能です。',
+  'Volume discounts and rev-share models are available if you handle the bill for your clients.':
+    'クライアントの請求を代行する場合、ボリューム割引と rev-share モデルが利用できます。',
   'Watch': '視聴',
   'Ways to partner': 'パートナーシップの方法',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'GDPR、HIPAA、CCPA、SOC-2など、必要なすべてのコンプライアンスに準拠しています。',

@@ -86,6 +86,7 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'partners-become': 'Become Partner Clicked',
   'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
 
@@ -213,6 +214,7 @@ export const ANALYTICS_ACTIONS = {
   'create-provider': 'Create Provider Clicked',
   'add-subscriber': 'Add Subscriber Clicked',
   'create-api-key': 'Create API Key Clicked',
+  'create-org-api-key': 'Create Org API Key Clicked',
   'create-webhook': 'Create Webhook Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',

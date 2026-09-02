@@ -425,6 +425,22 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Organization is required': '組織は必須です',
   'Organization name': '組織名',
   'Organization name updated successfully': '組織名を更新しました',
+  'Partners keys': 'パートナーキー',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'バックエンドから Console API を認証します。この組織全体でプロジェクト、メンバー、ドメインを作成および管理できます。',
+  'Project keys vs Partners keys': 'プロジェクトキーとパートナーキー',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'パートナーキーではプロジェクト内のデータにアクセスできません。データベース、ストレージ、ユーザー、Functions には、代わりにプロジェクトキーを作成してください。',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'プロジェクトを開き、プロジェクトサイドバーの API キー から、バックエンドに必要なスコープでキーを作成してください。',
+  'No Partners keys yet': 'パートナーキーはまだありません',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'バックエンドから Console API を認証するために、最初のパートナーキーを作成してください。',
+  'Learn more about Partners key scopes': 'パートナーキーのスコープについて',
+  'Create Partners key': 'パートナーキーを作成',
+  'Create a Partners key for Console automation':
+    'Console 自動化用のパートナーキーを作成',
+  'Partners keys for partner platforms': 'パートナープラットフォーム向けのパートナーキー',
   'Pay and register': '支払って登録',
   'Payment authorized': '支払いを承認しました',
   'Payment confirmed': '支払いを確認しました',
@@ -1005,6 +1021,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Overview: '概要',
   Owner: 'オーナー',
   Page: 'ページ',
+  Partners: 'パートナー',
   Paused: '一時停止',
   Locked: 'ロック中',
   Payment: '支払い',

@@ -397,7 +397,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Org key': '組織キー',
   'Project API key': 'プロジェクト API キー',
   'Account API key': 'アカウント API キー',
-  'Organization API key': '組織 API キー',
+  'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',

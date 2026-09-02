@@ -2137,8 +2137,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
-                'Organization API keys',
-                'Org settings API keys tab and /settings/api-keys route.',
+                'Partners keys',
+                'Org settings Partners tab and /settings/partners route.',
                 'orgApiKeys',
                 profileId,
                 features.orgApiKeys,

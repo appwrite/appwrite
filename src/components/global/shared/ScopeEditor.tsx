@@ -18,7 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useConsoleProjectScopes } from '@/lib/react-query/hooks/console-project-scopes'
+import { useQuery } from '@tanstack/react-query'
+import {
+  consoleOrganizationScopesQueryOptions,
+  consoleProjectScopesQueryOptions,
+} from '@/lib/react-query/hooks/console-project-scopes'
 import {
   compareScopeEditorRowsForDisplay,
   compareScopeRowsDeprecatedLast,
@@ -40,17 +44,23 @@ interface ScopeEditorProps {
   value: string[]
   onChange: (scopes: string[]) => void
   disabled?: boolean
+  catalog?: 'project' | 'organization'
 }
 
 export function ScopeEditor({
   value,
   onChange,
   disabled = false,
+  catalog = 'project',
 }: ScopeEditorProps) {
   const t = useT()
   const isCloud = isCloudEnvironment()
   const { features } = useConsoleProfile()
-  const { data: scopeList, isLoading, isError, error } = useConsoleProjectScopes()
+  const { data: scopeList, isLoading, isError, error } = useQuery(
+    catalog === 'organization'
+      ? consoleOrganizationScopesQueryOptions()
+      : consoleProjectScopesQueryOptions(),
+  )
 
   const [searchQuery, setSearchQuery] = useState('')
   const [openCategories, setOpenCategories] = useState<string[]>([])
@@ -66,12 +76,14 @@ export function ScopeEditor({
       isCloud,
       oauth2Server: features.oauth2Server,
       selectedScopeIds: value,
+      catalog,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
     for (const v of value) {
       if (byId.has(v)) continue
       const orphanEntry = scopeById.get(v)
       if (
+        catalog !== 'organization' &&
         !features.oauth2Server &&
         isOAuth2AppsCatalogScope(v, orphanEntry?.category)
       ) {
@@ -98,10 +110,12 @@ export function ScopeEditor({
     return Array.from(byId.values())
       .filter(
         (row) =>
-          features.oauth2Server || !isOAuth2AppsScopeEditorRow(row),
+          catalog === 'organization' ||
+          features.oauth2Server ||
+          !isOAuth2AppsScopeEditorRow(row),
       )
       .sort(compareScopeEditorRowsForDisplay)
-  }, [features.oauth2Server, scopeList, isCloud, value])
+  }, [catalog, features.oauth2Server, scopeList, isCloud, value])
 
   const filteredScopes = useMemo(
     () => filterScopeEditorRows(availableScopes, searchQuery),

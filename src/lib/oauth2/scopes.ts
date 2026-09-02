@@ -433,12 +433,12 @@ const ORGANIZATION_RESOURCE_COPY: Record<string, ResourceCopy> = {
     desc: "The names, IDs, and settings of this organization's projects, but not the data inside them.",
   },
   'organization.keys': {
-    name: 'Organization keys',
-    desc: 'Organization-level API keys that authorize access across projects.',
+    name: 'Partners keys',
+    desc: 'Partners keys that authorize Console access across projects.',
   },
   keys: {
-    name: 'Organization keys (legacy)',
-    desc: 'Legacy access to organization API keys, replaced by Organization keys.',
+    name: 'Partners keys (legacy)',
+    desc: 'Legacy access to Partners keys, replaced by Partners keys.',
   },
   devKeys: {
     name: 'Development keys',

@@ -19,7 +19,6 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Key,
   AlertCircle,
   AlertTriangle,
   UserCog,
@@ -29,9 +28,7 @@ import {
   CreditCard,
   Settings,
   KeyRound,
-  Info,
-  ExternalLink,
-  ChevronRight,
+  Handshake,
   Pin,
   PinOff} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -171,6 +168,7 @@ import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
+import { Partners } from '../settings/Partners'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -548,7 +546,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return 'projects'
   }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
 
-  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'api-keys'
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
   const settingsSubTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -558,7 +556,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'billing') return 'billing'
       if (subTab === 'compliance') return 'compliance'
       if (subTab === 'oauth-apps') return 'oauth-apps'
-      if (subTab === 'api-keys') return 'api-keys'
+      if (subTab === 'partners') return 'partners'
       return 'overview'
     }
     return 'overview'
@@ -618,11 +616,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ...(features.orgApiKeys
         ? [
             {
-              id: 'api-keys',
-              label: t('API keys'),
-              to: '/organizations/$orgId/settings/api-keys',
-              icon: Key,
-              keywords: ['api', 'keys', 'credentials']},
+              id: 'partners',
+              label: t('Partners'),
+              to: '/organizations/$orgId/settings/partners',
+              icon: Handshake,
+              keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
           ]
         : []),
     ]
@@ -637,7 +635,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
             return canShowOrgOAuthAppsSettings(access, features)
-          if (item.id === 'api-keys')
+          if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
           return true
         })
@@ -734,7 +732,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
-      (settingsSubTab === 'api-keys' && !features.orgApiKeys)
+      (settingsSubTab === 'partners' && !features.orgApiKeys)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -752,7 +750,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
           canShowOrgOAuthAppsSettings(access, features)) ||
-        (settingsSubTab === 'api-keys' &&
+        (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features))
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
@@ -778,7 +776,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/members': '/organizations/$orgId/settings/members',
         'settings/billing': '/organizations/$orgId/settings/billing',
         'settings/compliance': '/organizations/$orgId/settings/compliance',
-        'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps'}
+        'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+        'settings/partners': '/organizations/$orgId/settings/partners'}
 
       const route = tabRoutes[tab]
       if (route) {
@@ -2029,7 +2028,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     // Preserve settings sub-tab when switching orgs
     const settingsSubRoute =
       activeTab === 'settings' &&
-      ['members', 'billing', 'compliance', 'oauth-apps', 'api-keys'].includes(
+      ['members', 'billing', 'compliance', 'oauth-apps', 'partners'].includes(
         settingsSubTab,
       )
         ? `/organizations/$orgId/settings/${settingsSubTab}`
@@ -3287,180 +3286,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <ComplianceTab />
                     ) : settingsSubTab === 'oauth-apps' ? (
                       <OrgAppsView />
-                    ) : settingsSubTab === 'api-keys' ? (
-                      <SettingsCardsList
-                        className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"
-                        cards={[
-                          {
-                            id: 'api-key-types',
-                            search: {
-                              title: 'API key types',
-                              description:
-                                'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
-                              keywords: [
-                                'api',
-                                'keys',
-                                'scopes',
-                                'credentials',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                                <div className="px-6 py-4">
-                                  <h3 className="text-[15px] font-semibold text-foreground">
-                                    {t('API key types')}
-                                  </h3>
-                                  <p className="mt-1 text-[13px] text-muted-foreground">
-                                    {t(
-                                      'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'project-keys',
-                            search: {
-                              title: 'Project keys',
-                              keywords: [
-                                'database',
-                                'storage',
-                                'functions',
-                                'project',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Project keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Databases, storage, users, functions. One project per key.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  {activeProjects.length > 0 ? (
-                                    <ProjectSelector
-                                      orgTeamId={orgTeamId}
-                                      getProjectLink={(projectId) => ({
-                                        to: '/projects/$projectId/api-keys',
-                                        params: { projectId }})}
-                                      showApiKeysCount
-                                    />
-                                  ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 w-full justify-between text-[13px] font-normal"
-                                      asChild
-                                    >
-                                      <Link
-                                        to="/organizations/$orgId"
-                                        params={{ orgId: orgId ?? '' }}
-                                        className="inline-flex items-center gap-1.5"
-                                      >
-                                        {t('Create a project first')}
-                                        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                                      </Link>
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'account-keys',
-                            search: {
-                              title: 'Account keys',
-                              keywords: ['cli', 'sessions', 'user', 'account']},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Account keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Account-level ops, CLI auth, sessions. Per-user credentials.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 w-full justify-between text-[13px] font-normal"
-                                    asChild
-                                  >
-                                    <Link
-                                      to="/account"
-                                      className="inline-flex items-center gap-1.5"
-                                    >
-                                      {t('Account settings')}
-                                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                                    </Link>
-                                  </Button>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'org-keys',
-                            search: {
-                              title: 'Org keys',
-                              keywords: [
-                                'billing',
-                                'team',
-                                'organization',
-                                'org',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Org keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Billing, team, cross-project. One key for the whole org.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 w-full justify-between text-[13px] font-normal"
-                                    asChild
-                                  >
-                                    <DocsRouteLink className="inline-flex items-center gap-1.5" href="/docs/advanced/platform/api-keys">
-                                      {t('Docs')}
-                                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                    </DocsRouteLink>
-                                  </Button>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'api-keys-info',
-                            search: {
-                              title: 'API key types',
-                              keywords: [
-                                'organization-level',
-                                'server-side',
-                                'manageable',
-                              ]},
-                            node: (
-                              <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
-                                <p className="text-[12px] text-muted-foreground">
-                                  <Info className="mb-0.5 me-2 inline-block h-4 w-4 align-middle" />
-                                  {t(
-                                    'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.',
-                                  )}
-                                </p>
-                              </div>
-                            )},
-                        ]}
-                      />
+                    ) : settingsSubTab === 'partners' ? (
+                      <Partners />
                     ) : settingsSubTab === 'members' ? (
                       <>
                         {/* Error State */}

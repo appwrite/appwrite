@@ -134,7 +134,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
-  orgApiKeys: 'Org API keys',
+  orgApiKeys: 'Partners keys',
   agent: 'Agent',
   notifications: 'Notifications',
   databaseBackups: 'Database backups',

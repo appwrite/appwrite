@@ -57,7 +57,7 @@ export function UserTypeAvatar({
     tone = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     if (normalized === 'keyproject') label = 'Project API key'
     else if (normalized === 'keyaccount') label = 'Account API key'
-    else if (normalized === 'keyorganization') label = 'Organization API key'
+    else if (normalized === 'keyorganization') label = 'Partners API key'
     else label = 'API key'
   } else {
     icon = <Server className="h-3.5 w-3.5" />

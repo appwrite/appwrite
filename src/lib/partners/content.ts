@@ -60,7 +60,7 @@ export const partnerBenefits: PartnerBenefit[] = [
   {
     title: 'Discounts',
     description:
-      'Volume discounts are available in case you handle the bill for your clients.',
+      'Volume discounts and rev-share models are available if you handle the bill for your clients.',
     icon: Percent,
   },
 ]

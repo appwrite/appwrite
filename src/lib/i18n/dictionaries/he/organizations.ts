@@ -748,11 +748,29 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Organization is required': 'ארגון הוא שדה חובה',
   'Organization name': 'שם הארגון',
   'Organization name updated successfully': 'שם הארגון עודכן בהצלחה',
+  'Partners keys': 'מפתחות שותפים',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'אמתו קריאות Console API מהבקאנד שלכם. צרו ונהלו פרויקטים, חברים ודומיינים בכל הארגון.',
+  'Project keys vs Partners keys': 'מפתחות פרויקט מול מפתחות שותפים',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'מפתחות שותפים לא יכולים לגשת לנתונים בתוך פרויקט. למסדי נתונים, אחסון, משתמשים ופונקציות, צרו מפתח פרויקט.',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'פתחו פרויקט, עברו למפתחות API בסרגל הצד של הפרויקט, וצרו מפתח עם היקפי הגישה שהבקאנד שלכם צריך.',
+  'No Partners keys yet': 'אין עדיין מפתחות שותפים',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'צרו את מפתח השותפים הראשון שלכם כדי לאמת קריאות Console API מהבקאנד.',
+  'Learn more about Partners key scopes':
+    'למידע נוסף על היקפי גישה של מפתחות שותפים',
+  'Create Partners key': 'יצירת מפתח שותפים',
+  'Create a Partners key for Console automation':
+    'צרו מפתח שותפים לאוטומציה של Console',
+  'Partners keys for partner platforms': 'מפתחות שותפים לפלטפורמות שותפים',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
     'מפתחות ברמת הארגון יהיו ניתנים לניהול כאן כשיהיו זמינים. בינתיים, השתמשו במפתחות פרויקט לגישה בצד השרת.',
   Overview: 'סקירה כללית',
   Owner: 'בעלים',
   Page: 'דף',
+  Partners: 'שותפים',
   Paused: 'מושהה',
   Locked: 'נעול',
   'Pay and register': 'תשלום ורישום',

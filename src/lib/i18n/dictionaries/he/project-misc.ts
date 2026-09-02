@@ -651,7 +651,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   System: 'מערכת',
   'Project API key': 'מפתח API של פרויקט',
   'Account API key': 'מפתח API של חשבון',
-  'Organization API key': 'מפתח API של ארגון',
+  'Partners API key': 'מפתח API של שותפים',
   document: 'מסמך',
   collection: 'אוסף',
   database: 'מסד נתונים',

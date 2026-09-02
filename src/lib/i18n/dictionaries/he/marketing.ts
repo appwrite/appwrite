@@ -1227,7 +1227,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'בקרו באתר התצוגה שלנו שנבנה עם Appwrite כדי למצוא השראה לפרויקטים שלכם או להציג את מה שבניתם.', // pragma: allowlist secret
   'Visit the community': 'בקרו בקהילה',
   'Volume discounts': 'הנחות כמות',
-  'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Volume discounts and rev-share models are available if you handle the bill for your clients.':
+    'הנחות כמות ומודלי rev-share זמינים אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
   'Watch': 'צפייה',
   'Ways to partner': 'דרכים לשותפות',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',

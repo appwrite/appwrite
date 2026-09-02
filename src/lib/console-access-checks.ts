@@ -372,6 +372,14 @@ export function canShowOrgApiKeysSettings(
   return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
+/** Create/update/delete organization API keys. Same audience as the settings tab. */
+export function canCreateOrgApiKey(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return canShowOrgApiKeysSettings(access, features)
+}
+
 /** Organization Domains (route access): owners and developers when orgRoles enabled. */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
@@ -440,7 +448,7 @@ export function getFirstAllowedOrgSettingsPath(
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
   if (canShowOrgApiKeysSettings(access, features))
-    return `${basePath}/api-keys`
+    return `${basePath}/partners`
   return basePath
 }
 
