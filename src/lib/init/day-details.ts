@@ -333,7 +333,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'VectorsDB, DocumentsDB & MySQL AMA',
     startsAt: '2026-09-02T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w5fazf/introducing_vectorsdb_documentsdb_and_native/',
   },
   {
     id: 'sched-yt-s3',
