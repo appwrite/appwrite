@@ -159,7 +159,7 @@ export function View({ userId, initialData }: ViewProps) {
             <div className="flex flex-col gap-2">
               <Button
                 type="button"
-                className="w-full"
+                className="w-full gap-1.5"
                 onClick={handleConfirm}
                 disabled={!target || !!blockingMessage || isStarting}
               >

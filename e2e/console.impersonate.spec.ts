@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
 import { appwriteApiPath } from './helpers/appwrite-url'
@@ -15,10 +16,7 @@ import { acceptCookieBannerIfPresent } from './helpers/cookie-banner'
 const IMPERSONATE_HEADER = 'x-appwrite-impersonate-user-id'
 const TARGET_STORAGE_KEY = 'console.impersonation.targetUserId'
 
-type ConsoleUser = {
-  $id: string
-  name: string
-  email: string
+type ConsoleUser = Models.User<Models.Preferences> & {
   impersonator?: boolean
   impersonatorUserId?: string
 }

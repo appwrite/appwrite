@@ -2,10 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { View } from '@/components/pages/impersonate/$userId/View'
 import { consoleUserQueryOptions } from '@/lib/react-query/hooks/console-user-search'
+import { translate } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/impersonate/$userId')({
-  head: () => ({ meta: [{ title: pageTitle('Impersonate user') }] }),
+  head: () => ({ meta: [{ title: pageTitle(translate('Impersonate user')) }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 

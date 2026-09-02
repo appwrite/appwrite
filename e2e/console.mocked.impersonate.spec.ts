@@ -1,4 +1,5 @@
 import type { Page, Route } from '@playwright/test'
+import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
 import { appwriteApiPath } from './helpers/appwrite-url'
@@ -27,15 +28,21 @@ const TARGET = {
   email: 'ticket.opener@example.com',
 }
 
-type MockUser = {
-  $id: string
-  name: string
-  email: string
+/** Console account fields the server adds on top of `Models.User`. */
+type ConsoleAccountFields = {
   impersonator?: boolean
   impersonatorUserId?: string
 }
 
-function mockUserResponse(overrides: MockUser) {
+type MockUser = Pick<
+  Models.User<Models.Preferences>,
+  '$id' | 'name' | 'email'
+> &
+  ConsoleAccountFields
+
+function mockUserResponse(
+  overrides: MockUser,
+): Models.User<Models.Preferences> & ConsoleAccountFields {
   const now = new Date().toISOString()
   return {
     $createdAt: now,
