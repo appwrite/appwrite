@@ -3019,6 +3019,7 @@ function realtimeConnectionsChartQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -3055,7 +3056,12 @@ function realtimeMessagesChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeMessagesOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3091,7 +3097,12 @@ function realtimeBandwidthChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeBandwidthOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3108,7 +3119,8 @@ export function useProjectRealtimeConnectionsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries()
+  const { filterQueries, logRetentionHours } =
+    useUsageSectionFilterQueries('gauges')
 
   return useQuery({
     ...realtimeConnectionsChartQueryOptions(
@@ -3116,6 +3128,7 @@ export function useProjectRealtimeConnectionsChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3135,6 +3148,7 @@ export function useProjectRealtimeMessagesChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3154,6 +3168,7 @@ export function useProjectRealtimeBandwidthChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
