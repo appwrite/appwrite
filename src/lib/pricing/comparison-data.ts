@@ -177,6 +177,32 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: 'Custom'
                 },
                 {
+                    title: 'Text embeddings (Nomic)',
+                    free: '1M tokens / month',
+                    pro: '10M tokens / month',
+                    enterprise: 'Custom',
+                    info: 'Tokens processed by the Nomic (768 dim) text embedding model. Each model has its own monthly allowance.'
+                },
+                {
+                    title: 'Additional Nomic embeddings',
+                    free: '-',
+                    pro: '$0.10 per 1M tokens',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Text embeddings (MiniLM)',
+                    free: '1M tokens / month',
+                    pro: '10M tokens / month',
+                    enterprise: 'Custom',
+                    info: 'Tokens processed by the MiniLM (384 dim) text embedding model. Each model has its own monthly allowance.'
+                },
+                {
+                    title: 'Additional MiniLM embeddings',
+                    free: '-',
+                    pro: '$0.05 per 1M tokens',
+                    enterprise: 'Custom'
+                },
+                {
                     title: 'Backups',
                     free: '-',
                     pro: 'Daily',

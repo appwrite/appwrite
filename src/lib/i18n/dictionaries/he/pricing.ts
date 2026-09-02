@@ -9,9 +9,11 @@ export const hePricingDictionary: Record<string, string> = {
   '$0': '$0',
   '$0 fixed fee': '$0 דמי קבועים',
   '$0.004 per screenshot': '$0.004 לכל צילום מסך',
+  '$0.05 per 1M tokens': '$0.05 לכל 1M טוקנים',
   '$0.06 per GB-hour': '$0.06 לכל GB-hour',
   '$0.060 per 100k reads': '$0.060 לכל 100 אלף קריאות',
   '$0.10 per 100k writes': '$0.10 לכל 100 אלף כתיבות',
+  '$0.10 per 1M tokens': '$0.10 לכל 1M טוקנים',
   '$10/mo': '$10/חודש',
   '$10 of compute credits for database usage included every month.':
     'כל חודש כלולים $10 קרדיטים למחשוב לשימוש במסדי נתונים.',
@@ -39,6 +41,8 @@ export const hePricingDictionary: Record<string, string> = {
   '1 per project': '1 לפרויקט',
   '1,000 GB-hour / month': '1,000 GB-hour / חודש',
   '1,000 rows / request': '1,000 שורות / בקשה',
+  '1M tokens / month': '1M טוקנים / חודש',
+  '10M tokens / month': '10M טוקנים / חודש',
   '100': '100',
   '100 GB-hour / month': '100 GB-hour / חודש',
   '100 origin images / month': '100 תמונות מקור / חודש',
@@ -161,6 +165,10 @@ export const hePricingDictionary: Record<string, string> = {
   'Not needed': 'לא נדרש',
   'Number of execution logs retained per function/site':
     'מספר לוגי ההרצה שנשמרים לכל פונקציה/אתר',
+  'Tokens processed by the MiniLM (384 dim) text embedding model. Each model has its own monthly allowance.':
+    'טוקנים שעובדו במודל MiniLM (384 dim) ל-text embeddings. לכל מודל יש מכסה חודשית נפרדת.',
+  'Tokens processed by the Nomic (768 dim) text embedding model. Each model has its own monthly allowance.':
+    'טוקנים שעובדו במודל Nomic (768 dim) ל-text embeddings. לכל מודל יש מכסה חודשית נפרדת.',
   'One platform across the app lifecycle': 'פלטפורמה אחת לאורך מחזור חיי האפליקציה',
   'One subscription with simpler billing and procurement':
     'מנוי אחד עם חיוב ורכש פשוטים יותר',
