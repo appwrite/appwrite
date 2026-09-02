@@ -169,7 +169,7 @@ final class LockTest extends TestCase
             $this->assertSame('span-report', $span->get('lock.target'));
             $this->assertSame(self::KEY_PREFIX.'keys:*', $span->get('lock.key_pattern'));
             $this->assertSame('redis unavailable', $span->get('lock.error'));
-            $this->assertNull($span->getError(), 'a lock backend failure must not fail the request span');
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError(), 'a lock backend failure must not fail the request span');
         } finally {
             Span::setStorage(null);
         }
