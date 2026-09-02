@@ -258,9 +258,9 @@ curl -X POST \
 | `policyId`  | custom ID or `unique()` | Policy identifier                          |
 | `name`      | text                    | Display name                               |
 | `schedule`  | cron expression         | When backups run, for example `0 3 * * *`  |
-| `retention` | 1 - 36500 days          | How long backups from this policy are kept |
+| `retention` | days                    | How long backups from this policy are kept; 7 on Pro |
 
-List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. Plan limits apply: Pro allows one policy with a daily schedule and 7-day retention, and Scale allows any number of policies with any schedule and retention between 1 and 36500 days.
+List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. Plan limits apply: Pro allows one policy with a daily schedule and 7-day retention.
 
 # Manual backups {% #manual %}
 

@@ -82,16 +82,15 @@ You can [resize between tiers](/docs/products/databases/mysql/scaling) as your w
 
 # Limits {% #limits %}
 
-The following limits apply per database:
+The following limits apply per database. Some are also capped by your plan:
 
 | Limit                          | Value                                                     |
 |--------------------------------|-----------------------------------------------------------|
-| Databases per project          | 10                                                        |
 | High availability replicas     | 0 - 5                                                     |
 | IP allowlist entries           | 100                                                       |
-| Backup retention               | 1 - 365 days                                              |
+| Backup retention               | 7 days on Pro                                             |
 | Point-in-time recovery window  | 1 - 35 days                                               |
-| Max simultaneous connections   | 10,000 platform cap, lower on smaller specifications      |
+| Max simultaneous connections   | Set by the specification, from 100 up to 10,000           |
 
 # Billing and plan requirements {% #plans %}
 
