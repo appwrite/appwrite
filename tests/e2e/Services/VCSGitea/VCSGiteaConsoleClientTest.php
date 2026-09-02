@@ -113,17 +113,17 @@ final class VCSGiteaConsoleClientTest extends Scope
      * Walk the full OAuth2 dance against the local Gitea and return the
      * resulting installation, asserting every hop on the way.
      */
-    private function createInstallationHelper(): array
+    private function createInstallationHelper(bool $redirects = true): array
     {
         $projectId = $this->getProject()['$id'];
         $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
+        ], $this->getHeaders()), $redirects ? [
             'success' => $consoleUrl,
             'failure' => $consoleUrl,
-        ], true, false);
+        ] : [], true, false);
 
         $this->assertEquals(301, $authorize['headers']['status-code']);
 
@@ -386,8 +386,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
 
-        // Signed state, no code: the failure redirect must carry the error as a
-        // query string rather than glue it onto the path.
+        // Signed state, no code: the failure redirect carries the error as a query string
         $response = $this->callGiteaCallbackHelper([
             'state' => $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl),
         ]);
@@ -446,5 +445,15 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($failure, (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithoutRedirects(): void
+    {
+        // Authorize signs empty success and failure URLs when none are given;
+        // the helper asserts the callback still lands on the console default
+        // rather than redirecting to an empty location.
+        $installation = $this->createInstallationHelper(redirects: false);
+
+        $this->assertNotEmpty($installation['$id']);
     }
 }
