@@ -1898,7 +1898,7 @@ final class AccountCustomClientTest extends Scope
             'url' => 'http://localhost/recovery',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     #[Retry(count: 1)]

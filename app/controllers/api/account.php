@@ -3870,9 +3870,15 @@ Http::post('/v1/account/recovery')
 
         if ($profile->isEmpty()) {
             // Mitigate User Enumeration by returning a mock success response
+            // Simulate the hashing time to prevent timing attacks
+            $secret = $proofForToken->generate();
+            $proofForToken->hash($secret);
+
             $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
             $mockToken = new Document([
                 '$id' => ID::unique(),
+                '$createdAt' => DateTime::now(),
+                '$updatedAt' => DateTime::now(),
                 'userId' => ID::unique(),
                 'type' => TOKEN_TYPE_RECOVERY,
                 'secret' => '',
