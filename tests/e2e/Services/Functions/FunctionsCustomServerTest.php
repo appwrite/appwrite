@@ -1074,10 +1074,11 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertSame($deploymentId, \json_decode($execution['body']['responseBody'], true)['APPWRITE_FUNCTION_DEPLOYMENT']);
 
-        // The download endpoint reads buildPath through the builds device.
+        // The download endpoint reads buildPath through the builds device. The
+        // artifact format depends on the storage strategy, so compare sizes.
         $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $output['headers']['status-code']);
-        $this->assertStringStartsWith("\x1f\x8b", $output['body']);
+        $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
 
         $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
         $this->assertEquals(200, $source['headers']['status-code']);
