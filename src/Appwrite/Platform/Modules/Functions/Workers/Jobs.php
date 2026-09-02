@@ -403,9 +403,17 @@ class Jobs extends Action
             }
         }
 
+        // The build job wrote its artifact onto the shared builds volume (see
+        // Deployments::storage()). On a remote device (S3 and friends) the
+        // executor and the download endpoint read buildPath through that
+        // device, so move the artifact off the volume onto it first.
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path !== '') {
-            $this->publish($deviceForBuilds, Deployments::buildPath($project->getId(), $deploymentId), $path);
+        if ($path !== '' && $deviceForBuilds->getType() !== DeviceType::Local) {
+            $local = new Local();
+            $source = Deployments::buildPath($project->getId(), $deploymentId);
+            if ($local->exists($source) && $local->copy($source, $path, $deviceForBuilds)) {
+                $local->delete($source);
+            }
         }
         if ($path === '' || ! $deviceForBuilds->exists($path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
@@ -433,29 +441,6 @@ class Jobs extends Action
         }
 
         return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $size);
-    }
-
-    /**
-     * The build job writes its artifact onto the shared builds volume (see
-     * Deployments::storage()). When the builds device is remote (S3 and
-     * friends), the executor and the download endpoint read the deployment's
-     * buildPath through that device, so move the artifact off the volume onto
-     * it. A no-op on the local device, where the volume already is the device.
-     */
-    private function publish(Device $deviceForBuilds, string $source, string $target): void
-    {
-        if ($deviceForBuilds->getType() === DeviceType::Local) {
-            return;
-        }
-
-        $local = new Local();
-        if (! $local->exists($source)) {
-            return;
-        }
-
-        if ($local->copy($source, $target, $deviceForBuilds)) {
-            $local->delete($source);
-        }
     }
 
     /**
