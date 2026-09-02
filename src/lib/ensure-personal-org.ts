@@ -12,15 +12,17 @@
  * are redirected to their org main page.
  */
 
-import { ID, type Models } from '@appwrite.io/console'
+import { ID, Query, type Models } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { setConsoleAccountCache } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
-import { createConsoleProject } from '@/lib/appwrite/console-projects'
+import {
+  createConsoleProject,
+  listConsoleProjects,
+} from '@/lib/appwrite/console-projects'
 import {
   createOrganization,
   fetchOrganizationById,
-  fetchOrganizationProjects,
   fetchOrganizations,
   organizationQueryOptions,
   organizationsQueryOptions,
@@ -80,7 +82,11 @@ export async function resolvePostAuthOrganizationId(
     const restPrefs = { ...prefs }
     delete restPrefs[USER_PREFS_KEY_ORGANIZATION]
     const updatedAccount = await updateAccountPrefs(restPrefs)
-    if (updatedAccount && typeof updatedAccount === 'object' && '$id' in updatedAccount) {
+    if (
+      updatedAccount &&
+      typeof updatedAccount === 'object' &&
+      '$id' in updatedAccount
+    ) {
       setConsoleAccountCache(
         updatedAccount as Models.User,
         getConsoleAccountQueryRevision(),
@@ -91,7 +97,35 @@ export async function resolvePostAuthOrganizationId(
   return await ensurePersonalOrgAndFirstProject(queryClient)
 }
 
-export async function ensurePersonalOrgAndFirstProject(
+/**
+ * Write a prefs update back to the account cache so the next
+ * `resolvePostAuthOrganizationId(account)` sees the organization preference
+ * instead of re-entering provisioning with a stale account.
+ */
+function rememberAccount(updated: Models.User | undefined): void {
+  if (updated && typeof updated === 'object' && '$id' in updated) {
+    setConsoleAccountCache(updated, getConsoleAccountQueryRevision())
+  }
+}
+
+let inflight: Promise<string> | null = null
+
+/**
+ * Single-flight: sign-up, the post-auth prefetch and the root loader can all
+ * call this within the same tick. Running them concurrently used to create a
+ * second "Personal Projects" / "My first project".
+ */
+export function ensurePersonalOrgAndFirstProject(
+  queryClient?: QueryClient,
+): Promise<string> {
+  if (inflight) return inflight
+  inflight = provisionPersonalOrgAndFirstProject(queryClient).finally(() => {
+    inflight = null
+  })
+  return inflight
+}
+
+async function provisionPersonalOrgAndFirstProject(
   queryClient?: QueryClient,
 ): Promise<string> {
   const account = await fetchConsoleAccount()
@@ -103,13 +137,29 @@ export async function ensurePersonalOrgAndFirstProject(
   const orgs = response.teams || []
 
   if (orgs.length === 0) {
-    const org = await createOrganization({ name: PERSONAL_ORG_NAME })
+    const created = await createOrganization({ name: PERSONAL_ORG_NAME })
+    if (!('$id' in created)) {
+      throw new Error(
+        'Creating the personal organization requires payment authentication',
+      )
+    }
+    const org: Models.Team = created
     const orgId = org.$id
 
-    await updateAccountPrefs({
-      ...prefs,
-      [USER_PREFS_KEY_ORGANIZATION]: orgId,
+    // The cached list was fetched before the org existed; a concurrent
+    // loader must not read it as "no organizations" and create another.
+    queryClient?.setQueryData(organizationsQueryOptions().queryKey, {
+      ...response,
+      teams: [org],
+      total: 1,
     })
+
+    rememberAccount(
+      await updateAccountPrefs({
+        ...prefs,
+        [USER_PREFS_KEY_ORGANIZATION]: orgId,
+      }),
+    )
 
     await createConsoleProject({
       projectId: ID.unique(),
@@ -119,17 +169,25 @@ export async function ensurePersonalOrgAndFirstProject(
     return orgId
   }
 
-  const orgId =
-    (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
+  const orgId = (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
 
   if (!prefs[USER_PREFS_KEY_ORGANIZATION]) {
-    await updateAccountPrefs({
-      ...prefs,
-      [USER_PREFS_KEY_ORGANIZATION]: orgId,
-    })
+    rememberAccount(
+      await updateAccountPrefs({
+        ...prefs,
+        [USER_PREFS_KEY_ORGANIZATION]: orgId,
+      }),
+    )
   }
 
-  const { total } = await fetchOrganizationProjects(orgId)
+  // A failed listing must abort provisioning rather than read as "no
+  // projects" and create a duplicate, so this does not go through the
+  // error-swallowing fetchOrganizationProjects().
+  const { total } = await listConsoleProjects({
+    organizationId: orgId,
+    queries: [Query.limit(1)],
+    total: true,
+  })
   if (total === 0) {
     await createConsoleProject({
       projectId: ID.unique(),
