@@ -305,7 +305,7 @@ Because permissions are enforced at the document level, you can serve data direc
 
 # Compute specifications
 
-When you create a DocumentsDB database, you select a compute specification that fits your workload, and the database is provisioned for your project with its own resources. As usage grows, backups and scaling are handled from the same place you manage the rest of your Appwrite project.
+When you create a DocumentsDB database, you select a compute specification that fits your workload, and the database is provisioned for your project with its own resources. As usage grows, backups and scaling are handled from the same place you manage the rest of your Appwrite project. The available tiers and their prices are listed on the [pricing page](/pricing#database-pricing).
 
 # When to use DocumentsDB
 

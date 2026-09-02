@@ -405,7 +405,7 @@ VectorsDB shares the platform capabilities available across Appwrite Databases:
 
 Your vectors live next to the rest of your application data, behind the same SDKs and the same access control, instead of in a service on the side.
 
-Every VectorsDB database is provisioned for your project with a compute specification you choose at creation, so search performance scales with the tier you pick.
+Every VectorsDB database is provisioned for your project with a compute specification you choose at creation, so search performance scales with the tier you pick. The available tiers and their prices are listed on the [pricing page](/pricing#database-pricing).
 
 # Get started
 
