@@ -5,3 +5,4 @@
 .env
 .DS_Store
 /tests/.tokens/
+composer.lock
