@@ -7,12 +7,15 @@ import {
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
   useMergedDatabaseSpecifications,
+  backupPoliciesQueryOptions,
   dedicatedBackupPoliciesQueryOptions,
   dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
 import { type Models } from '@appwrite.io/console'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
+  databaseOwnerTypeForMutation,
+  databaseRouteKindFromApiType,
   dedicatedDatabaseHomeLink,
   isDatabaseRouteKind,
   isDatabaseTypeFeatureEnabled,
@@ -68,6 +71,7 @@ import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import {
+  isDedicatedDatabaseDeleting,
   isDedicatedDatabaseProvisioning,
   isDedicatedDatabaseReady,
 } from '@/lib/databases/dedicated-database-status'
@@ -120,19 +124,42 @@ function isListedDatabaseTypeUnavailable(
   return !isDatabaseTypeFeatureEnabled(db.apiType ?? db.databaseType, features)
 }
 
+function databaseListDisabledState(
+  db: Pick<DatabaseWithBackup, 'enabled' | 'apiType' | 'databaseType' | 'status'>,
+  dedicated: Models.DedicatedDatabase | undefined,
+  features: Parameters<typeof isDatabaseTypeFeatureEnabled>[1],
+) {
+  const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
+  const lifecycleStatus = dedicated?.status ?? db.status
+  const appearDisabled =
+    typeUnavailable ||
+    db.enabled === false ||
+    isDedicatedDatabaseDeleting(lifecycleStatus)
+  return { typeUnavailable, appearDisabled, lifecycleStatus }
+}
+
 /**
- * Product DBs expose policies on `console.listDatabases` (`db.policies`).
- * Native dedicated DBs store policies on the engine API instead; those are
- * resolved separately and passed via `nativeHasBackupPolicyById`.
- * Returns `null` while a native policy lookup is still in flight (no warning flash).
+ * Resolve whether a database has backup policies using the same resourceType
+ * lookup as the backups view (`backupResourceTypeForDbKind`).
+ *
+ * - Native dedicated DBs: engine API via `nativeHasBackupPolicyById`
+ * - Product DBs: `listPolicies` via `productHasBackupPolicyById` (not the
+ *   embedded `console.listDatabases` policies, which can miss documentsdb /
+ *   vectorsdb policies when resourceType is wrong)
+ *
+ * Returns `null` while a lookup is still in flight (no warning flash).
  */
 function resolveHasBackupPolicy(
   db: DatabaseWithBackup,
   dedicated: Models.DedicatedDatabase | undefined,
   nativeHasBackupPolicyById: Map<string, boolean | null>,
+  productHasBackupPolicyById: Map<string, boolean | null>,
 ): boolean | null {
   if (dedicated && isNativeDedicatedDatabase(dedicated)) {
     return nativeHasBackupPolicyById.get(dedicated.$id) ?? null
+  }
+  if (productHasBackupPolicyById.has(db.$id)) {
+    return productHasBackupPolicyById.get(db.$id) ?? null
   }
   return db.hasBackupPolicy ?? false
 }
@@ -219,11 +246,9 @@ function AllDatabasesGridCardShell({
     product: dedicated?.api,
   })
   const showFooter = Boolean(computeLabel || connectionsLabel || isBeta)
-  const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
-  const appearDisabled = typeUnavailable || db.enabled === false
-  const provisioningDisabled = isDedicatedDatabaseProvisioning(
-    dedicated?.status ?? db.status,
-  )
+  const { typeUnavailable, appearDisabled, lifecycleStatus } =
+    databaseListDisabledState(db, dedicated, features)
+  const provisioningDisabled = isDedicatedDatabaseProvisioning(lifecycleStatus)
 
   const card = (
     <div
@@ -249,10 +274,12 @@ function AllDatabasesGridCardShell({
             {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
               <NoBackupPoliciesWarningIcon />
             ) : null}
-            <DedicatedDatabaseStatusBadge
-              status={dedicated?.status ?? db.status}
-              onlyWhenNotReady
-            />
+            {!appearDisabled ? (
+              <DedicatedDatabaseStatusBadge
+                status={lifecycleStatus}
+                onlyWhenNotReady
+              />
+            ) : null}
             {appearDisabled ? (
               <Badge
                 variant="error"
@@ -332,7 +359,10 @@ function AllDatabasesGridCardShell({
       database={{
         $id: db.$id,
         name: db.name,
-        databaseType: db.databaseType,
+        databaseType: databaseOwnerTypeForMutation(
+          { apiType: db.apiType, databaseType: db.databaseType },
+          dedicated,
+        ),
       }}
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
@@ -684,6 +714,13 @@ export function AllDatabasesSection({
     return items
   }, [databases, dedicatedById])
 
+  const productDatabasesOnPage = useMemo(() => {
+    return databases.filter((db) => {
+      const dedicated = dedicatedById.get(db.$id)
+      return !(dedicated && isNativeDedicatedDatabase(dedicated))
+    })
+  }, [databases, dedicatedById])
+
   const showBackups = features.databaseBackups
   const nativeBackupPolicyQueries = useQueries({
     queries: nativeDedicatedOnPage.map((dedicated) => ({
@@ -708,6 +745,31 @@ export function AllDatabasesSection({
     })
     return map
   }, [nativeBackupPolicyQueries, nativeDedicatedOnPage])
+
+  const productBackupPolicyQueries = useQueries({
+    queries: productDatabasesOnPage.map((db) => {
+      const dbKind = databaseRouteKindFromApiType(
+        db.apiType ?? db.databaseType,
+      )
+      return {
+        ...backupPoliciesQueryOptions(projectId, db.$id, dbKind),
+        enabled: showBackups && !!projectId && !!db.$id,
+      }
+    }),
+  })
+
+  const productHasBackupPolicyById = useMemo(() => {
+    const map = new Map<string, boolean | null>()
+    productDatabasesOnPage.forEach((db, index) => {
+      const query = productBackupPolicyQueries[index]
+      if (!query || query.isLoading || query.isPending) {
+        map.set(db.$id, null)
+        return
+      }
+      map.set(db.$id, (query.data?.policies?.length ?? 0) > 0)
+    })
+    return map
+  }, [productBackupPolicyQueries, productDatabasesOnPage])
 
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =
@@ -797,12 +859,8 @@ export function AllDatabasesSection({
                 <TableBody>
                   {databases.map((db) => {
                     const dedicated = dedicatedById.get(db.$id)
-                    const typeUnavailable = isListedDatabaseTypeUnavailable(
-                      db,
-                      features,
-                    )
-                    const appearDisabled =
-                      typeUnavailable || db.enabled === false
+                    const { typeUnavailable, appearDisabled, lifecycleStatus } =
+                      databaseListDisabledState(db, dedicated, features)
                     const nameContent = (
                       <>
                         <div className="flex min-w-0 items-center gap-1.5">
@@ -814,6 +872,7 @@ export function AllDatabasesSection({
                               db,
                               dedicated,
                               nativeHasBackupPolicyById,
+                              productHasBackupPolicyById,
                             ),
                             showBackups,
                           ) ? (
@@ -868,12 +927,10 @@ export function AllDatabasesSection({
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
                           {!appearDisabled &&
-                          (dedicated?.status || db.status) &&
-                          !isDedicatedDatabaseReady(
-                            dedicated?.status || db.status,
-                          ) ? (
+                          lifecycleStatus &&
+                          !isDedicatedDatabaseReady(lifecycleStatus) ? (
                             <DedicatedDatabaseStatusBadge
-                              status={dedicated?.status || db.status}
+                              status={lifecycleStatus}
                               className="text-[11px]"
                             />
                           ) : appearDisabled ? (
@@ -981,6 +1038,7 @@ export function AllDatabasesSection({
                   db,
                   dedicatedById.get(db.$id),
                   nativeHasBackupPolicyById,
+                  productHasBackupPolicyById,
                 )}
                 computeLabelOptions={computeLabelOptions}
               />

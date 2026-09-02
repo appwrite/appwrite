@@ -1,7 +1,6 @@
 import {
-  COVER_HEIGHT,
   COVER_IMAGE_FORMATS,
-  COVER_WIDTH,
+  getDefaultCoverSize,
   isCoverTemplateId,
   type CoverImageFormat,
   type CoverTemplateId,
@@ -167,8 +166,7 @@ export const DEFAULT_COVER_VALUES = {
   template: 'simple-title' satisfies CoverTemplateId,
   theme: DEFAULT_COVER_THEME_ID satisfies CoverThemeId,
   format: 'png' satisfies CoverImageFormat,
-  width: COVER_WIDTH,
-  height: COVER_HEIGHT,
+  ...getDefaultCoverSize(),
   title: 'Build like a team of hundreds',
   subtitle: 'The open-source developer platform',
   eyebrow: 'Cover generator',
@@ -738,7 +736,10 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
   params.set('template', data.template)
   params.set('theme', data.theme)
   params.set('format', data.format)
-  if (data.width !== COVER_WIDTH || data.height !== COVER_HEIGHT) {
+  if (
+    data.width !== DEFAULT_COVER_VALUES.width ||
+    data.height !== DEFAULT_COVER_VALUES.height
+  ) {
     params.set('width', String(data.width))
     params.set('height', String(data.height))
   }

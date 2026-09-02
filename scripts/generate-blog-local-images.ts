@@ -134,6 +134,28 @@ async function generateMcpServerOauth2Images(outputDir: string): Promise<void> {
   await convertScreenshotSources(outputDir)
 }
 
+async function generateAnnouncingAppwrite2Cover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'version-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    version: '2.0',
+    title: 'A new foundation for your apps',
+    eyebrow: 'Announcing Appwrite',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 async function generateAnnouncingGitlabSupportCover(
   outputDir: string,
 ): Promise<void> {
@@ -183,9 +205,12 @@ async function generateAnnouncingBitbucketSupportCover(
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
+  'announcing-appwrite-domains': convertCoverSourceToAvif,
   'announcing-gitlab-support': generateAnnouncingGitlabSupportCover,
   'announcing-bitbucket-support': generateAnnouncingBitbucketSupportCover,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
+  'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
+  'announcing-console-iv': convertCoverSourceToAvif,
 }
 
 async function main() {

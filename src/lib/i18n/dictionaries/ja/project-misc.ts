@@ -979,9 +979,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '関数フォルダー内で次のコマンドを実行し、Appwrite CLI を使用して関数をデプロイしてください。',
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'サイトフォルダー内で次のコマンドを実行し、Appwrite CLI を使用してサイトをデプロイしてください。',
-  'Historic data is not available through the new usage API.':
-    '新しい使用量 API では履歴データは利用できません。',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'provider {} ブロックの一般的なファイル名。例: Appwrite が cloud.appwrite.io にない場合のカスタムエンドポイントと self_signed。シークレットは .tf ファイルではなく、tfvars、env、または CI に保持します。ルートモジュールごとに 1 つの required_providers ブロック (main.tf を参照)。',
   'About GBH': 'GBH について',
   Bandwidth: '帯域幅',
@@ -1733,6 +1731,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Summary: '概要',
   'Supabase endpoint': 'Supabase エンドポイント',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'チーム',
   'Test email sent to': 'テストメールの送信先',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2721,4 +2720,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'マージリクエスト',
   'Pull request': 'プルリクエスト',
   'Failed to approve deployment': 'デプロイの承認に失敗しました',
+  'Pause live updates': 'ライブ更新を一時停止',
+  'Pause live updates to refresh manually':
+    '手動で更新するにはライブ更新を一時停止してください',
+  'Resume live updates': 'ライブ更新を再開',
+  'Updating…': '更新中…',
+  Paused: '一時停止',
 }

@@ -52,10 +52,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
-import {
-  analyticsAttrs,
-  type AnalyticsActionId,
-} from '@/lib/analytics-actions'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
@@ -180,7 +177,8 @@ function getMarketingNavAnalyticsAction(
   if (href === '/docs') return 'marketing-nav-docs'
   if (href === '/pricing') return 'marketing-nav-pricing'
   if (href === '/enterprise') return 'marketing-nav-enterprise'
-  if (href === '/blog/category/customer-stories') return 'marketing-nav-customers'
+  if (href === '/blog/category/customer-stories')
+    return 'marketing-nav-customers'
   if (href === '/blog') return 'marketing-nav-blog'
   if (href === '/changelog') return 'marketing-nav-changelog'
   return undefined
@@ -348,7 +346,7 @@ export function ConsoleHeader({
     ? (project?.teamId ?? undefined)
     : (orgIdFromRoute ??
       (headerAccount?.prefs?.organization as string | undefined))
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
   const resolvedCenterSearchPlaceholder =
@@ -381,13 +379,17 @@ export function ConsoleHeader({
       return { ...item, href: getMarketingPageUrl('/docs', localMarketing) }
     }
     if (item.href === '/changelog') {
-      return { ...item, href: getMarketingPageUrl('/changelog', localMarketing) }
+      return {
+        ...item,
+        href: getMarketingPageUrl('/changelog', localMarketing),
+      }
     }
     return item
   })
   const showMarketingNav = marketingNavItems.length > 0 && !preLaunch
   const showAgent = features.agent && !showMarketingNav && !preLaunch
-  const showNotifications = features.notifications && !showMarketingNav && !preLaunch
+  const showNotifications =
+    features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -411,9 +413,7 @@ export function ConsoleHeader({
 
   // Get user display name (prefer name, fallback to email)
   const displayName =
-    headerAccount?.name ||
-    headerAccount?.email ||
-    headerCopy.accountMenu.user
+    headerAccount?.name || headerAccount?.email || headerCopy.accountMenu.user
   const userEmail = headerAccount?.email || ''
   const accountId = headerAccount?.$id || ''
 
@@ -444,7 +444,7 @@ export function ConsoleHeader({
   const isInitScope =
     (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
-    ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
+    ? resolveInitHeaderNavCta({ currentDay: overrides.mockInitCurrentDay })
     : null
   const resolvedInitHeaderNavCta = initHeaderNavCta
     ? (() => {
@@ -482,7 +482,9 @@ export function ConsoleHeader({
     selfService &&
     (organizationPlan?.price ?? 0) === 0
   const showChangelogBadge = useChangelogNavBadge()
-  const showOrgDomainsLink = Boolean(orgId && canShowOrgDomainsTab(access, features))
+  const showOrgDomainsLink = Boolean(
+    orgId && canShowOrgDomainsTab(access, features),
+  )
   const docsHref = getMarketingPageUrl('/docs', localMarketing)
   const changelogHref = getMarketingPageUrl('/changelog', localMarketing)
   const homeHref = getMarketingPageUrl('/home', localMarketing)
@@ -542,13 +544,18 @@ export function ConsoleHeader({
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] p-0">
-                <SheetHeader className="border-b border-border px-4 py-4">
+                <SheetHeader className="shrink-0 border-b border-border px-4 py-4">
                   <SheetTitle className="text-start">
                     <AppwriteWordmark className="h-5" aria-label="Appwrite" />
                   </SheetTitle>
                 </SheetHeader>
+                {/* The sheet is a fixed, full-height flex column with no scroll
+                    port of its own, so the nav owns the overflow - otherwise the
+                    expanded Products panel runs past the viewport unreachably.
+                    Block, not flex: as flex items the h-10 rows shrink to fit a
+                    short viewport instead of letting the nav scroll. */}
                 <nav
-                  className="flex flex-col p-2 text-start"
+                  className="overlay-scrollbar overscroll-y-contain min-h-0 flex-1 overflow-y-auto p-2 text-start"
                   aria-label={headerCopy.marketingNav.websiteNavigation}
                 >
                   {marketingNavItems.map((item) =>
@@ -579,15 +586,15 @@ export function ConsoleHeader({
             const logoDestination = preLaunch
               ? ({ to: '/init' } as const)
               : showMarketingNav
-              ? ({ to: '/home' } as const)
-              : showGuestHeader && features.init
-                ? ({ to: '/init' } as const)
-                : linkOrgId
-                  ? ({
-                      to: '/organizations/$orgId',
-                      params: { orgId: linkOrgId },
-                    } as const)
-                  : ({ to: '/' } as const)
+                ? ({ to: '/home' } as const)
+                : showGuestHeader && features.init
+                  ? ({ to: '/init' } as const)
+                  : linkOrgId
+                    ? ({
+                        to: '/organizations/$orgId',
+                        params: { orgId: linkOrgId },
+                      } as const)
+                    : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
                 {...logoDestination}
@@ -771,9 +778,7 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>
-                              {headerCopy.permissions.createProjects}
-                            </p>
+                            <p>{headerCopy.permissions.createProjects}</p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -851,14 +856,14 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Database className="h-4 w-4" />
-                                    <span>{headerCopy.createMenu.newDatabase}</span>
+                                    <span>
+                                      {headerCopy.createMenu.newDatabase}
+                                    </span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createDatabases}
-                                </p>
+                                <p>{headerCopy.permissions.createDatabases}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -894,9 +899,7 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createUsers}
-                                </p>
+                                <p>{headerCopy.permissions.createUsers}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -927,14 +930,14 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Folder className="h-4 w-4" />
-                                    <span>{headerCopy.createMenu.newBucket}</span>
+                                    <span>
+                                      {headerCopy.createMenu.newBucket}
+                                    </span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createBuckets}
-                                </p>
+                                <p>{headerCopy.permissions.createBuckets}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -965,14 +968,14 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Zap className="h-4 w-4" />
-                                    <span>{headerCopy.createMenu.newFunction}</span>
+                                    <span>
+                                      {headerCopy.createMenu.newFunction}
+                                    </span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createFunctions}
-                                </p>
+                                <p>{headerCopy.permissions.createFunctions}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -999,14 +1002,14 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <MessageSquare className="h-4 w-4" />
-                                    <span>{headerCopy.createMenu.newMessage}</span>
+                                    <span>
+                                      {headerCopy.createMenu.newMessage}
+                                    </span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createTopics}
-                                </p>
+                                <p>{headerCopy.permissions.createTopics}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -1047,9 +1050,7 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>
-                                  {headerCopy.permissions.createSites}
-                                </p>
+                                <p>{headerCopy.permissions.createSites}</p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -1494,42 +1495,42 @@ export function ConsoleHeader({
 
                   {preLaunch ? null : (
                     <>
-                  <DropdownMenuItem asChild>
-                    <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
-                      <User className="h-4 w-4" />
-                      <span>{headerCopy.accountMenu.account}</span>
-                    </Link>
-                  </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <User className="h-4 w-4" />
+                          <span>{headerCopy.accountMenu.account}</span>
+                        </Link>
+                      </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild>
-                    <Link
-                      {...(orgId
-                        ? {
-                            to: '/organizations/$orgId',
-                            params: { orgId },
-                          }
-                        : { to: '/' })}
-                      className={ACCOUNT_MENU_ITEM_CLASS}
-                    >
-                      <FolderOpen className="h-4 w-4" />
-                      <span>{headerCopy.accountMenu.projects}</span>
-                    </Link>
-                  </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          {...(orgId
+                            ? {
+                                to: '/organizations/$orgId',
+                                params: { orgId },
+                              }
+                            : { to: '/' })}
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                        >
+                          <FolderOpen className="h-4 w-4" />
+                          <span>{headerCopy.accountMenu.projects}</span>
+                        </Link>
+                      </DropdownMenuItem>
 
-                  {showOrgDomainsLink && orgId ? (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/organizations/$orgId/domains"
-                        params={{ orgId }}
-                        className={ACCOUNT_MENU_ITEM_CLASS}
-                      >
-                        <Globe className="h-4 w-4" />
-                        <span>{headerCopy.accountMenu.domains}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  ) : null}
+                      {showOrgDomainsLink && orgId ? (
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/organizations/$orgId/domains"
+                            params={{ orgId }}
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                          >
+                            <Globe className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.domains}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ) : null}
 
-                  <DropdownMenuSeparator className="my-1 bg-border" />
+                      <DropdownMenuSeparator className="my-1 bg-border" />
                     </>
                   )}
 
@@ -1624,117 +1625,128 @@ export function ConsoleHeader({
                   </div>
 
                   {preLaunch ? null : (
-                  <>
-                    <DropdownMenuSeparator className="my-1 bg-border" />
+                    <>
+                      <DropdownMenuSeparator className="my-1 bg-border" />
 
-                    {showMarketingNav && !preLaunch ? (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          {...(orgId
-                            ? {
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                              }
-                            : { to: '/' })}
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...analyticsAttrs('header-console')}
-                        >
-                          <LayoutDashboard className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.console}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    ) : marketingNavLinksExternal ? (
-                      <DropdownMenuItem asChild>
-                        <a
-                          href={homeHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...analyticsAttrs('header-home')}
-                        >
-                          <Home className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.home}</span>
-                        </a>
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/home"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...analyticsAttrs('header-home')}
-                        >
-                          <Home className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.home}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-
-                    <DropdownMenuItem asChild>
-                      {marketingNavLinksExternal ? (
-                        <a
-                          href={docsHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...analyticsAttrs('header-docs')}
-                        >
-                          <BookOpen className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.docs}</span>
-                        </a>
+                      {showMarketingNav && !preLaunch ? (
+                        <DropdownMenuItem asChild>
+                          <Link
+                            {...(orgId
+                              ? {
+                                  to: '/organizations/$orgId',
+                                  params: { orgId },
+                                }
+                              : { to: '/' })}
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-console')}
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.console}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ) : marketingNavLinksExternal ? (
+                        <DropdownMenuItem asChild>
+                          <a
+                            href={homeHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-home')}
+                          >
+                            <Home className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.home}</span>
+                          </a>
+                        </DropdownMenuItem>
                       ) : (
-                        <Link
-                          to="/docs"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...analyticsAttrs('header-docs')}
-                        >
-                          <BookOpen className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.docs}</span>
-                        </Link>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/home"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-home')}
+                          >
+                            <Home className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.home}</span>
+                          </Link>
+                        </DropdownMenuItem>
                       )}
-                    </DropdownMenuItem>
 
-                    <DropdownMenuItem asChild>
-                      {marketingNavLinksExternal ? (
-                        <a
-                          href={changelogHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...(showChangelogBadge
-                            ? { 'aria-label': headerCopy.marketingNav.changelogNewUpdatesAria }
-                            : {})}
-                        >
-                          <Clock className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.changelog}</span>
-                        </a>
-                      ) : (
-                        <Link
-                          to="/changelog"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                          {...(showChangelogBadge
-                            ? { 'aria-label': headerCopy.marketingNav.changelogNewUpdatesAria }
-                            : {})}
-                        >
-                          <Clock className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.changelog}</span>
-                        </Link>
+                      <DropdownMenuItem asChild>
+                        {marketingNavLinksExternal ? (
+                          <a
+                            href={docsHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-docs')}
+                          >
+                            <BookOpen className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.docs}</span>
+                          </a>
+                        ) : (
+                          <Link
+                            to="/docs"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-docs')}
+                          >
+                            <BookOpen className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.docs}</span>
+                          </Link>
+                        )}
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem asChild>
+                        {marketingNavLinksExternal ? (
+                          <a
+                            href={changelogHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...(showChangelogBadge
+                              ? {
+                                  'aria-label':
+                                    headerCopy.marketingNav
+                                      .changelogNewUpdatesAria,
+                                }
+                              : {})}
+                          >
+                            <Clock className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.changelog}</span>
+                          </a>
+                        ) : (
+                          <Link
+                            to="/changelog"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...(showChangelogBadge
+                              ? {
+                                  'aria-label':
+                                    headerCopy.marketingNav
+                                      .changelogNewUpdatesAria,
+                                }
+                              : {})}
+                          >
+                            <Clock className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.changelog}</span>
+                          </Link>
+                        )}
+                      </DropdownMenuItem>
+
+                      {/* Temporary: remove once the old console is retired.
+                        Cloud only: self-hosted 2.0 ships no legacy console. */}
+                      {isCloud && (
+                        <DropdownMenuItem asChild>
+                          <a
+                            href="https://cloud.appwrite.io"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            {...analyticsAttrs('header-old-console')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.oldConsole}</span>
+                          </a>
+                        </DropdownMenuItem>
                       )}
-                    </DropdownMenuItem>
-
-                    {/* Temporary: remove once the old console is retired */}
-                    <DropdownMenuItem asChild>
-                      <a
-                        href="https://cloud.appwrite.io"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={ACCOUNT_MENU_ITEM_CLASS}
-                        {...analyticsAttrs('header-old-console')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>{headerCopy.accountMenu.oldConsole}</span>
-                      </a>
-                    </DropdownMenuItem>
-                  </>
+                    </>
                   )}
 
                   {showAdminSection && !preLaunch && (
@@ -1760,7 +1772,10 @@ export function ConsoleHeader({
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link to="/generator" className={ACCOUNT_MENU_ITEM_CLASS}>
+                        <Link
+                          to="/generator"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                        >
                           <Sparkles className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.generator}</span>
                         </Link>

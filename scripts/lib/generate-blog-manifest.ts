@@ -91,7 +91,13 @@ async function main() {
     posts.push(buildBlogPostMeta(slug, raw))
   }
 
-  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  // Newest first; slug tie-break keeps same-day order stable (and puts
+  // announcing-appwrite-2 ahead of the other Init day-1 featured posts).
+  posts.sort((a, b) => {
+    const byDate = new Date(b.date).getTime() - new Date(a.date).getTime()
+    if (byDate !== 0) return byDate
+    return a.slug.localeCompare(b.slug)
+  })
 
   await mkdir(OUTPUT_DIR, { recursive: true })
 

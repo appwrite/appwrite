@@ -250,7 +250,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"orderDesc","values":["$createdAt"]}'
+    --queries '{"method":"orderDesc","attribute":"$createdAt"}'
 ```
 {% /multicode %}
 
@@ -508,7 +508,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"orderDesc","values":["$createdAt"]}' '{"method":"orderAsc","values":["$id"]}'
+    --queries '{"method":"orderDesc","attribute":"$createdAt"}' \
+    --queries '{"method":"orderAsc","attribute":"$id"}'
 ```
 {% /multicode %}
 
@@ -751,7 +752,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"orderAsc","values":["$sequence"]}'
+    --queries '{"method":"orderAsc","attribute":"$sequence"}'
 ```
 {% /multicode %}
 

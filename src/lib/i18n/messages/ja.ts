@@ -240,6 +240,7 @@ export const jaCatalog: EnCatalog = {
       badges: {
         ...enCatalog.app.sidebar.badges,
         soon: '近日公開',
+        new: '新着',
       },
       accessibility: {
         ...enCatalog.app.sidebar.accessibility,
@@ -295,7 +296,8 @@ export const jaCatalog: EnCatalog = {
       heroImageAlt:
         '使用量グラフ、アプリ、API キーを表示する Appwrite コンソールの概要', // pragma: allowlist secret
       startProject: 'プロジェクトを開始',
-      requestDemo: 'デモを依頼',
+      viewDocs: 'ドキュメントを見る',
+      mcpIncluded: 'MCP 同梱',
       toolsHeading: 'お気に入りのフレームワーク、言語、エージェント向けに最適化',
       productsHeadingLineOne: '必要なサービスをすべて',
       productsHeadingLineTwo: '一つのプラットフォームに',

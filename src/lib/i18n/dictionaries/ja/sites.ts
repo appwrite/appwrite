@@ -220,6 +220,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Connect Git provider': 'Git プロバイダーの接続',
   'Connect GitHub': 'GitHub の接続',
   'Connect GitLab': 'GitLab の接続',
+  'Connect Bitbucket': 'Bitbucket の接続',
+  'Connect Origin': 'Origin の接続',
   'Select organization': 'Organization を選択',
   'Add account': 'アカウントの追加',
   'Search...': '検索...',

@@ -192,6 +192,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -299,6 +300,10 @@ function OrgRoleBadge({ role }: { role: string }) {
 /** Header avatar stack beside Invite: fixed width fits this many md avatars. */
 const HEADER_MEMBER_AVATAR_SLOTS = 2
 
+/** Shared frame so photo, initials, overflow, and empty slots stay the same size. */
+const HEADER_MEMBER_AVATAR_FRAME =
+  'relative h-8 w-8 shrink-0 rounded-full ring-2 ring-background'
+
 function EmptyMemberAvatarSlot({
   zIndex,
   onClick,
@@ -317,16 +322,15 @@ function EmptyMemberAvatarSlot({
       onClick={onClick}
       {...analyticsAttrs('invite-org-member')}
       className={cn(
-        'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        HEADER_MEMBER_AVATAR_FRAME,
+        'flex items-center justify-center border border-dashed border-muted-foreground/35 bg-muted/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
       )}
       style={{ zIndex }}
       title={disabled ? undefined : t('Invite member')}
       aria-label={t('Invite member')}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25">
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-      </div>
+      <Plus className="h-3.5 w-3.5 text-muted-foreground" />
     </button>
   )
 
@@ -338,7 +342,7 @@ function EmptyMemberAvatarSlot({
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="relative inline-flex shrink-0" style={{ zIndex }}>
+          <span className="relative flex h-8 w-8 shrink-0" style={{ zIndex }}>
             {button}
           </span>
         </TooltipTrigger>
@@ -375,7 +379,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     null,
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
-  const { features, isCloud } = useConsoleProfile()
+  const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -422,6 +426,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 3]
     ) {
       const domainId = pathParts[orgIndex + 3]
+      // Wizard segments are not domain detail routes (transfer-in is long enough to
+      // look like an id if we only check length).
+      if (domainId === 'buy' || domainId === 'transfer-in') {
+        return false
+      }
       // If the domainId looks like an ID (long alphanumeric), we're on a detail route
       if (domainId && domainId.length > 10) {
         return true
@@ -483,6 +492,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 2] === 'domains' &&
       !pathParts[orgIndex + 3] // No domainId means we're on the index route
 
+    // Pathname updates to /domains/buy|transfer-in before the wizard match commits.
+    // Keep the Outlet children slot so the list stays visible until then.
+    const isDomainsWizardPendingByPath =
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'domains' &&
+      (pathParts[orgIndex + 3] === 'buy' ||
+        pathParts[orgIndex + 3] === 'transfer-in')
+
     const isMarketplaceRouteByPath =
       orgIndex >= 0 &&
       pathParts[orgIndex + 2] === 'marketplace' &&
@@ -492,6 +509,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return (
       isDomainsIndexRoute ||
       isDomainsRouteByPath ||
+      isDomainsWizardPendingByPath ||
       isMarketplaceIndexRoute ||
       isMarketplaceRouteByPath
     )
@@ -1799,7 +1817,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const showProjectUsageCharts = features.usageStats
+  const showProjectUsageCharts =
+    features.usageStats ||
+    (isSelfHosted && !isUsageStatsCapabilityResolved())
   // Budget-locked projects cannot load platform/usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
@@ -1823,7 +1843,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
     visibleProjectIds,
-    showProjectUsageCharts && !skipProjectCardExtras,
+    features.usageStats && !skipProjectCardExtras,
+    organizationPlan,
   )
 
   const projectListPlatformIds = useMemo(() => {
@@ -2207,23 +2228,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             </div>
 
             {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
-            <div className="hidden h-8 min-h-8 max-h-8 shrink-0 items-center gap-3 sm:flex">
+            <div className="hidden h-8 shrink-0 items-center gap-3 overflow-visible sm:flex">
               {orgId && (
-                <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
+                <div className="flex h-8 w-[5.5rem] shrink-0 items-center justify-start overflow-visible">
                   {!selectedOrg || membershipsLoading ? (
                     <div className="flex -space-x-2" aria-hidden>
                       <div
-                        className="relative rounded-full border-2 border-background"
+                        className={cn(
+                          HEADER_MEMBER_AVATAR_FRAME,
+                          'bg-muted animate-pulse',
+                        )}
                         style={{ zIndex: 2 }}
-                      >
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
-                      </div>
+                      />
                       <div
-                        className="relative rounded-full border-2 border-background"
+                        className={cn(
+                          HEADER_MEMBER_AVATAR_FRAME,
+                          'bg-muted animate-pulse',
+                        )}
                         style={{ zIndex: 1 }}
-                      >
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
-                      </div>
+                      />
                     </div>
                   ) : (
                     (() => {
@@ -2245,7 +2268,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       return (
                         <div
                           className={cn(
-                            'flex h-8 min-h-8 items-center',
+                            'flex h-8 items-center overflow-visible',
                             slotCount > 1 && '-space-x-2',
                           )}
                         >
@@ -2254,7 +2277,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               to="/organizations/$orgId/settings/members"
                               params={{ orgId: orgId! }}
                               className={cn(
-                                'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
+                                'flex h-8 items-center overflow-visible rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
                                 (displayMembers.length > 1 ||
                                   (displayMembers.length > 0 &&
                                     showOverflow)) &&
@@ -2266,7 +2289,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 (member: TeamMember, index: number) => (
                                   <div
                                     key={member.$id}
-                                    className="relative rounded-full border-2 border-background"
+                                    className={HEADER_MEMBER_AVATAR_FRAME}
                                     style={{
                                       zIndex:
                                         emptySlotCount +
@@ -2277,13 +2300,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       userId={member.userId}
                                       name={member.userName}
                                       size="md"
+                                      className="h-full w-full"
                                     />
                                   </div>
                                 ),
                               )}
                               {showOverflow && (
                                 <div
-                                  className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-foreground/80"
+                                  className={cn(
+                                    HEADER_MEMBER_AVATAR_FRAME,
+                                    'flex items-center justify-center bg-muted text-[11px] font-medium leading-none text-foreground/80',
+                                  )}
                                   style={{ zIndex: 0 }}
                                 >
                                   +{totalCount - HEADER_MEMBER_AVATAR_SLOTS}
@@ -4125,7 +4152,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       ) => (
                                                         <div
                                                           key={member.$id}
-                                                          className="relative rounded-full border-2 border-background"
+                                                          className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full ring-2 ring-background"
                                                           style={{
                                                             zIndex: 4 - index}}
                                                           title={
@@ -4140,13 +4167,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               member.userName
                                                             }
                                                             size="sm"
+                                                            className="h-full w-full"
                                                           />
                                                         </div>
                                                       ),
                                                     )}
                                                   {membershipsTotal > 4 && (
                                                     <div
-                                                      className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
+                                                      className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[10px] font-medium leading-none text-muted-foreground ring-2 ring-background"
                                                       style={{ zIndex: 0 }}
                                                     >
                                                       +{membershipsTotal - 4}

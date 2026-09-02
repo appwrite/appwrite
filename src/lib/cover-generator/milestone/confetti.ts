@@ -1,12 +1,13 @@
 import type { CoverTemplateId } from '@/lib/cover-generator/constants'
+import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
 import {
   getCoverBrandLightRgb,
   type CoverSoftLightTone,
 } from '@/lib/cover-generator/cover-brand-lights'
 import type { CoverThemeFamily } from '@/lib/cover-generator/themes'
 
-const BASE_WIDTH = 1200
-const BASE_HEIGHT = 630
+const BASE_WIDTH = COVER_WIDTH
+const BASE_HEIGHT = COVER_HEIGHT
 
 type ConfettiPieceDef = {
   /** Normalized x (0–1). */

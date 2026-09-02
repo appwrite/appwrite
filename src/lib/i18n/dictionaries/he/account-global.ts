@@ -354,7 +354,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אין לכם סשנים פעילים כרגע.',
   'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.':
     'החשבון שלכם יימחק לצמיתות ותאבדו גישה לכל הצוותים והנתונים שלכם. פעולה זו אינה הפיכה.',
+  'Your email': 'האימייל שלכם',
   'Your name': 'השם שלכם',
+  'Your password': 'הסיסמה שלכם',
 
   // Auth (sign in, sign up, recovery, reset, verify, MFA, OAuth consent)
   'A 6-digit verification code was sent to your email. Enter it below.':

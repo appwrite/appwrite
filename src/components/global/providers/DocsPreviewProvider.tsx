@@ -17,6 +17,11 @@ import {
   isAgentDocsEnabled,
   isAgentDocsSlug,
 } from '@/lib/docs/agent-docs-feature'
+import { isDatabaseTypeDocsSlugHidden } from '@/lib/docs/database-docs-feature'
+import {
+  isDomainsDocsEnabled,
+  isDomainsDocsSlug,
+} from '@/lib/docs/domains-docs-feature'
 import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
@@ -68,8 +73,10 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
       if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
+      if (isDomainsDocsSlug(nextSlug) && !isDomainsDocsEnabled()) return
       if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
       if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
+      if (isDatabaseTypeDocsSlugHidden(nextSlug)) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))

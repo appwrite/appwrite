@@ -257,7 +257,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite documents-db create-document \
+appwrite documentsdb create-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id 'unique()' \
@@ -267,6 +267,10 @@ appwrite documents-db create-document \
 
 # List documents {% #list-documents %}
 Use the `listDocuments` method to read documents from a collection. Pass [queries](/docs/products/databases/documentsdb/queries) to filter, order, and paginate the results.
+
+{% info title="Cache list responses" %}
+Pass a `ttl` value in seconds (1 to 86400) to cache the response. Identical requests return the cached result until the TTL expires, and the `X-Appwrite-Cache` header reports `hit` or `miss`. See [cache list responses](/docs/products/databases/documentsdb/pagination#cache-list-responses).
+{% /info %}
 
 {% multicode %}
 ```server-nodejs
@@ -501,7 +505,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite documents-db list-documents \
+appwrite documentsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --queries '{"method":"equal","attribute":"title","values":["Hamlet"]}'
@@ -729,7 +733,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite documents-db update-document \
+appwrite documentsdb update-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -958,7 +962,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite documents-db upsert-document \
+appwrite documentsdb upsert-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID> \
@@ -1173,7 +1177,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 ```bash
-appwrite documents-db delete-document \
+appwrite documentsdb delete-document \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
     --document-id <DOCUMENT_ID>

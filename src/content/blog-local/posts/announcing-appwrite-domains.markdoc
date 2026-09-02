@@ -1,0 +1,144 @@
+---
+layout: post
+title: "Announcing Appwrite Domains: your registrar and DNS host"
+description: Appwrite Domains brings registration, DNS, and TLS into your organization. Buy names across 160+ TLDs, host the zone, and connect Sites and Functions.
+date: 2026-09-04
+cover: /images/blog-local/announcing-appwrite-domains/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: product, announcement
+featured: false
+draft: true
+faqs:
+  - question: "What is Appwrite Domains?"
+    answer: "Appwrite Domains is organization-level domain management on Appwrite Cloud. You can register a new domain, transfer an existing registration in, or delegate DNS for a domain you keep registered elsewhere. Appwrite then hosts the authoritative DNS zone and connects hostnames to [Sites](/docs/products/sites), [Functions](/docs/products/functions), and [custom API endpoints](/docs/products/network/custom-domains)."
+  - question: "Do I have to move my registration to Appwrite to use Appwrite DNS?"
+    answer: "No. Use [Add domain](/docs/products/domains/external) to add a domain you own elsewhere, then point its nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`. Registration and renewal stay with your current registrar, and Appwrite serves the zone once verification completes."
+  - question: "Which DNS record types can I create on an Appwrite domain?"
+    answer: "A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, HTTPS, and ALIAS. Appwrite also creates locked records needed for routing and TLS renewal, which you cannot edit or delete. See [DNS records](/docs/products/domains/dns)."
+  - question: "Will delegating nameservers to Appwrite break my email?"
+    answer: "It will if you move nameservers before recreating your MX and TXT records in the Appwrite zone. Add those records first, then switch nameservers. [DNS presets](/docs/products/domains/presets) cover inbound MX for Google Workspace, Outlook, Mailgun, Zoho, ProtonMail, and iCloud, but you still need to add DKIM, DMARC, and provider verification records yourself."
+  - question: "Are domains scoped to a project or to an organization?"
+    answer: "To an organization. Domains live under **Organization** > **Domains**, and every project in that organization can attach hostnames from the same zone. Plan limits on the number of domains apply per organization. You can move a domain to another organization you own with [Change organization](/docs/products/domains/change-organization), which does not touch the registration."
+  - question: "Can I transfer a domain away from Appwrite later?"
+    answer: "Yes. Open the domain **Settings** tab and generate a transfer authorization code, then start the transfer at your new registrar. See [Transfer a domain](/docs/products/domains/transfer#transfer-out)."
+  - question: "Is Appwrite Domains available on self-hosted Appwrite?"
+    answer: "No. Domain registration and organization-level domain management are Appwrite Cloud features. Self-hosted deployments can still use custom domains on Sites, Functions, and project APIs with DNS managed at your own provider."
+---
+
+Owning a domain and shipping on it are two separate jobs, and they have always lived in two separate places. You buy `example.com` at a registrar. You point its nameservers at a DNS host. Then you open Appwrite, add `www.example.com` to a Site, copy a CNAME value out of the Console, paste it into the other tab, and wait.
+
+Get the record name wrong and you find out twenty minutes later. Delegate the whole zone and forget to recreate your MX records, and you find out when a customer tells you their email bounced.
+
+Today, we are announcing **Appwrite Domains**, domain registration and DNS management inside your Appwrite organization on Appwrite Cloud. Appwrite acts as your registrar, hosts your authoritative zone, and already knows which hostnames your Sites, Functions, and project APIs need.
+
+# What ships today
+
+- **Registration across more than 160 TLDs.** Search with or without an extension, read live pricing per name, and pay with a method already on your organization.
+- **Transfer in from another registrar.** Enter the domain and an authorization code, confirm the registry transfer fee, and watch status until the registry completes the move.
+- **External domains.** Keep the registration where it is, point nameservers at Appwrite, and manage the zone here.
+- **A DNS editor with ten record types.** TTL control, per-record comments, filters, and BIND zone file import and export.
+- **One-click email records.** Presets for Google Workspace, Outlook, Mailgun, Zoho, ProtonMail, and iCloud.
+- **Hostnames wired to products.** Attach an apex or a subdomain to Sites, Functions, and custom API endpoints. Appwrite issues and renews TLS.
+- **Auto-renewal per domain.** See the renewal price before it charges and get an email if a charge fails.
+
+Domains belong to an organization, not to a single project. Open **Organization** > **Domains** and every project in that organization can attach hostnames from the same zone.
+
+# Three ways to get a domain into your organization
+
+## Register a new name
+
+Click **Buy domain** and search. Type `myapp` to see suggestions across extensions, or `myapp.io` to focus on one. Prices load per card as results appear, and taken names are marked.
+
+The registry rules that usually surprise people show up before you pay. Premium names carry registry premium pricing and get labeled as premium. Registration periods vary by TLD, so a `.ai` domain registers for two years rather than one, and the order summary states the exact period. Checkout collects registrant contact details, a billing address for tax, and a payment method, then Appwrite registers the name and opens its detail page.
+
+## Transfer an existing registration in
+
+Click **Transfer domain**, enter the full domain name and the authorization code from your current registrar, and confirm the transfer fee.
+
+Registry transfers are slow and they fail for boring reasons, so the domain page reports where yours is: pending owner approval, pending admin approval, pending registry, completed, cancelled, or not transferrable. A domain registered too recently or still locked at the old registrar reports **not transferrable** instead of a price, which is a registry policy rather than an Appwrite limit.
+
+## Delegate DNS without moving the registration
+
+This is the option worth knowing about even if you never buy a domain from us. Click **Add domain**, enter the name, then set its nameservers at your current DNS host to `ns1.appwrite.zone` and `ns2.appwrite.zone`. Click **Verify** once the change propagates.
+
+Registration and renewal stay with your registrar. Appwrite serves the zone, and the domain behaves like any other verified domain in your organization.
+
+{% info title="Recreate your records before you cut over" %}
+Delegating nameservers hands the whole zone to Appwrite, so any record that lives only at your old DNS host stops resolving. Add your MX, TXT, and third-party CNAME records here first, then change nameservers. Nameserver changes can take up to 48 hours to propagate.
+{% /info %}
+
+# DNS you can edit without leaving the Console
+
+Once a domain is verified, the **DNS Records** tab shows the full zone Appwrite serves. Ten record types are supported:
+
+| Type | Purpose |
+|------|---------|
+| A / AAAA | IPv4 and IPv6 addresses |
+| CNAME | Alias to another hostname |
+| MX | Mail servers |
+| TXT | SPF, DKIM, DMARC, and verification strings |
+| NS | Delegation within the zone |
+| SRV | Service location |
+| CAA | Which certificate authorities may issue for the name |
+| HTTPS | HTTPS service binding |
+| ALIAS | Apex-friendly alias, where a CNAME is not legal |
+
+Two things make this more useful than a generic DNS panel.
+
+**Locked records.** When you attach a hostname to a Site, Function, or API, Appwrite writes the routing and certificate records the zone needs and locks them. You cannot edit or delete them from the Console, which means nobody on your team can break TLS renewal by tidying up records they do not recognize. Locked entries sort to the top of the table so they are easy to tell apart from yours.
+
+**Zone file import and export.** Migrating from another DNS host is a `.txt` BIND export upload, up to 5 MB. Export works the other way, which matters if you ever want to leave.
+
+For email, **Add preset** writes a provider's inbound MX records at the apex in one step: five records for Google Workspace, three for Zoho, two each for Mailgun and ProtonMail, one for Outlook, and two plus an SPF TXT record for iCloud. Presets append rather than replace, so check the table afterward for MX records left over from your old provider. They also stop at inbound mail. DKIM, DMARC, and provider domain verification are still yours to add.
+
+# Connecting a hostname to a Site, Function, or API
+
+Custom domains on Appwrite work in two layers, and knowing which is which saves an afternoon.
+
+The **organization domain** is the apex zone, `example.com`. It proves your organization controls the name. The **product hostname** is whatever you actually serve traffic on, like `www.example.com` or `api.example.com`, and it is a routing rule on a specific Site, Function, or project API.
+
+A typical production layout on one domain:
+
+| Hostname | Product | Purpose |
+|----------|---------|---------|
+| `example.com` or `www.example.com` | Site, active deployment | User-facing web app |
+| `api.example.com` | Project custom domain | Appwrite API and first-party auth cookies |
+| `hooks.example.com` | Function | Webhooks and serverless endpoints |
+| `staging.example.com` | Site, Git branch rule | Branch-pinned preview |
+
+Add each hostname on its product, create the record the verification screen shows, and click **Verify**. Subdomains for Sites and Functions use a CNAME to `appwrite.network`. Custom API domains use the project endpoint host, which is a different target, so copy the value from the Console rather than reusing the one you saw on a Site.
+
+Apex domains cannot take a CNAME at the zone root, which is a DNS rule rather than a platform choice. Either delegate the zone to Appwrite nameservers, or use CNAME flattening if your provider supports ALIAS or ANAME records. When the zone already lives on Appwrite, apex works with no extra steps.
+
+TLS is automatic in both directions. Appwrite provisions the certificate after verification, usually in a couple of minutes, and renews it without asking. Pointing `api.example.com` at your project API also fixes the third-party cookie problem. Serve your app and your API on the same registrable domain and browsers treat session cookies as first-party.
+
+# Renewals, transfers out, and moving between organizations
+
+Auto-renewal applies to domains where Appwrite is the registrar. Toggle it on the domain **Settings** tab and Appwrite charges your organization's default payment method before expiry, at the renewal price shown on the domain. If a charge fails, Appwrite retries across roughly the 30 days before expiration and emails you. Keep a backup card on the organization and the failure mode is a support email rather than a lost domain.
+
+External domains renew at your registrar. Appwrite does not charge renewal for them and does not track their billing.
+
+Two exits, and they are different. **Change organization** moves a domain between organizations you own without touching the registration, which is what you want when a side project graduates into a company account. **Transfer to another registrar** generates an authorization code you hand to your new registrar. Both live on the domain **Settings** tab.
+
+On organizations with [roles](/docs/advanced/security/roles) enabled, owners and developers with the domains write scope can manage domains, records, and settings. Viewers can look but not change anything.
+
+# When to move your DNS to Appwrite
+
+DNS is the piece of infrastructure to be most careful about consolidating. If your zone is wrong, your email stops, your site disappears, and your certificate renewal fails, all at once. So here is the honest read.
+
+Move the zone to Appwrite when most of your hostnames already point at Appwrite. Once you are running a Site, an API domain, and a couple of function endpoints on the same name, the copy-paste between two dashboards is the actual work, and cutting it out cuts out a class of typo. Register the domain here too if you would rather have one invoice than two.
+
+Keep DNS where it is when your zone carries load Appwrite has nothing to do with, like a mail server you manage, split-horizon views, or a provider whose edge features you depend on. Use CNAME flattening for the apex and add records per hostname instead. Appwrite works fine as a hostname target without owning your zone.
+
+Appwrite Domains is Cloud-only. Self-hosted deployments do not include registration or organization-level domain management, though custom domains on Sites, Functions, and project APIs still work with DNS managed at your own provider.
+
+# Getting started with Appwrite Domains
+
+Open **Domains** in your organization on [Appwrite Cloud](https://cloud.appwrite.io) and either buy a name or add one you already own. If you are moving an existing domain, add your records before you switch nameservers.
+
+- [Domains overview](/docs/products/domains)
+- [Start with Domains](/docs/products/domains/quick-start)
+- [Add external domain](/docs/products/domains/external)
+- [Connect to products](/docs/products/domains/connect)
+- [Manage DNS records](/docs/products/domains/manage-dns)

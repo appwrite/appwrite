@@ -55,11 +55,9 @@ import {
   usersQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import { resolveModalPortalHost } from '@/lib/layout/modal-portal-host'
 
 const PICK_LIMIT = 25
-
-const MODAL_PORTAL_HOST_SELECTOR =
-  '[data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="alert-dialog-content"]'
 
 export type ResourceSearchKind =
   | 'function'
@@ -415,11 +413,6 @@ export interface ResourceSearchPopoverProps {
    * mounted inside an open dialog). Avoids a cold fetch when the picker opens.
    */
   prefetch?: boolean
-}
-
-function resolveModalPortalHost(from: Element | null | undefined): HTMLElement | null {
-  if (!from) return null
-  return from.closest(MODAL_PORTAL_HOST_SELECTOR) as HTMLElement | null
 }
 
 export function ResourceSearchPopover({

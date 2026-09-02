@@ -16,12 +16,16 @@ import {
   buildMysqlCreateIndexSql,
   buildMysqlIndexCommentSql,
 } from '@/lib/mysql-table-ddl'
-import { buildMysqlSingleRequestDdlSql } from '@/lib/mysql-sql'
+import { runMysqlDdlStatements } from '@/lib/mysql-sql'
+import { NativeDbIndexBuildNotice } from '../../_components/NativeDbIndexBuildNotice'
 import {
   useExecuteMysqlSql,
   useMysqlTableColumns,
+  useMysqlTableInfo,
 } from '@/lib/react-query/hooks'
+import { getNativeIndexBuildEstimate } from '@/lib/databases/native-index-build-estimate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { MysqlIndexAlgorithmSelector } from './MysqlIndexAlgorithmSelector'
 import { useT } from '@/lib/i18n/translate'
 
@@ -69,6 +73,11 @@ export function MysqlTableIndexDrawer({
   const t = useT()
   const executeSql = useExecuteMysqlSql(projectId, databaseId)
   const { columns } = useMysqlTableColumns(projectId, databaseId, tableId)
+  const { tableInfo, isLoading: tableInfoLoading } = useMysqlTableInfo(
+    open ? projectId : null,
+    open ? databaseId : null,
+    open ? tableId : null,
+  )
 
   const [formState, setFormState] = useState<MysqlIndexFormState>(
     createDefaultMysqlIndexFormState(),
@@ -87,6 +96,26 @@ export function MysqlTableIndexDrawer({
     [columns, formState.columns],
   )
 
+  const showIndexBuildNotice = useMemo(() => {
+    if (tableInfoLoading) return false
+    return (
+      getNativeIndexBuildEstimate({
+        estimatedRows: tableInfo?.estimated_rows,
+        totalBytes: tableInfo?.total_bytes,
+        algorithm: formState.algorithm,
+        unique: formState.unique,
+        hasCondition: formState.condition.trim().length > 0,
+      }) != null
+    )
+  }, [
+    tableInfoLoading,
+    tableInfo?.estimated_rows,
+    tableInfo?.total_bytes,
+    formState.algorithm,
+    formState.unique,
+    formState.condition,
+  ])
+
   const handleSubmit = async () => {
     const validationError = validateMysqlIndexFormState(formState)
     if (validationError) {
@@ -103,6 +132,12 @@ export function MysqlTableIndexDrawer({
           algorithm: formState.algorithm,
           condition: formState.condition.trim() || undefined,
           includeColumns: formState.includeColumns,
+          columnTypes: formState.columns.map((columnName) => {
+            const column = columns.find(
+              (entry) => entry.column_name === columnName,
+            )
+            return column?.data_type
+          }),
         }),
       ]
 
@@ -112,9 +147,7 @@ export function MysqlTableIndexDrawer({
         )
       }
 
-      await executeSql.mutateAsync(
-        buildMysqlSingleRequestDdlSql(statements, 'Create table index'),
-      )
+      await runMysqlDdlStatements(executeSql.mutateAsync, statements)
       toast.success(t('Index created'))
       onOpenChange(false)
       onSuccess()
@@ -331,7 +364,23 @@ export function MysqlTableIndexDrawer({
               />
             </div>
           </div>
-          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
+          <div className="shrink-0 bg-muted/30">
+            <NativeDbIndexBuildNotice
+              placement="footer"
+              engine="mysql"
+              estimatedRows={tableInfo?.estimated_rows}
+              totalBytes={tableInfo?.total_bytes}
+              isLoading={tableInfoLoading}
+              algorithm={formState.algorithm}
+              unique={formState.unique}
+              hasCondition={formState.condition.trim().length > 0}
+            />
+            <div
+              className={cn(
+                'flex flex-col gap-2 px-6 py-4 sm:flex-row sm:justify-start',
+                !showIndexBuildNotice && 'border-t border-border',
+              )}
+            >
             <Button
               type="submit"
               disabled={
@@ -350,6 +399,7 @@ export function MysqlTableIndexDrawer({
             >
               {t('Cancel')}
             </Button>
+            </div>
           </div>
         </form>
       </>

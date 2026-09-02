@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
+import { resolveInitCalendarDay } from '@/lib/init/dates'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-activity'
 import { formatInitScheduleDayDateLabel } from '@/lib/init/schedule-time'
@@ -18,6 +19,26 @@ interface EventSchedulePanelProps {
   embedded?: boolean
 }
 
+function resolveDefaultScheduleDay(
+  scheduleDays: number[],
+  calendarDay: number,
+): number {
+  if (scheduleDays.length === 0) return 1
+
+  if (calendarDay > 0 && scheduleDays.includes(calendarDay)) {
+    return calendarDay
+  }
+
+  if (calendarDay > 0) {
+    const pastOrToday = scheduleDays.filter((day) => day <= calendarDay)
+    if (pastOrToday.length > 0) {
+      return pastOrToday[pastOrToday.length - 1]!
+    }
+  }
+
+  return scheduleDays[0]!
+}
+
 export function EventSchedulePanel({
   event,
   embedded = false,
@@ -31,10 +52,13 @@ export function EventSchedulePanel({
     return [...days].sort((a, b) => a - b)
   }, [event.days, event.schedule])
 
-  const defaultDay =
-    event.currentDay > 0 && scheduleDays.includes(event.currentDay)
-      ? event.currentDay
-      : scheduleDays[0] ?? 1
+  // Follow the real calendar day, not the unlock / debug day slider.
+  const calendarDay = useMemo(
+    () => resolveInitCalendarDay(event.startDate),
+    [event.startDate],
+  )
+
+  const defaultDay = resolveDefaultScheduleDay(scheduleDays, calendarDay)
 
   const [selectedDay, setSelectedDay] = useState(defaultDay)
   const { setTransientActivity } = useInitPresenceActivity()
@@ -45,6 +69,7 @@ export function EventSchedulePanel({
 
   const selectedDayInfo = event.days.find((day) => day.day === selectedDay)
   const dayEvents = event.schedule.filter((item) => item.day === selectedDay)
+  const isCalendarToday = calendarDay > 0 && selectedDay === calendarDay
 
   const selectedIndex = scheduleDays.indexOf(selectedDay)
   const canGoPrevious = selectedIndex > 0
@@ -61,11 +86,10 @@ export function EventSchedulePanel({
       : null
 
   const selectedDateLabel =
-    selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
-      ? selectedDayInfo.dateLabel
-      : !selectedDayInfo && dayEvents.length > 0
-        ? formatInitScheduleDayDateLabel(dayEvents[0].startsAt)
-        : null
+    selectedDayInfo?.dateLabel ??
+    (dayEvents.length > 0
+      ? formatInitScheduleDayDateLabel(dayEvents[0]!.startsAt)
+      : null)
 
   return (
     <div
@@ -87,9 +111,7 @@ export function EventSchedulePanel({
             <p className="mt-1 text-[13px] text-muted-foreground">
               {event.isRecapMode
                 ? 'Session replays and community hangouts'
-                : selectedDayInfo &&
-                    !isLaunchEventDayLocked(selectedDayInfo) &&
-                    selectedDayInfo.isLive
+                : isCalendarToday
                   ? "Today's sessions"
                   : 'YouTube streams and Reddit AMAs'}
             </p>

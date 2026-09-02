@@ -15,6 +15,18 @@ export const INIT_TICKET_SECTION_HASH = '#ticket'
 /** Where Init YouTube sessions land when no per-session link is set. */
 export const INIT_YOUTUBE_CHANNEL_HREF = 'https://www.youtube.com/@Appwrite'
 
+/**
+ * Per-day stream URLs, keyed by Init day. Days left out fall back to the
+ * channel, so links can land one at a time as streams get scheduled.
+ */
+export const INIT_DAY_STREAM_HREFS: Record<number, string | undefined> = {
+  1: 'https://www.youtube.com/watch?v=FaEmdOwzQMw',
+  2: 'https://www.youtube.com/watch?v=Rq4WNPvqWes',
+  3: 'https://www.youtube.com/watch?v=0UHYLAtWBMo',
+  4: 'https://www.youtube.com/watch?v=N4bz33uSiko',
+  5: 'https://www.youtube.com/watch?v=LYq0qtyQmJk',
+}
+
 export type ResolvedInitHref = {
   href: string
   external: boolean

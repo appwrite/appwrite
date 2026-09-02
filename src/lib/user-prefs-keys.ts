@@ -2388,6 +2388,34 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: admin nav collapsed (Credentials, Monitor, Connections, …)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.databases.adminNavCollapsed` - admin links hidden when true. */
+export const USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED =
+  'console.databases.adminNavCollapsed'
+
+export function parseDatabaseAdminNavCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED],
+    ) ?? false
+  )
+}
+
+export function mergeDatabaseAdminNavCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED]: collapsed,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Connect project dialog tab (account prefs)
 // ---------------------------------------------------------------------------
 
@@ -3511,6 +3539,28 @@ export function mergeUsageChartFiltersIntoPrefs(
     ...prefs,
     [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]: JSON.stringify(serializedDateRange),
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+/** Full key: `console.firewall.trafficLive` - live traffic chart polling when true. */
+export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE = 'console.firewall.trafficLive'
+
+export function parseFirewallTrafficLiveUpdatesEnabled(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]) ??
+    true
+  )
+}
+
+export function mergeFirewallTrafficLiveUpdatesIntoPrefs(
+  prefs: UserPrefs,
+  enabled: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]: enabled,
   }
 }
 

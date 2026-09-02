@@ -20,6 +20,7 @@ import {
   canAccessOrgDomains,
   canShowGetStartedSection,
   canCreateDatabase,
+  canSeeActivityNav,
 } from '@/lib/console-access-checks'
 import {
   deriveAccessFromRolesScopes,
@@ -225,4 +226,15 @@ export async function canAccessProjectOnboarding(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowGetStartedSection(access, features)
+}
+
+/** Project Activity (audit logs). Requires `events.read`. */
+export async function canAccessProjectActivity(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canSeeActivityNav(access, features)
 }

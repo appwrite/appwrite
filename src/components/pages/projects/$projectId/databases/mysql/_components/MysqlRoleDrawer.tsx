@@ -20,6 +20,7 @@ import {
   type MysqlRoleFormState,
   type MysqlRoleRow,
 } from '@/lib/mysql-roles'
+import { runMysqlDdlStatements } from '@/lib/mysql-sql'
 import { useExecuteMysqlSql } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -134,7 +135,8 @@ export function MysqlRoleDrawer({
 
     try {
       if (isEdit && role) {
-        await executeSql.mutateAsync(
+        await runMysqlDdlStatements(
+          executeSql.mutateAsync,
           buildMysqlUpdateRoleSql(
             formState,
             parseMysqlRoleMembership(role.member_of),
@@ -142,7 +144,10 @@ export function MysqlRoleDrawer({
         )
         toast.success(t('Role updated'))
       } else {
-        await executeSql.mutateAsync(buildMysqlCreateRoleSql(formState))
+        await runMysqlDdlStatements(
+          executeSql.mutateAsync,
+          buildMysqlCreateRoleSql(formState),
+        )
         toast.success(t('Role created'))
       }
       onOpenChange(false)

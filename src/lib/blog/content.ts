@@ -3,6 +3,7 @@ import { extractDocsToc } from '@/lib/docs/toc'
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
+  BLOG_FEATURED_SLUG_ORDER,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
@@ -359,7 +360,16 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
   categorySpotlights: BlogCategorySpotlight[]
   excludedSlugs: Set<string>
 } {
-  const featuredPosts = posts.filter((post) => post.featured)
+  const featuredRank = new Map<string, number>(
+    BLOG_FEATURED_SLUG_ORDER.map((slug, index) => [slug, index]),
+  )
+  const featuredPosts = posts
+    .filter((post) => post.featured)
+    .sort((a, b) => {
+      const aRank = featuredRank.get(a.slug) ?? Number.MAX_SAFE_INTEGER
+      const bRank = featuredRank.get(b.slug) ?? Number.MAX_SAFE_INTEGER
+      return aRank - bRank
+    })
   const featured = featuredPosts[0] ?? null
   const excludedSlugs = new Set<string>()
 

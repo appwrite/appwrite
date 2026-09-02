@@ -65,7 +65,10 @@ import {
   docsNavLinkClassName,
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
+import { isDatabaseTypeDocsPathnameHidden } from '@/lib/docs/database-docs-feature'
+import { isDomainsDocsPathname } from '@/lib/docs/domains-docs-feature'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
+import { isStorageS3DocsPathname } from '@/lib/docs/storage-s3-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -489,17 +492,35 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
+    if (!features.domains && isDomainsDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+      return
+    }
     if (!features.firewall && isFirewallDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
     }
     if (!features.agent && isAgentDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
+    }
+    if (!features.storageS3 && isStorageS3DocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+      return
+    }
+    if (isDatabaseTypeDocsPathnameHidden(pathname)) {
+      navigate({ to: '/docs', replace: true })
     }
   }, [
     features.agent,
+    features.dedicatedDbsDocumentsDB,
+    features.dedicatedDbsVectorsDB,
+    features.domains,
     features.firewall,
+    features.nativeDbsMySQL,
+    features.nativeDbsPostgres,
     features.partnersDocs,
+    features.storageS3,
     hasMounted,
     navigate,
     pathname,

@@ -78,6 +78,10 @@ import { PostgresMetricRankedList } from './_components/PostgresMetricRankedList
 import { PostgresMetricKpiCard } from './_components/PostgresMetricKpiCard'
 import { PostgresMetricsBentoCard } from './_components/PostgresMetricsBentoCard'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getDatabaseMonitorEmptyMessage,
+  resolveDatabaseCreatedAt,
+} from '@/lib/databases/database-monitor-empty-state'
 
 type MonitorNavItem = { id: string; label: string; icon: LucideIcon }
 type MonitorNavGroup = { id: string; label: string; items: MonitorNavItem[] }
@@ -226,6 +230,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const { database } = usePostgresDatabase(projectId, databaseId)
   const replicaCount = database?.replicas ?? 0
   const metricsOrdinal = replicaCount > 0 ? selectedOrdinal : undefined
+  const databaseCreatedAt = resolveDatabaseCreatedAt(database)
+  const monitorChartEmptyMessage = useCallback(
+    (defaultMessage: string) =>
+      getDatabaseMonitorEmptyMessage(databaseCreatedAt, defaultMessage),
+    [databaseCreatedAt],
+  )
 
   useEffect(() => {
     if (selectedOrdinal > replicaCount) {
@@ -803,7 +813,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageQuota={100}
                     usageUnitLabel="utilization"
                     isLoading={cpuChartLoading}
-                    emptyMessage={t('No CPU metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No CPU metrics for this date range',
+                    )}
                   />
 
                   <PostgresMetricChart
@@ -817,7 +829,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageQuota={100}
                     usageUnitLabel="utilization"
                     isLoading={memoryChartLoading}
-                    emptyMessage={t('No memory metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No memory metrics for this date range',
+                    )}
                   />
 
                   <PostgresMetricChart
@@ -828,7 +842,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     data={qpsSeries}
                     formatY={(value) => value.toFixed(1)}
                     isLoading={qpsChartLoading}
-                    emptyMessage={t('No QPS metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No QPS metrics for this date range',
+                    )}
                   />
 
                   <PostgresMetricChart
@@ -859,7 +875,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageUnitLabel="read"
                     usageSecondaryUnitLabel="write"
                     isLoading={iopsChartLoading}
-                    emptyMessage={t('No IOPS metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No IOPS metrics for this date range',
+                    )}
                   />
                 </div>
               </section>
@@ -876,7 +894,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     data={dedicatedConnectionsSeries}
                     formatY={(value) => Math.round(value).toLocaleString()}
                     isLoading={connectionsChartLoading}
-                    emptyMessage={t('No connection metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No connection metrics for this date range',
+                    )}
                   />
 
                   <PostgresMetricRankedList
@@ -955,7 +975,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     }
                     usageQuota={storageLimitBytes}
                     isLoading={storageChartLoading}
-                    emptyMessage={t('No storage metrics for this date range')}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No storage metrics for this date range',
+                    )}
                   />
 
                   <PostgresMetricRankedList

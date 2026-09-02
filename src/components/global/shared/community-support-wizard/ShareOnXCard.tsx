@@ -111,7 +111,9 @@ export function ShareOnXCard({
         aria-label={t('Share message')}
       />
 
-      <div className="mt-3 flex items-center justify-between gap-3">
+      {/* Phones stack the actions: side by side these two nowrap buttons plus the
+          counter set a ~385px min-content floor that overflowed the card. */}
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <Button
             type="button"
@@ -131,7 +133,7 @@ export function ShareOnXCard({
         <Button
           type="button"
           size="sm"
-          className="h-9 text-[13px]"
+          className="h-9 w-full text-[13px] sm:w-auto"
           disabled={!canPost}
           data-analytics-track="manual"
           onClick={() => {

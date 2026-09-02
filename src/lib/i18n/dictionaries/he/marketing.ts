@@ -54,6 +54,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Additional connections': 'חיבורים נוספים',
   'Additional executions': 'הרצות נוספות',
   'Additional GB-hours': 'שעות GB נוספות',
+  'Additional MiniLM embeddings': 'MiniLM embeddings נוספים',
+  'Additional Nomic embeddings': 'Nomic embeddings נוספים',
   'Additional projects': 'פרויקטים נוספים',
   'Additional reads': 'קריאות נוספות',
   'Additional screenshots': 'צילומי מסך נוספים',
@@ -99,6 +101,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'apply.': 'של Google.',
   'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.': // pragma: allowlist secret
     'Appwrite 2.0 הביאה חוויית פלטפורמה מרעננת ויסודות חזקים יותר, מונעת על ידי Hyperloop B, מנוע חדש לפלטפורמה, ו-Console IV, קונסולה מהדור הבא שנבנתה מחדש עם TanStack.', // pragma: allowlist secret
+  'Appwrite 2.0 launch': 'Appwrite 2.0 launch',
   'Appwrite Arena launched as an open benchmark for evaluating how effectively AI models understand and work with Appwrite APIs and workflows.': // pragma: allowlist secret
     'Appwrite Arena הושקה כמדד פתוח להערכת מידת ההבנה והעבודה של מודלי AI עם ממשקי ה-API ותהליכי העבודה של Appwrite.', // pragma: allowlist secret
   'Appwrite Cloud entered public beta, making the platform available without self-hosting and opening the door to managed infrastructure for teams of every size.': // pragma: allowlist secret
@@ -637,6 +640,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join Discord': 'הצטרפו ל-Discord',
   'Join on Discord': 'הצטרפו ל-Discord',
   'Join Init': 'הצטרפו ל-Init',
+  'Join event': 'הצטרפות לאירוע',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
   'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
     'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מקבלים גישה חינמית ל-Appwrite Cloud לאורך כל הלימודים.', // pragma: allowlist secret
@@ -666,6 +670,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Learn more about': 'למדו עוד על',
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
+  'Live now': 'בשידור חי',
+  'Loading online participants…': 'טוען משתתפים אונליין…',
   'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
@@ -784,6 +790,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Partner Tiers': 'דרגות שותפים',
   'Partner with one of the fastest growing dev tool companies': 'שתפו פעולה עם אחת מחברות כלי הפיתוח הצומחות במהירות',
   'Partners Program': 'תוכנית השותפים',
+  'participant online': 'משתתף אונליין',
+  'participants online': 'משתתפים אונליין',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות אימות.',
   'Password policies': 'מדיניות סיסמאות',
   'Password protected': 'מוגן בסיסמה',
@@ -874,6 +882,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Recovery codes': 'קודי שחזור',
   'Redirect': 'הפניה',
   'Redo': 'ביצוע מחדש',
+  'Reload list': 'טעינת הרשימה מחדש',
   'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.': // pragma: allowlist secret
     'צמצמו ריבוי ספקים ותקורת אינטגרציות. Appwrite מאחדת את שירותי ה-backend שצוותי ארגון צריכים כדי לבנות, לפרוס ולהגן על אפליקציות מודרניות בלי ללהטט בין חוזים או לתפור ספקים יחד.', // pragma: allowlist secret
   'Region': 'אזור',
@@ -1059,6 +1068,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Start small, build consistently, and give things enough time to become real.': 'התחילו בקטן, בנו בעקביות ותנו לדברים מספיק זמן להפוך לאמיתיים.',
   'Startups program': 'תוכנית הסטארטאפים',
   'Startups Program': 'תוכנית הסטארטאפים',
+  'Starting soon': 'מתחיל בקרוב',
   'Static assets': 'נכסים סטטיים',
   'Static, SPA, and PWA': 'סטטי, SPA ו-PWA',
   'Status': 'סטטוס',
@@ -1112,6 +1122,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Terms of Service': 'תנאי שירות',
   Terms: 'תנאים',
   Cookies: 'עוגיות',
+  'Text embeddings (MiniLM)': 'Text embeddings (MiniLM)',
+  'Text embeddings (Nomic)': 'Text embeddings (Nomic)',
   'Text verification': 'אימות ב-SMS',
   'Thank you for applying': 'תודה על הגשת המועמדות',
   "Thanks for signing up. Here's how to get started with your new account.": 'תודה שנרשמתם. כך מתחילים עם החשבון החדש שלכם.',
@@ -1216,6 +1228,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Visit the community': 'בקרו בקהילה',
   'Volume discounts': 'הנחות כמות',
   'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Watch': 'צפייה',
   'Ways to partner': 'דרכים לשותפות',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
   'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':

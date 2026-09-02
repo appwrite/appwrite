@@ -67,9 +67,21 @@ export async function buildInitAnonymousPresenceUserId(
   return `anon_${hash.slice(0, 24)}`
 }
 
-/** Map key for presence rows; always the document ID (real console account). */
-export function getInitPresenceMapKey(presence: InitPresenceRecord): string {
+/**
+ * Public presence document id (`presenceId` / `$id`). Anonymous rows use `anon_…`;
+ * visible rows usually equal the account id.
+ */
+export function getInitPresencePublicId(presence: InitPresenceRecord): string {
   return presence.$id?.trim() || presence.userId?.trim() || ''
+}
+
+/**
+ * Map key for presence rows: the owning console account (`userId`).
+ * Appwrite sets `userId` from the session; `$id` is the custom presenceId. Keying by
+ * owner keeps one row per person when identity visibility switches presenceIds.
+ */
+export function getInitPresenceMapKey(presence: InitPresenceRecord): string {
+  return presence.userId?.trim() || presence.$id?.trim() || ''
 }
 
 /** Remove legacy per-event random presence IDs from localStorage. */
@@ -223,7 +235,7 @@ function placeInitPresenceInMaps(
   const previousMeta = previous
     ? parseInitPresenceMetadata(previous.metadata)
     : null
-  const mergedPresence =
+  const countryMerged =
     previous &&
     normalizeCountryCode(previousMeta?.countryCode) &&
     !normalizeCountryCode(incomingMeta?.countryCode)
@@ -235,6 +247,11 @@ function placeInitPresenceInMaps(
           },
         }
       : presence
+  // List/realtime payloads sometimes omit expiresAt; keep the prior TTL so prune works.
+  const mergedPresence =
+    previous?.expiresAt && !countryMerged.expiresAt
+      ? { ...countryMerged, expiresAt: previous.expiresAt }
+      : countryMerged
 
   if (isInitHiddenPresence(mergedPresence) || isInitAwayStatus(mergedPresence, eventId)) {
     maps.away.set(mapKey, mergedPresence)
@@ -344,11 +361,10 @@ export function applyInitPresenceRealtimeRecord(
 
   const normalizedDelete = normalizeInitPresenceRecord(rawPresence)
   if (options?.deleted) {
-    const mapKey = normalizedDelete ? getInitPresenceMapKey(normalizedDelete) : ''
-    if (mapKey) {
-      nextOnline.delete(mapKey)
-      nextAway.delete(mapKey)
-    }
+    removeInitPresenceFromMaps(
+      { online: nextOnline, away: nextAway },
+      normalizedDelete,
+    )
     return { online: nextOnline, away: nextAway }
   }
 
@@ -362,20 +378,49 @@ export function applyInitPresenceRealtimeRecord(
   const presence = mergePresenceRecordUpdate(previous, normalized)
 
   if (!presenceMatchesInitEvent(presence, eventId)) {
-    nextOnline.delete(mapKey)
-    nextAway.delete(mapKey)
+    removeInitPresenceFromMaps({ online: nextOnline, away: nextAway }, presence)
     return { online: nextOnline, away: nextAway }
   }
 
   if (!isPresenceActive(presence)) {
-    nextOnline.delete(mapKey)
-    nextAway.delete(mapKey)
+    removeInitPresenceFromMaps({ online: nextOnline, away: nextAway }, presence)
     return { online: nextOnline, away: nextAway }
   }
 
   placeInitPresenceInMaps({ online: nextOnline, away: nextAway }, presence, eventId)
 
   return reconcileExclusivePresenceMaps(nextOnline, nextAway, eventId)
+}
+
+/** Drop by owner key, and by public `$id` for legacy maps keyed on presenceId. */
+function removeInitPresenceFromMaps(
+  maps: {
+    online: Map<string, InitPresenceRecord>
+    away: Map<string, InitPresenceRecord>
+  },
+  presence: InitPresenceRecord | null,
+): void {
+  if (!presence) return
+
+  const ownerKey = getInitPresenceMapKey(presence)
+  const publicId = getInitPresencePublicId(presence)
+
+  if (ownerKey) {
+    maps.online.delete(ownerKey)
+    maps.away.delete(ownerKey)
+  }
+  if (publicId && publicId !== ownerKey) {
+    maps.online.delete(publicId)
+    maps.away.delete(publicId)
+  }
+
+  if (!publicId) return
+  for (const [key, row] of maps.online) {
+    if (getInitPresencePublicId(row) === publicId) maps.online.delete(key)
+  }
+  for (const [key, row] of maps.away) {
+    if (getInitPresencePublicId(row) === publicId) maps.away.delete(key)
+  }
 }
 
 /** Overlay list API results onto existing maps without dropping realtime-only rows. */
@@ -387,12 +432,22 @@ export function overlayInitPresenceListFetch(
   onlineFromApi: Map<string, InitPresenceRecord>,
   awayFromApi: Map<string, InitPresenceRecord>,
   eventId: string,
+  options?: {
+    /** When true, drop online rows missing from the API (safe when the list is not capped). */
+    replaceOnline?: boolean
+    /** When true, drop away rows missing from the API (safe when the list is not capped). */
+    replaceAway?: boolean
+  },
 ): {
   online: Map<string, InitPresenceRecord>
   away: Map<string, InitPresenceRecord>
 } {
-  const nextOnline = new Map(previous.online)
-  const nextAway = new Map(previous.away)
+  const nextOnline = options?.replaceOnline
+    ? new Map<string, InitPresenceRecord>()
+    : new Map(previous.online)
+  const nextAway = options?.replaceAway
+    ? new Map<string, InitPresenceRecord>()
+    : new Map(previous.away)
 
   for (const [, presence] of onlineFromApi) {
     if (!isInitOnlineStatus(presence, eventId) || !isPresenceActive(presence)) {
@@ -505,11 +560,13 @@ export function presenceToOnlineUser(
   activityAllowlist: ReadonlySet<string>,
 ): LaunchEventOnlineUser {
   const metadata = parseInitPresenceMetadata(presence.metadata)
+  const publicId = getInitPresencePublicId(presence)
   const ownerId = getInitPresenceMapKey(presence)
-  const identityHidden = isInitAnonymousPresenceUserId(presence.userId)
+  const identityHidden = isInitAnonymousPresenceUserId(publicId)
   return {
-    id: presence.userId,
-    ownerId: identityHidden ? undefined : ownerId,
+    id: publicId,
+    // Never leak the console account id while identity is hidden.
+    ownerId: identityHidden ? undefined : ownerId || undefined,
     identityHidden,
     name: metadata?.name || 'Console user',
     activity: sanitizeInitPresenceActivity(metadata?.activity, activityAllowlist),
@@ -536,13 +593,13 @@ export function sortOnlineUsers(users: LaunchEventOnlineUser[]): LaunchEventOnli
 export function dedupeInitSelfOnlineUsers(
   users: LaunchEventOnlineUser[],
   accountUserId: string,
-  selfPresenceMapKey: string,
+  selfPresencePublicId: string,
 ): LaunchEventOnlineUser[] {
   const selfRowCount = users.filter(
     (user) =>
       user.ownerId === accountUserId ||
       user.id === accountUserId ||
-      user.id === selfPresenceMapKey,
+      user.id === selfPresencePublicId,
   ).length
 
   if (selfRowCount <= 1) return users
@@ -551,9 +608,9 @@ export function dedupeInitSelfOnlineUsers(
     const isSelf =
       user.ownerId === accountUserId ||
       user.id === accountUserId ||
-      user.id === selfPresenceMapKey
+      user.id === selfPresencePublicId
     if (!isSelf) return true
-    return user.id === selfPresenceMapKey
+    return user.id === selfPresencePublicId
   })
 }
 
@@ -561,20 +618,29 @@ export function dedupeInitSelfOnlineUsers(
 export function dedupeInitSelfPresenceRecords(
   presences: InitPresenceRecord[],
   accountUserId: string,
-  selfPresenceMapKey: string,
+  selfPresencePublicId: string,
 ): InitPresenceRecord[] {
   const selfRowCount = presences.filter((presence) => {
-    const mapKey = getInitPresenceMapKey(presence)
-    return mapKey === accountUserId || mapKey === selfPresenceMapKey
+    const ownerKey = getInitPresenceMapKey(presence)
+    const publicId = getInitPresencePublicId(presence)
+    return (
+      ownerKey === accountUserId ||
+      publicId === accountUserId ||
+      publicId === selfPresencePublicId
+    )
   }).length
 
   if (selfRowCount <= 1) return presences
 
   return presences.filter((presence) => {
-    const mapKey = getInitPresenceMapKey(presence)
-    const isSelf = mapKey === accountUserId || mapKey === selfPresenceMapKey
+    const ownerKey = getInitPresenceMapKey(presence)
+    const publicId = getInitPresencePublicId(presence)
+    const isSelf =
+      ownerKey === accountUserId ||
+      publicId === accountUserId ||
+      publicId === selfPresencePublicId
     if (!isSelf) return true
-    return mapKey === selfPresenceMapKey
+    return publicId === selfPresencePublicId
   })
 }
 

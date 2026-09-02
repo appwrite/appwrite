@@ -30,13 +30,29 @@ export function variantNeedsKey(variant: string): boolean {
   return true
 }
 
+/**
+ * Matches the legacy console `extendedHostnameRegex`: domains, localhost,
+ * wildcards (`*` / `*.example.com`), IPv4, and Chrome extension IDs.
+ */
+export const EXTENDED_HOSTNAME_PATTERN =
+  /^((\*)|(\*\.)?((?!-)[A-Za-z0-9-]+([-.]{1}[a-z0-9]+)*\.[A-Za-z]{2,18}|localhost|(\d{1,3}\.){3}\d{1,3}|[a-z0-9]{32}))$/i
+
+/** Quick-fill values for the web / Flutter web hostname field. */
+export const HOSTNAME_PRESETS = [
+  'localhost',
+  '127.0.0.1',
+  '*',
+  '*.vercel.app',
+  '*.netlify.app',
+  '*.pages.dev',
+] as const
+
 export function isValidHostname(value: string): boolean {
   const v = value.trim()
   if (!v) return false
-  if (v === 'localhost') return true
-  // No protocol or port; allow common dev/prod hostnames
+  // No protocol or port
   if (/[\s/:]/.test(v)) return false
-  return /^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$/.test(v) || v.length >= 3
+  return EXTENDED_HOSTNAME_PATTERN.test(v)
 }
 
 /** Simple package/bundle id check (reverse-DNS style). */

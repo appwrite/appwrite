@@ -26,7 +26,6 @@ The maximum number of operations you can stage per transaction depends on your p
 |------|-------------------------------|
 | Free | 100 |
 | Pro | 1,000 |
-| Scale | 2,500 |
 
 # Create a transaction {% #create-a-transaction %}
 
@@ -599,7 +598,25 @@ Use the `createOperations` method to stage multiple operations across databases 
 ]
 ```
 
-For `create`, `update`, and `upsert` actions, pass the document `data` (an `embeddings` vector and optional `metadata`). For `delete`, the `documentId` is enough.
+Each action takes a different `data` shape.
+
+### Create and upsert {% #op-create-upsert %}
+Pass the full document data: an `embeddings` vector of the collection's `dimension` and optional `metadata`.
+```json
+{ "embeddings": [0.12, -0.08, 0.45, 0.33], "metadata": { "title": "Hamlet" } }
+```
+
+### Update {% #op-update %}
+Pass only the fields to change. To replace the vector, pass a new `embeddings` array of the same length.
+```json
+{ "metadata": { "title": "Macbeth" } }
+```
+
+### Delete {% #op-delete %}
+Pass the `documentId` and omit `data`.
+```json
+{ "action": "delete", "databaseId": "<DATABASE_ID>", "collectionId": "<COLLECTION_ID>", "documentId": "<DOCUMENT_ID>" }
+```
 
 {% multicode %}
 ```server-nodejs

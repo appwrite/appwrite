@@ -1102,7 +1102,7 @@ Profiles control which features are available based on deployment type (cloud vs
 **Profiles:**
 
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
-- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off)
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off). Usage stats follow `_APP_USAGE_STATS` (on by default)
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
@@ -1112,11 +1112,17 @@ Profiles control which features are available based on deployment type (cloud vs
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
 - `VITE_CONSOLE_EXTRA_OAUTH_LOGIN` – `true`/`false` to show extra console OAuth login/signup methods (Google, GitLab, Bitbucket, Cursor). GitHub stays available. Off in both profiles by default.
+- `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (GitLab, Bitbucket, Origin). GitHub stays available. Off in both profiles by default.
 
-**Pre-launch mode** (not a profile feature; unset = on):
+**Pre-launch mode** (not a profile feature; unset = off):
 
-- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `false` / `0` / `disabled` turns it off. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
+- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `true` / `1` / `enabled` turns it on. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
 
+**Init day unlocks** (always controlled; never calendar-driven):
+
+- Default is **day 2** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → day `2`).
+- Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
+- When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).
@@ -1334,7 +1340,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `organization` (preferred org on account prefs).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `console.databases.adminNavCollapsed`, `organization` (preferred org on account prefs).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format
@@ -1606,6 +1612,7 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 - **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` (or `blog-local` for vibes-native posts) and set `cover:` in the post frontmatter. `scripts/generate-blog-local-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
 - **After adding or changing any cover**: run `bun run generate:cover-manifest`. This regenerates `src/lib/seo/cover-dimensions.json`, which the SEO helpers use to emit accurate `og:image:width` / `og:image:height`. The script warns about undersized covers; fix them with `bun run generate:content-covers` (upscales in place, aspect ratio preserved). The manifest is also regenerated during `bun run build`.
 - **Never** claim 1200x630 for a cover that has different dimensions; the manifest lookup handles this - do not hardcode dimensions in meta tags.
+- **Never add a per-post cover generator function.** A cover is a finished image that ships in `public/images/`, not code. Do not add a `generate<Post>Cover` function or an `IMAGE_GENERATORS` entry to `scripts/generate-blog-local-images.ts` for a new post, and never run that script for a slug whose cover already exists: the generator re-renders `cover.avif` and silently overwrites the shipped one. To convert an inline screenshot for a post without a generator, convert it outside the cover path and commit only the `.avif`.
 
 ### Article meta and structured data
 
@@ -1636,7 +1643,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
-- **Login for manual testing**: To exercise authenticated console flows, turn off pre-launch (debug menu → Settings → Flags → Pre-launch, or `VITE_CONSOLE_PRE_LAUNCH=false`), then log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
+- **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env or debug menu, turn it off first (debug menu → Settings → Flags → Pre-launch, or unset / set `VITE_CONSOLE_PRE_LAUNCH=false`). The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
 - **`remotion/` subfolder** is an independent package (launch video) with its own deps and no lockfile; it is not needed to run or test the console.
 

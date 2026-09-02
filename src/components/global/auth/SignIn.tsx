@@ -490,7 +490,7 @@ export function SignIn({
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="m@example.com"
+                          placeholder={t('Your email')}
                           {...field}
                         />
                       </FormControl>
@@ -505,29 +505,37 @@ export function SignIn({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('Password')}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
+                      <div className="relative">
+                        <FormControl>
                           <Input
                             type={showPassword ? 'text' : 'password'}
+                            placeholder={t('Your password')}
+                            autoComplete={
+                              mode === 'sign-up'
+                                ? 'new-password'
+                                : 'current-password'
+                            }
                             className="pe-10"
                             {...field}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((current) => !current)}
-                            className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            aria-label={
-                              showPassword ? t('Hide password') : t('Show password')
-                            }
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((current) => !current)}
+                          className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={
+                            showPassword
+                              ? t('Hide password')
+                              : t('Show password')
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                       <FormMessage />
                       {mode === 'sign-in' && (
                         <Link

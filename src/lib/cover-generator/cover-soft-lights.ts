@@ -225,7 +225,7 @@ function scaleCoverSoftLightLayouts(
   )
 }
 
-/** Reference canvas the light layouts were tuned against (Open Graph). */
+/** Reference canvas the light layouts were tuned against (classic OG). Ratios scale to any canvas. */
 export const COVER_SOFT_LIGHT_REFERENCE = {
   width: 1200,
   height: 630,

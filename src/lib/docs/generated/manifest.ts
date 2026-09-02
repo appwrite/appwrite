@@ -31,6 +31,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/embeddings",
+    "title": "Text Embeddings",
+    "description": "Learn how Appwrite meters and bills text embedding tokens, and what each plan includes per model.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
     "slug": "advanced/billing/enterprise",
     "title": "Enterprise",
     "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
@@ -749,7 +756,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "partners/project/auth-methods",
@@ -1600,7 +1607,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Databases",
     "description": "Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/databases/documentsdb",
@@ -1649,7 +1656,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Documents",
     "description": "Create, read, update, and delete documents in Appwrite DocumentsDB. Learn how to work with schemaless JSON documents in your collections.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/databases/documentsdb/json-exports",
@@ -1691,7 +1698,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite DocumentsDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/documentsdb/quick-start",
@@ -1733,7 +1740,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Branches",
     "description": "Spin up an ephemeral, isolated copy of your MySQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/mysql/concepts/access-control",
@@ -1747,7 +1754,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Data modeling and normalization",
     "description": "Design MySQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/databases/mysql/concepts/indexes",
@@ -1775,7 +1782,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Tables and data types",
     "description": "Create MySQL tables with the right column types and constraints. Covers numeric, string, date and time, JSON, ENUM, and generated columns.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/databases/mysql/concepts/transactions",
@@ -1789,7 +1796,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Connection pooling",
     "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/mysql/connections",
@@ -1964,7 +1971,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "PostgreSQL",
     "description": "Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/backups",
@@ -1978,21 +1985,21 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Branches",
     "description": "Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/concepts/access-control",
     "title": "Security and access control",
     "description": "Control access to PostgreSQL with roles, GRANT and REVOKE, and row-level security policies for multi-tenant data.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/concepts/data-modeling",
     "title": "Data modeling and normalization",
     "description": "Design PostgreSQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/databases/postgresql/concepts/indexes",
@@ -2034,7 +2041,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Connection pooling",
     "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/connections",
@@ -3357,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "S3 API",
     "description": "Connect any S3-compatible client, SDK, or tool to Appwrite Storage. Configure credentials once, then manage buckets, objects, and multipart uploads over the S3 API.",
     "layout": "article",
-    "readingTimeMinutes": 10
+    "readingTimeMinutes": 15
   },
   {
     "slug": "products/storage/upload-download",
@@ -4050,14 +4057,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "tooling/terraform/provider",
     "title": "Configuration",
     "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/auth",
@@ -4075,8 +4082,29 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
+    "title": "TablesDB",
     "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "tooling/terraform/resources/dedicated-databases",
+    "title": "Dedicated databases",
+    "description": "Provision dedicated Appwrite PostgreSQL, MySQL, and MongoDB databases with Terraform, including replicas, backups, branches, poolers, and extensions.",
+    "layout": "article",
+    "readingTimeMinutes": 7
+  },
+  {
+    "slug": "tooling/terraform/resources/documentsdb",
+    "title": "DocumentsDB",
+    "description": "Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "tooling/terraform/resources/domains",
+    "title": "Custom domains",
+    "description": "Point custom domains at Appwrite sites and functions with the appwrite_proxy_rule Terraform resource.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -4107,6 +4135,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "tooling/terraform/resources/vectorsdb",
+    "title": "VectorsDB",
+    "description": "Manage Appwrite VectorsDB databases, collections, indexes, and embeddings with the official Terraform provider.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/terraform/resources/webhooks",

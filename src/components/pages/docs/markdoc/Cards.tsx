@@ -1,5 +1,9 @@
+'use client'
+
 import { ArrowRight, type LucideIcon } from 'lucide-react'
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isDatabaseTypeFeatureEnabled } from '@/lib/database-routes'
 import { resolveMarkdocCardIcon, MARKDOC_BRAND_ICON_CLASS } from '@/lib/docs/markdoc-icons'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -25,6 +29,23 @@ const CARD_HOVER_LIGHT_POSITIONS = [
 
 const CARD_LINK_CLASS = 'link-unstyled block h-full'
 
+const GATED_DATABASE_CARD_HREF_PREFIXES = [
+  '/docs/products/databases/documentsdb',
+  '/docs/products/databases/vectorsdb',
+  '/docs/products/databases/postgresql',
+  '/docs/products/databases/mysql',
+] as const
+
+function databaseTypeFromDocsHref(href: string): string | null {
+  const path = href.split(/[?#]/, 2)[0] ?? href
+  for (const prefix of GATED_DATABASE_CARD_HREF_PREFIXES) {
+    if (path === prefix || path.startsWith(`${prefix}/`)) {
+      return prefix.slice('/docs/products/databases/'.length)
+    }
+  }
+  return null
+}
+
 function getCardLightVariant(seed: string, fallbackIndex: number): number {
   if (!seed) return fallbackIndex % CARD_HOVER_LIGHTS.length
 
@@ -36,11 +57,31 @@ function getCardLightVariant(seed: string, fallbackIndex: number): number {
   return hash % CARD_HOVER_LIGHTS.length
 }
 
+function readChildHref(child: ReactNode): string | undefined {
+  if (!isValidElement(child)) return undefined
+  if (typeof child.props !== 'object' || child.props === null) return undefined
+  if (!('href' in child.props)) return undefined
+  const href = (child.props as { href?: unknown }).href
+  return typeof href === 'string' ? href : undefined
+}
+
 export function Cards({ children }: { children: ReactNode }) {
-  const items = Children.map(children, (child, index) => {
-    if (!isValidElement(child)) return child
-    return cloneElement(child, { cardIndex: index } as { cardIndex: number })
+  const { features } = useConsoleProfile()
+
+  const items = Children.toArray(children).flatMap((child, index) => {
+    if (!isValidElement(child)) return [child]
+    const href = readChildHref(child)
+    const databaseType = href ? databaseTypeFromDocsHref(href) : null
+    if (
+      databaseType &&
+      !isDatabaseTypeFeatureEnabled(databaseType, features)
+    ) {
+      return []
+    }
+    return [cloneElement(child, { cardIndex: index } as { cardIndex: number })]
   })
+
+  if (items.length === 0) return null
 
   return (
     <div className="not-prose my-8 grid grid-cols-1 gap-4 @[640px]:grid-cols-2">
@@ -105,6 +146,15 @@ export function CardsItem({
   cardIndex?: number
   compact?: boolean
 }) {
+  const { features } = useConsoleProfile()
+  const databaseType = href ? databaseTypeFromDocsHref(href) : null
+  if (
+    databaseType &&
+    !isDatabaseTypeFeatureEnabled(databaseType, features)
+  ) {
+    return null
+  }
+
   const lightVariant = getCardLightVariant(href ?? title ?? '', cardIndex)
   const resolvedIcon = resolveMarkdocCardIcon({ icon, image, title, href })
 

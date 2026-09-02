@@ -38,7 +38,7 @@ import {
   useMysqlTablePolicies,
   useMysqlTableRls,
 } from '@/lib/react-query/hooks'
-import { buildMysqlSingleRequestDdlSql } from '@/lib/mysql-sql'
+import { runMysqlDdlStatements } from '@/lib/mysql-sql'
 import {
   buildMysqlDisableRlsSql,
   buildMysqlDropPolicySql,
@@ -154,9 +154,7 @@ export function MysqlTableSecurityPanel({
       }
       if (statements.length === 0) return
 
-      await executeSql.mutateAsync(
-        buildMysqlSingleRequestDdlSql(statements, 'Update table RLS'),
-      )
+      await runMysqlDdlStatements(executeSql.mutateAsync, statements)
       toast.success(t('Security has been updated'))
       await refreshSecurity()
     } catch (error) {

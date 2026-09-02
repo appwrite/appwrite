@@ -12,6 +12,7 @@ import { useCallback, useEffect } from 'react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import {
   COVER_SIZE_PRESETS,
+  DEFAULT_COVER_SIZE_PRESET_ID,
   getCoverSizePresetKey,
   resolveCoverSizePresetKey,
 } from '@/lib/cover-generator/constants'
@@ -95,6 +96,9 @@ export function CoverCanvas({
   })
   const displayHeight = getCoverDisplayHeight(data.width, data.height)
   const canvasPresetKey = getCoverSizePresetKey(data.width, data.height)
+  const isKnownCanvasPreset = COVER_SIZE_PRESETS.some(
+    (preset) => preset.id === canvasPresetKey,
+  )
 
   const handleCanvasKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -257,14 +261,20 @@ export function CoverCanvas({
               aria-label="Canvas size"
               className="h-8 w-auto max-w-[min(100%,220px)] border-border bg-card/95 text-[12px] backdrop-blur-sm"
             >
-              <SelectValue />
+              <SelectValue placeholder="Blog" />
             </SelectTrigger>
             <SelectContent align="end">
               {COVER_SIZE_PRESETS.map((preset) => (
                 <SelectItem key={preset.id} value={preset.id}>
                   {preset.label}
+                  {preset.id === DEFAULT_COVER_SIZE_PRESET_ID ? ' (default)' : ''}
                 </SelectItem>
               ))}
+              {!isKnownCanvasPreset ? (
+                <SelectItem value={canvasPresetKey}>
+                  Custom ({data.width} × {data.height})
+                </SelectItem>
+              ) : null}
             </SelectContent>
           </Select>
 

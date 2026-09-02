@@ -30,37 +30,12 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { dedicatedDatabaseStatusBadgeVariant } from '@/lib/databases/dedicated-database-status'
 import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 import { useT } from '@/lib/i18n/translate'
 import type { MysqlDatabaseSettingsCardProps } from './mysql-database-settings-types'
 
 export type { MysqlDatabaseSettingsCardProps } from './mysql-database-settings-types'
-
-function dedicatedStatusVariant(
-  status: string,
-): 'success' | 'warning' | 'error' | 'info' | 'inactive' {
-  switch (status) {
-    case 'ready':
-      return 'success'
-    case 'provisioning':
-    case 'scaling':
-    case 'restoring':
-    case 'upgrading':
-    case 'migrating':
-    case 'pausing':
-    case 'resuming':
-    case 'deleting':
-      return 'warning'
-    case 'failed':
-    case 'deleted':
-      return 'error'
-    case 'paused':
-    case 'inactive':
-      return 'inactive'
-    default:
-      return 'info'
-  }
-}
 
 function useWriteAccess(canWrite: boolean, isPending: boolean) {
   const t = useT()
@@ -196,7 +171,7 @@ export function MysqlDatabaseDetailsCard({
       <div className="px-6 py-4 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge
-            variant={dedicatedStatusVariant(database.status)}
+            variant={dedicatedDatabaseStatusBadgeVariant(database.status)}
             className="text-[11px] capitalize"
           >
             {localizeResourceStatusLabel(database.status, t)}

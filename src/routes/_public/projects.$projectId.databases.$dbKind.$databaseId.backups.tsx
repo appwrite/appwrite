@@ -61,10 +61,20 @@ export const Route = createFileRoute(
 
     await Promise.all([
       queryClient.prefetchQuery(
-        backupPoliciesQueryOptions(projectId, databaseId),
+        backupPoliciesQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+        ),
       ),
       queryClient.prefetchQuery(
-        backupArchivesQueryOptions(projectId, databaseId, 0, 10),
+        backupArchivesQueryOptions(
+          projectId,
+          databaseId,
+          0,
+          10,
+          dbKind as DatabaseRouteKind,
+        ),
       ),
     ]).catch(() => {})
 

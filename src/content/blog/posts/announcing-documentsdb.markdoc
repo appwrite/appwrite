@@ -2,14 +2,13 @@
 layout: post
 title: "Announcing DocumentsDB: Documents that evolve with your product"
 description: Store flexible JSON documents, query them with the Appwrite SDKs, and let your data model evolve with your product instead of ahead of it.
-date: 2026-07-09
+date: 2026-09-02
 cover: /images/blog/announcing-documentsdb/cover.avif
 timeToRead: 5
-author: atharva
+author: arnab-chatterjee
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is Appwrite DocumentsDB?"
     answer: "DocumentsDB is an Appwrite database for schemaless documents. Collections hold flexible JSON, so you can add or change fields as your application grows without defining columns or running schema migrations. You work with it through the Appwrite SDKs and APIs, with the same permissions, queries, and pagination used across Appwrite Databases."
@@ -306,7 +305,7 @@ Because permissions are enforced at the document level, you can serve data direc
 
 # Compute specifications
 
-When you create a DocumentsDB database, you select a compute specification that fits your workload, and the database is provisioned for your project with its own resources. As usage grows, backups and scaling are handled from the same place you manage the rest of your Appwrite project.
+When you create a DocumentsDB database, you select a compute specification that fits your workload, and the database is provisioned for your project with its own resources. As usage grows, backups and scaling are handled from the same place you manage the rest of your Appwrite project. The available tiers and their prices are listed on the [pricing page](/pricing#database-pricing).
 
 # When to use DocumentsDB
 

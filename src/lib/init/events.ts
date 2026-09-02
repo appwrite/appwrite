@@ -12,9 +12,11 @@ import {
   INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { INIT_JULY_2026_PRIZES } from './prizes'
+import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
 import {
+  getInitMockCurrentDayDefault,
   getInitMockDayAfter,
   INIT_MOCK_DAY_BEFORE,
 } from './mock-current-day'
@@ -59,7 +61,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     },
     liveBanner: {
       title: 'Appwrite 2.0 launch',
-      href: '/init/keynote',
+      href: INIT_YOUTUBE_CHANNEL_HREF,
     },
     onlineCount: 0,
     hiddenOnlineCount: 0,
@@ -160,7 +162,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Init August 31 - September 4 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
-        'From Appwrite 2.0 to Appwrite Firewall & Domains. Explore the full launch timeline, blog posts, and session replays.',
+        'From Appwrite 2.0 to Firewall, OAuth, and Domains. Explore the full launch timeline, blog posts, and session replays.',
       getInvolvedSectionTitle: 'Keep exploring',
       getInvolved: [
         {
@@ -296,19 +298,18 @@ function dayHeaderNavCtaToHeaderNav(
   }
 }
 
-/** Match debug “mock current day” to header CTA phase (calendar may still be before the event). */
+/** Match controlled current day to header CTA phase. */
 function resolveInitHeaderNavPhase(
   event: LaunchEvent | undefined,
-  calendarStatus: LaunchEventStatus,
-  mockCurrentDay: number | null,
+  currentDay: number,
 ): LaunchEventStatus {
-  if (mockCurrentDay === null || !event) return calendarStatus
+  if (!event) return 'upcoming'
 
   const maxDay = event.days.reduce((max, day) => Math.max(max, day.day), 0)
   const mockAfterDay = getInitMockDayAfter(maxDay)
 
-  if (mockCurrentDay <= INIT_MOCK_DAY_BEFORE) return 'upcoming'
-  if (mockCurrentDay >= mockAfterDay) return 'past'
+  if (currentDay <= INIT_MOCK_DAY_BEFORE) return 'upcoming'
+  if (currentDay >= mockAfterDay) return 'past'
   return 'active'
 }
 
@@ -316,22 +317,21 @@ function resolveInitHeaderNavPhase(
 export function resolveInitHeaderNavCta(options?: {
   event?: LaunchEvent
   now?: Date
-  mockCurrentDay?: number | null
+  currentDay?: number
 }): LaunchEventHeaderNavCta {
   const now = options?.now ?? new Date()
   const activeEvent = options?.event ?? getActiveLaunchEvent(now)
   const overrides = activeEvent?.headerNavCta
-  const mockCurrentDay = options?.mockCurrentDay ?? null
-  const calendarStatus = activeEvent?.status ?? 'upcoming'
-  const phase = resolveInitHeaderNavPhase(activeEvent, calendarStatus, mockCurrentDay)
+  const currentDay = options?.currentDay ?? getInitMockCurrentDayDefault()
+  const phase = resolveInitHeaderNavPhase(activeEvent, currentDay)
 
   if (phase === 'upcoming') {
     return { ...DEFAULT_INIT_HEADER_NAV_BEFORE, ...overrides?.beforeEvent }
   }
 
   if (phase === 'active' && activeEvent) {
-    const currentDay = resolveInitCurrentDay(activeEvent, now, mockCurrentDay)
-    const day = activeEvent.days.find((entry) => entry.day === currentDay)
+    const resolvedDay = resolveInitCurrentDay(activeEvent, currentDay)
+    const day = activeEvent.days.find((entry) => entry.day === resolvedDay)
     if (day?.headerNavCta) {
       return dayHeaderNavCtaToHeaderNav(day.headerNavCta)
     }

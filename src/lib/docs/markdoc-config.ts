@@ -74,6 +74,21 @@ export const docsMarkdocConfig: Config = {
       render: 'RateLimitStrategyAnimation',
       attributes: { strategy: { type: String, required: true } },
     },
+    index_lookup_animation: {
+      selfClosing: true,
+      render: 'IndexLookupAnimation',
+    },
+    feature_gate: {
+      render: 'FeatureGate',
+      attributes: {
+        anyOf: { type: String },
+        allOf: { type: String },
+      },
+    },
+    hyperloop_race_animation: {
+      selfClosing: true,
+      render: 'HyperloopRaceAnimation',
+    },
     compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },

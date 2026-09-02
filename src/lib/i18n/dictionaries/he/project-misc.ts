@@ -1486,9 +1486,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
-  'Historic data is not available through the new usage API.':
-    'נתונים היסטוריים אינם זמינים דרך ה-API החדש של נתוני שימוש.',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
   Bandwidth: 'רוחב פס',
@@ -2216,6 +2214,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Summary: 'סיכום',
   'Supabase endpoint': 'נקודת קצה של Supabase',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'צוותים',
   'Test email sent to': 'אימייל בדיקה נשלח אל',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2742,4 +2741,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'Merge request',
   'Pull request': 'Pull request',
   'Failed to approve deployment': 'אישור הפריסה נכשל',
+  'Pause live updates': 'השהיית עדכונים חיים',
+  'Pause live updates to refresh manually':
+    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Resume live updates': 'חידוש עדכונים חיים',
+  'Updating…': 'מתעדכן…',
+  Paused: 'מושהה',
 }

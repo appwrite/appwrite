@@ -6,12 +6,15 @@ description: Dive deeper into Appwrite VectorsDB and database configuration. Lea
 Databases are the largest organizational unit in Appwrite.
 Each database contains a group of [collections](/docs/products/databases/vectorsdb/collections).
 
-# Shared and dedicated databases {% #shared-and-dedicated %}
-A VectorsDB database runs either on a shared pool that Appwrite manages for you, or on compute provisioned for your project alone.
-
-Leave `specification` out and the database lands on the shared pool, where it is ready to use as soon as the call returns. Pass a specification instead and Appwrite provisions a dedicated database on that tier, which you can then resize, replicate, and fail over. Collections and documents work through the same methods either way.
+A database runs on shared or dedicated infrastructure; see [shared and dedicated databases](/docs/products/databases#shared-and-dedicated).
 
 # Create in Console {% #create-in-console %}
+{% only_dark %}
+![Create database with VectorsDB selected](/images/docs/products/databases/vectorsdb/dark/create-database-type.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database with VectorsDB selected](/images/docs/products/databases/vectorsdb/create-database-type.avif)
+{% /only_light %}
 Navigate to the **Databases** page and click **Create database**, then choose **VectorsDB** as the database type. Name the database, select your preferred tier, and pick a replica count and backup policy. Click **Create database** to finish.
 
 # Create using Server SDKs {% #create-using-server-sdks %}

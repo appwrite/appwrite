@@ -652,51 +652,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Stage many with createOperations {% #create-operations %}
 
-Use the `createOperations` method to stage multiple operations across databases and collections in a single request. Provide an array of operation objects:
-
-```json
-[
-  {
-    "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
-    "databaseId": "<DATABASE_ID>",
-    "collectionId": "<COLLECTION_ID>",
-    "documentId": "<DOCUMENT_ID>",
-    "data": {}
-  }
-]
-```
-
-### Provide data for each action (createOperations) {% #provide-data-for-each-action %}
-
-### Create, update, and upsert {% #create-update-upsert %}
-Pass a raw data object.
-```json
-{ "name": "Walter" }
-```
-
-### Increment and decrement {% #increment-decrement %}
-Pass a value and optionally `min`/`max` bounds.
-```json
-{ "value": 1, "min": 0, "max": 1000, "attribute": "<ATTRIBUTE_NAME>" }
-```
-
-### Bulk create and bulk upsert {% #bulk-create-upsert %}
-Pass an array of raw data objects.
-```json
-[{ "$id": "123", "name": "Walter" }]
-```
-
-### Bulk update {% #bulk-update %}
-Pass queries and the data to apply.
-```json
-{ "queries": [{"method": "equal", "attribute": "status", "values": ["draft"]}], "data": { "status": "published" } }
-```
-
-### Bulk delete {% #bulk-delete %}
-Pass queries to select documents to delete.
-```json
-{ "queries": [{"method": "equal", "attribute": "archived", "values": [true]}] }
-```
+Use the `createOperations` method to stage multiple operations across databases and collections in a single request:
 
 {% multicode %}
 ```server-nodejs
@@ -1049,6 +1005,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 {% /multicode %}
+
+Each operation object has this shape:
+
+```json
+[
+  {
+    "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
+    "databaseId": "<DATABASE_ID>",
+    "collectionId": "<COLLECTION_ID>",
+    "documentId": "<DOCUMENT_ID>",
+    "data": {}
+  }
+]
+```
+
+### Provide data for each action (createOperations) {% #provide-data-for-each-action %}
+
+### Create, update, and upsert {% #create-update-upsert %}
+Pass a raw data object.
+```json
+{ "name": "Walter" }
+```
+
+### Increment and decrement {% #increment-decrement %}
+Pass a value and optionally `min`/`max` bounds.
+```json
+{ "value": 1, "min": 0, "max": 1000, "attribute": "<ATTRIBUTE_NAME>" }
+```
+
+### Bulk create and bulk upsert {% #bulk-create-upsert %}
+Pass an array of raw data objects.
+```json
+[{ "$id": "123", "name": "Walter" }]
+```
+
+### Bulk update {% #bulk-update %}
+Pass queries and the data to apply.
+```json
+{ "queries": [{"method": "equal", "attribute": "status", "values": ["draft"]}], "data": { "status": "published" } }
+```
+
+### Bulk delete {% #bulk-delete %}
+Pass queries to select documents to delete.
+```json
+{ "queries": [{"method": "equal", "attribute": "archived", "values": [true]}] }
+```
+
 
 # Commit or roll back {% #commit-or-rollback %}
 

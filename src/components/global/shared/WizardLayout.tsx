@@ -13,6 +13,8 @@ interface WizardLayoutProps {
   description?: string | ReactNode
   /** Optional content to render at the bottom of the fixed header */
   headerBottom?: ReactNode
+  /** Optional content rendered above the main content/sidebar grid (inside the scroll area) */
+  contentTop?: ReactNode
   /** Optional actions to render in the header (right side, before close button) */
   headerActions?: ReactNode
   /** Main content area (typically forms and inputs) */
@@ -104,6 +106,7 @@ export function WizardLayout({
   title,
   description,
   headerBottom,
+  contentTop,
   headerActions,
   children,
   sidebar,
@@ -353,6 +356,7 @@ export function WizardLayout({
               fullscreenInnerClassName,
             )}
           >
+            {contentTop ? <div className="mb-8">{contentTop}</div> : null}
             {useSidebar ? (
               <div className="grid gap-8 lg:grid-cols-3">
                 {/* Main Content */}
@@ -385,6 +389,9 @@ export function WizardLayout({
               contentPadding && 'pt-6',
             )}
           >
+            {contentTop ? (
+              <div className="lg:col-span-3">{contentTop}</div>
+            ) : null}
             {/* Main Content */}
             <div
               ref={contentRef}
@@ -407,6 +414,7 @@ export function WizardLayout({
             ref={contentRef}
             className={cn(contentPadding && 'pt-6', contentClassName)}
           >
+            {contentTop ? <div className="mb-6">{contentTop}</div> : null}
             {children}
           </div>
         )}

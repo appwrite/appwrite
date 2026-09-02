@@ -173,6 +173,7 @@ function CliShellHeaderTitle({
   onRetry?: () => void
 }) {
   const t = useT()
+
   return (
     <div className="flex min-w-0 items-center gap-2">
       <TerminalIcon

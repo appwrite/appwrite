@@ -13,6 +13,7 @@ export type MysqlSqlEditorActions = {
   canFormat: boolean
   canRun: boolean
   canExplain: boolean
+  canAnalyze: boolean
   canCreateTab: boolean
   canCloseTab: boolean
   canSelectNextTab: boolean
@@ -25,6 +26,7 @@ export type MysqlSqlEditorActions = {
   format: () => void
   run: () => void
   explain: () => void
+  analyze: () => void
   createTab: () => void
   closeTab: () => void
   selectNextTab: () => void

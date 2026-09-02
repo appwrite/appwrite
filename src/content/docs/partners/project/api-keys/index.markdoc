@@ -1555,6 +1555,23 @@ When adding a new API key, you choose which scopes to grant. Scopes are grouped 
 | `indexes.write`       | Access to create, update, and delete your project's database table indexes      |
 | `rows.read`           | Access to read your project's database rows                                     |
 | `rows.write`          | Access to create, update, and delete your project's database rows               |
+| `embeddings.write`    | Access to generate vector embeddings                                            |
+| `documentsdb.read`    | Access to read your project's document databases                                |
+| `documentsdb.write`   | Access to create, update, and delete your project's document databases          |
+| `documentsdb.collections.read` | Access to read your project's document database collections            |
+| `documentsdb.collections.write` | Access to create, update, and delete your project's document database collections |
+| `documentsdb.documents.read` | Access to read your project's document database documents                |
+| `documentsdb.documents.write` | Access to create, update, and delete your project's document database documents |
+| `documentsdb.indexes.read` | Access to read your project's document database collection indexes         |
+| `documentsdb.indexes.write` | Access to create, update, and delete your project's document database collection indexes |
+| `vectorsdb.read`      | Access to read your project's vector databases                                  |
+| `vectorsdb.write`     | Access to create, update, and delete your project's vector databases            |
+| `vectorsdb.collections.read` | Access to read your project's vector database collections                |
+| `vectorsdb.collections.write` | Access to create, update, and delete your project's vector database collections |
+| `vectorsdb.documents.read` | Access to read your project's vector database documents                    |
+| `vectorsdb.documents.write` | Access to create, update, and delete your project's vector database documents |
+| `vectorsdb.indexes.read` | Access to read your project's vector database collection indexes             |
+| `vectorsdb.indexes.write` | Access to create, update, and delete your project's vector database collection indexes |
 
 {% /accordion_item %}
 {% accordion_item title="Functions" %}

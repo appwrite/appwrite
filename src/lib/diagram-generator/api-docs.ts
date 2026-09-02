@@ -2,12 +2,12 @@ import {
   buildCoverApiDocsMarkdown,
   type CoverApiDocsContext,
 } from '@/lib/cover-generator/api-docs'
-import {
-  COVER_HEIGHT,
-  COVER_IMAGE_FORMATS,
-  COVER_WIDTH,
-} from '@/lib/cover-generator/constants'
+import { COVER_IMAGE_FORMATS } from '@/lib/cover-generator/constants'
 import { COVER_THEME_IDS } from '@/lib/cover-generator/themes'
+import {
+  DIAGRAM_DEFAULT_HEIGHT,
+  DIAGRAM_DEFAULT_WIDTH,
+} from '@/lib/diagram-generator/constants'
 import { createDiagramFromTemplate } from '@/lib/diagram-generator/templates'
 import type { DiagramDocument, DiagramTemplateId } from '@/lib/diagram-generator/types'
 import {
@@ -93,14 +93,14 @@ function buildDiagramDocumentParameterDocs(): DiagramApiParameterDoc[] {
       name: 'width',
       type: 'number',
       description: 'Artboard width in pixels.',
-      defaultValue: String(COVER_WIDTH),
+      defaultValue: String(DIAGRAM_DEFAULT_WIDTH),
       example: '1200',
     },
     {
       name: 'height',
       type: 'number',
       description: 'Artboard height in pixels.',
-      defaultValue: String(COVER_HEIGHT),
+      defaultValue: String(DIAGRAM_DEFAULT_HEIGHT),
       example: '630',
     },
     {

@@ -140,11 +140,24 @@ export function canCreatePlatform(
   return whenOrgRoles(access, features, access.canWritePlatforms)
 }
 
+/** Auth/end-user `domains.write`. Not granted to console owners. Use `canWriteProjectDomains` for Settings → Custom domains. */
 export function canWriteDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteDomains)
+}
+
+/**
+ * Project custom domains (API / Functions / Sites proxy rules).
+ * Console owner and developer roles include `rules.write`, not `domains.write`.
+ * `domains.write` is an Auth/end-user scope and is not granted to org owners.
+ */
+export function canWriteProjectDomains(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteRules)
 }
 
 export function canWriteWebhooks(
@@ -254,10 +267,12 @@ export function canSeeProjectNavItem(
     case 'sites':
       return access.canWriteSites
     case 'usage':
-    case 'activity':
     case 'realtime':
     case 'analytics':
       return access.canSeeProjects
+    case 'activity':
+      // Activity API requires `events.read` (not just `projects.read`).
+      return access.canSeeEvents
     case 'firewall':
       return access.canSeeProjects
     default:
@@ -272,11 +287,12 @@ export function canSeeUsageNav(
   return !features.orgRoles || access.canSeeProjects
 }
 
+/** Project Activity tab: requires `events.read` (activities.listEvents). */
 export function canSeeActivityNav(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !features.orgRoles || access.canSeeProjects
+  return !features.orgRoles || access.canSeeEvents
 }
 
 export function canSeeProjects(
@@ -292,10 +308,15 @@ export function canShowOrgDomainsTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(
-    features.domains &&
-    (!features.orgRoles || access.isOwner || access.isDeveloper)
-  )
+  return canAccessOrgDomains(access, features)
+}
+
+/** Buy domain and transfer-in (registrar commerce). Gated by the domains profile flag. */
+export function canBuyOrTransferOrgDomain(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!(features.domains && canAccessOrgDomains(access, features))
 }
 
 /** Organization marketplace tab (cloud profile + feature flag; browse integrations). */

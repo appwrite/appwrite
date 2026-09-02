@@ -75,6 +75,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Add variable': 'הוספת משתנה',
   All: 'הכול',
   'All shortcuts': 'כל הקיצורים',
+  'All timezones': 'כל אזורי הזמן',
   'All variable keys are required': 'כל מפתחות המשתנים נדרשים',
   'Always active': 'פעילות תמיד',
   Amount: 'כמות',
@@ -416,6 +417,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'אין עדיין סינונים שמורים. הוסיפו סינונים בלשונית הסינונים ושמרו אותם כאן לגישה מהירה.',
   'No scopes match your search.': 'אין הרשאות התואמות את החיפוש.',
   'No types': 'אין סוגים',
+  'No timezones found': 'לא נמצאו אזורי זמן',
   'No units found': 'לא נמצאו יחידות',
   'No users to show': 'אין משתמשים להצגה',
   'No values found': 'לא נמצאו ערכים',
@@ -536,6 +538,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search repositories...': 'חיפוש repos...',
   'Search scopes...': 'חיפוש הרשאות…',
   'Search templates...': 'חיפוש תבניות...',
+  'Search timezones...': 'חיפוש אזורי זמן…',
   'Search units...': 'חיפוש יחידות…',
   'Search values...': 'חיפוש ערכים…',
   'Searching resources…': 'מחפש משאבים…',
@@ -550,6 +553,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',
   'Select function to execute...': 'בחרו פונקציה להרצה...',
@@ -1237,4 +1241,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Red: 'אדום',
   Blue: 'כחול',
   Slate: 'אפור',
+
+  'Increase time': 'העלאת זמן',
+  'Decrease time': 'הורדת זמן',
 }

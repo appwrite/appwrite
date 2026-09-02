@@ -20,6 +20,7 @@ import {
   type PostgresRoleFormState,
   type PostgresRoleRow,
 } from '@/lib/postgres-roles'
+import { runPostgresDdlStatements } from '@/lib/postgres-sql'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -133,7 +134,8 @@ export function PostgresRoleDrawer({
 
     try {
       if (isEdit && role) {
-        await executeSql.mutateAsync(
+        await runPostgresDdlStatements(
+          executeSql.mutateAsync,
           buildPostgresUpdateRoleSql(
             formState,
             parsePostgresRoleMembership(role.member_of),

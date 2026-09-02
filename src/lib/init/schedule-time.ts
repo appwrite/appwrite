@@ -37,6 +37,55 @@ export function parseInitScheduleTime(startsAt: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+/** True when `startsAt` is a valid instant at or before `nowMs`. */
+export function hasInitScheduleStarted(
+  startsAt: string,
+  nowMs: number = Date.now(),
+): boolean {
+  const date = parseInitScheduleTime(startsAt)
+  if (!date) return false
+  return nowMs >= date.getTime()
+}
+
+/** How long before `startsAt` a session enters "Starting soon" mode. */
+export const INIT_SCHEDULE_STARTING_SOON_WINDOW_MS = 60 * 60 * 1000
+
+/**
+ * How long after `startsAt` an authored livestream stays "Live now".
+ * Matches calendar export duration and the gap before each day's AMA.
+ */
+export const INIT_SCHEDULE_LIVE_DURATION_MS = 60 * 60 * 1000
+
+/**
+ * True when `nowMs` is within the starting-soon window before `startsAt`
+ * (after the window opens, before the session starts).
+ */
+export function isInitScheduleStartingSoon(
+  startsAt: string,
+  nowMs: number = Date.now(),
+  windowMs: number = INIT_SCHEDULE_STARTING_SOON_WINDOW_MS,
+): boolean {
+  const date = parseInitScheduleTime(startsAt)
+  if (!date) return false
+  const startMs = date.getTime()
+  return nowMs < startMs && nowMs >= startMs - windowMs
+}
+
+/**
+ * True when `nowMs` falls in the live window: at/after `startsAt`, before
+ * `startsAt + durationMs`.
+ */
+export function isInitScheduleLiveNow(
+  startsAt: string,
+  nowMs: number = Date.now(),
+  durationMs: number = INIT_SCHEDULE_LIVE_DURATION_MS,
+): boolean {
+  const date = parseInitScheduleTime(startsAt)
+  if (!date) return false
+  const startMs = date.getTime()
+  return nowMs >= startMs && nowMs < startMs + durationMs
+}
+
 /** `YYYY-MM-DD` for an instant in the given zone (viewer's zone when omitted). */
 function getCalendarDateKey(date: Date, timeZone?: string): string {
   const parts = new Intl.DateTimeFormat('en-US', {

@@ -1,3 +1,4 @@
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import type { ProductNavItemId } from '@/lib/products/types'
 
 /** How long a product stays marked as new after its launch date. */
@@ -36,6 +37,11 @@ export function isProductNavItemNew(
   id: ProductNavItemId,
   now: Date = new Date(),
 ): boolean {
+  // Databases "New" marks native Postgres and related DB launches.
+  if (id === 'databases' && !getActiveProfileFeatures().nativeDbsPostgres) {
+    return false
+  }
+
   const launchedAt = PRODUCT_LAUNCH_DATES[id]
   if (!launchedAt) return false
 

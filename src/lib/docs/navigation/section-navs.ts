@@ -3,9 +3,20 @@ import {
   isAgentDocsHref,
 } from '../agent-docs-feature'
 import {
+  isDatabaseTypeDocsHrefHidden,
+  isDatabaseTypeDocsSlugHidden,
+} from '../database-docs-feature'
+import {
+  isDomainsDocsEnabled,
+} from '../domains-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsHref,
 } from '../firewall-docs-feature'
+import {
+  isStorageS3DocsEnabled,
+  isStorageS3DocsHref,
+} from '../storage-s3-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { DOCS_LOCAL_SECTION_NAVS } from './local-sections'
 import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './sections'
@@ -40,6 +51,9 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
   }
 
   let configs = Array.from(byPrefix.values())
+  if (!isDomainsDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/domains')
+  }
   if (!isFirewallDocsEnabled()) {
     configs = configs
       .filter((config) => config.prefix !== 'products/firewall')
@@ -64,6 +78,30 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
           : config,
       )
   }
+  if (!isStorageS3DocsEnabled()) {
+    configs = configs.map((config) =>
+      config.prefix === 'products/storage'
+        ? {
+            ...config,
+            navigation: withoutHref(config.navigation, isStorageS3DocsHref),
+          }
+        : config,
+    )
+  }
+
+  configs = configs
+    .filter((config) => !isDatabaseTypeDocsSlugHidden(config.prefix))
+    .map((config) =>
+      config.prefix === 'products/databases'
+        ? {
+            ...config,
+            navigation: withoutHref(
+              config.navigation,
+              isDatabaseTypeDocsHrefHidden,
+            ),
+          }
+        : config,
+    )
 
   return configs
     .map((config) =>

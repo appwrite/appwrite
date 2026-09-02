@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { Bookmark, Braces, ListTree, Loader2, Play, Redo2, Undo2 } from 'lucide-react'
+import { Bookmark, Braces, Loader2, Play, Redo2, Undo2 } from 'lucide-react'
+import { SqlEditorExplainActions } from '@/components/pages/projects/$projectId/databases/_components/SqlEditorExplainActions'
+import type { SqlQueryPlanMode } from '@/components/pages/projects/$projectId/databases/_components/sql-query-plan-mode'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -10,6 +12,7 @@ import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import {
   MYSQL_SQL_EXPLAIN_SHORTCUT_RAW,
+  MYSQL_SQL_ANALYZE_SHORTCUT_RAW,
   MYSQL_SQL_FORMAT_SHORTCUT_RAW,
   MYSQL_SQL_REDO_SHORTCUT_RAW,
   MYSQL_SQL_RUN_SHORTCUT_RAW,
@@ -32,12 +35,14 @@ type SqlEditorActionBarProps = {
   canExplain: boolean
   isRunning: boolean
   isExplaining: boolean
+  activePlanMode?: SqlQueryPlanMode | null
   onUndo: () => void
   onRedo: () => void
   onSave: () => void
   onFormat: () => void
   onRun: () => void
   onExplain: () => void
+  onAnalyze: () => void
   runDisabledTooltip?: string
   explainDisabledTooltip?: string
 }
@@ -82,12 +87,14 @@ export function SqlEditorActionBar({
   canExplain,
   isRunning,
   isExplaining,
+  activePlanMode = null,
   onUndo,
   onRedo,
   onSave,
   onFormat,
   onRun,
   onExplain,
+  onAnalyze,
   runDisabledTooltip,
   explainDisabledTooltip,
 }: SqlEditorActionBarProps) {
@@ -99,6 +106,10 @@ export function SqlEditorActionBar({
   const formatShortcut = formatShortcutLabel(MYSQL_SQL_FORMAT_SHORTCUT_RAW, isMac)
   const explainShortcut = formatShortcutLabel(
     MYSQL_SQL_EXPLAIN_SHORTCUT_RAW,
+    isMac,
+  )
+  const analyzeShortcut = formatShortcutLabel(
+    MYSQL_SQL_ANALYZE_SHORTCUT_RAW,
     isMac,
   )
   const runShortcut = formatShortcutLabel(MYSQL_SQL_RUN_SHORTCUT_RAW, isMac)
@@ -192,35 +203,18 @@ export function SqlEditorActionBar({
 
           <ActionDivider />
 
-          <ShortcutTooltip
-            enabled={canExplain}
-            disabledReason={
-              !canExplain && explainDisabledTooltip
-                ? explainDisabledTooltip
-                : isExplaining
-                  ? t('Query explanation is running.')
-                  : isRunning
-                    ? t('Query is running.')
-                    : t('Write SQL before explaining a query.')
-            }
-            enabledLabel={`${t('Explain')} (${explainShortcut})`}
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 px-3 text-[12px] font-medium"
-              onClick={onExplain}
-              disabled={!canExplain}
-            >
-              {isExplaining ? (
-                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-              ) : (
-                <ListTree className="h-3.5 w-3.5 shrink-0" />
-              )}
-              {t('Explain')}
-            </Button>
-          </ShortcutTooltip>
+          <SqlEditorExplainActions
+            canExplain={canExplain}
+            isExplaining={isExplaining}
+            isRunning={isRunning}
+            activeMode={activePlanMode}
+            onExplain={onExplain}
+            onAnalyze={onAnalyze}
+            explainShortcut={explainShortcut}
+            analyzeShortcut={analyzeShortcut}
+            explainDisabledTooltip={explainDisabledTooltip}
+            operationsDisabledTooltip={explainDisabledTooltip}
+          />
 
           <ActionDivider />
 

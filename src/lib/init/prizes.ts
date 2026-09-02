@@ -69,8 +69,8 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
   grandPrize: {
     day: 5,
     dateLabel: 'SEPTEMBER 4',
-    scheduleItemId: 'sched-yt-firewall',
-    sessionTitle: 'Appwrite Firewall & Domains launch stream',
+    scheduleItemId: 'sched-yt-firewall-oauth-domains',
+    sessionTitle: 'Firewall, OAuth, and Domains launch stream',
     platform: 'youtube',
     href: INIT_YOUTUBE_CHANNEL_HREF,
     title: 'Claude Max 20x · 12 months free',

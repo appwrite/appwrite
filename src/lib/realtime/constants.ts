@@ -37,10 +37,19 @@ export const REALTIME_EVENTS = {
   DATABASES_TABLES_COLUMNS_DELETE: 'databases.*.tables.*.columns.*.delete',
   DATABASES_TABLES_INDEXES_ANY: 'databases.*.tables.*.indexes.*',
 
-  // Backups & restorations
+  // Backups & restorations (legacy product backup service)
   ARCHIVES_ANY: 'archives.*',
   RESTORATIONS_ANY: 'restorations.*',
   POLICIES_ANY: 'policies.*',
+
+  // Dedicated database engines (native + product compute)
+  DEDICATED_DATABASE_ANY: 'postgresql.*',
+  DEDICATED_DATABASE_MYSQL_ANY: 'mysql.*',
+  DEDICATED_DATABASE_MONGODB_ANY: 'mongodb.*',
+  DEDICATED_DATABASE_TABLESDB_ANY: 'tablesdb.*',
+  DEDICATED_DATABASE_DOCUMENTSDB_ANY: 'documentsdb.*',
+  DEDICATED_DATABASE_VECTORSDB_ANY: 'vectorsdb.*',
+  DEDICATED_DATABASE_POLICY_ANY: 'policies.*',
 
   // Migrations
   MIGRATIONS_ANY: 'migrations.*',

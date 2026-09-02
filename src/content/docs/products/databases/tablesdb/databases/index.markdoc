@@ -7,6 +7,8 @@ Databases are the largest organizational unit in Appwrite.
 Each database contains a group of [tables](/docs/products/databases/tables).
 In future versions, different databases may be backed by a different database technology of your choosing.
 
+A database runs on shared or dedicated infrastructure; see [shared and dedicated databases](/docs/products/databases#shared-and-dedicated).
+
 # Create in Console {% #create-in-console %}
 The easiest way to create a database using the Appwrite Console.
 You can create a database by navigating to the **Databases** page and clicking **Create database**.

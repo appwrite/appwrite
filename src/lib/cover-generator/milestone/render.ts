@@ -187,7 +187,7 @@ export function renderMilestoneCenteredTemplateSvg(
     subtitleBlockHeight +
     COVER_MILESTONE_CENTERED_BOTTOM_PADDING
 
-  let cursorY = Math.round((630 - totalHeight) / 2)
+  let cursorY = Math.round((COVER_HEIGHT - totalHeight) / 2)
 
   const parts: string[] = []
 

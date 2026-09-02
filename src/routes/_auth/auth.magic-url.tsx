@@ -87,52 +87,54 @@ function MagicUrlPage() {
   }, [confirmMutation.mutate, t])
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <Card className="overflow-hidden py-0">
-          <div className="grid md:grid-cols-2">
-            <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-              <div className="space-y-6">
-                {errorMessage ? (
-                  <>
+    <div className="bg-background relative h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-sm md:max-w-4xl">
+          <Card className="overflow-hidden py-0">
+            <div className="grid md:grid-cols-2">
+              <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
+                <div className="space-y-6">
+                  {errorMessage ? (
+                    <>
+                      <div className="space-y-2">
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                          {t('Unable to sign you in')}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                          {errorMessage}
+                        </p>
+                      </div>
+                      <Link to="/sign-in">
+                        <Button className="w-full">{t('Go to sign in')}</Button>
+                      </Link>
+                    </>
+                  ) : (
                     <div className="space-y-2">
                       <h1 className="text-2xl font-semibold tracking-tight">
-                        {t('Unable to sign you in')}
+                        {t('Signing you in')}
                       </h1>
-                      <p className="text-sm text-muted-foreground">
-                        {errorMessage}
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('Please wait while we confirm your magic URL.')}
                       </p>
                     </div>
-                    <Link to="/sign-in">
-                      <Button className="w-full">{t('Go to sign in')}</Button>
-                    </Link>
-                  </>
-                ) : (
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Signing you in')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {t('Please wait while we confirm your magic URL.')}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+              <div className="hidden bg-background md:block min-h-[600px]">
+                <img
+                  alt="Appwrite console illustration"
+                  className="h-full w-full object-cover"
+                  height="600"
+                  src="/cover.avif"
+                  width="600"
+                />
               </div>
             </div>
-            <div className="hidden bg-background md:block min-h-[600px]">
-              <img
-                alt="Appwrite console illustration"
-                className="h-full w-full object-cover"
-                height="600"
-                src="/cover.avif"
-                width="600"
-              />
-            </div>
+          </Card>
+          <div className="mt-10 md:mt-16 flex justify-center">
+            <AppwriteLogo className="h-6 w-auto" />
           </div>
-        </Card>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>
     </div>

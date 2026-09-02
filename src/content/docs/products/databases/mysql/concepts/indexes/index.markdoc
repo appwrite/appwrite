@@ -36,12 +36,7 @@ ANALYZE TABLE users;
 
 # How an index works {% #how-it-works %}
 
-{% only_dark %}
-![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/dark/index-lookup.avif)
-{% /only_dark %}
-{% only_light %}
-![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/index-lookup.avif)
-{% /only_light %}
+{% index_lookup_animation /%}
 
 Table rows are stored in no order useful for searching an arbitrary column, so answering `WHERE email = '...'` without an index means reading every row and checking each one. The work grows with the table: ten times the rows, ten times the reads.
 

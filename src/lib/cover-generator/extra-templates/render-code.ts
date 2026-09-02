@@ -1,3 +1,4 @@
+import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
 import { getCoverBrandLightRgb } from '@/lib/cover-generator/cover-brand-lights'
 import { getCoverFrameWidthPx } from '@/lib/cover-generator/cover-frame-width'
 import { getCoverScreenshotGlassColors } from '@/lib/cover-generator/cover-screenshot-frame'
@@ -60,7 +61,7 @@ export function renderApiEndpointTemplateSvg(
   const subtitleHeight = subtitle ? API_SUBTITLE_FONT_SIZE + 8 : 0
   const barGap = 56
   const totalHeight = titleHeight + subtitleGap + subtitleHeight + barGap + API_BAR_HEIGHT
-  const startY = Math.round((630 - totalHeight) / 2)
+  const startY = Math.round((COVER_HEIGHT - totalHeight) / 2)
 
   const titleSvg = renderExtraTitleLines({
     lines: titleLines,
@@ -76,7 +77,7 @@ export function renderApiEndpointTemplateSvg(
     width: data.width,
     height: data.height,
   })
-  const barX = Math.round((1200 - barWidth) / 2)
+  const barX = Math.round((COVER_WIDTH - barWidth) / 2)
 
   const tone = API_METHOD_TONES[data.method]
   const toneRgb = getCoverBrandLightRgb(tone)
@@ -206,7 +207,7 @@ export function renderCodeDiffTemplateSvg(
     width: data.width,
     height: data.height,
   })
-  const frameX = Math.round((1200 - frameWidth) / 2)
+  const frameX = Math.round((COVER_WIDTH - frameWidth) / 2)
 
   const titleHeight = titleLines.length * (DIFF_TITLE_FONT_SIZE + 8)
   const titleGap = titleLines.length ? 36 : 0
@@ -215,7 +216,7 @@ export function renderCodeDiffTemplateSvg(
   const windowHeight =
     DIFF_HEADER_HEIGHT + 16 + windowBodyHeight + DIFF_PADDING_BOTTOM
   const totalHeight = titleHeight + titleGap + windowHeight
-  const startY = Math.round((630 - totalHeight) / 2)
+  const startY = Math.round((COVER_HEIGHT - totalHeight) / 2)
   const windowY = startY + titleHeight + titleGap
 
   const dotY = windowY + DIFF_HEADER_HEIGHT / 2

@@ -23,7 +23,6 @@ import {
   useProjectStorageResourceTypeUsage,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -49,8 +48,7 @@ export function StorageSection({
 }: StorageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
 
   // One query per resource family of the unified `storage` gauge. Listed
   // explicitly rather than mapped so hook order stays fixed.

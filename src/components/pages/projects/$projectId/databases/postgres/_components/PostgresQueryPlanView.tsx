@@ -12,12 +12,17 @@ import {
   type PostgresQueryPlanNodeVariant,
 } from '@/lib/postgres-query-plan'
 import { cn } from '@/lib/utils'
-import { PostgresQueryResultsMeta } from './PostgresQueryResultsMeta'
 import { SqlWorkbenchPanelEmptyState } from './SqlWorkbenchPanelEmptyState'
+import {
+  SqlQueryPlanModeBadge,
+  SqlQueryPlanModeDescription,
+} from '@/components/pages/projects/$projectId/databases/_components/SqlQueryPlanModeBadge'
+import type { SqlQueryPlanMode } from '@/components/pages/projects/$projectId/databases/_components/sql-query-plan-mode'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresQueryPlanViewProps = {
   explanation: DedicatedDatabaseQueryExplanation | null
+  planMode: SqlQueryPlanMode
   isLoading?: boolean
   loadingLabel?: string
   className?: string
@@ -141,6 +146,7 @@ function PlanNodeRow({
 
 export function PostgresQueryPlanView({
   explanation,
+  planMode,
   isLoading = false,
   loadingLabel = 'Explaining query…',
   className,
@@ -163,19 +169,24 @@ export function PostgresQueryPlanView({
       : 'sql'
 
   return (
-    <div
-      className={cn(
-        'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
-        className,
-      )}
-    >
+    <div className={cn('flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden', className)}>
       <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <PostgresQueryResultsMeta
-            title={t('Query plan')}
-            rowCount={nodeCount}
-            countLabel="step"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h3 className="text-[13px] font-semibold text-foreground">
+                {t('Query plan')}
+              </h3>
+              <SqlQueryPlanModeBadge mode={planMode} />
+            </div>
+            <SqlQueryPlanModeDescription mode={planMode} />
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              <span className="tabular-nums text-foreground/90">
+                {nodeCount.toLocaleString()}
+              </span>{' '}
+              step{nodeCount === 1 ? '' : 's'}
+            </p>
+          </div>
           <ToggleGroup
             type="single"
             variant="outline"
@@ -198,9 +209,9 @@ export function PostgresQueryPlanView({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
         {isLoading && !explanation ? (
-          <div className="flex h-full min-h-[12rem] items-center justify-center gap-2 text-[13px] text-muted-foreground">
+          <div className="flex min-h-[8rem] items-center justify-center gap-2 text-[13px] text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             {loadingLabel}
           </div>
@@ -211,13 +222,13 @@ export function PostgresQueryPlanView({
               language={rawLanguage}
               headless
               wrapLines
-              className="min-h-[12rem] rounded-lg border border-border"
+              className="min-h-[8rem] rounded-lg border border-border"
             />
           ) : (
             <SqlWorkbenchPanelEmptyState variant="query-no-rows" />
           )
         ) : planNodes.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-1">
             {planNodes.map((node) => (
               <PlanNodeRow key={node.id} node={node} />
             ))}
@@ -228,7 +239,7 @@ export function PostgresQueryPlanView({
             language={rawLanguage}
             headless
             wrapLines
-            className="min-h-[12rem] rounded-lg border border-border"
+            className="min-h-[8rem] rounded-lg border border-border"
           />
         ) : (
           <SqlWorkbenchPanelEmptyState variant="query-no-rows" />

@@ -63,6 +63,7 @@ import {
   loadDebugOverrides,
   resetFeatureFlagsMenuDebugOverrides,
   resetFeatureFlagsMenuDebugOverride,
+  resetInitMenuDebugOverrides,
   FEATURE_FLAGS_MENU_DEBUG_DEFAULTS,
   setDebugOverride,
   subscribeToDebugOverrides,
@@ -71,11 +72,6 @@ import {
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
 import { getPreLaunchDefault } from '@/lib/pre-launch'
-import {
-  OVERVIEW_CHART_TAB_ORDER,
-  OVERVIEW_CHART_TAB_DISABLE_KEYS,
-  OVERVIEW_CHART_TAB_LABELS,
-} from '@/lib/overview-chart-tabs'
 import {
   detectUserOs,
   getUserOsLabel,
@@ -768,10 +764,9 @@ function resolveActiveSubmenu(
 }
 
 function getInitSubmenuDescription(overrides: DebugOverrides): string {
-  const parts: string[] = []
-  if (overrides.mockInitCurrentDay !== null) {
-    parts.push(formatInitMockCurrentDay(overrides.mockInitCurrentDay))
-  }
+  const parts: string[] = [
+    formatInitMockCurrentDay(overrides.mockInitCurrentDay),
+  ]
   if (overrides.mockInitTicketType !== null) {
     parts.push(formatInitMockTicketType(overrides.mockInitTicketType))
   }
@@ -781,7 +776,7 @@ function getInitSubmenuDescription(overrides: DebugOverrides): string {
   if (overrides.initLowPowerAnimations !== 'auto') {
     parts.push(`Low power ${overrides.initLowPowerAnimations}`)
   }
-  return parts.length > 0 ? parts.join(' · ') : 'Launch week mocks and previews'
+  return parts.join(' · ')
 }
 
 function formatLowPowerSignalValue(value: number | string | boolean | null) {
@@ -1412,6 +1407,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: getLowPowerDecisionDescription(initLowPowerDecision),
         icon: <Sparkles className="h-3 w-3" />,
         submenu: lowPowerAnimationSubmenu,
+      },
+      {
+        label: 'Reset settings',
+        description:
+          'Restore day, ticket mock, confetti preview, and low power to defaults.',
+        onClick: () => {
+          resetInitMenuDebugOverrides()
+          setOverrides(loadDebugOverrides())
+          setIsOpen(false)
+        },
+        icon: <RotateCcw className="h-3 w-3" />,
+        rowClassName:
+          'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
       },
     ]
 
@@ -2044,6 +2052,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
+                'Database PITR restore',
+                'Restore PITR button on backups and the restore card in dedicated DB PITR settings.',
+                'databasePitrRestore',
+                profileId,
+                features.databasePitrRestore,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
                 'Console user verification',
                 'Require email verification after signup; redirect to verify-email page on cloud.',
                 'userVerification',
@@ -2057,6 +2073,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'extraOAuthLogin',
                 profileId,
                 features.extraOAuthLogin,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
+                'Extra VCS OAuth',
+                'Show GitLab, Bitbucket, and Origin on Git connect. GitHub stays available.',
+                'extraVcsOAuth',
+                profileId,
+                features.extraVcsOAuth,
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
@@ -2076,6 +2100,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Storage S3',
+                'Show the Connect S3 tab, storage sidebar S3 card, and S3 API docs.',
+                'storageS3',
+                profileId,
+                features.storageS3,
+                { category: 'Storage' },
+              ),
+              createProfileFeatureFlagItem(
                 'Project OAuth2 server',
                 profileId === 'cloud'
                   ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'
@@ -2087,6 +2119,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   disabled: profileId !== 'cloud',
                   category: 'Auth & security',
                 },
+              ),
+              createProfileFeatureFlagItem(
+                'Domain buy/transfer',
+                'Buy domain and transfer-in in the console, plus Domains marketing/docs. Org Domains tab (add domain, DNS) stays available when off.',
+                'domains',
+                profileId,
+                features.domains,
+                { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
                 'Organization OAuth apps',
@@ -2288,68 +2328,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              createDebugFeatureFlagItem(
-                'Disable usage breakdown queries',
-                'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
-                'disableUsageBreakdownQueries',
-                overrides.disableUsageBreakdownQueries,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    disableUsageBreakdownQueries: checked,
-                  }))
-                  setDebugOverride('disableUsageBreakdownQueries', checked)
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                () => {
-                  setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                'Usage & analytics',
-              ),
-              ...OVERVIEW_CHART_TAB_ORDER.map((tabId) => {
-                const disableKey = OVERVIEW_CHART_TAB_DISABLE_KEYS[tabId]
-                const label = OVERVIEW_CHART_TAB_LABELS[tabId]
-                return createDebugFeatureFlagItem(
-                  `Disable overview ${label.toLowerCase()} chart`,
-                  `Hide the ${label} tab and usage queries on the project overview.`,
-                  disableKey,
-                  overrides[disableKey],
-                  (checked) => {
-                    setOverrides((prev) => ({
-                      ...prev,
-                      [disableKey]: checked,
-                    }))
-                    setDebugOverride(disableKey, checked)
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  () => {
-                    setOverrides(loadDebugOverrides())
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  'Usage & analytics',
-                )
-              }),
               {
                 label: 'Reset all feature flags',
                 description:
@@ -2358,12 +2336,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()
                   setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -2565,18 +2537,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsPostgres,
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
+    features.databasePitrRestore,
     features.userVerification,
     features.extraOAuthLogin,
+    features.extraVcsOAuth,
     features.cookieBanner,
     features.blogDrafts,
     features.oauthApps,
     features.oauth2Server,
     features.orgApiKeys,
+    features.domains,
     features.marketplace,
     features.partnersDocs,
     features.agent,
     features.notifications,
     features.firewall,
+    features.storageS3,
     features.init,
     endpointPreset,
     endpointCustomUrl,
