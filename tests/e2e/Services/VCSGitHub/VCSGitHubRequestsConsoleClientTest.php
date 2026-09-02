@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\System\System;
 
 /**
  * Member-requested installation flow: request document, webhook approval,
@@ -42,13 +43,27 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         return $seeded['body']['requestId'];
     }
 
-    private function approveOnProvider(string $requester, int $providerInstallationId, string $organization): void
+    private function postInstallationEvent(array $payload): void
     {
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
-        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+        $headers = [
             'content-type' => 'application/json',
             'x-github-event' => 'installation',
-        ], [
+        ];
+
+        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        if (!empty($secret)) {
+            $headers['x-hub-signature-256'] = 'sha256=' . hash_hmac('sha256', json_encode($payload, JSON_THROW_ON_ERROR), $secret);
+        }
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+    }
+
+    private function approveOnProvider(string $requester, int $providerInstallationId, string $organization): void
+    {
+        $this->postInstallationEvent([
             'action' => 'created',
             'installation' => [
                 'id' => $providerInstallationId,
@@ -56,8 +71,20 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
             ],
             'requester' => ['login' => $requester],
         ]);
+    }
 
-        $this->assertEquals(200, $event['headers']['status-code']);
+    private function findRequest(string $requestId): ?array
+    {
+        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
+        $this->assertEquals(200, $requests['headers']['status-code']);
+
+        foreach ($requests['body']['requests'] as $request) {
+            if ($request['$id'] === $requestId) {
+                return $request;
+            }
+        }
+
+        return null;
     }
 
     public function testUpdateRequest(): void
@@ -65,10 +92,8 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $requester = uniqid('octocat-');
         $requestId = $this->seedRequest($requester);
 
-        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
-        $this->assertEquals(200, $requests['headers']['status-code']);
-        $this->assertEquals(1, $requests['body']['total']);
-        $this->assertEquals('requested', $requests['body']['requests'][0]['status']);
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('requested', $request['status'] ?? '');
 
         // Confirming before the provider approved must fail.
         $early = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
@@ -77,15 +102,15 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
 
         $this->approveOnProvider($requester, 424242, 'request-test-org');
 
-        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
-        $this->assertEquals('ready', $requests['body']['requests'][0]['status']);
-        $this->assertEquals('request-test-org', $requests['body']['requests'][0]['organization']);
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('ready', $request['status'] ?? '');
+        $this->assertEquals('request-test-org', $request['organization'] ?? '');
 
         $confirmed = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
         $this->assertEquals(200, $confirmed['headers']['status-code']);
         $this->assertEquals('github', $confirmed['body']['provider']);
         $this->assertEquals('request-test-org', $confirmed['body']['organization']);
-        $this->assertEquals('424242', $confirmed['body']['providerInstallationId']);
+        $this->assertSame('424242', $confirmed['body']['providerInstallationId']);
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', $this->getRequestHeaders());
         $this->assertEquals(200, $installations['headers']['status-code']);
@@ -93,8 +118,7 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $this->assertContains('request-test-org', $organizations);
 
         // Confirming consumes the request.
-        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
-        $this->assertEquals(0, $requests['body']['total']);
+        $this->assertNull($this->findRequest($requestId));
     }
 
     public function testUpdateRequestForeignProject(): void
@@ -108,6 +132,12 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $foreign = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders($foreignProject));
         $this->assertEquals(404, $foreign['headers']['status-code']);
         $this->assertEquals('installation_request_not_found', $foreign['body']['type']);
+
+        $foreign = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders($foreignProject));
+        $this->assertEquals(404, $foreign['headers']['status-code']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(204, $deleted['headers']['status-code']);
     }
 
     public function testDeleteRequest(): void
@@ -119,5 +149,53 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
 
         $missing = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
         $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
+    public function testUpdateRequestIgnoresUnrelatedApproval(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+
+        // No requester in the payload: a direct owner install, not an approval.
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424244,
+                'account' => ['login' => 'request-test-org3'],
+            ],
+        ]);
+
+        // An approval for someone else's request.
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424245,
+                'account' => ['login' => 'request-test-org4'],
+            ],
+            'requester' => ['login' => uniqid('someone-else-')],
+        ]);
+
+        $request = $this->findRequest($requestId);
+        $this->assertEquals('requested', $request['status'] ?? '');
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+    }
+
+    public function testDeleteRequestOnProviderUninstall(): void
+    {
+        $requester = uniqid('octocat-');
+        $requestId = $this->seedRequest($requester);
+        $this->approveOnProvider($requester, 424246, 'request-test-org5');
+
+        $this->postInstallationEvent([
+            'action' => 'deleted',
+            'installation' => [
+                'id' => 424246,
+                'account' => ['login' => 'request-test-org5'],
+            ],
+        ]);
+
+        $this->assertNull($this->findRequest($requestId));
     }
 }
