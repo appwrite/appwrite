@@ -2214,6 +2214,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Summary: 'סיכום',
   'Supabase endpoint': 'נקודת קצה של Supabase',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'צוותים',
   'Test email sent to': 'אימייל בדיקה נשלח אל',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':

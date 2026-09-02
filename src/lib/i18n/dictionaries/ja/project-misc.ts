@@ -1731,6 +1731,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Summary: '概要',
   'Supabase endpoint': 'Supabase エンドポイント',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'チーム',
   'Test email sent to': 'テストメールの送信先',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
