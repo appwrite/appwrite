@@ -121,7 +121,9 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         // Each dance starts from a fresh jar; Gitea reuses session cookies, so
         // a stale jar would silently keep the previous user logged in.
-        $this->giteaCookies = [];
+        /** @var array<string, string> $cookies */
+        $cookies = [];
+        $this->giteaCookies = $cookies;
         $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
@@ -558,7 +560,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $membership['headers']['status-code']);
 
-        $email = $this->getLastEmailByAddress($b['email'], fn ($email) => $this->assertStringContainsString('/join-us', $email['html'] ?? ''));
+        $email = $this->getLastEmailByAddress($b['email'], fn ($email) => $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? '')));
         $params = $this->extractQueryParamsFromEmailLink($email['html']);
         $this->assertNotEmpty($params['secret'] ?? '');
 
