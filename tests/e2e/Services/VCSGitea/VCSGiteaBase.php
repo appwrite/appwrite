@@ -58,7 +58,7 @@ trait VCSGiteaBase
         $this->assertNotEmpty($session['cookies']['a_session_console'] ?? '');
         $sessionCookie = $session['cookies']['a_session_console'];
 
-        // Sessions propagate slowly under parallel load, so retry 401s like ProjectCustom does
+        // Sessions propagate slowly under parallel load, so retry 401s
         $team = null;
         for ($i = 0; $i < 5; $i++) {
             $team = $this->client->call(Client::METHOD_POST, '/teams', [
@@ -122,8 +122,7 @@ trait VCSGiteaBase
             'username' => $username,
             'email' => $username . '@localhost.test',
             'password' => $password,
-            // Defaults to true, which turns the OAuth2 authorize into a
-            // redirect to the change-password page instead of the callback.
+            // Defaults to true, which redirects the OAuth2 authorize to the change-password page
             'must_change_password' => false,
         ]);
 

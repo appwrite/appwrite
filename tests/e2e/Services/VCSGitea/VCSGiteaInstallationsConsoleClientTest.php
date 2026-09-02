@@ -10,13 +10,10 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 
 /**
- * Cross-tenant isolation of VCS installations. Two unrelated console users with
- * their own teams, projects and Gitea accounts must not be able to use each
- * other's installations, even knowing the installation id.
- *
- * ProjectCustom and SideConsole only satisfy the Scope contract; every call in
- * this class authenticates as one of the two tenants built per test, never as
- * the shared root user.
+ * Cross-tenant isolation of VCS installations: two unrelated console users must
+ * not be able to use each other's installations, even knowing the id.
+ * ProjectCustom and SideConsole only satisfy the Scope contract; every call
+ * authenticates as one of the per-test tenants, never as the shared root user.
  */
 final class VCSGiteaInstallationsConsoleClientTest extends Scope
 {
@@ -52,8 +49,7 @@ final class VCSGiteaInstallationsConsoleClientTest extends Scope
         $installationB = $this->createInstallationHelper($b['projectId'], $b['headers'], self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
 
         $this->assertNotEquals($installationA['$id'], $installationB['$id']);
-        // Different Gitea accounts, so a cross-tenant leak would be visible as
-        // the other owner's repositories, not a second identical listing.
+        // Different Gitea accounts make a leak visible as the other owner's repositories
         $this->assertNotEquals($installationA['organization'], $installationB['organization']);
 
         // Foreign installation id on the caller's own project never reaches the
@@ -77,7 +73,6 @@ final class VCSGiteaInstallationsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(401, $foreignProject['headers']['status-code']);
 
-        // Each tenant still reaches their own installation.
         $own = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationA['$id'] . '/providerRepositories', $this->getTenantHeaders($a), [
             'type' => 'runtime',
         ]);
@@ -97,9 +92,7 @@ final class VCSGiteaInstallationsConsoleClientTest extends Scope
         $installationA = $this->createInstallationHelper($a['projectId'], $a['headers']);
         $base = '/vcs/github/installations/' . $installationA['$id'];
 
-        // Dummy repository ids are safe: the ownership guard answers before any
-        // provider call. The POSTs would write to tenant A's Gitea account if
-        // the guard regressed, which is exactly the point.
+        // Dummy repository ids are safe: the ownership guard answers before any provider call
         $probes = [
             [Client::METHOD_GET, $base . '/providerRepositories/1', []],
             [Client::METHOD_GET, $base . '/providerRepositories/1/branches', []],
@@ -157,8 +150,6 @@ final class VCSGiteaInstallationsConsoleClientTest extends Scope
         $this->assertEquals(200, $accept['headers']['status-code']);
         $this->assertTrue($accept['body']['confirm']);
 
-        // Same request as before: membership in the team now authorizes B on
-        // project A, and the installation belongs to project A, so it works.
         $after = $this->client->call(Client::METHOD_GET, $path, $this->getTenantHeaders($b, $a['projectId']), [
             'type' => 'runtime',
         ]);
