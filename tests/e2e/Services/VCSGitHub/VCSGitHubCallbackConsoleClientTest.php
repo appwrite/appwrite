@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\System\System;
 
 /**
  * Failure paths of the GitHub App installation callback. Deliberately does not
@@ -26,12 +27,17 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
 
     private function getState(): string
     {
+        $projectId = $this->getProject()['$id'];
         $redirect = $this->getRedirect();
 
+        // Signed the way the authorize endpoint signs it. Harmless while the
+        // callback does not verify signatures, and keeps this suite green once
+        // it does.
         return (string) json_encode([
-            'projectId' => $this->getProject()['$id'],
+            'projectId' => $projectId,
             'success' => $redirect,
             'failure' => $redirect,
+            'signature' => hash_hmac('sha256', json_encode([$projectId, $redirect, $redirect]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
     }
 
@@ -71,6 +77,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Missing state parameter', (string) $response['body']);
+        $this->assertStringContainsString('completed on GitHub', (string) $response['body']);
     }
 }

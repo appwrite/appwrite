@@ -38,7 +38,7 @@ class Get extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
-            ->param('state', '', new Text(2048, 0), 'GitHub state. Contains info sent when starting authorization flow.', true)
+            ->param('state', '', new Text(4096, 0), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
             ->inject('vcsFactory')
             ->inject('project')
@@ -60,7 +60,7 @@ class Get extends Action
         array $platform
     ) {
         if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
         }
 
         $state = \json_decode($state, true) ?? [];
@@ -163,7 +163,7 @@ class Get extends Action
             }
         } else {
             $error = $setupAction === 'request'
-                ? 'Your installation request was sent to the organization owners for approval. Installing the Appwrite GitHub App on an organization requires an owner, so ask one of them to create the installation from the Appwrite Console.'
+                ? 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.'
                 : 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.';
 
             if (empty($redirectFailure)) {
