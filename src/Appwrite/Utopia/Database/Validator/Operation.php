@@ -177,6 +177,12 @@ class Operation extends Validator
                 $this->description = "Key 'queries' must be an array for {$action}";
                 return false;
             }
+            foreach ($value['data']['queries'] as $query) {
+                if (!\is_string($query)) {
+                    $this->description = "Key 'data.queries' must contain only strings for {$action}";
+                    return false;
+                }
+            }
         }
 
         // BulkUpdate requires both queries and data
