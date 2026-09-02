@@ -113,4 +113,42 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
     }
+
+    public function testGetCallbackInvalidJsonState(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'install',
+            'installation_id' => '1234567',
+            'state' => 'not-json',
+        ], followRedirects: false);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('project_not_found', $response['body']['type']);
+    }
+
+    public function testGetCallbackLongState(): void
+    {
+        // Above the old 2048 cap: redirect URLs are not length-limited, so a
+        // state this size is one the server itself can produce.
+        $failure = $this->getRedirect() . '?pad=' . str_repeat('a', 2400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'request',
+            'state' => $this->buildState($this->getProject()['$id'], $this->getRedirect(), $failure),
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($failure, (string) $response['headers']['location']);
+    }
+
+    public function testGetCallbackUnexpectedSetupAction(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
+            'setup_action' => 'foo',
+            'state' => $this->getState(),
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
+    }
 }
