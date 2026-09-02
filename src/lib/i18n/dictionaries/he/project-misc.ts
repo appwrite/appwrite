@@ -2740,4 +2740,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'Merge request',
   'Pull request': 'Pull request',
   'Failed to approve deployment': 'אישור הפריסה נכשל',
+  'Pause live updates': 'השהיית עדכונים חיים',
+  'Pause live updates to refresh manually':
+    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Resume live updates': 'חידוש עדכונים חיים',
+  'Updating…': 'מתעדכן…',
+  Paused: 'מושהה',
 }

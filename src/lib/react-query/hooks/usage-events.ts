@@ -142,15 +142,21 @@ import {
 } from '@/lib/usage/usage-filter-queries'
 import { useUsageSectionFilterQueries } from '@/hooks/use-usage-section-filter-queries'
 
-function normalizeDateRangeKey(dateRange: DateRange | undefined): {
+function normalizeDateRangeKey(
+  dateRange: DateRange | undefined,
+  dateRangePresetId?: string | null,
+): {
   rangeKeyPart: string
   getBounds: () => { from: Date; to: Date }
   refetchOnMountRolling: boolean
 } {
-  const rangeKeyPart = getUsageChartQueryRangeKeyPart(dateRange)
+  const rangeKeyPart = getUsageChartQueryRangeKeyPart(
+    dateRange,
+    dateRangePresetId,
+  )
   return {
     rangeKeyPart,
-    getBounds: () => resolveUsageChartFetchBounds(dateRange),
+    getBounds: () => resolveUsageChartFetchBounds(dateRange, dateRangePresetId),
     refetchOnMountRolling: shouldRefetchUsageChartOnMount(rangeKeyPart),
   }
 }
@@ -324,9 +330,10 @@ export function firewallTrafficOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  dateRangePresetId?: string | null,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
-    normalizeDateRangeKey(dateRange)
+    normalizeDateRangeKey(dateRange, dateRangePresetId)
 
   return queryOptions({
     queryKey: [
@@ -361,6 +368,7 @@ export function useProjectFirewallTrafficOverview(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  dateRangePresetId?: string | null,
 ) {
   return useQuery({
     ...firewallTrafficOverviewQueryOptions(
@@ -368,6 +376,7 @@ export function useProjectFirewallTrafficOverview(
       dateRange,
       interval,
       logRetentionHours,
+      dateRangePresetId,
     ),
     enabled: !!projectId,
   })

@@ -10,7 +10,7 @@ import {
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
-import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
+import { useChartLiveUpdateAnimation } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import {
   getUsageChartIntervalsForPlan,
@@ -29,6 +29,7 @@ import {
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -42,7 +43,13 @@ import {
   useProjectFirewallTrafficOverview,
 } from '@/lib/react-query/hooks'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
+import { useDocumentVisible } from '@/hooks/use-document-visible'
+import { useFirewallTrafficLiveUpdatesEnabled } from '@/hooks/use-firewall-traffic-live-updates-pref'
+import { useFirewallTrafficLivePolling } from '@/hooks/use-firewall-traffic-live-polling'
+import { useFirewallTrafficLiveTransitions } from '@/hooks/use-firewall-traffic-live-transitions'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
+import { FirewallChartLiveControls } from './_components/FirewallChartLiveControls'
+import { FirewallChartLiveIndicator } from './_components/FirewallChartLiveIndicator'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
   FIREWALL_TRAFFIC_SERIES,
@@ -59,17 +66,23 @@ interface MetricSubStat {
   label: string
   /** Full name used for the hover title. */
   title: string
-  value: string | number
+  value: number
   change?: number
   trend?: 'up' | 'down'
+  decimals?: number
+  suffix?: string
+  formatValue?: (value: number) => string
 }
 
 interface StatCardProps {
   label: string
-  value: string | number
+  value: number
   change?: number
   trend?: 'up' | 'down'
   subStats?: MetricSubStat[]
+  decimals?: number
+  suffix?: string
+  formatValue?: (value: number) => string
 }
 
 function MetricChange({
@@ -95,7 +108,16 @@ function MetricChange({
   )
 }
 
-function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
+function MetricTile({
+  label,
+  value,
+  change,
+  trend,
+  subStats,
+  decimals,
+  suffix,
+  formatValue,
+}: StatCardProps) {
   return (
     <div className="min-w-0">
       <div className="flex min-w-0 items-baseline justify-between gap-x-2">
@@ -105,10 +127,14 @@ function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
         {subStats && subStats.length > 0 ? (
           <p className="shrink-0 text-end text-[11px] leading-tight text-muted-foreground">
             {subStats.map((sub, index) => {
-              const formattedValue =
-                typeof sub.value === 'number'
-                  ? sub.value.toLocaleString()
-                  : sub.value
+              const formattedValue = sub.formatValue
+                ? sub.formatValue(sub.value)
+                : sub.decimals !== undefined
+                  ? sub.value.toLocaleString(undefined, {
+                      minimumFractionDigits: sub.decimals,
+                      maximumFractionDigits: sub.decimals,
+                    }) + (sub.suffix ?? '')
+                  : sub.value.toLocaleString() + (sub.suffix ?? '')
               const changeSuffix =
                 sub.change !== undefined
                   ? ` (${sub.change > 0 ? '+' : ''}${sub.change}%)`
@@ -124,9 +150,13 @@ function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
                       ·
                     </span>
                   ) : null}
-                  <span className="font-medium tabular-nums text-foreground">
-                    {formattedValue}
-                  </span>
+                  <AnimatedCounter
+                    value={sub.value}
+                    className="font-medium text-foreground"
+                    decimals={sub.decimals}
+                    suffix={sub.suffix}
+                    formatDisplay={sub.formatValue}
+                  />
                   {sub.label ? <span>{sub.label}</span> : null}
                 </span>
               )
@@ -135,9 +165,13 @@ function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
         ) : null}
       </div>
       <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
-        <span className="text-[20px] font-semibold tabular-nums text-foreground">
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </span>
+        <AnimatedCounter
+          value={value}
+          className="text-[20px] font-semibold text-foreground"
+          decimals={decimals}
+          suffix={suffix}
+          formatDisplay={formatValue}
+        />
         <MetricChange change={change} trend={trend} />
       </div>
     </div>
@@ -217,13 +251,38 @@ export function TrafficOverview() {
     }
   }, [setDateRange, usageLogRetentionHours])
 
-  const { data: overview, refetch } = useProjectFirewallTrafficOverview(
+  const isDocumentVisible = useDocumentVisible()
+  const { liveUpdatesEnabled, toggleLiveUpdatesEnabled } =
+    useFirewallTrafficLiveUpdatesEnabled()
+
+  const {
+    data: overview,
+    refetch,
+  } = useProjectFirewallTrafficOverview(
     projectId,
     dateRange,
     resolvedChartInterval,
     usageLogRetentionHours,
+    dateRangePresetId,
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const { isLiveActive } = useFirewallTrafficLivePolling({
+    enabled: liveUpdatesEnabled,
+    isDocumentVisible,
+    refreshRollingDateRange,
+    refetch,
+  })
+
+  const { chartAnimationRevision } = useFirewallTrafficLiveTransitions({
+    overview,
+    enabled: liveUpdatesEnabled,
+  })
+
+  const chartLiveAnimation = useChartLiveUpdateAnimation(
+    chartAnimationRevision,
+    liveUpdatesEnabled,
+  )
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -294,10 +353,10 @@ export function TrafficOverview() {
     [chartAxisMax],
   )
 
-  const blockRate =
+  const blockRateValue =
     totalRequests > 0
-      ? (((totalDenied + totalRateLimited) / totalRequests) * 100).toFixed(1)
-      : '0.0'
+      ? ((totalDenied + totalRateLimited) / totalRequests) * 100
+      : 0
 
   const seriesTotals = useMemo(
     () =>
@@ -353,7 +412,8 @@ export function TrafficOverview() {
         {
           label: '',
           title: t('Avg solve time'),
-          value: formatFirewallSolveTime(avgSolveTimeMs),
+          value: avgSolveTimeMs,
+          formatValue: formatFirewallSolveTime,
           change: avgSolveTimeChange,
           trend: changeTrend(avgSolveTimeChange),
         },
@@ -373,7 +433,9 @@ export function TrafficOverview() {
     },
     {
       label: t('Block rate'),
-      value: `${blockRate}%`,
+      value: blockRateValue,
+      decimals: 1,
+      suffix: '%',
       change: blockRateChange,
       trend: changeTrend(blockRateChange),
     },
@@ -384,9 +446,10 @@ export function TrafficOverview() {
       <div className="flex flex-col-reverse gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-[24px] font-semibold tabular-nums text-foreground">
-              {totalRequests.toLocaleString()}
-            </span>
+            <AnimatedCounter
+              value={totalRequests}
+              className="text-[24px] font-semibold text-foreground"
+            />
             <span className="text-[13px] text-muted-foreground">
               {t('requests')}
             </span>
@@ -419,9 +482,19 @@ export function TrafficOverview() {
             presetId={dateRangePresetId}
             className="h-9 shrink-0"
           />
+          <FirewallChartLiveControls
+            isLive={liveUpdatesEnabled}
+            onToggle={toggleLiveUpdatesEnabled}
+          />
           <RefreshButton
             onClick={() => void handleRefresh()}
             isRefreshing={isRefreshing}
+            disabled={liveUpdatesEnabled}
+            tooltip={
+              liveUpdatesEnabled
+                ? t('Pause live updates to refresh manually')
+                : undefined
+            }
           />
         </div>
       </div>
@@ -436,23 +509,29 @@ export function TrafficOverview() {
       ) : null}
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {seriesByValueAsc.map((series) => (
-            <div key={series.key} className="flex items-center gap-1.5">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: series.color }}
-              />
-              <span className="text-[12px] text-muted-foreground">
-                {t(series.label)}
-              </span>
-            </div>
-          ))}
+        <div className="mb-3 flex min-h-5 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {seriesByValueAsc.map((series) => (
+              <div key={series.key} className="flex items-center gap-1.5">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: series.color }}
+                />
+                <span className="text-[12px] text-muted-foreground">
+                  {t(series.label)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <FirewallChartLiveIndicator
+            isLive={liveUpdatesEnabled}
+            isPolling={isLiveActive}
+          />
         </div>
 
         <ChartArea>
           <div
-            className={surfaceClassName}
+            className={cn(surfaceClassName, 'relative')}
             aria-label={
               canSelect
                 ? t('Drag on the chart to select a date range')
@@ -603,7 +682,7 @@ export function TrafficOverview() {
                     strokeWidth={2}
                     fill={`url(#${series.gradientId})`}
                     dot={false}
-                    {...CHART_ANIMATION_DISABLED}
+                    {...chartLiveAnimation}
                   />
                 ))}
                 <UsageChartBrushReferenceArea
@@ -645,6 +724,9 @@ export function TrafficOverview() {
                 change={metric.change}
                 trend={metric.trend}
                 subStats={metric.subStats}
+                decimals={metric.decimals}
+                suffix={metric.suffix}
+                formatValue={metric.formatValue}
               />
             </div>
           )

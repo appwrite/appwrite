@@ -2719,4 +2719,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'マージリクエスト',
   'Pull request': 'プルリクエスト',
   'Failed to approve deployment': 'デプロイの承認に失敗しました',
+  'Pause live updates': 'ライブ更新を一時停止',
+  'Pause live updates to refresh manually':
+    '手動で更新するにはライブ更新を一時停止してください',
+  'Resume live updates': 'ライブ更新を再開',
+  'Updating…': '更新中…',
+  Paused: '一時停止',
 }
