@@ -122,3 +122,29 @@ export function isConsoleImpersonationActive(
 export function hasConsoleImpersonationSessionTarget(): boolean {
   return !!readConsoleImpersonationTargetUserId()
 }
+
+/**
+ * Operator snapshot to persist for a new impersonation session. While already
+ * impersonating, the original operator is kept instead of the current (target) account.
+ */
+export function resolveConsoleImpersonationOperator(
+  account:
+    | {
+        $id: string
+        name?: string
+        email?: string
+        impersonatorUserId?: string
+      }
+    | null
+    | undefined,
+): ConsoleImpersonationOperatorSnapshot | undefined {
+  if (account?.impersonatorUserId) {
+    return readConsoleImpersonationOperatorSnapshot()
+  }
+  if (!account) return undefined
+  return {
+    $id: account.$id,
+    name: account.name ?? '',
+    email: account.email ?? '',
+  }
+}
