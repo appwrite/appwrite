@@ -21,9 +21,11 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      - --entrypoints.appwrite_mqtt.address=:8883
     ports:
       - ${_APP_HTTP_PORT:-80}:80
       - ${_APP_HTTPS_PORT:-443}:443
+      - ${_APP_MQTT_PORT:-8883}:8883
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -353,6 +355,58 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_POOL_ADAPTER=swoole
+
+  appwrite-mqtt:
+    entrypoint: mqtt
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-mqtt
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      # TLS is terminated here (mqtts, :8883) and forwarded as plaintext MQTT to :1883,
+      # mirroring how realtime's wss is terminated at the appwrite_websecure entrypoint.
+      - traefik.tcp.routers.appwrite_mqtt.entrypoints=appwrite_mqtt
+      - traefik.tcp.routers.appwrite_mqtt.rule=HostSNI(`*`)
+      - traefik.tcp.routers.appwrite_mqtt.tls=true
+      - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
+      - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
+    networks:
+      - appwrite
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_LOGGING_CONFIG_REALTIME
+      - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:

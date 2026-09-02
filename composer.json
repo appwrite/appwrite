@@ -26,7 +26,8 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus"
+            "Utopia\\Bus\\": "src/Utopia/Bus",
+            "Utopia\\Mqtt\\": "src/Utopia/Mqtt"
         }
     },
     "autoload-dev": {
@@ -40,6 +41,61 @@
     "prefer-stable": true,
     "repositories": [
         {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/platform",
+                "version": "1.0.999",
+                "source": {
+                    "url": "https://github.com/utopia-php/monorepo.git",
+                    "type": "git",
+                    "reference": "cursor/multi-job-queue-platform-f0c8"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Platform\\": "packages/platform/src/Platform"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5",
+                    "ext-json": "*",
+                    "ext-redis": "*",
+                    "utopia-php/cli": "^0.24",
+                    "utopia-php/http": "^2.0@RC",
+                    "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0",
+                    "utopia-php/servers": "^0.4"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/messaging",
+                "version": "2.1.999",
+                "source": {
+                    "url": "https://github.com/utopia-php/monorepo.git",
+                    "type": "git",
+                    "reference": "appwrite-mqtt-poc"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
+                    }
+                },
+                "require": {
+                    "php": ">=8.5.0",
+                    "ext-curl": "*",
+                    "ext-openssl": "*",
+                    "ext-swoole": "*",
+                    "psr/http-client": "^1.0",
+                    "psr/http-message": "^1.1 || ^2.0",
+                    "utopia-php/client": "^0.3",
+                    "utopia-php/pools": "^2.0",
+                    "utopia-php/smtp": "^0.1",
+                    "utopia-php/telemetry": "^0.4"
+                }
+            }
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
         },
@@ -50,6 +106,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -94,7 +154,8 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
-        "utopia-php/platform": "1.0.0-rc18",
+        "utopia-php/mqtt": "dev-dev",
+        "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
         "utopia-php/queue": "^1.3.0",

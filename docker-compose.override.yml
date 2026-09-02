@@ -50,6 +50,18 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
+  appwrite-mqtt:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   appwrite-worker:
     build:
       context: .
@@ -505,6 +517,11 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      # This dev override replaces the base command wholesale, so the mqtts
+      # entrypoint must be repeated here or Traefik won't listen on :8883 and the
+      # appwrite-mqtt broker is unreachable (the :8883 port publish survives via
+      # ports concatenation, but has no entrypoint behind it without this).
+      - --entrypoints.appwrite_mqtt.address=:8883
       - --log.level=DEBUG
       - --api.insecure=true
       - --accesslog=true
