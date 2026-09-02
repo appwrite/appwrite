@@ -11,8 +11,9 @@ use Appwrite\Auth\OAuth2;
  * Shared with the "Sign in with GitLab" account-login OAuth2 provider, which
  * stores its secret as JSON ({"clientSecret": "...", "endpoint": "..."}) to
  * support self-hosted GitLab per-project. The VCS flow (see app/config/vcs.php)
- * only supports official gitlab.com, but still encodes to that same JSON
- * shape so getAppSecret()/getEndpoint() stay correct for both consumers.
+ * and the console project (see app/config/console.php) encode to that same JSON
+ * shape, taking their endpoint from _APP_VCS_GITLAB_ENDPOINT and
+ * _APP_CONSOLE_GITLAB_ENDPOINT respectively.
  */
 class Gitlab extends OAuth2
 {
@@ -230,7 +231,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Decode the JSON stored in appSecret
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
      *
      * @return array
      */
@@ -239,8 +241,13 @@ class Gitlab extends OAuth2
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
-            throw new \Exception('Invalid secret');
+            return ['clientSecret' => $this->appSecret];
         }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
         return $secret;
     }
 
@@ -255,6 +262,6 @@ class Gitlab extends OAuth2
         $defaultEndpoint = 'https://gitlab.com';
         $secret = $this->getAppSecret();
         $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
-        return empty($endpoint) ? $defaultEndpoint : $endpoint;
+        return empty($endpoint) ? $defaultEndpoint : \rtrim($endpoint, '/');
     }
 }

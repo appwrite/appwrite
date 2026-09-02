@@ -120,6 +120,113 @@ final class AttributesTest extends TestCase
             ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_ENUM, 'size' => Database::LENGTH_KEY],
             Attribute::resolve(['key' => 'enum', 'type' => APP_DATABASE_ATTRIBUTE_ENUM])
         );
+
+        // createIntegerColumn sizes the column off max, defaulting to the int64
+        // range, and createBigIntColumn is always 8 bytes
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 3000000000])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100])
+        );
+
+        // Both edges of the declared range have to be storable. A max on its own
+        // leaves min at PHP_INT_MIN, and a min below INT32 needs the wide column
+        // however small max is.
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 100])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -5000000000, 'max' => 100])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -2147483648, 'max' => 2147483647])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT])
+        );
+
+        // None of the numeric endpoints takes a size. A size sent inline must not
+        // narrow the column below the range the same definition declares.
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 4])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 8, 'min' => 0, 'max' => 100])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT, 'size' => 4])
+        );
+
+        $this->assertEquals(
+            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'size' => 4])
+        );
+    }
+
+    public function testNumericBoundsMustFitTheType(): void
+    {
+        $this->assertTrue($this->object->isValid([
+            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
+            ['key' => 'total', 'type' => Database::VAR_BIGINT, 'min' => \PHP_INT_MIN, 'max' => \PHP_INT_MAX],
+            ['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'min' => -1.5, 'max' => 1.5],
+        ]), $this->object->getDescription());
+
+        // 9223372036854776000 is what a client that rounds an int64 to a double
+        // sends back after reading the default bounds off an existing column. PHP
+        // decodes it as a float, and storing it leaves an integer column bounded
+        // by 9.223372036854776e+18.
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
+        ]));
+        $this->assertStringContainsString("Attribute 'counter': min is invalid", $this->object->getDescription());
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 9223372036854776000],
+        ]));
+        $this->assertStringContainsString("Attribute 'counter': max is invalid", $this->object->getDescription());
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'total', 'type' => Database::VAR_BIGINT, 'max' => 9223372036854776000],
+        ]));
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 1.5],
+        ]));
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => '100'],
+        ]));
+
+        // A float column carries the same bound as a double, which is what it is
+        $this->assertTrue($this->object->isValid([
+            ['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'max' => 9223372036854776000],
+        ]), $this->object->getDescription());
     }
 
     public function testResolveKeepsExplicitSize(): void
