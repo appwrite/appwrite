@@ -5,11 +5,10 @@ description: Provision a managed MySQL 8.4 instance inside your Appwrite project
 date: 2026-09-02
 cover: /images/blog/announcing-native-mysql-databases/cover.avif
 timeToRead: 5
-author: atharva
+author: jake-barnby
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is a native MySQL database in Appwrite?"
     answer: "It is a managed MySQL instance running on dedicated compute inside your Appwrite project. Appwrite provisions the engine with its own hostname, credentials, and TLS, and you connect with the mysql client or any MySQL driver. Appwrite manages the infrastructure; your code talks to MySQL directly."

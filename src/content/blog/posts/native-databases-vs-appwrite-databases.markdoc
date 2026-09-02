@@ -9,7 +9,6 @@ author: atharva
 category: comparisons
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is the difference between an Appwrite database and a native database?"
     answer: "An Appwrite database (TablesDB, DocumentsDB, or VectorsDB) is a managed data store you work with through the Appwrite SDKs and APIs. Permissions, queries, realtime, and functions triggers are built in. A native database (PostgreSQL or MySQL) is the database engine itself, provisioned for your project. You connect to it with standard drivers, ORMs, and SQL clients, and the Appwrite SDKs do not manage its data."
