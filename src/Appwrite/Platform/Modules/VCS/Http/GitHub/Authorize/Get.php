@@ -64,10 +64,13 @@ class Get extends Action
         Document $project,
         array $platform
     ) {
+        // The callback endpoint is public, so it verifies this signature
+        // before trusting the projectId and redirect URLs in state.
         $state = \json_encode([
             'projectId' => $project->getId(),
             'success' => $success,
             'failure' => $failure,
+            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
