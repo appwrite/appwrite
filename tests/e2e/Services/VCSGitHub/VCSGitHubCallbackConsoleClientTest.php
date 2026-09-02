@@ -30,9 +30,8 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $redirect = $this->getRedirect();
 
-        // Signed the way the authorize endpoint signs it. Harmless while the
-        // callback does not verify signatures, and keeps this suite green once
-        // it does.
+        // Signed like the authorize endpoint does: harmless while the callback
+        // does not verify signatures, green once it does.
         return (string) json_encode([
             'projectId' => $projectId,
             'success' => $redirect,
@@ -65,10 +64,6 @@ final class VCSGitHubCallbackConsoleClientTest extends Scope
         $this->assertStringStartsWith($this->getRedirect() . '?error=', (string) $response['headers']['location']);
     }
 
-    /**
-     * Without state there is no project to redirect to, so the error has to at
-     * least say what went wrong.
-     */
     public function testGetCallbackMissingState(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', $this->getCallbackHeaders(), [
