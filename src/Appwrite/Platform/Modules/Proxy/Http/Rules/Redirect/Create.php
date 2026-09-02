@@ -16,7 +16,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -92,7 +91,6 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -111,7 +109,6 @@ class Create extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         array $platform,
-        Log $log,
         Authorization $authorization,
         Bus $bus,
     ) {
@@ -164,7 +161,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());

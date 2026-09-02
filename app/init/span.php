@@ -1,6 +1,9 @@
 <?php
 
+use Utopia\DSN\DSN;
 use Utopia\Span\Exporter\Pretty;
+use Utopia\Span\Exporter\Sentry;
+use Utopia\Span\Exporter\SentryField;
 use Utopia\Span\Exporter\Stdout;
 use Utopia\Span\Span;
 use Utopia\Span\Storage;
@@ -35,8 +38,35 @@ $sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunc
 // `_APP_LOGGING_FORMAT`: `pretty` (default) for multi-line terminal output;
 // `json` for one NDJSON object per span (log aggregators).
 $loggingFormat = \strtolower(System::getEnv('_APP_LOGGING_FORMAT', 'pretty'));
-$exporter = $loggingFormat === 'json'
-    ? new Stdout(sampler: $sampler)
-    : new Pretty(sampler: $sampler);
+$exporters = [
+    $loggingFormat === 'json'
+        ? new Stdout(sampler: $sampler)
+        : new Pretty(sampler: $sampler),
+];
 
-Span::setExporters($exporter);
+// `_APP_LOGGING_CONFIG`: a `sentry://PROJECT_ID:KEY@HOST/` DSN ships spans that
+// carry an error to Sentry. Handlers mark expected client errors with
+// `error.publish=false` so only server-side failures are exported.
+$loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
+if ($loggingConfig !== '') {
+    try {
+        $dsn = new DSN($loggingConfig);
+        if ($dsn->getScheme() !== 'sentry') {
+            throw new \InvalidArgumentException('Only the sentry:// scheme is supported');
+        }
+
+        $tags = ['project.id', 'user.id', 'http.method', 'http.path', 'http.hostname', 'http.locale', 'error.type', 'error.code', 'type', 'domain', 'function.id', 'deployment.id', 'database.id', 'channel', 'lock.target'];
+        $exporters[] = new Sentry(
+            dsn: 'https://' . $dsn->getPassword() . '@' . $dsn->getHost() . '/' . $dsn->getUser(),
+            environment: System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging',
+            release: System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            serverName: System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname() ?: null),
+            classifier: static fn (string $key): SentryField => \in_array($key, $tags, true) ? SentryField::Tag : SentryField::Context,
+            sampler: static fn (Span $span): bool => $span->get('error.publish') !== false,
+        );
+    } catch (\Throwable $th) {
+        \error_log('Invalid _APP_LOGGING_CONFIG, error reporting is disabled: ' . $th->getMessage());
+    }
+}
+
+Span::setExporters(...$exporters);
