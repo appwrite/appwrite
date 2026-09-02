@@ -124,7 +124,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         /** @var array<string, string> $cookies */
         $cookies = [];
         $this->giteaCookies = $cookies;
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
             'x-appwrite-project' => $projectId,
@@ -376,7 +376,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithTamperedState(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
 
         $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
         $state['projectId'] = 'victim-project';
@@ -392,7 +392,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithoutCode(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
 
         // Signed state, no code: the failure redirect carries the error as a query string
         $response = $this->callGiteaCallbackHelper([
@@ -415,7 +415,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://localhost/console/project-default-' . $projectId . '/settings/git-installations?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->gitInstallationsUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationWithInvalidState(): void
@@ -427,7 +427,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     public function testCreateInstallationWithUnknownProject(): void
     {
-        $consoleUrl = 'http://localhost/console/project-default-missing/settings/git-installations';
+        $consoleUrl = $this->gitInstallationsUrl('missing');
 
         $response = $this->callGiteaCallbackHelper([
             'code' => 'unused',
@@ -441,7 +441,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallationWithLongState(): void
     {
         $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
 
         // Past the old 2048 cap: redirect URLs are not length-limited, so the
         // authorize endpoint can produce a state this size itself.
@@ -463,6 +463,18 @@ final class VCSGiteaConsoleClientTest extends Scope
         $installation = $this->createInstallationHelper(redirects: false);
 
         $this->assertNotEmpty($installation['$id']);
+    }
+
+    /**
+     * The callback builds its fallback redirect from the project's region, so the
+     * expected URL follows the region the scope's project was created in: Cloud
+     * CI creates projects in a region other than default.
+     */
+    private function gitInstallationsUrl(string $projectId): string
+    {
+        $region = $this->getProject()['region'];
+
+        return "http://localhost/console/project-{$region}-{$projectId}/settings/git-installations";
     }
 
     /**
