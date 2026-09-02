@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Route;
 
+require_once __DIR__ . '/../../../../../../app/init.php';
 require_once __DIR__ . '/../../../../../../src/Appwrite/Platform/Modules/Databases/Constants.php';
 
 final class CreateTransactionIdTest extends TestCase
