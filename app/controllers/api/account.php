@@ -3868,28 +3868,18 @@ Http::post('/v1/account/recovery')
             Query::equal('email', [$email]),
         ]);
 
-        if ($profile->isEmpty()) {
-            // Mitigate User Enumeration by returning a mock success response
-            // Simulate the hashing time to prevent timing attacks
-            $secret = $proofForToken->generate();
-            $proofForToken->hash($secret);
+        $accountExists = !$profile->isEmpty();
 
-            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
-            $mockToken = new Document([
+        if (!$accountExists) {
+            // Generate dummy profile to pass through the rest of the logic for timing mitigation
+            $profile = new Document([
                 '$id' => ID::unique(),
-                '$createdAt' => DateTime::now(),
-                '$updatedAt' => DateTime::now(),
-                'userId' => ID::unique(),
-                'type' => TOKEN_TYPE_RECOVERY,
-                'secret' => '',
-                'expire' => $expire,
+                'status' => true,
+                'email' => $email,
             ]);
-            return $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($mockToken, Response::MODEL_TOKEN);
+        } else {
+            $user->setAttributes($profile->getArrayCopy());
         }
-
-        $user->setAttributes($profile->getArrayCopy());
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
@@ -3911,14 +3901,19 @@ Http::post('/v1/account/recovery')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $recovery = $dbForProject->createDocument('tokens', $recovery
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($profile->getId())),
-                Permission::update(Role::user($profile->getId())),
-                Permission::delete(Role::user($profile->getId())),
-            ]));
+        if ($accountExists) {
+            $recovery = $dbForProject->createDocument('tokens', $recovery
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::user($profile->getId())),
+                    Permission::update(Role::user($profile->getId())),
+                    Permission::delete(Role::user($profile->getId())),
+                ]));
 
-        $dbForProject->purgeCachedDocument('users', $profile->getId());
+            $dbForProject->purgeCachedDocument('users', $profile->getId());
+        } else {
+            $recovery->setAttribute('$createdAt', DateTime::now());
+            $recovery->setAttribute('$updatedAt', DateTime::now());
+        }
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -4039,28 +4034,34 @@ Http::post('/v1/account/recovery')
             ];
         }
 
-        $publisherForMails->enqueue(new MailMessage(
-            project: $project,
-            recipient: $profile->getAttribute('email', ''),
-            name: $profile->getAttribute('name', ''),
-            subject: $subject,
-            template: MAIL_TEMPLATE_RECOVERY,
-            bodyTemplate: $bodyTemplate,
-            body: $body,
-            preview: $preview,
-            smtp: $smtpConfig,
-            variables: $emailVariables,
-            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
-            platform: $platform,
-        ));
+        if ($accountExists) {
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $profile->getAttribute('email', ''),
+                name: $profile->getAttribute('name', ''),
+                subject: $subject,
+                template: MAIL_TEMPLATE_RECOVERY,
+                bodyTemplate: $bodyTemplate,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
 
-        $recovery->setAttribute('secret', $secret);
+        if (!$accountExists) {
+            $recovery->setAttribute('secret', '');
+        } else {
+            $recovery->setAttribute('secret', $secret);
 
-        $queueForEvents
-            ->setParam('userId', $profile->getId())
-            ->setParam('tokenId', $recovery->getId())
-            ->setUser($profile)
-            ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            $queueForEvents
+                ->setParam('userId', $profile->getId())
+                ->setParam('tokenId', $recovery->getId())
+                ->setUser($profile)
+                ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
