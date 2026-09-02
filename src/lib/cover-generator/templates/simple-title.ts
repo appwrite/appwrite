@@ -1,27 +1,34 @@
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
-import { COVER_HEIGHT } from '@/lib/cover-generator/constants'
+import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
+import { getCoverContentLayoutTransform } from '@/lib/cover-generator/cover-layout-scale'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
 import { COVER_EYEBROW_LETTER_SPACING, escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
-import type { CoverSimpleTitleData } from '@/lib/cover-generator/types'
+import type { CoverRenderData } from '@/lib/cover-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
-const COVER_CONTENT_X = 96
-/** Scaled up from marketing `text-[11px]` for OG export. */
-const COVER_EYEBROW_FONT_SIZE = 18
-/** Extra space between eyebrow baseline block and title (scaled for OG export). */
-const COVER_EYEBROW_TITLE_GAP = 32
-const COVER_SUBTITLE_FONT_SIZE = 26
-const COVER_SUBTITLE_LINE_STEP = COVER_SUBTITLE_FONT_SIZE + 8
-const COVER_SUBTITLE_MAX_CHARS_PER_LINE = 50
-const COVER_SUBTITLE_MAX_LINES = 4
-const COVER_BOTTOM_PADDING = 80
+const COVER_CONTENT_X = 40
+const COVER_EYEBROW_FONT_SIZE = 22
+const COVER_EYEBROW_TITLE_GAP = 20
+const COVER_TITLE_MAX_CHARS_PER_LINE = 18
+const COVER_TITLE_MAX_LINES = 3
+const COVER_TITLE_SUBTITLE_GAP = 16
+const COVER_SUBTITLE_FONT_SIZE = 32
+const COVER_SUBTITLE_LINE_STEP = COVER_SUBTITLE_FONT_SIZE + 10
+/** Inter regular advance at subtitle size; keep a matching right inset. */
+const COVER_SUBTITLE_CHAR_ADVANCE = 0.44
+const COVER_SUBTITLE_MAX_CHARS_PER_LINE = Math.max(
+  40,
+  Math.floor(
+    (COVER_WIDTH - COVER_CONTENT_X * 2) /
+      (COVER_SUBTITLE_FONT_SIZE * COVER_SUBTITLE_CHAR_ADVANCE),
+  ),
+)
+const COVER_SUBTITLE_MAX_LINES = 2
 const COVER_CTA_FONT_SIZE = 22
-const COVER_CTA_PILL_HEIGHT = 48
-/** Horizontal inset so the pill hugs the label (Inter Semibold). */
+const COVER_CTA_PILL_HEIGHT = 44
 const COVER_CTA_PILL_PADDING_X = 20
-/** Average Inter Semibold advance at CTA size (tighter than generic pill estimate). */
 const COVER_CTA_CHAR_ADVANCE = 0.5
-const COVER_CTA_RESERVED_HEIGHT = 72
+const COVER_CTA_GAP = 20
 
 function renderTitleTspans(
   lines: string[],
@@ -59,21 +66,26 @@ function renderBodyTspans(
     .join('')
 }
 
-function getSimpleTitleMaxSubtitleLines(
-  subtitleLayoutY: number,
-  hasCta: boolean,
-): number {
-  const bottomPadding = hasCta
-    ? COVER_BOTTOM_PADDING + COVER_CTA_RESERVED_HEIGHT
-    : COVER_BOTTOM_PADDING
-  const availableHeight = COVER_HEIGHT - bottomPadding - subtitleLayoutY
-  return Math.max(
-    1,
-    Math.min(
-      COVER_SUBTITLE_MAX_LINES,
-      Math.floor(availableHeight / COVER_SUBTITLE_LINE_STEP),
-    ),
-  )
+function getSimpleTitleFontSize(lines: string[]): number {
+  if (lines.length >= 3) return 92
+  if (lines.length === 2) return 108
+  const longest = Math.max(0, ...lines.map((line) => line.length))
+  return longest > 16 ? 120 : 144
+}
+
+function textBlockHeight(lineCount: number, fontSize: number, lineStep: number): number {
+  if (lineCount <= 0) return 0
+  return (lineCount - 1) * lineStep + fontSize
+}
+
+/**
+ * Artboard bottom inset so the *output* bottom gap matches the output left gap.
+ * OG 1200×630 letterboxes the 16:9 artboard horizontally (extra left/right),
+ * which is why a matching artboard padding looked huge on the bottom.
+ */
+function getSimpleTitleBottomPadding(canvasWidth: number, canvasHeight: number): number {
+  const { scale, translateX } = getCoverContentLayoutTransform(canvasWidth, canvasHeight)
+  return Math.round(translateX / scale + COVER_CONTENT_X)
 }
 
 function estimateCtaPillWidth(label: string): number {
@@ -84,9 +96,8 @@ function estimateCtaPillWidth(label: string): number {
   )
 }
 
-function renderCtaPill(label: string, brandCta: string): string {
+function renderCtaPill(label: string, brandCta: string, pillTop: number): string {
   const pillWidth = estimateCtaPillWidth(label)
-  const pillTop = COVER_HEIGHT - COVER_BOTTOM_PADDING - COVER_CTA_PILL_HEIGHT
   const textBaseline = coverSvgTextBaseline(
     pillTop + (COVER_CTA_PILL_HEIGHT - COVER_CTA_FONT_SIZE) / 2,
     COVER_CTA_FONT_SIZE,
@@ -99,38 +110,59 @@ function renderCtaPill(label: string, brandCta: string): string {
 }
 
 export function renderSimpleTitleTemplateSvg(
-  data: CoverSimpleTitleData,
+  data: Extract<CoverRenderData, { template: 'simple-title' }>,
   theme: CoverTheme,
 ): string {
   const brand = getCoverBrandThemeForSvgExport(theme)
-  const titleLines = wrapTextLines(stripCoverTitleSuffix(data.title), 22, 3)
-  const titleFontSize = titleLines.some((line) => line.length > 18) ? 72 : 84
-  const lineStep = titleFontSize + 8
-
+  const bottomPadding = getSimpleTitleBottomPadding(data.width, data.height)
+  const titleLines = wrapTextLines(
+    stripCoverTitleSuffix(data.title),
+    COVER_TITLE_MAX_CHARS_PER_LINE,
+    COVER_TITLE_MAX_LINES,
+  )
+  const titleFontSize = getSimpleTitleFontSize(titleLines)
+  const lineStep = titleFontSize + 6
   const eyebrowText = formatCoverEyebrow(data.eyebrow)
-  const eyebrowLayoutY = 196
-  const startY = eyebrowText
-    ? eyebrowLayoutY + COVER_EYEBROW_FONT_SIZE + COVER_EYEBROW_TITLE_GAP
-    : 220
-
-  const firstBaseline = coverSvgTextBaseline(startY, titleFontSize)
-  const titleSvg = titleLines.length
-    ? `<text class="cover-title" fill="${brand.foreground}" font-size="${titleFontSize}" x="${COVER_CONTENT_X}" y="${firstBaseline}">${renderTitleTspans(titleLines, lineStep, brand.brandCta)}</text>`
-    : ''
-
-  const subtitleLayoutY =
-    startY + titleLines.length * lineStep + (data.subtitle ? 24 : 0)
   const ctaLabel = data.cta?.trim()
-  const subtitleMaxLines = data.subtitle
-    ? getSimpleTitleMaxSubtitleLines(subtitleLayoutY, Boolean(ctaLabel))
-    : 0
   const subtitleLines = data.subtitle
     ? wrapTextLines(
         data.subtitle.trim(),
         COVER_SUBTITLE_MAX_CHARS_PER_LINE,
-        subtitleMaxLines,
+        COVER_SUBTITLE_MAX_LINES,
       )
     : []
+
+  let cursorBottom = COVER_HEIGHT - bottomPadding
+  let ctaSvg = ''
+
+  if (ctaLabel) {
+    const pillTop = cursorBottom - COVER_CTA_PILL_HEIGHT
+    ctaSvg = renderCtaPill(ctaLabel, brand.brandCta, pillTop)
+    cursorBottom = pillTop - COVER_CTA_GAP
+  }
+
+  const subtitleLayoutY = subtitleLines.length
+    ? cursorBottom -
+      textBlockHeight(
+        subtitleLines.length,
+        COVER_SUBTITLE_FONT_SIZE,
+        COVER_SUBTITLE_LINE_STEP,
+      )
+    : 0
+  if (subtitleLines.length) {
+    cursorBottom = subtitleLayoutY - COVER_TITLE_SUBTITLE_GAP
+  }
+
+  const startY =
+    cursorBottom - textBlockHeight(titleLines.length, titleFontSize, lineStep)
+  const eyebrowLayoutY = eyebrowText
+    ? startY - COVER_EYEBROW_TITLE_GAP - COVER_EYEBROW_FONT_SIZE
+    : 0
+
+  const firstBaseline = coverSvgTextBaseline(startY, titleFontSize)
+  const titleSvg = titleLines.length
+    ? `<text class="cover-title" fill="${brand.foreground}" font-size="${titleFontSize}" letter-spacing="0" x="${COVER_CONTENT_X}" y="${firstBaseline}">${renderTitleTspans(titleLines, lineStep, brand.brandCta)}</text>`
+    : ''
 
   return `
     ${
@@ -144,6 +176,6 @@ export function renderSimpleTitleTemplateSvg(
         ? `<text class="cover-body" fill="${brand.mutedForeground}" font-size="${COVER_SUBTITLE_FONT_SIZE}" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(subtitleLayoutY, COVER_SUBTITLE_FONT_SIZE)}">${renderBodyTspans(subtitleLines, COVER_CONTENT_X, COVER_SUBTITLE_LINE_STEP)}</text>`
         : ''
     }
-    ${ctaLabel ? renderCtaPill(ctaLabel, brand.brandCta) : ''}
+    ${ctaSvg}
   `
 }
