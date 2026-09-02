@@ -35,6 +35,17 @@ abstract class Adapter
     protected bool $sharedConsumer = false;
 
     /**
+     * How often a running worker sweeps its consumers for idle upkeep.
+     *
+     * Sized against the shortest server-side idle deadline a broker is likely
+     * to be holding: NATS pings every 120s and closes after two go unanswered,
+     * so a sweep every 30s leaves several chances to answer before that runs
+     * out. Cheap enough to be unconditional — a sweep with nothing to do is a
+     * method_exists() per consumer.
+     */
+    protected const float MAINTENANCE_INTERVAL = 30.0;
+
+    /**
      * Prefer a callable factory so each consume loop gets its own receive
      * connection. A bare Consumer is OK for single-queue only.
      *
@@ -182,6 +193,62 @@ abstract class Adapter
     }
 
     /**
+     * Sweep the consumers this adapter owns for idle upkeep.
+     *
+     * A broker holding connections nobody is using still has servers on the
+     * other end counting silence. The consume loop's own traffic keeps its
+     * receive connection alive, but a pooled broker's spare slots get no
+     * traffic at all, and are reaped on a timer with nothing watching.
+     *
+     * Deliberately maintain() and not tick(): a tick reads the socket and needs
+     * the caller to hold the resource exclusively, which a running receive loop
+     * does not allow. maintain() is the pool-level sweep — it touches only what
+     * is idle, so it is safe to call while the loop is mid-receive. Consumers
+     * that expose neither are skipped, which is why this can run unconditionally.
+     *
+     * Never throws: upkeep failing must not take the worker down with it.
+     *
+     * @param callable(?Message, \Throwable): void|null $errorCallback
+     */
+    public function maintain(?callable $errorCallback = null): void
+    {
+        foreach ($this->maintenanceTargets() as $target) {
+            $sweep = [$target, 'maintain'];
+
+            if (!\is_callable($sweep)) {
+                continue;
+            }
+
+            try {
+                $sweep();
+            } catch (\Throwable $error) {
+                // Reported rather than swallowed: a pool that cannot keep its
+                // idle connections alive will hand the next caller a dead one,
+                // and that is exactly the silent loss this is here to prevent.
+                if ($errorCallback === null) {
+                    continue;
+                }
+
+                try {
+                    $errorCallback(null, $error);
+                } catch (\Throwable) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Consumers eligible for a maintenance sweep. Adapters that hold more than
+     * the one bound consumer override this to include them.
+     *
+     * @return list<Consumer>
+     */
+    protected function maintenanceTargets(): array
+    {
+        return [$this->consumer];
+    }
+
+    /**
      * Never throws: a broker that cannot be reached is reported to
      * $errorCallback and retried after RECEIVE_BACKOFF. Losing the worker to a
      * transient outage is worse than waiting for the broker to come back.
@@ -243,27 +310,35 @@ abstract class Adapter
         callable $successCallback,
         callable $errorCallback,
     ): void {
-        try {
-            $messageCallback($message);
-            $this->consumer->commit($this->queue, $message);
-            $successCallback($message);
-        } catch (\Throwable $error) {
-            try {
-                $this->consumer->reject($this->queue, $message);
-            } catch (\Throwable) {
-            }
-            try {
-                $errorCallback($message, $error);
-            } catch (\Throwable $reportFailure) {
-                $this->reportUnreported($error, $reportFailure, $message);
-            }
-        } finally {
-            $this->releaseContext();
-        }
+        $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $this->queue, $this->consumer);
     }
 
     /**
      * Concurrent multi-queue variant of {@see process()}.
+     *
+     * The three phases are separated rather than sharing one try, because only
+     * the first of them means the work failed. Committing and the success hook
+     * run after the handler has already succeeded, and routing their failures
+     * to reject() gives the message back to the broker after the job is done:
+     * the handler runs a second time, or — at the delivery ceiling — a job that
+     * worked is dead-lettered as though it never had.
+     *
+     * Contract change for $errorCallback. It used to fire only for work that
+     * had failed, so "reported" and "will be retried" were the same statement.
+     * It now also fires for a failed commit and a throwing success hook, and in
+     * both of those the handler has already run to completion:
+     *
+     *  - handler threw       — the work did not happen; the message is rejected
+     *                          and will be retried.
+     *  - commit threw        — the work happened; nothing is rejected, and the
+     *                          broker may still redeliver on its own deadline.
+     *  - success hook threw  — the work happened and is acked; nothing will
+     *                          redeliver it.
+     *
+     * A callback that treats every report as a failed job will over-count and,
+     * where it drives alerting or compensation, act on work that succeeded.
+     * Implementations that need to tell them apart should key off the phase
+     * rather than the presence of a report.
      */
     protected function processFrom(
         Message $message,
@@ -274,21 +349,91 @@ abstract class Adapter
         Consumer $consumer,
     ): void {
         try {
-            $messageCallback($message);
-            $consumer->commit($queue, $message);
-            $successCallback($message);
+            $this->runPhases($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
+        } finally {
+            // The phases return early on failure, so the container is dropped
+            // here rather than at the end of any one of them.
+            $this->releaseContext();
+        }
+    }
+
+    /**
+     * The three phases themselves. Separated from processFrom() only so the
+     * per-message container is released on every exit path.
+     */
+    private function runPhases(
+        Message $message,
+        callable $messageCallback,
+        callable $successCallback,
+        callable $errorCallback,
+        Queue $queue,
+        Consumer $consumer,
+    ): void {
+        try {
+            $this->withAckExtension($consumer, $queue, $message, static function () use ($messageCallback, $message): void {
+                $messageCallback($message);
+            });
         } catch (\Throwable $error) {
+            // The work did not happen, so hand the message back to be retried.
             try {
                 $consumer->reject($queue, $message);
             } catch (\Throwable) {
             }
-            try {
-                $errorCallback($message, $error);
-            } catch (\Throwable $reportFailure) {
-                $this->reportUnreported($error, $reportFailure, $message);
-            }
-        } finally {
-            $this->releaseContext();
+
+            $this->report($errorCallback, $error, $message);
+
+            return;
+        }
+
+        try {
+            $consumer->commit($queue, $message);
+        } catch (\Throwable $error) {
+            // A transient ack failure over completed work. Not rejected: the
+            // job is done, and the broker will redeliver on its own deadline if
+            // the ack genuinely never landed — a duplicate the handler can
+            // guard against, where a NAK here is a duplicate guaranteed.
+            $this->report($errorCallback, $error, $message);
+
+            return;
+        }
+
+        try {
+            $successCallback($message);
+        } catch (\Throwable $error) {
+            // Bookkeeping after the message is acked and gone. There is nothing
+            // left to reject, and re-running the job would not fix a shutdown
+            // hook, so this is reported and no more.
+            $this->report($errorCallback, $error, $message);
+        }
+    }
+
+    /**
+     * Run the handler, keeping the broker's delivery deadline extended for as
+     * long as it takes.
+     *
+     * The default is to just run it: extending needs a scheduler to run
+     * alongside the handler, which only a coroutine adapter has. Adapters that
+     * have one override this, and where they do, the broker's ack deadline
+     * stops being a ceiling on how long a job may run.
+     *
+     * @param \Closure(): void $work
+     */
+    protected function withAckExtension(Consumer $consumer, Queue $queue, Message $message, \Closure $work): void
+    {
+        $work();
+    }
+
+    /**
+     * Report a failure, with the last-resort trace when reporting fails too.
+     *
+     * @param callable(?Message, \Throwable): void $errorCallback
+     */
+    private function report(callable $errorCallback, \Throwable $error, Message $message): void
+    {
+        try {
+            $errorCallback($message, $error);
+        } catch (\Throwable $reportFailure) {
+            $this->reportUnreported($error, $reportFailure, $message);
         }
     }
 

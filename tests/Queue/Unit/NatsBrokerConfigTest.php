@@ -54,4 +54,17 @@ final class NatsBrokerConfigTest extends TestCase
         $broker = new Nats($this->neverConnect(), ackWait: 10.0, maxDeliver: 5, backoff: [10.0, 30.0, 120.0], deadMaxAge: 604800.0);
         $this->assertInstanceOf(Nats::class, $broker);
     }
+
+    public function testDuplicateWindowMustBePositive(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('duplicateWindow must be a positive number of seconds');
+        new Nats($this->neverConnect(), duplicateWindow: 0.0);
+    }
+
+    public function testDuplicateWindowRejectsNegativeValues(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Nats($this->neverConnect(), duplicateWindow: -1.0);
+    }
 }

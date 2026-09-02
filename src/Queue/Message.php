@@ -9,6 +9,7 @@ class Message
     protected int $timestamp;
     protected array $payload;
     protected int $attempts = 0;
+    protected ?int $sequence = null;
 
     public function __construct(array $array = [])
     {
@@ -21,6 +22,7 @@ class Message
         $this->timestamp = $array['timestamp'];
         $this->payload = $array['payload'] ?? [];
         $this->attempts = $array['attempts'] ?? 0;
+        $this->sequence = $array['sequence'] ?? null;
     }
 
     public function setPid(string $pid): self
@@ -86,6 +88,28 @@ class Message
         return $this;
     }
 
+    /**
+     * The broker's own position for this message, where it has one.
+     *
+     * A stronger deduplication key than the pid for a handler that needs one.
+     * The pid identifies the logical message and is stable across every
+     * redelivery, which is what makes it the right key for "have I already done
+     * this work"; the sequence identifies the stored copy, so it distinguishes
+     * one delivery of a message from another. Null on brokers with no such
+     * notion, so a handler must treat it as optional.
+     */
+    public function getSequence(): ?int
+    {
+        return $this->sequence;
+    }
+
+    public function setSequence(?int $sequence): self
+    {
+        $this->sequence = $sequence;
+
+        return $this;
+    }
+
     public function asArray(): array
     {
         return [
@@ -94,6 +118,7 @@ class Message
             'timestamp' => $this->timestamp,
             'payload' => $this->payload ?? null,
             'attempts' => $this->attempts,
+            'sequence' => $this->sequence,
         ];
     }
 }
