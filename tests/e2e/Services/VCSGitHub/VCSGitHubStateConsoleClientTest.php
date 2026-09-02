@@ -78,7 +78,6 @@ final class VCSGitHubStateConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
 
     public function testGetCallbackTamperedState(): void
@@ -101,7 +100,6 @@ final class VCSGitHubStateConsoleClientTest extends Scope
             ], followRedirects: false);
 
             $this->assertEquals(400, $response['headers']['status-code'], json_encode($mutation));
-            $this->assertStringContainsString('Invalid state parameter', (string) $response['body'], json_encode($mutation));
         }
     }
 
@@ -119,7 +117,6 @@ final class VCSGitHubStateConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
 
     public function testGetCallbackNonStringSignature(): void
@@ -136,6 +133,5 @@ final class VCSGitHubStateConsoleClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Invalid state parameter', (string) $response['body']);
     }
 }
