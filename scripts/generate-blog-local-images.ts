@@ -164,15 +164,16 @@ async function generateAnnouncingGitlabSupportCover(
   const { width, height } = resolveCoverSizePresetKey('blog')
 
   const data: CoverRenderData = {
-    template: 'showcase-icon',
+    template: 'integration',
     theme: 'dark',
     format: 'png',
     width,
     height,
     title: 'GitLab comes to Appwrite',
     subtitle: 'Deploy Sites and Functions from your GitLab groups and projects',
-    icon: '/icons/gitlab.svg',
-    iconSize: 140,
+    logoLeft: '/icons/appwrite.svg',
+    logoRight: '/icons/gitlab.svg',
+    connector: '×',
   }
 
   const png = await renderCoverImage(data)
@@ -187,15 +188,16 @@ async function generateAnnouncingBitbucketSupportCover(
   const { width, height } = resolveCoverSizePresetKey('blog')
 
   const data: CoverRenderData = {
-    template: 'showcase-icon',
+    template: 'integration',
     theme: 'dark',
     format: 'png',
     width,
     height,
     title: 'Bitbucket comes to Appwrite',
     subtitle: 'Deploy Sites and Functions from your Bitbucket workspaces',
-    icon: '/icons/bitbucket.svg',
-    iconSize: 140,
+    logoLeft: '/icons/appwrite.svg',
+    logoRight: '/icons/bitbucket.svg',
+    connector: '×',
   }
 
   const png = await renderCoverImage(data)
