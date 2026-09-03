@@ -14,8 +14,6 @@ You can protect a project API path or block a noisy IP in a few minutes. This qu
 2. Open a project.
 3. Open **Firewall** in the sidebar.
 
-Firewall is available on Appwrite Cloud.
-
 # Create a deny rule {% #create-a-deny-rule %}
 
 {% only_dark %}

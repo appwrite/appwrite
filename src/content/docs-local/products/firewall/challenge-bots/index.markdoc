@@ -31,8 +31,6 @@ This guide puts a challenge in front of the sign-up page of a site.
 8. Keep **TTL (seconds)** at `1800`.
 9. Click **Create rule**.
 
-**Difficulty** sets how much work the browser does, from `1` to `5`. **TTL** sets how long a visitor stays cleared after solving one, from `900` to `86400` seconds.
-
 Scope challenge rules to a **Site** or a **Function**. An **API** rule rejects matching requests instead of challenging them, because an API client has no browser to solve the puzzle with. See [Challenge](/docs/products/firewall/actions#challenge).
 
 # Choose the paths to cover {% #choose-the-paths %}

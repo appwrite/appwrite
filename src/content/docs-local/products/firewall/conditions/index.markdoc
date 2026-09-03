@@ -53,7 +53,9 @@ The condition builder groups attributes by what they describe. A further 13 attr
 
 With the premium Geo DB addon you can also match on **City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization**. The network attributes tell data center traffic apart from residential and mobile connections.
 
-Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error. If the addon lapses, rules that use them stop matching on API traffic, so rewrite those rules first.
+Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error.
+
+If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
 
@@ -70,7 +72,7 @@ To match a cookie on Functions or Sites traffic, use the **Cookie** attribute in
 # Matching details {% #matching-details %}
 
 - **IP address** accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks match only with **equals** and **not equal**.
-- **Path** is the URL path without the query string. Use **starts with** for prefixes such as `/v1/account`.
+- **Path** conditions work best with **starts with**, for prefixes such as `/v1/account`.
 - **Operating system** and **Browser** are derived from the user agent and may not resolve for unusual clients. Match **User agent** directly instead.
 
 Text comparison ignores case.

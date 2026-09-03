@@ -24,14 +24,10 @@ While Attack mode is on, an amber banner appears under the Firewall header: **At
 Appwrite creates (or re-enables) a **Challenge** rule named **Attack mode** on that site. The rule:
 
 - Matches **path starts with `/`**, so every request for the site
-- Uses [priority](/docs/products/firewall/priority) `0`, so it is evaluated before the create-wizard default of `100`
+- Uses [priority](/docs/products/firewall/priority) `0`, so it runs before the wizard default of `100` and before bypass rules at `10`. Give allowlist bypass rules a negative priority so they still run first
 - Uses difficulty `3` and a TTL of `1800` seconds
 
-The rule appears in the site's rules list like any other rule. You can inspect it there, but prefer the **Attack mode** button or banner to turn it off so the same rule can be re-enabled later.
-
-# Allowlists {% #allowlists %}
-
-Attack mode runs at priority `0`. Bypass rules at `10` or higher run after it and do not skip the challenge. To keep an allowlist working, give those bypass rules a negative priority, which you set through the API. See [Priority](/docs/products/firewall/priority).
+The rule appears in the site's rules list like any other rule.
 
 # Turn it off {% #turn-it-off %}
 

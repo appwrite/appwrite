@@ -91,19 +91,3 @@ Read traffic overview metrics and use impact preview when designing new rules.
 Challenge every visitor to a site with one click during an incident.
 {% /cards_item %}
 {% /cards %}
-
-# Platform integration {% #platform-integration %}
-
-Firewall sits in front of project traffic on Appwrite Cloud. Related platform docs cover network security and the products you can protect.
-
-{% cards %}
-{% cards_item href="/docs/products/network" title="Appwrite Network" %}
-Edge routing, TLS, DDoS mitigation, and other network-layer protections.
-{% /cards_item %}
-{% cards_item href="/docs/products/functions" title="Functions" %}
-HTTP-triggered serverless functions you can scope Firewall rules to.
-{% /cards_item %}
-{% cards_item href="/docs/products/sites" title="Sites" %}
-Deployed web apps you can protect with site-scoped Firewall rules.
-{% /cards_item %}
-{% /cards %}

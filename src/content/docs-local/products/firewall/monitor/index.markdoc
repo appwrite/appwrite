@@ -53,9 +53,7 @@ When you create or edit a rule, the wizard sidebar estimates how many recent req
 
 The estimate covers IP, path, method, country, city, hostname, operating system, browser, and user agent. A rule that uses any other attribute, a **does not contain** condition, or more than eight conditions shows **Preview unavailable** instead of a number. IP addresses are compared as text, so a CIDR range previews as zero matches even though the rule enforces it.
 
-# Confirm a rule fired {% #confirm-a-rule-fired %}
-
-Test rules with a client SDK or an API key, then read the `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action` response headers. They name the rule that fired and arrive with the response, instead of minutes later in a chart. See [Find out which rule fired](/docs/products/firewall/actions#which-rule-fired).
+To confirm which rule handled a request once the rule is live, read the `X-Appwrite-WAF-Rule` response header. See [Find out which rule fired](/docs/products/firewall/actions#which-rule-fired).
 
 {% arrow_link href="/docs/products/firewall/rate-limit-auth" %}
 Rate limit authentication traffic

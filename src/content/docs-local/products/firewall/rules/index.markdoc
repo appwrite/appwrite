@@ -22,8 +22,6 @@ A **Firewall rule** is a named policy that matches inbound requests and applies 
 
 Each action has its own settings, covered in [Actions](/docs/products/firewall/actions).
 
-You choose the action when you create the rule and cannot change it later. To swap a deny rule for a challenge rule, delete it and create a new one.
-
 The name holds up to 128 characters, and the description holds up to 1024.
 
 # Console layout {% #console-layout %}
@@ -43,7 +41,7 @@ When a **site** is selected, the rules toolbar includes **Attack mode**. Turning
 
 # Create a rule through the API {% #create-a-rule-through-the-api %}
 
-Each action has its own endpoint. Post to `/v1/waf/rules/deny`, `/bypass`, `/challenge`, `/rate-limit`, or `/redirect`, and give the rule at least one condition:
+Each action has its own endpoint. Post to `/v1/waf/rules/deny`, `/bypass`, `/challenge`, `/rate-limit`, or `/redirect`:
 
 ```sh
 curl -X POST https://cloud.appwrite.io/v1/waf/rules/deny \
@@ -64,7 +62,7 @@ curl -X POST https://cloud.appwrite.io/v1/waf/rules/deny \
 
 Each condition takes a `method`, an `attribute`, and a list of `values`. Operators that take no value, such as `isNull`, still need `values` as an empty list. [Conditions](/docs/products/firewall/conditions#api-attribute-names) lists the attribute names.
 
-Use the API for the settings the Console cannot reach, such as a negative [priority](/docs/products/firewall/priority).
+Always send `conditions`. Leaving the parameter out creates a rule that matches every request in its scope, while sending an empty array returns a `400`.
 
 # Plan limits {% #plan-limits %}
 
@@ -82,7 +80,7 @@ The Console shows current usage next to the Firewall title when a limit applies.
 
 # Access {% #access %}
 
-Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, the owner, developer, and editor roles hold both scopes and can create, update, and delete rules. The analyst role holds only `wafRules.read` and can view rules without changing them. The billing role holds neither.
+Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, the owner and developer roles hold both scopes and can create, update, and delete rules. The analyst and editor roles hold only `wafRules.read`, so they can view rules without changing them. The billing role holds neither.
 
 When organization roles are disabled, all organization members can manage rules where the feature is available.
 

@@ -6,7 +6,7 @@ description: Learn how Appwrite Firewall evaluates rules by priority and first-m
 
 **Priority** sets the order Appwrite evaluates rules in. Lower numbers run first. The first rule that matches applies its [action](/docs/products/firewall/actions), and no later rule runs for that request.
 
-Priority ranges from `-100000` to `100000`. The Console's field starts at `0` and will not step below it, so set a negative priority through the API.
+Priority ranges from `-100000` to `100000`. The Console's stepper stops at `0`, so type a negative number to go below it.
 
 # How evaluation works {% #how-evaluation-works %}
 
@@ -36,10 +36,6 @@ The Console create wizard defaults priority to `100`, while the API defaults to 
 | [Attack mode](/docs/products/firewall/attack-mode) on a site | Catch-all challenge at `0`. Bypass allowlists must use a **negative** priority to run first |
 
 Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert rules later without renumbering everything.
-
-# Conflicts and overlaps {% #conflicts-and-overlaps %}
-
-Overlapping conditions are normal. The lowest priority number that matches wins, including a bypass or a rate limit that is still under its quota. Use [impact preview](/docs/products/firewall/monitor#impact-preview) to see what a new rule would catch before you place it.
 
 # Updating priority {% #updating-priority %}
 

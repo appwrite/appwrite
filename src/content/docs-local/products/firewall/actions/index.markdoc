@@ -87,8 +87,6 @@ Rate limit throttles matching requests that go over a quota. Each rule counts it
 | **Strategy** | How the quota is enforced over time (see [Rate limit strategies](#rate-limit-strategies)) | `fixedWindow`, `slidingWindow`, or `tokenBucket` (Console default `fixedWindow`) |
 | **Max bucket size** | Token bucket only: the largest burst allowed. The other strategies ignore it | `1` to `1000000` (Console default `50`) |
 
-A limit of `100` with an interval of `60` and **Limit by** `ip` allows each IP address 100 matching requests per minute.
-
 A matching request under the quota is allowed, and later rules are skipped, the same as a bypass. A request over the quota gets `429` with a `Retry-After` header. Treat that header as a minimum wait. Outside fixed window, a client that retries exactly then may still be throttled.
 
 If the rate limiter itself is unavailable, Appwrite allows the request. A rule can therefore look inactive during an outage.
