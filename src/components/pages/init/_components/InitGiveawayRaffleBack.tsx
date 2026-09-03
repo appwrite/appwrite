@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { Loader2, RefreshCw, Sparkles, Trophy, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   computeRaffleWheelRotation,
   INIT_GIVEAWAY_RAFFLE_SPIN_MS,
@@ -57,6 +57,15 @@ export function InitGiveawayRaffleBack({
     return () => setTransientActivity(null)
   }, [isSpinning, setTransientActivity])
 
+  const wheelSegments = useMemo(
+    () =>
+      participants.map((participant) => ({
+        id: participant.id,
+        label: formatInitPresenceDisplayName(participant.name),
+      })),
+    [participants],
+  )
+
   const canRaffle = participants.length > 0 && !isSpinning && !loadingParticipants
   const canReload = !isSpinning && !loadingParticipants
 
@@ -75,7 +84,7 @@ export function InitGiveawayRaffleBack({
     window.setTimeout(() => {
       setWinner(nextWinner)
       setIsSpinning(false)
-      raffleContext?.celebrateRaffleWinner(nextWinner)
+      raffleContext?.celebrateRaffleWinner(nextWinner.id)
     }, INIT_GIVEAWAY_RAFFLE_SPIN_MS)
   }, [canRaffle, participants, raffleContext, rotation])
 
@@ -120,7 +129,7 @@ export function InitGiveawayRaffleBack({
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />
             </div>
           ) : (
-            <InitGiveawayRaffleWheel participants={participants} rotation={rotation} />
+            <InitGiveawayRaffleWheel segments={wheelSegments} rotation={rotation} />
           )}
 
           <div className="flex flex-col items-center gap-2">
