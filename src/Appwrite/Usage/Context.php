@@ -25,6 +25,11 @@ class Context
     protected string $ip = '';
     protected string $sdk = '';
     protected string $sdkVersion = '';
+    protected string $protocol = '';
+    protected string $accept = '';
+    protected string $acceptLanguage = '';
+    protected string $cookie = '';
+    protected string $queryKeys = '';
 
     public function setPath(string $path): static
     {
@@ -181,6 +186,39 @@ class Context
         return $this;
     }
 
+    public function setProtocol(string $protocol): static
+    {
+        $this->protocol = $protocol;
+        return $this;
+    }
+
+    public function setAccept(string $accept): static
+    {
+        $this->accept = $accept;
+        return $this;
+    }
+
+    public function setAcceptLanguage(string $acceptLanguage): static
+    {
+        $this->acceptLanguage = $acceptLanguage;
+        return $this;
+    }
+
+    public function setCookie(string $cookie): static
+    {
+        $this->cookie = $cookie;
+        return $this;
+    }
+
+    /**
+     * Comma-joined query parameter names (values are intentionally excluded).
+     */
+    public function setQueryKeys(string $queryKeys): static
+    {
+        $this->queryKeys = $queryKeys;
+        return $this;
+    }
+
     /**
      * Add a metric with the metadata active at the time it was emitted.
      */
@@ -206,6 +244,11 @@ class Context
             'ip' => $this->ip,
             'sdk' => $this->sdk,
             'sdkVersion' => $this->sdkVersion,
+            'protocol' => $this->protocol,
+            'accept' => $this->accept,
+            'acceptLanguage' => $this->acceptLanguage,
+            'cookie' => $this->cookie,
+            'queryKeys' => $this->queryKeys,
         ];
 
         return $this;
@@ -280,6 +323,11 @@ class Context
         $this->ip = '';
         $this->sdk = '';
         $this->sdkVersion = '';
+        $this->protocol = '';
+        $this->accept = '';
+        $this->acceptLanguage = '';
+        $this->cookie = '';
+        $this->queryKeys = '';
 
         return $this;
     }
