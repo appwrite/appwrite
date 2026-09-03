@@ -153,7 +153,16 @@ class Create extends Action
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
+            // The files collection is DDL and cannot share a transaction with the
+            // document insert above, and its name needs the document's sequence,
+            // so the document is committed first. A bucket without its collection
+            // can never hold a file: remove it rather than leave an orphan.
+            try {
+                $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
+            } catch (\Throwable $th) {
+                $dbForProject->deleteDocument('buckets', $bucketId);
+                throw $th;
+            }
         } catch (DuplicateException) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }

@@ -576,7 +576,16 @@ class Install extends Action
 
             if ($existingCompose !== '') {
                 try {
-                    $installedVersion = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+                    $tag = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+
+                    // Compose files before 2.0 interpolate the tag, so the service reads
+                    // back "${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}" and
+                    // the part after the first colon is an expression, not a version.
+                    // Anything that does not start with a digit is left to .env below,
+                    // which holds the value that expression resolves to.
+                    if (\preg_match('/^\d/', $tag) === 1) {
+                        $installedVersion = $tag;
+                    }
                 } catch (\Throwable) {
                     // No appwrite service to read a tag from; .env below covers it.
                 }

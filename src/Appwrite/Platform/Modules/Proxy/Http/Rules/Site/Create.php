@@ -99,6 +99,11 @@ class Create extends Action
         Bus $bus,
     ) {
 
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
+
         $this->validateDomainRestrictions($domain, $platform);
 
         $site = $dbForProject->getDocument('sites', $siteId);
