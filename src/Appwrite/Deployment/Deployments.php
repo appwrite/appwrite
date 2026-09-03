@@ -537,27 +537,14 @@ readonly class Deployments
     }
 
     /**
-     * Where build.sh's output artifact and package-manager cache
-     * (a squashfs) land, and what the job needs to get them there. build.sh
-     * only cares that OPEN_RUNTIMES_BUILD_OUTPUT_DIR/_CACHE_ARTIFACT point
-     * somewhere on its local filesystem, volume-backed or not, so the
-     * strategy follows the builds device:
-     *   - local: the shared builds volume is mounted and build.sh writes to
-     *     outputDirectory()/cachePath() on it, which already are the device's
-     *     paths.
-     *   - remote (S3 and friends): no volume spans Appwrite and the build
-     *     workers, so build.sh writes into the job workspace and the sidecar
-     *     moves things in/out via s3:// 'artifacts', signed with the S3_*
-     *     credentials the orchestrator is configured with:
-     *       - cache pull, before the build: a plain DownloadArtifact (no
-     *         `depends`, so it runs before the command) into the local cache
-     *         path.
-     *       - cache push and output upload, after the build: an UploadArtifact
-     *         with `depends: 'job'` — 'job' is the orchestrator's sentinel id
-     *         for "after the build command finishes", not an id of another
-     *         artifact.
-     *     Object keys are the device's buildPath()/cachePath(), so everything
-     *     that reads builds through deviceForBuilds works unchanged.
+     * Where build.sh's output artifact and package-manager cache land, and
+     * what the job needs to get them there. On the local device the shared
+     * builds volume is mounted and build.sh writes straight to
+     * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
+     * writes into the job workspace and the sidecar moves output and cache
+     * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
+     * reading through deviceForBuilds works unchanged. 'job' in `depends`
+     * is the orchestrator's sentinel for "after the build command finishes".
      *
      * @return array{volumes: array<Volume>, artifacts: array<mixed>, environment: array<string, string>}
      */
