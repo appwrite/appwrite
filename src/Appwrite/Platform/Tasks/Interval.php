@@ -76,6 +76,7 @@ class Interval extends Action
     protected function getTasks(): array
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
+        $intervalCertificateGeneration = (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', '300'); // 5 minutes
 
         return [
             [
@@ -84,6 +85,13 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
+            ],
+            [
+                'name' => 'certificateGeneration',
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->generateCertificate($dbForPlatform, $publisherForCertificates);
+                },
+                'interval' => $intervalCertificateGeneration * 1000,
             ]
         ];
     }
@@ -134,5 +142,60 @@ class Interval extends Action
 
         Span::add("interval.domain_verification.processed", $processed);
         Span::add("interval.domain_verification.failed", $failed);
+    }
+
+    /**
+     * Retry certificate generation for domains whose last attempt failed.
+     *
+     * DNS verification already retries on its own schedule; issuance had no
+     * equivalent, so a single failed attempt — a transient issuer error included
+     * — left the domain without a certificate until someone pressed retry in the
+     * Console. The worker caps how many times one certificate is attempted.
+     */
+    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    {
+        $fromTime = new DateTime('-3 days'); // Max 3 days old
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::createdAfter(DatabaseDateTime::format($fromTime)),
+            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATION_FAILED]), // Verified DNS, but no certificate yet
+            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
+            Query::limit(100), // Reasonable pagination limit
+        ]);
+
+        $scanned = \count($rules);
+        Span::add("interval.certificate_generation.scanned", $scanned);
+
+        if ($scanned === 0) {
+            Span::add("interval.certificate_generation.processed", 0);
+            Span::add("interval.certificate_generation.failed", 0);
+            return; // No rules to retry
+        }
+
+        $processed = 0;
+        $failed = 0;
+
+        foreach ($rules as $rule) {
+            try {
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                ));
+                $processed++;
+            } catch (\Throwable $th) {
+                $failed++;
+            }
+        }
+
+        Span::add("interval.certificate_generation.processed", $processed);
+        Span::add("interval.certificate_generation.failed", $failed);
     }
 }
