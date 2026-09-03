@@ -4,8 +4,18 @@ services:
     ports:
       - '11025:1025'
       - '11080:1080'
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '1080']
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
   request-catcher:
     image: appwrite/requestcatcher:1.0.0
     ports:
       - '15000:5000'
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '5000']
+      interval: 2s
+      timeout: 2s
+      retries: 30
