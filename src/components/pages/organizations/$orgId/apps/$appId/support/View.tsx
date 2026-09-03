@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { InputTags } from '@/components/ui/input-tags'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
 import {
+  listsEqual,
   nonEmptyList,
   trimOrEmpty,
   useOrgAppUpdate,
@@ -26,6 +27,10 @@ export function View() {
     setSupportUrl(app.supportUrl ?? '')
     setContacts(app.contacts ?? [])
   }, [app])
+
+  const supportDirty =
+    trimOrEmpty(supportUrl) !== (app.supportUrl ?? '') ||
+    !listsEqual(nonEmptyList(contacts), app.contacts ?? [])
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -61,7 +66,7 @@ export function View() {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating}
+          disabled={isUpdating || !supportDirty}
           onClick={() =>
             submit({
               supportUrl: trimOrEmpty(supportUrl),

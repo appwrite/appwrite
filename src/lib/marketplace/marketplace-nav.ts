@@ -1,9 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  BookOpen,
+  // BookOpen and FileText back the commented-out sidebar links below;
+  // LayoutGrid backs the commented-out Catalog nav item.
+  // BookOpen,
   Compass,
-  FileText,
-  LayoutGrid,
+  // FileText,
+  // LayoutGrid,
   Package,
   Plus,
 } from 'lucide-react'
@@ -11,7 +13,6 @@ import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
   MARKETPLACE_CATEGORY_ORDER,
-  type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
 
@@ -57,16 +58,16 @@ export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
           label: 'Explore',
           icon: Compass,
           keywords: ['explore', 'overview', 'home', 'discover', 'featured'],
-          description:
-            'Featured apps, popular integrations, and browse by category.',
+          description: 'Browse official apps, or explore by category.',
         },
-        {
-          id: 'catalog',
-          label: 'Catalog',
-          icon: LayoutGrid,
-          keywords: ['catalog', 'browse', 'all', 'integrations'],
-          description: 'Explore all apps available in the marketplace.',
-        },
+        // Hidden for now — Explore already lists every published app.
+        // {
+        //   id: 'catalog',
+        //   label: 'Catalog',
+        //   icon: LayoutGrid,
+        //   keywords: ['catalog', 'browse', 'all', 'integrations'],
+        //   description: 'Explore all apps available in the marketplace.',
+        // },
       ],
     },
     {
@@ -99,23 +100,24 @@ export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
 export const MARKETPLACE_SIDEBAR_LINKS: MarketplaceLinkItem[] = [
   {
     id: 'add-app',
-    label: 'Add app',
+    label: 'Create app',
     icon: Plus,
     action: 'add-app',
   },
-  {
-    id: 'docs',
-    label: 'Documentation',
-    icon: BookOpen,
-    href: '/docs',
-    external: true,
-  },
-  {
-    id: 'publisher-guidelines',
-    label: 'Publisher guidelines',
-    icon: FileText,
-    action: 'publisher-guidelines',
-  },
+  // Hidden for now, but kept for when the docs pages are ready.
+  // {
+  //   id: 'docs',
+  //   label: 'Documentation',
+  //   icon: BookOpen,
+  //   href: '/docs',
+  //   external: true,
+  // },
+  // {
+  //   id: 'publisher-guidelines',
+  //   label: 'Publisher guidelines',
+  //   icon: FileText,
+  //   action: 'publisher-guidelines',
+  // },
 ]
 
 export function getMarketplaceNavItem(
@@ -127,33 +129,4 @@ export function getMarketplaceNavItem(
     if (item) return item
   }
   return undefined
-}
-
-export function getAppsForMarketplaceNav(
-  navId: MarketplaceNavId,
-  catalog: MarketplaceApp[],
-  owned: MarketplaceApp[],
-): MarketplaceApp[] {
-  switch (navId) {
-    case 'explore':
-      return catalog
-    case 'catalog':
-      return catalog
-    case 'my-apps':
-      return owned
-    default:
-      if (navId.startsWith('category:')) {
-        const category = navId.slice('category:'.length) as MarketplaceAppCategory
-        return catalog.filter((a) => a.category === category)
-      }
-      return catalog
-  }
-}
-
-export function countAppsForNav(
-  navId: MarketplaceNavId,
-  catalog: MarketplaceApp[],
-  owned: MarketplaceApp[],
-): number {
-  return getAppsForMarketplaceNav(navId, catalog, owned).length
 }
