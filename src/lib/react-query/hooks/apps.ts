@@ -28,6 +28,13 @@ import { DEFAULT_STALE_TIME } from './constants'
 export const MARKETPLACE_APPS_LIMIT = 100
 export const MARKETPLACE_PAGE_SIZE = 15
 
+export type MarketplaceCatalogPageOptions = {
+  category?: MarketplaceAppCategory
+  page: number
+  /** Server-side text search across the whole catalog. */
+  search?: string
+}
+
 /** Labels only Appwrite can set; used for curated marketplace sections. */
 export type MarketplaceCurationLabel = 'official' | 'suggested'
 
@@ -93,29 +100,28 @@ function marketplaceCategoryQueries(category: MarketplaceAppCategory) {
   ]
 }
 
-export async function fetchMarketplaceCatalogAppsRaw(organizationId: string) {
-  if (!organizationId) {
-    return { apps: [], total: 0 }
-  }
-
-  const response = await sdk.forConsole.apps.list({
-    queries: [
-      ...marketplaceBaseQueries(),
-      Query.orderDesc('$createdAt'),
-      Query.limit(MARKETPLACE_APPS_LIMIT),
-    ],
-    total: true,
-  })
-
-  return {
-    apps: response.apps ?? [],
-    total: response.total ?? 0,
-  }
+/**
+ * Server-side text match, so search covers the whole catalog instead of only
+ * the first page. Apps have no fulltext index, so `contains` (substring) is
+ * used per attribute. `author` is derived client-side (official apps read as
+ * "Appwrite") and therefore cannot be matched here.
+ */
+function marketplaceSearchQueries(search: string | undefined) {
+  const term = search?.trim()
+  if (!term) return []
+  return [
+    Query.or([
+      Query.contains('name', term),
+      Query.contains('tagline', term),
+      Query.contains('description', term),
+      Query.contains('tags', term),
+    ]),
+  ]
 }
 
 export async function fetchMarketplaceCatalogPageRaw(
   organizationId: string,
-  options: { category?: MarketplaceAppCategory; page: number },
+  options: MarketplaceCatalogPageOptions,
 ) {
   if (!organizationId) {
     return { apps: [], total: 0 }
@@ -123,6 +129,7 @@ export async function fetchMarketplaceCatalogPageRaw(
 
   const queries = [
     ...marketplaceBaseQueries(),
+    ...marketplaceSearchQueries(options.search),
     Query.orderDesc('$createdAt'),
     Query.limit(MARKETPLACE_PAGE_SIZE),
     Query.offset(Math.max(0, options.page - 1) * MARKETPLACE_PAGE_SIZE),
@@ -173,7 +180,10 @@ export async function fetchMarketplaceLabeledAppsRaw(
 }
 
 /** Server-side totals for the sidebar and category tiles (limit-1 count queries). */
-export async function fetchMarketplaceNavCountsRaw(organizationId: string) {
+export async function fetchMarketplaceNavCountsRaw(
+  organizationId: string,
+  search?: string,
+) {
   if (!organizationId) {
     return {
       catalogTotal: 0,
@@ -182,7 +192,12 @@ export async function fetchMarketplaceNavCountsRaw(organizationId: string) {
   }
 
   const countQueries = (extra: string[] = []) => ({
-    queries: [...marketplaceBaseQueries(), ...extra, Query.limit(1)],
+    queries: [
+      ...marketplaceBaseQueries(),
+      ...marketplaceSearchQueries(search),
+      ...extra,
+      Query.limit(1),
+    ],
     total: true,
   })
 
@@ -300,25 +315,9 @@ export function organizationAppsQueryOptions(
   })
 }
 
-export function marketplaceCatalogQueryOptions(
-  organizationId: string | null | undefined,
-) {
-  return queryOptions({
-    queryKey: ['apps', 'marketplace', 'catalog', organizationId],
-    queryFn: () => fetchMarketplaceCatalogAppsRaw(organizationId!),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: organizationId ? 5 * 60 * 1000 : 0,
-  })
-}
-
 export function marketplaceCatalogPageQueryOptions(
   organizationId: string | null | undefined,
-  options: { category?: MarketplaceAppCategory; page: number },
+  options: MarketplaceCatalogPageOptions,
 ) {
   return queryOptions({
     queryKey: [
@@ -327,6 +326,7 @@ export function marketplaceCatalogPageQueryOptions(
       'catalog-page',
       organizationId,
       options.category ?? 'all',
+      options.search?.trim() || '',
       options.page,
     ],
     queryFn: () => fetchMarketplaceCatalogPageRaw(organizationId!, options),
@@ -369,12 +369,15 @@ export function marketplaceLabeledAppsQueryOptions(
 
 export function marketplaceNavCountsQueryOptions(
   organizationId: string | null | undefined,
+  search?: string,
 ) {
+  const term = search?.trim() || ''
   return queryOptions({
-    queryKey: ['apps', 'marketplace', 'nav-counts', organizationId],
-    queryFn: () => fetchMarketplaceNavCountsRaw(organizationId!),
+    queryKey: ['apps', 'marketplace', 'nav-counts', organizationId, term],
+    queryFn: () => fetchMarketplaceNavCountsRaw(organizationId!, term),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
+    placeholderData: keepPreviousData,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -424,38 +427,13 @@ export function useOrganizationApps(
   }
 }
 
-export function useMarketplaceCatalog(
-  organizationId: string | null | undefined,
-  teamNamesById?: Record<string, string>,
-) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
-    marketplaceCatalogQueryOptions(organizationId),
-  )
-
-  const apps = useMemo(
-    () =>
-      data?.apps
-        ? sortMarketplaceApps(
-            mapListedApps(data.apps, organizationId!, teamNamesById),
-          )
-        : [],
-    [data?.apps, organizationId, teamNamesById],
-  )
-
-  return {
-    apps,
-    total: data?.total ?? apps.length,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  }
-}
-
-/** One 15-app page of the catalog (optionally scoped to a category) plus the server total. */
+/**
+ * One 15-app page of the catalog (optionally scoped to a category and/or a
+ * search term) plus the server total.
+ */
 export function useMarketplaceCatalogPage(
   organizationId: string | null | undefined,
-  options: { category?: MarketplaceAppCategory; page: number },
+  options: MarketplaceCatalogPageOptions,
   teamNamesById?: Record<string, string>,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
@@ -520,12 +498,13 @@ export function useMarketplaceLabeledApps(
   }
 }
 
-/** Server totals for sidebar badges and category tiles. */
+/** Server totals for sidebar badges and category tiles, scoped to the search term. */
 export function useMarketplaceNavCounts(
   organizationId: string | null | undefined,
+  search?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    marketplaceNavCountsQueryOptions(organizationId),
+    marketplaceNavCountsQueryOptions(organizationId, search),
   )
 
   return {

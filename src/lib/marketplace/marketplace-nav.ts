@@ -13,7 +13,6 @@ import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
   MARKETPLACE_CATEGORY_ORDER,
-  type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
 
@@ -130,33 +129,4 @@ export function getMarketplaceNavItem(
     if (item) return item
   }
   return undefined
-}
-
-export function getAppsForMarketplaceNav(
-  navId: MarketplaceNavId,
-  catalog: MarketplaceApp[],
-  owned: MarketplaceApp[],
-): MarketplaceApp[] {
-  switch (navId) {
-    case 'explore':
-      return catalog
-    case 'catalog':
-      return catalog
-    case 'my-apps':
-      return owned
-    default:
-      if (navId.startsWith('category:')) {
-        const category = navId.slice('category:'.length) as MarketplaceAppCategory
-        return catalog.filter((a) => a.category === category)
-      }
-      return catalog
-  }
-}
-
-export function countAppsForNav(
-  navId: MarketplaceNavId,
-  catalog: MarketplaceApp[],
-  owned: MarketplaceApp[],
-): number {
-  return getAppsForMarketplaceNav(navId, catalog, owned).length
 }

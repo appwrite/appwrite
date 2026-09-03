@@ -13,7 +13,6 @@ import {
 import {
   MARKETPLACE_SIDEBAR_LINKS,
   buildMarketplaceNavGroups,
-  getAppsForMarketplaceNav,
   getMarketplaceNavItem,
   type MarketplaceNavId,
   type MarketplaceLinkItem,
@@ -21,12 +20,12 @@ import {
 import {
   MARKETPLACE_PAGE_SIZE,
   useCreateOrganizationApp,
-  useMarketplaceCatalog,
   useMarketplaceCatalogPage,
   useMarketplaceNavCounts,
   useOrganizationApps,
   useOrganizations,
 } from '@/lib/react-query/hooks'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -74,11 +73,6 @@ export function View() {
   )
 
   const {
-    apps: catalogApps,
-    isLoading: catalogLoading,
-    isFetching: catalogFetching,
-  } = useMarketplaceCatalog(orgId, teamNamesById)
-  const {
     apps: ownedApps,
     isLoading: ownedLoading,
     isFetching: ownedFetching,
@@ -92,18 +86,25 @@ export function View() {
   const [page, setPage] = useState(1)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
-  const searchActive = searchValue.trim().length > 0
+  const searchTerm = searchValue.trim()
+  const searchActive = searchTerm.length > 0
+  // Marketplace search runs on the server, so debounce the term to keep typing
+  // from firing a list request per keystroke.
+  const appliedSearch = useDebouncedValue(searchTerm, 300)
   const isExplore = activeNavId === 'explore'
   const activeCategory = activeNavId.startsWith('category:')
     ? (activeNavId.slice('category:'.length) as MarketplaceAppCategory)
     : undefined
-  // Explore, catalog, and category pages are server-paginated; other lists
-  // paginate client-side.
+  // Explore, catalog, and category pages are server-paginated and
+  // server-searched; My apps paginates and filters client-side.
   const isBrowseNav =
     isExplore || activeNavId === 'catalog' || activeCategory !== undefined
   const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
 
-  const { catalogTotal, categoryTotals } = useMarketplaceNavCounts(orgId)
+  const { catalogTotal, categoryTotals } = useMarketplaceNavCounts(
+    orgId,
+    appliedSearch,
+  )
   const {
     apps: browseApps,
     total: browseTotal,
@@ -111,7 +112,7 @@ export function View() {
     isFetching: browseFetching,
   } = useMarketplaceCatalogPage(
     orgId,
-    { category: activeCategory, page },
+    { category: activeCategory, page, search: appliedSearch },
     teamNamesById,
   )
 
@@ -127,75 +128,35 @@ export function View() {
 
   // Snap back when the last page disappears (e.g. after a refetch shrinks the list).
   useEffect(() => {
-    if (searchActive || !isBrowseNav || browseTotal === 0) return
+    if (!isBrowseNav || browseTotal === 0) return
     const maxPage = Math.max(1, Math.ceil(browseTotal / MARKETPLACE_PAGE_SIZE))
     if (page > maxPage) setPage(maxPage)
-  }, [searchActive, isBrowseNav, browseTotal, page])
+  }, [isBrowseNav, browseTotal, page])
 
-  const listLoading =
-    (catalogLoading || ownedLoading) &&
-    catalogApps.length === 0 &&
-    ownedApps.length === 0
-  const listFetching = catalogFetching || ownedFetching || browseFetching
+  const listFetching = ownedFetching || browseFetching
 
-  const filteredCatalog = useMemo(
-    () => filterApps(catalogApps, searchValue),
-    [catalogApps, searchValue],
+  const matchingOwnedApps = useMemo(
+    () => (searchActive ? filterApps(ownedApps, searchTerm) : ownedApps),
+    [searchActive, ownedApps, searchTerm],
   )
 
-  // Search runs client-side over the loaded catalog; browsing uses server pages.
-  const searchResults = useMemo(() => {
-    if (!searchActive) return []
-    if (isExplore) return filteredCatalog
-    const base = getAppsForMarketplaceNav(activeNavId, catalogApps, ownedApps)
-    return filterApps(base, searchValue)
-  }, [
-    searchActive,
-    isExplore,
-    filteredCatalog,
-    activeNavId,
-    catalogApps,
-    ownedApps,
-    searchValue,
-  ])
+  const listedApps = isBrowseNav ? browseApps : matchingOwnedApps
 
-  const listedApps = useMemo(() => {
-    if (searchActive) return searchResults
-    if (isBrowseNav) return browseApps
-    return getAppsForMarketplaceNav(activeNavId, catalogApps, ownedApps)
-  }, [
-    searchActive,
-    searchResults,
-    isBrowseNav,
-    browseApps,
-    activeNavId,
-    catalogApps,
-    ownedApps,
-  ])
-
-  // Server pages arrive pre-sliced; everything else is paginated client-side.
-  const listedTotal =
-    !searchActive && isBrowseNav ? browseTotal : listedApps.length
+  // Server pages arrive pre-sliced; My apps is paginated client-side.
+  const listedTotal = isBrowseNav ? browseTotal : listedApps.length
   const displayedApps = useMemo(() => {
-    if (!searchActive && isBrowseNav) return listedApps
+    if (isBrowseNav) return listedApps
     const start = (page - 1) * MARKETPLACE_PAGE_SIZE
     return listedApps.slice(start, start + MARKETPLACE_PAGE_SIZE)
-  }, [searchActive, isBrowseNav, listedApps, page])
+  }, [isBrowseNav, listedApps, page])
 
   const getItemCount = (navId: MarketplaceNavId): string => {
-    if (searchActive) {
-      if (navId === 'explore') return String(filteredCatalog.length)
-      return String(
-        filterApps(
-          getAppsForMarketplaceNav(navId, catalogApps, ownedApps),
-          searchValue,
-        ).length,
-      )
-    }
+    // Catalog and category counts come from server totals, which honour the
+    // search term, so they stay correct beyond the first page of results.
     if (navId === 'explore' || navId === 'catalog') {
       return formatMarketplaceCount(catalogTotal)
     }
-    if (navId === 'my-apps') return String(ownedApps.length)
+    if (navId === 'my-apps') return String(matchingOwnedApps.length)
     if (navId.startsWith('category:')) {
       const category = navId.slice('category:'.length) as MarketplaceAppCategory
       const total = categoryTotals?.[category]
@@ -262,10 +223,11 @@ export function View() {
         )
 
   const mainContent = () => {
-    const browseLoading2 =
-      !searchActive && isBrowseNav && browseLoading && browseApps.length === 0
+    const listLoading = isBrowseNav
+      ? browseLoading && browseApps.length === 0
+      : ownedLoading && ownedApps.length === 0
 
-    if (listLoading || browseLoading2) {
+    if (listLoading) {
       return (
         <div className="flex min-h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
