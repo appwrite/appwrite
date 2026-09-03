@@ -1810,6 +1810,33 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
+                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_EXECUTIONS',
+                'description' => 'ClickHouse HTTP DSN used for execution storage. Defaults to _APP_CONNECTIONS_DB_USAGE.',
+                'introduction' => '',
+                'default' => 'http://appwrite:appwrite@clickhouse:8123/appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_POOL_SIZE_EXECUTIONS',
+                'description' => 'Maximum number of pooled ClickHouse HTTP clients per process for execution CRUD.',
+                'introduction' => '',
+                'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_USAGE_TTL',
                 'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
                 'introduction' => '',
