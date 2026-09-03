@@ -59,18 +59,6 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $this->assertEquals(200, $event['headers']['status-code']);
     }
 
-    private function approveOnProvider(string $requester, int $providerInstallationId, string $organization): void
-    {
-        $this->postInstallationEvent([
-            'action' => 'created',
-            'installation' => [
-                'id' => $providerInstallationId,
-                'account' => ['login' => $organization],
-            ],
-            'requester' => ['login' => $requester],
-        ]);
-    }
-
     private function findRequest(string $requestId): ?array
     {
         $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders());
@@ -90,7 +78,14 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $requester = uniqid('octocat-');
         $requestId = $this->seedRequest($requester);
 
-        $this->approveOnProvider($requester, 424242, 'request-test-org');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424242,
+                'account' => ['login' => 'request-test-org'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
         $confirmed = $this->client->call(Client::METHOD_PATCH, '/vcs/requests/' . $requestId, $this->getRequestHeaders());
         $this->assertEquals(200, $confirmed['headers']['status-code']);
@@ -115,7 +110,14 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
     {
         $requester = uniqid('octocat-');
         $requestId = $this->seedRequest($requester);
-        $this->approveOnProvider($requester, 424247, 'request-test-org6');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424247,
+                'account' => ['login' => 'request-test-org6'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
         $request = $this->findRequest($requestId);
         $this->assertEquals('ready', $request['status'] ?? '');
@@ -126,7 +128,14 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
     {
         $requester = uniqid('octocat-');
         $requestId = $this->seedRequest($requester);
-        $this->approveOnProvider($requester, 424243, 'request-test-org2');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424243,
+                'account' => ['login' => 'request-test-org2'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
         $foreignProject = $this->getProject(true)['$id'];
 
@@ -183,7 +192,14 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
     {
         $requester = uniqid('octocat-');
         $requestId = $this->seedRequest($requester);
-        $this->approveOnProvider($requester, 424246, 'request-test-org5');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424246,
+                'account' => ['login' => 'request-test-org5'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
         $this->postInstallationEvent([
             'action' => 'deleted',
@@ -214,9 +230,23 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
     {
         $requester = uniqid('octocat-');
         $readyId = $this->seedRequest($requester);
-        $this->approveOnProvider($requester, 424249, 'request-test-org8');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424249,
+                'account' => ['login' => 'request-test-org8'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
-        $this->approveOnProvider($requester, 424250, 'request-test-org9');
+        $this->postInstallationEvent([
+            'action' => 'created',
+            'installation' => [
+                'id' => 424250,
+                'account' => ['login' => 'request-test-org9'],
+            ],
+            'requester' => ['login' => $requester],
+        ]);
 
         $ready = $this->findRequest($readyId);
         $this->assertEquals('request-test-org8', $ready['organization'] ?? '');

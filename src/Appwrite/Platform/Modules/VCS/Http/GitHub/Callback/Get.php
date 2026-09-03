@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -211,7 +212,7 @@ class Get extends Action
             // carry an installation_id, so without one they mean the caller
             // lacked permission to install.
             $error = match (true) {
-                $duplicate => 'You already have an installation request waiting for an organization owner to approve it. Complete or withdraw that one before requesting another.',
+                $duplicate => Config::getParam('errors')[Exception::INSTALLATION_REQUEST_ALREADY_EXISTS]['description'],
                 $setupAction === 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
                 \in_array($setupAction, ['install', 'update', ''], true) => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
                 default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',

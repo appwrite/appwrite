@@ -56,8 +56,10 @@ class XList extends Action
     ) {
         $queries = [Query::equal('projectInternalId', [$project->getSequence()])];
 
+        $results = $dbForPlatform->find('installationRequests', [...$queries, Query::limit(APP_LIMIT_COUNT)]);
+
         $response->dynamic(new Document([
-            'requests' => $dbForPlatform->find('installationRequests', $queries),
+            'requests' => $results,
             'total' => $dbForPlatform->count('installationRequests', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_INSTALLATION_REQUEST_LIST);
     }

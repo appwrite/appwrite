@@ -150,17 +150,26 @@ class Create extends Action
             return;
         }
 
-        $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', [
-            Query::equal('providerInstallationId', [$parsedPayload["installationId"]]),
-            Query::equal('provider', ['github']),
-            Query::limit(1000),
-        ]));
-
-        foreach ($requests as $request) {
-            $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
-        }
-
         $providerInstallationId = $parsedPayload["installationId"];
+
+        $requestCursor = null;
+        do {
+            $requestQueries = [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('provider', ['github']),
+                Query::limit(1000),
+            ];
+            if ($requestCursor !== null) {
+                $requestQueries[] = Query::cursorAfter($requestCursor);
+            }
+            $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', $requestQueries));
+
+            foreach ($requests as $request) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installationRequests', $request->getId()));
+            }
+
+            $requestCursor = \count($requests) === 1000 ? $requests[\array_key_last($requests)] : null;
+        } while ($requestCursor !== null);
 
         $installationCursor = null;
         do {
