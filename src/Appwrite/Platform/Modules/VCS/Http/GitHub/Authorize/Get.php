@@ -64,9 +64,9 @@ class Get extends Action
         Document $project,
         array $platform
     ) {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
 
-        if (empty($key)) {
+        if (empty($signingKey)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
@@ -76,7 +76,7 @@ class Get extends Action
             'projectId' => $project->getId(),
             'success' => $success,
             'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), $key),
+            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), $signingKey),
         ]);
 
         if (\strlen($state) > APP_LIMIT_VCS_STATE) {
