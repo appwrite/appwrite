@@ -16,7 +16,7 @@ import {
 import { beginConsoleImpersonation } from '@/lib/console-impersonation-start'
 import { useT } from '@/lib/i18n/translate'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
-import { consoleUserQueryOptions } from '@/lib/react-query/hooks/console-user-search'
+import { consoleImpersonationTargetQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 export type ImpersonateInitialData = {
@@ -25,7 +25,10 @@ export type ImpersonateInitialData = {
 }
 
 type ViewProps = {
-  userId: string
+  /** Console user id (`/impersonate/$userId`). */
+  userId?: string
+  /** Requester email (`/impersonate?email=`), resolved to a console user. */
+  email?: string
   initialData?: ImpersonateInitialData
 }
 
@@ -34,7 +37,7 @@ type ViewProps = {
  * triage notes). Operators see who they are about to impersonate and confirm before
  * the Console switches identity; everyone else is sent back to `/account`.
  */
-export function View({ userId, initialData }: ViewProps) {
+export function View({ userId, email, initialData }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
   const { account: rawAccount } = useAuth()
@@ -51,18 +54,30 @@ export function View({ userId, initialData }: ViewProps) {
     }
   }, [account, isOperator, navigate])
 
-  const { data: targetFromHook, error: targetError } = useQuery({
-    ...consoleUserQueryOptions(userId),
-    enabled: isOperator,
+  const hasLookup = !!userId || !!email
+  const {
+    data: targetFromHook,
+    error: targetError,
+    isFetched: targetFetched,
+  } = useQuery({
+    ...consoleImpersonationTargetQueryOptions(
+      userId ? { userId } : { email: email ?? '' },
+    ),
+    enabled: isOperator && hasLookup,
   })
   const target = targetFromHook ?? initialData?.target ?? undefined
+  const targetId = target?.$id ?? userId
+  const targetMissing =
+    !target &&
+    (!hasLookup || !!targetError || (targetFetched && !targetFromHook))
 
   const operator = resolveConsoleImpersonationOperator(account)
   const operatorLabel =
     operator?.name?.trim() || operator?.email?.trim() || operator?.$id || ''
 
-  const alreadyActive = !!account && account.$id === userId
-  const isOwnOperatorAccount = !!operator && operator.$id === userId
+  const alreadyActive = !!account && !!targetId && account.$id === targetId
+  const isOwnOperatorAccount =
+    !!operator && !!targetId && operator.$id === targetId
 
   const blockingMessage = !operator
     ? t('Operator context was lost. Stop impersonating, then start again.')
@@ -70,8 +85,10 @@ export function View({ userId, initialData }: ViewProps) {
       ? t('That user is already the active Console session.')
       : isOwnOperatorAccount
         ? t('You cannot impersonate your own operator account.')
-        : targetError && !target
-          ? getErrorMessage(targetError, t('Could not load this user.'))
+        : targetMissing
+          ? targetError
+            ? getErrorMessage(targetError, t('Could not load this user.'))
+            : t('Could not load this user.')
           : null
 
   const handleConfirm = () => {
@@ -95,7 +112,7 @@ export function View({ userId, initialData }: ViewProps) {
     return null
   }
 
-  const targetLabel = target?.name || target?.email || userId
+  const targetLabel = target?.name || target?.email || email || userId || ''
 
   return (
     <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10">
@@ -130,16 +147,18 @@ export function View({ userId, initialData }: ViewProps) {
                   {target?.name || '-'}
                 </p>
                 <p className="truncate text-[12px] text-muted-foreground">
-                  {target?.email || '-'}
+                  {target?.email || email || '-'}
                 </p>
-                <div className="mt-1">
-                  <CopyableId
-                    id={userId}
-                    size="xs"
-                    maxWidth={260}
-                    className="max-w-full"
-                  />
-                </div>
+                {targetId ? (
+                  <div className="mt-1">
+                    <CopyableId
+                      id={targetId}
+                      size="xs"
+                      maxWidth={260}
+                      className="max-w-full"
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
 

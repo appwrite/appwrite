@@ -71,6 +71,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
+import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
 import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
@@ -726,6 +727,11 @@ const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
   id: '/partners/',
   path: '/partners/',
   getParentRoute: () => DocsRoute,
+} as any)
+const PublicImpersonateIndexRoute = PublicImpersonateIndexRouteImport.update({
+  id: '/impersonate/',
+  path: '/impersonate/',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
   id: '/',
@@ -3109,6 +3115,7 @@ export interface FileRoutesByFullPath {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
   '/agent/': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3509,6 +3516,7 @@ export interface FileRoutesByTo {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account': typeof PublicAccountIndexRoute
   '/agent': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3880,6 +3888,7 @@ export interface FileRoutesById {
   '/_marketing/threads/': typeof MarketingThreadsIndexRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_public/agent/': typeof PublicAgentIndexRoute
+  '/_public/impersonate/': typeof PublicImpersonateIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -4290,6 +4299,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account/'
     | '/agent/'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -4690,6 +4700,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account'
     | '/agent'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -5060,6 +5071,7 @@ export interface FileRouteTypes {
     | '/_marketing/threads/'
     | '/_public/account/'
     | '/_public/agent/'
+    | '/_public/impersonate/'
     | '/docs/partners/'
     | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
@@ -5839,6 +5851,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/partners'
       preLoaderRoute: typeof DocsPartnersIndexRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/_public/impersonate/': {
+      id: '/_public/impersonate/'
+      path: '/impersonate'
+      fullPath: '/impersonate'
+      preLoaderRoute: typeof PublicImpersonateIndexRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_public/agent/': {
       id: '/_public/agent/'
@@ -10014,6 +10033,7 @@ interface PublicRouteChildren {
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
+  PublicImpersonateIndexRoute: typeof PublicImpersonateIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -10038,6 +10058,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
+  PublicImpersonateIndexRoute: PublicImpersonateIndexRoute,
 }
 
 const PublicRouteWithChildren =
@@ -10133,3 +10154,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

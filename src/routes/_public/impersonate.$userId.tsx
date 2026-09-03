@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { View } from '@/components/pages/impersonate/$userId/View'
-import { consoleUserQueryOptions } from '@/lib/react-query/hooks/console-user-search'
+import { consoleImpersonationTargetQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import { translate } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_public/impersonate/$userId')({
 
     try {
       const target = await queryClient.ensureQueryData(
-        consoleUserQueryOptions(userId),
+        consoleImpersonationTargetQueryOptions({ userId }),
       )
       return { target }
     } catch {

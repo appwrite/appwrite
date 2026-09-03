@@ -139,6 +139,15 @@ async function mockAppwriteApi(page: Page, scenario: ApiScenario) {
       return json(200, mockUserResponse(TARGET))
     }
 
+    if (request.method() === 'GET' && path === '/users') {
+      // Query params are JSON strings; match on the email regardless of key shape.
+      const matches = decodeURIComponent(
+        new URL(request.url()).search,
+      ).includes(TARGET.email)
+      const users = matches ? [mockUserResponse(TARGET)] : []
+      return json(200, { total: users.length, users })
+    }
+
     return json(404, NOT_FOUND)
   })
 }
@@ -186,6 +195,52 @@ test.describe('impersonation deep link (mocked API)', () => {
       window.sessionStorage.getItem('console.impersonation.targetUserId'),
     )
     expect(storedTarget).toBe(TARGET.$id)
+  })
+
+  test('operator can open the link by email instead of user id', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { account: OPERATOR })
+
+    await page.goto(`/impersonate?email=${encodeURIComponent(TARGET.email)}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const card = page.locator('#main-content')
+    await expect(
+      card.getByRole('heading', { name: 'Impersonate user' }),
+    ).toBeVisible()
+    await expect(card.getByText(TARGET.name)).toBeVisible()
+    await expect(card.getByText(TARGET.$id)).toBeVisible()
+
+    const impersonatedAccountRequest = page.waitForRequest(
+      (request) =>
+        request.method() === 'GET' &&
+        appwriteApiPath(request.url()) === '/account' &&
+        request.headers()[IMPERSONATE_HEADER] === TARGET.$id,
+      { timeout: 30_000 },
+    )
+
+    await card.getByRole('button', { name: 'Start impersonation' }).click()
+
+    await impersonatedAccountRequest
+    await expect(
+      page.getByRole('status', { name: /Impersonation active/ }),
+    ).toBeVisible({ timeout: 30_000 })
+  })
+
+  test('unknown email cannot be confirmed', async ({ page }) => {
+    await mockAppwriteApi(page, { account: OPERATOR })
+
+    await page.goto('/impersonate?email=nobody%40example.com', {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const card = page.locator('#main-content')
+    await expect(card.getByText('Could not load this user.')).toBeVisible()
+    await expect(
+      card.getByRole('button', { name: 'Start impersonation' }),
+    ).toBeDisabled()
   })
 
   test('exit from the banner clears the session and header', async ({
