@@ -281,7 +281,7 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
-                    ...($methodType !== null && $methodType !== MethodType::UPLOAD ? ['type' => $methodType->value] : []),
+                    'type' => $methodType?->value,
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -292,6 +292,10 @@ class OpenAPI3 extends Format
                     'public' => $sdk->isPublic(),
                 ],
             ];
+
+            if ($methodType === null || $methodType === MethodType::UPLOAD) {
+                unset($temp['x-appwrite']['type']);
+            }
 
             if ($sdk->getDescriptionFilePath() !== null) {
                 $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
