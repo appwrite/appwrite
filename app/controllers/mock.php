@@ -9,6 +9,7 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -360,21 +361,25 @@ Http::get('/v1/mock/github/request')
 
         $teamId = $project->getAttribute('teamId', '');
 
-        $request = $dbForPlatform->createDocument('installationRequests', new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'projectId' => $projectId,
-            'projectInternalId' => $project->getSequence(),
-            'provider' => 'github',
-            'requester' => $requester,
-            'status' => 'requested',
-        ]));
+        try {
+            $request = $dbForPlatform->createDocument('installationRequests', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'projectId' => $projectId,
+                'projectInternalId' => $project->getSequence(),
+                'provider' => 'github',
+                'requester' => $requester,
+                'status' => 'requested',
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::INSTALLATION_REQUEST_ALREADY_EXISTS);
+        }
 
         $response->json([
             'requestId' => $request->getId(),

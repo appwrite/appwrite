@@ -1990,11 +1990,11 @@ $platformCollections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_requester'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['requester'],
-                'lengths' => [256],
-                'orders' => [Database::ORDER_ASC],
+                '$id' => ID::custom('_key_provider_requester'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['provider', 'requester'],
+                'lengths' => [128, 256],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_providerInstallationId'),

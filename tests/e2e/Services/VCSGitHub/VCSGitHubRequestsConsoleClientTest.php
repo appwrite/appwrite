@@ -196,44 +196,27 @@ final class VCSGitHubRequestsConsoleClientTest extends Scope
         $this->assertNull($this->findRequest($requestId));
     }
 
-    public function testCreateEventIgnoresAmbiguousApproval(): void
+    public function testCreateRequestRejectsASecondForTheSameRequester(): void
     {
         $requester = uniqid('octocat-');
-        $requestId = $this->seedRequest($requester);
+        $this->seedRequest($requester);
 
         $otherProject = $this->getProject(true)['$id'];
         $other = $this->client->call(Client::METHOD_GET, '/mock/github/request', $this->getRequestHeaders($otherProject), [
             'projectId' => $otherProject,
             'requester' => $requester,
         ]);
-        $this->assertEquals(200, $other['headers']['status-code']);
 
-        $this->approveOnProvider($requester, 424248, 'request-test-org7');
-
-        $request = $this->findRequest($requestId);
-        $this->assertEquals('requested', $request['status'] ?? '');
-
-        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders($otherProject));
-        $this->assertEquals('requested', $requests['body']['requests'][0]['status'] ?? '');
+        $this->assertEquals(409, $other['headers']['status-code']);
     }
 
-    public function testCreateEventIgnoresApprovalWhileAnotherIsReady(): void
+    public function testCreateEventLeavesAReadyRequestAlone(): void
     {
         $requester = uniqid('octocat-');
         $readyId = $this->seedRequest($requester);
         $this->approveOnProvider($requester, 424249, 'request-test-org8');
 
-        $otherProject = $this->getProject(true)['$id'];
-        $other = $this->client->call(Client::METHOD_GET, '/mock/github/request', $this->getRequestHeaders($otherProject), [
-            'projectId' => $otherProject,
-            'requester' => $requester,
-        ]);
-        $this->assertEquals(200, $other['headers']['status-code']);
-
         $this->approveOnProvider($requester, 424250, 'request-test-org9');
-
-        $requests = $this->client->call(Client::METHOD_GET, '/vcs/requests', $this->getRequestHeaders($otherProject));
-        $this->assertEquals('requested', $requests['body']['requests'][0]['status'] ?? '');
 
         $ready = $this->findRequest($readyId);
         $this->assertEquals('request-test-org8', $ready['organization'] ?? '');

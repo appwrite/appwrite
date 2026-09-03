@@ -117,38 +117,22 @@ class Create extends Action
                 return;
             }
 
-            // The webhook does not say which request the owner approved, so a
-            // requester with more than one unconsumed request is ambiguous and
-            // nothing is marked until the others are confirmed or withdrawn.
-            // Read and stamp in one transaction so concurrent approvals cannot
-            // overwrite each other's binding.
+            // The webhook names the requester but not the request, so the
+            // collection allows a requester only one unconsumed request and the
+            // stamp runs under its lock.
             $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $requester, $parsedPayload) {
-                $candidates = $dbForPlatform->find('installationRequests', [
+                $candidate = $dbForPlatform->findOne('installationRequests', [
                     Query::equal('provider', ['github']),
                     Query::equal('requester', [$requester]),
-                    Query::limit(2),
                 ]);
 
-                if (\count($candidates) !== 1) {
+                if ($candidate->isEmpty()) {
                     return;
                 }
 
-                $request = $dbForPlatform->getDocument('installationRequests', $candidates[0]->getId(), forUpdate: true);
+                $request = $dbForPlatform->getDocument('installationRequests', $candidate->getId(), forUpdate: true);
 
                 if ($request->isEmpty() || $request->getAttribute('status') !== 'requested') {
-                    return;
-                }
-
-                // A callback could have added another request for this requester
-                // between the first read and this lock, so count again now that
-                // the chosen one is held.
-                $confirmed = $dbForPlatform->find('installationRequests', [
-                    Query::equal('provider', ['github']),
-                    Query::equal('requester', [$requester]),
-                    Query::limit(2),
-                ]);
-
-                if (\count($confirmed) !== 1) {
                     return;
                 }
 

@@ -10,6 +10,7 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
@@ -184,13 +185,7 @@ class Get extends Action
                 $requester = $oauth2->getUserSlug($oauth2->getAccessToken($code));
 
                 if (!empty($requester)) {
-                    $request = $dbForPlatform->findOne('installationRequests', [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('provider', ['github']),
-                        Query::equal('requester', [$requester]),
-                    ]);
-
-                    if ($request->isEmpty()) {
+                    try {
                         $dbForPlatform->createDocument('installationRequests', new Document([
                             '$id' => ID::unique(),
                             '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $projectId),
@@ -200,6 +195,10 @@ class Get extends Action
                             'requester' => $requester,
                             'status' => 'requested',
                         ]));
+                    } catch (Duplicate) {
+                        // The requester already has an unconsumed request. An
+                        // approval names the requester but not the request, so
+                        // a second one would be unattributable.
                     }
                 }
             }
