@@ -48,7 +48,7 @@ class Create extends Action
             ->desc('Create index')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
-            ->label('scope', ['tables.write', 'collections.write', 'indexes.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

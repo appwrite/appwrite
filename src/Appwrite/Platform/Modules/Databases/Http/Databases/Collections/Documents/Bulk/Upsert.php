@@ -47,7 +47,7 @@ class Upsert extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->desc('Upsert documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['rows.write', 'documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

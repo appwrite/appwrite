@@ -38,7 +38,7 @@ class Create extends Action
             ->setHttpPath('/v1/databases/transactions/:transactionId/operations')
             ->desc('Create operations')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', ['documents.write', 'rows.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',

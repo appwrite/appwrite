@@ -34,7 +34,7 @@ class XList extends CollectionXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables')
             ->desc('List tables')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.read', 'collections.read'])
+            ->label('scope', 'tables.read')
             ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

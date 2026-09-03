@@ -33,7 +33,7 @@ class XList extends IndexXList
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/indexes')
             ->desc('List indexes')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.read', 'collections.read', 'indexes.read'])
+            ->label('scope', ['tables.read', 'indexes.read'])
             ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

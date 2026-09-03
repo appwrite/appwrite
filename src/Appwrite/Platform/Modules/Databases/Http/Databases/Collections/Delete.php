@@ -36,7 +36,7 @@ class Delete extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId')
             ->desc('Delete collection')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
             ->label('audits.event', 'collection.delete')

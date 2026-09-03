@@ -34,6 +34,12 @@ class ConsoleKeyScope extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('renamedTo', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Scope that replaced this one, when it was deprecated by a rename.',
+                'default' => '',
+                'example' => 'tables.write',
+            ])
         ;
     }
 

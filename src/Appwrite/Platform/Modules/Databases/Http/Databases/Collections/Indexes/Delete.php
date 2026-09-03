@@ -42,7 +42,7 @@ class Delete extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.write', 'collections.write', 'indexes.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')

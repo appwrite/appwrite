@@ -49,7 +49,7 @@ class Update extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->desc('Update documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['rows.write', 'documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

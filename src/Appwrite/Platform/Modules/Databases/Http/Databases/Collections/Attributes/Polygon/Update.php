@@ -39,7 +39,7 @@ class Update extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/polygon/:key')
             ->desc('Update polygon attribute')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
             ->label('audits.event', 'attribute.update')

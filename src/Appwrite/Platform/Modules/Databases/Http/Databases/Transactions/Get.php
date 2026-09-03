@@ -27,7 +27,7 @@ class Get extends Action
             ->setHttpPath('/v1/databases/transactions/:transactionId')
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', ['documents.read', 'rows.read'])
+            ->label('scope', 'documents.read')
             ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

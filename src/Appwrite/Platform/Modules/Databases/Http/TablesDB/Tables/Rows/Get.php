@@ -34,7 +34,7 @@ class Get extends DocumentGet
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/rows/:rowId')
             ->desc('Get row')
             ->groups(['api', 'database'])
-            ->label('scope', ['rows.read', 'documents.read'])
+            ->label('scope', 'rows.read')
             ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

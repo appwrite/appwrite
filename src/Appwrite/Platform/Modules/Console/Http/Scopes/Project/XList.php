@@ -58,6 +58,7 @@ class XList extends Action
                 'description' => $scope['description'] ?? '',
                 'category' => $scope['category'] ?? '',
                 'deprecated' => $scope['deprecated'] ?? false,
+                'renamedTo' => $scope['renamedTo'] ?? '',
             ]);
         }
 

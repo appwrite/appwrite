@@ -52,12 +52,14 @@ return [
             "Access to read project\'s policies. Replaced by \'project.policies.read\' for more granular control",
         "category" => "Project",
         'deprecated' => true,
+        'renamedTo' => 'project.policies.read',
     ],
     "policies.write" => [
         "description" =>
             "Access to update project\'s policies. Replaces by \'project.policies.write\' for more granular control",
         "category" => "Project",
         'deprecated' => true,
+        'renamedTo' => 'project.policies.write',
     ],
     "project.policies.read" => [
         "description" =>
@@ -175,31 +177,37 @@ return [
         'description' => 'Access to read database collections',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'tables.read',
     ],
     'collections.write' => [
         'description' => 'Access to create, update, and delete database collections',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'tables.write',
     ],
     'attributes.read' => [
         'description' => 'Access to read database collection attributes',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'columns.read',
     ],
     'attributes.write' => [
         'description' => 'Access to create, update, and delete database collection attributes',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'columns.write',
     ],
     'documents.read'  => [
         'description' => 'Access to read database collection documents',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'rows.read',
     ],
     'documents.write' => [
         'description' => 'Access to create, update, and delete database collection documents',
         'category' => 'Databases',
         'deprecated' => true,
+        'renamedTo' => 'rows.write',
     ],
 
     // DocumentsDB

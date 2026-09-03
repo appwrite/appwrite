@@ -38,7 +38,7 @@ class Delete extends DocumentDelete
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/rows/:rowId')
             ->desc('Delete row')
             ->groups(['api', 'database'])
-            ->label('scope', ['rows.write', 'documents.write'])
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].delete')
             ->label('audits.event', 'row.delete')

@@ -7,6 +7,7 @@ namespace Tests\Unit\Auth;
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Utopia\Database\Documents\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -21,8 +22,8 @@ final class KeyTest extends TestCase
         $usage = false;
         $scopes = [
             'databases.read',
-            'collections.read',
-            'documents.read',
+            'users.read',
+            'teams.read',
         ];
         $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
         $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
@@ -341,6 +342,55 @@ final class KeyTest extends TestCase
         $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertSame($scopes, $decoded->getScopes());
         $this->assertSame('Organization key', $decoded->getName());
+    }
+
+    /**
+     * @return array<string, array{0: array<string>, 1: array<string>}>
+     */
+    public static function renamedScopesProvider(): array
+    {
+        return [
+            'legacy name grants the current one' => [
+                ['collections.write'],
+                ['collections.write', 'tables.write'],
+            ],
+            'current name grants the legacy one' => [
+                ['tables.write'],
+                ['tables.write', 'collections.write'],
+            ],
+            'both names granted stay deduplicated' => [
+                ['rows.read', 'documents.read'],
+                ['rows.read', 'documents.read'],
+            ],
+            'scopes without a rename are untouched' => [
+                ['databases.write', 'documentsdb.collections.write'],
+                ['databases.write', 'documentsdb.collections.write'],
+            ],
+            'renames outside the databases surface' => [
+                ['project.policies.write'],
+                ['project.policies.write', 'policies.write'],
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string> $granted
+     * @param array<string> $expected
+     */
+    #[DataProvider('renamedScopesProvider')]
+    public function testDecodeAppliesScopeRenames(array $granted, array $expected): void
+    {
+        $projectId = 'test';
+        $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
+
+        $decoded = Key::decode(
+            project: new Document(['$id' => $projectId]),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey($projectId, false, $granted),
+        );
+
+        $this->assertEqualsCanonicalizing(\array_merge($expected, $roleScopes), $decoded->getScopes());
     }
 
     private static function generateKey(

@@ -30,7 +30,7 @@ class XList extends Action
             ->setHttpPath('/v1/databases/transactions')
             ->desc('List transactions')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', ['documents.read', 'rows.read'])
+            ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',

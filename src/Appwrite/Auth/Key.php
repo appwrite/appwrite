@@ -29,6 +29,40 @@ class Key
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
     ) {
+        $this->scopes = self::withRenamedScopes($scopes);
+    }
+
+    /**
+     * A renamed scope and its replacement name the same authority, so a key granted either
+     * one is granted both. Keys minted before a rename keep reaching routes that moved to
+     * the new name, and keys minted after it reach the routes that kept the old one.
+     *
+     * @param array<string> $scopes
+     * @return array<string>
+     */
+    private static function withRenamedScopes(array $scopes): array
+    {
+        $renames = [];
+
+        foreach (['projectScopes', 'organizationScopes', 'accountScopes'] as $config) {
+            foreach (Config::getParam($config, []) as $scope => $definition) {
+                $renamedTo = $definition['renamedTo'] ?? null;
+                if (empty($renamedTo)) {
+                    continue;
+                }
+
+                $renames[$scope] = $renamedTo;
+                $renames[$renamedTo] = $scope;
+            }
+        }
+
+        foreach ($scopes as $scope) {
+            if (isset($renames[$scope])) {
+                $scopes[] = $renames[$scope];
+            }
+        }
+
+        return \array_values(\array_unique($scopes));
     }
 
     public function getProjectId(): string

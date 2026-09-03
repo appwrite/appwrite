@@ -41,7 +41,7 @@ class Get extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
             ->desc('Get document')
             ->groups(['api', 'database'])
-            ->label('scope', ['rows.read', 'documents.read'])
+            ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
             ->label('sdk', new Method(

@@ -12,11 +12,11 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
 /**
- * The legacy /v1/databases surface is gated on collections.* / attributes.* / documents.*,
- * all flagged deprecated in app/config/scopes/project.php and hidden by the console key
- * editor. A key created today therefore carries only the current Databases scopes, so the
- * legacy routes must accept those alongside the deprecated names they were named after,
- * the same way the /v1/tablesdb routes accept both.
+ * collections.* / attributes.* / documents.* were renamed to tables.* / columns.* / rows.*,
+ * and the old names are flagged deprecated in app/config/scopes/project.php and hidden by
+ * the console key editor. Each pair names the same authority, so a key granted either name
+ * has to reach both the legacy /v1/databases surface and the current /v1/tablesdb one --
+ * see the renamedTo expansion in Appwrite\Auth\Key.
  */
 final class DatabasesKeyScopesTest extends Scope
 {
@@ -168,6 +168,61 @@ final class DatabasesKeyScopesTest extends Scope
             Client::METHOD_POST,
             '/databases/transactions',
             $this->getScopedHeaders($scopes)
+        );
+
+        $this->assertSame(201, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testUpdateTable(array $scopes): void
+    {
+        [$databaseId, $collectionId] = $this->createCollection();
+
+        $response = $this->client->call(
+            Client::METHOD_PUT,
+            '/tablesdb/' . $databaseId . '/tables/' . $collectionId,
+            $this->getScopedHeaders($scopes),
+            [
+                'name' => 'Renamed',
+                'permissions' => [],
+            ]
+        );
+
+        $this->assertSame(200, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateColumn(array $scopes): void
+    {
+        [$databaseId, $collectionId] = $this->createCollection();
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/string',
+            $this->getScopedHeaders($scopes),
+            [
+                'key' => 'tagline',
+                'size' => 128,
+                'required' => false,
+            ]
+        );
+
+        $this->assertSame(202, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateRow(array $scopes): void
+    {
+        [$databaseId, $collectionId] = $this->createCollection();
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows',
+            $this->getScopedHeaders($scopes),
+            [
+                'rowId' => ID::unique(),
+                'data' => ['title' => 'Hello'],
+            ]
         );
 
         $this->assertSame(201, $response['headers']['status-code'], $response['body']['message'] ?? '');

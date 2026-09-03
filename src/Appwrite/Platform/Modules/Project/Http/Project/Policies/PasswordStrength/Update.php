@@ -31,7 +31,7 @@ class Update extends Action
             ->setHttpPath('/v1/project/policies/password-strength')
             ->desc('Update password strength policy')
             ->groups(['api', 'project'])
-            ->label('scope', ['policies.write', 'project.policies.write'])
+            ->label('scope', 'project.policies.write')
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
