@@ -9,7 +9,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -62,47 +61,49 @@ class Update extends Action
         Document $project,
         Database $dbForPlatform
     ) {
-        $request = $dbForPlatform->getDocument('installationRequests', $requestId);
+        // One transaction, with the request row locked: concurrent confirmations
+        // serialise behind it, and nothing is written unless all of it succeeds.
+        $installation = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $requestId) {
+            $request = $dbForPlatform->getDocument('installationRequests', $requestId, forUpdate: true);
 
-        if ($request->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
-        }
+            if ($request->isEmpty()) {
+                throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
+            }
 
-        if ($request->getAttribute('projectInternalId') !== $project->getSequence()) {
-            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
-        }
+            if ($request->getAttribute('projectInternalId') !== $project->getSequence()) {
+                throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
+            }
 
-        if ($request->getAttribute('status') !== 'ready') {
-            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_READY);
-        }
+            if ($request->getAttribute('status') !== 'ready') {
+                throw new Exception(Exception::INSTALLATION_REQUEST_NOT_READY);
+            }
 
-        $provider = $request->getAttribute('provider');
-        $providerInstallationId = $request->getAttribute('providerInstallationId');
+            $provider = $request->getAttribute('provider');
+            $providerInstallationId = $request->getAttribute('providerInstallationId');
 
-        $installation = $dbForPlatform->findOne('installations', [
-            Query::equal('providerInstallationId', [$providerInstallationId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::equal('provider', [$provider]),
-        ]);
+            $installation = $dbForPlatform->findOne('installations', [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('provider', [$provider]),
+            ]);
 
-        if ($installation->isEmpty()) {
-            $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
-                'providerInstallationId' => $providerInstallationId,
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'provider' => $provider,
-                'organization' => $request->getAttribute('organization'),
-                'personal' => false,
-            ]));
-        }
+            if ($installation->isEmpty()) {
+                $installation = $dbForPlatform->createDocument('installations', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                    'providerInstallationId' => $providerInstallationId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'provider' => $provider,
+                    'organization' => $request->getAttribute('organization'),
+                    'personal' => false,
+                ]));
+            }
 
-        // Consumed only once the installation exists, so a failure anywhere
-        // above leaves the approval intact and the confirmation retryable.
-        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
-            Console::error('Failed to delete installation request ' . $request->getId() . ' after confirming it.');
-        }
+            $dbForPlatform->deleteDocument('installationRequests', $request->getId());
+
+            return $installation;
+        });
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     }
