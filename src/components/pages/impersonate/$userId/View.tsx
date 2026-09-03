@@ -103,7 +103,7 @@ export function View({ userId, initialData }: ViewProps) {
         <Card className="overflow-hidden p-6 md:p-8">
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-4 text-center">
-              <Badge variant="pending" className="shrink-0 text-[10px]">
+              <Badge variant="info" className="shrink-0 text-[10px]">
                 <UserRound className="size-3" aria-hidden />
                 {t('Operator access')}
               </Badge>
