@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8421ff4db771a69dea3af12a11983553",
+    "content-hash": "5d22294df286f4a613838e10e047fd0f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5140,16 +5140,16 @@
         },
         {
             "name": "utopia-php/usage",
-            "version": "0.15.0",
+            "version": "0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/usage.git",
-                "reference": "e710b16a08a9dc184906c5b8cf698546238c7be0"
+                "reference": "fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/e710b16a08a9dc184906c5b8cf698546238c7be0",
-                "reference": "e710b16a08a9dc184906c5b8cf698546238c7be0",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441",
+                "reference": "fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441",
                 "shasum": ""
             },
             "require": {
@@ -5187,9 +5187,9 @@
             "description": "Light and Fast Usage library",
             "support": {
                 "issues": "https://github.com/utopia-php/usage/issues",
-                "source": "https://github.com/utopia-php/usage/tree/0.15.0"
+                "source": "https://github.com/utopia-php/usage/tree/0.16.1"
             },
-            "time": "2026-08-25T05:10:14+00:00"
+            "time": "2026-09-03T08:47:59+00:00"
         },
         {
             "name": "utopia-php/user-agent",
