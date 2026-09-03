@@ -286,6 +286,13 @@ class Jobs extends Action
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
+        // On a remote builds device the sidecar delivers the artifact; a failed
+        // upload is the build's failure, with the sidecar's reason (for
+        // instance, the orchestrator lacking storage credentials) in the log.
+        if (($data['artifactId'] ?? '') === 'output' && ($data['status'] ?? '') === 'failed') {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($data['error'] ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
             return $deployment;
         }
