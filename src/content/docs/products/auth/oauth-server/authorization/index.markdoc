@@ -208,17 +208,17 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Authorize = try await oauth2.authorize(
-    client_id: "<CLIENT_ID>",
-    redirect_uri: "https://example.com",
-    response_type: "code",
+    clientId: "<CLIENT_ID>",
+    redirectUri: "https://example.com",
+    responseType: "code",
     scope: "<SCOPE>", // optional
     state: "<STATE>", // optional
     nonce: "<NONCE>", // optional
-    code_challenge: "<CODE_CHALLENGE>", // optional
-    code_challenge_method: "S256", // optional
+    codeChallenge: "<CODE_CHALLENGE>", // optional
+    codeChallengeMethod: "S256", // optional
     prompt: "<PROMPT>", // optional
-    max_age: 0, // optional
-    authorization_details: "<AUTHORIZATION_DETAILS>", // optional
+    maxAge: 0, // optional
+    authorizationDetails: "<AUTHORIZATION_DETAILS>", // optional
     resource: "" // optional
 )
 ```
@@ -234,17 +234,17 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.authorize(
-    client_id = "<CLIENT_ID>", 
-    redirect_uri = "https://example.com", 
-    response_type = "code", 
+    clientId = "<CLIENT_ID>", 
+    redirectUri = "https://example.com", 
+    responseType = "code", 
     scope = "<SCOPE>", // (optional)
     state = "<STATE>", // (optional)
     nonce = "<NONCE>", // (optional)
-    code_challenge = "<CODE_CHALLENGE>", // (optional)
-    code_challenge_method = "S256", // (optional)
+    codeChallenge = "<CODE_CHALLENGE>", // (optional)
+    codeChallengeMethod = "S256", // (optional)
     prompt = "<PROMPT>", // (optional)
-    max_age = 0, // (optional)
-    authorization_details = "<AUTHORIZATION_DETAILS>", // (optional)
+    maxAge = 0, // (optional)
+    authorizationDetails = "<AUTHORIZATION_DETAILS>", // (optional)
     resource = "", // (optional)
 )
 ```
@@ -355,7 +355,7 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Grant = try await oauth2.getGrant(
-    grant_id: "<GRANT_ID>"
+    grantId: "<GRANT_ID>"
 )
 ```
 ```client-android-kotlin
@@ -370,7 +370,7 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.getGrant(
-    grant_id = "<GRANT_ID>", 
+    grantId = "<GRANT_ID>", 
 )
 ```
 ```client-android-java
@@ -460,8 +460,8 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Approve = try await oauth2.approve(
-    grant_id: "<GRANT_ID>",
-    authorization_details: "<AUTHORIZATION_DETAILS>", // optional
+    grantId: "<GRANT_ID>",
+    authorizationDetails: "<AUTHORIZATION_DETAILS>", // optional
     scope: "<SCOPE>" // optional
 )
 ```
@@ -477,8 +477,8 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.approve(
-    grant_id = "<GRANT_ID>", 
-    authorization_details = "<AUTHORIZATION_DETAILS>", // (optional)
+    grantId = "<GRANT_ID>", 
+    authorizationDetails = "<AUTHORIZATION_DETAILS>", // (optional)
     scope = "<SCOPE>", // (optional)
 )
 ```
@@ -569,7 +569,7 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Reject = try await oauth2.reject(
-    grant_id: "<GRANT_ID>"
+    grantId: "<GRANT_ID>"
 )
 ```
 ```client-android-kotlin
@@ -584,7 +584,7 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.reject(
-    grant_id = "<GRANT_ID>", 
+    grantId = "<GRANT_ID>", 
 )
 ```
 ```client-android-java
