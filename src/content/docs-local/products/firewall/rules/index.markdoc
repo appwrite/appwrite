@@ -14,13 +14,21 @@ A **Firewall rule** is a named policy that matches inbound requests and applies 
 | Description | Optional notes for your team |
 | Resource type | [API, Functions, or Sites](/docs/products/firewall/scopes) |
 | Resource ID | Required for Functions and Sites scopes |
-| Conditions | One or more [request filters](/docs/products/firewall/conditions) (required) |
+| Conditions | [Request filters](/docs/products/firewall/conditions). The Console requires at least one; the API accepts a rule with none, which matches every request in scope |
 | Action | Deny, bypass, challenge, rate limit, or redirect (set at create time) |
 | Priority | Evaluation order ([lower first](/docs/products/firewall/priority)), `-100000` to `100000` |
 | Enabled | Whether the rule participates in evaluation |
-| Rule ID | Optional custom ID at create time |
+| Rule ID | Custom ID set at create time. Pass `ID.unique()` to generate one. Required by the API; the Console generates it for you |
 
-Action-specific fields (rate limit quota, redirect location and status code, challenge type) are stored with the rule when those actions are selected.
+Action-specific fields are stored with the rule when those actions are selected:
+
+| Action | Fields |
+|--------|--------|
+| Challenge | `challengeType` (`compute` only), `difficulty` `1`-`5` default `3`, `ttl` `900`-`86400` default `1800` |
+| Rate limit | `limit` and `interval` (both required), `key` (`ip` or `userId`), `strategy`, `maxBucketSize` |
+| Redirect | `location` (required, up to 2048 characters), `statusCode` `300`-`399` default `302` |
+
+Each action has its own create and update endpoint, which is why the action cannot change after the rule exists. Name is limited to 128 characters, description to 1024, and resource ID to 255.
 
 When at least one **enabled** rule exists, Appwrite marks the project as Firewall-enabled so evaluation runs for eligible traffic. Disabling or deleting the last enabled rule turns evaluation off for the project.
 
@@ -62,7 +70,7 @@ The Console shows current usage next to the Firewall title when a limit applies.
 
 # Access {% #access %}
 
-Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, members with write access can create, update, and delete rules. Read-only roles (for example analysts) can view rules but cannot change them.
+Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, the owner, developer, and editor roles hold both scopes and can create, update, and delete rules. The analyst role holds only `wafRules.read` and can view rules without changing them. The billing role holds neither.
 
 When organization roles are disabled, all organization members can manage rules where the feature is available.
 

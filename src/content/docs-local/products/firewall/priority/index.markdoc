@@ -4,7 +4,9 @@ title: Priority
 description: Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.
 ---
 
-**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. The Console accepts values from `0` to `100000`; the API also accepts negative values down to `-100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
+**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Priority ranges from `-100000` to `100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
+
+The Console's priority field starts at `0` and its stepper will not go below it, so negative priorities are easiest to set through the API.
 
 # How evaluation works {% #how-evaluation-works %}
 
@@ -18,11 +20,13 @@ Disabled rules are not loaded. If no rule matches, the request continues.
 
 {% info title="Stop on match" %}
 **Bypass** and **rate limit** (even when the request is still under the quota) also stop evaluation. A matching bypass or under-quota rate limit prevents later deny rules from running.
+
+One rule type is an exception. A rate limit rule with **Limit by** set to `userId` is dropped from evaluation when the request has no authenticated user, so later rules still run.
 {% /info %}
 
 # Choosing priority values {% #choosing-priority-values %}
 
-The Console create wizard defaults priority to `100`. Common patterns:
+The Console create wizard defaults priority to `100`, while the API defaults to `0` when you omit the parameter. Common patterns:
 
 | Pattern | Approach |
 |---------|----------|
@@ -45,7 +49,7 @@ Use [impact preview](/docs/products/firewall/monitor#impact-preview) while editi
 
 # Updating priority {% #updating-priority %}
 
-To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. After saving, new requests use the updated order immediately. Historical traffic metrics are not rewritten.
+To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. Appwrite refreshes the cached rule set after the change, so new requests pick up the new order within moments. Propagation is not guaranteed to be instant. Historical traffic metrics are not rewritten.
 
 {% arrow_link href="/docs/products/firewall/allowlist-ips" %}
 Allowlist trusted IP addresses
