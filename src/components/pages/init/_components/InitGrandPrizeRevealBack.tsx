@@ -288,12 +288,6 @@ export function InitGrandPrizeRevealBack({
           <div className="flex flex-col items-center gap-2">
             <p className="text-center text-[12px] text-muted-foreground">
               {isReadingFile ? t('Reading CSV…') : entriesSummary}
-              {entries && entries.excludedOutsideCutoff > 0 ? (
-                <>
-                  <span className="mx-1.5 text-border">·</span>
-                  {entries.excludedOutsideCutoff} {t('outside the 7-day cutoff')}
-                </>
-              ) : null}
             </p>
             {fileName && !isReadingFile ? (
               <p className="flex max-w-[320px] items-center gap-1.5 text-[11px] text-muted-foreground">

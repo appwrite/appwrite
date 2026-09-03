@@ -4,7 +4,6 @@ import { join } from 'path'
 import {
   InitGrandPrizeCsvError,
   parseCsvRows,
-  parseCutoffFlag,
   parseInitGrandPrizeEntries,
 } from '@/lib/init/grand-prize-entries'
 
@@ -53,18 +52,6 @@ describe('parseCsvRows', () => {
   })
 })
 
-describe('parseCutoffFlag', () => {
-  test('only an explicit negative excludes a row', () => {
-    expect(parseCutoffFlag('true')).toBe(true)
-    expect(parseCutoffFlag('')).toBe(true)
-    expect(parseCutoffFlag('maybe')).toBe(true)
-    expect(parseCutoffFlag('false')).toBe(false)
-    expect(parseCutoffFlag('FALSE')).toBe(false)
-    expect(parseCutoffFlag('0')).toBe(false)
-    expect(parseCutoffFlag('no')).toBe(false)
-  })
-})
-
 describe('parseInitGrandPrizeEntries', () => {
   test('maps every column and keeps CSV order', () => {
     const text = [HEADER, row(), row({ name: 'Grace', username: '@grace', ticket_id: 'tkt_2' })].join('\n')
@@ -80,7 +67,6 @@ describe('parseInitGrandPrizeEntries', () => {
       ticketId: 'tkt_1',
       ticketDomain: 'appwrite.io',
       postDate: '2026-09-01T10:00:00Z',
-      withinCutoff: true,
       matchedText: 'Got my Init ticket',
       verifiedAt: '2026-09-03T08:00:00Z',
     })
@@ -97,7 +83,7 @@ describe('parseInitGrandPrizeEntries', () => {
     expect(result.entries[0]).toMatchObject({ name: 'Ada', username: 'ada', ticketId: 'tkt_1' })
   })
 
-  test('excludes rows outside the cutoff and skips rows without an identity', () => {
+  test('keeps rows regardless of the cutoff column and skips rows without an identity', () => {
     const text = [
       HEADER,
       row(),
@@ -107,9 +93,19 @@ describe('parseInitGrandPrizeEntries', () => {
     const result = parseInitGrandPrizeEntries(text)
 
     expect(result.totalRows).toBe(3)
-    expect(result.entries.map((entry) => entry.username)).toEqual(['ada'])
-    expect(result.excludedOutsideCutoff).toBe(1)
+    expect(result.entries.map((entry) => entry.username)).toEqual(['ada', 'late'])
     expect(result.skippedIncomplete).toBe(1)
+  })
+
+  test('does not require the within_7d_cutoff column', () => {
+    const columns = HEADER.split(',')
+    const cutoffIndex = columns.indexOf('within_7d_cutoff')
+    const header = columns.filter((column) => column !== 'within_7d_cutoff').join(',')
+    const values = row().split(',')
+    values.splice(cutoffIndex, 1)
+    const result = parseInitGrandPrizeEntries([header, values.join(',')].join('\n'))
+    expect(result.entries).toHaveLength(1)
+    expect(result.entries[0].username).toBe('ada')
   })
 
   test('falls back to the username when the name is blank', () => {
@@ -125,13 +121,13 @@ describe('parseInitGrandPrizeEntries', () => {
     const result = parseInitGrandPrizeEntries(text)
 
     expect(result.totalRows).toBe(6)
-    expect(result.excludedOutsideCutoff).toBe(1)
     expect(result.skippedIncomplete).toBe(0)
     expect(result.entries.map((entry) => entry.username)).toEqual([
       'ada_codes',
       'gracehopper',
       'torvalds',
       'margaret_h',
+      'late_poster',
       'dmr',
     ])
     // Quoted cell with a comma and doubled quotes survives intact.
@@ -140,13 +136,14 @@ describe('parseInitGrandPrizeEntries', () => {
     )
     // Blank name falls back to the username so the wheel always has a label.
     expect(result.entries[3].name).toBe('margaret_h')
-    // Uppercase TRUE is still eligible.
-    expect(result.entries[4].withinCutoff).toBe(true)
+    // A false within_7d_cutoff no longer excludes the row.
+    expect(result.entries[4].username).toBe('late_poster')
     expect(result.entries.map((entry) => entry.ticketId)).toEqual([
       'tkt_01J6ADA',
       'tkt_01J6GRACE',
       'tkt_01J6LINUS',
       'tkt_01J6MARG',
+      'tkt_01J6LATE',
       'tkt_01J6DMR',
     ])
   })

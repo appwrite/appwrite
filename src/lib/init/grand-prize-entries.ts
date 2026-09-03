@@ -1,6 +1,8 @@
 /**
  * Day 5 grand prize entries come from a verified social-post CSV the host
  * uploads during the stream. Online presence never feeds this draw.
+ * Every row with a name or username is eligible; extra columns such as
+ * `within_7d_cutoff` are ignored.
  */
 
 export const INIT_GRAND_PRIZE_CSV_COLUMNS = [
@@ -11,7 +13,6 @@ export const INIT_GRAND_PRIZE_CSV_COLUMNS = [
   'ticket_id',
   'ticket_domain',
   'post_date',
-  'within_7d_cutoff',
   'matched_text',
   'verified_at',
 ] as const
@@ -28,7 +29,6 @@ export interface InitGrandPrizeEntry {
   ticketId: string
   ticketDomain: string
   postDate: string
-  withinCutoff: boolean
   matchedText: string
   verifiedAt: string
 }
@@ -36,8 +36,6 @@ export interface InitGrandPrizeEntry {
 export interface InitGrandPrizeEntriesParseResult {
   /** Rows eligible for the wheel, in CSV order. */
   entries: InitGrandPrizeEntry[]
-  /** Rows whose `within_7d_cutoff` column is explicitly false. */
-  excludedOutsideCutoff: number
   /** Rows with neither a name nor a username. */
   skippedIncomplete: number
   /** Data rows seen, excluding the header and blank lines. */
@@ -141,12 +139,6 @@ function normalizeHeader(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, '_')
 }
 
-/** Only an explicit negative excludes a row; blank or unknown values keep it. */
-export function parseCutoffFlag(value: string): boolean {
-  const normalized = value.trim().toLowerCase()
-  return !['false', '0', 'no', 'n', 'f'].includes(normalized)
-}
-
 function normalizeUsername(value: string): string {
   return value.trim().replace(/^@+/, '')
 }
@@ -175,7 +167,6 @@ export function parseInitGrandPrizeEntries(text: string): InitGrandPrizeEntriesP
     (cells[columnIndex.get(column) ?? -1] ?? '').trim()
 
   const entries: InitGrandPrizeEntry[] = []
-  let excludedOutsideCutoff = 0
   let skippedIncomplete = 0
 
   dataRows.forEach((cells, rowIndex) => {
@@ -184,12 +175,6 @@ export function parseInitGrandPrizeEntries(text: string): InitGrandPrizeEntriesP
 
     if (!name && !username) {
       skippedIncomplete += 1
-      return
-    }
-
-    const withinCutoff = parseCutoffFlag(read(cells, 'within_7d_cutoff'))
-    if (!withinCutoff) {
-      excludedOutsideCutoff += 1
       return
     }
 
@@ -204,7 +189,6 @@ export function parseInitGrandPrizeEntries(text: string): InitGrandPrizeEntriesP
       ticketId,
       ticketDomain: read(cells, 'ticket_domain'),
       postDate: read(cells, 'post_date'),
-      withinCutoff,
       matchedText: read(cells, 'matched_text'),
       verifiedAt: read(cells, 'verified_at'),
     })
@@ -212,7 +196,6 @@ export function parseInitGrandPrizeEntries(text: string): InitGrandPrizeEntriesP
 
   return {
     entries,
-    excludedOutsideCutoff,
     skippedIncomplete,
     totalRows: dataRows.length,
   }

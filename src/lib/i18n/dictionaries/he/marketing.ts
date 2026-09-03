@@ -1587,7 +1587,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'No entries loaded yet.': 'עדיין לא נטענו השתתפויות.',
   'verified entry': 'השתתפות מאומתת',
   'verified entries': 'השתתפויות מאומתות',
-  'outside the 7-day cutoff': 'מחוץ למסגרת 7 הימים',
   'Only CSV files are accepted.': 'ניתן להעלות רק קובצי CSV.',
   'The CSV has no eligible entries.': 'בקובץ ה-CSV אין השתתפויות כשירות.',
   'Missing required CSV columns:': 'חסרות עמודות CSV נדרשות:',

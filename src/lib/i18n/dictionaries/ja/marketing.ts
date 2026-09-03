@@ -1433,7 +1433,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'No entries loaded yet.': 'エントリーはまだ読み込まれていません。',
   'verified entry': '件の検証済みエントリー',
   'verified entries': '件の検証済みエントリー',
-  'outside the 7-day cutoff': '件は 7 日間の期限外',
   'Only CSV files are accepted.': 'CSV ファイルのみ受け付けます。',
   'The CSV has no eligible entries.': 'この CSV には対象となるエントリーがありません。',
   'Missing required CSV columns:': '必須の CSV 列がありません:',
