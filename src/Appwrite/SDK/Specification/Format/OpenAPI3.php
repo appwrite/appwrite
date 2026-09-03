@@ -257,6 +257,7 @@ class OpenAPI3 extends Format
             $consumes = [$sdk->getRequestType()->value];
 
             $methodName = $sdk->getMethodName();
+            $methodType = $sdk->getType();
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
@@ -280,7 +281,7 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $sdk->getType()->value ?? '',
+                    ...($methodType !== null && $methodType !== MethodType::UPLOAD ? ['type' => $methodType->value] : []),
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
