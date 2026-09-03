@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Databases\Legacy;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -12,9 +13,10 @@ use Utopia\Database\Helpers\ID;
 
 /**
  * The legacy /v1/databases surface is gated on collections.* / attributes.* / documents.*,
- * all flagged deprecated in app/config/scopes/project.php. The console hides deprecated
- * scopes from the key editor, so a key created today carries only the current Databases
- * scopes and cannot reach the legacy routes at all.
+ * all flagged deprecated in app/config/scopes/project.php and hidden by the console key
+ * editor. A key created today therefore carries only the current Databases scopes, so the
+ * legacy routes must accept those alongside the deprecated names they were named after,
+ * the same way the /v1/tablesdb routes accept both.
  */
 final class DatabasesKeyScopesTest extends Scope
 {
@@ -36,48 +38,107 @@ final class DatabasesKeyScopesTest extends Scope
         'indexes.write',
         'rows.read',
         'rows.write',
-        'embeddings.write',
-        'documentsdb.read',
-        'documentsdb.write',
-        'documentsdb.collections.read',
-        'documentsdb.collections.write',
-        'documentsdb.documents.read',
-        'documentsdb.documents.write',
-        'documentsdb.indexes.read',
-        'documentsdb.indexes.write',
-        'vectorsdb.read',
-        'vectorsdb.write',
-        'vectorsdb.collections.read',
-        'vectorsdb.collections.write',
-        'vectorsdb.documents.read',
-        'vectorsdb.documents.write',
-        'vectorsdb.indexes.read',
-        'vectorsdb.indexes.write',
     ];
 
-    public function testUpdateCollectionWithCurrentScopes(): void
+    /**
+     * The deprecated names the legacy routes were originally gated on. Keys minted before
+     * the rename still carry only these, so they have to keep working.
+     */
+    private const DEPRECATED_SCOPES = [
+        'databases.read',
+        'databases.write',
+        'collections.read',
+        'collections.write',
+        'attributes.read',
+        'attributes.write',
+        'documents.read',
+        'documents.write',
+    ];
+
+    public static function scopesProvider(): array
+    {
+        return [
+            'current scopes' => [self::CURRENT_SCOPES],
+            'deprecated scopes' => [self::DEPRECATED_SCOPES],
+        ];
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testUpdateCollection(array $scopes): void
     {
         [$databaseId, $collectionId] = $this->createCollection();
-        $headers = $this->getCurrentScopedHeaders();
 
         $response = $this->client->call(
             Client::METHOD_PUT,
             '/databases/' . $databaseId . '/collections/' . $collectionId,
-            $headers,
+            $this->getScopedHeaders($scopes),
             [
                 'name' => 'Renamed',
                 'permissions' => [],
             ]
         );
 
-        $this->assertSame(200, $response['headers']['status-code'], 'Legacy update collection rejected: ' . ($response['body']['message'] ?? ''));
+        $this->assertSame(200, $response['headers']['status-code'], $response['body']['message'] ?? '');
         $this->assertSame('Renamed', $response['body']['name']);
     }
 
-    public function testCreateDocumentWithCurrentScopes(): void
+    #[DataProvider('scopesProvider')]
+    public function testListCollections(array $scopes): void
+    {
+        [$databaseId] = $this->createCollection();
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections',
+            $this->getScopedHeaders($scopes)
+        );
+
+        $this->assertSame(200, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateAttribute(array $scopes): void
     {
         [$databaseId, $collectionId] = $this->createCollection();
-        $headers = $this->getCurrentScopedHeaders();
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string',
+            $this->getScopedHeaders($scopes),
+            [
+                'key' => 'subtitle',
+                'size' => 128,
+                'required' => false,
+            ]
+        );
+
+        $this->assertSame(202, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateIndex(array $scopes): void
+    {
+        [$databaseId, $collectionId] = $this->createCollection();
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes',
+            $this->getScopedHeaders($scopes),
+            [
+                'key' => 'title_index',
+                'type' => 'key',
+                'attributes' => ['title'],
+            ]
+        );
+
+        $this->assertSame(202, $response['headers']['status-code'], $response['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateDocument(array $scopes): void
+    {
+        [$databaseId, $collectionId] = $this->createCollection();
+        $headers = $this->getScopedHeaders($scopes);
 
         $response = $this->client->call(
             Client::METHOD_POST,
@@ -89,25 +150,27 @@ final class DatabasesKeyScopesTest extends Scope
             ]
         );
 
-        $this->assertSame(201, $response['headers']['status-code'], 'Legacy create document rejected: ' . ($response['body']['message'] ?? ''));
-    }
+        $this->assertSame(201, $response['headers']['status-code'], $response['body']['message'] ?? '');
 
-    public function testUpdateTableWithCurrentScopes(): void
-    {
-        [$databaseId, $collectionId] = $this->createCollection();
-        $headers = $this->getCurrentScopedHeaders();
-
-        $response = $this->client->call(
-            Client::METHOD_PUT,
-            '/tablesdb/' . $databaseId . '/tables/' . $collectionId,
-            $headers,
-            [
-                'name' => 'Renamed',
-                'permissions' => [],
-            ]
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            $headers
         );
 
-        $this->assertSame(200, $response['headers']['status-code'], 'TablesDB update table rejected: ' . ($response['body']['message'] ?? ''));
+        $this->assertSame(200, $list['headers']['status-code'], $list['body']['message'] ?? '');
+    }
+
+    #[DataProvider('scopesProvider')]
+    public function testCreateTransaction(array $scopes): void
+    {
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/transactions',
+            $this->getScopedHeaders($scopes)
+        );
+
+        $this->assertSame(201, $response['headers']['status-code'], $response['body']['message'] ?? '');
     }
 
     /**
@@ -144,7 +207,10 @@ final class DatabasesKeyScopesTest extends Scope
         return [$database['body']['$id'], $collection['body']['$id']];
     }
 
-    private function getCurrentScopedHeaders(): array
+    /**
+     * @param array<string> $scopes
+     */
+    private function getScopedHeaders(array $scopes): array
     {
         $key = $this->client->call(Client::METHOD_POST, '/project/keys', [
             'origin' => 'http://localhost',
@@ -154,8 +220,8 @@ final class DatabasesKeyScopesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'keyId' => ID::unique(),
-            'name' => 'Current Databases scopes',
-            'scopes' => self::CURRENT_SCOPES,
+            'name' => 'Databases scopes',
+            'scopes' => $scopes,
         ]);
 
         $this->assertSame(201, $key['headers']['status-code']);

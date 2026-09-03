@@ -48,7 +48,7 @@ class Increment extends Action
             ->desc('Increment document attribute')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-            ->label('scope', 'documents.write')
+            ->label('scope', ['rows.write', 'documents.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

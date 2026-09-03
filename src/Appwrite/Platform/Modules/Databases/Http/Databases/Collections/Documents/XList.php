@@ -49,7 +49,7 @@ class XList extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->desc('List documents')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', ['rows.read', 'documents.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/documents')
             ->label('sdk', new Method(

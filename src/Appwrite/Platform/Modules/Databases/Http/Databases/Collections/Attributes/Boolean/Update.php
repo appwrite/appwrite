@@ -37,7 +37,7 @@ class Update extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
             ->desc('Update boolean attribute')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
             ->label('audits.event', 'attribute.update')

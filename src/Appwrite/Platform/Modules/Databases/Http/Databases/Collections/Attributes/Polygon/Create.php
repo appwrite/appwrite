@@ -41,7 +41,7 @@ class Create extends Action
             ->desc('Create polygon attribute')
             ->groups(['api', 'database', 'schema'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
-            ->label('scope', 'collections.write')
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
