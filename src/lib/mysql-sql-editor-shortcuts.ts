@@ -20,6 +20,13 @@ export const MYSQL_SQL_EXPLAIN_SHORTCUT_COMBOS = [
   'control+shift+e',
 ] as const
 
+export const MYSQL_SQL_ANALYZE_SHORTCUT_RAW = 'mod+shift+a'
+
+export const MYSQL_SQL_ANALYZE_SHORTCUT_COMBOS = [
+  'meta+shift+a',
+  'control+shift+a',
+] as const
+
 export const MYSQL_SQL_SAVE_SHORTCUT_RAW = 'mod+s'
 
 export const MYSQL_SQL_SAVE_SHORTCUT_COMBOS = [
@@ -90,6 +97,11 @@ export const MYSQL_SQL_EDITOR_SHORTCUTS: readonly MysqlSqlEditorShortcutRef[] =
       id: 'mysql-sql.explain',
       description: 'Explain',
       raw: MYSQL_SQL_EXPLAIN_SHORTCUT_RAW,
+    },
+    {
+      id: 'mysql-sql.analyze',
+      description: 'Analyze',
+      raw: MYSQL_SQL_ANALYZE_SHORTCUT_RAW,
     },
     {
       id: 'mysql-sql.save',

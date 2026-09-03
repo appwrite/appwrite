@@ -11,10 +11,12 @@ import {
   Globe,
   Boxes,
   Globe2,
+  Building2,
   MoreHorizontal,
   ScanSearch,
   Network,
   Plug2,
+  Bot,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -104,6 +106,10 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   }
   if (/^advisor\./.test(id)) return 'Advisor'
   if (/^proxy\./.test(id)) return 'Proxy'
+  if (/^organization\./.test(id) || /^devkeys\./.test(id)) {
+    return 'Organization'
+  }
+  if (/^agent\./.test(id)) return 'Agent'
   return 'General'
 }
 
@@ -130,7 +136,9 @@ const KNOWN_CATEGORY_ORDER = [
   'Presences',
   'Domains',
   'Project',
+  'Organization',
   'Advisor',
+  'Agent',
   'Proxy',
   'General',
 ]
@@ -166,6 +174,12 @@ export function getScopeCategoryIcon(
   }
   if (c.includes('project')) {
     return Boxes
+  }
+  if (c.includes('organization') || c.includes('membership')) {
+    return Building2
+  }
+  if (c.includes('agent')) {
+    return Bot
   }
   if (
     c.includes('database') ||
@@ -242,6 +256,8 @@ export function getScopeCategoryIcon(
     if (/^apps\./.test(id)) return Plug2
     if (/^advisor\./.test(id)) return ScanSearch
     if (/^proxy\./.test(id)) return Network
+    if (/^organization\./.test(id) || /^devkeys\./.test(id)) return Building2
+    if (/^agent\./.test(id)) return Bot
   }
   return MoreHorizontal
 }
@@ -324,20 +340,27 @@ export function consoleKeyScopesToEditorRows(
     isCloud: boolean
     oauth2Server: boolean
     selectedScopeIds?: readonly string[]
+    catalog?: 'project' | 'organization'
   },
 ): ScopeEditorRow[] {
   if (!list?.scopes?.length) return []
   const selected = new Set(opts.selectedScopeIds ?? [])
+  const isOrgCatalog = opts.catalog === 'organization'
   return list.scopes
     .filter(
-      (s) => !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
+      (s) =>
+        isOrgCatalog || !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
     )
     .filter(
       (s) =>
-        !isOAuth2AppsCatalogScope(s.$id, s.category) || opts.oauth2Server,
+        isOrgCatalog ||
+        !isOAuth2AppsCatalogScope(s.$id, s.category) ||
+        opts.oauth2Server,
     )
     .filter((s) => {
-      if (!LEGACY_CATALOG_ONLY_WHEN_ON_KEY.has(s.$id)) return true
+      if (isOrgCatalog || !LEGACY_CATALOG_ONLY_WHEN_ON_KEY.has(s.$id)) {
+        return true
+      }
       return selected.has(s.$id)
     })
     .map((s) => {

@@ -302,3 +302,28 @@ function emptyFirewallTrafficOverview(): ProjectFirewallTrafficOverview {
     chartPoints: [],
   }
 }
+
+/** Compact fingerprint for live-update change detection. */
+export function getFirewallTrafficOverviewSnapshot(
+  overview: ProjectFirewallTrafficOverview,
+): string {
+  const totals = [
+    overview.totalRequests,
+    overview.totalPassed,
+    overview.totalDenied,
+    overview.totalChallenged,
+    overview.totalRateLimited,
+    overview.totalRedirected,
+    overview.totalChallengeSolved,
+    overview.avgSolveTimeMs,
+  ].join(',')
+
+  const series = overview.chartPoints
+    .map(
+      (point) =>
+        `${point.date}:${point.requests}:${point.denied}:${point.challenged}:${point.rateLimited}:${point.redirected}`,
+    )
+    .join(';')
+
+  return `${totals}|${series}`
+}

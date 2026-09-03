@@ -1,15 +1,23 @@
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import { formatInitCappedCount } from '@/lib/init/presence'
-import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
+import type {
+  InitDisplayEvent,
+  LaunchEventLiveBanner,
+  LaunchEventOnlineUser,
+} from '@/lib/init/types'
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
   INIT_COLLAPSED_HEADER_HEIGHT_PX,
   useInitScrollSpyDay,
 } from '@/lib/init/use-init-scroll-spy-day'
-import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import {
+  useInitPresence,
+  useInitPresenceActivity,
+} from '@/lib/init/init-presence-context'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { buildInitPlayingWithJoolActivity } from '@/lib/init/init-presence-activity'
 import { InitPresenceUserAvatar } from '@/components/pages/init/_components/InitPresenceUserAvatar'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +35,84 @@ import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 
 /** Tailwind `sm` - skip sticky-header Jool on phones for performance. */
 const STICKY_JOOL_MIN_WIDTH_PX = 640
+const HERO_ONLINE_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
+/** `size-6` avatar minus `-space-x-2` overlap. */
+const HERO_AVATAR_UNFOLD_PX = 16
+const HERO_AVATAR_UNFOLD_SPRING = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 28,
+  mass: 0.75,
+}
+
+const HeroOnlineAvatarStack = forwardRef<
+  HTMLDivElement,
+  {
+    users: LaunchEventOnlineUser[]
+    count: number
+    countCapped: boolean
+    reduceMotion: boolean | null
+  }
+>(function HeroOnlineAvatarStack(
+  { users, count, countCapped, reduceMotion },
+  ref,
+) {
+  const faces = users.slice(0, 4)
+
+  return (
+    <motion.div
+      ref={ref}
+      className="flex items-center justify-center gap-3"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
+      transition={{ duration: 0.28, ease: HERO_ONLINE_EASE }}
+    >
+      <div className="flex -space-x-2">
+        {faces.map((user, index) => (
+          <motion.span
+            key={user.id}
+            className="relative inline-flex origin-left [transform:translateZ(0)] [backface-visibility:hidden]"
+            style={{ zIndex: index }}
+            initial={
+              reduceMotion
+                ? false
+                : {
+                    opacity: 0,
+                    scale: 0.55,
+                    x: -index * HERO_AVATAR_UNFOLD_PX,
+                  }
+            }
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{
+              ...HERO_AVATAR_UNFOLD_SPRING,
+              delay: 0.05 + index * 0.09,
+            }}
+          >
+            <InitPresenceUserAvatar
+              user={user}
+              displayName={user.name}
+              size="sm"
+              className="ring-2 ring-background"
+            />
+          </motion.span>
+        ))}
+      </div>
+      <motion.span
+        className="text-[12px] tabular-nums text-muted-foreground"
+        initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{
+          duration: 0.38,
+          ease: HERO_ONLINE_EASE,
+          delay: reduceMotion ? 0 : 0.12 + faces.length * 0.09,
+        }}
+      >
+        {formatInitCappedCount(count, countCapped)} online now
+      </motion.span>
+    </motion.div>
+  )
+})
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -79,6 +165,10 @@ function CollapsedHeroBar({
     <div
       ref={barRef}
       aria-hidden={!visible}
+      // opacity + translate leave the day buttons and Watch link in the tab
+      // order, so keyboard users hit six invisible stops on a fixed bar the
+      // browser cannot scroll into view. aria-hidden alone does not remove them.
+      inert={!visible ? true : undefined}
       className={cn(
         'fixed z-[15] overflow-hidden border-b border-border',
         'bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',
@@ -223,6 +313,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
+  const { isReady: isPresenceReady } = useInitPresence()
+  const reduceMotion = useReducedMotion()
   const { setTransientActivity } = useInitPresenceActivity()
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
@@ -368,24 +460,17 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           ) : null}
           {!event.isRecapMode && event.presenceEnabled ? (
             <div className="mt-8 flex min-h-8 items-center justify-center gap-3">
-              {event.onlineCount > 0 ? (
-                <>
-                  <div className="flex -space-x-2">
-                    {event.onlineUsers.slice(0, 4).map((user) => (
-                      <InitPresenceUserAvatar
-                        key={user.id}
-                        user={user}
-                        displayName={user.name}
-                        size="sm"
-                        className="ring-2 ring-background"
-                      />
-                    ))}
-                  </div>
-                  <span className="text-[12px] tabular-nums text-muted-foreground">
-                    {formatInitCappedCount(event.onlineCount, event.onlineCountCapped)} online now
-                  </span>
-                </>
-              ) : null}
+              <AnimatePresence>
+                {isPresenceReady && event.onlineCount > 0 ? (
+                  <HeroOnlineAvatarStack
+                    key="online-now"
+                    users={event.onlineUsers}
+                    count={event.onlineCount}
+                    countCapped={event.onlineCountCapped}
+                    reduceMotion={reduceMotion}
+                  />
+                ) : null}
+              </AnimatePresence>
             </div>
           ) : null}
         </div>

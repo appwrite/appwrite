@@ -166,7 +166,7 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
 
 /**
  * Compute-tier scaling keeps the cluster available, so existing nodes should
- * keep live metrics and only switch the status dot to amber. Leave draft
+ * keep live metrics and only switch the status dot to blue. Leave draft
  * add/remove and failed states alone.
  */
 function overlayScalingLifecycle(
@@ -284,11 +284,13 @@ function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
     case 'active':
       return 'bg-emerald-500 dark:bg-emerald-400'
     case 'provisioning':
-    case 'scaling':
     case 'starting':
+      return 'bg-blue-500 dark:bg-blue-400'
     case 'pending':
-    case 'adding':
       return 'bg-amber-500 dark:bg-amber-400'
+    case 'scaling':
+    case 'adding':
+      return 'bg-blue-500 dark:bg-blue-400'
     case 'removing':
       return 'bg-slate-400 dark:bg-slate-500'
     case 'failed':
@@ -519,6 +521,10 @@ function buildCompactLayout(
   }
 }
 
+function hasResourceMetricValue(value: number | null): boolean {
+  return value != null && !Number.isNaN(value)
+}
+
 function CompactClusterNode({
   label,
   node,
@@ -545,6 +551,17 @@ function CompactClusterNode({
     status === 'pending' ||
     status === 'failed'
 
+  const hasCpu =
+    metrics.kind === 'resource' && hasResourceMetricValue(metrics.cpu)
+  const hasMemory =
+    metrics.kind === 'resource' && hasResourceMetricValue(metrics.memory)
+  const hasConnections =
+    metrics.kind === 'connections' &&
+    (metrics.current != null || metrics.max != null)
+
+  const showMetricsFooter =
+    showStatusBody || hasCpu || hasMemory || hasConnections
+
   const connectionsLabel =
     metrics.kind === 'connections'
       ? `${
@@ -567,11 +584,11 @@ function CompactClusterNode({
       <div
         className={cn(
           'overflow-hidden rounded-md border bg-card shadow-sm',
-          isPreviewChange
-            ? 'border-dashed border-muted-foreground/55'
-            : 'border-border',
-          status === 'adding' && 'bg-amber-500/5',
-          status === 'removing' && 'bg-muted/40',
+          status === 'adding' &&
+            'border-dashed border-blue-500/40 bg-blue-500/5',
+          status === 'removing' &&
+            'border-dashed border-muted-foreground/55 bg-muted/40',
+          !isPreviewChange && 'border-border',
         )}
       >
         <div
@@ -602,50 +619,59 @@ function CompactClusterNode({
             aria-label={statusLabel}
           />
         </div>
-        <div
-          className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
-          style={{ minHeight: METRICS_BODY_HEIGHT }}
-        >
-          {showStatusBody ? (
-            <span
-              className={cn(
-                'text-[10px] font-medium leading-none',
-                status === 'removing'
-                  ? 'text-muted-foreground'
-                  : status === 'adding' ||
-                      status === 'provisioning' ||
-                      status === 'starting' ||
-                      status === 'pending'
-                    ? 'text-amber-700 dark:text-amber-400'
-                    : 'text-muted-foreground',
-              )}
-            >
-              {statusLabel}
-            </span>
-          ) : metrics.kind === 'connections' ? (
-            <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-              <span className="text-muted-foreground">{t('Connections')}</span>
-              <span className="font-mono tabular-nums font-medium text-foreground">
-                {connectionsLabel}
-              </span>
-            </span>
-          ) : (
-            <>
-              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-                <span className="text-muted-foreground">{t('CPU')}</span>
-                <ResourcePercentValue value={metrics.cpu} />
-              </span>
+        {showMetricsFooter ? (
+          <div
+            className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
+            style={{ minHeight: METRICS_BODY_HEIGHT }}
+          >
+            {showStatusBody ? (
               <span
-                className="h-3 w-px shrink-0 bg-border"
-                aria-hidden
-              />
-              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-                <span className="text-muted-foreground">{t('Memory')}</span>
-                <ResourcePercentValue value={metrics.memory} />
+                className={cn(
+                  'text-[10px] font-medium leading-none',
+                  status === 'removing'
+                    ? 'text-muted-foreground'
+                    : status === 'adding' ||
+                        status === 'provisioning' ||
+                        status === 'starting'
+                      ? 'text-blue-700 dark:text-blue-400'
+                      : status === 'pending'
+                        ? 'text-amber-700 dark:text-amber-400'
+                        : 'text-muted-foreground',
+                )}
+              >
+                {statusLabel}
               </span>
-            </>
-          )}
-        </div>
+            ) : metrics.kind === 'connections' ? (
+              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                <span className="text-muted-foreground">{t('Connections')}</span>
+                <span className="font-mono tabular-nums font-medium text-foreground">
+                  {connectionsLabel}
+                </span>
+              </span>
+            ) : (
+              <>
+                {hasCpu ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                    <span className="text-muted-foreground">{t('CPU')}</span>
+                    <ResourcePercentValue value={metrics.cpu} />
+                  </span>
+                ) : null}
+                {hasCpu && hasMemory ? (
+                  <span
+                    className="h-3 w-px shrink-0 bg-border"
+                    aria-hidden
+                  />
+                ) : null}
+                {hasMemory ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                    <span className="text-muted-foreground">{t('Memory')}</span>
+                    <ResourcePercentValue value={metrics.memory} />
+                  </span>
+                ) : null}
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   )

@@ -194,11 +194,13 @@ function formatEngineLabel(engine: string): string {
 
 function dedicatedStatusVariant(
   status: string,
-): 'success' | 'warning' | 'error' | 'info' {
+): 'success' | 'warning' | 'error' | 'info' | 'processing' {
   switch (status.toLowerCase()) {
     case 'ready':
       return 'success'
     case 'provisioning':
+    case 'starting':
+      return 'processing'
     case 'restoring':
     case 'scaling':
     case 'upgrading':

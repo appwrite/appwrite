@@ -22,6 +22,15 @@ export function escapeXml(value: string): string {
     .replace(/'/g, '&apos;')
 }
 
+function withLineEllipsis(line: string, maxCharsPerLine: number): string {
+  const withoutTrail = line.replace(/[.\s]+$/u, '').trimEnd()
+  const budget = Math.max(0, maxCharsPerLine - 3)
+  if (withoutTrail.length > budget) {
+    return `${withoutTrail.slice(0, budget).trimEnd()}...`
+  }
+  return `${withoutTrail}...`
+}
+
 function splitWordToFit(word: string, maxCharsPerLine: number): string[] {
   if (word.length <= maxCharsPerLine) return [word]
 
@@ -57,24 +66,21 @@ export function wrapTextLines(
     }
     lines.push(current)
     current = word
-    if (lines.length >= maxLines - 1) break
+    if (lines.length >= maxLines) break
   }
 
   if (lines.length < maxLines) {
     lines.push(current)
   }
 
-  const joinedLines = lines.slice(0, maxLines).join(' ')
+  const wrapped = lines.slice(0, maxLines)
+  const joinedLines = wrapped.join(' ')
   const sourceText = words.join(' ')
   if (sourceText.length > joinedLines.length) {
-    const last = lines[maxLines - 1] ?? ''
-    lines[maxLines - 1] =
-      last.length > maxCharsPerLine - 3
-        ? `${last.slice(0, Math.max(0, maxCharsPerLine - 3)).trimEnd()}...`
-        : `${last.trimEnd()}...`
+    wrapped[maxLines - 1] = withLineEllipsis(wrapped[maxLines - 1] ?? '', maxCharsPerLine)
   }
 
-  return lines.slice(0, maxLines)
+  return wrapped
 }
 
 export function clampNumber(value: number, min: number, max: number): number {

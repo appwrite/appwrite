@@ -55,6 +55,15 @@ export function getCanonicalHostRedirectUrl(requestUrl: string): string {
   ).toString()
 }
 
+/** 301 to the apex host, or null when this request is already canonical. */
+export function getCanonicalHostRedirectResponse(
+  request: Request,
+): Response | null {
+  const host = getRequestHostFromHeaders(request.headers, request.url)
+  if (!shouldRedirectToCanonicalHost(host)) return null
+  return Response.redirect(getCanonicalHostRedirectUrl(request.url), 301)
+}
+
 export function isSeoIndexableHost(host: string): boolean {
   if (!BLOCK_NON_PRODUCTION_SEO) return true
   return SEO_INDEXABLE_HOST_SET.has(normalizeRequestHost(host))

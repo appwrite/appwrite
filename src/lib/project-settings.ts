@@ -46,6 +46,13 @@ export type ProjectAuthSecuritySnapshot = {
     userId: boolean
     userPhone: boolean
   }
+  /** Null when the server does not report an mfa-factors policy. */
+  mfaFactors: {
+    totp: boolean
+    email: boolean
+    phone: boolean
+    custom: boolean
+  } | null
 }
 
 const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
@@ -70,6 +77,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
     userId: true,
     userPhone: true,
   },
+  mfaFactors: null,
 }
 
 function policyById(
@@ -149,6 +157,7 @@ export function parseProjectAuthSecurity(
     policies,
     ProjectPolicyId.Membershipprivacy,
   )
+  const mfaFactors = policyById(policies, ProjectPolicyId.Mfafactors)
   const denyFreeEmail = policyById(policies, AuthEmailPolicyId.DenyFreeEmail)
   const denyAliasedEmail = policyById(
     policies,
@@ -196,6 +205,15 @@ export function parseProjectAuthSecurity(
       phone: n.number,
       otp: n.otp,
     })),
+    mfaFactors:
+      mfaFactors && 'totp' in mfaFactors
+        ? {
+            totp: mfaFactors.totp ?? true,
+            email: mfaFactors.email ?? true,
+            phone: mfaFactors.phone ?? true,
+            custom: mfaFactors.custom ?? false,
+          }
+        : null,
     membershipsPrivacy: {
       userName:
         membershipPrivacy && 'userName' in membershipPrivacy

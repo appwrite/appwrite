@@ -119,6 +119,8 @@ type UsageTimeSeriesChartCardProps = {
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
   onDateRangeChange?: (dateRange: DateRange | undefined) => void
+  /** Shown when the chart has no points for the selected range (not loading/error). */
+  emptyMessage?: string
 }
 
 export function UsageTimeSeriesChartCard({
@@ -145,6 +147,7 @@ export function UsageTimeSeriesChartCard({
   dateRange: dateRangeProp,
   chartInterval: chartIntervalProp,
   onDateRangeChange: onDateRangeChangeProp,
+  emptyMessage = 'No data for this date range',
 }: UsageTimeSeriesChartCardProps) {
   const t = useT()
   const usageFilters = useOptionalUsageFilters()
@@ -294,8 +297,8 @@ export function UsageTimeSeriesChartCard({
           <ChartSkeleton label={t('Loading usage data')} />
         ) : chartData.length === 0 ? (
           <UsageChartArea>
-            <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
-              {t('No data for this date range')}
+            <div className="absolute inset-0 flex max-w-md mx-auto items-center justify-center px-6 text-center text-[13px] leading-relaxed text-muted-foreground">
+              {t(emptyMessage)}
             </div>
           </UsageChartArea>
         ) : (

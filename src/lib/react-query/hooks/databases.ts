@@ -44,11 +44,9 @@ import {
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
-import {
-  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
-  coerceTrimmedString,
-  shouldPollDedicatedDatabaseStatus,
-} from '@/lib/databases/dedicated-database-status'
+import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import { waitForDatabaseRealtimeEvent } from '@/lib/realtime/wait-for-database-realtime'
+import { normalizeDedicatedRealtimeEngine } from '@/lib/realtime/dedicated-database-cache'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
 import {
   normalizePostgresExecutionResult,
@@ -200,55 +198,104 @@ function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
 }
 
 /**
- * Dedicated compute often takes several minutes. 180 attempts with 500ms→3s
- * backoff covers about 8–9 minutes before the wizard gives up.
+ * Dedicated compute often takes several minutes. Realtime waits up to ~9 minutes
+ * before the wizard gives up (matches the old polling window).
  */
-const CREATED_DATABASE_READY_ATTEMPTS = 180
+const CREATED_DATABASE_READY_TIMEOUT_MS = 9 * 60 * 1000
 const CREATED_DATABASE_WORKSPACE_ATTEMPTS = 90
 
-/** Poll dedicated database status until ready or timeout. */
+function dedicatedRealtimeEngineForSource(
+  source:
+    | { type: 'product'; dbKind: DatabaseRouteKind }
+    | { type: 'engine'; engine: string },
+): string {
+  if (source.type === 'engine') {
+    return normalizeDedicatedRealtimeEngine(source.engine)
+  }
+  return computeApiForDatabaseType(routeKindToDatabaseType(source.dbKind))
+}
+
+function dedicatedRealtimeEngineForKind(
+  kind: CreatedDatabaseWorkspaceKind,
+): string {
+  if (kind.type === 'native') {
+    if (kind.engine === 'postgres') return 'postgresql'
+    if (kind.engine === 'mongo') return 'mongodb'
+    return 'mysql'
+  }
+  return computeApiForDatabaseType(kind.backend)
+}
+
+/** Wait for dedicated database status until ready or failed (realtime-driven). */
 export async function waitForDedicatedDatabaseReady(
   projectId: string,
   databaseId: string,
   source:
     | { type: 'product'; dbKind: DatabaseRouteKind }
     | { type: 'engine'; engine: string },
-  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
-  let intervalMs = 500
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        source,
-      )
-      const status = database?.status
-      if (isDatabaseLifecycleFailed(status)) {
-        return false
-      }
-      if (isDatabaseLifecycleReady(status)) {
-        if (source.type === 'engine' && database) {
-          await ensureConsoleSqlApiStatements(
-            projectId,
-            databaseId,
-            source.engine,
-            database,
-          ).catch(() => {
-            /* Console DDL still retries on first write if this PATCH fails */
-          })
-        }
-        return true
-      }
-    } catch {
-      /* retry */
+  try {
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      source,
+    )
+    const status = database?.status
+    if (isDatabaseLifecycleFailed(status)) {
+      return false
     }
-    if (attempt < maxAttempts - 1) {
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    if (isDatabaseLifecycleReady(status)) {
+      if (source.type === 'engine' && database) {
+        await ensureConsoleSqlApiStatements(
+          projectId,
+          databaseId,
+          source.engine,
+          database,
+        ).catch(() => {
+          /* Console DDL still retries on first write if this PATCH fails */
+        })
+      }
+      return true
     }
+  } catch {
+    /* wait for realtime */
   }
-  return false
+
+  const engine = dedicatedRealtimeEngineForSource(source)
+
+  try {
+    await waitForDatabaseRealtimeEvent({
+      projectId,
+      databaseId,
+      engine,
+      lifecycleOnly: true,
+      timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
+    })
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      source,
+    ).catch(() => null)
+    const status = database?.status ?? null
+    if (isDatabaseLifecycleFailed(status)) {
+      return false
+    }
+    if (source.type === 'engine' && isDatabaseLifecycleReady(status)) {
+      if (database) {
+        await ensureConsoleSqlApiStatements(
+          projectId,
+          databaseId,
+          source.engine,
+          database,
+        ).catch(() => {
+          /* Console DDL still retries on first write if this PATCH fails */
+        })
+      }
+    }
+    return isDatabaseLifecycleReady(status)
+  } catch {
+    return false
+  }
 }
 
 export type CreatedDatabaseWorkspaceKind =
@@ -256,7 +303,7 @@ export type CreatedDatabaseWorkspaceKind =
   | { type: 'native'; engine: NativeDatabaseEngine }
 
 /**
- * Poll until the created database leaves transitional lifecycle statuses
+ * Wait until the created database leaves transitional lifecycle statuses
  * (e.g. `provisioning`). Used by the create wizard before leaving the
  * provisioning step. Requires an explicit ready/paused status so a brief
  * null status right after create does not advance the wizard early.
@@ -265,49 +312,61 @@ export async function waitForCreatedDatabaseLifecycleReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = CREATED_DATABASE_READY_ATTEMPTS,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
 
   if (kind.type === 'native') {
-    return waitForDedicatedDatabaseReady(
-      projectId,
-      databaseId,
-      {
-        type: 'engine',
-        engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
-      },
-      maxAttempts,
-    )
+    return waitForDedicatedDatabaseReady(projectId, databaseId, {
+      type: 'engine',
+      engine: kind.engine === 'postgres' ? 'postgresql' : kind.engine === 'mongo' ? 'mongodb' : 'mysql',
+    })
   }
 
   const projectSdk = sdk.forProject(projectId)
-  let intervalMs = 500
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const database = await getProductDatabase(
-        projectSdk,
-        kind.backend,
-        databaseId,
-      )
-      const status = database
-        ? readProductDatabaseLifecycleStatus(database)
-        : null
-      if (isDatabaseLifecycleFailed(status)) {
-        return false
-      }
-      if (isDatabaseLifecycleReady(status)) {
-        return true
-      }
-    } catch {
-      /* retry */
+  try {
+    const database = await getProductDatabase(
+      projectSdk,
+      kind.backend,
+      databaseId,
+    )
+    const status = database
+      ? readProductDatabaseLifecycleStatus(database)
+      : null
+    if (isDatabaseLifecycleFailed(status)) {
+      return false
     }
-    if (attempt < maxAttempts - 1) {
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    if (isDatabaseLifecycleReady(status)) {
+      return true
     }
+  } catch {
+    /* wait for realtime */
   }
-  return false
+
+  const engine = dedicatedRealtimeEngineForKind(kind)
+
+  try {
+    await waitForDatabaseRealtimeEvent({
+      projectId,
+      databaseId,
+      engine,
+      lifecycleOnly: true,
+      timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
+    })
+    const database = await getProductDatabase(
+      projectSdk,
+      kind.backend,
+      databaseId,
+    ).catch(() => null)
+    const status = database
+      ? readProductDatabaseLifecycleStatus(database)
+      : null
+    if (isDatabaseLifecycleFailed(status)) {
+      return false
+    }
+    return isDatabaseLifecycleReady(status)
+  } catch {
+    return false
+  }
 }
 
 async function probeProductDatabaseTablesList(
@@ -1334,7 +1393,7 @@ export async function enableProductDatabasePitr(
 }
 
 /**
- * Poll until a created dedicated database reports the expected replica count.
+ * Wait until a created dedicated database reports the expected replica count.
  * Product payloads may omit `replicas` after ready; in that case a ready get
  * is enough because replicas were requested on the single create call.
  */
@@ -1343,65 +1402,98 @@ export async function waitForCreatedDatabaseHaReady(
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
   expectedReplicas: number,
-  maxAttempts = 40,
 ): Promise<boolean> {
   if (!projectId || !databaseId || expectedReplicas <= 0) return true
 
-  let intervalMs = 500
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      if (kind.type === 'native') {
-        const database = await fetchDedicatedDatabaseById(
-          projectId,
-          databaseId,
-          {
-            type: 'engine',
-            engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
-          },
-        )
-        if (
-          database &&
-          typeof database.replicas === 'number' &&
-          database.replicas >= expectedReplicas
-        ) {
-          return true
-        }
-      } else {
-        const projectSdk = sdk.forProject(projectId)
-        const database = await getProductDatabase(
-          projectSdk,
-          kind.backend,
-          databaseId,
-        )
-        if (database) {
-          if (
-            typeof database.replicas === 'number' &&
-            database.replicas >= expectedReplicas
-          ) {
-            return true
-          }
-          const status = readProductDatabaseLifecycleStatus(database)
-          if (
-            typeof database.replicas !== 'number' &&
-            isDatabaseLifecycleReady(status)
-          ) {
-            return true
-          }
-        }
-      }
-    } catch {
-      /* retry */
+  const matchesHaReady = (payload: Record<string, unknown>): boolean => {
+    const replicas = payload.replicas
+    if (typeof replicas === 'number' && replicas >= expectedReplicas) {
+      return true
     }
-    if (attempt < maxAttempts - 1) {
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
-    }
+    const status = typeof payload.status === 'string' ? payload.status : null
+    return (
+      typeof replicas !== 'number' &&
+      isDatabaseLifecycleReady(status)
+    )
   }
-  return false
+
+  try {
+    if (kind.type === 'native') {
+      const database = await fetchDedicatedDatabaseById(
+        projectId,
+        databaseId,
+        {
+          type: 'engine',
+          engine:
+            kind.engine === 'postgres'
+              ? 'postgresql'
+              : kind.engine === 'mongo'
+                ? 'mongodb'
+                : 'mysql',
+        },
+      )
+      if (database && matchesHaReady(database as Record<string, unknown>)) {
+        return true
+      }
+    } else {
+      const projectSdk = sdk.forProject(projectId)
+      const database = await getProductDatabase(
+        projectSdk,
+        kind.backend,
+        databaseId,
+      )
+      if (database && matchesHaReady(database as Record<string, unknown>)) {
+        return true
+      }
+    }
+  } catch {
+    /* wait for realtime */
+  }
+
+  try {
+    await waitForDatabaseRealtimeEvent({
+      projectId,
+      databaseId,
+      engine: dedicatedRealtimeEngineForKind(kind),
+      lifecycleOnly: true,
+      timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
+    })
+
+    if (kind.type === 'native') {
+      const database = await fetchDedicatedDatabaseById(
+        projectId,
+        databaseId,
+        {
+          type: 'engine',
+          engine:
+            kind.engine === 'postgres'
+              ? 'postgresql'
+              : kind.engine === 'mongo'
+                ? 'mongodb'
+                : 'mysql',
+        },
+      ).catch(() => null)
+      return Boolean(
+        database && matchesHaReady(database as Record<string, unknown>),
+      )
+    }
+
+    const projectSdk = sdk.forProject(projectId)
+    const database = await getProductDatabase(
+      projectSdk,
+      kind.backend,
+      databaseId,
+    ).catch(() => null)
+    return Boolean(
+      database && matchesHaReady(database as Record<string, unknown>),
+    )
+  } catch {
+    return false
+  }
 }
 
 /**
- * Poll until PITR is reported enabled on the created database.
+ * Wait until PITR is reported enabled on the created database.
  *
  * Native DBs are checked via the engine get. Product DBs have no PITR field or
  * mutation on the product API, so this returns true immediately for product
@@ -1411,32 +1503,61 @@ export async function waitForCreatedDatabasePitrReady(
   projectId: string,
   databaseId: string,
   kind: CreatedDatabaseWorkspaceKind,
-  maxAttempts = 40,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
   if (kind.type !== 'native') return true
 
-  let intervalMs = 500
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        {
-          type: 'engine',
-          engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
-        },
-      )
-      if (database?.pitr === true) return true
-    } catch {
-      /* retry */
+  const matchesPitrReady = (payload: Record<string, unknown>): boolean =>
+    payload.pitr === true
+
+  try {
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      },
+    )
+    if (database && matchesPitrReady(database as Record<string, unknown>)) {
+      return true
     }
-    if (attempt < maxAttempts - 1) {
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
-    }
+  } catch {
+    /* wait for realtime */
   }
-  return false
+
+  try {
+    await waitForDatabaseRealtimeEvent({
+      projectId,
+      databaseId,
+      engine: dedicatedRealtimeEngineForKind(kind),
+      lifecycleOnly: true,
+      timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
+    })
+    const database = await fetchDedicatedDatabaseById(
+      projectId,
+      databaseId,
+      {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      },
+    ).catch(() => null)
+    return Boolean(
+      database && matchesPitrReady(database as Record<string, unknown>),
+    )
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -1578,8 +1699,11 @@ export async function updateProductDatabaseSpecification(
  *
  * `dbKindOrType` may be a product route kind (`tablesdb` / `documentsdb` /
  * `vectorsdb`) or a native engine type (`postgresql` / `mysql` / `mongodb`).
- * Native types must not fall through to TablesDB — that is what broke context-
- * menu delete for Postgres (settings used `postgresql.delete` directly).
+ * Pass the product type for product-owned DBs, never the backing engine.
+ * VectorsDB is postgres-backed and DocumentsDB is mongo-backed; sending the
+ * engine here deletes via postgresql/mongo and 404s. Native types must not
+ * fall through to TablesDB — that is what broke context-menu delete for
+ * Postgres (settings used `postgresql.delete` directly).
  */
 export async function deleteProjectDatabase(
   projectId: string,
@@ -2104,14 +2228,6 @@ export function dedicatedDatabasesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchInterval: (query) => {
-      const databases = query.state.data?.databases ?? []
-      return databases.some((db) =>
-        shouldPollDedicatedDatabaseStatus(db.status),
-      )
-        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
-        : false
-    },
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -4790,46 +4906,13 @@ export function useProjectDatabase(
   databaseId: string | null | undefined,
   dbKind: DatabaseRouteKind,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: databaseData,
     isLoading,
     isPending,
     error,
     refetch,
-  } = useQuery({
-    ...databaseQueryOptions(projectId, databaseId, dbKind),
-    refetchInterval: (query) =>
-      shouldPollDedicatedDatabaseStatus(
-        (query.state.data as { status?: string | null } | undefined)?.status,
-      )
-        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
-        : false,
-  })
-
-  // Keep dedicated list badges in sync when product detail polling sees a status change.
-  useEffect(() => {
-    const nextStatus = (databaseData as { status?: string | null } | null)
-      ?.status
-    if (!projectId || !databaseId || !nextStatus) return
-    queryClient.setQueryData(
-      ['dedicated-databases', 'project', projectId],
-      (
-        prev:
-          | { databases: Models.DedicatedDatabase[]; total: number }
-          | undefined,
-      ) => {
-        if (!prev?.databases?.length) return prev
-        let changed = false
-        const databases = prev.databases.map((db) => {
-          if (db.$id !== databaseId || db.status === nextStatus) return db
-          changed = true
-          return { ...db, status: nextStatus }
-        })
-        return changed ? { ...prev, databases } : prev
-      },
-    )
-  }, [databaseData, databaseId, projectId, queryClient])
+  } = useQuery(databaseQueryOptions(projectId, databaseId, dbKind))
 
   return {
     database: databaseData || null,

@@ -27,7 +27,7 @@ const ACTIVITY_ACTOR_TYPE_ELEMENTS = [
   { value: 'guest', label: 'Guest' },
   { value: 'keyProject', label: 'Project API key' },
   { value: 'keyAccount', label: 'Account API key' },
-  { value: 'keyOrganization', label: 'Organization API key' },
+  { value: 'keyOrganization', label: 'Partners API key' },
 ]
 
 const ACTIVITY_CORE_FILTER_COLUMNS: FilterColumn[] = [

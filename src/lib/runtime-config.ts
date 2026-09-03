@@ -40,7 +40,8 @@ const EMPTY_CONFIG: RuntimeConfig = {
   userVerification: '',
   cookieBanner: '',
   blogDrafts: '',
-  extraOAuthLogin: '',
+  databasePitrRestore: '',
+  extraVcsOAuth: '',
   usageStats: '',
   preLaunch: '',
 }

@@ -18,6 +18,7 @@ import {
   canShowTopicSettingsTab,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
+  canShowOrgApiKeysSettings,
   canShowGetStartedSection,
   canCreateDatabase,
   canSeeActivityNav,
@@ -215,6 +216,17 @@ export async function canAccessOrganizationDomains(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canAccessOrgDomains(access, features)
+}
+
+/** Organization settings → Partners (org API keys). */
+export async function canAccessOrganizationApiKeys(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<boolean> {
+  const access = await getOrganizationAccess(queryClient, organizationId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowOrgApiKeysSettings(access, features)
 }
 
 /** Onboarding checklist (same audience as sidebar Get started). */

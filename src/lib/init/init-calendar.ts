@@ -1,6 +1,7 @@
 import { parseDateOnly, resolveInitDayUnlockDate } from './dates'
 import {
   formatInitScheduleEventZoneTime,
+  INIT_SCHEDULE_LIVE_DURATION_MS,
   parseInitScheduleTime,
 } from './schedule-time'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
@@ -225,8 +226,6 @@ function formatGoogleCalendarDate(date: Date): string {
   return formatIcsDateOnly(date)
 }
 
-const SCHEDULE_ITEM_DURATION_MS = 60 * 60 * 1000
-
 /** UTC timestamp form, so calendar clients resolve the viewer's own zone. */
 function formatCalendarUtcDateTime(date: Date): string {
   return formatIcsUtcTimestamp(date)
@@ -247,7 +246,7 @@ function getInitScheduleItemDateRange(
 
   return {
     start,
-    end: new Date(start.getTime() + SCHEDULE_ITEM_DURATION_MS),
+    end: new Date(start.getTime() + INIT_SCHEDULE_LIVE_DURATION_MS),
     allDay: false,
   }
 }

@@ -32,6 +32,7 @@ import {
   buildPresenceMapForEvent,
   clearLegacyInitPresenceStorage,
   getInitPresenceMapKey,
+  getInitPresencePublicId,
   isInitAwayStatus,
   collectInitHiddenOnlinePresences,
   isInitHiddenPresence,
@@ -96,7 +97,7 @@ export type InitOnlinePresenceState = {
   identityVisible: boolean
   isIdentityVisibleUpdating: boolean
   setIdentityVisible: (visible: boolean) => Promise<void>
-  /** Map key / public presence ID for the signed-in user (anonymous when identity hidden). */
+  /** Public presence id (`$id`) for the signed-in user; may be anonymized. */
   selfPresenceMapKey: string | null
   setBaselineActivity: (activity: string) => void
   setTransientActivity: (activity: string | null) => void
@@ -341,7 +342,9 @@ export function useInitOnlinePresence(
       listInitPresences(scopeEventId, 'away', AWAY_USER_LIMIT),
     ])
 
-    setOnlineListFetchCapped(online.length >= SIDEBAR_USER_LIMIT)
+    const onlineCapped = online.length >= SIDEBAR_USER_LIMIT
+    const awayCapped = away.length >= AWAY_USER_LIMIT
+    setOnlineListFetchCapped(onlineCapped)
 
     setPresenceMaps((previous) => {
       const onlineFromApi = buildPresenceMapForEvent(online, scopeEventId)
@@ -352,20 +355,26 @@ export function useInitOnlinePresence(
         onlineFromApi,
         awayFromApi,
         scopeEventId,
+        {
+          // Uncapped lists are complete; replace so stale presenceIds for the same
+          // owner (e.g. after identity toggle) cannot accumulate forever.
+          replaceOnline: !onlineCapped,
+          replaceAway: !awayCapped,
+        },
       )
 
-      const selfMapKey = selfPresenceIdRef.current ?? accountUserIdRef.current
+      const selfOwnerKey = accountUserIdRef.current
 
       if (
-        selfMapKey &&
+        selfOwnerKey &&
         participantOnlineRef.current &&
-        !next.online.has(selfMapKey)
+        !next.online.has(selfOwnerKey)
       ) {
-        const selfPresence = previous.online.get(selfMapKey)
+        const selfPresence = previous.online.get(selfOwnerKey)
         if (selfPresence && isInitOnlineStatus(selfPresence, scopeEventId)) {
           next = reconcileMapsForEvent(
             {
-              online: new Map(next.online).set(selfMapKey, selfPresence),
+              online: new Map(next.online).set(selfOwnerKey, selfPresence),
               away: new Map(next.away),
             },
             scopeEventId,
@@ -374,16 +383,16 @@ export function useInitOnlinePresence(
       }
 
       if (
-        selfMapKey &&
+        selfOwnerKey &&
         !participantOnlineRef.current &&
-        !next.away.has(selfMapKey)
+        !next.away.has(selfOwnerKey)
       ) {
-        const selfPresence = previous.away.get(selfMapKey)
+        const selfPresence = previous.away.get(selfOwnerKey)
         if (selfPresence && isInitAwayStatus(selfPresence, scopeEventId)) {
           next = reconcileMapsForEvent(
             {
               online: new Map(next.online),
-              away: new Map(next.away).set(selfMapKey, selfPresence),
+              away: new Map(next.away).set(selfOwnerKey, selfPresence),
             },
             scopeEventId,
           )
@@ -457,9 +466,9 @@ export function useInitOnlinePresence(
         selfOnlineAtRef.current = null
       } else {
         if (!selfOnlineAtRef.current) {
-          const selfMapKey = selfPresenceIdRef.current ?? accountUserId
-          const existingOnline = selfMapKey
-            ? presenceMapsRef.current.online.get(selfMapKey)
+          const selfOwnerKey = accountUserId
+          const existingOnline = selfOwnerKey
+            ? presenceMapsRef.current.online.get(selfOwnerKey)
             : undefined
           const fromMap = existingOnline
             ? parseInitPresenceMetadata(existingOnline.metadata)?.onlineAt
@@ -490,7 +499,8 @@ export function useInitOnlinePresence(
         })
         selfPresenceIdRef.current = presence.$id
         presenceIdRef.current = presence.$id
-        setSelfPresenceMapKey(getInitPresenceMapKey(presence))
+        // Public presence id for UI matching (`user.id`), not the owner map key.
+        setSelfPresenceMapKey(getInitPresencePublicId(presence) || presence.$id)
 
         if (
           previousPresenceId &&
@@ -499,15 +509,20 @@ export function useInitOnlinePresence(
           void deleteInitPresence(previousPresenceId).catch(() => undefined)
         }
 
-        const mapKey = getInitPresenceMapKey(presence)
+        const mapKey = getInitPresenceMapKey(presence) || accountUserId
 
         if (away) {
           setPresenceMaps((previous) => {
             const nextOnline = new Map(previous.online)
             const nextAway = new Map(previous.away)
-            if (previousPresenceId && previousPresenceId !== nextPresenceId) {
+            // Clear legacy presenceId-keyed rows from before owner-keyed maps.
+            if (previousPresenceId) {
               nextOnline.delete(previousPresenceId)
               nextAway.delete(previousPresenceId)
+            }
+            if (nextPresenceId !== mapKey) {
+              nextOnline.delete(nextPresenceId)
+              nextAway.delete(nextPresenceId)
             }
             nextOnline.delete(mapKey)
             nextAway.set(mapKey, presence)
@@ -517,9 +532,13 @@ export function useInitOnlinePresence(
           setPresenceMaps((previous) => {
             const nextOnline = new Map(previous.online)
             const nextAway = new Map(previous.away)
-            if (previousPresenceId && previousPresenceId !== nextPresenceId) {
+            if (previousPresenceId) {
               nextOnline.delete(previousPresenceId)
               nextAway.delete(previousPresenceId)
+            }
+            if (nextPresenceId !== mapKey) {
+              nextOnline.delete(nextPresenceId)
+              nextAway.delete(nextPresenceId)
             }
             nextOnline.set(mapKey, presence)
             nextAway.delete(mapKey)
@@ -944,7 +963,8 @@ export function useInitOnlinePresence(
 
     void activityDisplayVersion
     const selfOnlineActivity = accountUserId ? resolveActivity(false) : null
-    const selfMapKey = selfPresenceMapKey ?? accountUserId
+    const selfOwnerKey = accountUserId
+    const selfPublicId = selfPresenceMapKey ?? accountUserId
 
     const hiddenOnlinePresences = collectInitHiddenOnlinePresences(
       presenceMaps.online,
@@ -952,10 +972,10 @@ export function useInitOnlinePresence(
     )
     let hiddenOnlineCount = hiddenOnlinePresences.length
     if (
-      selfMapKey &&
+      selfOwnerKey &&
       participantStatus === 'offline' &&
       !hiddenOnlinePresences.some(
-        (presence) => getInitPresenceMapKey(presence) === selfMapKey,
+        (presence) => getInitPresenceMapKey(presence) === selfOwnerKey,
       )
     ) {
       hiddenOnlineCount += 1
@@ -964,8 +984,8 @@ export function useInitOnlinePresence(
     const visibleOnlinePresencesRaw = [...presenceMaps.online.values()].filter((presence) => {
       if (isInitHiddenPresence(presence)) return false
       if (
-        selfMapKey &&
-        getInitPresenceMapKey(presence) === selfMapKey &&
+        selfOwnerKey &&
+        getInitPresenceMapKey(presence) === selfOwnerKey &&
         participantStatus === 'offline'
       ) {
         return false
@@ -973,22 +993,22 @@ export function useInitOnlinePresence(
       return true
     })
     const visibleOnlinePresences =
-      accountUserId && selfMapKey
+      accountUserId && selfPublicId
         ? dedupeInitSelfPresenceRecords(
             visibleOnlinePresencesRaw,
             accountUserId,
-            selfMapKey,
+            selfPublicId,
           )
         : visibleOnlinePresencesRaw
     const visibleAwayPresencesRaw = [...presenceMaps.away.values()].filter(
       (presence) => !isInitHiddenPresence(presence),
     )
     const visibleAwayPresences =
-      accountUserId && selfMapKey
+      accountUserId && selfPublicId
         ? dedupeInitSelfPresenceRecords(
             visibleAwayPresencesRaw,
             accountUserId,
-            selfMapKey,
+            selfPublicId,
           )
         : visibleAwayPresencesRaw
 
@@ -1002,12 +1022,15 @@ export function useInitOnlinePresence(
       visibleOnlinePresences,
       activityAllowlist,
     ).map((user) => {
-      if (!accountUserId || !selfMapKey) return user
+      if (!accountUserId || !selfPublicId) return user
       const isSelf =
-        user.ownerId === accountUserId || user.id === selfMapKey
+        user.ownerId === accountUserId ||
+        user.id === accountUserId ||
+        user.id === selfPublicId
       if (!isSelf) return user
       return {
         ...user,
+        id: selfPublicId,
         ownerId: accountUserId,
         name: accountName || user.name,
         identityHidden: !identityVisible,
@@ -1016,12 +1039,13 @@ export function useInitOnlinePresence(
       }
     })
     const allOnlineUsersBase =
-      accountUserId && selfMapKey
-        ? dedupeInitSelfOnlineUsers(mappedOnlineUsers, accountUserId, selfMapKey)
+      accountUserId && selfPublicId
+        ? dedupeInitSelfOnlineUsers(mappedOnlineUsers, accountUserId, selfPublicId)
         : mappedOnlineUsers
 
     const overlaySelfOnOnlineUser = (user: LaunchEventOnlineUser): LaunchEventOnlineUser => ({
       ...user,
+      id: selfPublicId!,
       ownerId: accountUserId!,
       name: accountName || user.name,
       identityHidden: !identityVisible,
@@ -1033,27 +1057,29 @@ export function useInitOnlinePresence(
     if (
       participantStatus === 'online' &&
       accountUserId &&
-      selfMapKey &&
+      selfPublicId &&
       !allOnlineUsers.some(
         (user) =>
           user.ownerId === accountUserId ||
           user.id === accountUserId ||
-          user.id === selfMapKey,
+          user.id === selfPublicId,
       )
     ) {
-      const selfPresence = presenceMaps.online.get(selfMapKey)
+      const selfPresence = selfOwnerKey
+        ? presenceMaps.online.get(selfOwnerKey)
+        : undefined
       const selfFromMap =
         selfPresence && !isInitHiddenPresence(selfPresence)
           ? mapPresencesToOnlineUsers([selfPresence], activityAllowlist)[0]
           : undefined
       const selfUser = overlaySelfOnOnlineUser(
         selfFromMap ?? {
-          id: selfMapKey,
+          id: selfPublicId,
           ownerId: accountUserId,
           identityHidden: !identityVisible,
           name: identityVisible
             ? accountName || 'You'
-            : buildInitRandomPresenceName(selfMapKey),
+            : buildInitRandomPresenceName(selfPublicId),
           activity: selfOnlineActivity ?? INIT_PRESENCE_ACTIVITY_ON_INIT,
           ...(identityVisible && countryCodeRef.current
             ? { countryCode: countryCodeRef.current }
@@ -1067,7 +1093,7 @@ export function useInitOnlinePresence(
       allOnlineUsers = dedupeInitSelfOnlineUsers(
         sortOnlineUsers([selfUser, ...allOnlineUsers]),
         accountUserId,
-        selfMapKey,
+        selfPublicId,
       )
     }
 
@@ -1076,12 +1102,15 @@ export function useInitOnlinePresence(
       visibleAwayPresences,
       activityAllowlist,
     ).map((user) => {
-      if (!accountUserId || !selfMapKey) return user
+      if (!accountUserId || !selfPublicId) return user
       const isSelf =
-        user.ownerId === accountUserId || user.id === selfMapKey
+        user.ownerId === accountUserId ||
+        user.id === accountUserId ||
+        user.id === selfPublicId
       if (!isSelf) return user
       return {
         ...user,
+        id: selfPublicId,
         ownerId: accountUserId,
         name: accountName || user.name,
         identityHidden: !identityVisible,
@@ -1093,11 +1122,11 @@ export function useInitOnlinePresence(
       }
     })
     const recentlyOnlineUsers = (
-      accountUserId && selfMapKey
+      accountUserId && selfPublicId
         ? dedupeInitSelfOnlineUsers(
             mappedRecentlyOnlineUsers,
             accountUserId,
-            selfMapKey,
+            selfPublicId,
           )
         : mappedRecentlyOnlineUsers
     ).slice(0, AWAY_USER_LIMIT)

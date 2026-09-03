@@ -1,4 +1,5 @@
 import { getOpenApiEnumValues } from './openapi-schema'
+import { normalizeDatabaseOpenApiSpec } from './normalize-database-spec'
 import {
   compareServices,
   getServiceLabel,
@@ -380,11 +381,12 @@ export function parseOpenApiSpec(
   spec: OpenApiSpec,
   platform: ApiSpecPlatform,
 ): ParsedApiSpec {
+  const normalizedSpec = normalizeDatabaseOpenApiSpec(spec)
   const serviceMap = new Map<string, ApiExplorerMethod[]>()
-  const tagDescriptions = buildTagDescriptionMap(spec)
+  const tagDescriptions = buildTagDescriptionMap(normalizedSpec)
 
-  for (const context of iterateOperations(spec, platform)) {
-    const parsed = parseOperation(context, spec.components)
+  for (const context of iterateOperations(normalizedSpec, platform)) {
+    const parsed = parseOperation(context, normalizedSpec.components)
     const existing = serviceMap.get(parsed.service) ?? []
     existing.push(parsed)
     serviceMap.set(parsed.service, existing)
@@ -395,13 +397,13 @@ export function parseOpenApiSpec(
       id,
       label: getServiceLabel(id),
       description: getServiceDescription(id, tagDescriptions),
-      methods: sortMethodsByWeight(methods, spec),
+      methods: sortMethodsByWeight(methods, normalizedSpec),
     }))
     .sort((a, b) => compareServices(a.id, b.id))
 
   return {
     platform,
-    version: spec.info?.version,
+    version: normalizedSpec.info?.version,
     services,
   }
 }

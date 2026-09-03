@@ -2269,7 +2269,7 @@ function CreateUserMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!teamId || roles.length === 0) {
+    if (!teamId) {
       return
     }
     onSubmit({ teamId, roles })
@@ -2303,7 +2303,12 @@ function CreateUserMembershipDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="membership-roles">{t('Roles')}</Label>
+              <Label htmlFor="membership-roles">
+                {t('Roles')}{' '}
+                <span className="font-normal text-muted-foreground">
+                  {t('(optional)')}
+                </span>
+              </Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -2372,7 +2377,7 @@ function CreateUserMembershipDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!teamId || roles.length === 0 || isLoading}
+            disabled={!teamId || isLoading}
           >
             {t('Create')}
           </Button>

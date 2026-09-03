@@ -55,9 +55,7 @@ export function RestoreProgressBanner({
   const migrationId = restoration.migrationId
   const restoredTarget = getRestoredDatabaseTarget(restoration)
 
-  const { migration } = useProjectMigration(projectId, region, migrationId, {
-    pollWhileInProgress: true,
-  })
+  const { migration } = useProjectMigration(projectId, region, migrationId)
 
   const status = migration?.status ?? restoration.status ?? 'pending'
   const isFailed = status === 'failed'

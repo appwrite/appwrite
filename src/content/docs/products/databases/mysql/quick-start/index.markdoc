@@ -55,14 +55,14 @@ const database = await mysql.get({
 console.log(database.connectionString);
 ```
 
-The response includes the hostname, port, username, password, and the generated database name, plus a ready-made connection string in the form `mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>`. See [Connections](/docs/products/databases/mysql/connections) for the full response and every language.
+The response includes the hostname, port, username, and password, plus a ready-made connection string in the form `mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?ssl=true`. The username is `admin.<hash>` and the database name is always `default`. See [Connections](/docs/products/databases/mysql/connections) for the full response and every language.
 
 # Connect with the mysql client {% #mysql-client %}
 
 Pass the connection details to the `mysql` command-line client:
 
 ```bash
-mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin -p -D <database>
+mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin.<hash> -p -D default
 ```
 
 Enter the password when prompted.

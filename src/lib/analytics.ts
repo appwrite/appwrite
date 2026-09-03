@@ -6,7 +6,7 @@ import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import {
   PLAUSIBLE_PROXY_EVENT_PATH,
-  PLAUSIBLE_PROXY_SCRIPT_PATH,
+  buildPlausibleProxyScriptSrc,
 } from '@/lib/plausible-proxy'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
@@ -26,9 +26,9 @@ export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
 
 export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
 
-/** First-party script path loaded in the browser (proxied; see plausible-proxy). */
+/** First-party script URL loaded in the browser (proxied + cache-busted). */
 export const PLAUSIBLE_SCRIPT_SRC = ANALYTICS_ENABLED
-  ? PLAUSIBLE_PROXY_SCRIPT_PATH
+  ? buildPlausibleProxyScriptSrc(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
   : ''
 
 function isAnalyticsAllowed() {

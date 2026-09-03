@@ -8,10 +8,14 @@ You can create a PostgreSQL database and run your first query in a few minutes.
 
 # Create a database {% #create %}
 
+{% info title="Available regions" %}
+Native databases are rolling out region by region, starting with Frankfurt (`fra`) and New York (`nyc`), and more regions are on the way. A database takes the region of the project that owns it and there is no per-database region selector, so create your project in a supported region before you start.
+{% /info %}
+
 1. In your project, go to **Databases**.
 2. Click **Create database**.
-3. Give your database a name, and optionally a custom database ID.
-4. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+3. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+4. Give your database a name, and optionally a custom database ID. This step appears once you pick a type.
 
 {% only_dark %}
 ![Create database type selection](/images/docs/products/databases/postgresql/dark/create-database-type.avif)
@@ -45,7 +49,9 @@ Your database starts provisioning and becomes ready shortly after. You land in t
 
 The **SQL editor** tab gives you an editor with formatting, query explain, and a results panel, without leaving the browser.
 
-Create a table, insert a row, and read it back:
+The editor runs one statement per query, so run these three in turn rather than pasting them together.
+
+Create a table:
 
 ```sql
 CREATE TABLE books (
@@ -53,10 +59,18 @@ CREATE TABLE books (
     title TEXT NOT NULL,
     author TEXT NOT NULL
 );
+```
 
+Insert a row:
+
+```sql
 INSERT INTO books (title, author)
 VALUES ('The Hitchhiker''s Guide to the Galaxy', 'Douglas Adams');
+```
 
+Read it back:
+
+```sql
 SELECT * FROM books;
 ```
 
@@ -70,11 +84,13 @@ To connect from outside the Console:
 
 # Connect with psql {% #psql %}
 
-Copy the command from the **psql** tab of the credentials dialog, or build it from the details:
+Copy the command from the **psql** tab of the credentials dialog, or build it from the details. The port shown there is `6432`, the connection pooler, which is what you want for everyday use:
 
 ```bash
-psql -h <host> -p 5432 -U admin -d <database>
+PGSSLMODE=require psql -h <host> -p 6432 -U admin -d <database>
 ```
+
+Port `5432` reaches the database directly, bypassing the pooler. Use it for migrations and other work that needs one session for the whole run.
 
 Enter the password when prompted. You can run the same queries from your terminal that you ran in the SQL editor, or connect from your application with any PostgreSQL driver. See [Connections](/docs/products/databases/postgresql/connections) for driver examples.
 

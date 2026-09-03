@@ -30,9 +30,9 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, GitBranch, Loader2 } from 'lucide-react'
 import {
   getKnownVcsProvider,
-  VCS_PROVIDERS,
   VcsIcon,
   buildVcsOrgOptions,
+  getVisibleVcsOAuthProviders,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -46,6 +46,7 @@ import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const REPO_PAGE_SIZE = 5
 
@@ -112,6 +113,8 @@ export function RepositoryPicker({
   className,
 }: RepositoryPickerProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -268,7 +271,7 @@ export function RepositoryPicker({
           {t('Import repositories for automatic deployments')}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          {Object.values(VCS_PROVIDERS).map((provider) => (
+          {vcsOAuthProviders.map((provider) => (
             <Button key={provider.id} size="sm" variant="secondary" asChild>
               <a href={vcsAuthUrl(provider.id)}>
                 <provider.Icon className="me-1.5 h-3.5 w-3.5" />
@@ -345,7 +348,7 @@ export function RepositoryPicker({
                   </p>
                 )}
                 <div className="border-t border-border mt-1 pt-1">
-                  {Object.values(VCS_PROVIDERS).map((p) => (
+                  {vcsOAuthProviders.map((p) => (
                     <a
                       key={p.id}
                       href={vcsAuthUrl(p.id)}

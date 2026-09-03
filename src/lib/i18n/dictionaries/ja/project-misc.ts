@@ -397,7 +397,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Org key': '組織キー',
   'Project API key': 'プロジェクト API キー',
   'Account API key': 'アカウント API キー',
-  'Organization API key': '組織 API キー',
+  'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',
@@ -1731,6 +1731,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Summary: '概要',
   'Supabase endpoint': 'Supabase エンドポイント',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'チーム',
   'Test email sent to': 'テストメールの送信先',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2719,4 +2720,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'マージリクエスト',
   'Pull request': 'プルリクエスト',
   'Failed to approve deployment': 'デプロイの承認に失敗しました',
+  'Pause live updates': 'ライブ更新を一時停止',
+  'Pause live updates to refresh manually':
+    '手動で更新するにはライブ更新を一時停止してください',
+  'Resume live updates': 'ライブ更新を再開',
+  'Updating…': '更新中…',
+  Paused: '一時停止',
 }

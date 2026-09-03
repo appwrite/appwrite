@@ -7,7 +7,6 @@ cover: /images/blog-local/build-a-memory-mcp-server/cover.avif
 timeToRead: 14
 author: atharva
 category: tutorial
-draft: true
 faqs:
   - question: "What is a memory MCP server?"
     answer: "A memory MCP server is a Model Context Protocol server that exposes tools for storing and retrieving a user's long-term memories. AI clients such as Claude Code call tools like remember and recall over HTTP, so facts saved in one conversation are available in every later conversation and in every tool connected to the same server."

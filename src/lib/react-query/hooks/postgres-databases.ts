@@ -145,10 +145,9 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
+import { syncDedicatedDatabasePitrCachesAfterUpdate } from './dedicated-database-pitr'
 import {
-  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
   coerceTrimmedString,
-  shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
@@ -1028,7 +1027,7 @@ export function useUpdatePostgresDatabase(
         ...input,
       })
     },
-    onSuccess: async (database) => {
+    onSuccess: async (database, variables) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
         postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
@@ -1037,6 +1036,14 @@ export function useUpdatePostgresDatabase(
       // Keep the shared switcher / databases index in sync (console.listDatabases
       // + dedicated lists). Invalidating dedicated alone left the droplist stale.
       await refetchProjectDatabaseLists(queryClient, projectId)
+      if ('pitr' in variables || 'pitrRetentionDays' in variables) {
+        syncDedicatedDatabasePitrCachesAfterUpdate(
+          queryClient,
+          projectId,
+          databaseId,
+          database,
+        )
+      }
     },
   })
 }
@@ -1577,37 +1584,9 @@ export function usePostgresDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
 ) {
-  const queryClient = useQueryClient()
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    ...postgresDatabaseQueryOptions(projectId, databaseId),
-    refetchInterval: (query) =>
-      shouldPollDedicatedDatabaseStatus(query.state.data?.status)
-        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
-        : false,
-  })
-
-  // Keep list/selector badges in sync when detail polling sees a status change.
-  useEffect(() => {
-    if (!projectId || !databaseId || !data?.status) return
-    const nextStatus = data.status
-    queryClient.setQueryData(
-      ['dedicated-databases', 'project', projectId],
-      (
-        prev:
-          | { databases: Models.DedicatedDatabase[]; total: number }
-          | undefined,
-      ) => {
-        if (!prev?.databases?.length) return prev
-        let changed = false
-        const databases = prev.databases.map((db) => {
-          if (db.$id !== databaseId || db.status === nextStatus) return db
-          changed = true
-          return { ...db, status: nextStatus }
-        })
-        return changed ? { ...prev, databases } : prev
-      },
-    )
-  }, [data?.status, databaseId, projectId, queryClient])
+  const { data, isLoading, error, refetch, isFetching } = useQuery(
+    postgresDatabaseQueryOptions(projectId, databaseId),
+  )
 
   return { database: data ?? null, isLoading, error, refetch, isFetching }
 }
@@ -2280,9 +2259,15 @@ export function useExplainPostgresSql(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (query: string) => {
+    mutationFn: ({
+      query,
+      analyze,
+    }: {
+      query: string
+      analyze?: boolean
+    }) => {
       requireOperationalDatabase(queryClient, projectId, databaseId)
-      return explainPostgresDatabaseQuery(projectId, databaseId, query)
+      return explainPostgresDatabaseQuery(projectId, databaseId, query, analyze)
     },
   })
 }

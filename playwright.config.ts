@@ -72,10 +72,19 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
       // Smoke / read-only console specs only (exclude write database suites).
       testMatch:
-        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.).*\.spec\.ts/,
+        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.|mocked\.).*\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
+      },
+    },
+    {
+      // Console flows that mock the Appwrite API at the network layer. No auth
+      // setup: the specs fulfil `account.get` themselves.
+      name: 'console-mocked',
+      testMatch: /console\.mocked\..*\.spec\.ts/,
+      use: {
+        ...desktopChrome,
       },
     },
     {

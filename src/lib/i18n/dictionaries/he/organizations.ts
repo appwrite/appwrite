@@ -100,6 +100,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
   Amount: 'סכום',
+  'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
   Analyst: 'אנליסט',
   Analytics: 'אנליטיקה',
@@ -763,11 +764,29 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Organization is required': 'ארגון הוא שדה חובה',
   'Organization name': 'שם הארגון',
   'Organization name updated successfully': 'שם הארגון עודכן בהצלחה',
+  'Partners keys': 'מפתחות שותפים',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'אמתו קריאות Console API מהבקאנד שלכם. צרו ונהלו פרויקטים, חברים ודומיינים בכל הארגון.',
+  'Project keys vs Partners keys': 'מפתחות פרויקט מול מפתחות שותפים',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'מפתחות שותפים לא יכולים לגשת לנתונים בתוך פרויקט. למסדי נתונים, אחסון, משתמשים ופונקציות, צרו מפתח פרויקט.',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'פתחו פרויקט, עברו למפתחות API בסרגל הצד של הפרויקט, וצרו מפתח עם היקפי הגישה שהבקאנד שלכם צריך.',
+  'No Partners keys yet': 'אין עדיין מפתחות שותפים',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'צרו את מפתח השותפים הראשון שלכם כדי לאמת קריאות Console API מהבקאנד.',
+  'Learn more about Partners key scopes':
+    'למידע נוסף על היקפי גישה של מפתחות שותפים',
+  'Create Partners key': 'יצירת מפתח שותפים',
+  'Create a Partners key for Console automation':
+    'צרו מפתח שותפים לאוטומציה של Console',
+  'Partners keys for partner platforms': 'מפתחות שותפים לפלטפורמות שותפים',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
     'מפתחות ברמת הארגון יהיו ניתנים לניהול כאן כשיהיו זמינים. בינתיים, השתמשו במפתחות פרויקט לגישה בצד השרת.',
   Overview: 'סקירה כללית',
   Owner: 'בעלים',
   Page: 'דף',
+  Partners: 'שותפים',
   Paused: 'מושהה',
   Locked: 'נעול',
   'Pay and register': 'תשלום ורישום',
@@ -775,6 +794,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Payment authorized': 'התשלום אושר',
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
+  'Payment has been successfully processed': 'התשלום עובד בהצלחה',
   'Payment failed': 'התשלום נכשל',
   'Payment failed - organization has restricted access':
     'התשלום נכשל, לארגון יש גישה מוגבלת',
@@ -930,6 +950,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Retry: 'ניסיון חוזר',
   'Retry Verification': 'אימות מחדש',
   'Retry payment': 'ניסיון תשלום חוזר',
+  'Retry your payment to avoid service interruptions with your projects.':
+    'נסו שוב את התשלום כדי למנוע הפרעות בשירות בפרויקטים שלכם.',
   'Retry verification': 'אימות מחדש',
   'Retrying...': 'מנסה שוב...',
   'Review charges before you complete payment.':
@@ -989,6 +1011,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Served by Appwrite': 'מוגש על ידי Appwrite', // pragma: allowlist secret
   'Server-side only': 'צד שרת בלבד',
   'Set a monthly spending limit': 'הגדירו מגבלת הוצאה חודשית',
+  'Set as default payment method': 'הגדירו כאמצעי התשלום הראשי',
   'Setting up your organization': 'מגדיר את הארגון שלכם',
   Settings: 'הגדרות',
   'Short description': 'תיאור קצר',

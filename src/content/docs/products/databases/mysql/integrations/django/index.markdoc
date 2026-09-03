@@ -7,7 +7,7 @@ description: Use Django's ORM with an Appwrite native MySQL database. Configure 
 A native MySQL database is a standard MySQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the `DATABASES` setting at the credentials from the [Connections](/docs/products/databases/mysql/connections) page, then use migrations, models, and the rest of Django as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one with the create-database wizard, then use [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) to read the hostname, port, username, password, and generated database name. The primary username is `admin`.
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one with the create-database wizard, then use [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) to read the hostname, port, username, and password. The username is `admin.<hash>` and the database name is `default`.
 {% /info %}
 
 # Install a driver {% #driver %}
@@ -50,8 +50,8 @@ The MySQL backend passes `OPTIONS` to `mysqlclient`. `charset` keeps client enco
 Populate the environment with values from `mysql.get()` in the [API credentials flow](/docs/products/databases/mysql/connections#credentials):
 
 ```env
-DB_NAME=<database>
-DB_USER=admin
+DB_NAME=default
+DB_USER=admin.<hash>
 DB_PASSWORD=<password>
 DB_HOST=db-<hash>.<region>.appwrite.center
 DB_PORT=3306
@@ -69,7 +69,7 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-`migrate` needs a session connection with DDL privileges. The primary `admin` user owns the database and can run schema changes. Always run `migrate` on the direct MySQL port, not through the transaction-mode pooler.
+`migrate` needs a session connection with DDL privileges. The `admin.<hash>` user owns the database and can run schema changes. Always run `migrate` on the direct MySQL port, not through the transaction-mode pooler.
 
 # Define a model {% #model %}
 
@@ -146,6 +146,6 @@ Pool modes, ports, and read/write splitting for serverless workloads.
 Ephemeral database copies for preview environments and CI.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
-TLS, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}

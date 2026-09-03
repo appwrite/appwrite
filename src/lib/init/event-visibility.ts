@@ -6,6 +6,7 @@ import {
 } from './prize-visibility'
 import {
   hasInitScheduleStarted,
+  isInitScheduleLiveNow,
   isInitScheduleStartingSoon,
 } from './schedule-time'
 import type {
@@ -19,9 +20,9 @@ import type {
 } from './types'
 
 /**
- * Authored `isLive` sessions become "Live now" only after `startsAt`, and only
- * on the unlocked current day. Day unlock stays controlled; stream live state
- * follows the wall clock.
+ * Authored `isLive` sessions become "Live now" after `startsAt` for one hour,
+ * and only on the unlocked current day. Day unlock stays controlled; stream
+ * live state follows the wall clock.
  */
 export function isInitScheduleItemLiveNow(
   item: LaunchEventScheduleItem,
@@ -29,7 +30,7 @@ export function isInitScheduleItemLiveNow(
   nowMs: number = Date.now(),
 ): boolean {
   if (!item.isLive || item.day !== currentDay) return false
-  return hasInitScheduleStarted(item.startsAt, nowMs)
+  return isInitScheduleLiveNow(item.startsAt, nowMs)
 }
 
 /**
@@ -61,7 +62,7 @@ function resolveInitLiveBanner(
   // The banner follows whichever day is live, so it takes that session's link.
   const href = liveSession.href ?? event.liveBanner.href
 
-  if (hasInitScheduleStarted(liveSession.startsAt, nowMs)) {
+  if (isInitScheduleLiveNow(liveSession.startsAt, nowMs)) {
     return { ...event.liveBanner, href, mode: 'live' }
   }
 
@@ -149,7 +150,7 @@ function buildRecapDisplayEvent(
  * session titles masked until each day unlocks. Unlock state is always driven
  * by `currentDay` (code default or debug Day slider), never the calendar.
  * Session "Starting soon" / "Live now" and the live banner follow each
- * session's `startsAt` (starting-soon window is 1 hour).
+ * session's `startsAt` (starting-soon and live windows are each 1 hour).
  */
 export function applyInitEventVisibility(
   event: LaunchEvent,

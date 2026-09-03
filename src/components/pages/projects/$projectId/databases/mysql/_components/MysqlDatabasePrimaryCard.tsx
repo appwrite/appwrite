@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  mysqlDatabaseQueryOptions,
   useCreateDedicatedDatabaseFailover,
   useDedicatedDatabaseReplicas,
 } from '@/lib/react-query/hooks'
@@ -119,11 +117,11 @@ function expandClusterMembers(
 
 function getMemberStatusVariant(
   status: string,
-): 'success' | 'warning' | 'error' | 'info' {
+): 'success' | 'warning' | 'error' | 'info' | 'processing' {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') return 'success'
   if (normalized === 'provisioning' || normalized === 'starting') {
-    return 'warning'
+    return 'processing'
   }
   if (normalized === 'failed') return 'error'
   // Legacy API values (pre-15.3)
@@ -173,19 +171,16 @@ export function MysqlDatabasePrimaryCard({
   haEngine,
 }: MysqlDatabaseSettingsCardProps) {
   const t = useT()
-  const queryClient = useQueryClient()
   const source: DedicatedReplicationSource = replicationSource ?? {
     type: 'engine',
     engine: haEngine || database.engine || 'mysql',
   }
   const haEnabled = (database.replicas ?? 0) > 0
-  const pollReplicas = database.status !== 'ready'
   const { replicas, members, isLoading } = useDedicatedDatabaseReplicas(
     projectId,
     databaseId,
     source,
     haEnabled,
-    pollReplicas ? 5000 : false,
   )
   const failoverMutation = useCreateDedicatedDatabaseFailover(
     projectId,
@@ -214,13 +209,6 @@ export function MysqlDatabasePrimaryCard({
       setSelectedReplicaId(null)
     }
   }, [failoverTargets, selectedReplicaId])
-
-  useEffect(() => {
-    if (!pollReplicas || !projectId || !databaseId) return
-    void queryClient.invalidateQueries({
-      queryKey: mysqlDatabaseQueryOptions(projectId, databaseId).queryKey,
-    })
-  }, [databaseId, pollReplicas, projectId, queryClient])
 
   const writeDisabled = !canWrite || failoverMutation.isPending
   const writeTooltip = !canWrite

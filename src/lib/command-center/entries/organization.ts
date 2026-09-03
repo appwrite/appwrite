@@ -11,6 +11,7 @@ import {
   CreditCard,
   FolderOpen,
   Globe,
+  Handshake,
   Key,
   Store,
   Plus,
@@ -142,16 +143,16 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     to: (ctx) => `/organizations/${ctx.orgId}/settings/oauth-apps`,
   },
   {
-    id: 'org.tab.settings.api-keys',
+    id: 'org.tab.settings.partners',
     scopes: ['organization'],
     kind: 'tab',
     group: 'Settings',
-    label: 'Settings · API keys',
-    description: 'Org-level API keys for automation',
-    icon: Key,
-    keywords: ['api', 'keys', 'tokens', 'automation', 'org'],
+    label: 'Settings · Partners',
+    description: 'Partners keys for partner platforms',
+    icon: Handshake,
+    keywords: ['partners', 'api', 'keys', 'tokens', 'automation', 'org'],
     available: (ctx) => canShowOrgApiKeysSettings(ctx.access, ctx.features),
-    to: (ctx) => `/organizations/${ctx.orgId}/settings/api-keys`,
+    to: (ctx) => `/organizations/${ctx.orgId}/settings/partners`,
   },
   {
     id: 'org.tab.settings.danger-zone',
@@ -169,6 +170,17 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
 ]
 
 const ORG_CREATE: CommandEntry[] = [
+  {
+    id: 'org.create.api-key',
+    scopes: ['organization'],
+    kind: 'create',
+    label: 'Create Partners key',
+    description: 'Create a Partners key for Console automation',
+    icon: Key,
+    keywords: ['new', 'api', 'key', 'token', 'org'],
+    available: (ctx) => canShowOrgApiKeysSettings(ctx.access, ctx.features),
+    to: (ctx) => `/organizations/${ctx.orgId}/settings/partners`,
+  },
   {
     id: 'org.create.project',
     scopes: ['organization'],

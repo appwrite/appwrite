@@ -12,12 +12,17 @@ import {
   type PostgresQueryPlanNodeVariant,
 } from '@/lib/postgres-query-plan'
 import { cn } from '@/lib/utils'
-import { PostgresQueryResultsMeta } from './PostgresQueryResultsMeta'
 import { SqlWorkbenchPanelEmptyState } from './SqlWorkbenchPanelEmptyState'
+import {
+  SqlQueryPlanModeBadge,
+  SqlQueryPlanModeDescription,
+} from '@/components/pages/projects/$projectId/databases/_components/SqlQueryPlanModeBadge'
+import type { SqlQueryPlanMode } from '@/components/pages/projects/$projectId/databases/_components/sql-query-plan-mode'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresQueryPlanViewProps = {
   explanation: DedicatedDatabaseQueryExplanation | null
+  planMode: SqlQueryPlanMode
   isLoading?: boolean
   loadingLabel?: string
   className?: string
@@ -59,17 +64,17 @@ function PlanNodeRow({
 
   if (isDetail) {
     return (
-      <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+      <p className="min-w-0 break-all font-mono text-[11px] leading-relaxed text-muted-foreground">
         {node.label}
       </p>
     )
   }
 
   return (
-    <div className="min-w-0">
-      <div className="rounded-xl border border-border/60 bg-card/40 px-3.5 py-3 shadow-sm">
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1 space-y-2">
+    <div className="min-w-0 max-w-full">
+      <div className="min-w-0 overflow-hidden rounded-xl border border-border/60 bg-card/40 px-3.5 py-3 shadow-sm">
+        <div className="flex min-w-0 flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1 space-y-2 overflow-hidden">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Badge
                 variant={VARIANT_BADGE[node.variant]}
@@ -77,17 +82,17 @@ function PlanNodeRow({
               >
                 {node.nodeType}
               </Badge>
-              <p className="min-w-0 break-words text-[13px] font-medium leading-snug text-foreground">
+              <p className="min-w-0 break-all text-[13px] font-medium leading-snug text-foreground">
                 {node.label}
               </p>
             </div>
 
             {node.details.length > 0 ? (
-              <div className="space-y-1 rounded-lg bg-muted/25 px-2.5 py-2">
+              <div className="min-w-0 space-y-1 overflow-hidden rounded-lg bg-muted/25 px-2.5 py-2">
                 {node.details.map((detail) => (
                   <p
                     key={detail}
-                    className="font-mono text-[11px] leading-relaxed text-muted-foreground"
+                    className="min-w-0 break-all font-mono text-[11px] leading-relaxed text-muted-foreground"
                   >
                     {detail}
                   </p>
@@ -97,7 +102,7 @@ function PlanNodeRow({
           </div>
 
           {node.metrics.length > 0 ? (
-            <div className="flex shrink-0 flex-wrap gap-1.5 lg:justify-end">
+            <div className="flex min-w-0 flex-wrap gap-1.5 lg:max-w-[min(100%,22rem)] lg:justify-end">
               {node.metrics.map((metric) => (
                 <span
                   key={`${metric.label}-${metric.value}`}
@@ -119,7 +124,7 @@ function PlanNodeRow({
       {node.children.length > 0 ? (
         <div
           className={cn(
-            'relative mt-2.5 space-y-2.5',
+            'relative mt-2.5 min-w-0 space-y-2.5',
             depth > 0 ? 'ms-3 ps-4' : 'ms-2 ps-4',
           )}
         >
@@ -141,6 +146,7 @@ function PlanNodeRow({
 
 export function PostgresQueryPlanView({
   explanation,
+  planMode,
   isLoading = false,
   loadingLabel = 'Explaining query…',
   className,
@@ -163,19 +169,24 @@ export function PostgresQueryPlanView({
       : 'sql'
 
   return (
-    <div
-      className={cn(
-        'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
-        className,
-      )}
-    >
+    <div className={cn('flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden', className)}>
       <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <PostgresQueryResultsMeta
-            title={t('Query plan')}
-            rowCount={nodeCount}
-            countLabel="step"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h3 className="text-[13px] font-semibold text-foreground">
+                {t('Query plan')}
+              </h3>
+              <SqlQueryPlanModeBadge mode={planMode} />
+            </div>
+            <SqlQueryPlanModeDescription mode={planMode} />
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              <span className="tabular-nums text-foreground/90">
+                {nodeCount.toLocaleString()}
+              </span>{' '}
+              step{nodeCount === 1 ? '' : 's'}
+            </p>
+          </div>
           <ToggleGroup
             type="single"
             variant="outline"
@@ -198,9 +209,9 @@ export function PostgresQueryPlanView({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
         {isLoading && !explanation ? (
-          <div className="flex h-full min-h-[12rem] items-center justify-center gap-2 text-[13px] text-muted-foreground">
+          <div className="flex min-h-[8rem] items-center justify-center gap-2 text-[13px] text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             {loadingLabel}
           </div>
@@ -211,13 +222,13 @@ export function PostgresQueryPlanView({
               language={rawLanguage}
               headless
               wrapLines
-              className="min-h-[12rem] rounded-lg border border-border"
+              className="min-h-[8rem] rounded-lg border border-border"
             />
           ) : (
             <SqlWorkbenchPanelEmptyState variant="query-no-rows" />
           )
         ) : planNodes.length > 0 ? (
-          <div className="space-y-3">
+          <div className="min-w-0 max-w-full space-y-3 pb-1">
             {planNodes.map((node) => (
               <PlanNodeRow key={node.id} node={node} />
             ))}
@@ -228,7 +239,7 @@ export function PostgresQueryPlanView({
             language={rawLanguage}
             headless
             wrapLines
-            className="min-h-[12rem] rounded-lg border border-border"
+            className="min-h-[8rem] rounded-lg border border-border"
           />
         ) : (
           <SqlWorkbenchPanelEmptyState variant="query-no-rows" />

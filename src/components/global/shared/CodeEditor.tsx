@@ -20,6 +20,7 @@ import {
   defineMonacoAppTheme,
   monacoAppThemeId,
 } from '@/lib/monaco-app-theme'
+import { getMonacoOverflowWidgetsRoot } from '@/lib/monaco-overflow-widgets'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 
 export type CodeEditorLanguage =
@@ -101,6 +102,10 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<typeof import('monaco-editor') | null>(null)
     const valueRef = useRef(value)
+    const overflowWidgetsDomNodeRef = useRef<HTMLElement | undefined>(undefined)
+    if (!overflowWidgetsDomNodeRef.current) {
+      overflowWidgetsDomNodeRef.current = getMonacoOverflowWidgetsRoot()
+    }
 
     useEffect(() => {
       valueRef.current = value
@@ -192,6 +197,10 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
             tabSize: 2,
             wordWrap: 'on',
             automaticLayout: true,
+            fixedOverflowWidgets: true,
+            overflowWidgetsDomNode: overflowWidgetsDomNodeRef.current,
+            suggestFontSize: 13,
+            suggestLineHeight: 28,
           }}
         />
       </div>

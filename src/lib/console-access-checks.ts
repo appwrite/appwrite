@@ -140,11 +140,24 @@ export function canCreatePlatform(
   return whenOrgRoles(access, features, access.canWritePlatforms)
 }
 
+/** Auth/end-user `domains.write`. Not granted to console owners. Use `canWriteProjectDomains` for Settings → Custom domains. */
 export function canWriteDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteDomains)
+}
+
+/**
+ * Project custom domains (API / Functions / Sites proxy rules).
+ * Console owner and developer roles include `rules.write`, not `domains.write`.
+ * `domains.write` is an Auth/end-user scope and is not granted to org owners.
+ */
+export function canWriteProjectDomains(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteRules)
 }
 
 export function canWriteWebhooks(
@@ -359,6 +372,14 @@ export function canShowOrgApiKeysSettings(
   return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
+/** Create/update/delete organization API keys. Same audience as the settings tab. */
+export function canCreateOrgApiKey(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return canShowOrgApiKeysSettings(access, features)
+}
+
 /** Organization Domains (route access): owners and developers when orgRoles enabled. */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
@@ -427,7 +448,7 @@ export function getFirstAllowedOrgSettingsPath(
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
   if (canShowOrgApiKeysSettings(access, features))
-    return `${basePath}/api-keys`
+    return `${basePath}/partners`
   return basePath
 }
 

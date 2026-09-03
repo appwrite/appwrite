@@ -44,10 +44,11 @@ export type ConsoleProfileFeatures = {
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
   /**
-   * Extra console OAuth login/signup providers (Google, GitLab, Bitbucket,
-   * Cursor). GitHub is always shown.
+   * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
+   * Bitbucket are always shown. Existing installations of a hidden provider
+   * still render; only new connect actions are gated.
    */
-  extraOAuthLogin: boolean
+  extraVcsOAuth: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization OAuth apps */
@@ -62,6 +63,8 @@ export type ConsoleProfileFeatures = {
   notifications: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
+  /** Dedicated database PITR restore UI (backups restore button and settings restore card). */
+  databasePitrRestore: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
   dedicatedDbsSupport: boolean
   /** Dedicated DBs support for Documents DB. */
@@ -121,14 +124,15 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
-  extraOAuthLogin: 'Extra OAuth login',
+  extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
-  orgApiKeys: 'Org API keys',
+  orgApiKeys: 'Partners keys',
   agent: 'Agent',
   notifications: 'Notifications',
   databaseBackups: 'Database backups',
+  databasePitrRestore: 'Database PITR restore',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
@@ -175,7 +179,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: true,
       oauthApps: false,
       oauth2Server: true,
@@ -183,17 +187,18 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       agent: false,
       notifications: false,
       databaseBackups: true,
-      dedicatedDbsSupport: false,
-      dedicatedDbsDocumentsDB: false,
-      dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: false,
-      nativeDbsMySQL: false,
+      databasePitrRestore: false,
+      dedicatedDbsSupport: true,
+      dedicatedDbsDocumentsDB: true,
+      dedicatedDbsVectorsDB: true,
+      nativeDbsPostgres: true,
+      nativeDbsMySQL: true,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
       firewall: false,
-      storageS3: false,
+      storageS3: true,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
@@ -217,7 +222,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: false,
       oauthApps: false,
       oauth2Server: false,
@@ -225,6 +230,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       agent: false,
       notifications: false,
       databaseBackups: false,
+      databasePitrRestore: false,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
@@ -504,7 +510,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -525,9 +531,13 @@ function applyEnvFeatureOverrides(
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
   }
-  const extraOAuthLogin = parseEnvFeatureOverride(config.extraOAuthLogin)
-  if (extraOAuthLogin !== null) {
-    next = { ...next, extraOAuthLogin }
+  const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
+  if (extraVcsOAuth !== null) {
+    next = { ...next, extraVcsOAuth }
+  }
+  const databasePitrRestore = parseEnvFeatureOverride(config.databasePitrRestore)
+  if (databasePitrRestore !== null) {
+    next = { ...next, databasePitrRestore }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {

@@ -54,6 +54,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Additional connections': 'חיבורים נוספים',
   'Additional executions': 'הרצות נוספות',
   'Additional GB-hours': 'שעות GB נוספות',
+  'Additional MiniLM embeddings': 'MiniLM embeddings נוספים',
+  'Additional Nomic embeddings': 'Nomic embeddings נוספים',
   'Additional projects': 'פרויקטים נוספים',
   'Additional reads': 'קריאות נוספות',
   'Additional screenshots': 'צילומי מסך נוספים',
@@ -669,6 +671,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
   'Live now': 'בשידור חי',
+  'Loading online participants…': 'טוען משתתפים אונליין…',
   'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
@@ -787,6 +790,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Partner Tiers': 'דרגות שותפים',
   'Partner with one of the fastest growing dev tool companies': 'שתפו פעולה עם אחת מחברות כלי הפיתוח הצומחות במהירות',
   'Partners Program': 'תוכנית השותפים',
+  'participant online': 'משתתף אונליין',
+  'participants online': 'משתתפים אונליין',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות אימות.',
   'Password policies': 'מדיניות סיסמאות',
   'Password protected': 'מוגן בסיסמה',
@@ -877,6 +882,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Recovery codes': 'קודי שחזור',
   'Redirect': 'הפניה',
   'Redo': 'ביצוע מחדש',
+  'Reload list': 'טעינת הרשימה מחדש',
   'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.': // pragma: allowlist secret
     'צמצמו ריבוי ספקים ותקורת אינטגרציות. Appwrite מאחדת את שירותי ה-backend שצוותי ארגון צריכים כדי לבנות, לפרוס ולהגן על אפליקציות מודרניות בלי ללהטט בין חוזים או לתפור ספקים יחד.', // pragma: allowlist secret
   'Region': 'אזור',
@@ -1116,6 +1122,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Terms of Service': 'תנאי שירות',
   Terms: 'תנאים',
   Cookies: 'עוגיות',
+  'Text embeddings (MiniLM)': 'Text embeddings (MiniLM)',
+  'Text embeddings (Nomic)': 'Text embeddings (Nomic)',
   'Text verification': 'אימות ב-SMS',
   'Thank you for applying': 'תודה על הגשת המועמדות',
   "Thanks for signing up. Here's how to get started with your new account.": 'תודה שנרשמתם. כך מתחילים עם החשבון החדש שלכם.',
@@ -1219,7 +1227,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'בקרו באתר התצוגה שלנו שנבנה עם Appwrite כדי למצוא השראה לפרויקטים שלכם או להציג את מה שבניתם.', // pragma: allowlist secret
   'Visit the community': 'בקרו בקהילה',
   'Volume discounts': 'הנחות כמות',
-  'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Volume discounts and rev-share models are available if you handle the bill for your clients.':
+    'הנחות כמות ומודלי rev-share זמינים אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
   'Watch': 'צפייה',
   'Ways to partner': 'דרכים לשותפות',
   'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',

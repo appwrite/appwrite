@@ -41,12 +41,13 @@ type SqlWorkbenchProps = {
   onRenameTab: (tabId: string, title: string) => void
   onRun: () => void
   onExplain: () => void
+  onAnalyze: () => void
   isRunning: boolean
   isExplaining: boolean
   error: unknown
   result: Models.DedicatedDatabaseExecution | null
   explainResult: DedicatedDatabaseQueryExplanation | null
-  resultKind?: 'query' | 'explain'
+  resultKind?: 'query' | 'explain' | 'analyze'
   account: { prefs?: Record<string, unknown> } | undefined
   teamId: string | null | undefined
   canSaveTeam: boolean
@@ -72,6 +73,7 @@ export function SqlWorkbench({
   onRenameTab,
   onRun,
   onExplain,
+  onAnalyze,
   isRunning,
   isExplaining,
   error,
@@ -97,11 +99,28 @@ export function SqlWorkbench({
   const isBusy = isRunning || isExplaining
   const canRunQuery = operationsEnabled && !isBusy && hasSql
   const canExplainQuery = explainEnabled && !isBusy && hasSql
+  const canAnalyzeQuery = canExplainQuery
   const canSaveQuery = hasSql
   const canFormatQuery = hasSql
   const errorMessage = error ? getErrorMessage(error) : null
-  const errorTitle = resultKind === 'explain' ? 'Explain failed' : 'Query failed'
-  const loadingLabel = isExplaining ? 'Explaining query…' : 'Running query…'
+  const isPlanResult = resultKind === 'explain' || resultKind === 'analyze'
+  const activePlanMode =
+    isPlanResult || isExplaining
+      ? resultKind === 'analyze'
+        ? 'analyze'
+        : 'explain'
+      : null
+  const errorTitle =
+    resultKind === 'analyze'
+      ? t('Analyze failed')
+      : resultKind === 'explain'
+        ? t('Explain failed')
+        : t('Query failed')
+  const loadingLabel = isExplaining
+    ? resultKind === 'analyze'
+      ? t('Analyzing query…')
+      : t('Explaining query…')
+    : t('Running query…')
   const resultRows = useMemo(
     () => (result ? executionResultRows<Record<string, unknown>>(result) : []),
     [result],
@@ -120,8 +139,7 @@ export function SqlWorkbench({
   }, [result?.columns, resultRows])
   const showQueryResults =
     result != null || explainResult != null || isBusy
-  const showExplainResults =
-    isExplaining || (resultKind === 'explain' && !isRunning)
+  const showExplainResults = isExplaining || (isPlanResult && !isRunning)
 
   const canSwitchTabs = tabs.length > 1
   const canCloseTab = tabs.length > 1
@@ -180,6 +198,7 @@ export function SqlWorkbench({
       canFormat: canFormatQuery,
       canRun: canRunQuery,
       canExplain: canExplainQuery,
+      canAnalyze: canAnalyzeQuery,
       canCreateTab: true,
       canCloseTab,
       canSelectNextTab: canSwitchTabs,
@@ -192,6 +211,7 @@ export function SqlWorkbench({
       format: () => onSqlChange(formatPostgresSql(sql)),
       run: onRun,
       explain: onExplain,
+      analyze: onAnalyze,
       createTab: onCreateTab,
       closeTab: closeActiveTab,
       selectNextTab,
@@ -202,6 +222,7 @@ export function SqlWorkbench({
     }),
     [
       canCloseTab,
+      canAnalyzeQuery,
       canExplainQuery,
       canFormatQuery,
       canRedo,
@@ -211,6 +232,7 @@ export function SqlWorkbench({
       canUndo,
       closeActiveTab,
       onCreateTab,
+      onAnalyze,
       onExplain,
       onRun,
       onSqlChange,
@@ -294,10 +316,12 @@ export function SqlWorkbench({
               canExplain={canExplainQuery}
               isRunning={isRunning}
               isExplaining={isExplaining}
+              activePlanMode={activePlanMode}
               onSave={() => setSaveDialogOpen(true)}
               onFormat={() => onSqlChange(formatPostgresSql(sql))}
               onRun={onRun}
               onExplain={onExplain}
+              onAnalyze={onAnalyze}
               runDisabledTooltip={
                 !operationsEnabled ? runDisabledTooltip : undefined
               }
@@ -309,55 +333,58 @@ export function SqlWorkbench({
         </div>
       }
     >
-      {errorMessage ? (
-        <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-          <Alert>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            <AlertTitle>{errorTitle}</AlertTitle>
-            <AlertDescription className="text-[13px]">
-              {errorMessage}
-            </AlertDescription>
-          </Alert>
-        </div>
-      ) : null}
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {errorMessage ? (
+          <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <AlertTitle>{errorTitle}</AlertTitle>
+              <AlertDescription className="text-[13px]">
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : null}
 
-      {showQueryResults ? (
-        showExplainResults ? (
-          <PostgresQueryPlanView
-            className="min-h-0 flex-1"
-            explanation={explainResult}
-            isLoading={isExplaining && !explainResult}
-            loadingLabel={loadingLabel}
-          />
+        {showQueryResults ? (
+          showExplainResults ? (
+            <PostgresQueryPlanView
+              className="min-h-0 flex-1"
+              explanation={explainResult}
+              planMode={activePlanMode ?? 'explain'}
+              isLoading={isExplaining && !explainResult}
+              loadingLabel={loadingLabel}
+            />
+          ) : (
+            <ReadOnlyDataSpreadsheet
+              className="h-full min-h-0 flex-1"
+              variant="studio"
+              showRowNumbers
+              enableColumnResize
+              columns={resultColumns}
+              rows={resultRows}
+              getRowKey={(_, index) => `sql-result-${index}`}
+              isLoading={isBusy && !result}
+              loadingLabel={loadingLabel}
+              emptyContent={<SqlWorkbenchPanelEmptyState variant="query-no-rows" />}
+              header={
+                result ? (
+                  <PostgresQueryResultsMeta
+                    title={t('Query results')}
+                    rowCount={result.rowCount}
+                    durationMs={result.durationMs}
+                    truncated={result.truncated}
+                  />
+                ) : undefined
+              }
+            />
+          )
         ) : (
-        <ReadOnlyDataSpreadsheet
-          className="min-h-0 flex-1"
-          variant="studio"
-          showRowNumbers
-          enableColumnResize
-          columns={resultColumns}
-          rows={resultRows}
-          getRowKey={(_, index) => `sql-result-${index}`}
-          isLoading={isBusy && !result}
-          loadingLabel={loadingLabel}
-          emptyContent={<SqlWorkbenchPanelEmptyState variant="query-no-rows" />}
-          header={
-            result ? (
-              <PostgresQueryResultsMeta
-                title={t('Query results')}
-                rowCount={result.rowCount}
-                durationMs={result.durationMs}
-                truncated={result.truncated}
-              />
-            ) : undefined
-          }
-        />
-        )
-      ) : (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {children}
-        </div>
-      )}
+          <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {children}
+          </div>
+        )}
+      </div>
     </PostgresSqlEditorContainer>
     <SavePostgresQueryDialog
       open={saveDialogOpen}

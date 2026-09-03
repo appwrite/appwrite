@@ -93,6 +93,7 @@ export const docsMarkdocConfig: Config = {
     table: { render: 'MarkdocTableTag' },
   },
   nodes: {
+    blockquote: { render: 'Blockquote' },
     fence: {
       render: 'Fence',
       attributes: { content: { type: String }, language: { type: String } },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Ghost } from 'lucide-react'
 
 import { sdk } from '@/lib/appwrite/sdk'
@@ -94,7 +94,7 @@ export function InitialsAvatar({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-medium text-zinc-600 dark:bg-accent dark:text-muted-foreground',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 font-medium leading-none text-zinc-600 dark:bg-accent dark:text-muted-foreground',
         sizeClasses[size],
         className,
       )}
@@ -118,6 +118,7 @@ export function PhotoAvatar({
   className,
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const trimmedUserId = userId?.trim() || ''
   const pixels = sizePixels[size]
 
@@ -140,8 +141,19 @@ export function PhotoAvatar({
     return null
   }, [pixels, trimmedUserId, useCurrentUser])
 
-  useEffect(() => {
+  const [activeSrc, setActiveSrc] = useState(src)
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  if (src !== activeSrc) {
+    setActiveSrc(src)
     setFailed(false)
+    setLoaded(false)
+  }
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (image?.complete && image.naturalWidth > 0) {
+      setLoaded(true)
+    }
   }, [src])
 
   if (failed || !src) {
@@ -149,19 +161,36 @@ export function PhotoAvatar({
   }
 
   return (
-    <img
-      src={src}
-      alt=""
-      width={pixels}
-      height={pixels}
-      decoding="async"
-      onError={() => setFailed(true)}
+    <span
       className={cn(
-        'shrink-0 rounded-full bg-zinc-200 object-cover dark:bg-accent',
+        'relative flex shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-accent',
         sizeClasses[size],
         className,
       )}
-    />
+    >
+      <InitialsAvatar
+        name={name}
+        size={size}
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
+      <img
+        ref={imageRef}
+        src={src}
+        alt=""
+        width={pixels}
+        height={pixels}
+        decoding="async"
+        onLoad={(event) => {
+          if (event.currentTarget.naturalWidth > 0) setLoaded(true)
+        }}
+        onError={() => setFailed(true)}
+        className={cn(
+          'relative z-[1] h-full w-full min-h-0 min-w-0 rounded-full object-cover motion-reduce:transition-none',
+          'transition-opacity duration-300 ease-out',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+    </span>
   )
 }
 

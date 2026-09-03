@@ -116,7 +116,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "torsten-dittmann",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-s3-api/cover.avif",
     "hasCover": true
   },
@@ -128,10 +127,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-documentsdb/cover.avif",
     "hasCover": true
   },
@@ -143,10 +141,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-native-mysql-databases/cover.avif",
     "hasCover": true
   },
@@ -158,10 +155,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-vectorsdb/cover.avif",
     "hasCover": true
   },
@@ -191,23 +187,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "ai",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/vectorsdb-use-cases/cover.avif",
     "hasCover": true
   },
   {
-    "slug": "announcing-native-postgresql-databases",
-    "href": "/blog/post/announcing-native-postgresql-databases",
-    "title": "Announcing native PostgreSQL databases: The full engine, provisioned in minutes",
+    "slug": "appwrite-now-speaks-postgresql",
+    "href": "/blog/post/appwrite-now-speaks-postgresql",
+    "title": "Appwrite now speaks Postgres",
     "description": "Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.",
     "date": "2026-09-01",
     "lastUpdated": "2026-09-01",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog/announcing-native-postgresql-databases/cover.avif",
+    "featured": true,
+    "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },
   {
@@ -221,7 +215,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "comparisons",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/native-databases-vs-appwrite-databases/cover.avif",
     "hasCover": true
   },
@@ -277,7 +270,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "eldad-fux",
     "category": "product, announcement",
-    "featured": true,
+    "featured": false,
     "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
@@ -319,7 +312,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
-    "draft": true,
     "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
     "hasCover": true
   },
@@ -377,7 +369,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
   },
