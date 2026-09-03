@@ -71,23 +71,29 @@ webapp.com {
 
     # Keep this test zone authoritative. Forwarding missing fixture records to a
     # public resolver makes verification depend on external DNS availability.
+    # Authoritative empty answers must carry the zone SOA in the authority
+    # section (RFC 2308 NODATA), otherwise the DNS client rejects the response.
     template IN A {
         match "^([a-z0-9-]+\.)*webapp\.com\.$"
+        authority "webapp.com. 60 IN SOA ns.webapp.com. hostmaster.webapp.com. 1 3600 600 86400 60"
         rcode NOERROR
     }
 
     template IN AAAA {
         match "^([a-z0-9-]+\.)*webapp\.com\.$"
+        authority "webapp.com. 60 IN SOA ns.webapp.com. hostmaster.webapp.com. 1 3600 600 86400 60"
         rcode NOERROR
     }
 
     template IN CNAME {
         match "^([a-z0-9-]+\.)*webapp\.com\.$"
+        authority "webapp.com. 60 IN SOA ns.webapp.com. hostmaster.webapp.com. 1 3600 600 86400 60"
         rcode NOERROR
     }
 
     template IN CAA {
         match "^([a-z0-9-]+\.)*webapp\.com\.$"
+        authority "webapp.com. 60 IN SOA ns.webapp.com. hostmaster.webapp.com. 1 3600 600 86400 60"
         rcode NOERROR
     }
 }
