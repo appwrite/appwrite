@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -105,8 +106,14 @@ class Update extends Action
             }
         } catch (\Throwable $th) {
             // The approval must survive a failed creation, so the consumed
-            // request goes back for another try.
-            $dbForPlatform->createDocument('installationRequests', $request);
+            // request goes back for another try. A restore that fails too must
+            // not hide why the confirmation failed in the first place.
+            try {
+                $dbForPlatform->createDocument('installationRequests', $request);
+            } catch (\Throwable $restore) {
+                Console::error('Failed to restore installation request ' . $request->getId() . ': ' . $restore->getMessage());
+            }
+
             throw $th;
         }
 
