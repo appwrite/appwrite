@@ -59,7 +59,7 @@ When a **site** is selected, the rules toolbar includes **Attack mode**. Turning
 Firewall rule limits are **per project** and depend on your organization plan:
 
 | Plan | Rules per project |
-|------|------------------:|
+|------|-------------------|
 | Free (Starter) | 2 |
 | Pro | 50 |
 | Scale | 50 |
