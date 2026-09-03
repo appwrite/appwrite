@@ -24,7 +24,6 @@ Create `provider/src/lib/resource-server.ts`:
 // provider/src/lib/resource-server.ts
 // TaskFlow's resource server: validates access tokens issued by the
 // project's OAuth2 server and enforces the scopes they carry.
-import '@tanstack/react-start/server-only'
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
 
 const issuer = process.env.OAUTH_ISSUER!
@@ -58,7 +57,9 @@ export function hasScope(token: AccessToken, scope: string): boolean {
 }
 ```
 
-`jwtVerify` checks the signature against the published keys and rejects expired tokens, so a forged or stale token never reaches your handlers. It also pins the algorithm to the RS256 keys in the JWKS, so `alg: none` and HMAC confusion attacks fail here too.
+`jwtVerify` checks the signature against the published keys and rejects expired tokens, so a forged token never reaches your handlers. It also pins the algorithm to the RS256 keys in the JWKS, so `alg: none` and HMAC confusion attacks fail here too.
+
+Offline verification has one limit worth knowing. It reads the token itself and nothing else, so it cannot see that a token was revoked or that its refresh rotated. A revoked token keeps passing this check until it expires, which for a confidential client is up to eight hours. Where that window is too long, call [introspection](/docs/products/auth/oauth-server/tokens#introspect) instead, which checks the token against its stored family.
 
 The `{ typ: 'at+jwt' }` option matters more than it looks. Your OAuth2 server signs [ID tokens](/docs/products/auth/oauth-server/tokens) with the same key as access tokens, and an ID token has no `scope` claim. Without the type check, a client could present its ID token to your API; requiring `at+jwt` (the [access token type](/docs/products/auth/oauth-server/tokens)) rejects it before it reaches a handler. An ID token is meant for the client that received it, never as a credential for your API.
 

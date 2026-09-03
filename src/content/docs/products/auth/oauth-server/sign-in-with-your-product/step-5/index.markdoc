@@ -37,7 +37,6 @@ Create `provider/src/lib/oauth-server.ts`. Every function here calls the OAuth2 
 
 ```ts
 // provider/src/lib/oauth-server.ts
-import '@tanstack/react-start/server-only'
 import { useSession } from '@tanstack/react-start/server'
 import type { ClientApp, Grant } from './consent-types'
 
@@ -60,7 +59,9 @@ export async function login(email: string, password: string): Promise<string> {
   const setCookie = res.headers.get('set-cookie') ?? ''
   const match = setCookie.match(new RegExp(`a_session_${project}=([^;]+)`))
   if (!match) throw new Error('No session returned')
-  return match[1]
+  // The cookie value is URL-encoded on the wire, so the base64 padding
+  // arrives as %3D. Decode it before sending it back as a header.
+  return decodeURIComponent(match[1])
 }
 
 type AuthorizeParams = Record<string, string>

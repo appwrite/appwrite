@@ -23,7 +23,7 @@ In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **E
 ![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/oauth2-server-settings.avif)
 {% /only_light %}
 
-Set the **Authorization URL** to the page you will host the consent screen on. This is where Appwrite redirects users during authorization, and where you present them the details of the request so they can approve or reject. Point it at `https://taskflow.localhost/consent`, where TaskFlow will host its consent screen. Nothing needs to run there yet. The `openid`, `profile`, and `email` scopes are always included; add any scopes your custom APIs will support.
+Set the **Authorization URL** to the page you will host the consent screen on. This is where Appwrite redirects users during authorization, and where you present them the details of the request so they can approve or reject. Point it at `https://taskflow.localhost/consent`, where TaskFlow will host its consent screen. Nothing needs to run there yet. The `openid`, `profile`, `email`, and `phone` scopes are always included. Add any scopes your custom APIs will support.
 
 You can also enable and configure the server with a [Server SDK](/docs/sdks#server) using the `updateOAuth2Server` method.
 
