@@ -3,6 +3,7 @@
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -52,6 +53,13 @@ return function (Container $container): void {
     ), ['pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
+
+    $container->set('projectContext', function ($message) {
+        $payload = $message->getPayload() ?? [];
+        $project = $payload['project'] ?? [];
+
+        return ProjectContext::fromArray(\is_array($project) ? $project : []);
+    }, ['message']);
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
