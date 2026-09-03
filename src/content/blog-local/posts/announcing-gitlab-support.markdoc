@@ -43,7 +43,7 @@ Today, we are announcing **GitLab support** across Appwrite Sites and Functions.
 
 Everything else about a deployment stays where it was. Branch filters, path filters, install and build commands, root directories, and output directories are configured per Site or Function and do not care which provider is behind the repository.
 
-> A special thanks to [Jayesh Somani](https://github.com/jaysomani) from our community, who went far beyond a typical contribution and made the GitLab integration possible.
+> GitLab support is the result of a long collaboration with [Jayesh Somani](https://github.com/jaysomani) from our community. Jayesh asked for GitLab, and while we wanted it too, we could not immediately promise him a spot on the roadmap. So he offered to build it with us. The catch was that Appwrite's underlying VCS library had grown up around GitHub, and roughly half of it assumed GitHub was the only provider. Instead of bolting GitLab onto that, we agreed to fix the foundation first. Jayesh added Gitea, Forgejo, and Gogs adapters following the existing patterns, and together we used them to pin down what every Git provider has in common. Once we were confident in that shared model, Jayesh wrote a generic interface that shares one set of tests across all providers, and only then implemented GitLab on top of it. [Bitbucket support](/blog/post/announcing-bitbucket-support), announced today, was built by the Appwrite team on the same interface. Thank you, Jayesh, for building something every GitLab developer on Appwrite, and every contributor who adds the next provider, now stands on.
 
 # Connecting a GitLab account
 
