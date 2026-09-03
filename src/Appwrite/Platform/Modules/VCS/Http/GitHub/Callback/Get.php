@@ -180,6 +180,8 @@ class Get extends Action
             // A member's request carries an OAuth code even though nothing was
             // installed; the requester's login is what later matches the
             // installation webhook back to this project.
+            $duplicate = false;
+
             if ($setupAction === 'request' && !empty($code)) {
                 $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
                 $requester = $oauth2->getUserSlug($oauth2->getAccessToken($code));
@@ -196,9 +198,9 @@ class Get extends Action
                             'status' => 'requested',
                         ]));
                     } catch (Duplicate) {
-                        // The requester already has an unconsumed request. An
-                        // approval names the requester but not the request, so
-                        // a second one would be unattributable.
+                        // An approval names the requester but not the request,
+                        // so a second open request could not be attributed.
+                        $duplicate = true;
                     }
                 }
             }
@@ -208,9 +210,10 @@ class Get extends Action
             // asked the owners for approval. install and update should always
             // carry an installation_id, so without one they mean the caller
             // lacked permission to install.
-            $error = match ($setupAction) {
-                'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
-                'install', 'update', '' => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
+            $error = match (true) {
+                $duplicate => 'You already have an installation request waiting for an organization owner to approve it. Complete or withdraw that one before requesting another.',
+                $setupAction === 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
+                \in_array($setupAction, ['install', 'update', ''], true) => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
                 default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
             };
 
