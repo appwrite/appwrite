@@ -2,10 +2,10 @@
 layout: post
 title: "Announcing Bitbucket support for Sites and Functions"
 description: Appwrite now deploys from Bitbucket. Connect a workspace, pick a repository, and every push builds a Site or Function, with links that resolve to Bitbucket.
-date: 2026-09-03
+date: 2026-09-04
 cover: /images/blog-local/announcing-bitbucket-support/cover.avif
 timeToRead: 6
-author: aditya-oberai
+author: harsh-mahajan
 category: announcement
 featured: false
 callToAction: true

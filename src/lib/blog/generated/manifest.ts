@@ -33,6 +33,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-bitbucket-support",
+    "href": "/blog/post/announcing-bitbucket-support",
+    "title": "Announcing Bitbucket support for Sites and Functions",
+    "description": "Appwrite now deploys from Bitbucket. Connect a workspace, pick a repository, and every push builds a Site or Function, with links that resolve to Bitbucket.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 6,
+    "author": "harsh-mahajan",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-gitlab-support",
+    "href": "/blog/post/announcing-gitlab-support",
+    "title": "Announcing GitLab support for Appwrite Sites and Functions",
+    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 7,
+    "author": "matej-baco",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-oauth2-server",
     "href": "/blog/post/announcing-oauth2-server",
     "title": "Announcing the Appwrite OAuth2 server: Turn your project into an identity provider",
@@ -103,34 +131,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": true,
     "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-bitbucket-support",
-    "href": "/blog/post/announcing-bitbucket-support",
-    "title": "Announcing Bitbucket support for Sites and Functions",
-    "description": "Appwrite now deploys from Bitbucket. Connect a workspace, pick a repository, and every push builds a Site or Function, with links that resolve to Bitbucket.",
-    "date": "2026-09-03",
-    "lastUpdated": "2026-09-03",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "announcement",
-    "featured": false,
-    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-gitlab-support",
-    "href": "/blog/post/announcing-gitlab-support",
-    "title": "Announcing GitLab support for Appwrite Sites and Functions",
-    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
-    "date": "2026-09-03",
-    "lastUpdated": "2026-09-03",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "announcement",
-    "featured": false,
-    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
