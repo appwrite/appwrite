@@ -36,7 +36,6 @@ class UsageDataPoint extends ResponseModel
             'protocol' => 'https',
             'accept' => 'application/json',
             'acceptLanguage' => 'en-US',
-            'cookie' => 'a_session_console=...',
             'queryKeys' => 'project,mode',
             'osName' => 'iOS',
             'clientType' => 'browser',

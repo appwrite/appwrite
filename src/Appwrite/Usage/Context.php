@@ -28,7 +28,6 @@ class Context
     protected string $protocol = '';
     protected string $accept = '';
     protected string $acceptLanguage = '';
-    protected string $cookie = '';
     protected string $queryKeys = '';
 
     public function setPath(string $path): static
@@ -229,12 +228,6 @@ class Context
         return $this;
     }
 
-    public function setCookie(string $cookie): static
-    {
-        $this->cookie = $cookie;
-        return $this;
-    }
-
     /**
      * Comma-joined query parameter names (values are intentionally excluded).
      */
@@ -272,7 +265,6 @@ class Context
             'protocol' => $this->protocol,
             'accept' => $this->accept,
             'acceptLanguage' => $this->acceptLanguage,
-            'cookie' => $this->cookie,
             'queryKeys' => $this->queryKeys,
         ];
 
