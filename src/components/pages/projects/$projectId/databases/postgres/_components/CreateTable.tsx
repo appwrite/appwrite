@@ -61,6 +61,7 @@ import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
 import { PostgresSchemaSelector } from './PostgresSchemaSelector'
 import { useT } from '@/lib/i18n/translate'
+import { randomUUID } from '@/lib/random-uuid'
 
 type CreateTableProps = {
   open: boolean
@@ -161,7 +162,7 @@ function preferredPostgresDraftDefaultKind(
 
 function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
   const merged = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     name: '',
     typeState: createDefaultPostgresColumnTypeState(),
     nullable: true,
@@ -200,7 +201,7 @@ function createDefaultTableColumns(): DraftColumn[] {
 
 function createDraftIndex(): DraftIndex {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     formState: createDefaultPostgresIndexFormState(),
   }
 }

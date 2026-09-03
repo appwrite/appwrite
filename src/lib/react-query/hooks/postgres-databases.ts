@@ -155,6 +155,7 @@ import {
   ensureConsoleSqlApiStatements,
   isSqlApiDdlBlockedError,
 } from '@/lib/databases/sql-api-statements'
+import { randomUUID } from '@/lib/random-uuid'
 
 function isPostgresEngine(engine: string | undefined): boolean {
   return matchesNativeEngine(engine, 'postgres')
@@ -2695,7 +2696,7 @@ function buildNextPostgresSavedQueriesList(
   }
 
   return [
-    { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
+    { id: randomUUID(), name: trimmedName, sql: trimmedSql },
     ...current,
   ].slice(0, MAX_SAVED_POSTGRES_QUERIES)
 }

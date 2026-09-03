@@ -153,6 +153,7 @@ import {
   ensureConsoleSqlApiStatements,
   isSqlApiDdlBlockedError,
 } from '@/lib/databases/sql-api-statements'
+import { randomUUID } from '@/lib/random-uuid'
 
 function isMysqlEngine(engine: string | undefined): boolean {
   return matchesNativeEngine(engine, 'mysql')
@@ -2656,7 +2657,7 @@ function buildNextMysqlSavedQueriesList(
   }
 
   return [
-    { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
+    { id: randomUUID(), name: trimmedName, sql: trimmedSql },
     ...current,
   ].slice(0, MAX_SAVED_MYSQL_QUERIES)
 }

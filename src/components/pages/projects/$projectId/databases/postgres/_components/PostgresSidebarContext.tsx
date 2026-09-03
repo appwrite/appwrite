@@ -38,6 +38,7 @@ import {
   type ReactNode,
 } from 'react'
 import { flushSync } from 'react-dom'
+import { randomUUID } from '@/lib/random-uuid'
 
 const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
 
@@ -119,7 +120,7 @@ export function postgresQuerySelectionKey(
 
 function createBlankTab(existingCount: number): SqlEditorTab {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     title: `Query ${existingCount + 1}`,
     sql: DEFAULT_SQL,
     result: null,
@@ -131,7 +132,7 @@ function createBlankTab(existingCount: number): SqlEditorTab {
 function createTableTab(tableId: string): SqlEditorTab {
   const { schema, table } = parsePostgresTableId(tableId)
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     title: table,
     sql: buildPostgresSelectSql(schema, table, ROWS_DEFAULT_PAGE_SIZE, 0),
     tableId,
@@ -161,7 +162,7 @@ function openQueryInEditorState(
   }
 
   const newTab: SqlEditorTab = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     title: queryPreviewLabel(trimmed),
     sql: trimmed,
     result: null,
@@ -208,7 +209,7 @@ function duplicateQueryInEditorState(
 ): SqlEditorTabState {
   const trimmed = sql.trim()
   const newTab: SqlEditorTab = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     title: queryPreviewLabel(trimmed || DEFAULT_SQL),
     sql: trimmed || DEFAULT_SQL,
     result: null,
@@ -477,7 +478,7 @@ export function PostgresSidebarProvider({
 
       const existing = recentQueries.find((entry) => entry.sql === trimmed)
       const nextEntry: PostgresRecentQuery = {
-        id: existing?.id ?? crypto.randomUUID(),
+        id: existing?.id ?? randomUUID(),
         sql: trimmed,
         ranAt: Date.now(),
       }

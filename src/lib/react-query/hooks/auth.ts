@@ -162,6 +162,7 @@ import type {
 } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
+import { randomUUID } from '@/lib/random-uuid'
 
 export type ConsoleAccountCache = { prefs?: Record<string, unknown> }
 
@@ -3445,7 +3446,7 @@ export function useSavedFilters(
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
       const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         name: trimmedName,
         query,
         ...(sort ? { sort } : {}),
@@ -3482,7 +3483,7 @@ export function useSavedFilters(
       await updateTeamPrefs.mutateAsync((freshPrefs) => {
         const current = parseSavedFilters(freshPrefs, scope)
         const newFilter: SavedFilter = {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           query,
           ...(sort ? { sort } : {}),
@@ -3774,7 +3775,7 @@ export function useImageTransformSavedPresets(
       }
       const next: SavedImageTransformPreset[] = [
         {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           json,
         },
@@ -3811,7 +3812,7 @@ export function useImageTransformSavedPresets(
           )
         }
         const next: SavedImageTransformPreset[] = [
-          { id: crypto.randomUUID(), name: trimmedName, json },
+          { id: randomUUID(), name: trimmedName, json },
           ...current,
         ]
         return buildSavedImageTransformPresetsPrefs(next)

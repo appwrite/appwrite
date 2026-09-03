@@ -61,6 +61,7 @@ import { MysqlColumnTypeSelector } from './MysqlColumnTypeSelector'
 import { MysqlIndexAlgorithmSelector } from './MysqlIndexAlgorithmSelector'
 import { MysqlSchemaSelector } from './MysqlSchemaSelector'
 import { useT } from '@/lib/i18n/translate'
+import { randomUUID } from '@/lib/random-uuid'
 
 type CreateTableProps = {
   open: boolean
@@ -167,7 +168,7 @@ function preferredMysqlDraftDefaultKind(
 
 function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
   const merged = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     name: '',
     typeState: createDefaultMysqlColumnTypeState(),
     nullable: true,
@@ -206,7 +207,7 @@ function createDefaultTableColumns(): DraftColumn[] {
 
 function createDraftIndex(): DraftIndex {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     formState: createDefaultMysqlIndexFormState(),
   }
 }

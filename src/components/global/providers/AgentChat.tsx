@@ -241,6 +241,7 @@ import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { useAgentResourceRefreshEffects } from '@/hooks/use-agent-resource-refresh-effects'
 import { useConsoleProtocolEffects } from '@/hooks/use-console-protocol-effects'
+import { randomUUID } from '@/lib/random-uuid'
 
 const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
 const EMPTY_ASSISTANT_MODELS: AssistantModel[] = []
@@ -4275,10 +4276,7 @@ export function AgentPanelContent({
       if (!trimmed && attachmentIds.length === 0) return
 
       const queued: QueuedComposerMessage = {
-        id:
-          typeof crypto !== 'undefined' && 'randomUUID' in crypto
-            ? crypto.randomUUID()
-            : `queue-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id: randomUUID(),
         content: trimmed,
         attachmentIds,
       }

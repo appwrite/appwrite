@@ -27,6 +27,7 @@ import {
 import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { randomUUID } from '@/lib/random-uuid'
 
 const enumValueDragModifiers = getAxisRestrictedDragModifiers('vertical')
 
@@ -55,7 +56,7 @@ type SortableEnumValueRowProps = {
 }
 
 function createEntry(value = ''): EnumValueEntry {
-  return { id: crypto.randomUUID(), value }
+  return { id: randomUUID(), value }
 }
 
 function SortableEnumValueRow({

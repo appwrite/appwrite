@@ -23,6 +23,7 @@ import {
   isAccountPrefsPayloadWithinLimit,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
+import { randomUUID } from '@/lib/random-uuid'
 
 function readLocalDiagramGenerations(): SavedDiagramGeneration[] {
   if (typeof window === 'undefined') return []
@@ -63,7 +64,7 @@ function readLegacySingleDiagramLocalStorage(): SavedDiagramGeneration | null {
       document.title === 'Untitled diagram'
     if (isEmpty) return null
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       name: document.title.trim() || 'Imported diagram',
       updatedAt: Date.now(),
       document,
