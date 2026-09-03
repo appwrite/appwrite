@@ -831,6 +831,14 @@ Http::init()
         $geoRecord = $geo->get($request->getIP());
         $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
 
+        // Query parameter names only (values excluded), for firewall rule matching.
+        $queryKeys = '';
+        $queryString = parse_url($uri, PHP_URL_QUERY);
+        if (is_string($queryString) && $queryString !== '') {
+            parse_str($queryString, $queryParams);
+            $queryKeys = implode(',', array_keys($queryParams));
+        }
+
         $usage
             ->setPath($uri)
             ->setMethod($request->getMethod())
@@ -840,6 +848,10 @@ Http::init()
             ->setIp($request->getIP())
             ->setSdk(strtolower($request->getHeaderLine('x-sdk-name', '')))
             ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+            ->setProtocol(strtolower($request->getProtocol()))
+            ->setAccept($request->getHeaderLine('accept', ''))
+            ->setAcceptLanguage($request->getHeaderLine('accept-language', ''))
+            ->setQueryKeys($queryKeys)
             ->setRegion(System::getEnv('_APP_REGION', 'default'))
             ->setService($parts[1] ?? $parts[0])
             ->setResourceType('')

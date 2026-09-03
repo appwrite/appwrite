@@ -16,7 +16,6 @@ final class ContextTest extends TestCase
             ->setProtocol('https')
             ->setAccept('application/json')
             ->setAcceptLanguage('en-US')
-            ->setCookie('a-session-cookie')
             ->setQueryKeys('limit,offset')
             ->addMetric('files.storage', 42);
 
@@ -27,7 +26,6 @@ final class ContextTest extends TestCase
         $this->assertSame('https', $metric['protocol']);
         $this->assertSame('application/json', $metric['accept']);
         $this->assertSame('en-US', $metric['acceptLanguage']);
-        $this->assertSame('a-session-cookie', $metric['cookie']);
         $this->assertSame('limit,offset', $metric['queryKeys']);
     }
 
@@ -50,7 +48,6 @@ final class ContextTest extends TestCase
             ->setProtocol('https')
             ->setAccept('application/json')
             ->setAcceptLanguage('en-US')
-            ->setCookie('a-session-cookie')
             ->setQueryKeys('limit,offset')
             ->addMetric('files.storage', 42);
 
@@ -61,7 +58,6 @@ final class ContextTest extends TestCase
         $this->assertSame('', $metric['protocol']);
         $this->assertSame('', $metric['accept']);
         $this->assertSame('', $metric['acceptLanguage']);
-        $this->assertSame('', $metric['cookie']);
         $this->assertSame('', $metric['queryKeys']);
     }
 }

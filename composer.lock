@@ -5140,16 +5140,16 @@
         },
         {
             "name": "utopia-php/usage",
-            "version": "0.16.1",
+            "version": "0.16.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/usage.git",
-                "reference": "fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441"
+                "reference": "59f5b647be184627ba4ff5168effaded6770a336"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441",
-                "reference": "fde5dd8c3abc0bafd7f00f7e2ed1b09072ff0441",
+                "url": "https://api.github.com/repos/utopia-php/usage/zipball/59f5b647be184627ba4ff5168effaded6770a336",
+                "reference": "59f5b647be184627ba4ff5168effaded6770a336",
                 "shasum": ""
             },
             "require": {
@@ -5187,9 +5187,9 @@
             "description": "Light and Fast Usage library",
             "support": {
                 "issues": "https://github.com/utopia-php/usage/issues",
-                "source": "https://github.com/utopia-php/usage/tree/0.16.1"
+                "source": "https://github.com/utopia-php/usage/tree/0.16.2"
             },
-            "time": "2026-09-03T08:47:59+00:00"
+            "time": "2026-09-03T09:12:57+00:00"
         },
         {
             "name": "utopia-php/user-agent",
