@@ -37,12 +37,7 @@ import {
 } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
-import {
-  BitbucketIcon,
-  GitHubIcon,
-  GitLabIcon,
-  OriginIcon,
-} from '@/lib/vcs/providers'
+import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -101,7 +96,6 @@ const OAUTH_PROVIDERS: {
   { id: 'github', Icon: GitHubIcon },
   { id: 'gitlab', Icon: GitLabIcon },
   { id: 'bitbucket', Icon: BitbucketIcon },
-  { id: 'cursor', Icon: OriginIcon },
 ]
 
 const OAUTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
@@ -212,13 +206,11 @@ function oauthProviderLabel(
     if (provider === 'google') return t('Sign up with Google')
     if (provider === 'gitlab') return t('Sign up with GitLab')
     if (provider === 'bitbucket') return t('Sign up with Bitbucket')
-    if (provider === 'cursor') return t('Sign up with Cursor')
     return t('Sign up with GitHub')
   }
   if (provider === 'google') return t('Login with Google')
   if (provider === 'gitlab') return t('Login with GitLab')
   if (provider === 'bitbucket') return t('Login with Bitbucket')
-  if (provider === 'cursor') return t('Login with Cursor')
   return t('Login with GitHub')
 }
 
