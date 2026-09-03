@@ -43,6 +43,18 @@ export const SITE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'build',
+    title: 'Scopes',
+    keywords: [
+      'scope',
+      'permission',
+      'api key',
+      'dynamic key',
+      'ssr',
+      'access',
+    ],
+  },
+  {
+    sectionId: 'build',
     title: 'Specification',
     keywords: ['vcpu', 'memory', 'worker', 'profile'],
   },

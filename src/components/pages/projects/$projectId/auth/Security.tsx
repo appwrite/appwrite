@@ -17,6 +17,7 @@ import {
   useUpdateSessionInvalidation,
   useUpdateMockNumbers,
   useUpdateMembershipsPrivacy,
+  useUpdateMfaFactorsPolicy,
   useProject,
   useOrganizationPlan,
   MAX_AUTH_POLICY_TOTAL,
@@ -1605,6 +1606,151 @@ export function PrivacyCard({
               </p>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          {t('Update')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+const MFA_FACTORS = [
+  {
+    key: 'totp' as const,
+    label: 'TOTP',
+    description: 'Time-based codes from an authenticator app.',
+  },
+  {
+    key: 'email' as const,
+    label: 'Email',
+    description: "Codes sent to the user's verified email address.",
+  },
+  {
+    key: 'phone' as const,
+    label: 'Phone',
+    description: "Codes sent to the user's verified phone number over SMS.",
+  },
+  {
+    key: 'custom' as const,
+    label: 'Custom',
+    description:
+      'Appwrite generates and verifies the code, and you deliver it through your own channel.',
+  },
+]
+
+export type MfaFactors = {
+  totp: boolean
+  email: boolean
+  phone: boolean
+  custom: boolean
+}
+
+export function MfaFactorsCard({
+  projectId,
+  currentFactors,
+}: {
+  projectId: string
+  currentFactors: MfaFactors
+}) {
+  const t = useT()
+  const [factors, setFactors] = useState(currentFactors)
+  const mutation = useUpdateMfaFactorsPolicy(projectId)
+  const lastSubmittedValue = useRef<string | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      const currentFactorsStr = JSON.stringify(currentFactors)
+      if (
+        lastSubmittedValue.current === null ||
+        currentFactorsStr === lastSubmittedValue.current
+      ) {
+        setFactors(currentFactors)
+        // Reset ref once we've synced to the expected value
+        if (
+          lastSubmittedValue.current !== null &&
+          currentFactorsStr === lastSubmittedValue.current
+        ) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentFactors, mutation.isPending])
+
+  const hasChanges = useMemo(
+    () => MFA_FACTORS.some((f) => factors[f.key] !== currentFactors[f.key]),
+    [factors, currentFactors],
+  )
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = JSON.stringify(factors)
+    mutation.mutate(factors, {
+      onSuccess: () => {
+        toast.success(t('Updated MFA factors'))
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || t('Failed to update MFA factors'))
+        // Revert on error
+        lastSubmittedValue.current = null
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('MFA factors')}
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          {t(
+            'Choose which factors your users can use to complete a multi-factor authentication challenge. Recovery codes always remain available as a fallback.',
+          )}{' '}
+          <DocsRouteLink
+            className="link-neutral"
+            href="/docs/products/auth/mfa"
+          >
+            {t('Learn more')}
+          </DocsRouteLink>
+          .
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          {MFA_FACTORS.map((factor) => (
+            <div key={factor.key} className="flex items-start gap-3">
+              <Checkbox
+                id={`mfa-factor-${factor.key}`}
+                checked={factors[factor.key]}
+                onCheckedChange={(checked) =>
+                  setFactors({ ...factors, [factor.key]: checked === true })
+                }
+                disabled={mutation.isPending}
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <Label
+                  htmlFor={`mfa-factor-${factor.key}`}
+                  className="text-[13px] font-medium text-foreground cursor-pointer"
+                >
+                  {t(factor.label)}
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {t(factor.description)}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

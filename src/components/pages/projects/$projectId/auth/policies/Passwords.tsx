@@ -3,6 +3,7 @@ import {
   PasswordHistoryCard,
   PasswordDictionaryCard,
   PersonalDataCard,
+  MfaFactorsCard,
 } from '../Security'
 import { PasswordStrengthCard } from './PasswordStrengthCard'
 import {
@@ -18,6 +19,7 @@ type PasswordsProps = {
 export function PasswordsPolicies({ projectId }: PasswordsProps) {
   const t = useT()
   const security = useAuthSecuritySnapshot(projectId)
+  const mfaFactors = security.mfaFactors
 
   const cards: SettingsCardItem[] = [
     {
@@ -82,6 +84,36 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
         />
       ),
     },
+    // Servers without an mfa-factors policy report none; the old console hides
+    // the card in that case rather than showing defaults it cannot save.
+    ...(mfaFactors
+      ? [
+          {
+            id: 'mfa-factors',
+            search: {
+              title: 'MFA factors',
+              keywords: [
+                'mfa',
+                '2fa',
+                'multi-factor',
+                'totp',
+                'authenticator',
+                'email',
+                'phone',
+                'sms',
+                'custom',
+                'challenge',
+              ],
+            },
+            node: (
+              <MfaFactorsCard
+                projectId={projectId}
+                currentFactors={mfaFactors}
+              />
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (
