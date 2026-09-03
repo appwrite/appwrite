@@ -44,7 +44,12 @@ export interface InitGrandPrizeEntriesParseResult {
   totalRows: number
 }
 
-export type InitGrandPrizeCsvErrorCode = 'empty' | 'missing-columns'
+export type InitGrandPrizeCsvErrorCode = 'empty' | 'missing-columns' | 'unterminated-quote'
+
+const CSV_ERROR_MESSAGES: Record<Exclude<InitGrandPrizeCsvErrorCode, 'missing-columns'>, string> = {
+  empty: 'The CSV file is empty.',
+  'unterminated-quote': 'The CSV has an unterminated quoted value.',
+}
 
 export class InitGrandPrizeCsvError extends Error {
   readonly code: InitGrandPrizeCsvErrorCode
@@ -52,9 +57,9 @@ export class InitGrandPrizeCsvError extends Error {
 
   constructor(code: InitGrandPrizeCsvErrorCode, missingColumns: string[] = []) {
     super(
-      code === 'empty'
-        ? 'The CSV file is empty.'
-        : `Missing required CSV columns: ${missingColumns.join(', ')}`,
+      code === 'missing-columns'
+        ? `Missing required CSV columns: ${missingColumns.join(', ')}`
+        : CSV_ERROR_MESSAGES[code],
     )
     this.name = 'InitGrandPrizeCsvError'
     this.code = code
@@ -62,7 +67,10 @@ export class InitGrandPrizeCsvError extends Error {
   }
 }
 
-/** RFC 4180 style: quoted cells, doubled quotes, CRLF or LF line endings. */
+/**
+ * RFC 4180 style: quoted cells, doubled quotes, CRLF or LF line endings.
+ * Throws on an unterminated quote rather than flushing a merged, misaligned row.
+ */
 export function parseCsvRows(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = []
@@ -118,6 +126,8 @@ export function parseCsvRows(text: string): string[][] {
 
     cell += char
   }
+
+  if (inQuotes) throw new InitGrandPrizeCsvError('unterminated-quote')
 
   if (cell.length > 0 || row.length > 0) {
     row.push(cell)

@@ -1437,6 +1437,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Only CSV files are accepted.': 'CSV ファイルのみ受け付けます。',
   'The CSV has no eligible entries.': 'この CSV には対象となるエントリーがありません。',
   'Missing required CSV columns:': '必須の CSV 列がありません:',
+  'The CSV has an unterminated quoted value.': 'CSV に閉じられていない引用符付きの値があります。',
   'The CSV file is empty.': 'CSV ファイルが空です。',
   'Could not read that file.': 'ファイルを読み取れませんでした。',
   'Spin the wheel': 'ホイールを回す',

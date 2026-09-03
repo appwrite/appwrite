@@ -93,8 +93,17 @@ export function InitGrandPrizeRevealBack({
   const [isSpinning, setIsSpinning] = useState(false)
   const [winner, setWinner] = useState<InitGrandPrizeEntry | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const spinTimeoutRef = useRef<number | null>(null)
   const raffleContext = useInitGiveawayRaffleContext()
   const { setTransientActivity } = useInitPresenceActivity()
+
+  // Closing the card mid-spin must not publish a winner into the shared context later.
+  useEffect(
+    () => () => {
+      if (spinTimeoutRef.current != null) window.clearTimeout(spinTimeoutRef.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!isSpinning) {
@@ -138,11 +147,18 @@ export function InitGrandPrizeRevealBack({
           setFileError(t('The CSV has no eligible entries.'))
         }
       } catch (error) {
+        // A rejected file must never leave the previous upload drawable.
+        onEntriesChange(null)
+        setFileName(null)
+        setRotation(0)
+
         if (error instanceof InitGrandPrizeCsvError) {
           setFileError(
             error.code === 'missing-columns'
               ? `${t('Missing required CSV columns:')} ${error.missingColumns.join(', ')}`
-              : t('The CSV file is empty.'),
+              : error.code === 'unterminated-quote'
+                ? t('The CSV has an unterminated quoted value.')
+                : t('The CSV file is empty.'),
           )
         } else {
           setFileError(t('Could not read that file.'))
@@ -196,7 +212,8 @@ export function InitGrandPrizeRevealBack({
     setIsSpinning(true)
     setRotation(nextRotation)
 
-    window.setTimeout(() => {
+    spinTimeoutRef.current = window.setTimeout(() => {
+      spinTimeoutRef.current = null
       setWinner(nextWinner)
       setIsSpinning(false)
       raffleContext?.celebrateRaffleWinner(nextWinner.id)

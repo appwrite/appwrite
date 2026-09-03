@@ -41,6 +41,18 @@ describe('parseCsvRows', () => {
   })
 })
 
+describe('parseCsvRows', () => {
+  test('rejects an unterminated quoted cell instead of merging rows', () => {
+    const text = 'a,b\n"broken,c\nx,y\n'
+    expect(() => parseCsvRows(text)).toThrow(InitGrandPrizeCsvError)
+    try {
+      parseCsvRows(text)
+    } catch (error) {
+      expect((error as InitGrandPrizeCsvError).code).toBe('unterminated-quote')
+    }
+  })
+})
+
 describe('parseCutoffFlag', () => {
   test('only an explicit negative excludes a row', () => {
     expect(parseCutoffFlag('true')).toBe(true)

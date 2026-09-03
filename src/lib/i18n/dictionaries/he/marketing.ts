@@ -1591,6 +1591,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Only CSV files are accepted.': 'ניתן להעלות רק קובצי CSV.',
   'The CSV has no eligible entries.': 'בקובץ ה-CSV אין השתתפויות כשירות.',
   'Missing required CSV columns:': 'חסרות עמודות CSV נדרשות:',
+  'The CSV has an unterminated quoted value.': 'בקובץ ה-CSV יש ערך במירכאות שלא נסגרו.',
   'The CSV file is empty.': 'קובץ ה-CSV ריק.',
   'Could not read that file.': 'לא ניתן לקרוא את הקובץ.',
   'Spin the wheel': 'סובבו את הגלגל',
