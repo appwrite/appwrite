@@ -24,10 +24,8 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import {
   DEFAULT_MONITOR_CHART_INTERVAL,
-  resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
 import { DatabaseMonitorNodeSelect } from './DatabaseMonitorNodeSelect'
 import { UsageTimeSeriesChartCard } from '@/components/pages/projects/$projectId/usage/_components/UsageTimeSeriesChartCard'
 import { DatabaseOperationBentoCard } from '@/components/pages/projects/$projectId/usage/_components/DatabaseOperationBentoCard'
@@ -139,14 +137,18 @@ export type DatabaseMonitorViewProps = {
   databaseId: string
   dbKind: DatabaseRouteKind
   dateRange: DateRange
+  chartInterval?: UsageChartInterval
   chartTick: number
+  onDateRangeChange: (dateRange: DateRange | undefined) => void
 }
 
 export function DatabaseMonitorView({
   databaseId,
   dbKind,
   dateRange,
+  chartInterval = DEFAULT_MONITOR_CHART_INTERVAL,
   chartTick,
+  onDateRangeChange,
 }: DatabaseMonitorViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
@@ -154,17 +156,11 @@ export function DatabaseMonitorView({
   const projectId = params.projectId as string
   const showBreakdown = true
 
-  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_MONITOR_CHART_INTERVAL,
-  )
   const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BreakdownDrawerState | null>(null)
 
-  const resolvedInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
-    [chartInterval, dateRange],
-  )
+  const resolvedInterval = chartInterval
 
   const { database } = useProjectDatabase(projectId, databaseId, dbKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
@@ -352,12 +348,6 @@ export function DatabaseMonitorView({
                     : t('Instance metrics for this dedicated database.')}
                 </p>
               </div>
-              <UsageChartIntervalToggle
-                value={resolvedInterval}
-                onValueChange={setChartInterval}
-                dateRange={dateRange}
-                className="h-7"
-              />
             </div>
 
             {serverless ? (
@@ -391,6 +381,7 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -424,6 +415,7 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -453,6 +445,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -482,6 +475,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -512,6 +506,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -541,6 +536,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -568,6 +564,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
@@ -608,6 +605,7 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
                     emptyMessage={usageChartEmptyMessage}
                   />
                   {iopsDualPoints.length > 0 ? (

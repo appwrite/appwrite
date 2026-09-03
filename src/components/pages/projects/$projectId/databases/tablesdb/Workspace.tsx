@@ -77,10 +77,10 @@ import { navigateToDatabaseFromSwitcher } from '@/lib/databases/navigate-to-data
 import { TableSelector } from '../_components/TableSelector'
 import {
   DatabaseMonitorHeaderActions,
-  getDefaultMonitorDateRange,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
 import type { DateRange } from 'react-day-picker'
+import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
 
@@ -447,15 +447,22 @@ export function Workspace({
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
-  const [monitorDateRange, setMonitorDateRange] = useState<DateRange>(() =>
-    getDefaultMonitorDateRange(),
-  )
   const [monitorChartTick, setMonitorChartTick] = useState(0)
   const queryClient = useQueryClient()
 
   const { project } = useProject(projectId)
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const {
+    dateRange: monitorDateRange,
+    chartInterval: monitorChartInterval,
+    dateRangePresetId: monitorDateRangePresetId,
+    planChartIntervals: monitorPlanChartIntervals,
+    setDateRange: setMonitorDateRange,
+    setChartInterval: setMonitorChartInterval,
+    refreshRollingDateRange: refreshMonitorRollingDateRange,
+    reset: resetMonitorFilters,
+  } = useDatabaseMonitorChartFilters(organizationPlan)
   const { access } = useOrganizationScopes(project?.teamId)
   const showTableSecuritySettings = canShowTableSecuritySettings(
     access,
@@ -493,9 +500,9 @@ export function Workspace({
   ])
 
   useEffect(() => {
-    setMonitorDateRange(getDefaultMonitorDateRange())
+    resetMonitorFilters()
     setMonitorChartTick(0)
-  }, [databaseId])
+  }, [databaseId, resetMonitorFilters])
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1727,10 +1734,15 @@ export function Workspace({
           databaseTab === 'monitor' ? (
             <DatabaseMonitorHeaderActions
               dateRange={monitorDateRange}
-              onDateRangeChange={(r) =>
-                setMonitorDateRange(r ?? getDefaultMonitorDateRange())
-              }
-              onRefresh={() => setMonitorChartTick((n) => n + 1)}
+              dateRangePresetId={monitorDateRangePresetId}
+              onDateRangeChange={setMonitorDateRange}
+              chartInterval={monitorChartInterval}
+              onChartIntervalChange={setMonitorChartInterval}
+              allowedIntervals={monitorPlanChartIntervals}
+              onRefresh={() => {
+                refreshMonitorRollingDateRange()
+                setMonitorChartTick((n) => n + 1)
+              }}
             />
           ) : undefined
         }
@@ -1930,7 +1942,9 @@ export function Workspace({
                 databaseTab === 'monitor'
                   ? {
                       dateRange: monitorDateRange,
+                      chartInterval: monitorChartInterval,
                       chartTick: monitorChartTick,
+                      onDateRangeChange: setMonitorDateRange,
                     }
                   : undefined
               }

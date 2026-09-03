@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   formatDistanceToNow,
-  subHours,
 } from 'date-fns'
-import type { DateRange } from 'react-day-picker'
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
@@ -29,8 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
-import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -47,6 +44,8 @@ import {
   useMysqlDatabase,
   useMysqlMetricsSampling,
   useMysqlTableActivity,
+  useOrganizationPlan,
+  useProject,
 } from '@/lib/react-query/hooks'
 import {
   formatConnectionStateLabel,
@@ -65,13 +64,8 @@ import {
   mergeDualUsageChartSeries,
   usageChartPointsToMonitorSeries,
 } from '@/lib/usage/dedicated-databases-usage'
-import {
-  DEFAULT_MONITOR_CHART_INTERVAL,
-  resolveUsageChartIntervalForRange,
-  type UsageChartInterval,
-} from '@/lib/usage/chart-interval'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
-import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
+import { DatabaseMonitorHeaderActions } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorNodeSelect } from '../_components/DatabaseMonitorNodeSelect'
 import { MysqlMetricChart } from './_components/MysqlMetricChart'
 import { MysqlMetricRankedList } from './_components/MysqlMetricRankedList'
@@ -88,13 +82,6 @@ type MonitorNavGroup = { id: string; label: string; items: MonitorNavItem[] }
 
 const MONITOR_SCROLL_MARGIN =
   'scroll-mt-[calc(4rem+env(safe-area-inset-top))]' as const
-
-function getDefaultMonitorDateRange(): DateRange {
-  return {
-    from: subHours(new Date(), 1),
-    to: new Date(),
-  }
-}
 
 function getUsageTone(
   percentage: number | null,
@@ -216,16 +203,24 @@ type MonitorProps = {
 
 export function View({ projectId, databaseId }: MonitorProps) {
   const t = useT()
-  const [dateRange, setDateRange] = useState<DateRange>(getDefaultMonitorDateRange)
-  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_MONITOR_CHART_INTERVAL,
-  )
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const {
+    dateRange,
+    chartInterval: resolvedInterval,
+    dateRangePresetId,
+    planChartIntervals,
+    setDateRange,
+    setChartInterval,
+    refreshRollingDateRange,
+    reset: resetMonitorFilters,
+  } = useDatabaseMonitorChartFilters(organizationPlan)
   const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [activeSectionId, setActiveSectionId] = useState('connections')
-  const resolvedInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
-    [chartInterval, dateRange],
-  )
+
+  useEffect(() => {
+    resetMonitorFilters()
+  }, [databaseId, resetMonitorFilters])
 
   const { database } = useMysqlDatabase(projectId, databaseId)
   const replicaCount = database?.replicas ?? 0
@@ -553,8 +548,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
   const refetchDedicatedMetrics = dedicatedMetrics.refetchAll
   const handleRefresh = useCallback(async () => {
+    refreshRollingDateRange()
     await Promise.all([refresh(), refetchDedicatedMetrics()])
-  }, [refresh, refetchDedicatedMetrics])
+  }, [refresh, refetchDedicatedMetrics, refreshRollingDateRange])
 
   const metricsError =
     error ??
@@ -579,26 +575,19 @@ export function View({ projectId, databaseId }: MonitorProps) {
             </span>
           ) : null}
           <div className="ms-auto flex shrink-0 flex-wrap items-center justify-end gap-3">
-            <UsageChartIntervalToggle
-              value={resolvedInterval}
-              onValueChange={setChartInterval}
+            <DatabaseMonitorHeaderActions
               dateRange={dateRange}
-            />
-            <DateRangePicker
-              dateRange={dateRange}
-              onDateRangeChange={(range) =>
-                setDateRange(range ?? getDefaultMonitorDateRange())
-              }
-              className="h-9 min-w-[200px]"
-            />
-            <RefreshButton
-              onClick={() => void handleRefresh()}
+              dateRangePresetId={dateRangePresetId}
+              onDateRangeChange={setDateRange}
+              chartInterval={resolvedInterval}
+              onChartIntervalChange={setChartInterval}
+              allowedIntervals={planChartIntervals}
+              onRefresh={() => void handleRefresh()}
               isRefreshing={
                 isFetching ||
                 dedicatedMetrics.cpu.isFetching ||
                 dedicatedMetrics.memory.isFetching
               }
-              tooltip={t('Refresh metrics')}
             />
           </div>
         </div>
@@ -652,15 +641,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
                         : storageChartLoading
                           ? '-'
                           : '0B'
-                    }
-                    subValue={
-                      storageLimitBytes != null
-                        ? `/ ${formatCompactBytes(storageLimitBytes)} available${
-                            storageUsagePercent != null
-                              ? ` · ${storageUsagePercent.toFixed(1)}%`
-                              : ''
-                          }`
-                        : undefined
                     }
                     description={t(
                       'Storage used by this database instance compared to provisioned capacity.',
@@ -813,6 +793,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageQuota={100}
                     usageUnitLabel="utilization"
                     isLoading={cpuChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No CPU metrics for this date range',
                     )}
@@ -829,6 +811,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageQuota={100}
                     usageUnitLabel="utilization"
                     isLoading={memoryChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No memory metrics for this date range',
                     )}
@@ -842,6 +826,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     data={qpsSeries}
                     formatY={(value) => value.toFixed(1)}
                     isLoading={qpsChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No QPS metrics for this date range',
                     )}
@@ -875,6 +861,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     usageUnitLabel="read"
                     usageSecondaryUnitLabel="write"
                     isLoading={iopsChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No IOPS metrics for this date range',
                     )}
@@ -894,6 +882,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     data={dedicatedConnectionsSeries}
                     formatY={(value) => Math.round(value).toLocaleString()}
                     isLoading={connectionsChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No connection metrics for this date range',
                     )}
@@ -975,6 +965,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     }
                     usageQuota={storageLimitBytes}
                     isLoading={storageChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No storage metrics for this date range',
                     )}

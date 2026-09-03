@@ -66,6 +66,7 @@ type DatabaseOperationBentoCardProps = {
   docsHref?: string
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
   emptyMessage?: string
 }
 
@@ -107,6 +108,7 @@ export function DatabaseOperationBentoCard({
   docsHref,
   dateRange,
   chartInterval,
+  onDateRangeChange,
   emptyMessage,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
@@ -142,6 +144,7 @@ export function DatabaseOperationBentoCard({
         docsHref={docsHref}
         dateRange={dateRange}
         chartInterval={chartInterval}
+        onDateRangeChange={onDateRangeChange}
         emptyMessage={emptyMessage}
       />
 

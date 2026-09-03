@@ -23,6 +23,7 @@ import {
   useProjectTables,
   deleteProjectTable,
   useProject,
+  useOrganizationPlan,
   useOrganizationScopes,
   createProjectTable,
 } from '@/lib/react-query/hooks'
@@ -35,10 +36,11 @@ import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseMonitorView } from '../_components/DatabaseMonitorView'
 import {
   DatabaseMonitorHeaderActions,
-  getDefaultMonitorDateRange,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
 import type { DateRange } from 'react-day-picker'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
+import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { SchemaVisualizer } from './SchemaVisualizer'
 import { SchemaExportDialog } from '../SchemaExport'
 import {
@@ -123,7 +125,9 @@ export interface OverviewProps {
   /** Chart state when Monitor is embedded in Workspace (header/actions live in Workspace). */
   monitorEmbed?: {
     dateRange: DateRange
+    chartInterval: UsageChartInterval
     chartTick: number
+    onDateRangeChange: (dateRange: DateRange | undefined) => void
   }
 }
 
@@ -152,13 +156,7 @@ export function Overview({
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
-  const [localMonitorDateRange, setLocalMonitorDateRange] = useState<DateRange>(
-    () => getDefaultMonitorDateRange(),
-  )
   const [localMonitorChartTick, setLocalMonitorChartTick] = useState(0)
-
-  const monitorDateRange = monitorEmbed?.dateRange ?? localMonitorDateRange
-  const monitorChartTick = monitorEmbed?.chartTick ?? localMonitorChartTick
 
   // Fetch database
   const { database, isLoading: databaseLoading } = useProjectDatabase(
@@ -351,6 +349,15 @@ export function Overview({
   }
 
   const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const standaloneMonitorFilters = useDatabaseMonitorChartFilters(organizationPlan)
+  const monitorDateRange =
+    monitorEmbed?.dateRange ?? standaloneMonitorFilters.dateRange
+  const monitorChartInterval =
+    monitorEmbed?.chartInterval ?? standaloneMonitorFilters.chartInterval
+  const monitorChartTick = monitorEmbed?.chartTick ?? localMonitorChartTick
+  const onMonitorDateRangeChange =
+    monitorEmbed?.onDateRangeChange ?? standaloneMonitorFilters.setDateRange
   const { access } = useOrganizationScopes(project?.teamId)
   const showDbSecuritySettings = canShowDatabaseSecuritySettings(
     access,
@@ -409,9 +416,10 @@ export function Overview({
   ])
 
   useEffect(() => {
-    setLocalMonitorDateRange(getDefaultMonitorDateRange())
+    if (monitorEmbed) return
+    standaloneMonitorFilters.reset()
     setLocalMonitorChartTick(0)
-  }, [databaseId])
+  }, [databaseId, monitorEmbed, standaloneMonitorFilters.reset])
 
   const databaseTabs: Tab[] = useMemo(
     () =>
@@ -770,11 +778,16 @@ export function Overview({
           titleRightContent={
             activeTab === 'monitor' ? (
               <DatabaseMonitorHeaderActions
-                dateRange={localMonitorDateRange}
-                onDateRangeChange={(r) =>
-                  setLocalMonitorDateRange(r ?? getDefaultMonitorDateRange())
-                }
-                onRefresh={() => setLocalMonitorChartTick((n) => n + 1)}
+                dateRange={standaloneMonitorFilters.dateRange}
+                dateRangePresetId={standaloneMonitorFilters.dateRangePresetId}
+                onDateRangeChange={standaloneMonitorFilters.setDateRange}
+                chartInterval={standaloneMonitorFilters.chartInterval}
+                onChartIntervalChange={standaloneMonitorFilters.setChartInterval}
+                allowedIntervals={standaloneMonitorFilters.planChartIntervals}
+                onRefresh={() => {
+                  standaloneMonitorFilters.refreshRollingDateRange()
+                  setLocalMonitorChartTick((n) => n + 1)
+                }}
               />
             ) : undefined
           }
@@ -1156,7 +1169,9 @@ export function Overview({
               databaseId={databaseId}
               dbKind={DB_KIND}
               dateRange={monitorDateRange}
+              chartInterval={monitorChartInterval}
               chartTick={monitorChartTick}
+              onDateRangeChange={onMonitorDateRangeChange}
             />
           </div>
         )}
