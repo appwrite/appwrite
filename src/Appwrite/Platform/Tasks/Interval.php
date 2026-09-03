@@ -162,15 +162,15 @@ class Interval extends Action
     {
         $fromTime = new DateTime('-3 days'); // Max 3 days old
 
-        // An attempt only writes the rule once it finishes, so a rule touched
-        // within the last interval either has a job in flight or has just been
-        // tried. Holding those back keeps one domain to one attempt at a time.
-        $claimedUntil = new DateTime('-' . $this->certificateGenerationInterval() . ' seconds');
+        // Rules are leased for one interval when queued below, so anything
+        // touched more recently than this either has an attempt in flight or
+        // has just finished one.
+        $leasedUntil = new DateTime('-' . $this->certificateGenerationInterval() . ' seconds');
 
         $rules = $dbForPlatform->find('rules', [
             Query::createdAfter(DatabaseDateTime::format($fromTime)),
             Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATION_FAILED]), // Verified DNS, but no certificate yet
-            Query::updatedBefore(DatabaseDateTime::format($claimedUntil)),
+            Query::updatedBefore(DatabaseDateTime::format($leasedUntil)),
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
             Query::limit(100), // Reasonable pagination limit
@@ -201,6 +201,16 @@ class Interval extends Action
             }
 
             try {
+                // Take the lease before handing the job off. The worker writes the
+                // rule only once the issuer answers, which can outlast a tick, so
+                // claiming here is what keeps a second pass from queueing the same
+                // domain. The rule keeps its failed status, so a lease that is
+                // never used lapses and the rule comes back on a later pass
+                // instead of being stranded in a state nothing scans.
+                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    '$updatedAt' => DatabaseDateTime::now(),
+                ]));
+
                 $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
                     project: new Document([
                         '$id' => $rule->getAttribute('projectId', ''),
