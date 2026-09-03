@@ -2,6 +2,7 @@
 
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Deployment\Executions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -26,7 +27,7 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Executor\Executor;
+use OpenRuntimes\Orchestrator\Deployments as OrchestratorDeployments;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -80,22 +81,29 @@ $container->set('platform', fn () => Config::getParam('platform', []), []);
 
 $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
-$container->set('executor', fn () => new Executor(), []);
-
-$container->set('jobs', function () {
+// The orchestrator API client: builds go through its jobs plane, executions
+// through its deployments plane. Keep the injection resolvable without
+// _APP_JOBS_HOST and fail at call time instead, so installs that never build
+// stay bootable.
+$container->set('orchestrator', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
-    // Keep the injection resolvable without _APP_JOBS_HOST and fail at call
-    // time instead, so installs that never build stay bootable.
     $host = System::getEnv('_APP_JOBS_HOST', '');
     if ($host !== '') {
         $client = $client->withBaseUri($host);
     }
 
-    return new Jobs($client);
+    return $client;
 }, []);
+
+$container->set('jobs', fn (Client $orchestrator) => new Jobs($orchestrator), ['orchestrator']);
+
+$container->set('executions', fn (Client $orchestrator) => new Executions(
+    new OrchestratorDeployments($orchestrator),
+    new Client(new CurlAdapter()),
+), ['orchestrator']);
 
 $container->set('screenshots', function () {
     $client = (new Client(new CurlAdapter()))

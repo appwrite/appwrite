@@ -426,8 +426,14 @@ readonly class Deployments
         // back post-job so the Jobs worker can run adapter detection.
         $manifestArtifacts = $isSite ? [new ReadArtifact(id: 'manifest', in: 'manifest.json', format: ReadFormat::Json, depends: 'job')] : [];
 
+        $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+            'projectId' => $projectId,
+            'scopes' => static::scopes($resource),
+        ]);
+
         $command = self::command($resource, $deployment);
-        $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
+        $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint) + [
+            ($isSite ? 'APPWRITE_SITE_API_KEY' : 'APPWRITE_FUNCTION_API_KEY') => API_KEY_EPHEMERAL . '_' . $apiKey,
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
             'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
         ] + ($isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : []) + $output['environment'];
@@ -535,7 +541,7 @@ readonly class Deployments
      * The builds device for a project, as everything else reads it
      * (deviceForBuilds).
      */
-    protected static function device(string $projectId): Device
+    public static function device(string $projectId): Device
     {
         return getDevice(APP_STORAGE_BUILDS . "/app-{$projectId}");
     }
@@ -599,7 +605,7 @@ readonly class Deployments
      * the URL as is; a virtual-host device passes paths verbatim, so the
      * bucket is prepended.
      */
-    protected static function objectUrl(Device $device, string $path): string
+    public static function objectUrl(Device $device, string $path): string
     {
         $type = $device->getType();
         $configuredDevice = DeviceType::tryFrom(\strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
@@ -630,7 +636,7 @@ readonly class Deployments
         return 's3://' . \ltrim(($bucket !== '' ? "/{$bucket}" : '') . $path, '/');
     }
 
-    protected static function version(Document $resource): string
+    public static function version(Document $resource): string
     {
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
     }
@@ -658,7 +664,14 @@ readonly class Deployments
         return $runtime;
     }
 
-    private static function variables(
+    /**
+     * The environment a deployment's containers share, at build and at run time:
+     * the project's and resource's variables, then Appwrite's own. Endpoint is
+     * the Appwrite API the container should call.
+     *
+     * @return array<string, mixed>
+     */
+    public static function variables(
         Document $project,
         Document $resource,
         Document $deployment,
@@ -666,7 +679,6 @@ readonly class Deployments
         float $cpus,
         int $memory,
         string $endpoint,
-        int $timeout,
     ): array {
         $vars = [];
 
@@ -690,10 +702,10 @@ readonly class Deployments
             }
         }
 
-        $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
-            'projectId' => $project->getId(),
-            'scopes' => static::scopes($resource),
-        ]);
+        // SPA fallbackFile override
+        if ($deployment->getAttribute('adapter', '') === 'static' && $deployment->getAttribute('fallbackFile', '') !== '') {
+            $vars['OPEN_RUNTIMES_STATIC_FALLBACK'] = $deployment->getAttribute('fallbackFile', '');
+        }
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';
 
@@ -717,7 +729,6 @@ readonly class Deployments
             'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
             'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             "APPWRITE_{$prefix}_API_ENDPOINT" => "{$endpoint}/v1",
-            "APPWRITE_{$prefix}_API_KEY" => API_KEY_EPHEMERAL . '_' . $apiKey,
             "APPWRITE_{$prefix}_ID" => $resource->getId(),
             "APPWRITE_{$prefix}_NAME" => $resource->getAttribute('name'),
             "APPWRITE_{$prefix}_DEPLOYMENT" => $deployment->getId(),

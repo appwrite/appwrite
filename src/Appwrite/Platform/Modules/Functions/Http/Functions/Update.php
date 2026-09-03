@@ -16,7 +16,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -118,7 +117,6 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
-            ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -157,7 +155,6 @@ class Update extends Base
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
-        Executor $executor,
         Authorization $authorization,
         array $platform
     ) {
@@ -277,26 +274,6 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
-        if (!empty($function->getAttribute('deploymentId'))) {
-            $specsChanged = false;
-            if ($function->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
-                $specsChanged = true;
-            } elseif ($function->getAttribute('buildSpecification', '') !== $buildSpecification) {
-                $specsChanged = true;
-            }
-
-            if ($specsChanged) {
-                try {
-                    $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
-                } catch (\Throwable $th) {
-                    // Don't throw if the deployment doesn't exist
-                    if ($th->getCode() !== 404) {
-                        throw $th;
-                    }
-                }
-            }
-        }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,

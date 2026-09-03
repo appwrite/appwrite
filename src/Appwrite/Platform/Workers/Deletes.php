@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Executions;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -13,7 +14,6 @@ use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
-use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
@@ -71,7 +71,7 @@ class Deletes extends Action
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
             ->inject('certificates')
-            ->inject('executor')
+            ->inject('executions')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
             ->inject('log')
@@ -103,7 +103,7 @@ class Deletes extends Action
         Device $deviceForBuilds,
         Device $deviceForCache,
         Provider $certificates,
-        Executor $executor,
+        Executions $executions,
         string $executionRetention,
         int $executionsRetentionCount,
         Log $log,
@@ -138,7 +138,7 @@ class Deletes extends Action
             $deviceForBuilds,
             $deviceForCache,
             $certificates,
-            $executor,
+            $executions,
             $executionRetention,
             $executionsRetentionCount,
             $log,
@@ -233,7 +233,7 @@ class Deletes extends Action
         Device $deviceForBuilds,
         Device $deviceForCache,
         Provider $certificates,
-        Executor $executor,
+        Executions $executions,
         string $executionRetention,
         int $executionsRetentionCount,
         Log $log,
@@ -269,10 +269,10 @@ class Deletes extends Action
                         $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus, $executionStore);
+                        $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executions, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executions, $bus);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -1489,11 +1489,11 @@ class Deletes extends Action
      * @param Device $deviceForBuilds
      * @param Document $document function document
      * @param Document $project
-     * @param Executor $executor
+     * @param Executions $executions
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Provider $certificates, Document $document, Document $project, Executor $executor, Bus $bus, ?Store $executionStore = null): void
+    private function deleteFunction(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Provider $certificates, Document $document, Document $project, Executions $executions, Bus $bus, ?Store $executionStore = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1572,10 +1572,10 @@ class Deletes extends Action
         });
 
         /**
-         * Request executor to delete all deployment containers
+         * Request the orchestrator to delete all deployment runtimes
          */
-        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+        Console::info("Requesting the orchestrator to delete all deployment runtimes for function " . $functionId);
+        $this->deleteRuntimes($getProjectDB, $document, $project, $executions);
     }
 
     private function deleteDeploymentScreenshots(Device $deviceForFiles, Database $dbForPlatform, Document $deployment): void
@@ -1694,11 +1694,11 @@ class Deletes extends Action
      * @param Device $deviceForBuilds
      * @param Document $document
      * @param Document $project
-     * @param Executor $executor
+     * @param Executions $executions
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executions $executions, Bus $bus): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1738,10 +1738,10 @@ class Deletes extends Action
         });
 
         /**
-         * Request executor to delete all deployment containers
+         * Request the orchestrator to delete all deployment runtimes
          */
-        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+        Console::info("Requesting the orchestrator to delete the runtime for deployment " . $deploymentId);
+        $this->deleteRuntimes($getProjectDB, $document, $project, $executions);
     }
 
     /**
@@ -1910,13 +1910,13 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param ?Document $function
      * @param Document $project
-     * @param Executor $executor
+     * @param Executions $executions
      * @return void
      * @throws Exception
      */
-    private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project, Executor $executor): void
+    private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project, Executions $executions): void
     {
-        $deleteByFunction = function (Document $function) use ($getProjectDB, $project, $executor) {
+        $deleteByFunction = function (Document $function) use ($getProjectDB, $project, $executions) {
             $this->listByGroup(
                 'deployments',
                 [
@@ -1924,11 +1924,11 @@ class Deletes extends Action
                     Query::equal('resourceType', ['functions']),
                 ],
                 $getProjectDB($project),
-                function (Document $deployment) use ($project, $executor) {
+                function (Document $deployment) use ($project, $executions) {
                     $deploymentId = $deployment->getId();
 
                     try {
-                        $executor->deleteRuntime($project->getId(), $deploymentId);
+                        $executions->delete($project->getId(), $deploymentId);
                         Console::info("Runtime for deployment {$deploymentId} deleted.");
                     } catch (Throwable $th) {
                         Console::warning("Runtime for deployment {$deploymentId} skipped:");

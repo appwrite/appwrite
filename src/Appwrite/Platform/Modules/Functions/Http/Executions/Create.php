@@ -6,6 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Executions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -21,11 +22,10 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use Executor\Exception\Timeout as ExecutorTimeout;
-use Executor\Executor;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
+use Utopia\Client\Exception\TimeoutException;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -104,7 +104,7 @@ class Create extends Base
             ->inject('geo')
             ->inject('store')
             ->inject('proofForToken')
-            ->inject('executor')
+            ->inject('executions')
             ->inject('platform')
             ->inject('authorization')
             ->inject('publisherForDeletes')
@@ -132,7 +132,7 @@ class Create extends Base
         Geo $geo,
         Store $store,
         Token $proofForToken,
-        Executor $executor,
+        Executions $executions,
         array $platform,
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
@@ -365,59 +365,6 @@ class Create extends Base
 
         $durationStart = \microtime(true);
 
-        $vars = [];
-
-        // V2 vars
-        if ($version === 'v2') {
-            $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
-                'APPWRITE_FUNCTION_DATA' => $body,
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
-            ]);
-        }
-
-        // Shared vars
-        foreach ($function->getAttribute('varsProject', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-        }
-
-        // Function vars
-        foreach ($function->getAttribute('vars', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-        }
-
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
-
-        // Appwrite vars
-        $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-            'APPWRITE_FUNCTION_ID' => $functionId,
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-            'APPWRITE_VERSION' => APP_VERSION_STABLE,
-            'APPWRITE_REGION' => $project->getAttribute('region'),
-            'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
-            'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
-            'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
-            'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
-            'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
-            'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
-            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
-            'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
-            'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
-            'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
-            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
-            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
-            'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
-        ]);
-
         /** Execute function */
         $executionResponse = [
             'headers' => [],
@@ -425,61 +372,31 @@ class Create extends Base
         ];
 
         try {
-            $version = $function->getAttribute('version', 'v2');
-            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
-
-            $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
-                $executionResponse = $executor->createExecution(
-                    projectId: $project->getId(),
-                    deploymentId: $deployment->getId(),
-                    body: \strlen($body) > 0 ? $body : null,
-                    variables: $vars,
-                    timeout: $function->getAttribute('timeout', 0),
-                    image: $runtime['image'],
-                    source: $source,
-                    entrypoint: $deployment->getAttribute('entrypoint', ''),
-                    version: $version,
-                    path: $path,
+                $executionResponse = $executions->execute(
+                    project: $project,
+                    resource: $function,
+                    deployment: $deployment,
+                    runtime: $runtime,
+                    spec: $spec,
+                    platform: $platform,
+                    executionId: $execution->getId(),
                     method: $method,
+                    path: $path,
                     headers: $headers,
-                    runtimeEntrypoint: $command,
-                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                    logging: $function->getAttribute('logging', true),
-                    requestTimeout: 30
+                    body: $body,
+                    timeout: $function->getAttribute('timeout', 0),
+                    requestTimeout: 30,
                 );
-            } catch (ExecutorTimeout $th) {
+            } catch (TimeoutException $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
             }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = ['name' => $key, 'value' => $value];
+                    $headersFiltered[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
                 }
-            }
-
-            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
-            $logs = $executionResponse['logs'] ?? '';
-
-            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
-                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
-            }
-
-            // Truncate errors if they exceed the limit
-            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
-            $errors = $executionResponse['errors'] ?? '';
-
-            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
-                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
             }
 
             /** Update execution status */
@@ -487,8 +404,8 @@ class Create extends Base
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('logs', $logs);
-            $execution->setAttribute('errors', $errors);
+            $execution->setAttribute('logs', $executionResponse['logs']);
+            $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
@@ -515,11 +432,11 @@ class Create extends Base
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
 
         $headers = [];
-        foreach (($executionResponse['headers'] ?? []) as $key => $value) {
-            $headers[] = ['name' => $key, 'value' => $value];
+        foreach ($executionResponse['headers'] as $key => $value) {
+            $headers[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
         }
 
-        $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
+        $execution->setAttribute('responseBody', $executionResponse['body']);
         $execution->setAttribute('responseHeaders', $headers);
 
         $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));

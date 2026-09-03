@@ -397,14 +397,6 @@ jobs:
         timeout-minutes: 5
         run: docker compose up -d --quiet-pull --wait
 
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker logs exc1 | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
       - name: Run General Tests
         timeout-minutes: 15
         run: >-
@@ -531,14 +523,6 @@ jobs:
           _APP_VECTORSDB: enabled
         run: docker compose up -d --quiet-pull --wait
 
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker logs exc1 | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
       - name: Run tests
         timeout-minutes: 15
         run: |
@@ -592,7 +576,7 @@ jobs:
             options_abuse: disabled
             storage_antivirus: disabled
             compose_profiles: ''
-            wait: executor
+            wait: ''
           - label: Antivirus
             group: antivirus
             path: /usr/src/code/tests/e2e/Services/Storage
@@ -671,15 +655,6 @@ jobs:
           else
             docker compose up -d --quiet-pull --wait
           fi
-
-      - name: Wait for Open Runtimes
-        if: matrix.config.wait == 'executor'
-        timeout-minutes: 3
-        run: |
-          while ! docker logs exc1 | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
 
       - name: Wait for ClamAV
         if: matrix.config.wait == 'clamav'

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a90a09be089e0d25f24de920758e2de",
+    "content-hash": "283829f739f13657d5110417cfaded6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1079,16 +1079,16 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "0.13.0",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "30d963dafa4af53c2a401601809fb768483ac27e"
+                "reference": "fa60334b9acce3800e6dc5af62a902088371bc93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/30d963dafa4af53c2a401601809fb768483ac27e",
-                "reference": "30d963dafa4af53c2a401601809fb768483ac27e",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/fa60334b9acce3800e6dc5af62a902088371bc93",
+                "reference": "fa60334b9acce3800e6dc5af62a902088371bc93",
                 "shasum": ""
             },
             "require": {
@@ -1113,12 +1113,12 @@
             "license": [
                 "MIT"
             ],
-            "description": "PHP SDK for the Open Runtimes orchestrator: jobs, deployments, sandboxes, and pools.",
+            "description": "PHP SDK for the Open Runtimes orchestrator: jobs, deployments, and sandboxes.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.13.0"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/1.0.0"
             },
-            "time": "2026-08-26T19:28:48+00:00"
+            "time": "2026-09-02T20:24:41+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -8666,5 +8666,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

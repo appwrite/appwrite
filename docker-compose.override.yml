@@ -518,9 +518,6 @@ services:
       gateway:
         aliases:
           - appwrite.test
-      runtimes:
-        aliases:
-          - appwrite.test
   mariadb:
     profiles:
       - mariadb

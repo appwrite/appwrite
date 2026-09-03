@@ -1241,7 +1241,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this.',
+                'description' => 'Deprecated since 2.0.0. Functions and sites run on the open-runtimes orchestrator; see _APP_JOBS_SECRET.',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
@@ -1250,7 +1250,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
-                'description' => 'The host used by Appwrite to communicate with the function executor.',
+                'description' => 'Deprecated since 2.0.0. Functions and sites run on the open-runtimes orchestrator; see _APP_JOBS_HOST and _APP_DEPLOYMENTS_HOST.',
                 'introduction' => '0.13.0',
                 'default' => 'http://exc1/v1',
                 'required' => false,
@@ -1260,7 +1260,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
-                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible (`_APP_STORAGE_S3_ENDPOINT` set): `s3://ACCESS_KEY:SECRET@localhost?region=REGION&url=http%3A%2F%2Fminio%3A9000` — leave the bucket out of the DSN path; Appwrite keys objects under `BUCKET/` already, so the executor must not add it to the endpoint",
+                'description' => 'Deprecated since 2.0.0. Runtimes read build artifacts from the volume named by _APP_BUILDS_VOLUME.',
                 'introduction' => '1.9.5',
                 'default' => 'local://localhost',
                 'required' => false,
@@ -1269,7 +1269,7 @@ return [
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Build workers write their output onto it, and function and site runtimes read their build archive and write their execution logs there, so it must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -1278,7 +1278,7 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_HOST',
-                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator that builds manual-upload function deployments.',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes orchestrator API, which builds deployments and serves function and site runtimes.',
                 'introduction' => '1.9.0',
                 'default' => 'http://orchestrator:8080',
                 'required' => false,
@@ -1288,7 +1288,7 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_SECRET',
-                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'description' => 'The secret used to authenticate with the orchestrator, to sign/verify job callback (HMAC) requests, and to derive the per-runtime secrets. Make sure to change this.',
                 'introduction' => '1.9.0',
                 'default' => 'your-secret-key',
                 'required' => false,
@@ -1297,9 +1297,19 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',
-                'description' => 'Internal Appwrite endpoint the jobs-service (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
+                'description' => 'Internal Appwrite endpoint the orchestrator (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
                 'introduction' => '1.9.0',
                 'default' => 'http://appwrite',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DEPLOYMENTS_HOST',
+                'description' => 'The orchestrator data plane Appwrite sends function and site requests to, routed to the right runtime by Host.',
+                'introduction' => '2.0.0',
+                'default' => 'http://orchestrator:8081',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1344,7 +1354,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function or site must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'description' => 'The minimum time in seconds a function or site runtime must go without requests before the orchestrator scales it to zero. The next request cold-starts it again. If no value is provided, the default is 600 seconds.',
                 'introduction' => '1.7.0',
                 'default' => '60',
                 'required' => false,
@@ -1398,7 +1408,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes for sites and functions.',
+                'description' => 'Deprecated since 2.0.0. Runtimes join the Docker network the orchestrator is configured with.',
                 'introduction' => '1.7.0',
                 'default' => 'runtimes',
                 'required' => false,
@@ -1416,7 +1426,7 @@ return [
             ],
             [
                 'name' => '_APP_DOCKER_HUB_USERNAME',
-                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 2.0.0. Configure registry credentials on the Docker daemon or the orchestrator instead.',
                 'introduction' => '1.2.0',
                 'default' => '',
                 'required' => false,
@@ -1425,7 +1435,7 @@ return [
             ],
             [
                 'name' => '_APP_DOCKER_HUB_PASSWORD',
-                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 2.0.0. Configure registry credentials on the Docker daemon or the orchestrator instead.',
                 'introduction' => '1.2.0',
                 'default' => '',
                 'required' => false,
@@ -1444,7 +1454,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes of functions and sites. The default value is 3600 seconds (1 hour).',
+                'description' => 'Deprecated since 2.0.0. The orchestrator scales idle runtimes to zero on its own; see _APP_COMPUTE_INACTIVE_THRESHOLD.',
                 'introduction' => '1.7.0',
                 'default' => '3600',
                 'required' => false,

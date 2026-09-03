@@ -86,7 +86,9 @@ services:
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
-      - _APP_EXECUTOR_HOST
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DEPLOYMENTS_HOST
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -159,7 +161,9 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_EXECUTOR_HOST
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DEPLOYMENTS_HOST
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -237,7 +241,9 @@ services:
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
-      - _APP_EXECUTOR_HOST
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DEPLOYMENTS_HOST
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -315,8 +321,9 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DEPLOYMENTS_HOST
 
   appwrite-schedule:
     entrypoint: schedule

@@ -14,7 +14,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -116,7 +115,6 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
-            ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
             ->inject('bus')
@@ -158,7 +156,6 @@ class Update extends Base
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
-        Executor $executor,
         Authorization $authorization,
         Deployments $deployments,
         Bus $bus,
@@ -294,25 +291,6 @@ class Update extends Base
             $live = false;
         }
 
-        if (!empty($site->getAttribute('deploymentId'))) {
-            $specsChanged = false;
-            if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
-                $specsChanged = true;
-            } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
-                $specsChanged = true;
-            }
-
-            if ($specsChanged) {
-                try {
-                    $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
-                } catch (\Throwable $th) {
-                    // Don't throw if the deployment doesn't exist
-                    if ($th->getCode() !== 404) {
-                        throw $th;
-                    }
-                }
-            }
-        }
 
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,

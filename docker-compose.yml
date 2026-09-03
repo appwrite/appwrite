@@ -198,8 +198,7 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_SITES_RUNTIMES
       - _APP_DOMAIN_SITES
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_DEPLOYMENTS_HOST
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
@@ -470,10 +469,7 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_DOCKER_HUB_USERNAME
-      - _APP_DOCKER_HUB_PASSWORD
+      - _APP_DEPLOYMENTS_HOST
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -728,8 +724,11 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
+      - _APP_BUILDS_VOLUME
+      - _APP_DEPLOYMENTS_HOST
       - _APP_DATABASE_SHARED_TABLES
       - _APP_EMAIL_CERTIFICATES
       - _APP_MAINTENANCE_RETENTION_AUDIT
@@ -816,8 +815,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_DEPLOYMENTS_HOST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1155,10 +1153,11 @@ services:
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_DOCKER_HUB_USERNAME
-      - _APP_DOCKER_HUB_PASSWORD
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
+      - _APP_BUILDS_VOLUME
+      - _APP_DEPLOYMENTS_HOST
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_LOGGING_PROVIDER
@@ -1650,50 +1649,6 @@ services:
       retries: 3
       start_period: 5s
 
-  openruntimes-executor:
-    container_name: exc1
-    hostname: exc1
-    logging:
-      driver: json-file
-      options:
-        max-file: "5"
-        max-size: 10m
-    stop_signal: SIGINT
-    image: openruntimes/executor:0.29.0
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - appwrite-builds:/storage/builds:rw
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-sites:/storage/sites:rw
-      - /tmp:/tmp:rw
-    environment:
-      - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
-      - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
-      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
-      - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
-      - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
-      - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
-      - OPR_EXECUTOR_ENV=$_APP_ENV
-      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
-      - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
-      - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
-      - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-      - OPR_EXECUTOR_CONNECTION_STORAGE=${_APP_EXECUTOR_CONNECTION_STORAGE:-local://localhost}
-      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'curl -fsS -H "Authorization: Bearer $$OPR_EXECUTOR_SECRET" http://localhost/v1/health
-          >/dev/null'
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 5s
-
   orchestrator:
     container_name: orchestrator
     hostname: orchestrator
@@ -1702,10 +1657,11 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    # One image carrying every orchestrator control plane. Appwrite drives the
-    # jobs plane today; the per-plane images exist for Kubernetes, where each
+    # One image carrying every orchestrator control plane. Appwrite builds
+    # through the jobs plane and serves functions and sites through the
+    # deployments plane; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.9.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.0.1
     restart: unless-stopped
     user: root
     networks:
@@ -1723,6 +1679,18 @@ services:
       - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}
       - S3_ACCESS_KEY_ID=${_APP_STORAGE_S3_ACCESS_KEY:-}
       - S3_SECRET_ACCESS_KEY=${_APP_STORAGE_S3_SECRET:-}
+      # Runtimes scale to zero after this long without a request.
+      - AUTOSCALER_WINDOW=${_APP_COMPUTE_INACTIVE_THRESHOLD:-600}s
+    healthcheck:
+      # The image has no shell or curl; the binary probes its own /readyz.
+      test:
+        - CMD
+        - /ko-app/orchestrator
+        - -check-ready
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   mariadb:
     image: mariadb:10.11
@@ -1872,8 +1840,6 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
-  runtimes:
-    name: runtimes
 volumes:
   appwrite-mariadb: null
   appwrite-mongodb: null

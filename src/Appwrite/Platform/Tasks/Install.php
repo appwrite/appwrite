@@ -617,25 +617,11 @@ class Install extends Action
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
         $enableAssistant = trim($assistantKey) !== '';
-        $enabledRuntimes = \array_unique(\array_filter(\array_map(
-            'trim',
-            \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
-        )));
-        $runtimes = Config::getParam('runtimes', []);
-        $runtimeImages = [];
-        foreach ($enabledRuntimes as $runtime) {
-            $imageName = $runtimes[$runtime]['image'] ?? '';
-            if ($imageName !== '') {
-                $runtimeImages[] = $imageName;
-            }
-        }
-        $executorImages = \implode(',', \array_unique($runtimeImages));
 
         $input['_APP_HTTP_PORT'] = $httpPort;
         $input['_APP_HTTPS_PORT'] = $httpsPort;
         $input['_APP_IMAGE'] = "{$organization}/{$image}";
         $input['_APP_VERSION'] = $version;
-        $input['_APP_EXECUTOR_IMAGES'] = $executorImages;
 
         $composeContent = $composeGenerator->render([
             'version' => $version,

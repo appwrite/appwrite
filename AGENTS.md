@@ -41,12 +41,11 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Messaging**, **Realtime**, **PubSub** -- realtime fan-out
   - **Database** -- platform/project DB factory
   - **Vcs** -- Git provider helpers
-  - **Deployment** -- build and deploy helpers
+  - **Deployment** -- builds (orchestrator jobs) and executions (orchestrator deployments)
   - **Usage** -- metrics
   - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
-- **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Executions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -12,9 +13,8 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
-use Executor\Exception\Timeout as ExecutorTimeout;
-use Executor\Executor;
 use Utopia\Bus\Bus;
+use Utopia\Client\Exception\TimeoutException;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -58,7 +58,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('bus')
             ->inject('log')
-            ->inject('executor')
+            ->inject('executions')
             ->inject('getIsResourceBlocked')
             ->inject('locks')
             ->callback($this->action(...));
@@ -75,7 +75,7 @@ class Functions extends Action
         Event $queueForEvents,
         Bus $bus,
         Log $log,
-        Executor $executor,
+        Executions $executions,
         callable $getIsResourceBlocked,
         callable $locks
     ): void {
@@ -208,7 +208,7 @@ class Functions extends Action
                         bus: $bus,
                         project: $project,
                         function: $function,
-                        executor:  $executor,
+                        executions: $executions,
                         trigger: 'event',
                         path: '/',
                         method: 'POST',
@@ -252,7 +252,7 @@ class Functions extends Action
                     bus: $bus,
                     project: $project,
                     function: $function,
-                    executor:  $executor,
+                    executions: $executions,
                     trigger: 'http',
                     path: $path,
                     method: $method,
@@ -288,7 +288,7 @@ class Functions extends Action
                     bus: $bus,
                     project: $project,
                     function: $function,
-                    executor:  $executor,
+                    executions: $executions,
                     trigger: 'schedule',
                     path: $path,
                     method: $method,
@@ -481,7 +481,7 @@ class Functions extends Action
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
-     * @param Executor $executor
+     * @param Executions $executions
      * @param string $trigger
      * @param string $path
      * @param string $method
@@ -504,7 +504,7 @@ class Functions extends Action
         Bus $bus,
         Document $project,
         Document $function,
-        Executor $executor,
+        Executions $executions,
         string $trigger,
         string $path,
         string $method,
@@ -621,91 +621,28 @@ class Functions extends Action
             $body = $data ?? '';
         }
 
-        $vars = [];
-
-        // V2 vars
-        if ($version === 'v2') {
-            $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
-                'APPWRITE_FUNCTION_DATA' => $body,
-                'APPWRITE_FUNCTION_EVENT_DATA' => $body,
-                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'],
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
-            ]);
-        }
-
-        // Shared vars
-        foreach ($function->getAttribute('varsProject', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-        }
-
-        // Function vars
-        foreach ($function->getAttribute('vars', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-        }
-
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
-
-        // Appwrite vars
-        $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-            'APPWRITE_FUNCTION_ID' => $functionId,
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT),
-            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT),
-            'APPWRITE_VERSION' => APP_VERSION_STABLE,
-            'APPWRITE_REGION' => $project->getAttribute('region'),
-            'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
-            'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
-            'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
-            'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
-            'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
-            'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
-            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
-            'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
-            'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
-            'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
-            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
-            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
-            'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
-        ]);
-
         /** Execute function */
         $error = null;
         $errorCode = 0;
 
         try {
-            $version = $function->getAttribute('version', 'v2');
-            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
-
-            $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
-                $executionResponse = $executor->createExecution(
-                    projectId: $project->getId(),
-                    deploymentId: $deploymentId,
-                    body: \strlen($body) > 0 ? $body : null,
-                    variables: $vars,
-                    timeout: $function->getAttribute('timeout', 0),
-                    image: $runtime['image'],
-                    source: $source,
-                    entrypoint: $deployment->getAttribute('entrypoint', ''),
-                    version: $version,
-                    path: $path,
+                $executionResponse = $executions->execute(
+                    project: $project,
+                    resource: $function,
+                    deployment: $deployment,
+                    runtime: $runtime,
+                    spec: $spec,
+                    platform: $platform,
+                    executionId: $executionId,
                     method: $method,
+                    path: $path,
                     headers: $headers,
-                    runtimeEntrypoint: $command,
-                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                    logging: $function->getAttribute('logging', true),
+                    body: $body,
+                    timeout: $function->getAttribute('timeout', 0),
+                    requestTimeout: $function->getAttribute('timeout', 0) + 15,
                 );
-            } catch (ExecutorTimeout $th) {
+            } catch (TimeoutException $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_ASYNCHRONOUS_TIMEOUT, previous: $th);
             }
 
@@ -716,29 +653,8 @@ class Functions extends Action
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                    $headersFiltered[] = [ 'name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value ];
                 }
-            }
-
-            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
-            $logs = $executionResponse['logs'] ?? '';
-
-            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
-                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
-            }
-
-            // Truncate errors if they exceed the limit
-            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
-            $errors = $executionResponse['errors'] ?? '';
-
-            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
-                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
             }
 
             /** Update execution status */
@@ -746,8 +662,8 @@ class Functions extends Action
                 ->setAttribute('status', $status)
                 ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
                 ->setAttribute('responseHeaders', $headersFiltered)
-                ->setAttribute('logs', $logs)
-                ->setAttribute('errors', $errors)
+                ->setAttribute('logs', $executionResponse['logs'])
+                ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
 
         } catch (\Throwable $th) {
