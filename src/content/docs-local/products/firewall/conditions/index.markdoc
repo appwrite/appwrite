@@ -4,44 +4,82 @@ title: Conditions
 description: Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.
 ---
 
-**Conditions** define which requests a Firewall rule matches. A rule must include **at least one** condition. Every condition on the rule must match for the rule to apply (logical AND).
+**Conditions** define which requests a Firewall rule matches. Every condition on the rule must match for the rule to apply (logical AND).
 
-Incomplete conditions (operators that need a value but have an empty value) are not saved. The Console requires complete conditions before create or update.
+The Console requires at least one complete condition before you can create or update a rule, and it will not save a condition whose operator needs a value that you left empty.
+
+{% info title="Rules created through the API" %}
+The API is more permissive, and two shapes produce a rule that matches **every request in its scope**:
+
+- Omitting the `conditions` parameter entirely. Sending `conditions: []` is rejected, but leaving the parameter out is not.
+- A condition that needs a value but carries an empty `values` array. A `notEqual` condition of this shape matches everything.
+
+A catch-all deny or redirect rule created either way takes the whole scope offline. Always send at least one complete condition, and check the rules list, where a rule with no effective conditions is shown as **All requests**.
+{% /info %}
 
 # Attributes {% #attributes %}
 
-The condition builder groups attributes by what they describe: the request, the client, and the client's location.
+The condition builder groups attributes by what they describe: the request, the client, the client's location, and the client's network. The **API attribute** column gives the name to use when you create rules through the API.
 
 ## Request {% #request-attributes %}
 
-| Attribute | Matches | Typical use |
-|-----------|---------|-------------|
-| **Hostname** | Host serving the request | Separate policies per domain |
-| **Path** | URL path only (query string stripped) | Protect `/v1/...` prefixes or sensitive routes |
-| **Method** | Method enum (`GET`, `POST`, and others), uppercased | Restrict mutating methods on a path |
-| **Header** | A named request header (`headers.<name>`) | Require, block, or match custom headers |
-| **Query parameter** | A named query string parameter (`query.<key>`) | Match tokens or flags passed in the URL |
+| Attribute | API attribute | Matches |
+|-----------|---------------|---------|
+| **Hostname** | `host` | Host serving the request |
+| **Path** | `path` | URL path only, query string stripped |
+| **Method** | `method` | Method enum (`GET`, `POST`, and others), uppercased |
+| **Protocol** | `protocol` | `http` or `https` |
+| **Header** | `headers.<name>` | A named request header |
+| **Query parameter** | `query.<key>` | A named query string parameter |
+| **Query parameter name** | `queryKeys` | The set of query parameter names present |
+| **Accept** | `accept` | Raw `Accept` header |
+| **Accept-Language** | `acceptLanguage` | Raw `Accept-Language` header |
+| **Cookie** | `cookie` | Raw `Cookie` header |
+
+{% info title="Accept, Accept-Language, and Cookie on API rules" %}
+These three attributes are only populated for **Functions** and **Sites** traffic. On **API**-scoped rules they are always empty, so value comparisons never match and **is empty** always matches.
+{% /info %}
 
 ## Client {% #client-attributes %}
 
-| Attribute | Matches | Typical use |
-|-----------|---------|-------------|
-| **IP address** | Client IP as seen by Appwrite; single IPs or CIDR blocks | Block or allowlist addresses and ranges |
-| **Operating system** | Operating system derived from the user agent | Filter traffic by client platform |
-| **Browser** | Browser derived from the user agent | Filter specific browsers or embedded clients |
-| **User agent** | Raw `User-Agent` header | Filter bots, scripts, or known clients |
+| Attribute | API attribute | Matches |
+|-----------|---------------|---------|
+| **IP address** | `ip` | Client IP as seen by Appwrite; single IPs or CIDR blocks |
+| **Operating system** | `os` | Operating system derived from the user agent |
+| **Browser** | `browser` | Browser derived from the user agent |
+| **User agent** | `userAgent` | Raw `User-Agent` header |
 
 ## Location {% #location-attributes %}
 
-| Attribute | Matches | Typical use |
-|-----------|---------|-------------|
-| **Country** | ISO country code from geo lookup (uppercased) | Geo allow or deny lists |
-| **Continent** | Continent code from geo lookup (uppercased) | Broad geo policies |
-| **City** | City name from geo lookup | Fine-grained geo policies |
-| **State** | State or region from geo lookup | Fine-grained geo policies |
+| Attribute | API attribute | Premium |
+|-----------|---------------|---------|
+| **Country** | `country` | No |
+| **Continent** | `continent` | No |
+| **City** | `city` | Yes |
+| **State** | `state` | Yes |
+| **Postal code** | `postalCode` | Yes |
+| **Latitude** | `latitude` | Yes |
+| **Longitude** | `longitude` | Yes |
+| **Time zone** | `timeZone` | Yes |
+| **Weather code** | `weatherCode` | Yes |
+
+## Network {% #network-attributes %}
+
+Every network attribute requires the premium Geo DB addon.
+
+| Attribute | API attribute |
+|-----------|---------------|
+| **ISP** | `isp` |
+| **AS number** | `autonomousSystemNumber` |
+| **AS organization** | `autonomousSystemOrganization` |
+| **Connection type** | `connectionType` |
+| **Connection usage type** | `connectionUsageType` |
+| **Connection organization** | `connectionOrganization` |
 
 {% info title="Premium Geo DB" %}
-**City** and **State** conditions require the premium Geo DB addon. The Console disables these attributes until the addon is active on the project, and the API rejects them otherwise. **Country** and **Continent** work on every plan.
+Thirteen attributes require the premium Geo DB addon: every **Location** attribute except country and continent, plus every **Network** attribute. The Console disables them until the addon is active, and the API rejects a rule that references one with a `waf_rule_premium_condition` error.
+
+Without the addon, Appwrite leaves these attributes empty on API traffic, so an existing rule that matched on one stops matching. **Country**, **Continent**, and **Protocol** work on every plan.
 {% /info %}
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
@@ -55,8 +93,9 @@ Under the hood, these conditions use prefixed attributes: `headers.<name>` and `
 - **IP address**: Accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks only match with **equals** and **not equal**; other operators compare the value as a plain string.
 - **Path**: Taken from the request URI with the query string removed. An empty path is treated as `/`. Prefer `starts with` for prefixes such as `/v1/account`.
 - **Method**: Normalized to uppercase before matching.
-- **Country** and **Continent**: Use the resolved geo codes. Inputs in the Console are stored uppercase. When geo cannot be resolved, API traffic matches the value `unresolved`, while function and site traffic leaves the attribute empty (match it with **is empty**).
+- **Country** and **Continent**: Use the resolved geo codes. Inputs in the Console are stored uppercase. When geo cannot be resolved, API traffic matches the literal value `unresolved`, while function and site traffic leaves the attribute unset. Because an unset attribute never equals a country code, unresolved traffic matches every **not equal** condition.
 - **Operating system** and **Browser**: Derived from the `User-Agent` header, so unusual clients may not resolve. Use the raw **User agent** attribute for exact header matching.
+- **Case**: All string comparison folds case, so **equals** matches regardless of capitalization.
 
 # Operators {% #operators %}
 
@@ -70,18 +109,37 @@ Available operators depend on the attribute.
 | Does not contain | Value does not contain the substring | Yes |
 | Starts with | Value begins with the string | Yes |
 | Ends with | Value ends with the string | Yes |
-| Is empty | Attribute is empty | No |
-| Is not empty | Attribute is present | No |
+| Is empty | Attribute is unset | No |
+| Is not empty | Attribute is set | No |
+
+**Is empty** tests whether the attribute is unset, not whether it is an empty string. A header or query key that is absent from the request is unset, so **is empty** matches. Attributes read straight from a header, such as **User agent**, are an empty string when the header is missing rather than unset, so **is empty** does not match them.
 
 Notes:
 
-- **Hostname**, **path**, **header**, **query parameter**, **IP**, **operating system**, **browser**, **user agent**, **city**, and **state** support equals, not equal, contains, starts with, ends with, is empty, and is not empty.
-- **Method** supports equals, not equal, is empty, and is not empty (no text matching).
-- **Country** and **continent** support equals, not equal, contains, and does not contain.
+- Text attributes support equals, not equal, contains, starts with, ends with, is empty, and is not empty. This covers hostname, path, protocol, header, query parameter, query parameter name, accept, accept-language, cookie, IP, operating system, browser, user agent, city, state, postal code, time zone, weather code, ISP, AS organization, and the three connection attributes.
+- **Method** supports equals, not equal, is empty, and is not empty. It has no text matching.
+- **Country** and **continent** support equals, not equal, contains, and does not contain. The Console offers no is-empty option here, so matching unresolved geo on function and site traffic needs a rule created through the API.
+- **Latitude**, **longitude**, and **AS number** support equals, not equal, is empty, and is not empty.
 
-# API-only attributes {% #api-only-attributes %}
+The table above lists what the Console builder offers. The API accepts a wider operator set, including relational and range operators, and applies no per-attribute restriction. An operator the Console cannot display is rewritten to **equals** when you open that rule for editing, which changes the rule when you save it.
 
-The Firewall API also accepts a few attributes the Console builder does not expose: `queryKeys` (the set of query parameter names), `accept`, `acceptLanguage`, and `cookie` (the raw request headers), plus `resourceType`, `resourceId`, `deploymentId`, and `projectId`. Rules using them still evaluate normally and appear in the rules list.
+# Attribute names the API rejects {% #rejected-attributes %}
+
+Conditions may only reference the attributes listed above. Any other name is rejected with a `400`.
+
+`resourceType` and `resourceId` scope the rule itself and are parameters of the create and update calls, not condition attributes. `projectId` is rejected outright, because rules are already scoped to a project.
+
+# Headers you cannot match {% #headers-you-cannot-match %}
+
+Appwrite strips sensitive headers before matching, so a `headers.<name>` condition on any of these never matches even though the rule saves successfully:
+
+`cookie`, `authorization`, `x-appwrite-key`, `x-appwrite-jwt`, `x-appwrite-user-jwt`, `x-appwrite-session`, and any `x-forwarded-*` header.
+
+The top-level **Cookie** attribute remains available for function and site traffic.
+
+# Limits {% #limits %}
+
+A rule accepts at most 100 conditions, and each condition may be at most 4096 characters once serialized.
 
 # Multiple conditions {% #multiple-conditions %}
 
@@ -98,7 +156,11 @@ For allowlists, prefer a [bypass](/docs/products/firewall/actions#bypass) rule w
 
 When you create or edit conditions, the Console can estimate how many recent usage events would have matched. Use that preview to tighten overly broad filters before enabling deny or rate limit.
 
-The estimate is an upper bound. Conditions on **continent**, **state**, **header**, and **query parameter** attributes, and any **does not contain** condition, have no usage equivalent and are skipped in the estimate, and **user agent** conditions are approximated by client name. The Console warns you when parts of a rule cannot be estimated.
+The estimate is built from recent usage events, which cover only nine attributes: IP, path, method, country, city, hostname, operating system, browser, and user agent. Browser and user agent are both approximated by client name.
+
+If a rule uses any other attribute, any **does not contain** condition, or more than eight estimable conditions, the Console shows **Preview unavailable** instead of a number. It does not show a partial estimate. The rule still enforces every condition.
+
+One caveat for allowlists: the preview compares IP values literally, so a CIDR range reports no matches even though the rule enforces the range correctly.
 
 See [Monitor traffic](/docs/products/firewall/monitor) for overview metrics after rules are live.
 
