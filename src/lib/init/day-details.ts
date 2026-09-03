@@ -175,7 +175,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Try S3 for Storage',
-      href: '/docs/products/storage',
+      href: '/docs/products/storage/s3',
       external: false,
     },
     resources: [
@@ -190,7 +190,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
-        href: '/docs/products/storage',
+        href: '/docs/products/storage/s3',
         actionLabel: 'Visit docs',
       },
     ],

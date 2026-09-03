@@ -116,7 +116,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "torsten-dittmann",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-s3-api/cover.avif",
     "hasCover": true
   },

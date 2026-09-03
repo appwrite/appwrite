@@ -205,7 +205,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: true,
       userVerification: true,
       firewall: false,
-      storageS3: false,
+      storageS3: true,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
