@@ -30,7 +30,7 @@ The pair works because of [priority](/docs/products/firewall/priority). Appwrite
 9. Set **Priority** to `10`.
 10. Click **Create rule**.
 
-CIDR ranges match only with the **Equals** and **Not equal** operators. Other operators compare the value as plain text. See [Matching details](/docs/products/firewall/conditions#matching-details).
+A CIDR range previews as zero matches in the impact preview, but the rule enforces it.
 
 To protect one path only, add a second condition to the same rule. For example, add **Path** **Starts with** `/v1/users`. Both conditions must match for the bypass to apply.
 
@@ -44,14 +44,7 @@ To protect one path only, add a second condition to the same rule. For example, 
 6. Set **Priority** to `100`.
 7. Review the impact preview, then click **Create rule**.
 
-The impact preview shows how much recent traffic the deny rule would match. Tighten the path condition if the count is broader than you expect. The preview cannot estimate the bypass rule when its value is a CIDR range, because it compares IP values literally.
-
-# How the pair works {% #how-the-pair-works %}
-
-1. A request from a trusted IP address matches the bypass rule at priority `10`. Appwrite allows the request and stops rule evaluation.
-2. A request from any other IP address does not match the bypass rule. Appwrite continues to the deny rule at priority `100` and blocks the request.
-
-Keep a gap between the two priority numbers. The gap gives you space to insert more rules later without renumbering.
+The impact preview shows how much recent traffic the deny rule would match. Tighten the path condition if the count is broader than you expect.
 
 # Verify the rules {% #verify-the-rules %}
 

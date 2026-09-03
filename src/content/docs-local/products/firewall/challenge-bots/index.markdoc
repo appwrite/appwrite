@@ -37,15 +37,11 @@ Scope challenge rules to a **Site** or a **Function**. An **API** rule rejects m
 
 # Choose the paths to cover {% #choose-the-paths %}
 
-Every condition on a rule must match, so one rule covers one path prefix. Create a rule for each path you want to protect, and give them the same priority range so you can reason about them as one policy.
+Every condition on a rule must match, so one rule covers one path prefix. Create one rule per path prefix.
+
+Do not build a challenge rule on **User agent** contains `curl`. Appwrite denies known bots before a challenge is issued, so the rule produces denials and **Challenged** stays at zero. See [Known bots are denied](/docs/products/firewall/actions#known-bots-are-denied).
 
 Cover the page a visitor loads, not the endpoint the form posts to. Appwrite serves the challenge page only for browser navigation, so a rule on a `POST` target returns `403` rather than a challenge. A visitor who is cleared on the page carries that clearance through the form submission.
-
-# Do not challenge known bots {% #do-not-challenge-known-bots %}
-
-Matching a **User agent** such as `curl` looks like the obvious way to catch scripts, but it does not work. Appwrite denies well-known automated clients before any challenge is issued, so those rules produce denials and the **Challenged** count stays at zero.
-
-Use **Deny** for clients you can already identify from their user agent. Use **Challenge** when you cannot tell a script from a person. See [Known bots are denied, not challenged](/docs/products/firewall/actions#known-bots-are-denied).
 
 # Verify the rule {% #verify-the-rule %}
 
@@ -53,8 +49,6 @@ Use **Deny** for clients you can already identify from their user agent. Use **C
 2. Confirm the challenge page appears before the page loads.
 3. Reload the page. The challenge does not appear again, because you are now cleared.
 4. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
-
-If **Denied** rises instead, your condition matched a client Appwrite already treats as a bot.
 
 Raise the difficulty if automated traffic keeps getting through. Lower it if first page loads feel slow.
 

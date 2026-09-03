@@ -11,7 +11,7 @@ A redirect rule sends matching visitors to another location. Use it to put a dep
 This guide uses two rules on one site. A **bypass** rule keeps the maintenance page itself reachable. A **redirect** rule sends every other path to the maintenance page. Without the bypass rule, requests to the maintenance page would match the redirect rule and loop.
 
 {% info title="Keep the maintenance page self-contained" %}
-The redirect rule matches every path except the one you bypass, which includes the CSS, JavaScript, fonts, and images your maintenance page requests. Those subrequests are redirected too, and the page renders unstyled.
+The redirect rule also catches the CSS, JavaScript, fonts, and images your maintenance page loads, so the page renders unstyled.
 
 Serve a maintenance page with inline styles and no external assets, or add a bypass rule for each asset path at a lower priority number than the redirect.
 {% /info %}
@@ -46,20 +46,20 @@ Serve a maintenance page with inline styles and no external assets, or add a byp
 8. Set **Priority** to `100`.
 9. Click **Create rule**.
 
-Use `302` for a temporary redirect so browsers and search engines do not cache the maintenance location. Codes from `300` to `399` are accepted. See [Redirect](/docs/products/firewall/actions#redirect).
-
-# End the maintenance {% #end-the-maintenance %}
-
-1. Open **Firewall** and select the site in the resource selector.
-2. Turn off the status toggle of the redirect rule.
-
-The site serves normal traffic again. Keep the disabled rule for the next maintenance window, or delete it. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
+Use `302` so browsers and search engines do not cache the redirect.
 
 # Verify the rules {% #verify-the-rules %}
 
 1. Open any path of the site in a browser. Confirm the browser lands on `/maintenance`.
 2. Open `/maintenance` directly. Confirm the page loads without a redirect, and that it renders with its styles intact.
 3. Open **Firewall** and confirm the **Redirected** series rises in the traffic overview.
+
+# End the maintenance {% #end-the-maintenance %}
+
+1. Open **Firewall** and select the site in the resource selector.
+2. Turn off the status toggle of the redirect rule.
+
+The site serves normal traffic again. Keep the disabled rule for the next maintenance window, or delete it.
 
 {% arrow_link href="/docs/products/firewall/scopes" %}
 Resource scopes

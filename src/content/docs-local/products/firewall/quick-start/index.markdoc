@@ -14,7 +14,7 @@ You can protect a project API path or block a noisy IP in a few minutes. This qu
 2. Open a project.
 3. Open **Firewall** in the sidebar.
 
-If you do not see **Firewall**, confirm your Console profile includes the feature and that your role can view project navigation.
+Firewall is available on Appwrite Cloud.
 
 # Create a deny rule {% #create-a-deny-rule %}
 
@@ -33,13 +33,9 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
    - Operator: **Starts with**
    - Value: a path you want to block (for example `/v1/account`)
 5. Under **Then**, choose **Deny**.
-6. Keep **Priority** at the default (`100`) or choose a lower number so this rule is evaluated earlier.
+6. Keep **Priority** at `100`.
 7. Leave **Enabled** on.
 8. Review the impact preview in the sidebar, then click **Create rule**.
-
-{% info title="Path matching" %}
-Path conditions use the URL path only. Query strings are ignored. Prefer **starts with** for API prefixes.
-{% /info %}
 
 See the [guides](/docs/products/firewall#guides) for country blocks, IP allowlists, rate limits, challenges, and redirects.
 
@@ -65,5 +61,3 @@ Firewall does not block Console access. To verify a rule, send a request with a 
 {% /info %}
 
 See [Monitor traffic](/docs/products/firewall/monitor) for metrics and date ranges, and [Actions](/docs/products/firewall/actions) for what each outcome means.
-
-To protect a **site** during an incident, select that site on the Firewall page and turn on [Attack mode](/docs/products/firewall/attack-mode).

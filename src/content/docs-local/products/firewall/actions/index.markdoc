@@ -10,13 +10,13 @@ There is no separate **Allow** action. Use **Bypass** to allowlist traffic that 
 
 # Available actions {% #available-actions %}
 
-| Action | Client outcome | Usage metric |
-|--------|----------------|--------------|
-| **Deny** | `403` with an access-denied error | `waf.requests.denied` |
-| **Bypass** | Request continues; later Firewall rules are skipped | None (not counted as denied) |
-| **Challenge** | Client must pass a challenge before the request continues | `waf.requests.challenged` |
-| **Rate limit** | Under quota: continue and stop further rules. Over quota: `429` with `Retry-After` | `waf.requests.rateLimited` (only when throttled) |
-| **Redirect** | HTTP redirect (`300`–`399`) to the configured location | `waf.requests.redirected` |
+| Action | Client outcome |
+|--------|----------------|
+| **Deny** | `403` with an access-denied error |
+| **Bypass** | Request continues, and later Firewall rules are skipped |
+| **Challenge** | Client must pass a challenge before the request continues |
+| **Rate limit** | Under quota: continue and stop further rules. Over quota: `429` with `Retry-After` |
+| **Redirect** | HTTP redirect (`300` to `399`) to the configured location |
 
 # Find out which rule fired {% #which-rule-fired %}
 
@@ -29,13 +29,11 @@ X-Appwrite-WAF-Action: deny
 
 A challenge adds `X-Appwrite-WAF-Challenge-Type`. Reading these headers is faster than waiting for metrics to appear in traffic overview.
 
-Requests that Firewall allows are less consistent. An API rule sets the headers even when it allows the request, but a Functions or Sites rule sets them only when it stops one. A bypass on a site therefore arrives with no headers at all.
+Allowed requests carry the headers only on API rules.
 
 # Deny {% #deny %}
 
 Deny rejects matching requests before they reach your application logic. Use it to block abusive IPs, lock down sensitive paths, or reject traffic from specific countries.
-
-Denied requests appear in [traffic overview](/docs/products/firewall/monitor) under the denied series.
 
 # Bypass {% #bypass %}
 
@@ -59,117 +57,77 @@ Use challenge instead of deny when you want to filter out automated traffic with
 | **Difficulty** | Client-side proof-of-work cost. Higher values demand more work from the client, deterring automated traffic at the cost of a slower challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
 | **TTL (seconds)** | How long a visitor stays cleared after passing the challenge before being challenged again | `900` (15 minutes) to `86400` (24 hours), Console default `1800` (30 minutes) |
 
-A matching challenge rule stops rule evaluation, the same as any other action. Only the Console default challenge type is available today, so you rarely set the type yourself.
-
 ## Only browser navigation gets a challenge page {% #only-browser-navigation %}
 
-Appwrite serves the challenge page for `GET` requests that ask for HTML. Every other matching request gets `403` and a challenge-required error instead, because there is no page for it to solve. That includes:
-
-- Form posts and any other non-`GET` method
-- `fetch` and `XMLHttpRequest` calls
-- Requests for a site's CSS, JavaScript, images, and fonts
-- Every request matched by an **API** rule, since API clients cannot solve a challenge
+Appwrite serves the challenge page only for `GET` requests that accept HTML. Form posts, `fetch` calls, requests for a site's CSS and images, and every request matched by an **API** rule get `403` with a challenge-required error instead.
 
 Scope challenge rules to a site or function, and to the paths a browser navigates to. Use deny or rate limit everywhere else.
 
 ## Known bots are denied, not challenged {% #known-bots-are-denied %}
 
-Appwrite checks the `User-Agent` before it issues a challenge. A request with no user agent, or one containing a marker such as `curl/`, `wget/`, `python-requests`, `go-http-client`, `okhttp`, `headlesschrome`, or `scrapy`, is denied with `403`.
+Appwrite denies obvious automated clients before it issues a challenge, including requests with no `User-Agent` and those containing a marker such as `curl/`, `python-requests`, `go-http-client`, or `headlesschrome`.
 
-Those requests count under **Denied**. A challenge rule aimed at them produces no challenge at all, and the **Challenged** metric stays flat. Use **Deny** for clients you already know are automated, and save **Challenge** for traffic that might be a browser.
+They count as **Denied** and never as **Challenged**, so a challenge rule aimed at them does nothing. Use **Deny** for clients you already know are scripts, and **Challenge** for traffic that might be a browser.
 
 ## Clearance lasts for the whole site {% #clearance %}
 
-Challenged requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
-
-Once a visitor solves a challenge, Appwrite clears them for the length of the TTL. Clearance is not tied to the rule that challenged them. It covers every challenge rule on that hostname, so a visitor solves one challenge rather than one per rule. A visitor who passes with existing clearance publishes no metric.
+Once a visitor solves a challenge, they stay cleared for the length of the TTL across every challenge rule on that hostname, not just the rule that challenged them.
 
 To challenge **every** visitor to a site without building a rule by hand, use [Attack mode](/docs/products/firewall/attack-mode).
 
 # Rate limit {% #rate-limit %}
 
-Rate limit throttles matching requests that go over a quota.
-
-Each rule counts its own quota, and counts it separately for every client. **Limit by** decides what counts as one client: either the IP address, or the signed-in user.
+Rate limit throttles matching requests that go over a quota. Each rule counts its own quota, separately for every client.
 
 | Setting | Purpose | Limits |
 |---------|---------|--------|
-| **Request limit** | Sustained requests allowed per interval. This is the long-run rate, applied the same way across every strategy | `1` to `1000000` (Console default `100`) |
-| **Interval (seconds)** | Length of the time window the request limit applies over | `1` to `86400` (Console default `60`) |
-| **Limit by** | What the quota is bucketed by: `ip` counts per client IP, `userId` counts per authenticated user | `ip` or `userId` (Console default `ip`) |
-| **Strategy** | Algorithm used to enforce the quota over time (see [Rate limit strategies](#rate-limit-strategies)) | `fixedWindow`, `slidingWindow`, or `tokenBucket` (Console default `fixedWindow`) |
+| **Request limit** | Requests allowed per interval | `1` to `1000000` (Console default `100`) |
+| **Interval (seconds)** | Length of the window the request limit applies over | `1` to `86400` (Console default `60`) |
+| **Limit by** | What counts as one client: `ip` counts per IP address, `userId` counts per signed-in user | `ip` or `userId` (Console default `ip`) |
+| **Strategy** | How the quota is enforced over time (see [Rate limit strategies](#rate-limit-strategies)) | `fixedWindow`, `slidingWindow`, or `tokenBucket` (Console default `fixedWindow`) |
 | **Max bucket size** | Token bucket only: the largest burst allowed. The other strategies ignore it | `1` to `1000000` (Console default `50`) |
 
-Example: limit `100` with interval `60` and **Limit by** `ip` allows up to 100 matching requests per minute from each client IP for that rule. Choose `userId` instead to enforce the quota per authenticated user regardless of the IP they connect from.
+A limit of `100` with an interval of `60` and **Limit by** `ip` allows each IP address 100 matching requests per minute.
 
-**Request limit** and **Interval** mean the same thing under all three strategies. Only the handling of bursts and window edges differs.
+A matching request under the quota is allowed, and later rules are skipped, the same as a bypass. A request over the quota gets `429` with a `Retry-After` header. Treat that header as a minimum wait. Outside fixed window, a client that retries exactly then may still be throttled.
 
-You choose the strategy when you create the rule, and you cannot change it afterward. To switch, delete the rule and create a new one. An update that sends a different strategy changes nothing and returns no error, so check the rule after you edit it.
+If the rate limiter itself is unavailable, Appwrite allows the request. A rule can therefore look inactive during an outage.
 
-Set **Limit by** to `userId` to give each signed-in user their own quota, whatever IP they connect from.
+You choose the strategy when you create the rule and cannot change it afterward. Through the API, an update that sends a different strategy is ignored without an error.
 
-How Appwrite identifies the user depends on the scope. An **API** rule uses the user already signed in on the request. A **Functions** or **Sites** rule reads the `x-appwrite-user-jwt` header, which must hold a valid JWT for a user in that project.
+## Limiting by user {% #limit-by-user %}
 
-Requests with no signed-in user skip the rule entirely, and Appwrite carries on to the rules below it. Every other action stops evaluation on a match, so this is the one exception. If signed-out traffic also needs a limit, add a second rule for it.
+With **Limit by** set to `userId`, each signed-in user gets their own quota whatever IP they connect from.
 
-Important behaviors:
+An **API** rule uses the user already signed in on the request. A **Functions** or **Sites** rule reads a user JWT from the `x-appwrite-user-jwt` header, so your client has to send one.
 
-- A matching request that is under the quota is allowed, and later rules are skipped. Matching stops evaluation here just as it does for bypass.
-- A request over the quota gets `429` and a `Retry-After` header.
-- If the rate limiter itself fails, Appwrite allows the request. An outage in the limiter never blocks your traffic, so a rule can look inactive while the limiter is down.
-
-Rate-limited requests appear under the rate-limited series in traffic overview.
-
-## How long clients wait {% #retry-after %}
-
-The `429` response carries a `Retry-After` header in seconds. How accurate it is depends on the strategy:
-
-- **Fixed window** reports the seconds left in the current window. This is exact.
-- **Sliding window** reports the seconds left in the current window, but the count carries over, so a client may still be over quota when that time passes.
-- **Token bucket** reports the full interval, though the next token usually refills sooner.
-
-Treat the value as a floor outside fixed window. A client that retries exactly when told may still be throttled.
+A request with no signed-in user skips the rule and continues to the rules below it. Every other action stops evaluation on a match, so this is the only exception. Add a second rule limited by `ip` if signed-out traffic also needs a quota.
 
 # Rate limit strategies {% #rate-limit-strategies %}
 
-A rule like "100 requests per 60 seconds" has to become a yes or no answer for each request that arrives. The **strategy** is the method that answers it.
-
-All three hold a client to the same rate over time. They differ in how they treat bursts, and in what happens at the edges of each window.
+All three strategies hold a client to the same rate over time. They differ in how they treat bursts.
 
 ## Fixed window {% #fixed-window %}
 
 {% rate_limit_animation strategy="fixedWindow" /%}
 
-Time is divided into back-to-back windows of the interval length. Each request adds one to a counter for the current window. Once the counter passes the limit, Appwrite throttles further requests until the window ends and the counter resets to zero.
+Requests are counted in back-to-back windows of the interval length, and the count resets at each boundary. Windows follow the clock, not a client's first request, so every client resets at the same moment.
 
-Windows are fixed to the clock rather than to a client's first request, so every client resets at the same moment.
-
-- **How it behaves:** simple and cheap to compute, with an exact reset every interval.
-- **Trade-off:** allows a burst at the window boundary. A client can send the full limit in the last moment of one window and again in the first moment of the next, briefly reaching up to twice the limit over that short span.
-- **Good for:** general-purpose throttling where an occasional boundary burst is acceptable. This is the default.
+A client can send a full quota at the end of one window and another at the start of the next, so brief bursts of up to twice the limit get through. Choose fixed window when that is acceptable. It is the default.
 
 ## Sliding window {% #sliding-window %}
 
 {% rate_limit_animation strategy="slidingWindow" /%}
 
-Instead of resetting at hard boundaries, the sliding window adds the current window's count to a share of the previous window's count. That share is weighted by how much of the current window is still left, so the previous window's influence decays from its full count at the start of a window to zero at the end. The result is a smoothed count that moves continuously. It approximates a rolling window from two counters rather than storing every request timestamp.
-
-- **How it behaves:** enforcement glides over time rather than snapping to reset points.
-- **Trade-off:** removes the fixed-window boundary burst for slightly more computation per request.
-- **Good for:** steadier limiting when you want to avoid the ~2x spike that fixed windows permit at their edges.
+The previous window's count fades out gradually instead of resetting, which removes the boundary burst. Choose sliding window when you want an even rate.
 
 ## Token bucket {% #token-bucket %}
 
 {% rate_limit_animation strategy="tokenBucket" /%}
 
-A bucket holds tokens up to **Max bucket size**. Every request spends one token, and the bucket refills steadily at **Request limit** divided by **Interval**. Requests pass while tokens remain, and are throttled once the bucket is empty.
+A bucket refills at **Request limit** per **Interval**, up to **Max bucket size**. Each request spends one token, and requests are throttled once the bucket is empty.
 
-Because unused tokens accumulate (up to the bucket size), a client that has been quiet can spend a saved-up burst all at once, while the steady refill still caps its sustained throughput at the configured rate.
-
-- **How it behaves:** permits short bursts up to **Max bucket size**, then settles back to the average rate as tokens refill.
-- **Max bucket size:** sets how large that burst may be. Only this strategy uses it. The Console prefills `50`. Through the API, leave it out to make the bucket the same size as **Request limit**.
-- **Trade-off:** the most permissive toward bursts, which is desirable for well-behaved but bursty clients and less so if you need hard, even pacing.
-- **Good for:** APIs where clients legitimately send short bursts, such as batch writes or retries after reconnect, but should still hold to an average rate over time.
+A client that has been quiet spends its saved tokens in a burst, while its sustained rate stays at the limit. Choose token bucket for clients that legitimately burst, such as batch writes or retries after a reconnect. Set **Max bucket size** to the largest burst you are willing to serve, since a misbehaving client can spend it too.
 
 # Redirect {% #redirect %}
 

@@ -38,21 +38,15 @@ The path prefix on its own also covers listing and deleting sessions, so the **M
 
 Size the quota against the traffic you see in the impact preview. A quota below normal client behavior creates false positives. A quota far above attack speed gives no protection.
 
-**Fixed window** counts requests in back-to-back windows of the interval length and resets the count at each boundary. The `Retry-After` header then tells a throttled client exactly how many seconds are left in the current window.
+**Fixed window** resets the count at each interval boundary, so `Retry-After` tells a throttled client exactly how long to wait. Pick the strategy before you create the rule, because you cannot change it afterward. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
 
-Two other strategies handle bursts differently. Pick one before you create the rule, because you cannot change it afterward. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
-
-Set **Limit by** to **User ID** to count the quota per authenticated user instead of per client IP address. Requests without an authenticated user skip the rule, and later rules still run for them. See [Rate limit](/docs/products/firewall/actions#rate-limit).
+Set **Limit by** to **User ID** to count per signed-in user instead of per IP address. Signed-out requests then skip the rule.
 
 # Verify the rule {% #verify-the-rule %}
 
 1. Send more than `10` matching requests in one minute with a client SDK or an API key.
 2. Confirm the requests over the quota receive a `429` response with a `Retry-After` header.
 3. Open **Firewall** and confirm the **Rate limited** series rises in the traffic overview.
-
-If the rate limiter backend is unavailable, Appwrite allows the request rather than blocking it, so a rule can appear to do nothing during an outage.
-
-A matching request under the quota is allowed, and rule evaluation stops for that request. Under-quota requests count under **Passed**, not under **Rate limited**.
 
 {% arrow_link href="/docs/products/firewall/actions" %}
 Actions

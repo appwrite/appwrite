@@ -20,10 +20,6 @@ Every Firewall rule has a **resource type** that limits which traffic the rule c
 - **Functions** and **Sites** rules are stored on the project and applied to that function's or site's **public traffic** on the Appwrite Network edge.
 - Function and site rules do **not** block Console or Appwrite **management API** calls used to create, update, or deploy those resources. A deny rule on a function will not stop `GET /v1/functions/{id}` from a valid API key or the Console.
 
-{% info title="Pick the right scope" %}
-To protect SDK and client calls into Appwrite services, use **API**. To protect a deployed function URL or site hostname, use **Functions** or **Sites** with that resource selected.
-{% /info %}
-
 # When to use API {% #when-to-use-api %}
 
 Use **API** for project-wide API controls:
@@ -40,8 +36,6 @@ Use **Functions** when only one function's public traffic should be protected or
 - Deny non-`POST` methods on an HTTP-triggered function endpoint
 - Bypass Firewall checks for a trusted caller IP on that function only
 
-Select the function in the create wizard. The rule appears when that function is selected in the resource selector.
-
 # When to use Sites {% #when-to-use-sites %}
 
 Use **Sites** for a single deployed web app's public traffic:
@@ -49,8 +43,6 @@ Use **Sites** for a single deployed web app's public traffic:
 - Redirect a deprecated path on one site
 - Deny admin paths on a marketing site
 - Rate limit form submission paths for one site
-
-Select the site in the create wizard. The rule appears when that site is selected in the resource selector.
 
 [Attack mode](/docs/products/firewall/attack-mode) is available only in this scope. Select a site on the Firewall page to challenge every visitor with one click during an incident.
 

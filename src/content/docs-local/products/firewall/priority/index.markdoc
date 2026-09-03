@@ -39,17 +39,11 @@ Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert r
 
 # Conflicts and overlaps {% #conflicts-and-overlaps %}
 
-Overlapping conditions are normal. Priority decides which action wins:
-
-- A broad **deny** country rule at `100` will never run for an IP that already matched a **bypass** at `10`.
-- When two deny rules could both match, only the one with the lower priority number applies. The other never runs for those requests.
-- A **rate limit** at `50` that matches (even under quota) prevents a **deny** at `100` from running for the same request.
-
-Use [impact preview](/docs/products/firewall/monitor#impact-preview) while editing to see how many recent requests would match the rule you are about to place in the order.
+Overlapping conditions are normal. The lowest priority number that matches wins, including a bypass or a rate limit that is still under its quota. Use [impact preview](/docs/products/firewall/monitor#impact-preview) to see what a new rule would catch before you place it.
 
 # Updating priority {% #updating-priority %}
 
-To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. New requests pick up the new order within moments, once Appwrite refreshes the rules it has cached. Past traffic metrics stay as they were.
+To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. The change applies to new requests within moments.
 
 {% arrow_link href="/docs/products/firewall/allowlist-ips" %}
 Allowlist trusted IP addresses

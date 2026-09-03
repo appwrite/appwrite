@@ -9,14 +9,12 @@ description: Learn how Firewall conditions match requests by hostname, path, met
 Every condition on a rule must match for the rule to apply. Two conditions on one rule mean "this **and** that", never "this or that". To match either of two values, create one rule for each.
 
 {% info title="A rule with no conditions matches everything" %}
-The Console always requires at least one complete condition. The API does not, and a rule that reaches the edge with no conditions matches every request in its scope. If that rule denies or redirects, the whole scope goes down.
-
-Send at least one condition with a value on every API call. In the rules list, a rule in this state shows **All requests** in its conditions column.
+The Console requires at least one condition. Through the API, a rule with no conditions matches every request in its scope, and the rules list shows **All requests** in its conditions column.
 {% /info %}
 
 # Attributes {% #attributes %}
 
-The condition builder groups attributes by what they describe. Attributes marked **Premium** need the [premium Geo DB addon](#premium-geo-db).
+The condition builder groups attributes by what they describe. A further 13 attributes need the [premium Geo DB addon](#premium-geo-db).
 
 ## Request {% #request-attributes %}
 
@@ -50,34 +48,12 @@ The condition builder groups attributes by what they describe. Attributes marked
 |-----------|---------|-------------|
 | **Country** | ISO country code from geo lookup, uppercased | Geo allow or deny lists |
 | **Continent** | Continent code from geo lookup, uppercased | Broad geo policies |
-| **City** (Premium) | City name from geo lookup | Fine-grained geo policies |
-| **State** (Premium) | State or region from geo lookup | Fine-grained geo policies |
-| **Postal code** (Premium) | Postal code from geo lookup | Narrow a policy below city level |
-| **Latitude** (Premium) | Latitude from geo lookup | Match a coordinate exactly |
-| **Longitude** (Premium) | Longitude from geo lookup | Match a coordinate exactly |
-| **Time zone** (Premium) | Time zone name from geo lookup | Apply a policy by local time region |
-| **Weather code** (Premium) | Weather region code from geo lookup | Rarely used for access control |
-
-## Network {% #network-attributes %}
-
-Every attribute in this group needs the premium Geo DB addon. Use them to tell traffic from a data center apart from traffic from a home or mobile connection.
-
-| Attribute | Matches | Typical use |
-|-----------|---------|-------------|
-| **ISP** | Internet service provider name | Block a provider that sends abuse |
-| **AS number** | Autonomous system number | Match a network by its routing identifier |
-| **AS organization** | Organization that owns the autonomous system | Block a hosting company by name |
-| **Connection type** | Connection category, such as cable or cellular | Separate mobile traffic from fixed lines |
-| **Connection usage type** | How the address is used, such as residential or hosting | Challenge data center traffic, allow residential |
-| **Connection organization** | Organization that holds the address range | Allowlist a corporate network |
 
 ## Premium Geo DB {% #premium-geo-db %}
 
-**Country**, **Continent**, and **Protocol** work on every plan. The 13 attributes marked **Premium** need the premium Geo DB addon.
+With the premium Geo DB addon you can also match on **City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization**. The network attributes tell data center traffic apart from residential and mobile connections.
 
-Without the addon, the Console disables those attributes, and the API rejects a rule that uses one with a `waf_rule_premium_condition` error.
-
-If the addon lapses on a project that already has such rules, Appwrite stops filling those attributes on API traffic. A rule that matched on **City** then stops matching, and the traffic it used to catch passes through. Rewrite those rules before you drop the addon.
+Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error. If the addon lapses, rules that use them stop matching on API traffic, so rewrite those rules first.
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
 
@@ -93,22 +69,17 @@ To match a cookie on Functions or Sites traffic, use the **Cookie** attribute in
 
 # Matching details {% #matching-details %}
 
-- **IP address**: Accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks only match with **equals** and **not equal**. Other operators compare the value as plain text.
-- **Path**: Taken from the request URI with the query string removed. An empty path is treated as `/`. Prefer **starts with** for prefixes such as `/v1/account`.
-- **Method**: Normalized to uppercase before matching.
-- **Country** and **Continent**: Use the resolved geo codes. The Console stores what you enter in uppercase.
-- **Operating system** and **Browser**: Derived from the `User-Agent` header, so unusual clients may not resolve. Use the raw **User agent** attribute to match the header itself.
+- **IP address** accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks match only with **equals** and **not equal**.
+- **Path** is the URL path without the query string. Use **starts with** for prefixes such as `/v1/account`.
+- **Operating system** and **Browser** are derived from the user agent and may not resolve for unusual clients. Match **User agent** directly instead.
 
-Text comparison ignores capitalization. **Equals** `US` also matches `us`.
+Text comparison ignores case.
 
 ## When Appwrite cannot resolve a location {% #unresolved-location %}
 
-Geo lookup fails for some addresses. What the country and continent attributes hold then depends on the scope:
+Geo lookup fails for some addresses. **Country** and **Continent** then hold `unresolved` on an API rule, and are unset on a Functions or Sites rule.
 
-- On an **API** rule, both hold the text `unresolved`.
-- On a **Functions** or **Sites** rule, both are left unset.
-
-An unset attribute equals nothing, so unresolved traffic matches every **not equal** condition. A rule that denies every country except the ones you allow therefore denies unresolved traffic too. To let it through on an API rule, add a **Country** **not equal** `unresolved` condition.
+Either way they match every **not equal** condition, so a rule that allows only certain countries denies that traffic too. On an API rule, add **Country** **not equal** `unresolved` to let it through.
 
 # Operators {% #operators %}
 
@@ -132,12 +103,10 @@ Which operators appear depends on the attribute:
 | **Country**, **Continent** | Equals, not equal, contains, does not contain |
 | **Latitude**, **Longitude**, **AS number** | Equals, not equal, is empty, is not empty |
 
-**Is empty** asks whether Appwrite resolved the attribute at all, not whether the value is an empty string. A header that the request never sent is unset, so **is empty** matches it. **User agent** behaves differently: a request with no `User-Agent` gives an empty string rather than an unset value, so **is empty** does not match it.
+**Is empty** matches attributes the request did not send, such as a missing header. It does not match **User agent**, which is an empty string rather than unset when the header is absent.
 
 {% info title="Operators the Console cannot show" %}
-The API accepts more operators than the Console offers, including ranges and comparisons, and it does not restrict them per attribute.
-
-If you open a rule that uses one of them in the Console, the builder shows **equals** in its place. Saving the rule then writes **equals** to the rule and changes what it matches. Edit these rules through the API.
+The API accepts more operators than the Console shows. Opening such a rule in the Console displays **equals** in their place, and saving writes **equals** to the rule. Edit those rules through the API.
 {% /info %}
 
 # Multiple conditions {% #multiple-conditions %}
@@ -149,21 +118,9 @@ Add several conditions on one rule when you need a narrow match. Examples:
 - IP not equal to your office range (`198.51.100.0/24`) **and** path starts with `/v1`
 - Header `x-api-client` is empty **and** user agent contains `bot`
 
-For allowlists, prefer a [bypass](/docs/products/firewall/actions#bypass) rule with IP equals your trusted address or CIDR range at a **lower priority number** than a broad deny rule.
-
 A rule holds at most 100 conditions.
 
-# Impact estimation {% #impact-estimation %}
-
-When you create or edit conditions, the Console estimates how many recent requests would have matched. Use that preview to tighten a broad filter before you turn on deny or rate limit.
-
-The estimate reads your usage history, which records nine attributes: IP, path, method, country, city, hostname, operating system, browser, and user agent. Browser and user agent are both estimated from the client name, so the count is approximate for those.
-
-The Console shows **Preview unavailable** instead of a number when a rule uses any other attribute, a **does not contain** condition, or more than eight countable conditions. It never shows a partial count. The rule still enforces every condition you set.
-
-The preview compares IP addresses as text. A CIDR range therefore previews as no matches, even though the rule enforces the range correctly.
-
-See [Monitor traffic](/docs/products/firewall/monitor) for metrics after your rules are live.
+The Console previews how many recent requests a rule would match. See [Impact preview](/docs/products/firewall/monitor#impact-preview).
 
 # Attribute names for the API {% #api-attribute-names %}
 
@@ -200,8 +157,6 @@ The Console sends these names for you. Use them when you create rules through th
 | Connection type | `connectionType` |
 | Connection usage type | `connectionUsageType` |
 | Connection organization | `connectionOrganization` |
-
-`resourceType` and `resourceId` choose which traffic a rule applies to. They are parameters of the create and update calls, not attributes you can match on. `projectId` is rejected, because a rule already belongs to one project.
 
 {% arrow_link href="/docs/products/firewall/block-countries" %}
 Block traffic by country

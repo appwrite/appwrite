@@ -8,7 +8,7 @@ readtime: 4
 
 A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region.
 
-Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. The finer location attributes, and every network attribute, require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions).
+Country conditions use the geo location of the client IP address, and work on every plan. Finer location attributes such as city need the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db).
 
 # Create the deny rule {% #create-the-deny-rule %}
 
@@ -38,9 +38,7 @@ To block more than one country, create one deny rule for each country. Condition
 
 To serve only specific countries, invert the pattern. Create one deny rule, and add one **Country** **Not equal** condition for each allowed country. A request matches the rule only when its country differs from every allowed country, and the rule denies it.
 
-Appwrite cannot place every IP address. Traffic it cannot place matches **Not equal** conditions too, so this rule denies it along with the countries you did not allow.
-
-To let that traffic through on an API rule, add one more condition: **Country** **Not equal** `unresolved`. See [When Appwrite cannot resolve a location](/docs/products/firewall/conditions#unresolved-location).
+Traffic whose country Appwrite cannot resolve also matches **Not equal**, so this rule denies it. To let it through, add **Country** **Not equal** `unresolved`. See [When Appwrite cannot resolve a location](/docs/products/firewall/conditions#unresolved-location).
 
 # Verify the rule {% #verify-the-rule %}
 
@@ -48,7 +46,7 @@ To let that traffic through on an API rule, add one more condition: **Country** 
 2. Confirm the client receives a `403` response.
 3. Open **Firewall** and confirm the **Denied** series rises in the traffic overview.
 
-To pause the rule, turn off its status toggle in the rules list. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
+To pause the rule, turn off its status toggle in the rules list.
 
 {% arrow_link href="/docs/products/firewall/monitor" %}
 Monitor traffic
