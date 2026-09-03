@@ -726,4 +726,60 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(404, $stillForeign['headers']['status-code']);
         $this->assertEquals('installation_not_found', $stillForeign['body']['type']);
     }
+
+    public function testCreateInstallationWithUnsignedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        unset($state['signature']);
+
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithTamperedRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        foreach (['success', 'failure'] as $field) {
+            $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+            $state[$field] = 'https://evil.example/steal';
+
+            $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+            $this->assertEquals(400, $response['headers']['status-code'], $field);
+        }
+    }
+
+    public function testCreateInstallationWithReplayedSignature(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['signature'] = \json_decode($this->buildGiteaState('victim-project', $consoleUrl, $consoleUrl), true)['signature'];
+
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithNonStringSignature(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['signature'] = 1234;
+
+        // hash_equals() throws on non-string input, so this must reject as an
+        // invalid state rather than surface a 500.
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
 }
