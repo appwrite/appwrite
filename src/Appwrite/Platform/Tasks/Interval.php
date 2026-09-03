@@ -20,6 +20,14 @@ class Interval extends Action
 {
     private const int CERTIFICATE_GENERATION_INTERVAL = 300; // 5 minutes
 
+    /**
+     * How long a queued retry holds its rule. It has to outlast a whole attempt
+     * — the queue wait plus the issuer call — or a slow attempt becomes eligible
+     * again while it is still running and picks up a second job. It is also the
+     * gap between attempts, since finishing one writes the rule too.
+     */
+    private const int CERTIFICATE_GENERATION_LEASE = 900; // 15 minutes
+
     public static function getName(): string
     {
         return 'interval';
@@ -162,10 +170,11 @@ class Interval extends Action
     {
         $fromTime = new DateTime('-3 days'); // Max 3 days old
 
-        // Rules are leased for one interval when queued below, so anything
-        // touched more recently than this either has an attempt in flight or
-        // has just finished one.
-        $leasedUntil = new DateTime('-' . $this->certificateGenerationInterval() . ' seconds');
+        // Anything written more recently than the lease either has an attempt in
+        // flight or has just finished one. Deliberately longer than the tick:
+        // scanning often keeps newly failed domains from waiting, while the
+        // lease is sized to an attempt.
+        $leasedUntil = new DateTime('-' . self::CERTIFICATE_GENERATION_LEASE . ' seconds');
 
         $rules = $dbForPlatform->find('rules', [
             Query::createdAfter(DatabaseDateTime::format($fromTime)),
@@ -202,11 +211,11 @@ class Interval extends Action
 
             try {
                 // Take the lease before handing the job off. The worker writes the
-                // rule only once the issuer answers, which can outlast a tick, so
-                // claiming here is what keeps a second pass from queueing the same
-                // domain. The rule keeps its failed status, so a lease that is
-                // never used lapses and the rule comes back on a later pass
-                // instead of being stranded in a state nothing scans.
+                // rule only once the issuer answers, so claiming here is what
+                // keeps a later pass from queueing the same domain. The rule keeps
+                // its failed status, so a lease that is never used lapses and the
+                // rule comes back on a later pass instead of being stranded in a
+                // state nothing scans.
                 $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                     '$updatedAt' => DatabaseDateTime::now(),
                 ]));
