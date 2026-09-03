@@ -15,10 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-  ArrowUpDown,
   Network,
   Download,
-  Search,
   Activity,
 } from 'lucide-react'
 
@@ -56,6 +54,7 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import { CreateDatabase } from '../CreateDatabase'
 import { CreateTable } from '../CreateTable'
+import { DatabaseSidebarTableSearch } from '../_components/DatabaseSidebarTableSearch'
 import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
@@ -129,7 +128,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Link,
@@ -163,7 +161,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Input } from '@/components/ui/input'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -274,6 +271,7 @@ export function Workspace({
     tables: sidebarTables,
     total: sidebarTablesTotal,
     isLoading: sidebarTablesLoading,
+    refetch: refetchSidebarTables,
   } = useProjectTables(
     projectId,
     databaseId,
@@ -1081,37 +1079,15 @@ export function Workspace({
       {/* 2. Scrollable: search, create table, tables list, pagination */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={dbLabels.searchContainersPlaceholder}
-                value={sidebarTablesSearch}
-                onChange={(e) => setSidebarTablesSearch(e.target.value)}
-                className="h-8 ps-8 pe-2 text-[13px]"
-              />
-            </div>
-            <DropdownMenu>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        aria-label={dbLabels.sortContainersAriaLabel}
-                      >
-                        <ArrowUpDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {t('Sort by attribute and direction')}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          <DatabaseSidebarTableSearch
+            value={sidebarTablesSearch}
+            onChange={setSidebarTablesSearch}
+            placeholder={dbLabels.searchContainersPlaceholder}
+            isFetching={sidebarTablesFetching}
+            onRefresh={() => void refetchSidebarTables()}
+            sortAriaLabel={dbLabels.sortContainersAriaLabel}
+            sortTooltip={t('Sort by attribute and direction')}
+            sortMenu={
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {dbLabels.sortContainersMenu}
@@ -1155,8 +1131,8 @@ export function Workspace({
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+            }
+          />
         </div>
         <div className="shrink-0 px-2 py-2">
           {noCreateTablePermission ? (

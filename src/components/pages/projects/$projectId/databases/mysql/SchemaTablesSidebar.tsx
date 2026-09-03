@@ -1,5 +1,4 @@
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -17,7 +16,7 @@ import {
   MYSQL_SIDEBAR_TABLES_SORT_OPTIONS,
   sortMysqlSidebarTableRows,
 } from '@/lib/user-prefs-keys'
-import { ArrowUpDown, Eye, Loader2, Plus, Search, Table2, X } from 'lucide-react'
+import { Eye, Loader2, Plus, Table2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
@@ -50,6 +48,7 @@ import {
 import { MysqlHistorySidebarPanel } from './_components/MysqlHistorySidebarPanel'
 import { MysqlQueriesSidebarPanel } from './_components/MysqlQueriesSidebarPanel'
 import { MysqlSchemaSelector } from './_components/MysqlSchemaSelector'
+import { DatabaseSidebarTableSearch } from '../_components/DatabaseSidebarTableSearch'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { MysqlTableContextMenu } from './_components/MysqlTableContextMenu'
 import { MYSQL_TOP_HEADER_BAR_CLASS } from './_components/mysql-chrome'
@@ -157,6 +156,7 @@ export function SchemaTablesSidebar({
     isFetchingNextPage: isFetchingMoreTables,
     hasNextPage: hasMoreTables,
     fetchNextPage: fetchNextTablePage,
+    refetch: refetchTables,
   } = useMysqlSidebarTables(
     projectId,
     databaseId,
@@ -295,81 +295,43 @@ export function SchemaTablesSidebar({
                 aria-hidden
               />
               <div className="flex min-w-0 shrink-0 items-center gap-2">
-                <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    value={tableSearch}
-                    onChange={(event) => setTableSearch(event.target.value)}
-                    placeholder={t('Search tables...')}
-                    className="h-8 ps-8 pe-8 text-[13px]"
-                    aria-label={t('Search tables...')}
-                    disabled={!selectedSchema}
-                  />
-                  {tableSearch ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
-                      aria-label={t('Clear table search')}
-                      onClick={() => setTableSearch('')}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  ) : tablesFetching ? (
-                    <Loader2
-                      className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
-                      aria-hidden
-                    />
-                  ) : null}
-                </div>
-                <DropdownMenu>
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            aria-label={t('Sort tables')}
-                            disabled={!selectedSchema}
-                          >
-                            <ArrowUpDown className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
+                <DatabaseSidebarTableSearch
+                  value={tableSearch}
+                  onChange={setTableSearch}
+                  placeholder={t('Search tables...')}
+                  ariaLabel={t('Search tables...')}
+                  disabled={!selectedSchema}
+                  isFetching={tablesFetching}
+                  onRefresh={() => void refetchTables()}
+                  sortAriaLabel={t('Sort tables')}
+                  sortDisabled={!selectedSchema}
+                  sortMenu={
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         {t('Sort tables')}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      {t('Sort tables')}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuRadioGroup
-                      value={tablesSort}
-                      onValueChange={(value) => {
-                        const option = MYSQL_SIDEBAR_TABLES_SORT_OPTIONS.find(
-                          (item) => item.value === value,
-                        )
-                        if (option) setTablesSort(option.value)
-                      }}
-                    >
-                      {MYSQL_SIDEBAR_TABLES_SORT_OPTIONS.map((option) => (
-                        <DropdownMenuRadioItem
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {t(option.label)}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuRadioGroup
+                        value={tablesSort}
+                        onValueChange={(value) => {
+                          const option = MYSQL_SIDEBAR_TABLES_SORT_OPTIONS.find(
+                            (item) => item.value === value,
+                          )
+                          if (option) setTablesSort(option.value)
+                        }}
+                      >
+                        {MYSQL_SIDEBAR_TABLES_SORT_OPTIONS.map((option) => (
+                          <DropdownMenuRadioItem
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {t(option.label)}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  }
+                />
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
