@@ -53,7 +53,7 @@ Choose confidential whenever the app has a backend. It is the safer default: the
 
 # Register a client {% #register %}
 
-Create a client with the `create` method. It needs only a name and a redirect URI; everything else can be filled in later with `update`. Registering a confidential client also calls for a [secret](#secrets) before it can exchange tokens.
+Create a client with the `create` method. It needs an app ID, a name, and a redirect URI. Everything else can be filled in later with `update`. Registering a confidential client also calls for a [secret](#secrets) before it can exchange tokens.
 
 {% multicode %}
 ```client-web

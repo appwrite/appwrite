@@ -44,18 +44,8 @@ const project = new Project(client);
 
 const result = await project.updateOAuth2Server({
     enabled: true,
-    authorizationUrl: 'https://example.com',
-    scopes: [], // optional
-    authorizationDetailsTypes: [], // optional
-    accessTokenDuration: 60, // optional
-    refreshTokenDuration: 60, // optional
-    publicAccessTokenDuration: 60, // optional
-    publicRefreshTokenDuration: 60, // optional
-    confidentialPkce: false, // optional
-    verificationUrl: 'https://example.com', // optional
-    userCodeLength: 6, // optional
-    userCodeFormat: 'numeric', // optional
-    deviceCodeDuration: 60 // optional
+    authorizationUrl: 'https://taskflow.localhost/consent',
+    scopes: ['tasks.read'] // optional
 });
 ```
 ```server-deno
@@ -70,22 +60,11 @@ const project = new Project(client);
 
 const result = await project.updateOAuth2Server({
     enabled: true,
-    authorizationUrl: 'https://example.com',
-    scopes: [], // optional
-    authorizationDetailsTypes: [], // optional
-    accessTokenDuration: 60, // optional
-    refreshTokenDuration: 60, // optional
-    publicAccessTokenDuration: 60, // optional
-    publicRefreshTokenDuration: 60, // optional
-    confidentialPkce: false, // optional
-    verificationUrl: 'https://example.com', // optional
-    userCodeLength: 6, // optional
-    userCodeFormat: 'numeric', // optional
-    deviceCodeDuration: 60 // optional
+    authorizationUrl: 'https://taskflow.localhost/consent',
+    scopes: ['tasks.read'] // optional
 });
 ```
 ```server-php
-```php
 <?php
 
 use Appwrite\Client;
@@ -100,19 +79,9 @@ $project = new Project($client);
 
 $result = $project->updateOAuth2Server(
     enabled: true,
-    authorizationUrl: 'https://example.com',
-    scopes: [], // optional
-    authorizationDetailsTypes: [], // optional
-    accessTokenDuration: 60, // optional
-    refreshTokenDuration: 60, // optional
-    publicAccessTokenDuration: 60, // optional
-    publicRefreshTokenDuration: 60, // optional
-    confidentialPkce: false, // optional
-    verificationUrl: 'https://example.com', // optional
-    userCodeLength: 6, // optional
-    userCodeFormat: 'numeric', // optional
-    deviceCodeDuration: 60 // optional
-);```
+    authorizationUrl: 'https://taskflow.localhost/consent',
+    scopes: ['tasks.read'] // optional
+);
 ```
 ```server-python
 from appwrite.client import Client
@@ -128,18 +97,8 @@ project = Project(client)
 
 result: ProjectModel = project.update_o_auth2_server(
     enabled = True,
-    authorization_url = 'https://example.com',
-    scopes = [], # optional
-    authorization_details_types = [], # optional
-    access_token_duration = 60, # optional
-    refresh_token_duration = 60, # optional
-    public_access_token_duration = 60, # optional
-    public_refresh_token_duration = 60, # optional
-    confidential_pkce = False, # optional
-    verification_url = 'https://example.com', # optional
-    user_code_length = 6, # optional
-    user_code_format = 'numeric', # optional
-    device_code_duration = 60 # optional
+    authorization_url = 'https://taskflow.localhost/consent',
+    scopes = ['tasks.read'] # optional
 )
 
 print(result.model_dump())
@@ -158,18 +117,8 @@ project = Project.new(client)
 
 result = project.update_o_auth2_server(
     enabled: true,
-    authorization_url: 'https://example.com',
-    scopes: [], # optional
-    authorization_details_types: [], # optional
-    access_token_duration: 60, # optional
-    refresh_token_duration: 60, # optional
-    public_access_token_duration: 60, # optional
-    public_refresh_token_duration: 60, # optional
-    confidential_pkce: false, # optional
-    verification_url: 'https://example.com', # optional
-    user_code_length: 6, # optional
-    user_code_format: 'numeric', # optional
-    device_code_duration: 60 # optional
+    authorization_url: 'https://taskflow.localhost/consent',
+    scopes: ['tasks.read'] # optional
 )
 ```
 ```server-dart
@@ -184,22 +133,11 @@ Project project = Project(client);
 
 Project result = await project.updateOAuth2Server(
     enabled: true,
-    authorizationUrl: 'https://example.com',
-    scopes: [], // (optional)
-    authorizationDetailsTypes: [], // (optional)
-    accessTokenDuration: 60, // (optional)
-    refreshTokenDuration: 60, // (optional)
-    publicAccessTokenDuration: 60, // (optional)
-    publicRefreshTokenDuration: 60, // (optional)
-    confidentialPkce: false, // (optional)
-    verificationUrl: 'https://example.com', // (optional)
-    userCodeLength: 6, // (optional)
-    userCodeFormat: 'numeric', // (optional)
-    deviceCodeDuration: 60, // (optional)
+    authorizationUrl: 'https://taskflow.localhost/consent',
+    scopes: ['tasks.read'], // (optional)
 );
 ```
 ```server-dotnet
-```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -213,19 +151,9 @@ Project project = new Project(client);
 
 Project result = await project.UpdateOAuth2Server(
     enabled: true,
-    authorizationUrl: "https://example.com",
-    scopes: new List<string>(), // optional
-    authorizationDetailsTypes: new List<string>(), // optional
-    accessTokenDuration: 60, // optional
-    refreshTokenDuration: 60, // optional
-    publicAccessTokenDuration: 60, // optional
-    publicRefreshTokenDuration: 60, // optional
-    confidentialPkce: false, // optional
-    verificationUrl: "https://example.com", // optional
-    userCodeLength: 6, // optional
-    userCodeFormat: "numeric", // optional
-    deviceCodeDuration: 60 // optional
-);```
+    authorizationUrl: "https://taskflow.localhost/consent",
+    scopes: new List<string> { "tasks.read" } // optional
+);
 ```
 ```server-kotlin
 import io.appwrite.Client
@@ -241,18 +169,8 @@ val project = Project(client)
 
 val response = project.updateOAuth2Server(
     enabled = true,
-    authorizationUrl = "https://example.com",
-    scopes = listOf(), // optional
-    authorizationDetailsTypes = listOf(), // optional
-    accessTokenDuration = 60, // optional
-    refreshTokenDuration = 60, // optional
-    publicAccessTokenDuration = 60, // optional
-    publicRefreshTokenDuration = 60, // optional
-    confidentialPkce = false, // optional
-    verificationUrl = "https://example.com", // optional
-    userCodeLength = 6, // optional
-    userCodeFormat = "numeric", // optional
-    deviceCodeDuration = 60 // optional
+    authorizationUrl = "https://taskflow.localhost/consent",
+    scopes = listOf("tasks.read") // optional
 )
 ```
 ```server-java
@@ -269,18 +187,8 @@ Project project = new Project(client);
 
 project.updateOAuth2Server(
     true, // enabled
-    "https://example.com", // authorizationUrl
-    List.of(), // scopes (optional)
-    List.of(), // authorizationDetailsTypes (optional)
-    60, // accessTokenDuration (optional)
-    60, // refreshTokenDuration (optional)
-    60, // publicAccessTokenDuration (optional)
-    60, // publicRefreshTokenDuration (optional)
-    false, // confidentialPkce (optional)
-    "https://example.com", // verificationUrl (optional)
-    6, // userCodeLength (optional)
-    "numeric", // userCodeFormat (optional)
-    60, // deviceCodeDuration (optional)
+    "https://taskflow.localhost/consent", // authorizationUrl
+    List.of("tasks.read"), // scopes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -301,20 +209,10 @@ let client = Client()
 
 let project = Project(client)
 
-let project = try await project.updateOAuth2Server(
+let result = try await project.updateOAuth2Server(
     enabled: true,
-    authorizationUrl: "https://example.com",
-    scopes: [], // optional
-    authorizationDetailsTypes: [], // optional
-    accessTokenDuration: 60, // optional
-    refreshTokenDuration: 60, // optional
-    publicAccessTokenDuration: 60, // optional
-    publicRefreshTokenDuration: 60, // optional
-    confidentialPkce: false, // optional
-    verificationUrl: "https://example.com", // optional
-    userCodeLength: 6, // optional
-    userCodeFormat: "numeric", // optional
-    deviceCodeDuration: 60 // optional
+    authorizationUrl: "https://taskflow.localhost/consent",
+    scopes: ["tasks.read"] // optional
 )
 ```
 ```server-go
@@ -322,33 +220,31 @@ package main
 
 import (
     "fmt"
-    "github.com/repoowner/reponame/client"
-    "github.com/repoowner/reponame/project"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/v6/appwrite"
 )
 
-client := client.New(
-    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
-    client.WithProject("<YOUR_PROJECT_ID>")
-    client.WithKey("<YOUR_API_KEY>")
-)
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<YOUR_PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
 
-service := project.New(client)
+    project := appwrite.NewProject(client)
 
-response, error := service.UpdateOAuth2Server(
-    true,
-    "https://example.com",
-    project.WithUpdateOAuth2ServerScopes([]string{}),
-    project.WithUpdateOAuth2ServerAuthorizationDetailsTypes([]string{}),
-    project.WithUpdateOAuth2ServerAccessTokenDuration(60),
-    project.WithUpdateOAuth2ServerRefreshTokenDuration(60),
-    project.WithUpdateOAuth2ServerPublicAccessTokenDuration(60),
-    project.WithUpdateOAuth2ServerPublicRefreshTokenDuration(60),
-    project.WithUpdateOAuth2ServerConfidentialPkce(false),
-    project.WithUpdateOAuth2ServerVerificationUrl("https://example.com"),
-    project.WithUpdateOAuth2ServerUserCodeLength(6),
-    project.WithUpdateOAuth2ServerUserCodeFormat("numeric"),
-    project.WithUpdateOAuth2ServerDeviceCodeDuration(60),
-)
+    response, err := project.UpdateOAuth2Server(
+        true,
+        "https://taskflow.localhost/consent",
+        project.WithUpdateOAuth2ServerScopes([]string{"tasks.read"}), // optional
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println(response)
+}
 ```
 ```server-rust
 use appwrite::Client;
@@ -356,27 +252,30 @@ use appwrite::services::Project;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new();
-    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
-    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
-    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<YOUR_PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
 
     let project = Project::new(&client);
 
     let result = project.update_o_auth2_server(
         true,
-        "https://example.com",
-        Some(vec![]), // optional
-        Some(vec![]), // optional
-        Some(60), // optional
-        Some(60), // optional
-        Some(60), // optional
-        Some(60), // optional
-        Some(false), // optional
-        Some("https://example.com"), // optional
-        Some(6), // optional
-        Some("numeric"), // optional
-        Some(60) // optional
+        "https://taskflow.localhost/consent",
+        Some(vec!["tasks.read".to_string()]), // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
+        None, // optional
     ).await?;
 
     let _ = result;
@@ -401,7 +300,7 @@ Open it in a browser to confirm the server is live. It returns JSON describing t
 
 # Register a client {% #register %}
 
-Each app that integrates with your project registers as a client. Here that is Vantage. The **redirect URI** it declares is a URL on Vantage, `https://vantage.localhost/auth/redirect`, where the OAuth2 server sends users back with the authorization code. For security, redirect URIs must use HTTPS. Loopback addresses like `localhost`, `127.0.0.1`, and `[::1]` are the exception and can use HTTP during development.
+Each app that integrates with your project registers as a client. Here that is Vantage. The **redirect URI** it declares is a URL on Vantage, `https://vantage.localhost/auth/redirect`, where the OAuth2 server sends users back with the authorization code. For security, redirect URIs must use HTTPS. There are two exceptions: loopback addresses like `localhost`, `127.0.0.1`, and `[::1]` can use HTTP during development, and native apps can register a private-use scheme URI such as `com.example.app:/oauth`. No redirect URI may contain a fragment.
 
 Open the **Apps** sub-tab and create a client. Name it `Vantage`, add the redirect URI, and choose a type. Pick **Confidential** for this walkthrough so you get a secret to authenticate the token exchange. Copy the secret when it is shown, because it appears only once. For a mobile or single-page app that cannot hold a secret, pick **Public** instead: the token exchange then uses [PKCE](/docs/products/auth/oauth-server/authorization#pkce) in place of the secret, and the [client types](/docs/products/auth/oauth-server/clients#client-types) comparison shows what else changes.
 
@@ -412,7 +311,7 @@ Open the **Apps** sub-tab and create a client. Name it `Vantage`, add the redire
 ![Creating an OAuth2 client](/images/docs/oauth-server/oauth2-server-create-app.avif)
 {% /only_light %}
 
-Clients can also be registered from code with the `apps` service in the [Client SDKs](/docs/sdks#client). Any signed-in user on your project can register an app, which enables self-serve registration for integrators. Creating a client needs only a name and a redirect URI:
+Clients can also be registered from code with the `apps` service in the [Client SDKs](/docs/sdks#client). Any signed-in user on your project can register an app, which enables self-serve registration for integrators. Creating a client needs an app ID, a name, and a redirect URI:
 
 {% multicode %}
 ```client-web
@@ -797,6 +696,7 @@ Approving needs the same TaskFlow user's session, sent as the `a_session_<PROJEC
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve' \
   -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
   -H 'Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>' \
   -d '{
     "grant_id": "<GRANT_ID>"
@@ -805,6 +705,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve'
 ```hurl
 POST https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve
 Content-Type: application/json
+Accept: application/json
 Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>
 {
     "grant_id": "<GRANT_ID>"
@@ -812,11 +713,19 @@ Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>
 ```
 {% /multicode %}
 
-After approval, Appwrite redirects the browser to Vantage's registered redirect URI with an authorization `code` in the query string. Vantage uses this code in the next step.
+The `Accept: application/json` header asks for the redirect target as JSON instead of following it, which is what a consent screen needs and what lets you read the code here:
+
+```json
+{
+    "redirectUrl": "https://vantage.localhost/auth/redirect?code=<CODE>&iss=..."
+}
+```
+
+Copy the `code` value out of `redirectUrl`. Vantage uses it in the next step. Without the `Accept` header, Appwrite answers with a `303` redirect and the code appears only in the `Location` header.
 
 ## 3. Exchange the code for tokens {% #exchange-code %}
 
-Vantage's server sends the code to the token endpoint. A confidential client passes its `client_secret`; a public client passes its PKCE `code_verifier` instead.
+Vantage's server sends the code to the token endpoint. Vantage is a confidential client, so it authenticates with its `client_secret`. A public client sends a `code_verifier` in place of the secret, but only when its authorization request carried a `code_challenge`. Sending a verifier for a code that did not use PKCE is rejected, and sending a secret from a public client is rejected too.
 
 {% multicode %}
 ```curl
@@ -827,8 +736,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token' \
     "code": "<CODE>",
     "redirect_uri": "https://vantage.localhost/auth/redirect",
     "client_id": "<CLIENT_ID>",
-    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
-    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+    "client_secret": "<CLIENT_SECRET>"
   }'
 ```
 ```hurl
@@ -839,8 +747,7 @@ Content-Type: application/json
     "code": "<CODE>",
     "redirect_uri": "https://vantage.localhost/auth/redirect",
     "client_id": "<CLIENT_ID>",
-    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
-    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+    "client_secret": "<CLIENT_SECRET>"
 }
 ```
 {% /multicode %}
