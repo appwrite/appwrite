@@ -49,6 +49,10 @@ import {
   isDeploymentTimeout,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
@@ -106,6 +110,7 @@ import {
   useFunctionDomains,
   useProjectRuntimes,
   useFunctionSpecifications,
+  functionDeploymentQueryOptions,
   Dependencies,
   deleteFunctionDeployment,
   cancelFunctionDeployment,
@@ -546,17 +551,33 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !functionId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'function',
+        projectId,
+        resourceId: functionId,
+        resourceQueryKey: ['function', 'project', projectId, functionId],
+        deploymentQueryKey: functionDeploymentQueryOptions(
+          projectId,
+          functionId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'function', projectId, functionId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && functionId) {
+        clearSettingsRedeployPending(
+          queryClient,
+          'function',
+          projectId,
+          functionId,
+        )
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -577,7 +598,7 @@ export function View() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -606,7 +627,7 @@ export function View() {
       setCancelBuildDialogOpen(false)
       setCancelTargetDeploymentId(null)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -627,7 +648,7 @@ export function View() {
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -656,7 +677,7 @@ export function View() {
     onSuccess: async () => {
       // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],

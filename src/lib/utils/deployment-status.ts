@@ -196,3 +196,29 @@ export function getRedeploySourceDeploymentId(
 ): string | undefined {
   return resource?.latestDeploymentId || resource?.deploymentId || undefined
 }
+
+/** Merge a redeploy response into cached function/site data for immediate UI updates. */
+export function patchResourceAfterRedeploy<
+  T extends {
+    latestDeploymentId?: string | null
+    latestDeploymentStatus?: string
+  },
+>(resource: T, deployment: { $id: string; status: string }): T {
+  return {
+    ...resource,
+    latestDeploymentId: deployment.$id,
+    latestDeploymentStatus: deployment.status,
+  }
+}
+
+export function resourceIsBuilding(
+  resource?: {
+    latestDeploymentStatus?: string
+  } | null,
+  activeDeployment?: { status?: string | null } | null,
+): boolean {
+  if (isDeploymentInProgress(resource?.latestDeploymentStatus ?? '')) {
+    return true
+  }
+  return isDeploymentInProgress(activeDeployment?.status ?? '')
+}

@@ -57,7 +57,15 @@ import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
-import { getRedeploySourceDeploymentId, patchResourceAfterRedeploy, resourceIsBuilding } from '@/lib/utils/deployment-status'
+import {
+  getRedeploySourceDeploymentId,
+  resourceIsBuilding,
+} from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+  useSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -126,27 +134,12 @@ function SiteLayoutContent() {
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
 
-  const cancelBuildMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment?.$id) {
-        throw new Error('Project ID, Site ID, and Deployment ID are required')
-      }
-      return await cancelSiteDeployment(projectId, siteId, activeDeployment.$id)
-    },
-    onSuccess: async () => {
-      setCancelBuildDialogOpen(false)
-      await queryClient.refetchQueries({
-        queryKey: ['deployments', 'site', projectId, siteId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
-      toast.success(t('Build cancelled'))
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to cancel build'))
-    },
-  })
+  const settingsRedeployPending = useSettingsRedeployPending(
+    'site',
+    projectId,
+    siteId,
+    site,
+  )
 
   const redeployMutation = useMutation({
     mutationFn: async () => {
@@ -160,25 +153,27 @@ function SiteLayoutContent() {
       })
     },
     onSuccess: async (deployment) => {
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        (current: Models.Site | undefined) =>
-          current ? patchResourceAfterRedeploy(current, deployment) : current,
-      )
-      queryClient.setQueryData(
-        siteDeploymentQueryOptions(projectId, siteId, deployment.$id).queryKey,
+      if (!projectId || !siteId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'site',
+        projectId,
+        resourceId: siteId,
+        resourceQueryKey: ['site', 'project', projectId, siteId],
+        deploymentQueryKey: siteDeploymentQueryOptions(
+          projectId,
+          siteId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'site', projectId, siteId],
         deployment,
-      )
-      await queryClient.refetchQueries({
-        queryKey: ['deployments', 'site', projectId, siteId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -186,9 +181,35 @@ function SiteLayoutContent() {
   const handleCancelBuild = () => setCancelBuildDialogOpen(true)
 
   const isBuilding = useMemo(
-    () => resourceIsBuilding(site, activeDeployment),
-    [site, activeDeployment],
+    () =>
+      settingsRedeployPending || resourceIsBuilding(site, activeDeployment),
+    [settingsRedeployPending, site, activeDeployment],
   )
+
+  const cancelBuildMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment?.$id) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      return await cancelSiteDeployment(projectId, siteId, activeDeployment.$id)
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success(t('Build cancelled'))
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
 
   const handleBack = () => {
     navigate({

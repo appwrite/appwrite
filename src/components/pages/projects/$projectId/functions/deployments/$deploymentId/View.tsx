@@ -134,7 +134,7 @@ export function View() {
       showRuntime={true}
       RuntimeIcon={RuntimeIcon as unknown}
       invalidateQueries={[
-        ['deployments', 'project', projectId!, functionId!],
+        ['deployments', 'function', projectId!, functionId!],
         ['function', 'project', projectId!, functionId!],
         ['deployment', 'function', projectId!, functionId!, deploymentId!],
       ]}

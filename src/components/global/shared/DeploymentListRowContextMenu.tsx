@@ -128,7 +128,7 @@ export function DeploymentListRowContextMenu({
 
   const invalidateAfterFunctionMutation = async () => {
     await queryClient.refetchQueries({
-      queryKey: ['deployments', 'project', projectId, resourceId],
+      queryKey: ['deployments', 'function', projectId, resourceId],
     })
     await queryClient.refetchQueries({
       queryKey: ['function', 'project', projectId, resourceId],
