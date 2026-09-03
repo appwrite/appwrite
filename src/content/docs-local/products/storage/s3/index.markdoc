@@ -391,7 +391,7 @@ The S3 API targets the operations most clients depend on. Keep the following in 
 
 - **Path-style addressing only.** Virtual-hosted-style URLs (`https://<bucket>.host/...`) are not supported. Enable path-style addressing in your client, as shown in [Connect an S3 client](#connect-an-s3-client).
 - **Signature Version 4 only.** Requests are authenticated with SigV4, either with an `Authorization` header or as a [presigned URL](#presigned-urls) that carries the signature in the query string, but never both at once. A header-signed request must carry a timestamp within 15 minutes of the server's clock, while a presigned URL is valid for up to 7 days from the timestamp it was signed with.
-- **File names must be unique within a bucket.** Object keys are file names, so a bucket cannot hold two objects under one key, and uploading to an existing key replaces the object stored there. A bucket that already contains files sharing a name and folder is not served over the S3 API: requests whose key resolves ambiguously return `InvalidRequest` (HTTP 400). See [Buckets and objects](#buckets-and-objects).
+- **File names must be unique within a bucket.** Object keys are file names, so a bucket cannot hold two objects under one key, and uploading to an existing key replaces the object stored there. If a bucket already contains files sharing a name and folder, a request for that key is served from the first matching file and a listing shows the key once. The other files are not reachable over S3. See [Buckets and objects](#buckets-and-objects).
 - **ACLs are compatibility responses.** `GetObjectAcl`, `PutObjectAcl`, `GetBucketAcl`, and `PutBucketAcl` return a canned private ACL and are accepted for tooling compatibility. They do not change access. Manage access with [Appwrite permissions](/docs/products/storage/permissions) and API key scopes instead.
 - **No folder resource or folder markers.** Folders are virtual: they are `/`-separated prefixes in object keys, browsed by listing with `delimiter=/`. See [Folders](#folders). Using any other delimiter value or uploading a folder-marker object (a key ending in `/`) returns `NotImplemented` (HTTP 501).
 - **Prefer `ListObjectsV2` for large buckets.** `ListObjects` returns every matching object in a single response, while `ListObjectsV2` honors `max-keys` (capped at 1000) and paginates with `IsTruncated` and a `NextContinuationToken`. No objects are silently dropped.
@@ -412,5 +412,5 @@ Errors are returned as standard S3 XML error documents with an S3 error code and
 | `InvalidRange` | 416 | The requested `Range` cannot be satisfied. |
 | `PreconditionFailed` | 412 | An `If-Match` precondition did not hold. |
 | `NotImplemented` | 501 | The requested S3 feature is not supported. |
-| `InvalidRequest` | 400 | The request was malformed, violated a bucket constraint, or its key matched more than one file. |
+| `InvalidRequest` | 400 | The request was malformed or violated a bucket constraint. |
 | `InternalError` | 500 | An unexpected server error occurred. |
