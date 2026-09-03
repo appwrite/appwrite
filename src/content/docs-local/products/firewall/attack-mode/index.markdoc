@@ -23,17 +23,19 @@ Appwrite creates (or re-enables) a **Challenge** rule named **Attack mode** on t
 
 - Uses a catch-all condition: **path starts with `/`** (empty paths are stored as `/`, so every request for the site matches)
 - Uses [priority](/docs/products/firewall/priority) `0`, so it is evaluated before the create-wizard default of `100`
-- Uses the platform default challenge type, difficulty, and TTL
+- Uses the platform default challenge type, with difficulty `3` and a TTL of `1800` seconds
 
 The rule appears in the site's rules list like any other rule. You can inspect it there, but prefer the **Attack mode** button or banner to turn it off so the same rule can be re-enabled later.
+
+If you edit the rule's difficulty or TTL by hand, turning Attack mode off and on again keeps your values rather than resetting them.
 
 Challenged traffic appears in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
 
 # Allowlists {% #allowlists %}
 
-[Bypass](/docs/products/firewall/actions#bypass) rules with a **lower** priority number (negative values) still run first and can allowlist trusted traffic. Bypass rules at `10` or higher are evaluated after Attack mode, so they do not skip the challenge while Attack mode is on.
+[Bypass](/docs/products/firewall/actions#bypass) rules with a **lower** priority number still run first and can allowlist trusted traffic. Bypass rules at `10` or higher are evaluated after Attack mode, so they do not skip the challenge while Attack mode is on.
 
-To keep an allowlist during Attack mode, give those bypass rules a negative priority.
+To keep an allowlist during Attack mode, give those bypass rules a negative priority. The Console's priority field starts at `0`, so create or update those rules through the API.
 
 # Turn it off {% #turn-it-off %}
 

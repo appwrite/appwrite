@@ -21,25 +21,29 @@ Series include:
 
 | Series | Source | Meaning |
 |--------|--------|---------|
-| **Passed** | Project request volume (`network.requests`) | Requests that got through to your application, including bypassed and under-quota rate-limited requests |
+| **Passed** | Project request volume (`network.requests`) | Total project request volume, including bypassed and under-quota rate-limited requests |
 | **Denied** | `waf.requests.denied` | Requests rejected by a deny action (`403`) |
 | **Challenged** | `waf.requests.challenged` | Requests challenged by a [challenge action](/docs/products/firewall/actions#challenge), including [Attack mode](/docs/products/firewall/attack-mode) on a site |
 | **Rate limited** | `waf.requests.rateLimited` | Requests throttled over a rate limit quota (`429`) |
 | **Redirected** | `waf.requests.redirected` | Requests answered with a redirect action |
 
-The headline request count sums all five series. The **Challenged** tile also reports how many challenges were solved and the average solve time, and the **Block rate** tile shows the share of requests that were denied or rate limited.
+The headline request count sums all five series. For rules scoped to the project **API**, a denied, challenged, rate-limited, or redirected request is also counted in `network.requests`, so it appears in both **Passed** and its outcome series. Site and function traffic is not counted twice, because the edge stops the request before it reaches your application. **Block rate** divides denied plus rate limited by that same headline total.
+
+The **Challenged** tile also reports how many challenges were solved and the average solve time.
 
 {% info title="What is not counted" %}
 **Bypass** matches and under-quota **rate limit** matches do not publish a Firewall outcome metric. They allow the request, stop further rule evaluation, and count under **Passed**.
 {% /info %}
 
-Use the date range picker and interval controls to zoom into an incident window or review longer trends. Refresh to load the latest available data for your plan's usage retention.
+Use the date range picker and interval controls to zoom into an incident window or review longer trends, or drag across the chart to select a range. Refresh loads the latest available data for your plan's usage retention, and is disabled while live updates are on.
+
+The overview covers the whole project. It does not follow the resource selector that filters the rules list below it.
 
 # Reading the metrics {% #reading-the-metrics %}
 
 - A spike in **Denied** after creating a path deny rule usually means the rule is matching API (or edge) traffic. Confirm the path is intentional if legitimate clients are affected.
 - **Rate limited** rising with traffic load suggests the per-IP quota is engaged; raise the limit, lengthen the interval, or narrow conditions if false positives appear.
-- High **Passed** with flat denied can mean rules are disabled, priorities favor bypass, conditions do not match real traffic, or you are only browsing in the Console (which Firewall does not block).
+- High **Passed** with flat denied can mean rules are disabled, priorities favor bypass, or conditions do not match real traffic. Console browsing is not the explanation: privileged requests are not counted in any series, so they raise neither number.
 
 Compare overview trends with the rules list (enabled state, priority, and action) on the same page.
 
@@ -51,15 +55,15 @@ Use impact preview to:
 
 - Catch overly broad path or country filters before enabling deny
 - Size rate limit quotas against observed request volume
-- Validate that an IP allowlist matches the traffic you expect (single IPs or CIDR ranges)
+- Validate that an IP allowlist matches the traffic you expect. The preview compares IP values literally, so a CIDR range reports no matches even though the rule enforces the range
 
-Impact is an estimate from recent events, not a guarantee of future volume. Some conditions cannot be estimated and are skipped, so treat the number as an upper bound. See [Impact estimation](/docs/products/firewall/conditions#impact-estimation) for which conditions are excluded.
+Impact is an estimate from recent events, not a guarantee of future volume. When a rule uses a condition that usage data cannot represent, or more than eight estimable conditions, the Console shows **Preview unavailable** rather than a partial number. The rule still enforces every condition. See [Impact estimation](/docs/products/firewall/conditions#impact-estimation) for the attributes it can estimate.
 
 # Related debugging {% #related-debugging %}
 
 Project usage dashboards and product logs remain available for deeper debugging. Firewall overview focuses on request volume plus Firewall decision metrics.
 
-When testing rules, use a client SDK or API key. Firewall does not block Console access.
+When testing rules, use a client SDK or API key. Firewall does not block Console access. The `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action` response headers name the rule that fired, which is usually faster than waiting for metrics.
 
 {% arrow_link href="/docs/products/firewall/rate-limit-auth" %}
 Rate limit authentication traffic

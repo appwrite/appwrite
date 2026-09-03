@@ -8,7 +8,7 @@ readtime: 4
 
 A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region.
 
-Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. City and state conditions require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions).
+Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. The finer location attributes, and every network attribute, require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions).
 
 # Create the deny rule {% #create-the-deny-rule %}
 
@@ -38,7 +38,7 @@ To block more than one country, create one deny rule for each country. Condition
 
 To serve only specific countries, invert the pattern. Create one deny rule, and add one **Country** **Not equal** condition for each allowed country. A request matches the rule only when its country differs from every allowed country, and the rule denies it.
 
-Traffic without a resolved geo location also matches **Not equal** conditions. For API traffic, unresolved geo matches as the value `unresolved`. Add a **Country** **Not equal** `unresolved` condition if unresolved traffic must stay allowed.
+Traffic without a resolved geo location also matches **Not equal** conditions, so an allow-only rule denies it by default. For API traffic, unresolved geo matches the literal value `unresolved`, so add a **Country** **Not equal** `unresolved` condition if that traffic must stay allowed. On site and function traffic the attribute is left unset instead, and the Console offers no is-empty operator for country, so allowing it needs a rule created through the API.
 
 # Verify the rule {% #verify-the-rule %}
 

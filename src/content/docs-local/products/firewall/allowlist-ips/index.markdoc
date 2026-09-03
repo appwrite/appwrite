@@ -44,7 +44,7 @@ To protect one path only, add a second condition to the same rule. For example, 
 6. Set **Priority** to `100`.
 7. Review the impact preview, then click **Create rule**.
 
-The impact preview shows how much recent traffic the deny rule would match. Tighten the path condition if the count is broader than you expect.
+The impact preview shows how much recent traffic the deny rule would match. Tighten the path condition if the count is broader than you expect. The preview cannot estimate the bypass rule when its value is a CIDR range, because it compares IP values literally.
 
 # How the pair works {% #how-the-pair-works %}
 
