@@ -156,10 +156,60 @@ async function generateAnnouncingAppwrite2Cover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateAnnouncingGitlabSupportCover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'integration',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'GitLab comes to Appwrite',
+    subtitle: 'Deploy Sites and Functions from your GitLab groups and projects',
+    logoLeft: '/icons/appwrite.svg',
+    logoRight: '/icons/gitlab.svg',
+    connector: '×',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
+async function generateAnnouncingBitbucketSupportCover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'integration',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'Bitbucket comes to Appwrite',
+    subtitle: 'Deploy Sites and Functions from your Bitbucket workspaces',
+    logoLeft: '/icons/appwrite.svg',
+    logoRight: '/icons/bitbucket.svg',
+    connector: '×',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'announcing-appwrite-domains': convertCoverSourceToAvif,
+  'announcing-gitlab-support': generateAnnouncingGitlabSupportCover,
+  'announcing-bitbucket-support': generateAnnouncingBitbucketSupportCover,
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,

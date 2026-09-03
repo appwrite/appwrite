@@ -187,6 +187,20 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         actionLabel: 'Read article',
       },
       {
+        id: 'day4-gitlab-blog',
+        typeLabel: 'Blog',
+        title: 'GitLab comes to Appwrite',
+        href: '/blog/post/announcing-gitlab-support',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-bitbucket-blog',
+        typeLabel: 'Blog',
+        title: 'Bitbucket comes to Appwrite',
+        href: '/blog/post/announcing-bitbucket-support',
+        actionLabel: 'Read article',
+      },
+      {
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
