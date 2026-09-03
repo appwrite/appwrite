@@ -9,6 +9,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'organizations',
   'account',
   'blocks',
+  'impersonate',
   'init',
   'generator',
   'assistant',
