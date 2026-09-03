@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Message\Execution;
 use Appwrite\Event\Message\ExecutionCancelled as ExecutionCancelledMessage;
 use Appwrite\Event\Message\Executions as ExecutionsMessage;
+use Appwrite\Execution\Store;
 use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -34,12 +35,14 @@ class Executions extends Action
             ->groups(['executions'])
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
     public function action(
         Message $message,
         Database $dbForProject,
+        Store $executionStore,
     ): void {
         $payload = $message->getPayload();
 
@@ -55,6 +58,7 @@ class Executions extends Action
             Span::add('execution.id', $execution->getId());
             Span::add('execution.cancelled', true);
 
+            $executionStore->delete($executionMessage->project->getId(), $execution);
             if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
                 throw new Exception('Failed to remove cancelled execution');
             }
@@ -90,12 +94,34 @@ class Executions extends Action
             $pending = \array_values(\array_filter($executions, $this->isPending(...)));
             $final = \array_values(\array_filter($executions, fn (Document $execution) => !$this->isPending($execution)));
 
+            $created = [];
             foreach ($pending as $execution) {
-                $this->create($dbForProject, $execution);
+                $created[] = $this->create($dbForProject, $execution);
+            }
+            if ($created !== []) {
+                $executionStore->upsertMany($executionMessage->project->getId(), $created);
             }
 
             if (!empty($final)) {
-                $dbForProject->upsertDocuments('executions', $final, self::UPSERT_BATCH_SIZE);
+                $stored = [];
+                $dbForProject->upsertDocuments(
+                    'executions',
+                    $final,
+                    self::UPSERT_BATCH_SIZE,
+                    function (Document $execution) use (&$stored): void {
+                        $stored[$execution->getId()] = $execution;
+                    }
+                );
+
+                // An unchanged redelivery does not invoke upsertDocuments' callback.
+                // Read those rows back so a retry after a ClickHouse failure still heals
+                // the mirror and preserves the database-assigned sequence.
+                foreach ($final as $execution) {
+                    if (!isset($stored[$execution->getId()])) {
+                        $stored[$execution->getId()] = $dbForProject->getDocument('executions', $execution->getId());
+                    }
+                }
+                $executionStore->upsertMany($executionMessage->project->getId(), \array_values($stored));
             }
         } else {
             $execution = $executions[0];
@@ -105,9 +131,22 @@ class Executions extends Action
             Span::add('resource.type', $execution->getAttribute('resourceType', ''));
 
             if ($this->isPending($execution)) {
-                $this->create($dbForProject, $execution);
+                $stored = $this->create($dbForProject, $execution);
+                $executionStore->upsert($executionMessage->project->getId(), $stored);
             } else {
-                $dbForProject->upsertDocument('executions', $execution);
+                $stored = null;
+                $dbForProject->upsertDocuments(
+                    'executions',
+                    [$execution],
+                    self::UPSERT_BATCH_SIZE,
+                    function (Document $execution) use (&$stored): void {
+                        $stored = $execution;
+                    }
+                );
+
+                // An unchanged redelivery does not invoke upsertDocuments' callback.
+                $stored ??= $dbForProject->getDocument('executions', $execution->getId());
+                $executionStore->upsert($executionMessage->project->getId(), $stored);
             }
         }
     }
@@ -117,12 +156,13 @@ class Executions extends Action
         return \in_array($execution->getAttribute('status', ''), self::PENDING_STATUSES, true);
     }
 
-    private function create(Database $dbForProject, Document $execution): void
+    private function create(Database $dbForProject, Document $execution): Document
     {
         try {
-            $dbForProject->createDocument('executions', $execution);
+            return $dbForProject->createDocument('executions', $execution);
         } catch (Duplicate) {
             // A terminal write or a redelivery already created the document.
+            return $dbForProject->getDocument('executions', $execution->getId());
         }
     }
 }

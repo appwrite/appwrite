@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
@@ -42,6 +43,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Logger\Logger;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -179,6 +181,36 @@ $container->set('usageConnection', function () {
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_TTL', 180),
     );
 }, []);
+
+$container->set('executionStore', function (?Logger $logger) {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'executions',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+    $connection = System::getEnv(
+        '_APP_CONNECTIONS_DB_EXECUTIONS',
+        System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection)
+    );
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new ExecutionStore(
+        enabled: System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted'
+            && System::getEnv('_APP_EXECUTIONS_DUAL_WRITE', 'enabled') !== 'disabled',
+        dsn: $connection,
+        client: $client,
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        logger: $logger,
+    );
+}, ['logger']);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,

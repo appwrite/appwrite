@@ -55,7 +55,7 @@ abstract class Base extends Action
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->param('state', '', new Text(4096, 0), 'OAuth2 state. Contains info sent when starting authorization flow.', true)
+            ->param('state', '', new Text(APP_LIMIT_VCS_STATE, 0), 'OAuth2 state. Contains info sent when starting authorization flow.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -83,13 +83,13 @@ abstract class Base extends Action
         // Authorize action put in state, anyone with their own valid
         // authorization code could pass an arbitrary projectId here and
         // attach their VCS account as an installation on another project.
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
 
-        if (empty($key)) {
+        if (empty($signingKey)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $key);
+        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
         if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
