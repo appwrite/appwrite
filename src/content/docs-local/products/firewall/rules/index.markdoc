@@ -4,7 +4,7 @@ title: Rules
 description: Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.
 ---
 
-A **Firewall rule** is a named policy that matches inbound requests and applies an [action](/docs/products/firewall/actions). Rules belong to a **project**. They are managed under **Project** > **Firewall**.
+A **Firewall rule** is a named policy that matches inbound requests and applies an [action](/docs/products/firewall/actions). Rules belong to a **project**. You manage them under **Firewall** in your project.
 
 # What a rule contains {% #what-a-rule-contains %}
 
@@ -37,11 +37,11 @@ Use the resource selector above the list to filter by API, function, or site. Se
 
 Each row shows the rule's status toggle, name, action, priority, conditions, and last update. Use the status toggle to enable or disable a rule directly from the list, or open the row's actions menu to update or delete it.
 
-When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates (or re-enables) a catch-all [Challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode**. See [Attack mode](/docs/products/firewall/attack-mode).
+When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates a [challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode** that matches every request, or re-enables the one that already exists. See [Attack mode](/docs/products/firewall/attack-mode).
 
-# Create a rule through the API {% #create-a-rule-through-the-api %}
+# API endpoints {% #create-a-rule-through-the-api %}
 
-Each action has its own endpoint. Post to `/v1/waf/rules/deny`, `/bypass`, `/challenge`, `/rate-limit`, or `/redirect`:
+Each action has its own endpoint: `/v1/waf/rules/deny`, `/bypass`, `/challenge`, `/rate-limit`, and `/redirect`.
 
 ```sh
 curl -X POST https://cloud.appwrite.io/v1/waf/rules/deny \
@@ -62,7 +62,7 @@ curl -X POST https://cloud.appwrite.io/v1/waf/rules/deny \
 
 Each condition takes a `method`, an `attribute`, and a list of `values`. Operators that take no value, such as `isNull`, still need `values` as an empty list. [Conditions](/docs/products/firewall/conditions#api-attribute-names) lists the attribute names.
 
-Always send `conditions`. Leaving the parameter out creates a rule that matches every request in its scope, while sending an empty array returns a `400`.
+A request without `conditions` creates a rule that matches every request in its scope. An empty `conditions` array returns a `400`.
 
 # Plan limits {% #plan-limits %}
 
@@ -74,15 +74,15 @@ Firewall rule limits are **per project** and depend on your organization plan:
 | Pro | 50 |
 | Scale | 50 |
 
-Creating a rule is blocked when you reach the limit until you delete a rule or [upgrade your plan](/docs/advanced/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
+When you reach the limit, you cannot create a rule until you delete one or [upgrade your plan](/docs/advanced/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
 
 The Console shows current usage next to the Firewall title when a limit applies.
 
-# Access {% #access %}
+# Who can manage rules {% #access %}
 
 Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, the owner and developer roles hold both scopes and can create, update, and delete rules. The analyst and editor roles hold only `wafRules.read`, so they can view rules without changing them. The billing role holds neither.
 
-When organization roles are disabled, all organization members can manage rules where the feature is available.
+When organization roles are disabled, all organization members can manage rules.
 
 {% arrow_link href="/docs/products/firewall/quick-start" %}
 Quick start

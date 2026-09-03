@@ -37,7 +37,7 @@ The condition builder groups attributes by what they describe. A further 13 attr
 
 | Attribute | Matches | Typical use |
 |-----------|---------|-------------|
-| **IP address** | Client IP as seen by Appwrite; single IPs or CIDR blocks | Block or allowlist addresses and ranges |
+| **IP address** | Client IP as seen by Appwrite. Single IPs or CIDR blocks | Block or allowlist addresses and ranges |
 | **Operating system** | Operating system derived from the user agent | Filter traffic by client platform |
 | **Browser** | Browser derived from the user agent | Filter specific browsers or embedded clients |
 | **User agent** | Raw `User-Agent` header | Filter bots, scripts, or known clients |
@@ -55,7 +55,7 @@ With the premium Geo DB addon you can also match on **City**, **State**, **Posta
 
 Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error.
 
-If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
+If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **Not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
 
@@ -63,7 +63,7 @@ If the addon lapses on a project that already uses them, Appwrite treats those a
 
 Keys must be lowercase to match. The Console lowercases the key when it saves the rule. Through the API, write the key in lowercase yourself, or the condition never matches.
 
-Appwrite removes these headers from a request before it matches the request, so a **Header** condition on any of them never matches even though the rule saves:
+Appwrite strips these headers before it evaluates conditions. A **Header** condition on any of them never matches, even though you can save the rule:
 
 `cookie`, `authorization`, `x-appwrite-key`, `x-appwrite-jwt`, `x-appwrite-user-jwt`, `x-appwrite-session`, and any `x-forwarded-*` header.
 
@@ -71,8 +71,8 @@ To match a cookie on Functions or Sites traffic, use the **Cookie** attribute in
 
 # Matching details {% #matching-details %}
 
-- **IP address** accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks match only with **equals** and **not equal**.
-- **Path** conditions work best with **starts with**, for prefixes such as `/v1/account`.
+- **IP address** accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks match only with **Equals** and **Not equal**.
+- **Path** conditions work best with **Starts with**, for prefixes such as `/v1/account`.
 - **Operating system** and **Browser** are derived from the user agent and may not resolve for unusual clients. Match **User agent** directly instead.
 
 Text comparison ignores case.
@@ -81,7 +81,7 @@ Text comparison ignores case.
 
 Geo lookup fails for some addresses. **Country** and **Continent** then hold `unresolved` on an API rule, and are unset on a Functions or Sites rule.
 
-Either way they match every **not equal** condition, so a rule that allows only certain countries denies that traffic too. On an API rule, add **Country** **not equal** `unresolved` to let it through.
+Either way they match every **Not equal** condition, so a rule that allows only certain countries denies that traffic too. On an API rule, add **Country** **Not equal** `unresolved` to let it through.
 
 # Operators {% #operators %}
 
@@ -105,10 +105,10 @@ Which operators appear depends on the attribute:
 | **Country**, **Continent** | Equals, not equal, contains, does not contain |
 | **Latitude**, **Longitude**, **AS number** | Equals, not equal, is empty, is not empty |
 
-**Is empty** matches attributes the request did not send, such as a missing header. It does not match **User agent**, which is an empty string rather than unset when the header is absent.
+**Is empty** matches attributes the request did not send, such as a missing header. It does not match **User agent**: when that header is absent, Appwrite stores an empty string rather than leaving it unset.
 
 {% info title="Operators the Console cannot show" %}
-The API accepts more operators than the Console shows. Opening such a rule in the Console displays **equals** in their place, and saving writes **equals** to the rule. Edit those rules through the API.
+The API accepts more operators than the Console shows. When you open such a rule in the Console, it shows **Equals** in place of the unsupported operator. If you save, it writes **Equals** to the rule. Edit those rules through the API.
 {% /info %}
 
 # Multiple conditions {% #multiple-conditions %}

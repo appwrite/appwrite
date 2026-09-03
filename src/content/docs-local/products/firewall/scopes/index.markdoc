@@ -6,19 +6,19 @@ description: Learn how Appwrite Firewall scopes rules to the project API, a Func
 
 Every Firewall rule has a **resource type** that limits which traffic the rule can match. Scopes keep API-wide policies separate from policies for a single function or site.
 
-# Scope types {% #scope-types %}
+# Resource types {% #scope-types %}
 
 | Resource type | Applies to | Resource ID |
 |---------------|------------|-------------|
 | **API** | Project Appwrite API traffic (`/v1/...`) | Not required (stored empty) |
-| **Functions** | Public/edge traffic for one function | Function ID required |
-| **Sites** | Public/edge traffic for one site | Site ID required |
+| **Functions** | Public traffic to one function, enforced at the edge | Function ID required |
+| **Sites** | Public traffic to one site, enforced at the edge | Site ID required |
 
 # Where rules are enforced {% #where-rules-are-enforced %}
 
 - **API** rules are enforced on requests to your project's Appwrite API. This is the scope to use for Auth, Databases, Storage, and other `/v1` services.
 - **Functions** and **Sites** rules are stored on the project and applied to that function's or site's **public traffic** on the Appwrite Network edge.
-- Function and site rules do **not** block Console or Appwrite **management API** calls used to create, update, or deploy those resources. A deny rule on a function will not stop `GET /v1/functions/{id}` from a valid API key or the Console.
+- Function and site rules do not block the Console or the management API calls that create, update, or deploy those resources. A deny rule on a function does not stop `GET /v1/functions/{id}` from the Console or a valid API key.
 
 # When to use API {% #when-to-use-api %}
 
@@ -30,7 +30,7 @@ Use **API** for project-wide API controls:
 
 # When to use Functions {% #when-to-use-functions %}
 
-Use **Functions** when only one function's public traffic should be protected or exempted:
+Use **Functions** to protect or exempt the public traffic of one function:
 
 - Rate limit a public webhook function
 - Deny non-`POST` methods on an HTTP-triggered function endpoint
@@ -38,7 +38,7 @@ Use **Functions** when only one function's public traffic should be protected or
 
 # When to use Sites {% #when-to-use-sites %}
 
-Use **Sites** for a single deployed web app's public traffic:
+Use **Sites** for the public traffic of one deployed web app:
 
 - Redirect a deprecated path on one site
 - Deny admin paths on a marketing site
@@ -55,7 +55,7 @@ Use **Sites** for a single deployed web app's public traffic:
 ![Firewall resource selector with API and site scopes](/images/docs/firewall/resource-selector.avif)
 {% /only_light %}
 
-The Firewall page filters the rules list with a resource selector. The **Project** group holds the **API** scope, and each function and site appears under its own group. Creating a rule while a function or site is selected preselects that resource in the wizard. You can change the resource type in the create wizard, or later from the rule's **Update** action.
+The Firewall page filters the rules list with a resource selector. The **Project** group holds the **API** scope, and each function and site appears under its own group. If you create a rule while a function or site is selected, the wizard preselects that resource. You can change the resource type in the create wizard, or later from the rule's **Update** action.
 
 {% arrow_link href="/docs/products/firewall/site-maintenance" %}
 Redirect a site for maintenance

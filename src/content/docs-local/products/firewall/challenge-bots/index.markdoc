@@ -6,9 +6,9 @@ difficulty: intermediate
 readtime: 5
 ---
 
-A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Real browsers solve it and pass, usually without the visitor noticing. Scripts do not.
+A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Browsers solve it and pass, usually without the visitor noticing. Scripts do not.
 
-Use a challenge on the pages abuse targets, such as sign-up, sign-in, and password reset, where blocking by IP or country would also block real users.
+Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users.
 
 This guide puts a challenge in front of the sign-up page of a site.
 
@@ -39,7 +39,7 @@ Every condition on a rule must match, so one rule covers one path prefix. Create
 
 Do not build a challenge rule on **User agent** contains `curl`. Appwrite denies known bots before a challenge is issued, so the rule produces denials and **Challenged** stays at zero. See [Known bots are denied](/docs/products/firewall/actions#known-bots-are-denied).
 
-Cover the page a visitor loads, not the endpoint the form posts to. Appwrite serves the challenge page only for browser navigation, so a rule on a `POST` target returns `403` rather than a challenge. A visitor who is cleared on the page carries that clearance through the form submission.
+Cover the page a visitor loads, not the path the form posts to. Appwrite serves the challenge page only for browser navigation, so a rule on a `POST` target returns `403` rather than a challenge. A visitor who is cleared on the page carries that clearance through the form submission.
 
 # Verify the rule {% #verify-the-rule %}
 
@@ -48,7 +48,7 @@ Cover the page a visitor loads, not the endpoint the form posts to. Appwrite ser
 3. Reload the page. The challenge does not appear again, because you are now cleared.
 4. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
 
-Raise the difficulty if automated traffic keeps getting through. Lower it if first page loads feel slow.
+If automated traffic keeps getting through, raise the difficulty. If first page loads feel slow, lower it.
 
 {% arrow_link href="/docs/products/firewall/scopes" %}
 Resource scopes

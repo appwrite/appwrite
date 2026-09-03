@@ -1,10 +1,10 @@
 ---
 layout: article
-title: Monitor traffic
-description: Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.
+title: Traffic overview
+description: The metrics Appwrite Firewall reports for project traffic, and what the rule impact preview can estimate.
 ---
 
-Firewall includes a **traffic overview** on the project Firewall page and an **impact preview** while creating rules. Together they help you validate policies before and after you enable them.
+Firewall gives you two views of your rules. Use the **impact preview** to size a rule before you create it, and the **traffic overview** to see what it did after.
 
 # Traffic overview {% #traffic-overview %}
 
@@ -27,23 +27,23 @@ Series include:
 | **Rate limited** | Requests throttled over a rate limit quota (`429`) |
 | **Redirected** | Requests answered with a redirect action |
 
-**Block rate** is denied plus rate limited, as a share of the headline total.
+**Block rate** is denied plus rate limited, as a share of that count.
 
 Bypassed requests and under-quota rate-limited requests have no series of their own. Both are allowed, so they appear under **Passed**.
 
 {% info title="API rules are counted twice" %}
 A request that an **API** rule denies, challenges, rate limits, or redirects still counts under **Passed**, because it reached your project before Firewall stopped it. The headline total counts that request in two series.
 
-Rules on a **Function** or a **Site** stop the request at the edge, so those are counted once.
+Rules on a **Function** or a **Site** stop the request at the edge, so Appwrite counts those requests once.
 {% /info %}
 
 Use the date range picker and interval controls to zoom into an incident, or drag across the chart to select a range.
 
 The chart always covers the whole project. It does not follow the resource selector that filters the rules list below it.
 
-# Reading the metrics {% #reading-the-metrics %}
+# What the metrics tell you {% #reading-the-metrics %}
 
-If **Passed** is high and **Denied** is flat, check that the rule is enabled, that no bypass rule with a lower priority number catches the traffic first, and that its conditions match real traffic.
+If **Passed** is high and **Denied** is flat, check that the rule is enabled, that no bypass rule with a lower priority number catches the traffic first, and that the rule's conditions match your live traffic.
 
 If **Rate limited** climbs with normal load, raise the limit, lengthen the interval, or narrow the conditions.
 
@@ -51,7 +51,7 @@ If **Rate limited** climbs with normal load, raise the limit, lengthen the inter
 
 When you create or edit a rule, the wizard sidebar estimates how many recent requests would have matched. Use it to tighten a broad path or country filter before you turn on deny, and to size a rate limit quota against real volume.
 
-The estimate covers IP, path, method, country, city, hostname, operating system, browser, and user agent. A rule that uses any other attribute, a **does not contain** condition, or more than eight conditions shows **Preview unavailable** instead of a number. IP addresses are compared as text, so a CIDR range previews as zero matches even though the rule enforces it.
+The estimate covers IP, path, method, country, city, hostname, operating system, browser, and user agent. A rule that uses any other attribute, a **does not contain** condition, or more than eight conditions shows **Preview unavailable** instead of a number. IP addresses are compared as text, so a CIDR range shows zero matches. The rule still matches every address in the range.
 
 To confirm which rule handled a request once the rule is live, read the `X-Appwrite-WAF-Rule` response header. See [Find out which rule fired](/docs/products/firewall/actions#which-rule-fired).
 

@@ -10,6 +10,8 @@ A rate limit rule sets a request quota for matching traffic. Use it on authentic
 
 This guide limits session creation. Each client IP address can send `10` matching requests per `60` seconds. Requests over the quota receive a `429` response with a `Retry-After` header.
 
+You cannot change a rule's strategy after you create it. This guide uses **Fixed window**. Read [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies) first if you want another.
+
 # Create the rate limit rule {% #create-the-rate-limit-rule %}
 
 {% only_dark %}
@@ -38,7 +40,7 @@ The path prefix on its own also covers listing and deleting sessions, so the **M
 
 Size the quota against the traffic you see in the impact preview. A quota below normal client behavior creates false positives. A quota far above attack speed gives no protection.
 
-**Fixed window** resets the count at each interval boundary, so `Retry-After` tells a throttled client exactly how long to wait. Pick the strategy before you create the rule, because you cannot change it afterward. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
+**Fixed window** resets the count at each interval boundary, so `Retry-After` tells a throttled client exactly how long to wait.
 
 Set **Limit by** to **User ID** to count per signed-in user instead of per IP address. Signed-out requests then skip the rule.
 

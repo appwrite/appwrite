@@ -51,7 +51,7 @@ Use `302` so browsers and search engines do not cache the redirect.
 # Verify the rules {% #verify-the-rules %}
 
 1. Open any path of the site in a browser. Confirm the browser lands on `/maintenance`.
-2. Open `/maintenance` directly. Confirm the page loads without a redirect, and that it renders with its styles intact.
+2. Open `/maintenance` directly. Confirm that the page loads without a redirect and renders with its styles.
 3. Open **Firewall** and confirm the **Redirected** series rises in the traffic overview.
 
 # End the maintenance {% #end-the-maintenance %}

@@ -32,7 +32,7 @@ Country conditions use the geo location of the client IP address, and work on ev
 
 Denied clients receive a `403` response. The denied requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Denied** series.
 
-To block more than one country, create one deny rule for each country. Conditions on a single rule must all match, so two country conditions on one rule never match together.
+To block more than one country, create one deny rule for each. Conditions on a single rule must all match, and a request comes from one country, so a rule with two **Country** **Equals** conditions never matches anything.
 
 # Allow only specific countries {% #allow-only-specific-countries %}
 
@@ -42,12 +42,12 @@ Traffic whose country Appwrite cannot resolve also matches **Not equal**, so thi
 
 # Verify the rule {% #verify-the-rule %}
 
-1. Send a request from the blocked country with a client SDK or an API key. Firewall does not block Console access.
+1. Send a request from the blocked country with a client SDK or an API key. Use one of those, because Firewall never blocks the Console.
 2. Confirm the client receives a `403` response.
 3. Open **Firewall** and confirm the **Denied** series rises in the traffic overview.
 
 To pause the rule, turn off its status toggle in the rules list.
 
 {% arrow_link href="/docs/products/firewall/monitor" %}
-Monitor traffic
+Traffic overview
 {% /arrow_link %}

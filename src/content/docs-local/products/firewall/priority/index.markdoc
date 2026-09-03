@@ -11,17 +11,17 @@ Priority ranges from `-100000` to `100000`. The Console's stepper stops at `0`, 
 # How evaluation works {% #how-evaluation-works %}
 
 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example `10` before `100`).
-2. Rules that do not apply to the current [resource scope](/docs/products/firewall/scopes) are skipped.
+2. Appwrite skips rules that do not apply to the request's [resource type](/docs/products/firewall/scopes).
 3. For each remaining rule in order, Appwrite checks whether all [conditions](/docs/products/firewall/conditions) match.
 4. On the first match, the rule action runs (deny, bypass, challenge, rate limit, or redirect).
-5. Later rules are not applied to that request.
+5. Appwrite ignores later rules for that request.
 
-Disabled rules are not loaded. If no rule matches, the request continues.
+If no rule matches, the request continues.
 
 {% info title="Stop on match" %}
-**Bypass** and **rate limit** (even when the request is still under the quota) also stop evaluation. A matching bypass or under-quota rate limit prevents later deny rules from running.
+**Bypass** stops evaluation, and so does **rate limit** while the request is under the quota. Neither lets a later deny rule run.
 
-One case is different. A rate limit rule with **Limit by** set to `userId` cannot apply to a signed-out visitor, so Appwrite skips it and carries on to the rules below.
+One case is different. A rate limit rule with **Limit by** set to `userId` cannot apply to a signed-out visitor, so Appwrite skips it and continues to the rules below.
 {% /info %}
 
 # Choosing priority values {% #choosing-priority-values %}
@@ -37,9 +37,7 @@ The Console create wizard defaults priority to `100`, while the API defaults to 
 
 Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert rules later without renumbering everything.
 
-# Updating priority {% #updating-priority %}
-
-To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. The change applies to new requests within moments.
+To change a rule's priority, open its actions menu in the rules list and choose **Update**. The change applies to new requests within moments.
 
 {% arrow_link href="/docs/products/firewall/allowlist-ips" %}
 Allowlist trusted IP addresses
