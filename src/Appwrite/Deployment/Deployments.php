@@ -601,13 +601,6 @@ readonly class Deployments
      */
     protected static function objectUrl(Device $device, string $path): string
     {
-        $bucket = self::bucket($device);
-
-        return 's3://' . \ltrim(($bucket !== '' ? "/{$bucket}" : '') . $path, '/');
-    }
-
-    private static function bucket(Device $device): string
-    {
         $type = $device->getType();
         $configuredDevice = DeviceType::tryFrom(\strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
         $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
@@ -618,26 +611,23 @@ readonly class Deployments
         $usesS3Configuration = $hasS3Configuration && ($connection === '' || \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true));
 
         if ($usesS3Configuration && \in_array($type, [DeviceType::S3, DeviceType::AwsS3], true) && System::getEnv('_APP_STORAGE_S3_ENDPOINT', '') !== '') {
-            return '';
+            $bucket = '';
+        } elseif (! $usesS3Configuration && $connection !== '') {
+            $bucket = \trim((new DSN($connection))->getPath() ?? '', '/');
+        } elseif ($usesS3Configuration) {
+            $bucket = $s3Bucket;
+        } else {
+            $prefix = match ($type) {
+                DeviceType::DoSpaces => 'DO_SPACES',
+                DeviceType::Backblaze => 'BACKBLAZE',
+                DeviceType::Linode => 'LINODE',
+                DeviceType::Wasabi => 'WASABI',
+                DeviceType::S3, DeviceType::AwsS3, DeviceType::Local => null,
+            };
+            $bucket = $prefix === null ? '' : System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
         }
 
-        if (! $usesS3Configuration && $connection !== '') {
-            return \trim((new DSN($connection))->getPath() ?? '', '/');
-        }
-
-        if ($usesS3Configuration) {
-            return $s3Bucket;
-        }
-
-        $prefix = match ($type) {
-            DeviceType::DoSpaces => 'DO_SPACES',
-            DeviceType::Backblaze => 'BACKBLAZE',
-            DeviceType::Linode => 'LINODE',
-            DeviceType::Wasabi => 'WASABI',
-            DeviceType::S3, DeviceType::AwsS3, DeviceType::Local => null,
-        };
-
-        return $prefix === null ? '' : System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        return 's3://' . \ltrim(($bucket !== '' ? "/{$bucket}" : '') . $path, '/');
     }
 
     protected static function version(Document $resource): string
