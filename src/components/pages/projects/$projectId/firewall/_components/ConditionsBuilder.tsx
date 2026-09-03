@@ -13,13 +13,27 @@ import {
 } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
+  Activity,
   AppWindow,
+  Building,
   Building2,
+  Cable,
+  Check,
+  Clock,
+  Cloud,
+  Compass,
+  Cookie,
   Fingerprint,
   Globe,
   Globe2,
+  Hash,
+  KeyRound,
+  Languages,
+  LocateFixed,
+  Mailbox,
   MapPin,
   Monitor,
+  Network,
   Plus,
   Route,
   SearchCode,
@@ -28,6 +42,7 @@ import {
   Tags,
   Trash2,
   UserRound,
+  Wifi,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -70,12 +85,28 @@ const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   host: Server,
   path: Route,
   method: Send,
+  protocol: Network,
   headers: Tags,
   query: SearchCode,
+  queryKeys: KeyRound,
+  accept: Check,
+  acceptLanguage: Languages,
+  cookie: Cookie,
   country: Globe2,
   continent: Globe,
   city: Building2,
   state: MapPin,
+  postalCode: Mailbox,
+  latitude: LocateFixed,
+  longitude: Compass,
+  timeZone: Clock,
+  weatherCode: Cloud,
+  isp: Wifi,
+  autonomousSystemNumber: Hash,
+  autonomousSystemOrganization: Building,
+  connectionType: Cable,
+  connectionUsageType: Activity,
+  connectionOrganization: Building,
   os: Monitor,
   browser: AppWindow,
   userAgent: UserRound,
@@ -86,6 +117,32 @@ const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
   api: 'e.g. /v1/account',
   functions: 'e.g. /api',
   sites: 'e.g. /about',
+}
+
+/**
+ * Example value hints for attributes rendered by the generic text input (the
+ * `default` case below). Attributes with a dedicated input branch set their own
+ * placeholder; anything absent here falls back to a plain "Value".
+ */
+const ATTRIBUTE_VALUE_PLACEHOLDERS: Partial<
+  Record<FirewallConditionAttribute, string>
+> = {
+  protocol: 'e.g. https',
+  queryKeys: 'e.g. redirect',
+  accept: 'e.g. application/json',
+  acceptLanguage: 'e.g. en-US',
+  cookie: 'e.g. a_session_console',
+  postalCode: 'e.g. 94107',
+  latitude: 'e.g. 37.7749',
+  longitude: 'e.g. -122.4194',
+  timeZone: 'e.g. America/Los_Angeles',
+  weatherCode: 'e.g. USCA0746',
+  isp: 'e.g. Comcast Cable',
+  autonomousSystemNumber: 'e.g. 15169',
+  autonomousSystemOrganization: 'e.g. Google LLC',
+  connectionType: 'e.g. Cellular',
+  connectionUsageType: 'e.g. residential',
+  connectionOrganization: 'e.g. Google LLC',
 }
 
 interface ConditionsBuilderProps {
@@ -369,16 +426,18 @@ function ConditionValueInput({
         />
       )
 
-    default:
+    default: {
+      const hint = ATTRIBUTE_VALUE_PLACEHOLDERS[attribute]
       return (
         <Input
           value={value}
           disabled={disabled}
-          placeholder={t('Value')}
-          className="h-9 w-full"
+          placeholder={hint ?? t('Value')}
+          className="h-9 w-full font-mono text-[13px]"
           onChange={(e) => onChange(e.target.value)}
         />
       )
+    }
   }
 }
 
