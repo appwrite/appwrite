@@ -385,8 +385,14 @@ class Jobs extends Action
         Bus $bus,
         Deployments $deployments,
     ): Document {
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
-            return $deployment; // already finalized
+        if ($deployment->getAttribute('status') === 'ready') {
+            $this->activateIfNeeded($dbForProject, $dbForPlatform, $project, $deployment, $bus);
+
+            return $deployment;
+        }
+
+        if ($deployment->getAttribute('status') === 'failed') {
+            return $deployment;
         }
 
         $deploymentId = $deployment->getId();
@@ -530,8 +536,8 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+        if ($success && $deployment->getAttribute('status') === 'ready') {
+            $this->activateIfNeeded($dbForProject, $dbForPlatform, $project, $deployment, $bus, $resource);
         }
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
@@ -663,6 +669,36 @@ class Jobs extends Action
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', ['']),
         ]);
+    }
+
+    /**
+     * Reconcile auto-activation after a successful build. Terminal job
+     * callbacks can be delivered more than once, and a worker can stop after
+     * persisting `ready` but before updating the resource. Keep activation
+     * idempotent so a later callback repairs that partial outcome.
+     */
+    private function activateIfNeeded(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        Bus $bus,
+        ?Document $resource = null,
+    ): void {
+        if ($deployment->getAttribute('activate') !== true) {
+            return;
+        }
+
+        $resource ??= $dbForProject->getDocument(
+            $deployment->getAttribute('resourceType', 'functions'),
+            $deployment->getAttribute('resourceId')
+        );
+
+        if ($resource->isEmpty() || $resource->getAttribute('deploymentId') === $deployment->getId()) {
+            return;
+        }
+
+        $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
     }
 
     /**
