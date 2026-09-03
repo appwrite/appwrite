@@ -557,8 +557,8 @@ readonly class Deployments
         $cachePath = static::cachePath($projectId, $cacheKey);
         $device = static::device($projectId);
 
-        if ($device->getType() === DeviceType::Local) {
-            return [
+        return match ($device->getType()) {
+            DeviceType::Local => [
                 'volumes' => [
                     new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
                 ],
@@ -567,30 +567,24 @@ readonly class Deployments
                     'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
                     'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => $cachePath,
                 ],
-            ];
-        }
-
-        // 'in' paths are workspace-relative.
-        $artifacts = [
-            new UploadArtifact(id: 'output', in: 'output/' . static::artifact(), out: static::objectUrl($device, static::buildPath($projectId, $deploymentId)), depends: 'job'),
-            new UploadArtifact(id: 'cache', in: "cache/{$cacheKey}.sqfs", out: static::objectUrl($device, $cachePath), depends: 'job'),
-        ];
-
-        // Pull the cache only when a previous build saved one: a failed
-        // pre-job artifact aborts the job, so an unconditional download
-        // would break every first build.
-        if ($device->exists($cachePath)) {
-            \array_unshift($artifacts, new DownloadArtifact(id: 'cachePull', in: static::objectUrl($device, $cachePath), out: "cache/{$cacheKey}.sqfs"));
-        }
-
-        return [
-            'volumes' => [],
-            'artifacts' => $artifacts,
-            'environment' => [
-                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => '/mnt/code/output',
-                'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => "/mnt/code/cache/{$cacheKey}.sqfs",
             ],
-        ];
+            default => [
+                'volumes' => [],
+                // 'in' paths are workspace-relative. Pull the cache only when
+                // a previous build saved one: a failed pre-job artifact aborts
+                // the job, so an unconditional download would break every
+                // first build.
+                'artifacts' => [
+                    ...($device->exists($cachePath) ? [new DownloadArtifact(id: 'cachePull', in: static::objectUrl($device, $cachePath), out: "cache/{$cacheKey}.sqfs")] : []),
+                    new UploadArtifact(id: 'output', in: 'output/' . static::artifact(), out: static::objectUrl($device, static::buildPath($projectId, $deploymentId)), depends: 'job'),
+                    new UploadArtifact(id: 'cache', in: "cache/{$cacheKey}.sqfs", out: static::objectUrl($device, $cachePath), depends: 'job'),
+                ],
+                'environment' => [
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => '/mnt/code/output',
+                    'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => "/mnt/code/cache/{$cacheKey}.sqfs",
+                ],
+            ],
+        };
     }
 
     /**
