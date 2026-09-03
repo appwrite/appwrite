@@ -84,7 +84,7 @@ abstract class Base extends Action
         // authorization code could pass an arbitrary projectId here and
         // attach their VCS account as an installation on another project.
         $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        if (!\hash_equals($signature, $state['signature'] ?? '')) {
+        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 
