@@ -101,10 +101,7 @@ function RepositorySkeleton({
 export function CreateSiteView() {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(
-    features.extraVcsOAuth,
-    features.gitlabBitbucketProviders,
-  )
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()

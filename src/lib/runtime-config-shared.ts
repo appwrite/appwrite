@@ -35,11 +35,6 @@ export interface RuntimeConfig {
    * ('' = profile default, off).
    */
   extraVcsOAuth: string
-  /**
-   * Override for GitLab/Bitbucket sign-in and Git connect providers
-   * ('' = profile default).
-   */
-  gitlabBitbucketProviders: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
@@ -133,7 +128,6 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     extraOAuthLogin: read('VITE_CONSOLE_EXTRA_OAUTH_LOGIN'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
-    gitlabBitbucketProviders: read('VITE_CONSOLE_GITLAB_BITBUCKET'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }

@@ -43,7 +43,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   databasePitrRestore: '',
   extraOAuthLogin: '',
   extraVcsOAuth: '',
-  gitlabBitbucketProviders: '',
   usageStats: '',
   preLaunch: '',
 }

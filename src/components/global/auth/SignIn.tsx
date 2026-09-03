@@ -236,13 +236,10 @@ export function SignIn({
   const { features } = useConsoleProfile()
   const oauthProviders = useMemo(() => {
     const visible = new Set(
-      getVisibleConsoleOAuthProviders(
-        features.extraOAuthLogin,
-        features.gitlabBitbucketProviders,
-      ),
+      getVisibleConsoleOAuthProviders(features.extraOAuthLogin),
     )
     return OAUTH_PROVIDERS.filter((provider) => visible.has(provider.id))
-  }, [features.extraOAuthLogin, features.gitlabBitbucketProviders])
+  }, [features.extraOAuthLogin])
   const schema =
     mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
   const form = useForm<FormValues>({
@@ -270,7 +267,6 @@ export function SignIn({
       isConsoleOAuthProviderEnabled(
         last,
         getActiveProfileFeatures().extraOAuthLogin,
-        getActiveProfileFeatures().gitlabBitbucketProviders,
       )
     ) {
       return last

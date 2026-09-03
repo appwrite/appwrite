@@ -4,8 +4,15 @@ import {
   type OAuthLoginMethod,
 } from '@/lib/utils/auth-storage'
 
-/** Always available on console sign-in and sign-up. */
+/** Preselected on console sign-in and sign-up when no last-used method applies. */
 export const DEFAULT_CONSOLE_OAUTH_LOGIN: OAuthLoginMethod = 'github'
+
+/** Always available on console sign-in and sign-up, regardless of profile flags. */
+const ALWAYS_ENABLED_LOGIN_METHODS = new Set<OAuthLoginMethod>([
+  'github',
+  'gitlab',
+  'bitbucket',
+])
 
 /** Console project OAuth providers. */
 export const CONSOLE_OAUTH_PROVIDERS: Record<OAuthLoginMethod, OAuthProvider> = {
@@ -22,32 +29,17 @@ export const OAUTH_LOGIN_ERROR: Record<OAuthLoginMethod, string> = {
   bitbucket: 'Failed to initiate Bitbucket login',
 }
 
-const GITLAB_BITBUCKET_LOGIN_METHODS = new Set<OAuthLoginMethod>([
-  'gitlab',
-  'bitbucket',
-])
-
 export function getVisibleConsoleOAuthProviders(
   extraOAuthLogin: boolean,
-  gitlabBitbucketProviders: boolean,
 ): readonly OAuthLoginMethod[] {
   return OAUTH_LOGIN_METHODS.filter((provider) =>
-    isConsoleOAuthProviderEnabled(
-      provider,
-      extraOAuthLogin,
-      gitlabBitbucketProviders,
-    ),
+    isConsoleOAuthProviderEnabled(provider, extraOAuthLogin),
   )
 }
 
 export function isConsoleOAuthProviderEnabled(
   provider: OAuthLoginMethod,
   extraOAuthLogin: boolean,
-  gitlabBitbucketProviders: boolean,
 ): boolean {
-  if (provider === DEFAULT_CONSOLE_OAUTH_LOGIN) return true
-  if (GITLAB_BITBUCKET_LOGIN_METHODS.has(provider)) {
-    return gitlabBitbucketProviders
-  }
-  return extraOAuthLogin
+  return ALWAYS_ENABLED_LOGIN_METHODS.has(provider) || extraOAuthLogin
 }

@@ -155,10 +155,7 @@ export function GitConfigurationCard({
 }: GitConfigurationCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(
-    features.extraVcsOAuth,
-    features.gitlabBitbucketProviders,
-  )
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const queryClient = useQueryClient()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
   const vcsAuthUrl = (

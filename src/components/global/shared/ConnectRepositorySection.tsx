@@ -118,10 +118,7 @@ export function ConnectRepositorySection({
 }: ConnectRepositorySectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(
-    features.extraVcsOAuth,
-    features.gitlabBitbucketProviders,
-  )
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
