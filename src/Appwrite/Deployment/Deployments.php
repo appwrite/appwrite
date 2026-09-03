@@ -572,9 +572,6 @@ readonly class Deployments
 
         if ($device->getType() === DeviceType::Local) {
             return [
-                // Docker volume / K8s PVC named by _APP_BUILDS_VOLUME, attached
-                // to the worker at its Appwrite path so build.sh writes output +
-                // cache straight onto it.
                 'volumes' => [
                     new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
                 ],
