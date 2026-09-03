@@ -34,7 +34,10 @@ export function DocsStepNav({ slug }: DocsStepNavProps) {
       )}
 
       {next ? (
-        <DocsRouteLink href={next.href} className={`${CARD_CLASS} @[600px]:items-end`}>
+        <DocsRouteLink
+          href={next.href}
+          className={`${CARD_CLASS} @[600px]:items-end`}
+        >
           <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             Next
             <ArrowRight className="size-3.5" aria-hidden />
