@@ -35,7 +35,7 @@ Challenged traffic appears in [traffic overview](/docs/products/firewall/monitor
 
 [Bypass](/docs/products/firewall/actions#bypass) rules with a **lower** priority number still run first and can allowlist trusted traffic. Bypass rules at `10` or higher are evaluated after Attack mode, so they do not skip the challenge while Attack mode is on.
 
-To keep an allowlist during Attack mode, give those bypass rules a negative priority. The Console's priority field starts at `0`, so create or update those rules through the API.
+To keep an allowlist working during Attack mode, give those bypass rules a negative priority. The Console's priority field starts at `0`, so set the negative value through the API.
 
 # Turn it off {% #turn-it-off %}
 

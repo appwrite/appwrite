@@ -4,9 +4,9 @@ title: Priority
 description: Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.
 ---
 
-**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Priority ranges from `-100000` to `100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
+**Priority** sets the order Appwrite evaluates rules in. Lower numbers run first. The first rule that matches applies its [action](/docs/products/firewall/actions), and no later rule runs for that request.
 
-The Console's priority field starts at `0` and its stepper will not go below it, so negative priorities are easiest to set through the API.
+Priority ranges from `-100000` to `100000`. The Console's field starts at `0` and will not step below it, so set a negative priority through the API.
 
 # How evaluation works {% #how-evaluation-works %}
 
@@ -21,7 +21,7 @@ Disabled rules are not loaded. If no rule matches, the request continues.
 {% info title="Stop on match" %}
 **Bypass** and **rate limit** (even when the request is still under the quota) also stop evaluation. A matching bypass or under-quota rate limit prevents later deny rules from running.
 
-One rule type is an exception. A rate limit rule with **Limit by** set to `userId` is dropped from evaluation when the request has no authenticated user, so later rules still run.
+One case is different. A rate limit rule with **Limit by** set to `userId` cannot apply to a signed-out visitor, so Appwrite skips it and carries on to the rules below.
 {% /info %}
 
 # Choosing priority values {% #choosing-priority-values %}
@@ -42,14 +42,14 @@ Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert r
 Overlapping conditions are normal. Priority decides which action wins:
 
 - A broad **deny** country rule at `100` will never run for an IP that already matched a **bypass** at `10`.
-- Two deny rules that could both match: only the lower priority number applies; the second is unused for those requests.
+- When two deny rules could both match, only the one with the lower priority number applies. The other never runs for those requests.
 - A **rate limit** at `50` that matches (even under quota) prevents a **deny** at `100` from running for the same request.
 
 Use [impact preview](/docs/products/firewall/monitor#impact-preview) while editing to see how many recent requests would match the rule you are about to place in the order.
 
 # Updating priority {% #updating-priority %}
 
-To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. Appwrite refreshes the cached rule set after the change, so new requests pick up the new order within moments. Propagation is not guaranteed to be instant. Historical traffic metrics are not rewritten.
+To change a rule's priority, open the rule's actions menu in the rules list and choose **Update**. New requests pick up the new order within moments, once Appwrite refreshes the rules it has cached. Past traffic metrics stay as they were.
 
 {% arrow_link href="/docs/products/firewall/allowlist-ips" %}
 Allowlist trusted IP addresses

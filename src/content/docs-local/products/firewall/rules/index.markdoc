@@ -14,21 +14,17 @@ A **Firewall rule** is a named policy that matches inbound requests and applies 
 | Description | Optional notes for your team |
 | Resource type | [API, Functions, or Sites](/docs/products/firewall/scopes) |
 | Resource ID | Required for Functions and Sites scopes |
-| Conditions | [Request filters](/docs/products/firewall/conditions). The Console requires at least one; the API accepts a rule with none, which matches every request in scope |
+| Conditions | [Request filters](/docs/products/firewall/conditions). A rule with none matches every request in its scope |
 | Action | Deny, bypass, challenge, rate limit, or redirect (set at create time) |
 | Priority | Evaluation order ([lower first](/docs/products/firewall/priority)), `-100000` to `100000` |
 | Enabled | Whether the rule participates in evaluation |
-| Rule ID | Custom ID set at create time. Pass `ID.unique()` to generate one. Required by the API; the Console generates it for you |
+| Rule ID | Set once, when the rule is created. The Console generates one for you |
 
-Action-specific fields are stored with the rule when those actions are selected:
+Each action brings its own settings. A challenge rule stores a difficulty and a clearance time, a rate limit rule stores a quota and a strategy, and a redirect rule stores a location and a status code. [Actions](/docs/products/firewall/actions) covers all of them.
 
-| Action | Fields |
-|--------|--------|
-| Challenge | `challengeType` (`compute` only), `difficulty` `1`-`5` default `3`, `ttl` `900`-`86400` default `1800` |
-| Rate limit | `limit` and `interval` (both required), `key` (`ip` or `userId`), `strategy`, `maxBucketSize` |
-| Redirect | `location` (required, up to 2048 characters), `statusCode` `300`-`399` default `302` |
+You choose the action when you create the rule and cannot change it later. To swap a deny rule for a challenge rule, delete it and create a new one.
 
-Each action has its own create and update endpoint, which is why the action cannot change after the rule exists. Name is limited to 128 characters, description to 1024, and resource ID to 255.
+The name holds up to 128 characters, and the description holds up to 1024.
 
 When at least one **enabled** rule exists, Appwrite marks the project as Firewall-enabled so evaluation runs for eligible traffic. Disabling or deleting the last enabled rule turns evaluation off for the project.
 

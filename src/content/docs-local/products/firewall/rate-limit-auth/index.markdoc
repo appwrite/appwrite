@@ -38,7 +38,9 @@ The path prefix on its own also covers listing and deleting sessions, so the **M
 
 Size the quota against the traffic you see in the impact preview. A quota below normal client behavior creates false positives. A quota far above attack speed gives no protection.
 
-**Fixed window** is the default strategy. It divides time into back-to-back windows of the interval length and resets the count at each boundary, so the `Retry-After` header reports the seconds until the current window resets. Two other strategies are available, and strategy cannot be changed after the rule is created. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
+**Fixed window** counts requests in back-to-back windows of the interval length and resets the count at each boundary. The `Retry-After` header then tells a throttled client exactly how many seconds are left in the current window.
+
+Two other strategies handle bursts differently. Pick one before you create the rule, because you cannot change it afterward. See [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies).
 
 Set **Limit by** to **User ID** to count the quota per authenticated user instead of per client IP address. Requests without an authenticated user skip the rule, and later rules still run for them. See [Rate limit](/docs/products/firewall/actions#rate-limit).
 

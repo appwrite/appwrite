@@ -6,15 +6,11 @@ difficulty: intermediate
 readtime: 5
 ---
 
-A challenge rule verifies matching clients before their requests continue. Clients that pass the challenge continue to your application. Clients that fail do not. Use challenge instead of deny when automated traffic and normal users share the same paths.
+A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Real browsers solve it and pass, usually without the visitor noticing. Scripts do not.
 
-The interactive challenge page is served only for `GET` requests that send `Accept: text/html`, on **site** and **function** traffic. Everything else gets a `403` challenge-required error, including form posts, `fetch` calls, asset requests, and every **API**-scoped challenge rule. Scope challenge rules to a site or function, and to paths a browser navigates to. See [Challenge](/docs/products/firewall/actions#challenge).
+Use a challenge on the pages abuse targets, such as sign-up, sign-in, and password reset, where blocking by IP or country would also block real users.
 
-{% info title="Known bot clients are denied instead" %}
-Appwrite screens requests before issuing a challenge. A missing `User-Agent`, or one containing a marker such as `curl/`, `wget/`, `python-requests`, `go-http-client`, `okhttp`, `headlesschrome`, or `scrapy`, is denied with `403` and counted under **Denied**.
-
-A challenge rule aimed at those clients therefore never produces a challenge. Use **Deny** for them, and use **Challenge** for traffic that could be a browser.
-{% /info %}
+This guide puts a challenge in front of the sign-up page of a site.
 
 # Create the challenge rule {% #create-the-challenge-rule %}
 
@@ -27,34 +23,40 @@ A challenge rule aimed at those clients therefore never produces a challenge. Us
 
 1. Open **Firewall** in your project.
 2. Click **Create rule**.
-3. Enter a **Rule name** (for example `Challenge automated clients`).
-4. Select the **Resource type** for the traffic you expect. Pick **Sites** and select your site for browser traffic.
-5. Under conditions, set **User agent** **Contains** a pattern your traffic shows that Appwrite does not already deny, for example an automation framework that advertises a full browser user agent.
+3. Enter a **Rule name**, for example `Challenge sign-up`.
+4. Set **Resource type** to **Sites** and select your site.
+5. Under conditions, set **Path** **Starts with** `/signup`.
 6. Under **Then**, choose **Challenge**.
 7. Keep **Difficulty** at `3`.
 8. Keep **TTL (seconds)** at `1800`.
 9. Click **Create rule**.
 
-**Difficulty** sets the client-side proof-of-work cost, from `1` (easiest) to `5` (hardest). **TTL** sets how long a visitor stays cleared after a passed challenge, from `900` to `86400` seconds. Clearance is not per rule: one solved challenge clears that visitor for every challenge rule on the same host until the TTL expires.
+**Difficulty** sets how much work the browser does, from `1` to `5`. **TTL** sets how long a visitor stays cleared after solving one, from `900` to `86400` seconds.
 
-# Cover more client patterns {% #cover-more-client-patterns %}
+Scope challenge rules to a **Site** or a **Function**. An **API** rule rejects matching requests instead of challenging them, because an API client has no browser to solve the puzzle with. See [Challenge](/docs/products/firewall/actions#challenge).
 
-Conditions on one rule must all match. To cover several patterns, create one rule for each.
+# Choose the paths to cover {% #choose-the-paths %}
 
-Appwrite already denies `python-requests`, `Go-http-client`, and requests with no user agent before a challenge is issued, so challenge rules for them have no effect. Reach for challenge when the client looks like a browser but behaves like a script. Use **Deny** for the clients Appwrite screens out anyway.
+Every condition on a rule must match, so one rule covers one path prefix. Create a rule for each path you want to protect, and give them the same priority range so you can reason about them as one policy.
 
-Give the rules the same action and the same priority range so they behave as one policy.
+Cover the page a visitor loads, not the endpoint the form posts to. Appwrite serves the challenge page only for browser navigation, so a rule on a `POST` target returns `403` rather than a challenge. A visitor who is cleared on the page carries that clearance through the form submission.
+
+# Do not challenge known bots {% #do-not-challenge-known-bots %}
+
+Matching a **User agent** such as `curl` looks like the obvious way to catch scripts, but it does not work. Appwrite denies well-known automated clients before any challenge is issued, so those rules produce denials and the **Challenged** count stays at zero.
+
+Use **Deny** for clients you can already identify from their user agent. Use **Challenge** when you cannot tell a script from a person. See [Known bots are denied, not challenged](/docs/products/firewall/actions#known-bots-are-denied).
 
 # Verify the rule {% #verify-the-rule %}
 
-1. Open the protected resource in a browser with a matching user agent, so the request is a `GET` that accepts HTML.
-2. Confirm the challenge page appears instead of the normal response.
-3. Check the response headers. `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action` name the rule that fired.
+1. Open the protected path in a browser.
+2. Confirm the challenge page appears before the page loads.
+3. Reload the page. The challenge does not appear again, because you are now cleared.
 4. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
 
-If **Denied** rises instead of **Challenged**, the client was screened out as a known bot before the challenge.
+If **Denied** rises instead, your condition matched a client Appwrite already treats as a bot.
 
-Raise the difficulty if automated traffic keeps passing. Lower it if normal users report slow page loads on first visit.
+Raise the difficulty if automated traffic keeps getting through. Lower it if first page loads feel slow.
 
 {% arrow_link href="/docs/products/firewall/scopes" %}
 Resource scopes

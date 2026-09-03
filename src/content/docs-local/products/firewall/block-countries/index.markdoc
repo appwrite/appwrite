@@ -38,7 +38,9 @@ To block more than one country, create one deny rule for each country. Condition
 
 To serve only specific countries, invert the pattern. Create one deny rule, and add one **Country** **Not equal** condition for each allowed country. A request matches the rule only when its country differs from every allowed country, and the rule denies it.
 
-Traffic without a resolved geo location also matches **Not equal** conditions, so an allow-only rule denies it by default. For API traffic, unresolved geo matches the literal value `unresolved`, so add a **Country** **Not equal** `unresolved` condition if that traffic must stay allowed. On site and function traffic the attribute is left unset instead, and the Console offers no is-empty operator for country, so allowing it needs a rule created through the API.
+Appwrite cannot place every IP address. Traffic it cannot place matches **Not equal** conditions too, so this rule denies it along with the countries you did not allow.
+
+To let that traffic through on an API rule, add one more condition: **Country** **Not equal** `unresolved`. See [When Appwrite cannot resolve a location](/docs/products/firewall/conditions#unresolved-location).
 
 # Verify the rule {% #verify-the-rule %}
 
