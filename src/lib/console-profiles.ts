@@ -551,18 +551,25 @@ function applyEnvFeatureOverrides(
   return next
 }
 
+/** Profile from env (and backend vars), without debug localStorage overrides. Matches SSR. */
+export function getActiveProfileWithoutDebugOverride(): ConsoleProfile {
+  const profileId = getProfileFromEnv()
+  const canonical = CONSOLE_PROFILES[profileId]
+  return {
+    ...canonical,
+    features: applyEnvFeatureOverrides(
+      profileId,
+      applyCloudOnlyFeatureGates(profileId, canonical.features),
+    ),
+  }
+}
+
 export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
   const profileId = stored?.id ?? getProfileFromEnv()
   const canonical = CONSOLE_PROFILES[profileId]
   if (!stored) {
-    return {
-      ...canonical,
-      features: applyEnvFeatureOverrides(
-        profileId,
-        applyCloudOnlyFeatureGates(profileId, canonical.features),
-      ),
-    }
+    return getActiveProfileWithoutDebugOverride()
   }
   const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
     ...applyEnvFeatureOverrides(profileId, canonical.features),
