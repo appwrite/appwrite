@@ -11,10 +11,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
+use Utopia\Span\Span;
+use Utopia\Span\Storage\Memory;
 
 final class StoreTest extends TestCase
 {
@@ -269,32 +269,32 @@ final class StoreTest extends TestCase
         $this->store(new FailingClient())->setup();
     }
 
-    public function testMirrorFailuresAreReportedToConfiguredLogger(): void
+    public function testMirrorFailuresAreRecordedOnTheCurrentSpan(): void
     {
-        $logger = $this->createMock(Logger::class);
-        $logger->expects($this->once())
-            ->method('addLog')
-            ->with($this->callback(function (Log $log): bool {
-                $this->assertSame(Log::TYPE_ERROR, $log->getType());
-                $this->assertSame('executions.mirror.upsert', $log->getAction());
-                $this->assertStringContainsString('ClickHouse unavailable', $log->getMessage());
-                return true;
-            }));
+        Span::setStorage(new Memory());
+        $span = Span::init('test.executions');
 
-        $this->store(new FailingClient(), $logger)->create('project', new Document([
-            '$id' => 'execution',
-            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
-            'status' => 'completed',
-        ]));
+        try {
+            $this->store(new FailingClient())->create('project', new Document([
+                '$id' => 'execution',
+                '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+                'status' => 'completed',
+            ]));
+
+            $this->assertSame('upsert', $span->get('executions.mirror.operation'));
+            $this->assertStringContainsString('ClickHouse unavailable', (string) $span->get('executions.mirror.error'));
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError(), 'a failed mirror must not fail the request span');
+        } finally {
+            Span::setStorage(null);
+        }
     }
 
-    private function store(ClientInterface $client, ?Logger $logger = null): Store
+    private function store(ClientInterface $client): Store
     {
         return new Store(
             enabled: true,
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
-            logger: $logger,
         );
     }
 
