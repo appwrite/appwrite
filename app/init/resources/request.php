@@ -672,7 +672,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -796,7 +796,7 @@ return function (Container $context): void {
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForWebhooks = new Webhook($publisherWebhooks);
+        $queueForWebhooksClone = clone $queueForWebhooks;
         $queueForRealtime = new Realtime();
 
         $database
@@ -811,7 +811,7 @@ return function (Container $context): void {
                 $response,
                 $queueForEventsClone->from($queueForEvents),
                 $publisherForFunctions,
-                $queueForWebhooks->from($queueForEvents),
+                $queueForWebhooksClone->from($queueForEvents),
                 $queueForRealtime->from($queueForEvents)
             ))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
@@ -819,7 +819,7 @@ return function (Container $context): void {
             ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
 
         return $database;
-    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
+    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 

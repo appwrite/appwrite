@@ -55,7 +55,7 @@ abstract class Base extends Action
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->param('state', '', new Text(2048), 'OAuth2 state. Contains info sent when starting authorization flow.', true)
+            ->param('state', '', new Text(4096, 0), 'OAuth2 state. Contains info sent when starting authorization flow.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -104,9 +104,8 @@ abstract class Base extends Action
             'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
         ];
 
-        $state = \array_merge($defaultState, $state);
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
+        $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
+        $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
         if (empty($code)) {
             $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');

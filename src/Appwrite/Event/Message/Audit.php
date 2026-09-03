@@ -30,6 +30,8 @@ final class Audit extends Base
                 '$id' => $this->project->getId(),
                 '$sequence' => $this->project->getSequence(),
                 'database' => $this->project->getAttribute('database', ''),
+                'teamId' => $this->project->getAttribute('teamId', ''),
+                'teamInternalId' => $this->project->getAttribute('teamInternalId', ''),
             ],
             'user' => $this->user->getArrayCopy(),
             'impersonatorUser' => $this->impersonatorUser->getArrayCopy(),

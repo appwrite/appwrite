@@ -731,9 +731,9 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'url';
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';
                         break;
-                    case \Utopia\Validator\JSON::class:
-                    case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
+                        // Assoc reports TYPE_ARRAY, so only an explicit case publishes
+                        // it as an object. TYPE_OBJECT is handled by the default.
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
@@ -943,6 +943,13 @@ class OpenAPI3 extends Format
                         }
                         break;
                     default:
+                        if ($validator->getType() === Validator::TYPE_OBJECT) {
+                            $node['schema']['type'] = 'object';
+                            $node['schema']['default'] = empty($param['default']) ? new \stdClass() : $param['default'];
+                            $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
