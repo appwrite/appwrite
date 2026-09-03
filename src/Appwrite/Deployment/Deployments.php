@@ -570,10 +570,6 @@ readonly class Deployments
             ],
             default => [
                 'volumes' => [],
-                // 'in' paths are workspace-relative. Pull the cache only when
-                // a previous build saved one: a failed pre-job artifact aborts
-                // the job, so an unconditional download would break every
-                // first build.
                 'artifacts' => [
                     ...($device->exists($cachePath) ? [new DownloadArtifact(id: 'cachePull', in: static::objectUrl($device, $cachePath), out: "cache/{$cacheKey}.sqfs")] : []),
                     new UploadArtifact(id: 'output', in: 'output/' . static::artifact(), out: static::objectUrl($device, static::buildPath($projectId, $deploymentId)), depends: 'job'),
