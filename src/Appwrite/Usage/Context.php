@@ -343,7 +343,6 @@ class Context
         $this->protocol = '';
         $this->accept = '';
         $this->acceptLanguage = '';
-        $this->cookie = '';
         $this->queryKeys = '';
 
         return $this;
