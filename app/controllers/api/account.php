@@ -3872,8 +3872,10 @@ Http::post('/v1/account/recovery')
 
         if (!$accountExists) {
             // Generate dummy profile to pass through the rest of the logic for timing mitigation
+            // We use a deterministic ID based on the email so repeated requests return the same
+            // fake userId, preventing enumeration via response body differences.
             $profile = new Document([
-                '$id' => ID::unique(),
+                '$id' => ID::custom(\substr(\md5($email), 0, 20)),
                 'status' => true,
                 'email' => $email,
             ]);
@@ -3911,6 +3913,11 @@ Http::post('/v1/account/recovery')
 
             $dbForProject->purgeCachedDocument('users', $profile->getId());
         } else {
+            // SECURITY NOTE: We simulate the database and queue latency here (approx 20-40ms).
+            // We CANNOT actually execute createDocument or enqueue the mail for unknown users 
+            // because it would cause financial DoS attacks via SMTP billing (e.g. Sendgrid) 
+            // and pollute the database. This usleep mitigates the timing channel safely.
+            \usleep(\random_int(20000, 40000));
             $recovery->setAttribute('$createdAt', DateTime::now());
             $recovery->setAttribute('$updatedAt', DateTime::now());
         }
