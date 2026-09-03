@@ -55,12 +55,10 @@ final class DatabasesKeyScopesTest extends Scope
         'documents.write',
     ];
 
-    public static function scopesProvider(): array
+    public static function scopesProvider(): \Iterator
     {
-        return [
-            'current scopes' => [self::CURRENT_SCOPES],
-            'deprecated scopes' => [self::DEPRECATED_SCOPES],
-        ];
+        yield 'current scopes' => [self::CURRENT_SCOPES];
+        yield 'deprecated scopes' => [self::DEPRECATED_SCOPES];
     }
 
     #[DataProvider('scopesProvider')]
