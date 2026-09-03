@@ -42,8 +42,11 @@ use Utopia\VCS\Adapter\Git;
  * build.sh writes its artifact + the cache squashfs straight onto the volume
  * Appwrite already reads. On a remote device (S3 and friends) no volume spans
  * Appwrite and the build workers, so the sidecar moves them over s3://
- * upload/download artifacts instead. Either way the multi-hundred-MB output
- * stays off the (capped) HTTP upload path and out of the Appwrite process.
+ * upload/download artifacts instead. The orchestrator supports the generic
+ * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
+ * _APP_CONNECTIONS_STORAGE are retained by Appwrite only for backward
+ * compatibility. Either way the multi-hundred-MB output stays off the
+ * (capped) HTTP upload path and out of the Appwrite process.
  * Deployments that need yet another strategy override storage() — everything
  * else about the payload stays the same.
  *
@@ -544,8 +547,11 @@ readonly class Deployments
      * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
      * writes into the job workspace and the sidecar moves output and cache
      * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
-     * reading through deviceForBuilds works unchanged. 'job' in `depends`
-     * is the orchestrator's sentinel for "after the build command finishes".
+     * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
+     * accepts the generic _APP_STORAGE_S3_* configuration, not deprecated
+     * provider-specific variables or _APP_CONNECTIONS_STORAGE. 'job' in
+     * `depends` is the orchestrator's sentinel for "after the build command
+     * finishes".
      *
      * @return array{volumes: array<Volume>, artifacts: array<mixed>, environment: array<string, string>}
      */
@@ -603,22 +609,32 @@ readonly class Deployments
     private static function bucket(Device $device): string
     {
         $type = $device->getType();
-        if (\in_array($type, [DeviceType::S3, DeviceType::AwsS3], true) && System::getEnv('_APP_STORAGE_S3_ENDPOINT', '') !== '') {
+        $configuredDevice = DeviceType::tryFrom(\strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+        $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+        $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+        $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $usesS3Configuration = $hasS3Configuration && ($connection === '' || \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true));
+
+        if ($usesS3Configuration && \in_array($type, [DeviceType::S3, DeviceType::AwsS3], true) && System::getEnv('_APP_STORAGE_S3_ENDPOINT', '') !== '') {
             return '';
         }
 
-        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
-        if ($connection !== '') {
+        if (! $usesS3Configuration && $connection !== '') {
             return \trim((new DSN($connection))->getPath() ?? '', '/');
         }
 
+        if ($usesS3Configuration) {
+            return $s3Bucket;
+        }
+
         $prefix = match ($type) {
-            DeviceType::S3, DeviceType::AwsS3 => 'S3',
             DeviceType::DoSpaces => 'DO_SPACES',
             DeviceType::Backblaze => 'BACKBLAZE',
             DeviceType::Linode => 'LINODE',
             DeviceType::Wasabi => 'WASABI',
-            DeviceType::Local => null,
+            DeviceType::S3, DeviceType::AwsS3, DeviceType::Local => null,
         };
 
         return $prefix === null ? '' : System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
