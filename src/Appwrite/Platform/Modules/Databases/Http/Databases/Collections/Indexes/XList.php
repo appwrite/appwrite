@@ -95,8 +95,8 @@ class XList extends Action
 
         \array_push(
             $queries,
-            Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId]),
+            Query::equal('databaseInternalId', [$database->getSequence()]),
+            Query::equal('collectionInternalId', [$collection->getSequence()]),
         );
 
         $cursor = Query::getCursorQueries($queries, false);

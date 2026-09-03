@@ -134,7 +134,18 @@ class Executions extends Action
                 $stored = $this->create($dbForProject, $execution);
                 $executionStore->upsert($executionMessage->project->getId(), $stored);
             } else {
-                $stored = $dbForProject->upsertDocument('executions', $execution);
+                $stored = null;
+                $dbForProject->upsertDocuments(
+                    'executions',
+                    [$execution],
+                    self::UPSERT_BATCH_SIZE,
+                    function (Document $execution) use (&$stored): void {
+                        $stored = $execution;
+                    }
+                );
+
+                // An unchanged redelivery does not invoke upsertDocuments' callback.
+                $stored ??= $dbForProject->getDocument('executions', $execution->getId());
                 $executionStore->upsert($executionMessage->project->getId(), $stored);
             }
         }

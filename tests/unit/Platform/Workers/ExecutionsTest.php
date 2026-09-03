@@ -30,7 +30,7 @@ final class ExecutionsTest extends TestCase
                 $created = $execution;
                 return $execution;
             });
-        $dbForProject->expects($this->never())->method('upsertDocument');
+        $dbForProject->expects($this->never())->method('upsertDocuments');
         $store = $this->createMock(Store::class);
         $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
 
@@ -53,7 +53,7 @@ final class ExecutionsTest extends TestCase
         $dbForProject->expects($this->once())
             ->method('createDocument')
             ->willThrowException(new Duplicate('Execution already exists'));
-        $dbForProject->expects($this->never())->method('upsertDocument');
+        $dbForProject->expects($this->never())->method('upsertDocuments');
         $dbForProject->expects($this->once())
             ->method('getDocument')
             ->with('executions', 'execution')
@@ -82,11 +82,18 @@ final class ExecutionsTest extends TestCase
         $dbForProject = $this->createMock(Database::class);
         $dbForProject->expects($this->never())->method('createDocument');
         $dbForProject->expects($this->once())
-            ->method('upsertDocument')
-            ->with('executions', $this->isInstanceOf(Document::class))
-            ->willReturnCallback(function (string $collection, Document $execution) use (&$upserted): Document {
-                $upserted = $execution;
-                return $execution;
+            ->method('upsertDocuments')
+            ->with('executions', $this->isArray())
+            ->willReturnCallback(function (
+                string $collection,
+                array $executions,
+                int $batchSize = 0,
+                ?callable $onNext = null,
+                ?callable $onError = null
+            ) use (&$upserted): int {
+                $upserted = $executions[0];
+                $onNext($upserted);
+                return \count($executions);
             });
         $store = $this->createMock(Store::class);
         $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
