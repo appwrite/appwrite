@@ -1707,6 +1707,13 @@ services:
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
+      # Signs the s3:// build artifacts Appwrite submits when the builds
+      # device is not local (see Deployments::storage()); forwarded into
+      # the sidecar that runs them. Empty on the local device.
+      - S3_ENDPOINT=${_APP_STORAGE_S3_ENDPOINT:-}
+      - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}
+      - S3_ACCESS_KEY_ID=${_APP_STORAGE_S3_ACCESS_KEY:-}
+      - S3_SECRET_ACCESS_KEY=${_APP_STORAGE_S3_SECRET:-}
 
   mariadb:
     image: mariadb:10.11

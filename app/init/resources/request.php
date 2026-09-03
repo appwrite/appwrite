@@ -213,15 +213,9 @@ return function (Container $context): void {
     ), ['publisher']);
     // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform, Telemetry $telemetry) {
-        return fn (Database $dbForProject, Document $project): Deployments => new Deployments(
-            $jobs,
-            $dbForProject,
-            $project,
-            $platform,
-            new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())),
-        );
-    }, ['jobs', 'platform', 'telemetry']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'platform']);
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
