@@ -29,7 +29,7 @@ PKCE (Proof Key for Code Exchange) binds an authorization request to the client 
 
 The client creates a random `code_verifier`, hashes it with SHA-256 to produce a `code_challenge`, and sends both `code_challenge` and `code_challenge_method=S256` in the authorization request. Appwrite supports `S256` only.
 
-PKCE is always required for **public clients**, which cannot safely keep a client secret. **Confidential clients** authenticate with a client secret and do not require PKCE by default. To require both protections for confidential clients, enable **Require PKCE** in your OAuth2 server settings. This setting is represented as `confidentialPkce` in the API.
+PKCE is always required for **public clients**, which cannot safely keep a client secret. **Confidential clients** authenticate with a client secret and do not require PKCE by default. To require both protections for confidential clients, enable **Require PKCE** in the **Token lifetimes** card under **Auth > OAuth2 server > Server**. This setting is represented as `confidentialPkce` in the API.
 
 # 1. Send the user to the authorization endpoint {% #authorize %}
 
@@ -627,7 +627,7 @@ console.log(result);
 ```
 {% /multicode %}
 
-The SDK requests JSON responses so it can behave consistently with other SDK methods. The approve and reject methods therefore return `redirectUrl`, and your browser code must navigate to it. A direct HTTP request without an `Accept: application/json` header receives a `302` redirect automatically.
+The SDK requests JSON responses so it can behave consistently with other SDK methods. The approve and reject methods therefore return `redirectUrl`, and your browser code must navigate to it. A direct HTTP request without an `Accept: application/json` header receives a `303` redirect automatically.
 
 ## Consent screen best practices {% #consent-best-practices %}
 

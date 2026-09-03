@@ -35,7 +35,9 @@ Add custom scopes in the **Scopes** field on the OAuth2 server settings, or with
 
 A project can define up to 100 scopes, each up to 128 characters. A client can only request scopes you have defined; requesting an unknown scope fails the authorization request.
 
-Custom scopes are labels the OAuth2 server carries through the flow and stamps onto the access token. Enforcing what each scope allows is your resource server's job: read the `scope` claim from the access token (or from an [introspection](/docs/products/auth/oauth-server/tokens#introspect) response) and allow or deny the request accordingly.
+Most custom scopes are labels the OAuth2 server carries through the flow and stamps onto the access token. Enforcing what they allow is your resource server's job. Read the `scope` claim from the access token, or from an [introspection](/docs/products/auth/oauth-server/tokens#introspect) response, and allow or deny the request accordingly.
+
+The `project:` namespace behaves differently. Appwrite resolves those scopes against your project's own API, so a token granted `project:databases.read` authorizes that Appwrite operation directly, and `project:all` grants every ordinary project scope. Define a `project:` scope only when you intend to hand a client access to your Appwrite APIs.
 
 # Requesting scopes {% #requesting %}
 

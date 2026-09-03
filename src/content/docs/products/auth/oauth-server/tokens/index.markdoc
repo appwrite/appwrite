@@ -198,7 +198,7 @@ Public clients get shorter lifetimes because their tokens live on user devices, 
 
 To refresh, the client sends its current refresh token to the token endpoint. A successful response contains a new access token and a new refresh token.
 
-Each successful refresh replaces the stored refresh token. The client must store the newest refresh token before making another request. If the client presents an older refresh token again, Appwrite treats it as reuse and deletes the OAuth identity for that client and user. The current access token and newest refresh token then stop working, and the user must authorize that client again. Tokens issued to other clients are not affected.
+Each code exchange starts its own token family, so one user can hold tokens for the same client on several devices at once. Each successful refresh replaces the stored refresh token within its family. The client must store the newest refresh token before making another request. If the client presents an older refresh token again, Appwrite treats it as reuse and deletes that whole family, so its access token and newest refresh token stop working. Other families for the same client and user keep working, as do tokens issued to other clients. The user's consent record survives, so the client can run the authorization flow again and receive a new code without a second consent prompt.
 
 This public-client example sends JSON. A confidential client also includes its `client_secret`.
 
@@ -312,18 +312,20 @@ Authorization: Bearer <ACCESS_TOKEN>
 
 # Introspect a token {% #introspect %}
 
-An OAuth access token is not an Appwrite session or API key, so it does not authorize general Appwrite SDK methods. Appwrite's OAuth endpoints consume tokens only where the OAuth flow defines them. For example, userinfo accepts an access token as a bearer credential, while the token, introspection, and revocation endpoints accept their respective tokens as request parameters.
+An OAuth access token is not an Appwrite session. Appwrite's OAuth endpoints consume tokens where the OAuth flow defines them: userinfo accepts an access token as a bearer credential, while the token, introspection, and revocation endpoints accept their respective tokens as request parameters.
+
+Scopes in the `project:` namespace are the exception. Appwrite resolves those itself, so a token granted `project:databases.read` authorizes the matching Appwrite API operation when the client sends it as a bearer credential, and `project:all` grants every ordinary project scope. Scopes outside that namespace mean nothing to Appwrite and are yours to enforce.
 
 To make an access token useful to your product:
 
-1. Add custom scopes in **Auth > OAuth2 server > Settings** that describe the operations your API exposes.
+1. Add custom scopes in the **Integration** card under **Auth > OAuth2 server > Server** that describe the operations your API exposes.
 2. Host an API that acts as the resource server. Appwrite Functions and server-rendered Appwrite Sites are suitable places to run it.
 3. Read the bearer access token from each incoming request.
 4. From your server, call the introspection endpoint with an Appwrite API key that has the `oauth2.introspect` scope. Keep this API key on the server.
 5. Require `active: true`, then check that `scope` contains every permission the API operation needs.
 6. Perform the operation only after those checks pass.
 
-Introspection verifies the token against the current OAuth identity, so it detects expiry, revocation, refresh rotation, and refresh-token reuse. This is different from offline JWT verification, which cannot detect a token that was revoked before its `exp` time.
+Introspection verifies the token against its stored token family, so it detects expiry, revocation, refresh rotation, and refresh-token reuse. This is different from offline JWT verification, which cannot detect a token that was revoked before its `exp` time.
 
 The resource server sends JSON:
 
@@ -380,7 +382,7 @@ A confidential OAuth client can also authenticate with its client ID and client 
 
 # Revoke a token {% #revoke %}
 
-A third-party client should revoke its token when the user disconnects the integration or the client no longer needs access. Revoking either the current access token or refresh token deletes the OAuth identity for that client and user, so both current tokens stop working.
+A third-party client should revoke its token when the user disconnects the integration or the client no longer needs access. Revoking either the access token or the refresh token deletes the whole token family, so both stop working. Families issued to the same client and user from other sign-ins are unaffected, so revoke each one you want to end.
 
 This public-client example sends JSON. A confidential client also includes its `client_secret`.
 
@@ -433,4 +435,4 @@ state: <STATE>
 ```
 {% /multicode %}
 
-Appwrite verifies the ID token's signature, issuer, client, and user. It accepts an expired ID token as a logout hint, but still requires the token to be validly signed. After deleting the current project session and the app's OAuth identity, Appwrite redirects to the registered URI and returns `state` unchanged. If no post-logout redirect URI is supplied, the endpoint returns `204 No Content`.
+Appwrite verifies the ID token's signature, issuer, client, and user. It accepts an expired ID token as a logout hint, but still requires the token to be validly signed. After deleting the current project session, the user's consent for that client, and every token family issued under it, Appwrite redirects to the registered URI and returns `state` unchanged. If no post-logout redirect URI is supplied, the endpoint returns `204 No Content`.
