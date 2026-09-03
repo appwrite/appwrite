@@ -149,7 +149,14 @@ import {
 } from '../lib/oauth-server'
 import type { ClientApp, Grant } from '../lib/consent-types'
 
-const AUTHORIZE_KEYS = ['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'nonce']
+// Every authorize parameter the consent screen must carry across login.
+// Dropping one silently changes the request. Without code_challenge, a
+// PKCE client fails when the flow resumes.
+const AUTHORIZE_KEYS = [
+  'client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'nonce',
+  'code_challenge', 'code_challenge_method', 'prompt', 'max_age',
+  'authorization_details', 'resource',
+]
 
 type ConsentView =
   | { view: 'login' }

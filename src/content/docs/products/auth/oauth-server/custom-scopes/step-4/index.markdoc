@@ -59,7 +59,11 @@ export function hasScope(token: AccessToken, scope: string): boolean {
 
 `jwtVerify` checks the signature against the published keys and rejects expired tokens, so a forged token never reaches your handlers. It also pins the algorithm to the RS256 keys in the JWKS, so `alg: none` and HMAC confusion attacks fail here too.
 
-Offline verification has one limit worth knowing. It reads the token itself and nothing else, so it cannot see that a token was revoked or that its refresh rotated. A revoked token keeps passing this check until it expires, which for a confidential client is up to eight hours. Where that window is too long, call [introspection](/docs/products/auth/oauth-server/tokens#introspect) instead, which checks the token against its stored family.
+Two limits of this guard are worth knowing.
+
+Offline verification reads the token and nothing else, so it cannot see that a token was revoked or that its refresh rotated. A revoked token keeps passing this check until it expires, which for a confidential client is up to eight hours. Where that window is too long, call [introspection](/docs/products/auth/oauth-server/tokens#introspect) instead, which checks the token against its stored family.
+
+The guard also accepts any access token this project issued, because it checks the signature and type but not `aud`. That is enough here, since TaskFlow's OAuth2 server is the only issuer whose keys the JWKS publishes. An API that should only accept tokens minted for itself asks the client to send a `resource` indicator on the authorization request, then checks that value in `aud`.
 
 The `{ typ: 'at+jwt' }` option matters more than it looks. Your OAuth2 server signs [ID tokens](/docs/products/auth/oauth-server/tokens) with the same key as access tokens, and an ID token has no `scope` claim. Without the type check, a client could present its ID token to your API; requiring `at+jwt` (the [access token type](/docs/products/auth/oauth-server/tokens)) rejects it before it reaches a handler. An ID token is meant for the client that received it, never as a credential for your API.
 

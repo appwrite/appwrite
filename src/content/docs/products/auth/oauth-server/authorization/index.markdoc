@@ -417,7 +417,7 @@ console.log(result);
 
 ## Record the user's decision {% #decision %}
 
-When the user approves the request, you can pass the scopes they kept selected. Omit `scope` to approve every scope in the grant. Narrowing only works downward: a scope that was not in the grant is rejected, and `openid` is added back if the user dropped it, because it is the sign-in itself.
+When the user approves the request, you can pass the scopes they kept selected. Omit `scope` to approve every scope in the grant. Narrowing only works downward. A scope that was not in the grant is rejected, and `openid` is added back if the user dropped it, because it is the sign-in itself.
 
 {% multicode %}
 ```client-web
