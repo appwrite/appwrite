@@ -47,7 +47,14 @@ Everything else about a deployment stays where it was. Branch filters, path filt
 
 # Connecting a GitLab account
 
-Open a project and go to **Settings** > **Git configuration**. Alongside **Connect GitHub**, you will now see **Connect GitLab**. Choosing it sends you through GitLab's OAuth consent screen and returns you to the Console with the connection saved to the project.
+Open a Site or Function and go to **Settings** > **Version control (Git)**. Alongside **Connect GitHub**, you will now see **Connect GitLab**. Choosing it sends you through GitLab's OAuth consent screen and returns you to the Console with the connection saved to the project. The same providers are available at the project level under **Project settings** > **Git configuration**.
+
+{% only_dark %}
+![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/dark/git-repo.avif)
+{% /only_dark %}
+{% only_light %}
+![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/git-repo.avif)
+{% /only_light %}
 
 You can also start from scratch. When you create a Site or a Function and have no Git connection yet, the wizard's empty state offers the same set of providers, so connecting GitLab and picking a repository happen in one pass instead of two.
 
@@ -97,7 +104,7 @@ If your team is split across providers, you do not have to choose. A single Appw
 
 # Getting started with GitLab on Appwrite
 
-Open an existing Site or Function, go to **Settings** > **Git configuration**, and connect GitLab. Or create a new one on [Appwrite Cloud](https://cloud.appwrite.io) and pick GitLab from the wizard's provider list.
+Open an existing Site or Function, go to **Settings** > **Version control (Git)**, and connect GitLab. Or create a new one on [Appwrite Cloud](https://cloud.appwrite.io) and pick GitLab from the wizard's provider list.
 
 - [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers build triggers, branch and path filters, install and build commands, and output directories.
 - [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same ground for serverless functions.
