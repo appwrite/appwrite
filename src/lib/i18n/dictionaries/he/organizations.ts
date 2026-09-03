@@ -55,6 +55,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Add alert': 'הוספת התראה',
   'Add another member': 'הוספת חבר נוסף',
   'Add app': 'הוספת אפליקציה',
+  'Create app': 'יצירת אפליקציה',
+  Team: 'צוות',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'האפליקציה נוצרת בצוות הנוכחי שלכם. החליפו צוות כדי ליצור אותה בצוות אחר.',
   'Add backup': 'הוספת גיבוי',
   'Add billing address': 'הוספת כתובת חיוב',
   'Add credits': 'הוספת קרדיטים',
@@ -101,14 +105,15 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Analyst: 'אנליסט',
   Analytics: 'אנליטיקה',
   'App ID': 'מזהה אפליקציה',
-  'App created as draft': 'האפליקציה נוצרה כטיוטה',
+  'App created': 'האפליקציה נוצרה',
   'App deleted': 'האפליקציה נמחקה',
   'App logo preview': 'תצוגה מקדימה של לוגו האפליקציה',
   'App not found': 'האפליקציה לא נמצאה',
-  'App published': 'האפליקציה פורסמה',
+  'App enabled': 'האפליקציה הופעלה',
+  'App disabled': 'האפליקציה הושבתה',
+  'App status': 'סטטוס האפליקציה',
   'App settings': 'הגדרות אפליקציה',
   'App settings sections': 'מקטעי הגדרות אפליקציה',
-  'App unpublished': 'פרסום האפליקציה בוטל',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': // pragma: allowlist secret
     'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
   'Apply coupon': 'החלת קופון',
@@ -155,7 +160,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
   Back: 'חזרה',
-  'Back to OAuth apps': 'חזרה לאפליקציות OAuth',
+  'Back to apps': 'חזרה לאפליקציות',
   'Back to domains': 'חזרה לדומיינים',
   'Backup methods': 'אמצעי תשלום לגיבוי',
   'Backup payment method updated': 'אמצעי התשלום לגיבוי עודכן',
@@ -260,6 +265,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Contact for price': 'צרו קשר לקבלת מחיר',
   'Contact sales': 'צרו קשר עם צוות המכירות',
   'Copied to clipboard': 'הועתק ללוח',
+  'Client ID': 'מזהה לקוח',
+  'Last used': 'שימוש אחרון',
+  'Never used': 'לא היה בשימוש',
   Copy: 'העתקה',
   'Copy ID': 'העתקת מזהה',
   'Copy as JSON': 'העתקה כ-JSON',
@@ -289,8 +297,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create a project first': 'צרו פרויקט תחילה',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
     'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
-  'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.':
-    'צרו דף אפליקציית OAuth2 למרקטפלייס. הדף נשמר כטיוטה עד שתפרסמו אותו.',
+  'Create an OAuth2 app listing for the marketplace.':
+    'צרו דף אפליקציית OAuth2 למרקטפלייס.',
   'Create an app to share it with other organizations on the marketplace.':
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
@@ -301,7 +309,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create your first project to get started':
     'צרו את הפרויקט הראשון שלכם כדי להתחיל',
   Created: 'נוצר',
-  Creators: 'יוצרים',
+  Contacts: 'אנשי קשר',
   'Credit History': 'היסטוריית קרדיטים',
   'Credit expiration': 'תפוגת קרדיט',
   'Credit expires': 'הקרדיט פג בתאריך',
@@ -494,6 +502,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to upload logo': 'העלאת הלוגו נכשלה',
   'Failed to validate payment': 'אימות התשלום נכשל',
   'Failed to view invoice': 'הצגת החשבונית נכשלה',
+  'Browse official apps, or explore by category.':
+    'עיינו באפליקציות רשמיות או חקרו לפי קטגוריה.',
   'Featured apps, popular integrations, and browse by category.':
     'אפליקציות מומלצות, אינטגרציות פופולריות ועיון לפי קטגוריה.',
   Feedback: 'משוב',
@@ -534,6 +544,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.':
     'ספקי בריאות, תוכניות בריאות, מסלקות בריאות ושותפיהם העסקיים שבונים אפליקציות תואמות HIPAA.',
   'Hide code': 'הסתרת קוד',
+  Homepage: 'דף הבית',
   'Homepage URL': 'כתובת דף הבית',
   'Homepage:': 'דף הבית:',
   'How users can get help with your app during OAuth2 consent.':
@@ -724,6 +735,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.':
     'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
   Official: 'רשמי',
+  'We invite app makers to contact us and get your integrations published.':
+    'אנחנו מזמינים יוצרי אפליקציות לפנות אלינו ולפרסם את האינטגרציות שלהם.',
+  'Add your first app to get started.':
+    'הוסיפו את האפליקציה הראשונה שלכם כדי להתחיל.',
   Offline: 'לא מקוון',
   'One line summary': 'תקציר בשורה אחת',
   'One-time display': 'תצוגה חד-פעמית',
@@ -870,10 +885,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לקוחות ציבוריים דורשים PKCE. לקוחות חסויים משתמשים בסוד לקוח.',
   'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.':
     'לקוחות ציבוריים משתמשים ב-PKCE ואינם דורשים סודות OAuth. עברו ללקוח חסוי בלשונית לקוח OAuth אם אתם זקוקים לאימות סוד בצד השרת.',
-  Publish: 'פרסום',
-  Published: 'פורסם',
-  'Published apps appear in the marketplace catalog for other organizations.':
-    'אפליקציות שפורסמו מופיעות בקטלוג המרקטפלייס עבור ארגונים אחרים.',
+  'Marketplace page': 'דף המרקטפלייס',
+  'Public listing page for this app in the marketplace.':
+    'דף הרישום הציבורי של האפליקציה במרקטפלייס.',
+  'Control whether this app can be used to authorize users.':
+    'קבעו האם ניתן להשתמש באפליקציה לאימות משתמשים.',
   'Published apps from other organizations will appear here.':
     'אפליקציות שפורסמו על ידי ארגונים אחרים יופיעו כאן.',
   'Publisher guidelines': 'הנחיות למפרסמים',
@@ -1054,9 +1070,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'They will not be able to join the organization.':
     'הם לא יוכלו להצטרף לארגון.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
-  'This app is a draft and not listed publicly.':
-    'האפליקציה הזו היא טיוטה ואינה מוצגת באופן ציבורי.',
-  'This app is visible in the marketplace.': 'האפליקציה הזו מוצגת במרקטפלייס.',
+  'This app is enabled and can authorize users.':
+    'האפליקציה מופעלת ויכולה לאמת משתמשים.',
+  'This app is disabled and cannot authorize users.':
+    'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
   'This entire organization will be deleted, including all of its projects and resources.':

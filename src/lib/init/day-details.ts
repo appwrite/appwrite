@@ -175,7 +175,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Try S3 for Storage',
-      href: '/docs/products/storage',
+      href: '/docs/products/storage/s3',
       external: false,
     },
     resources: [
@@ -190,7 +190,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
-        href: '/docs/products/storage',
+        href: '/docs/products/storage/s3',
         actionLabel: 'Visit docs',
       },
     ],
@@ -350,7 +350,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'S3 for Storage AMA',
     startsAt: '2026-09-03T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w6c0qe/we_just_launched_s3_support_for_appwrite_storage/',
   },
   {
     id: 'sched-yt-firewall-oauth-domains',

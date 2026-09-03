@@ -13,6 +13,7 @@ import {
   resolveAppsLogoConsoleRegion,
 } from '@/lib/appwrite/apps-logo'
 import { useProjectsForTeam } from '@/lib/react-query/hooks'
+import { MarketplaceAppLogo } from '../../marketplace/_components/MarketplaceAppLogo'
 import { useT } from '@/lib/i18n/translate'
 
 interface AppLogoFilePickerProps {
@@ -99,17 +100,17 @@ export function AppLogoFilePicker({
   return (
     <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-card">
-          {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt={t('App logo preview')}
-              className="h-full w-full object-contain"
-            />
-          ) : (
+        {previewUrl ? (
+          <MarketplaceAppLogo
+            src={previewUrl}
+            size="xl"
+            alt={t('App logo preview')}
+          />
+        ) : (
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted">
             <ImageIcon className="h-8 w-8 text-muted-foreground" />
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-[13px] text-muted-foreground">

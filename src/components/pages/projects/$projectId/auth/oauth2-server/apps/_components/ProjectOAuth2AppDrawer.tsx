@@ -230,7 +230,7 @@ export function ProjectOAuth2AppDrawer({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const uris = nonEmptyList(redirectUris)
-    if (!name.trim() || uris.length === 0 || isPending) return
+    if (!name.trim() || isPending) return
 
     const consentPayload = {
       tagline: tagline.trim(),
@@ -345,7 +345,7 @@ export function ProjectOAuth2AppDrawer({
     window.setTimeout(() => onDelete(source), 0)
   }
 
-  const canSubmit = !!name.trim() && nonEmptyList(redirectUris).length > 0
+  const canSubmit = !!name.trim()
 
   return (
     <>
@@ -410,8 +410,7 @@ export function ProjectOAuth2AppDrawer({
 
                   <div className="space-y-2">
                     <Label className="text-[12px] font-medium">
-                      {t('Redirect URIs')}{' '}
-                      <span className="text-destructive">*</span>
+                      {t('Redirect URIs')}
                     </Label>
                     <InputTags
                       value={redirectUris}

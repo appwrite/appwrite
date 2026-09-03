@@ -3,12 +3,14 @@ import { cn } from '@/lib/utils'
 const SIZE_CLASSNAMES = {
   md: 'h-10 w-10 rounded-lg p-2',
   lg: 'h-12 w-12 rounded-xl p-2.5',
+  xl: 'h-20 w-20 rounded-xl p-4',
 } as const
 
 type MarketplaceAppLogoProps = {
   src: string
   size?: keyof typeof SIZE_CLASSNAMES
   className?: string
+  alt?: string
 }
 
 /**
@@ -22,6 +24,7 @@ export function MarketplaceAppLogo({
   src,
   size = 'md',
   className,
+  alt = '',
 }: MarketplaceAppLogoProps) {
   return (
     <div
@@ -33,7 +36,7 @@ export function MarketplaceAppLogo({
     >
       <img
         src={src}
-        alt=""
+        alt={alt}
         className="h-full w-full object-contain grayscale invert-[.44] dark:invert-[.63]"
       />
     </div>

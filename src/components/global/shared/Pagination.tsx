@@ -155,6 +155,12 @@ export interface PaginationProps {
    * plus client dedupe) so the default `(page−1)×pageSize+1 … page×pageSize` would be wrong.
    */
   displayItemRange?: { start: number; end: number }
+  /**
+   * Override for the total in the summary text (`start–end of <totalDisplay>`).
+   * Use when the API caps the reported total (e.g. "5000+"); navigation math
+   * still uses `totalItems`.
+   */
+  totalDisplay?: string
 }
 
 export function Pagination({
@@ -172,6 +178,7 @@ export function Pagination({
   showPageSizeSelector = true,
   scrollToTopOnPageChange = true,
   displayItemRange,
+  totalDisplay,
 }: PaginationProps) {
   const t = useT()
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -261,7 +268,7 @@ export function Pagination({
             {totalKnown
               ? totalItems === 0
                 ? `${t('No')} ${t(itemLabel)}`
-                : `${startItem}-${endItem} ${t('of')} ${totalItems.toLocaleString()}`
+                : `${startItem}-${endItem} ${t('of')} ${totalDisplay ?? totalItems.toLocaleString()}`
               : startItem === 0 && endItem === 0
                 ? `${t('No')} ${t(itemLabel)}`
                 : `${startItem}-${endItem}`}

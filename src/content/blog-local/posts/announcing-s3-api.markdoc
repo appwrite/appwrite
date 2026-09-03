@@ -8,7 +8,6 @@ timeToRead: 7
 author: torsten-dittmann
 category: announcement
 featured: false
-draft: true
 callToAction: true
 faqs:
   - question: "What is the Appwrite S3 API?"

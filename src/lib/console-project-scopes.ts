@@ -47,22 +47,6 @@ export const CLOUD_ONLY_SCOPE_IDS = new Set([
 ])
 
 /**
- * Renamed legacy scope ids omitted from the catalog unless the API key already
- * includes them. There is no mapping to modern scope ids - the key stores and
- * toggles the exact scope string.
- */
-export const LEGACY_CATALOG_ONLY_WHEN_ON_KEY = new Set([
-  'collections.read',
-  'collections.write',
-  'attributes.read',
-  'attributes.write',
-  'documents.read',
-  'documents.write',
-  'execution.read',
-  'execution.write',
-])
-
-/**
  * Whether to show the Deprecated badge for a catalog row (API `deprecated` or
  * deprecated category group from the server).
  */
@@ -339,12 +323,10 @@ export function consoleKeyScopesToEditorRows(
   opts: {
     isCloud: boolean
     oauth2Server: boolean
-    selectedScopeIds?: readonly string[]
     catalog?: 'project' | 'organization'
   },
 ): ScopeEditorRow[] {
   if (!list?.scopes?.length) return []
-  const selected = new Set(opts.selectedScopeIds ?? [])
   const isOrgCatalog = opts.catalog === 'organization'
   return list.scopes
     .filter(
@@ -357,12 +339,6 @@ export function consoleKeyScopesToEditorRows(
         !isOAuth2AppsCatalogScope(s.$id, s.category) ||
         opts.oauth2Server,
     )
-    .filter((s) => {
-      if (isOrgCatalog || !LEGACY_CATALOG_ONLY_WHEN_ON_KEY.has(s.$id)) {
-        return true
-      }
-      return selected.has(s.$id)
-    })
     .map((s) => {
       const sourceCategory = s.category || 'Other'
       const categoryLooksDeprecated =
