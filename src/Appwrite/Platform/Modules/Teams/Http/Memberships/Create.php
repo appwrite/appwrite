@@ -303,12 +303,29 @@ class Create extends Action
             $invitedTime = DateTime::now();
 
             if ($isPrivilegedUser || $isAppUser) {
-                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                    'secret' => $secretHash,
-                    'invited' => $invitedTime,
-                    'joined' => DateTime::now(),
-                    'confirm' => true
-                ])));
+                $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $secretHash, $invitedTime) {
+                    // Re-read under a lock, a concurrent invite must not count the same member twice
+                    $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+                    if ($current->getAttribute('confirm') === true) {
+                        return new Document();
+                    }
+
+                    $confirmed = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                        'secret' => $secretHash,
+                        'invited' => $invitedTime,
+                        'joined' => DateTime::now(),
+                        'confirm' => true
+                    ])));
+
+                    $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+                    return $confirmed;
+                });
+
+                if ($membership->isEmpty()) {
+                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+                }
             } else {
                 $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
                     'secret' => $secretHash,
