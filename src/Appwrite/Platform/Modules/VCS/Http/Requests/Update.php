@@ -76,47 +76,33 @@ class Update extends Action
             throw new Exception(Exception::INSTALLATION_REQUEST_NOT_READY);
         }
 
-        // Consuming the request first makes it the lock: a concurrent confirm,
-        // or an uninstall sweep that already removed it, stops here.
-        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
-            throw new Exception(Exception::INSTALLATION_REQUEST_NOT_FOUND);
-        }
-
         $provider = $request->getAttribute('provider');
         $providerInstallationId = $request->getAttribute('providerInstallationId');
 
-        try {
-            $installation = $dbForPlatform->findOne('installations', [
-                Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('provider', [$provider]),
-            ]);
+        $installation = $dbForPlatform->findOne('installations', [
+            Query::equal('providerInstallationId', [$providerInstallationId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('provider', [$provider]),
+        ]);
 
-            if ($installation->isEmpty()) {
-                $installation = $dbForPlatform->createDocument('installations', new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
-                    'providerInstallationId' => $providerInstallationId,
-                    'projectId' => $project->getId(),
-                    'projectInternalId' => $project->getSequence(),
-                    'provider' => $provider,
-                    'organization' => $request->getAttribute('organization'),
-                    'personal' => false,
-                ]));
-            }
-        } catch (\Throwable $th) {
-            // The approval must survive a failed creation, so the consumed
-            // request goes back for another try. A restore that fails too must
-            // not hide why the confirmation failed in the first place.
-            try {
-                $dbForPlatform->createDocument('installationRequests', $request);
-            } catch (\Throwable $restore) {
-                Console::error('Failed to restore installation request ' . $request->getId() . ': ' . $restore->getMessage());
-            }
-
-            throw $th;
+        if ($installation->isEmpty()) {
+            $installation = $dbForPlatform->createDocument('installations', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                'providerInstallationId' => $providerInstallationId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
+                'provider' => $provider,
+                'organization' => $request->getAttribute('organization'),
+                'personal' => false,
+            ]));
         }
 
+        // Consumed only once the installation exists, so a failure anywhere
+        // above leaves the approval intact and the confirmation retryable.
+        if (!$dbForPlatform->deleteDocument('installationRequests', $request->getId())) {
+            Console::error('Failed to delete installation request ' . $request->getId() . ' after confirming it.');
+        }
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     }
