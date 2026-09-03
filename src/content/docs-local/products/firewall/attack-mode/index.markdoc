@@ -43,7 +43,7 @@ Your other Firewall rules stay in place.
 
 # Plan limits {% #plan-limits %}
 
-Turning Attack mode on for the first time **creates** a rule. If the project is already at its Firewall rule limit, create a slot by [deleting a rule](/docs/products/firewall/delete) or [upgrade your plan](/docs/advanced/platform/billing) before you can turn Attack mode on.
+Turning Attack mode on for the first time **creates** a rule. If the project is already at its Firewall rule limit, create a slot by [deleting a rule](/docs/products/firewall/rules#plan-limits) or [upgrade your plan](/docs/advanced/billing) before you can turn Attack mode on.
 
 {% arrow_link href="/docs/products/firewall/actions#challenge" %}
 Challenge action

@@ -56,13 +56,13 @@ Firewall rule limits are **per project** and depend on your organization plan:
 | Pro | 50 |
 | Scale | 50 |
 
-Creating a rule is blocked when you reach the limit until you delete a rule or [upgrade your plan](/docs/advanced/platform/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
+Creating a rule is blocked when you reach the limit until you delete a rule or [upgrade your plan](/docs/advanced/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
 
 The Console shows current usage next to the Firewall title when a limit applies.
 
 # Access {% #access %}
 
-Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/platform/roles) enabled, members with write access can create, update, and delete rules. Read-only roles (for example analysts) can view rules but cannot change them.
+Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, members with write access can create, update, and delete rules. Read-only roles (for example analysts) can view rules but cannot change them.
 
 When organization roles are disabled, all organization members can manage rules where the feature is available.
 
