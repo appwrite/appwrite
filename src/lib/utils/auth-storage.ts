@@ -9,6 +9,7 @@ export const OAUTH_LOGIN_METHODS = [
   'github',
   'gitlab',
   'bitbucket',
+  'cursor',
 ] as const
 
 export type OAuthLoginMethod = (typeof OAUTH_LOGIN_METHODS)[number]

@@ -2069,7 +2069,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Extra OAuth login',
-                'Show Google on console sign-in and sign-up. GitHub stays available.',
+                'Show Cursor on console sign-in and sign-up. Google, GitHub, GitLab, and Bitbucket stay available.',
                 'extraOAuthLogin',
                 profileId,
                 features.extraOAuthLogin,

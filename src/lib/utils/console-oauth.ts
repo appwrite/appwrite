@@ -9,17 +9,19 @@ export const DEFAULT_CONSOLE_OAUTH_LOGIN: OAuthLoginMethod = 'github'
 
 /** Always available on console sign-in and sign-up, regardless of profile flags. */
 const ALWAYS_ENABLED_LOGIN_METHODS = new Set<OAuthLoginMethod>([
+  'google',
   'github',
   'gitlab',
   'bitbucket',
 ])
 
-/** Console project OAuth providers. */
+/** Console project OAuth providers. Cursor is not in the public SDK enum yet. */
 export const CONSOLE_OAUTH_PROVIDERS: Record<OAuthLoginMethod, OAuthProvider> = {
   google: OAuthProvider.Google,
   github: OAuthProvider.Github,
   gitlab: OAuthProvider.Gitlab,
   bitbucket: OAuthProvider.Bitbucket,
+  cursor: 'cursor' as OAuthProvider,
 }
 
 export const OAUTH_LOGIN_ERROR: Record<OAuthLoginMethod, string> = {
@@ -27,6 +29,7 @@ export const OAUTH_LOGIN_ERROR: Record<OAuthLoginMethod, string> = {
   github: 'Failed to initiate GitHub login',
   gitlab: 'Failed to initiate GitLab login',
   bitbucket: 'Failed to initiate Bitbucket login',
+  cursor: 'Failed to initiate Cursor login',
 }
 
 export function getVisibleConsoleOAuthProviders(

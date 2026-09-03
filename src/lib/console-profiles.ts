@@ -44,8 +44,8 @@ export type ConsoleProfileFeatures = {
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
   /**
-   * Extra console OAuth login/signup providers (Google). GitHub, GitLab, and
-   * Bitbucket are always shown.
+   * Extra console OAuth login/signup providers (Cursor). Google, GitHub,
+   * GitLab, and Bitbucket are always shown.
    */
   extraOAuthLogin: boolean
   /**
@@ -185,7 +185,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      extraOAuthLogin: true,
+      extraOAuthLogin: false,
       extraVcsOAuth: false,
       compliance: true,
       oauthApps: false,
@@ -229,7 +229,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      extraOAuthLogin: true,
+      extraOAuthLogin: false,
       extraVcsOAuth: false,
       compliance: false,
       oauthApps: false,

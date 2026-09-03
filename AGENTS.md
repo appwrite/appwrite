@@ -1111,7 +1111,7 @@ Profiles control which features are available based on deployment type (cloud vs
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_EXTRA_OAUTH_LOGIN` – `true`/`false` to show extra console OAuth login/signup methods (Google). GitHub, GitLab, and Bitbucket stay available. On in both profiles by default.
+- `VITE_CONSOLE_EXTRA_OAUTH_LOGIN` – `true`/`false` to show extra console OAuth login/signup methods (Cursor). Google, GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
 - `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
 
 **Pre-launch mode** (not a profile feature; unset = off):

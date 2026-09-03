@@ -7,23 +7,27 @@ import {
 } from '@/lib/utils/console-oauth'
 
 describe('console OAuth login providers', () => {
-  test('shows GitHub, GitLab, and Bitbucket when extra OAuth login is off', () => {
+  test('shows Google, GitHub, GitLab, and Bitbucket regardless of the flag', () => {
     expect(getVisibleConsoleOAuthProviders(false)).toEqual([
+      'google',
       'github',
       'gitlab',
       'bitbucket',
     ])
-    expect(isConsoleOAuthProviderEnabled('github', false)).toBe(true)
-    expect(isConsoleOAuthProviderEnabled('gitlab', false)).toBe(true)
-    expect(isConsoleOAuthProviderEnabled('bitbucket', false)).toBe(true)
-    expect(isConsoleOAuthProviderEnabled('google', false)).toBe(false)
+    for (const provider of ['google', 'github', 'gitlab', 'bitbucket'] as const) {
+      expect(isConsoleOAuthProviderEnabled(provider, false)).toBe(true)
+      expect(isConsoleOAuthProviderEnabled(provider, true)).toBe(true)
+    }
+  })
+
+  test('gates Cursor behind extra OAuth login', () => {
+    expect(isConsoleOAuthProviderEnabled('cursor', false)).toBe(false)
+    expect(isConsoleOAuthProviderEnabled('cursor', true)).toBe(true)
+    expect(getVisibleConsoleOAuthProviders(false)).not.toContain('cursor')
   })
 
   test('shows every console OAuth method when extra OAuth login is on', () => {
     expect(getVisibleConsoleOAuthProviders(true)).toEqual(OAUTH_LOGIN_METHODS)
-    for (const provider of OAUTH_LOGIN_METHODS) {
-      expect(isConsoleOAuthProviderEnabled(provider, true)).toBe(true)
-    }
   })
 
   test('keeps GitHub as the preselected default', () => {
