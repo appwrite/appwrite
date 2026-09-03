@@ -94,14 +94,18 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
   {
     key: 'VITE_CONSOLE_EXTRA_OAUTH_LOGIN',
     group: 'Runtime',
-    description:
-      'Override extra console OAuth login/signup (Google, GitLab, Bitbucket, Cursor)',
+    description: 'Override extra console OAuth login/signup (Google, Cursor)',
   },
   {
     key: 'VITE_CONSOLE_EXTRA_VCS_OAUTH',
     group: 'Runtime',
+    description: 'Override extra Git VCS OAuth connect (Origin)',
+  },
+  {
+    key: 'VITE_CONSOLE_GITLAB_BITBUCKET',
+    group: 'Runtime',
     description:
-      'Override extra Git VCS OAuth connect (GitLab, Bitbucket, Origin)',
+      'Override GitLab/Bitbucket sign-in and Git connect providers',
   },
   {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
@@ -246,6 +250,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_EXTRA_OAUTH_LOGIN: isNonEmpty(config.extraOAuthLogin),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
+    VITE_CONSOLE_GITLAB_BITBUCKET: isNonEmpty(config.gitlabBitbucketProviders),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }
 }

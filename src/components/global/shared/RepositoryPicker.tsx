@@ -114,7 +114,10 @@ export function RepositoryPicker({
 }: RepositoryPickerProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(
+    features.extraVcsOAuth,
+    features.gitlabBitbucketProviders,
+  )
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',

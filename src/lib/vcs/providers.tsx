@@ -108,16 +108,30 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
 /** Always available for Git connect. Extra providers (GitLab, Bitbucket, Origin) are flag-gated. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
+const GITLAB_BITBUCKET_VCS_PROVIDERS = new Set<VcsProviderId>([
+  'gitlab',
+  'bitbucket',
+])
+
 /**
  * Connect/authorize providers shown in Git installation UI.
  * Existing installations of a hidden provider still render; only new OAuth
  * connect actions are filtered.
+ *
+ * `extraVcsOAuth` gates Origin; `gitlabBitbucketProviders` gates GitLab and
+ * Bitbucket independently. GitHub is always visible.
  */
 export function getVisibleVcsOAuthProviders(
   extraVcsOAuth: boolean,
+  gitlabBitbucketProviders: boolean,
 ): VcsProviderMeta[] {
-  if (extraVcsOAuth) return Object.values(VCS_PROVIDERS)
-  return [VCS_PROVIDERS[DEFAULT_VCS_OAUTH_PROVIDER]]
+  return Object.values(VCS_PROVIDERS).filter((provider) => {
+    if (provider.id === DEFAULT_VCS_OAUTH_PROVIDER) return true
+    if (GITLAB_BITBUCKET_VCS_PROVIDERS.has(provider.id)) {
+      return gitlabBitbucketProviders
+    }
+    return extraVcsOAuth
+  })
 }
 
 /**

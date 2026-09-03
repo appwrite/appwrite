@@ -336,7 +336,10 @@ function RepositorySkeleton({
 export function CreateFunctionView() {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(
+    features.extraVcsOAuth,
+    features.gitlabBitbucketProviders,
+  )
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData } = useFunctionWizard()

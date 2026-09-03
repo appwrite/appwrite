@@ -102,6 +102,7 @@ function SignUpPage() {
       !isConsoleOAuthProviderEnabled(
         provider,
         getActiveProfileFeatures().extraOAuthLogin,
+        getActiveProfileFeatures().gitlabBitbucketProviders,
       )
     ) {
       return

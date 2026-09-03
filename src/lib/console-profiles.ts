@@ -44,16 +44,24 @@ export type ConsoleProfileFeatures = {
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
   /**
-   * Extra console OAuth login/signup providers (Google, GitLab, Bitbucket,
-   * Cursor). GitHub is always shown.
+   * Extra console OAuth login/signup providers (Google). GitHub is always
+   * shown. GitLab and Bitbucket are controlled separately by
+   * {@link gitlabBitbucketProviders}.
    */
   extraOAuthLogin: boolean
   /**
-   * Extra Git (VCS) OAuth connect providers (GitLab, Bitbucket, Origin).
+   * Extra Git (VCS) OAuth connect providers (Origin only - GitLab and
+   * Bitbucket are controlled separately by {@link gitlabBitbucketProviders}).
    * GitHub is always shown. Existing installations of a hidden provider still
    * render; only new connect actions are gated.
    */
   extraVcsOAuth: boolean
+  /**
+   * GitLab and Bitbucket as console sign-in providers and as Git connect
+   * providers. GitHub is always shown. Independent of {@link extraOAuthLogin}
+   * (Google sign-in) and {@link extraVcsOAuth} (Origin connect).
+   */
+  gitlabBitbucketProviders: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization OAuth apps */
@@ -131,6 +139,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountIdentities: 'Account identities',
   extraOAuthLogin: 'Extra OAuth login',
   extraVcsOAuth: 'Extra VCS OAuth',
+  gitlabBitbucketProviders: 'GitLab & Bitbucket',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
@@ -185,8 +194,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      extraOAuthLogin: false,
+      extraOAuthLogin: true,
       extraVcsOAuth: false,
+      gitlabBitbucketProviders: true,
       compliance: true,
       oauthApps: false,
       oauth2Server: true,
@@ -229,8 +239,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      extraOAuthLogin: false,
+      extraOAuthLogin: true,
       extraVcsOAuth: false,
+      gitlabBitbucketProviders: true,
       compliance: false,
       oauthApps: false,
       oauth2Server: false,
@@ -519,7 +530,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN,
- * VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
+ * VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_GITLAB_BITBUCKET,
+ * VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -547,6 +559,12 @@ function applyEnvFeatureOverrides(
   const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
   if (extraVcsOAuth !== null) {
     next = { ...next, extraVcsOAuth }
+  }
+  const gitlabBitbucketProviders = parseEnvFeatureOverride(
+    config.gitlabBitbucketProviders,
+  )
+  if (gitlabBitbucketProviders !== null) {
+    next = { ...next, gitlabBitbucketProviders }
   }
   const databasePitrRestore = parseEnvFeatureOverride(config.databasePitrRestore)
   if (databasePitrRestore !== null) {

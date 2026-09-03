@@ -2069,7 +2069,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Extra OAuth login',
-                'Show Google, GitLab, Bitbucket, and Cursor on console sign-in and sign-up. GitHub stays available.',
+                'Show Google on console sign-in and sign-up. GitHub stays available.',
                 'extraOAuthLogin',
                 profileId,
                 features.extraOAuthLogin,
@@ -2077,10 +2077,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Extra VCS OAuth',
-                'Show GitLab, Bitbucket, and Origin on Git connect. GitHub stays available.',
+                'Show Origin on Git connect. GitHub stays available.',
                 'extraVcsOAuth',
                 profileId,
                 features.extraVcsOAuth,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
+                'GitLab & Bitbucket',
+                'Show GitLab and Bitbucket on console sign-in, sign-up, and Git connect. GitHub stays available.',
+                'gitlabBitbucketProviders',
+                profileId,
+                features.gitlabBitbucketProviders,
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
@@ -2541,6 +2549,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.userVerification,
     features.extraOAuthLogin,
     features.extraVcsOAuth,
+    features.gitlabBitbucketProviders,
     features.cookieBanner,
     features.blogDrafts,
     features.oauthApps,
