@@ -11,7 +11,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -44,7 +43,6 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -52,7 +50,6 @@ class XList extends Action
     }
 
     public function action(
-        bool $includeTotal,
         Response $response,
         Document $project,
         Database $dbForPlatform
@@ -61,7 +58,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'requests' => $dbForPlatform->find('installationRequests', $queries),
-            'total' => $includeTotal ? $dbForPlatform->count('installationRequests', $queries, APP_LIMIT_COUNT) : 0,
+            'total' => $dbForPlatform->count('installationRequests', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_INSTALLATION_REQUEST_LIST);
     }
 }
