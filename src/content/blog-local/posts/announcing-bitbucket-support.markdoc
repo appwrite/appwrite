@@ -42,7 +42,9 @@ Connect a Bitbucket workspace, pick a repository, and pushes build and deploy ex
 
 # Connecting a Bitbucket workspace
 
-Go to **Settings** > **Git configuration** in any project, choose **Connect Bitbucket**, and approve the OAuth consent screen. The connection is saved to the project and its repositories become available immediately.
+Open a Site or Function, go to **Settings** > **Version control (Git)**, choose **Connect Bitbucket**, and approve the OAuth consent screen. The connection is saved to the project and its repositories become available immediately. You can also connect from **Project settings** > **Git configuration**, which covers every Site and Function in the project.
+
+![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/dark/git-repo.avif)
 
 If you are creating your first Site or Function and have no Git connection yet, the wizard's empty state lists the providers your server supports, so you can connect Bitbucket and pick a repository without a detour into settings.
 
@@ -86,7 +88,7 @@ Where your repositories are hosted is no longer a question you have to answer be
 
 # Getting started with Bitbucket on Appwrite
 
-Open a Site or Function, go to **Settings** > **Git configuration**, and connect Bitbucket. Or start a new one on [Appwrite Cloud](https://cloud.appwrite.io) and choose Bitbucket in the creation wizard.
+Open a Site or Function, go to **Settings** > **Version control (Git)**, and connect Bitbucket. Or start a new one on [Appwrite Cloud](https://cloud.appwrite.io) and choose Bitbucket in the creation wizard.
 
 - [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers build triggers, filters, and build configuration.
 - [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same for serverless functions.
