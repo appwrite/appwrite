@@ -84,23 +84,30 @@ class Update extends Action
         $provider = $request->getAttribute('provider');
         $providerInstallationId = $request->getAttribute('providerInstallationId');
 
-        $installation = $dbForPlatform->findOne('installations', [
-            Query::equal('providerInstallationId', [$providerInstallationId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::equal('provider', [$provider]),
-        ]);
+        try {
+            $installation = $dbForPlatform->findOne('installations', [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('provider', [$provider]),
+            ]);
 
-        if ($installation->isEmpty()) {
-            $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
-                'providerInstallationId' => $providerInstallationId,
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'provider' => $provider,
-                'organization' => $request->getAttribute('organization'),
-                'personal' => false,
-            ]));
+            if ($installation->isEmpty()) {
+                $installation = $dbForPlatform->createDocument('installations', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                    'providerInstallationId' => $providerInstallationId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'provider' => $provider,
+                    'organization' => $request->getAttribute('organization'),
+                    'personal' => false,
+                ]));
+            }
+        } catch (\Throwable $th) {
+            // The approval must survive a failed creation, so the consumed
+            // request goes back for another try.
+            $dbForPlatform->createDocument('installationRequests', $request);
+            throw $th;
         }
 
 

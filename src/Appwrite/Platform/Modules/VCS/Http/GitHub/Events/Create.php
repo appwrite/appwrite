@@ -120,14 +120,13 @@ class Create extends Action
             $requests = $authorization->skip(fn () => $dbForPlatform->find('installationRequests', [
                 Query::equal('provider', ['github']),
                 Query::equal('requester', [$requester]),
-                Query::equal('status', ['requested']),
                 Query::limit(2),
             ]));
 
             // The webhook does not say which request the owner approved, so a
-            // requester with pending requests in several projects is ambiguous
-            // and none of them is marked until the extras are withdrawn.
-            if (\count($requests) !== 1) {
+            // requester with more than one unconsumed request is ambiguous and
+            // nothing is marked until the others are confirmed or withdrawn.
+            if (\count($requests) !== 1 || $requests[0]->getAttribute('status') !== 'requested') {
                 return;
             }
 
