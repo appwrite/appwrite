@@ -16,7 +16,7 @@ Integrators never visit the Appwrite Console. You are expected to build a develo
 ![OAuth2 clients list in the Appwrite Console](/images/docs/oauth-server/oauth2-server-apps-list.avif)
 {% /only_light %}
 
-Server SDKs matter in exactly two places: [introspecting](/docs/products/auth/oauth-server/tokens#introspect) a public client's tokens, which needs an API key because there is no client secret, and administrative operations like [curating labels](#labels).
+Two operations need a project API key instead of a client secret. [Introspecting](/docs/products/auth/oauth-server/tokens#introspect) a public client's tokens needs one because a public client has no secret to authenticate with, and the introspection endpoint has no SDK method, so call it over HTTP. [Curating labels](#labels) is an administrative operation that the Server SDKs expose.
 
 # Confidential and public clients {% #client-types %}
 
@@ -45,7 +45,7 @@ The type a client uses changes what it can do:
 | --- | --- | --- |
 | Client secret | Issued, sent on token requests | None issued |
 | PKCE | Optional (configurable per project) | Always required |
-| Token introspection | With its client secret | With a project API key holding the `oauth2.read` scope |
+| Token introspection | With its client secret | With a project API key holding the `oauth2.introspect` scope |
 | Default access token lifetime | 8 hours | 1 hour |
 | Default refresh token lifetime | 365 days | 30 days |
 

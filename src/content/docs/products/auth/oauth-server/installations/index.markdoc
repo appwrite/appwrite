@@ -403,7 +403,7 @@ const key = await apps.createKey({
 ```
 {% /multicode %}
 
-The response holds the secret in its `secret` field. It never appears again, so store it as soon as the response arrives. The `hint` field repeats the secret's last six characters, so you can tell keys apart later. Treat the secret like a password: anyone who holds it can mint tokens for every installation of the client.
+The response holds the secret in its `secret` field. App keys are encrypted at rest and readable on every read, so `apps.getKey` and `apps.listKeys` return the secret again whenever you need it. The `hint` field repeats the secret's last six characters, so you can tell keys apart later. Treat the secret like a password: anyone who holds it can mint tokens for every installation of the client.
 
 # Create installation tokens {% #create-tokens %}
 

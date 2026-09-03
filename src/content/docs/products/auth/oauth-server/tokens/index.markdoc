@@ -319,7 +319,7 @@ To make an access token useful to your product:
 1. Add custom scopes in **Auth > OAuth2 server > Settings** that describe the operations your API exposes.
 2. Host an API that acts as the resource server. Appwrite Functions and server-rendered Appwrite Sites are suitable places to run it.
 3. Read the bearer access token from each incoming request.
-4. From your server, call the introspection endpoint with an Appwrite API key that has the `oauth2.read` scope. Keep this API key on the server.
+4. From your server, call the introspection endpoint with an Appwrite API key that has the `oauth2.introspect` scope. Keep this API key on the server.
 5. Require `active: true`, then check that `scope` contains every permission the API operation needs.
 6. Perform the operation only after those checks pass.
 
