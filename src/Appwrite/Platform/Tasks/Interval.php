@@ -18,6 +18,8 @@ use Utopia\System\System;
 
 class Interval extends Action
 {
+    private const int CERTIFICATE_GENERATION_INTERVAL = 300; // 5 minutes
+
     public static function getName(): string
     {
         return 'interval';
@@ -76,7 +78,6 @@ class Interval extends Action
     protected function getTasks(): array
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
-        $intervalCertificateGeneration = (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', '300'); // 5 minutes
 
         return [
             [
@@ -91,7 +92,7 @@ class Interval extends Action
                 "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
                     $this->generateCertificate($dbForPlatform, $publisherForCertificates);
                 },
-                'interval' => $intervalCertificateGeneration * 1000,
+                'interval' => $this->certificateGenerationInterval() * 1000,
             ]
         ];
     }
@@ -144,21 +145,32 @@ class Interval extends Action
         Span::add("interval.domain_verification.failed", $failed);
     }
 
+    private function certificateGenerationInterval(): int
+    {
+        return (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', (string) self::CERTIFICATE_GENERATION_INTERVAL);
+    }
+
     /**
      * Retry certificate generation for domains whose last attempt failed.
      *
      * DNS verification already retries on its own schedule; issuance had no
      * equivalent, so a single failed attempt — a transient issuer error included
      * — left the domain without a certificate until someone pressed retry in the
-     * Console. The worker caps how many times one certificate is attempted.
+     * Console. Both this task and the worker stop at the shared attempt limit.
      */
     private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
         $fromTime = new DateTime('-3 days'); // Max 3 days old
 
+        // An attempt only writes the rule once it finishes, so a rule touched
+        // within the last interval either has a job in flight or has just been
+        // tried. Holding those back keeps one domain to one attempt at a time.
+        $claimedUntil = new DateTime('-' . $this->certificateGenerationInterval() . ' seconds');
+
         $rules = $dbForPlatform->find('rules', [
             Query::createdAfter(DatabaseDateTime::format($fromTime)),
             Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATION_FAILED]), // Verified DNS, but no certificate yet
+            Query::updatedBefore(DatabaseDateTime::format($claimedUntil)),
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
             Query::limit(100), // Reasonable pagination limit
@@ -169,14 +181,25 @@ class Interval extends Action
 
         if ($scanned === 0) {
             Span::add("interval.certificate_generation.processed", 0);
+            Span::add("interval.certificate_generation.skipped", 0);
             Span::add("interval.certificate_generation.failed", 0);
             return; // No rules to retry
         }
 
         $processed = 0;
+        $skipped = 0;
         $failed = 0;
 
         foreach ($rules as $rule) {
+            // A certificate that used up its attempts stays in the failed state
+            // for the rest of the window, and the worker would only skip the job.
+            $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+
+            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                $skipped++;
+                continue;
+            }
+
             try {
                 $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
                     project: new Document([
@@ -196,6 +219,7 @@ class Interval extends Action
         }
 
         Span::add("interval.certificate_generation.processed", $processed);
+        Span::add("interval.certificate_generation.skipped", $skipped);
         Span::add("interval.certificate_generation.failed", $failed);
     }
 }
