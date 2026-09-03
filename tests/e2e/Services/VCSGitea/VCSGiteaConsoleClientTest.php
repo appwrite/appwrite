@@ -782,4 +782,20 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testCreateInstallationWithOversizedRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        // Authorize must refuse rather than mint a state its own callback would reject.
+        $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'success' => $consoleUrl,
+            'failure' => $consoleUrl . '?pad=' . \str_repeat('a', APP_LIMIT_VCS_STATE),
+        ], true, false);
+
+        $this->assertEquals(400, $authorize['headers']['status-code']);
+    }
 }

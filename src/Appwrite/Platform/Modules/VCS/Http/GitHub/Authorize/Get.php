@@ -79,6 +79,10 @@ class Get extends Action
             'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), $key),
         ]);
 
+        if (\strlen($state) > APP_LIMIT_VCS_STATE) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
+        }
+
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
