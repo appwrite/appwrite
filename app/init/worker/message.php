@@ -24,7 +24,6 @@ use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
-use Utopia\Storage\Device;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -191,9 +190,9 @@ return function (Container $container): void {
 
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
-    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform, Device $deviceForBuilds) {
-        return new Deployments($jobs, $dbForProject, $project, $platform, $deviceForBuilds);
-    }, ['jobs', 'dbForProject', 'project', 'platform', 'deviceForBuilds']);
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
+        return new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {

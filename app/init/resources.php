@@ -319,7 +319,18 @@ $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Teleme
 
 function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+    $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+    $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+    $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+    $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+    $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+
+    // An explicit connection remains authoritative. Otherwise the generic S3
+    // configuration takes precedence and the legacy internal DSN is a fallback.
+    if ($connection === '' && (! \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true) || ! $hasS3Configuration)) {
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    }
 
     $device = DeviceType::Local;
     $accessKey = '';
@@ -339,20 +350,27 @@ function getDevice(string $root, string $connection = ''): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
     } else {
-        $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $device = $configuredDevice;
         $prefix = match ($device) {
-            DeviceType::S3, DeviceType::AwsS3 => 'S3',
+            DeviceType::S3, DeviceType::AwsS3 => null,
             DeviceType::DoSpaces => 'DO_SPACES',
             DeviceType::Backblaze => 'BACKBLAZE',
             DeviceType::Linode => 'LINODE',
             DeviceType::Wasabi => 'WASABI',
             DeviceType::Local => null,
         };
-        if ($prefix !== null) {
-            $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
-            $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
-            $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
-            $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        if ($device !== DeviceType::Local) {
+            if ($prefix === null || $hasS3Configuration) {
+                $accessKey = $s3AccessKey;
+                $accessSecret = $s3AccessSecret;
+                $region = $s3Region;
+                $bucket = $s3Bucket;
+            } else {
+                $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
+                $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
+                $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
+                $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+            }
         }
     }
 
