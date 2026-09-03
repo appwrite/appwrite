@@ -97,14 +97,26 @@ abstract class Base extends Action
         $hostname = $platform['consoleHostname'] ?? '';
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
 
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
         // The callback endpoint is public, so it verifies this signature
         // before trusting the projectId and redirect URLs in state.
-        $oauth2 = $this->createOAuth2($callback, [
+        $state = [
             'projectId' => $project->getId(),
             'success' => $success,
             'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
-        ]);
+            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), $signingKey),
+        ];
+
+        if (\strlen((string) \json_encode($state)) > APP_LIMIT_VCS_STATE) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
+        }
+
+        $oauth2 = $this->createOAuth2($callback, $state);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

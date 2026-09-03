@@ -22,6 +22,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
@@ -53,6 +56,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private Device $deviceForBuilds,
     ) {
     }
 
@@ -182,7 +186,7 @@ readonly class Deployments
 
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
-            'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            'buildPath' => $this->deviceForBuilds->getPath($deployment->getId() . '/' . static::artifact()),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -459,6 +463,32 @@ readonly class Deployments
     }
 
     /**
+     * Bring a finished build's artifact to the deployment's buildPath, once
+     * the job has exited and delivered its artifacts. With the volume strategy
+     * (see storage()) build.sh wrote it onto the builds volume, which on the
+     * local device already is the buildPath; on a remote device (S3 and
+     * friends) it is moved off the volume onto the device here. A strategy
+     * whose artifacts already land on the device overrides this with a no-op.
+     */
+    public function store(Document $deployment): void
+    {
+        if ($this->deviceForBuilds->getType() === DeviceType::Local) {
+            return;
+        }
+
+        $source = static::buildPath($this->project->getId(), $deployment->getId());
+        $target = (string) $deployment->getAttribute('buildPath', '');
+        $local = new Local();
+        if ($target === '' || ! $local->exists($source)) {
+            return;
+        }
+
+        if ($local->copy($source, $target, $this->deviceForBuilds)) {
+            $local->delete($source);
+        }
+    }
+
+    /**
      * The jobs-service job id for a deployment build (used to submit and cancel).
      */
     public static function id(string $projectId, string $deploymentId): string
@@ -476,7 +506,9 @@ readonly class Deployments
     }
 
     /**
-     * The build output path on the builds volume, declared at submission.
+     * The build output path on the builds volume. On the local device this is
+     * also the deployment's buildPath; on a remote device (S3 and friends) the
+     * buildPath is a device path and the Jobs worker moves the artifact there.
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {

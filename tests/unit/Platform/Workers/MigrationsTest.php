@@ -102,11 +102,87 @@ final class MigrationsTest extends TestCase
             'persist:processing:migrating',
             'destination:success',
             'source:success',
-            'persist:failed:finished',
             'source:error',
             'destination:error',
+            'persist:failed:finished',
         ], $events);
         $this->assertNotContains('persist:completed:finished', $events);
+    }
+
+    /**
+     * The archive and restoration rows are what the product reads, so they are
+     * stamped before the migration's own copy of the outcome — a process that dies
+     * between the two writes must lose the internal record, not the customer's.
+     */
+    public function testFailureHooksRunBeforeFailedMigrationIsPersisted(): void
+    {
+        $events = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createDestinationMock();
+
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function (): void {
+                throw new \RuntimeException('Upload failed');
+            });
+        $source
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'source:error';
+            });
+        $destination
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'destination:error';
+            });
+
+        $migration = $this->createMigration();
+
+        $this->process($this->createProcessor($source, $destination, $events), $migration);
+
+        $this->assertSame(
+            ['source:error', 'destination:error', 'persist:failed:finished'],
+            \array_slice($events, -3)
+        );
+    }
+
+    /**
+     * Each hook owns a different record of the failure, so one throwing must not
+     * take the other's write down with it.
+     */
+    public function testAThrowingSourceErrorHookStillLetsTheDestinationRecordTheFailure(): void
+    {
+        $events = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createDestinationMock();
+
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function (): void {
+                throw new \RuntimeException('Upload failed');
+            });
+        $source
+            ->expects($this->once())
+            ->method('error')
+            ->willThrowException(new \RuntimeException('Lock release failed'));
+        $destination
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'destination:error';
+            });
+
+        $migration = $this->createMigration();
+
+        $this->process($this->createProcessor($source, $destination, $events), $migration);
+
+        $this->assertContains('destination:error', $events);
+        $this->assertSame('persist:failed:finished', \end($events));
+        $this->assertSame('failed', $migration->getAttribute('status'));
     }
 
     public function testNullResourceTypeUsesEmptyResourceSelector(): void

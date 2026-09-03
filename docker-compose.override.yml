@@ -560,6 +560,35 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+  # S3-compatible storage for the s3 e2e group. Creates the bucket the
+  # _APP_STORAGE_S3_* variables point at once the server is up.
+  minio:
+    profiles:
+      - s3
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: appwrite-minio
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment:
+      - MINIO_ROOT_USER=${_APP_STORAGE_S3_ACCESS_KEY:-minio}
+      - MINIO_ROOT_PASSWORD=${_APP_STORAGE_S3_SECRET:-minio12345}
+      - MINIO_BUCKET=${_APP_STORAGE_S3_BUCKET:-appwrite}
+    entrypoint:
+      - sh
+      - -c
+      - |
+        minio server /data &
+        until mc alias set local http://localhost:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do sleep 1; done
+        mc mb -p "local/$$MINIO_BUCKET"
+        wait
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mc ls "local/$$MINIO_BUCKET" >/dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 20
 configs:
   redisinsight-connections.json:
     content: |

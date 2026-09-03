@@ -652,14 +652,23 @@ class Migrations extends Action
                     $destinationErrors,
                 ));
 
-                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
-                    $source?->error();
-                    $destination?->error();
+                    try {
+                        $source?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Source failure hook threw: ' . $error->getMessage());
+                    }
+
+                    try {
+                        $destination?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Destination failure hook threw: ' . $error->getMessage());
+                    }
                 }
+
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             } finally {
                 $source?->cleanup();
