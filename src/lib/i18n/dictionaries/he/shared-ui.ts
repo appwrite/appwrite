@@ -263,7 +263,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.':
     'התחילו ביצירת הפריט הראשון שלכם.',
-  'Organization': 'ארגון',
+  Organization: 'ארגון',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',
@@ -673,7 +673,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
   // pragma: allowlist secret
-  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
@@ -1241,7 +1242,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   Red: 'אדום',
   Blue: 'כחול',
   Slate: 'אפור',
-
   'Increase time': 'העלאת זמן',
   'Decrease time': 'הורדת זמן',
+  'Start impersonation': 'התחלת התחזות',
+  'Could not load this user.': 'לא ניתן היה לטעון את המשתמש הזה.',
+  "The Console will run with this user's access until you exit impersonation. Actions stay attributed to your operator account.":
+    'המסוף יפעל עם ההרשאות של המשתמש הזה עד שתצאו ממצב ההתחזות. הפעולות יישארו משויכות לחשבון האופרטור שלכם.',
+  'Operator access': 'גישת אופרטור',
+  'Operator account': 'חשבון אופרטור',
 }

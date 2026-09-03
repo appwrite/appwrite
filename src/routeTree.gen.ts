@@ -71,6 +71,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
+import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
 import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
@@ -80,6 +81,7 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicImpersonateUserIdRouteImport } from './routes/_public/impersonate.$userId'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -726,6 +728,11 @@ const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
   path: '/partners/',
   getParentRoute: () => DocsRoute,
 } as any)
+const PublicImpersonateIndexRoute = PublicImpersonateIndexRouteImport.update({
+  id: '/impersonate/',
+  path: '/impersonate/',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -774,6 +781,11 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicImpersonateUserIdRoute = PublicImpersonateUserIdRouteImport.update({
+  id: '/impersonate/$userId',
+  path: '/impersonate/$userId',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicGitAuthorizeContributorRoute =
   PublicGitAuthorizeContributorRouteImport.update({
     id: '/git/authorize-contributor',
@@ -3093,6 +3105,7 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3102,6 +3115,7 @@ export interface FileRoutesByFullPath {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
   '/agent/': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3494,6 +3508,7 @@ export interface FileRoutesByTo {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3501,6 +3516,7 @@ export interface FileRoutesByTo {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account': typeof PublicAccountIndexRoute
   '/agent': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3862,6 +3878,7 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3871,6 +3888,7 @@ export interface FileRoutesById {
   '/_marketing/threads/': typeof MarketingThreadsIndexRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_public/agent/': typeof PublicAgentIndexRoute
+  '/_public/impersonate/': typeof PublicImpersonateIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -4271,6 +4289,7 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/impersonate/$userId'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4280,6 +4299,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account/'
     | '/agent/'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -4672,6 +4692,7 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/impersonate/$userId'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -4679,6 +4700,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account'
     | '/agent'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -5039,6 +5061,7 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
+    | '/_public/impersonate/$userId'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -5048,6 +5071,7 @@ export interface FileRouteTypes {
     | '/_marketing/threads/'
     | '/_public/account/'
     | '/_public/agent/'
+    | '/_public/impersonate/'
     | '/docs/partners/'
     | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
@@ -5828,6 +5852,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsPartnersIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_public/impersonate/': {
+      id: '/_public/impersonate/'
+      path: '/impersonate'
+      fullPath: '/impersonate'
+      preLoaderRoute: typeof PublicImpersonateIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/agent/': {
       id: '/_public/agent/'
       path: '/'
@@ -5889,6 +5920,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/impersonate/$userId': {
+      id: '/_public/impersonate/$userId'
+      path: '/impersonate/$userId'
+      fullPath: '/impersonate/$userId'
+      preLoaderRoute: typeof PublicImpersonateUserIdRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/git/authorize-contributor': {
@@ -9992,8 +10030,10 @@ interface PublicRouteChildren {
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
+  PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
+  PublicImpersonateIndexRoute: typeof PublicImpersonateIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -10015,8 +10055,10 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
+  PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
+  PublicImpersonateIndexRoute: PublicImpersonateIndexRoute,
 }
 
 const PublicRouteWithChildren =

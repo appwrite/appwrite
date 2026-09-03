@@ -20,6 +20,8 @@ jobs:
             timeout: 15
           - project: console
             timeout: 15
+          - project: console-mocked
+            timeout: 15
           - project: console-usage
             timeout: 20
           - project: console-mysql
