@@ -367,7 +367,9 @@ function ResourcePercentValue({ value }: { value: number | null }) {
     <span
       className={cn(
         RESOURCE_PERCENT_SLOT_CLASSNAME,
-        ready ? 'text-foreground' : 'text-transparent select-none',
+        ready
+          ? 'text-foreground transition-colors duration-300 ease-out motion-reduce:transition-none'
+          : 'text-transparent select-none',
       )}
       aria-hidden={!ready}
     >
@@ -555,12 +557,13 @@ function CompactClusterNode({
     metrics.kind === 'resource' && hasResourceMetricValue(metrics.cpu)
   const hasMemory =
     metrics.kind === 'resource' && hasResourceMetricValue(metrics.memory)
+  const hasAnyResourceStat = hasCpu || hasMemory
   const hasConnections =
     metrics.kind === 'connections' &&
     (metrics.current != null || metrics.max != null)
 
-  const showMetricsFooter =
-    showStatusBody || hasCpu || hasMemory || hasConnections
+  const footerExpanded =
+    showStatusBody || hasAnyResourceStat || hasConnections
 
   const connectionsLabel =
     metrics.kind === 'connections'
@@ -572,24 +575,28 @@ function CompactClusterNode({
   return (
     <div
       className={cn(
-        'absolute select-none transition-opacity',
+        'absolute select-none',
         status === 'removing' && 'opacity-45',
       )}
       style={{
         left: `${node.x}px`,
         top: `${node.y}px`,
         width: `${node.width}px`,
+        height: `${node.height}px`,
       }}
     >
       <div
         className={cn(
-          'overflow-hidden rounded-md border bg-card shadow-sm',
+          'overflow-hidden rounded-md border bg-card shadow-sm transition-[max-height] duration-300 ease-out motion-reduce:transition-none',
           status === 'adding' &&
             'border-dashed border-blue-500/40 bg-blue-500/5',
           status === 'removing' &&
             'border-dashed border-muted-foreground/55 bg-muted/40',
           !isPreviewChange && 'border-border',
         )}
+        style={{
+          maxHeight: footerExpanded ? NODE_HEIGHT : HEADER_HEIGHT,
+        }}
       >
         <div
           className={cn(
@@ -619,59 +626,51 @@ function CompactClusterNode({
             aria-label={statusLabel}
           />
         </div>
-        {showMetricsFooter ? (
-          <div
-            className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
-            style={{ minHeight: METRICS_BODY_HEIGHT }}
-          >
-            {showStatusBody ? (
-              <span
-                className={cn(
-                  'text-[10px] font-medium leading-none',
-                  status === 'removing'
-                    ? 'text-muted-foreground'
-                    : status === 'adding' ||
-                        status === 'provisioning' ||
-                        status === 'starting'
-                      ? 'text-blue-700 dark:text-blue-400'
-                      : status === 'pending'
-                        ? 'text-amber-700 dark:text-amber-400'
-                        : 'text-muted-foreground',
-                )}
-              >
-                {statusLabel}
+        <div
+          className={cn(
+            'flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5 transition-opacity duration-300 ease-out motion-reduce:transition-none',
+            footerExpanded ? 'opacity-100 delay-100' : 'opacity-0 delay-0',
+          )}
+          style={{ minHeight: METRICS_BODY_HEIGHT }}
+        >
+          {showStatusBody ? (
+            <span
+              className={cn(
+                'text-[10px] font-medium leading-none',
+                status === 'removing'
+                  ? 'text-muted-foreground'
+                  : status === 'adding' ||
+                      status === 'provisioning' ||
+                      status === 'starting'
+                    ? 'text-blue-700 dark:text-blue-400'
+                    : status === 'pending'
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-muted-foreground',
+              )}
+            >
+              {statusLabel}
+            </span>
+          ) : metrics.kind === 'connections' ? (
+            <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+              <span className="text-muted-foreground">{t('Connections')}</span>
+              <span className="font-mono tabular-nums font-medium text-foreground">
+                {connectionsLabel}
               </span>
-            ) : metrics.kind === 'connections' ? (
+            </span>
+          ) : (
+            <>
               <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-                <span className="text-muted-foreground">{t('Connections')}</span>
-                <span className="font-mono tabular-nums font-medium text-foreground">
-                  {connectionsLabel}
-                </span>
+                <span className="text-muted-foreground">{t('CPU')}</span>
+                <ResourcePercentValue value={metrics.cpu} />
               </span>
-            ) : (
-              <>
-                {hasCpu ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-                    <span className="text-muted-foreground">{t('CPU')}</span>
-                    <ResourcePercentValue value={metrics.cpu} />
-                  </span>
-                ) : null}
-                {hasCpu && hasMemory ? (
-                  <span
-                    className="h-3 w-px shrink-0 bg-border"
-                    aria-hidden
-                  />
-                ) : null}
-                {hasMemory ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-                    <span className="text-muted-foreground">{t('Memory')}</span>
-                    <ResourcePercentValue value={metrics.memory} />
-                  </span>
-                ) : null}
-              </>
-            )}
-          </div>
-        ) : null}
+              <span className="h-3 w-px shrink-0 bg-border" aria-hidden />
+              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                <span className="text-muted-foreground">{t('Memory')}</span>
+                <ResourcePercentValue value={metrics.memory} />
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
