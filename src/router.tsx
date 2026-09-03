@@ -2,8 +2,6 @@ import { createRouter } from '@tanstack/react-router'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
 
-// Import the generated route tree
-import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
 import {
@@ -19,8 +17,12 @@ import {
 // static build (text "Loading data for you" then logo).
 
 // Create a new router instance
-export function getRouter() {
+export async function getRouter() {
   const rqContext = TanstackQuery.getContext()
+
+  // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
+  // augmentation type-imports this module; static import can TDZ under SSR).
+  const { routeTree } = await import('./routeTree.gen')
 
   const router = createRouter({
     routeTree,
