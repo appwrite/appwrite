@@ -6,6 +6,8 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Message\Execution;
 use Appwrite\Event\Message\ExecutionCancelled;
+use Appwrite\Event\Message\Executions as ExecutionsMessage;
+use Appwrite\Execution\Store;
 use Appwrite\Platform\Workers\Executions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -29,6 +31,8 @@ final class ExecutionsTest extends TestCase
                 return $execution;
             });
         $dbForProject->expects($this->never())->method('upsertDocuments');
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -36,6 +40,7 @@ final class ExecutionsTest extends TestCase
                 execution: new Document(['$id' => 'execution', 'status' => 'waiting']),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
 
         $this->assertInstanceOf(Document::class, $created);
@@ -49,6 +54,17 @@ final class ExecutionsTest extends TestCase
             ->method('createDocument')
             ->willThrowException(new Duplicate('Execution already exists'));
         $dbForProject->expects($this->never())->method('upsertDocuments');
+        $dbForProject->expects($this->once())
+            ->method('getDocument')
+            ->with('executions', 'execution')
+            ->willReturn(new Document(['$id' => 'execution', 'status' => 'completed']));
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())
+            ->method('upsert')
+            ->willReturnCallback(function (string $projectId, Document $execution): void {
+                $this->assertSame('project', $projectId);
+                $this->assertSame('completed', $execution->getAttribute('status'));
+            });
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -56,6 +72,7 @@ final class ExecutionsTest extends TestCase
                 execution: new Document(['$id' => 'execution', 'status' => 'waiting']),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
     }
 
@@ -74,11 +91,12 @@ final class ExecutionsTest extends TestCase
                 ?callable $onNext = null,
                 ?callable $onError = null
             ) use (&$upserted): int {
-                // No callback is passed, so the write skips the sequence fetch.
-                $this->assertNull($onNext);
                 $upserted = $executions[0];
+                $onNext($upserted);
                 return \count($executions);
             });
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())->method('upsert')->with('project', $this->isInstanceOf(Document::class));
 
         (new Executions())->action(
             $this->message((new Execution(
@@ -90,11 +108,74 @@ final class ExecutionsTest extends TestCase
                 ]),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
 
         $this->assertInstanceOf(Document::class, $upserted);
         $this->assertSame('completed', $upserted->getAttribute('status'));
         $this->assertSame('output', $upserted->getAttribute('logs'));
+    }
+
+    public function testBatchMirrorsDatabaseAssignedSequences(): void
+    {
+        $stored = new Document([
+            '$id' => 'execution',
+            '$sequence' => 42,
+            'status' => 'completed',
+        ]);
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->expects($this->once())
+            ->method('upsertDocuments')
+            ->willReturnCallback(function (string $collection, array $executions, int $batchSize, callable $onNext) use ($stored): int {
+                $onNext($stored);
+                return 1;
+            });
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())
+            ->method('upsertMany')
+            ->willReturnCallback(function (string $projectId, array $executions): void {
+                $this->assertSame('project', $projectId);
+                $this->assertSame('42', $executions[0]->getSequence());
+            });
+
+        (new Executions())->action(
+            $this->message((new ExecutionsMessage(
+                project: new Document(['$id' => 'project']),
+                executions: [new Document(['$id' => 'execution', 'status' => 'completed'])],
+            ))->toArray()),
+            $dbForProject,
+            $store,
+        );
+    }
+
+    public function testBatchRedeliveryHealsClickHouseAfterDatabaseNoOp(): void
+    {
+        $stored = new Document([
+            '$id' => 'execution',
+            '$sequence' => 42,
+            'status' => 'completed',
+        ]);
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->expects($this->once())
+            ->method('upsertDocuments')
+            ->willReturn(0);
+        $dbForProject->expects($this->once())
+            ->method('getDocument')
+            ->with('executions', 'execution')
+            ->willReturn($stored);
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())
+            ->method('upsertMany')
+            ->with('project', [$stored]);
+
+        (new Executions())->action(
+            $this->message((new ExecutionsMessage(
+                project: new Document(['$id' => 'project']),
+                executions: [new Document(['$id' => 'execution', 'status' => 'completed'])],
+            ))->toArray()),
+            $dbForProject,
+            $store,
+        );
     }
 
     public function testDeletesCancelledExecution(): void
@@ -104,6 +185,8 @@ final class ExecutionsTest extends TestCase
             ->method('deleteDocument')
             ->with('executions', 'execution')
             ->willReturn(true);
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
 
         (new Executions())->action(
             $this->message((new ExecutionCancelled(
@@ -111,6 +194,7 @@ final class ExecutionsTest extends TestCase
                 execution: new Document(['$id' => 'execution']),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
     }
 
@@ -121,6 +205,8 @@ final class ExecutionsTest extends TestCase
             ->method('deleteDocument')
             ->with('executions', 'execution')
             ->willReturn(false);
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failed to remove cancelled execution');
@@ -131,6 +217,7 @@ final class ExecutionsTest extends TestCase
                 execution: new Document(['$id' => 'execution']),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
     }
 
@@ -142,6 +229,8 @@ final class ExecutionsTest extends TestCase
             ->method('deleteDocument')
             ->with('executions', 'execution')
             ->willThrowException($error);
+        $store = $this->createMock(Store::class);
+        $store->expects($this->once())->method('delete')->with('project', $this->isInstanceOf(Document::class));
 
         $this->expectExceptionObject($error);
 
@@ -151,6 +240,7 @@ final class ExecutionsTest extends TestCase
                 execution: new Document(['$id' => 'execution']),
             ))->toArray()),
             $dbForProject,
+            $store,
         );
     }
 
