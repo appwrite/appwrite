@@ -1,5 +1,6 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { BLOG_COVER_OG_HEIGHT, BLOG_COVER_OG_WIDTH } from '@/lib/seo/cover-constants'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
@@ -106,10 +107,13 @@ export function getBlogPostMetaTags(
   const canonical = getBlogCanonicalUrl(post.href)
   const coverImage = getBlogPostCoverImageUrl(post, siteOrigin)
   const ogImage = coverImage ?? getBlogPostOgImageUrl(post, siteOrigin)
-  // Real cover dimensions from the generated manifest; the dynamic OG
-  // endpoint always renders at OG_IMAGE_WIDTH x OG_IMAGE_HEIGHT.
+  // Prefer manifest dimensions; fall back to legacy website OG size so every
+  // post always emits og:image:width/height (website Post.svelte did this for all covers).
   const ogImageDimensions = coverImage
-    ? getCoverImageDimensions(coverImage)
+    ? (getCoverImageDimensions(coverImage) ?? {
+        width: BLOG_COVER_OG_WIDTH,
+        height: BLOG_COVER_OG_HEIGHT,
+      })
     : { width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT }
 
   return [
@@ -121,12 +125,8 @@ export function getBlogPostMetaTags(
     { property: 'og:type', content: 'article' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: ogImage },
-    ...(ogImageDimensions
-      ? [
-          { property: 'og:image:width', content: String(ogImageDimensions.width) },
-          { property: 'og:image:height', content: String(ogImageDimensions.height) },
-        ]
-      : []),
+    { property: 'og:image:width', content: String(ogImageDimensions.width) },
+    { property: 'og:image:height', content: String(ogImageDimensions.height) },
     { property: 'article:published_time', content: post.date },
     { property: 'article:modified_time', content: post.lastUpdated },
     { property: 'article:section', content: getPostCategoryLabel(post) },
