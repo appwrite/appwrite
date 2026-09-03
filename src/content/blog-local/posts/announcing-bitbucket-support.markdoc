@@ -44,7 +44,12 @@ Connect a Bitbucket workspace, pick a repository, and pushes build and deploy ex
 
 Open a Site or Function, go to **Settings** > **Version control (Git)**, choose **Connect Bitbucket**, and approve the OAuth consent screen. The connection is saved to the project and its repositories become available immediately. You can also connect from **Project settings** > **Git configuration**, which covers every Site and Function in the project.
 
+{% only_dark %}
 ![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/dark/git-repo.avif)
+{% /only_dark %}
+{% only_light %}
+![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/git-repo.avif)
+{% /only_light %}
 
 If you are creating your first Site or Function and have no Git connection yet, the wizard's empty state lists the providers your server supports, so you can connect Bitbucket and pick a repository without a detour into settings.
 

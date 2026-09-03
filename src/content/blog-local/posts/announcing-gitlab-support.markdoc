@@ -49,7 +49,12 @@ Everything else about a deployment stays where it was. Branch filters, path filt
 
 Open a Site or Function and go to **Settings** > **Version control (Git)**. Alongside **Connect GitHub**, you will now see **Connect GitLab**. Choosing it sends you through GitLab's OAuth consent screen and returns you to the Console with the connection saved to the project. The same providers are available at the project level under **Project settings** > **Git configuration**.
 
+{% only_dark %}
 ![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/dark/git-repo.avif)
+{% /only_dark %}
+{% only_light %}
+![The Version control settings of a Site with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/git-repo.avif)
+{% /only_light %}
 
 You can also start from scratch. When you create a Site or a Function and have no Git connection yet, the wizard's empty state offers the same set of providers, so connecting GitLab and picking a repository happen in one pass instead of two.
 
