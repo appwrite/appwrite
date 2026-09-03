@@ -70,7 +70,13 @@ class Get extends Action
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone could pass an arbitrary
         // projectId here and attach an installation to another project.
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+
+        if (empty($key)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
+        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $key);
         if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
