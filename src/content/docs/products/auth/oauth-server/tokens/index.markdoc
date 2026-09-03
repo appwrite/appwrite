@@ -22,7 +22,7 @@ When a client redeems an authorization code, the OAuth2 server issues an access 
 
 # Exchange a code for tokens {% #exchange %}
 
-The client exchanges its authorization code at the token endpoint with `grantType: 'authorization_code'`. A confidential client sends its `clientSecret`; a public client sends its `codeVerifier` instead.
+The client exchanges its authorization code at the token endpoint with `grantType: 'authorization_code'`. A confidential client sends its `clientSecret`, and a public client sends its `codeVerifier`. When the project requires PKCE for confidential clients, they send both.
 
 {% multicode %}
 ```client-web
@@ -297,7 +297,7 @@ A verified ID-token payload identifies the signed-in user. Profile claims appear
 
 A client may decode a token without verification to make a temporary UI choice, such as showing a sign-in screen before an API request. Only verified claims should control access or display trusted identity information.
 
-To retrieve the current user's profile with an access token, call the userinfo endpoint:
+To retrieve the current user's profile with an access token, call the userinfo endpoint. The token must carry the `openid` scope, otherwise the endpoint answers `401`:
 
 {% multicode %}
 ```curl

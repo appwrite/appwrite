@@ -48,7 +48,7 @@ Use `project.updateOAuth2Server` from a Server SDK to configure the verification
 
 ## Enable device flow for the client {% #enable-client %}
 
-The client must also have **Device flow** enabled. Turn it on when you create or update the client in the Console, or set `deviceFlow: true` with a Server SDK. Devices that cannot protect a client secret should be registered as public clients. See [Clients](/docs/products/auth/oauth-server/clients#register) for client registration.
+The client must also have **Device flow** enabled. Turn it on when you create or update the client in the Console, or set `deviceFlow: true` with any SDK that exposes the `apps` service. Devices that cannot protect a client secret should be registered as public clients. See [Clients](/docs/products/auth/oauth-server/clients#register) for client registration.
 
 # Integrate the device client {% #integrate-device %}
 

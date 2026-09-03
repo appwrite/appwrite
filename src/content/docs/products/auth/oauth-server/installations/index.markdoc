@@ -24,7 +24,7 @@ You decide which scopes clients may request at install time. Declare them in the
 
 The list accepts two kinds of values:
 
-- **Appwrite catalog scopes.** The `project:` and `organization:` scopes act on your project's Appwrite APIs, the same surface an [API key](/docs/partners/project/api-keys) reaches. A token with `project:databases.read` can list your project's databases, and a token with `project:teams.read` can read the team it is installed on. A call outside the granted scopes fails with `general_unauthorized_scope`.
+- **Appwrite catalog scopes.** The `project:` scopes act on your project's Appwrite APIs, the same set an [API key](/docs/partners/project/api-keys) reaches. (`organization:` scopes resolve only on the Appwrite Console, so they do nothing on your own project's OAuth2 server.) A token with `project:databases.read` can list your project's databases, and a token with `project:teams.read` can read the team it is installed on. A call outside the granted scopes fails with `general_unauthorized_scope`.
 - **Your own scope values.** Any vocabulary you define, such as `tasks.sync`. Appwrite stamps these onto the token's `scope` claim, and your API enforces them, the same way it enforces [custom scopes](/docs/products/auth/oauth-server/scopes#custom) in the user consent flow.
 
 Identity scopes such as `openid` have no place in the list, because no user takes part in an installation. The update replaces the whole list, so send every value on each `updateOAuth2Server` call; omitting the parameter clears it.
@@ -182,7 +182,7 @@ Each installation copies the client's scopes at the moment the owner creates or 
 
 # Install on a team {% #install %}
 
-Only team members with the owner role can install a client on their team. Each client installs once per team; a second attempt fails with `app_installation_already_exists`. The owner installs with the `createInstallation` method, authenticated by their own session in your product:
+Only team members with the owner role can install a client on their team, though a project API key or an admin-mode call can install on any team. Each client installs once per team; a second attempt fails with `app_installation_already_exists`. The owner installs with the `createInstallation` method, authenticated by their own session in your product:
 
 {% multicode %}
 ```client-web
@@ -470,7 +470,7 @@ X-Appwrite-Key: <APP_KEY_SECRET>
 ```
 {% /multicode %}
 
-The response wraps the records in an `installations` array with a `total` count. Each record has the shape shown in [Install on a team](#install), and its `lastAccessedAt` timestamp reports when the client last minted a token for it.
+The response wraps the records in an `installations` array with a `total` count. Each record has the shape shown in [Install on a team](#install), and its `lastAccessedAt` timestamp reports when the client last minted a token for it. The write is throttled to at most once an hour, so the value can trail real usage by that much.
 
 # Validate installation tokens {% #validate %}
 
