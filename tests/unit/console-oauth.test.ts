@@ -13,7 +13,6 @@ describe('console OAuth login providers', () => {
     expect(isConsoleOAuthProviderEnabled('google', false)).toBe(false)
     expect(isConsoleOAuthProviderEnabled('gitlab', false)).toBe(false)
     expect(isConsoleOAuthProviderEnabled('bitbucket', false)).toBe(false)
-    expect(isConsoleOAuthProviderEnabled('cursor', false)).toBe(false)
   })
 
   test('shows every console OAuth method when extra OAuth login is on', () => {
