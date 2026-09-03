@@ -32,7 +32,7 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
    - Attribute: **Path**
    - Operator: **Starts with**
    - Value: a path you want to block (for example `/v1/account`)
-5. Set **Action** to **Deny**.
+5. Under **Then**, choose **Deny**.
 6. Keep **Priority** at the default (`100`) or choose a lower number so this rule is evaluated earlier.
 7. Leave **Enabled** on.
 8. Review the impact preview in the sidebar, then click **Create rule**.

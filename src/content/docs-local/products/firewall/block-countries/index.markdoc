@@ -26,7 +26,7 @@ Country conditions use the geo location of the client IP address. Country and co
 5. Under conditions, set the attribute to **Country**.
 6. Keep the operator set to **Equals**.
 7. Select the country in the country picker.
-8. Set **Action** to **Deny**.
+8. Under **Then**, choose **Deny**.
 9. Keep **Priority** at `100`.
 10. Review the impact preview, then click **Create rule**.
 

@@ -8,7 +8,13 @@ readtime: 5
 
 A challenge rule verifies matching clients before their requests continue. Clients that pass the challenge continue to your application. Clients that fail do not. Use challenge instead of deny when automated traffic and normal users share the same paths.
 
-The interactive challenge page is served for **site** and **function** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a `403` challenge-required error, because API clients cannot solve an interactive challenge. Scope challenge rules to a site or function when you expect browser traffic. See [Challenge](/docs/products/firewall/actions#challenge).
+The interactive challenge page is served only for `GET` requests that send `Accept: text/html`, on **site** and **function** traffic. Everything else gets a `403` challenge-required error, including form posts, `fetch` calls, asset requests, and every **API**-scoped challenge rule. Scope challenge rules to a site or function, and to paths a browser navigates to. See [Challenge](/docs/products/firewall/actions#challenge).
+
+{% info title="Known bot clients are denied instead" %}
+Appwrite screens requests before issuing a challenge. A missing `User-Agent`, or one containing a marker such as `curl/`, `wget/`, `python-requests`, `go-http-client`, `okhttp`, `headlesschrome`, or `scrapy`, is denied with `403` and counted under **Denied**.
+
+A challenge rule aimed at those clients therefore never produces a challenge. Use **Deny** for them, and use **Challenge** for traffic that could be a browser.
+{% /info %}
 
 # Create the challenge rule {% #create-the-challenge-rule %}
 
@@ -23,29 +29,30 @@ The interactive challenge page is served for **site** and **function** traffic w
 2. Click **Create rule**.
 3. Enter a **Rule name** (for example `Challenge automated clients`).
 4. Select the **Resource type** for the traffic you expect. Pick **Sites** and select your site for browser traffic.
-5. Under conditions, set **User agent** **Contains** `curl`.
-6. Set **Action** to **Challenge**.
+5. Under conditions, set **User agent** **Contains** a pattern your traffic shows that Appwrite does not already deny, for example an automation framework that advertises a full browser user agent.
+6. Under **Then**, choose **Challenge**.
 7. Keep **Difficulty** at `3`.
 8. Keep **TTL (seconds)** at `1800`.
 9. Click **Create rule**.
 
-**Difficulty** sets the client-side proof-of-work cost, from `1` (easiest) to `5` (hardest). **TTL** sets how long a visitor stays cleared after a passed challenge.
+**Difficulty** sets the client-side proof-of-work cost, from `1` (easiest) to `5` (hardest). **TTL** sets how long a visitor stays cleared after a passed challenge, from `900` to `86400` seconds. Clearance is not per rule: one solved challenge clears that visitor for every challenge rule on the same host until the TTL expires.
 
 # Cover more client patterns {% #cover-more-client-patterns %}
 
-Conditions on one rule must all match. To challenge several user agent patterns, create one rule for each pattern. Common patterns include:
+Conditions on one rule must all match. To cover several patterns, create one rule for each.
 
-- **User agent** **Contains** `python-requests`
-- **User agent** **Contains** `Go-http-client`
-- **User agent** **Is empty**, for clients that send no user agent
+Appwrite already denies `python-requests`, `Go-http-client`, and requests with no user agent before a challenge is issued, so challenge rules for them have no effect. Reach for challenge when the client looks like a browser but behaves like a script. Use **Deny** for the clients Appwrite screens out anyway.
 
 Give the rules the same action and the same priority range so they behave as one policy.
 
 # Verify the rule {% #verify-the-rule %}
 
-1. Send a request with a matching user agent to the protected resource.
-2. Confirm the client receives a challenge instead of the normal response.
-3. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
+1. Open the protected resource in a browser with a matching user agent, so the request is a `GET` that accepts HTML.
+2. Confirm the challenge page appears instead of the normal response.
+3. Check the response headers. `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action` name the rule that fired.
+4. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
+
+If **Denied** rises instead of **Challenged**, the client was screened out as a known bot before the challenge.
 
 Raise the difficulty if automated traffic keeps passing. Lower it if normal users report slow page loads on first visit.
 
