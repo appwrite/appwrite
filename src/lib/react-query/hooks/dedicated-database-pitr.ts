@@ -2,9 +2,14 @@
  * React Query hooks for dedicated-database PITR windows and restorations.
  */
 
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useQuery,
+  type QueryClient,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -72,6 +77,9 @@ export function dedicatedDatabasePitrWindowsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -103,6 +111,9 @@ export function dedicatedDatabaseRestorationsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -135,5 +146,70 @@ export function useDedicatedDatabaseRestorations(
       engine,
       enabled,
     ),
+  )
+}
+
+/** Starts PITR queries in the background; does not block navigation. */
+export function prefetchDedicatedDatabasePitrSettingsData(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  engine: string | null | undefined,
+  database: Models.DedicatedDatabase | null | undefined,
+): void {
+  if (!getActiveProfileFeatures().databasePitrRestore) return
+  if (database?.pitr !== true) return
+
+  void queryClient
+    .prefetchQuery(
+      dedicatedDatabasePitrWindowsQueryOptions(
+        projectId,
+        databaseId,
+        engine,
+        true,
+      ),
+    )
+    .catch(() => {
+      /* PITR cards still render with per-query error states */
+    })
+
+  void queryClient
+    .prefetchQuery(
+      dedicatedDatabaseRestorationsQueryOptions(
+        projectId,
+        databaseId,
+        engine,
+        true,
+      ),
+    )
+    .catch(() => {
+      /* PITR cards still render with per-query error states */
+    })
+}
+
+export function syncDedicatedDatabasePitrCachesAfterUpdate(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  database: Models.DedicatedDatabase,
+): void {
+  if (!getActiveProfileFeatures().databasePitrRestore) return
+
+  if (database.pitr !== true) {
+    queryClient.removeQueries({
+      queryKey: ['dedicated-pitr-windows', 'project', projectId, databaseId],
+    })
+    queryClient.removeQueries({
+      queryKey: ['dedicated-restorations', 'project', projectId, databaseId],
+    })
+    return
+  }
+
+  prefetchDedicatedDatabasePitrSettingsData(
+    queryClient,
+    projectId,
+    databaseId,
+    database.engine,
+    database,
   )
 }

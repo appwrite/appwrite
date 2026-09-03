@@ -55,6 +55,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { analyticsAttrs } from '@/lib/analytics-actions'
@@ -87,6 +88,37 @@ function restorationStatusMeta(status: string): {
 
 function restorationTypeLabel(type: string): string {
   return type.toLowerCase() === 'pitr' ? 'PITR' : 'Backup'
+}
+
+function PitrRecoveryWindowTimestampSkeleton({
+  label,
+}: {
+  label: string
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-muted-foreground">{label}</span>
+      <Skeleton className="h-5 w-52 max-w-full rounded-sm" aria-hidden />
+    </div>
+  )
+}
+
+function PitrRecoveryWindowSkeleton({ t }: { t: (key: string) => string }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
+        <PitrRecoveryWindowTimestampSkeleton
+          label={t('Restore available from')}
+        />
+        <PitrRecoveryWindowTimestampSkeleton
+          label={t('Latest restore available at')}
+        />
+      </div>
+      <p className="min-h-[20px] text-[13px] text-muted-foreground">
+        <Skeleton className="h-4 w-72 max-w-full rounded-sm" aria-hidden />
+      </p>
+    </>
+  )
 }
 
 type RestorePitrSharedProps = {
@@ -494,7 +526,8 @@ export function DedicatedDatabasePitrRestoreCard({
   const pitrEnabled = database.pitr === true
   const {
     data: windowsData,
-    isLoading: windowsLoading,
+    isPending: windowsPending,
+    isFetching: windowsFetching,
     isError: windowsError,
   } = useDedicatedDatabasePitrWindows(
     projectId,
@@ -509,6 +542,12 @@ export function DedicatedDatabasePitrRestoreCard({
     showPitrRestore && pitrEnabled,
   )
   const recoveryWindow = pitrWindowFromResponse(windowsData)
+  const windowsLoading =
+    showPitrRestore &&
+    pitrEnabled &&
+    !windowsError &&
+    !recoveryWindow &&
+    (windowsPending || windowsFetching)
   const restorations = restorationsData?.restorations ?? []
   const restoreDisabledReason = !canWrite
     ? t("You don't have permission to change database settings.")
@@ -558,39 +597,45 @@ export function DedicatedDatabasePitrRestoreCard({
                 at={recoveryWindow?.latest}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">
-                  {t('Restore available from')}
-                </span>
-                {recoveryWindow ? (
-                  <PitrAbsoluteTimestamp
-                    date={recoveryWindow.earliest}
-                    timeZone={timeZone}
-                  />
-                ) : (
-                  <span className="text-foreground">-</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">
-                  {t('Latest restore available at')}
-                </span>
-                {recoveryWindow ? (
-                  <PitrAbsoluteTimestamp
-                    date={recoveryWindow.latest}
-                    timeZone={timeZone}
-                  />
-                ) : (
-                  <span className="text-foreground">-</span>
-                )}
-              </div>
-            </div>
-            {recoveryWindow ? (
-              <p className="text-[13px] text-muted-foreground">
-                {t("You'll pick the date and time when you start.")}
-              </p>
-            ) : null}
+            {windowsLoading ? (
+              <PitrRecoveryWindowSkeleton t={t} />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-muted-foreground">
+                      {t('Restore available from')}
+                    </span>
+                    {recoveryWindow ? (
+                      <PitrAbsoluteTimestamp
+                        date={recoveryWindow.earliest}
+                        timeZone={timeZone}
+                      />
+                    ) : (
+                      <span className="text-foreground">-</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-muted-foreground">
+                      {t('Latest restore available at')}
+                    </span>
+                    {recoveryWindow ? (
+                      <PitrAbsoluteTimestamp
+                        date={recoveryWindow.latest}
+                        timeZone={timeZone}
+                      />
+                    ) : (
+                      <span className="text-foreground">-</span>
+                    )}
+                  </div>
+                </div>
+                <p className="min-h-[20px] text-[13px] text-muted-foreground">
+                  {recoveryWindow
+                    ? t("You'll pick the date and time when you start.")
+                    : null}
+                </p>
+              </>
+            )}
           </div>
         )}
 

@@ -145,6 +145,7 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
+import { syncDedicatedDatabasePitrCachesAfterUpdate } from './dedicated-database-pitr'
 import {
   coerceTrimmedString,
 } from '@/lib/databases/dedicated-database-status'
@@ -1026,7 +1027,7 @@ export function useUpdatePostgresDatabase(
         ...input,
       })
     },
-    onSuccess: async (database) => {
+    onSuccess: async (database, variables) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
         postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
@@ -1035,6 +1036,14 @@ export function useUpdatePostgresDatabase(
       // Keep the shared switcher / databases index in sync (console.listDatabases
       // + dedicated lists). Invalidating dedicated alone left the droplist stale.
       await refetchProjectDatabaseLists(queryClient, projectId)
+      if ('pitr' in variables || 'pitrRetentionDays' in variables) {
+        syncDedicatedDatabasePitrCachesAfterUpdate(
+          queryClient,
+          projectId,
+          databaseId,
+          database,
+        )
+      }
     },
   })
 }

@@ -146,6 +146,7 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
+import { syncDedicatedDatabasePitrCachesAfterUpdate } from './dedicated-database-pitr'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
 import {
@@ -1032,7 +1033,7 @@ export function useUpdateMysqlDatabase(
         ...input,
       })
     },
-    onSuccess: async (database) => {
+    onSuccess: async (database, variables) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
         mysqlDatabaseQueryOptions(projectId, databaseId).queryKey,
@@ -1041,6 +1042,14 @@ export function useUpdateMysqlDatabase(
       // Keep the shared switcher / databases index in sync (console.listDatabases
       // + dedicated lists). Invalidating dedicated alone left the droplist stale.
       await refetchProjectDatabaseLists(queryClient, projectId)
+      if ('pitr' in variables || 'pitrRetentionDays' in variables) {
+        syncDedicatedDatabasePitrCachesAfterUpdate(
+          queryClient,
+          projectId,
+          databaseId,
+          database,
+        )
+      }
     },
   })
 }
