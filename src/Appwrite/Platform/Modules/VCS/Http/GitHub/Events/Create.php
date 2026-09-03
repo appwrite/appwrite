@@ -123,19 +123,32 @@ class Create extends Action
             // Read and stamp in one transaction so concurrent approvals cannot
             // overwrite each other's binding.
             $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $requester, $parsedPayload) {
-                $requests = $dbForPlatform->find('installationRequests', [
+                $candidates = $dbForPlatform->find('installationRequests', [
                     Query::equal('provider', ['github']),
                     Query::equal('requester', [$requester]),
                     Query::limit(2),
                 ]);
 
-                if (\count($requests) !== 1) {
+                if (\count($candidates) !== 1) {
                     return;
                 }
 
-                $request = $dbForPlatform->getDocument('installationRequests', $requests[0]->getId(), forUpdate: true);
+                $request = $dbForPlatform->getDocument('installationRequests', $candidates[0]->getId(), forUpdate: true);
 
                 if ($request->isEmpty() || $request->getAttribute('status') !== 'requested') {
+                    return;
+                }
+
+                // A callback could have added another request for this requester
+                // between the first read and this lock, so count again now that
+                // the chosen one is held.
+                $confirmed = $dbForPlatform->find('installationRequests', [
+                    Query::equal('provider', ['github']),
+                    Query::equal('requester', [$requester]),
+                    Query::limit(2),
+                ]);
+
+                if (\count($confirmed) !== 1) {
                     return;
                 }
 
