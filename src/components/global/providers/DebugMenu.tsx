@@ -2068,14 +2068,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Extra OAuth login',
-                'Show Cursor on console sign-in and sign-up. Google, GitHub, GitLab, and Bitbucket stay available.',
-                'extraOAuthLogin',
-                profileId,
-                features.extraOAuthLogin,
-                { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
                 'Extra VCS OAuth',
                 'Show Origin on Git connect. GitHub, GitLab, and Bitbucket stay available.',
                 'extraVcsOAuth',
@@ -2539,7 +2531,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.userVerification,
-    features.extraOAuthLogin,
     features.extraVcsOAuth,
     features.cookieBanner,
     features.blogDrafts,

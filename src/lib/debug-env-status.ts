@@ -92,11 +92,6 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override dedicated database PITR restore UI',
   },
   {
-    key: 'VITE_CONSOLE_EXTRA_OAUTH_LOGIN',
-    group: 'Runtime',
-    description: 'Override extra console OAuth login/signup (Google, Cursor)',
-  },
-  {
     key: 'VITE_CONSOLE_EXTRA_VCS_OAUTH',
     group: 'Runtime',
     description: 'Override extra Git VCS OAuth connect (Origin)',
@@ -242,7 +237,6 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
-    VITE_CONSOLE_EXTRA_OAUTH_LOGIN: isNonEmpty(config.extraOAuthLogin),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }

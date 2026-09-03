@@ -44,11 +44,6 @@ export type ConsoleProfileFeatures = {
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
   /**
-   * Extra console OAuth login/signup providers (Cursor). Google, GitHub,
-   * GitLab, and Bitbucket are always shown.
-   */
-  extraOAuthLogin: boolean
-  /**
    * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
    * Bitbucket are always shown. Existing installations of a hidden provider
    * still render; only new connect actions are gated.
@@ -129,7 +124,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
-  extraOAuthLogin: 'Extra OAuth login',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
@@ -185,7 +179,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      extraOAuthLogin: false,
       extraVcsOAuth: false,
       compliance: true,
       oauthApps: false,
@@ -229,7 +222,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      extraOAuthLogin: false,
       extraVcsOAuth: false,
       compliance: false,
       oauthApps: false,
@@ -518,8 +510,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN,
- * VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -539,10 +530,6 @@ function applyEnvFeatureOverrides(
   const blogDrafts = parseEnvFeatureOverride(config.blogDrafts)
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
-  }
-  const extraOAuthLogin = parseEnvFeatureOverride(config.extraOAuthLogin)
-  if (extraOAuthLogin !== null) {
-    next = { ...next, extraOAuthLogin }
   }
   const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
   if (extraVcsOAuth !== null) {
