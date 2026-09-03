@@ -831,12 +831,20 @@ Http::init()
         $geoRecord = $geo->get($request->getIP());
         $country = $geoRecord->isEmpty() ? '' : strtolower($geoRecord->getCountryCode());
 
-        // Query parameter names only (values excluded), for firewall rule matching.
         $queryKeys = '';
-        $queryString = parse_url($uri, PHP_URL_QUERY);
-        if (is_string($queryString) && $queryString !== '') {
-            parse_str($queryString, $queryParams);
-            $queryKeys = implode(',', array_keys($queryParams));
+        $rawQuery = parse_url($uri, PHP_URL_QUERY);
+        if (is_string($rawQuery) && $rawQuery !== '') {
+            $queryKeySet = [];
+            foreach (explode('&', $rawQuery) as $pair) {
+                if ($pair === '') {
+                    continue;
+                }
+                $key = strtolower(urldecode(explode('=', $pair, 2)[0]));
+                if ($key !== '') {
+                    $queryKeySet[$key] = true;
+                }
+            }
+            $queryKeys = implode(',', array_keys($queryKeySet));
         }
 
         $usage
