@@ -2,8 +2,6 @@ import { test, expect } from './fixtures'
 import { E2E_VIEWPORT } from './config/viewport'
 import {
   discoverConsoleTargets,
-  discoverFirstSiteId,
-  discoverSiteIds,
 } from './helpers/discovery'
 import { ensureProjectActive } from './helpers/ensure-project-active'
 import { newE2ePage } from './helpers/cookie-banner'
@@ -186,111 +184,6 @@ test.describe('project usage contract (mocked)', () => {
       )
     })
   }
-
-  test('isolates site detail usage by resource ID and type', async ({
-    page,
-  }, testInfo) => {
-    const siteId = await discoverFirstSiteId(page, projectId!)
-    test.skip(!siteId, 'No site is available for resource-isolation coverage.')
-    const resolvedSiteId = siteId!
-
-    const requests = await installUsageApiMock(page)
-    await page.goto(`/projects/${projectId}/sites/${resolvedSiteId}/usage`, {
-      waitUntil: 'domcontentloaded',
-    })
-
-    await expect(
-      page
-        .getByRole('tab', { name: 'Usage' })
-        .or(page.getByRole('link', { name: 'Usage' }))
-        .first(),
-    ).toBeVisible()
-    await expect(
-      page.getByRole('heading', { name: 'Site executions', exact: true }),
-    ).toBeVisible()
-    await expect(
-      page.getByRole('heading', { name: 'Site GB-hours', exact: true }),
-    ).toBeVisible()
-    await expect.poll(() => requests.length).toBeGreaterThan(0)
-    for (const request of requests) {
-      const serializedQueries = (request.params.queries ?? []).join('\n')
-      expect(serializedQueries).toContain(resolvedSiteId)
-      expect(serializedQueries).toContain('resourceType')
-      expect(serializedQueries).toContain('site')
-    }
-    await attachUsageEvidence(page, testInfo, requests, 'usage-site-isolation')
-  })
-
-  test('does not show site A values while site B is loading', async ({
-    page,
-  }) => {
-    const siteIds = await discoverSiteIds(page, projectId!)
-    test.skip(
-      siteIds.length < 2,
-      'Two sites are required for cache-isolation coverage.',
-    )
-    const [siteA, siteB] = siteIds as [string, string]
-    let releaseSiteB!: () => void
-    const siteBGate = new Promise<void>((resolve) => {
-      releaseSiteB = resolve
-    })
-
-    await page.route(/\/v1\/usage\/events(?:\?|$)/, async (route) => {
-      const url = new URL(route.request().url())
-      const params = [...url.searchParams.entries()]
-      const queries = params
-        .filter(([key]) => key.replace(/\[\d*\]$/, '') === 'queries')
-        .map(([, value]) => value)
-        .join('\n')
-      const metrics = params
-        .filter(([key]) => key.replace(/\[\d*\]$/, '') === 'metrics')
-        .map(([, value]) => value)
-      const isSiteB = queries.includes(siteB)
-      if (isSiteB) await siteBGate
-      const value = isSiteB ? 222 : 111
-      const time = url.searchParams.get('startAt') ?? new Date().toISOString()
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          interval: url.searchParams.get('interval') ?? '1h',
-          metrics: metrics.map((metric) => ({
-            metric,
-            points: [
-              {
-                time,
-                value,
-                resourceId: isSiteB ? siteB : siteA,
-                resourceType: 'site',
-              },
-            ],
-          })),
-        }),
-      })
-    })
-
-    await page.goto(`/projects/${projectId}/sites/${siteA}/usage`, {
-      waitUntil: 'domcontentloaded',
-    })
-    const executionsCard = () =>
-      page
-        .getByRole('heading', { name: 'Site executions', exact: true })
-        .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]')
-    await expect(executionsCard()).toContainText('111')
-
-    await page.getByRole('button', { name: 'Switch site' }).click()
-    const search = page.getByPlaceholder(/search sites/i)
-    await search.fill(siteB)
-    await page.getByRole('option').first().click()
-    await expect(page).toHaveURL(new RegExp(`/sites/${siteB}/usage`))
-    await expect(executionsCard()).not.toContainText('111')
-    await expect(
-      page.getByRole('status', { name: 'Loading usage data' }).first(),
-    ).toBeVisible()
-
-    releaseSiteB()
-    await expect(executionsCard()).toContainText('222')
-  })
 
   test('enables self-hosted usage from Console variables', async ({
     page,

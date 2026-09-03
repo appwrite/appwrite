@@ -581,54 +581,6 @@ export function useFunctionExecutionsForFunctionChart(
   })
 }
 
-export function siteExecutionsForSiteQueryOptions(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: [
-      'usage-events',
-      'site-executions',
-      'chart',
-      'project',
-      projectId,
-      'site',
-      siteId,
-      rangeKeyPart,
-      interval,
-    ],
-    queryFn: () =>
-      fetchProjectSiteExecutionsOverview(projectId!, getBounds(), interval, {
-        resourceId: siteId!,
-        resourceType: 'site',
-        includeBreakdown: false,
-      }),
-    enabled: !!projectId && !!siteId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForResource(
-      projectId,
-      'site',
-      siteId,
-    ),
-    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function useSiteExecutionsForSite(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  return useQuery(
-    siteExecutionsForSiteQueryOptions(projectId, siteId, dateRange, interval),
-  )
-}
-
 export function siteExecutionsOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -817,54 +769,6 @@ export function useFunctionGbHoursForFunctionChart(
     ),
     enabled: !!projectId && !!functionId && enabled,
   })
-}
-
-export function siteGbHoursForSiteQueryOptions(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: [
-      'usage-events',
-      'site-gb-hours',
-      'chart',
-      'project',
-      projectId,
-      'site',
-      siteId,
-      rangeKeyPart,
-      interval,
-    ],
-    queryFn: () =>
-      fetchProjectSiteGbHoursOverview(projectId!, getBounds(), interval, {
-        resourceId: siteId!,
-        resourceType: 'site',
-        includeBreakdown: false,
-      }),
-    enabled: !!projectId && !!siteId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForResource(
-      projectId,
-      'site',
-      siteId,
-    ),
-    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function useSiteGbHoursForSite(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  return useQuery(
-    siteGbHoursForSiteQueryOptions(projectId, siteId, dateRange, interval),
-  )
 }
 
 export function siteGbHoursOverviewQueryOptions(

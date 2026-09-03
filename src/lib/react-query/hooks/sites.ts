@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Sites
  *
- * Handles sites, deployments, logs, variables, frameworks, specifications, usage, and domains.
+ * Handles sites, deployments, logs, variables, frameworks, specifications, and domains.
  */
 
 import {

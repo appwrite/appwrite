@@ -6,8 +6,6 @@ export const jaSitesDictionary: Record<string, string> = {
   // Placeholder pages
   'Add Domain': 'ドメインの追加',
   'Add a custom domain to your site': 'サイトにカスタムドメインを追加',
-  'Sites Usage': 'サイトの使用量',
-  'View usage statistics for this site': 'このサイトの使用統計を表示',
   'Verify Domain': 'ドメインの検証',
   'Search sites...': 'サイトを検索...',
   'Create site': 'サイトの作成',
@@ -295,8 +293,6 @@ export const jaSitesDictionary: Record<string, string> = {
   'Site URL is not available yet': 'サイト URL はまだ利用できません',
   'Deployment successful!': 'デプロイに成功しました!',
   'Your site is now live': 'サイトが公開されました',
-  'View aggregated usage statistics across all sites':
-    'すべてのサイトにわたる集計使用統計を表示',
   'Configure DNS settings to verify your domain':
     'ドメインを検証するために DNS 設定を構成',
   'Create your first site to get started': '最初のサイトを作成して始めましょう',

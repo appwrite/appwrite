@@ -32,8 +32,6 @@ import {
   useProjectGbHoursOverview,
   useProjectSiteExecutionsOverview,
   useProjectSiteGbHoursOverview,
-  useSiteExecutionsForSite,
-  useSiteGbHoursForSite,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
@@ -48,8 +46,6 @@ type ComputeUsageSectionProps = {
   dateRange: DateRange | undefined
   chartInterval: UsageChartInterval
   scope?: ComputeUsageScope
-  /** Scope site charts to one site resource. */
-  siteId?: string
   onDateRangeChange?: (dateRange: DateRange | undefined) => void
 }
 
@@ -58,12 +54,10 @@ export function ComputeUsageSection({
   dateRange,
   chartInterval,
   scope = 'combined',
-  siteId,
   onDateRangeChange,
 }: ComputeUsageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const showBreakdown = !siteId
 
   const combinedExecutionsQuery = useProjectExecutionsOverview(
     projectId,
@@ -86,13 +80,7 @@ export function ComputeUsageSection({
   const allSitesExecutionsQuery = useProjectSiteExecutionsOverview(
     projectId,
     dateRange,
-    scope === 'sites' && !siteId,
-    chartInterval,
-  )
-  const siteExecutionsQuery = useSiteExecutionsForSite(
-    projectId,
-    scope === 'sites' ? siteId : undefined,
-    dateRange,
+    scope === 'sites',
     chartInterval,
   )
   const functionGbHoursQuery = useProjectFunctionGbHoursOverview(
@@ -104,13 +92,7 @@ export function ComputeUsageSection({
   const allSitesGbHoursQuery = useProjectSiteGbHoursOverview(
     projectId,
     dateRange,
-    scope === 'sites' && !siteId,
-    chartInterval,
-  )
-  const siteGbHoursQuery = useSiteGbHoursForSite(
-    projectId,
-    scope === 'sites' ? siteId : undefined,
-    dateRange,
+    scope === 'sites',
     chartInterval,
   )
 
@@ -118,22 +100,16 @@ export function ComputeUsageSection({
     scope === 'functions'
       ? functionExecutionsQuery
       : scope === 'sites'
-        ? siteId
-          ? siteExecutionsQuery
-          : allSitesExecutionsQuery
+        ? allSitesExecutionsQuery
         : combinedExecutionsQuery
   const gbHoursQuery =
     scope === 'functions'
       ? functionGbHoursQuery
       : scope === 'sites'
-        ? siteId
-          ? siteGbHoursQuery
-          : allSitesGbHoursQuery
+        ? allSitesGbHoursQuery
         : combinedGbHoursQuery
 
   const breakdownItems = useMemo(() => {
-    if (!showBreakdown) return []
-
     return [
       ...(executionsQuery.isError
         ? []
@@ -149,13 +125,12 @@ export function ComputeUsageSection({
     executionsQuery.isError,
     gbHoursQuery.data?.topConsumers,
     gbHoursQuery.isError,
-    showBreakdown,
   ])
 
   const { computeLookup } = useUsageResourceBreakdownLookups(
     projectId,
     breakdownItems,
-    showBreakdown && breakdownItems.length > 0,
+    breakdownItems.length > 0,
   )
 
   useEffect(() => {
@@ -228,7 +203,7 @@ export function ComputeUsageSection({
         queryError={executionsQuery.error}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
-        showBreakdown={showBreakdown}
+        showBreakdown
         breakdownItems={
           executionsQuery.isError
             ? []
@@ -263,7 +238,7 @@ export function ComputeUsageSection({
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}
         axisFormat="gbhours"
-        showBreakdown={showBreakdown}
+        showBreakdown
         breakdownItems={
           gbHoursQuery.isError
             ? []

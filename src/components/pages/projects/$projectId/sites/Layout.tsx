@@ -57,7 +57,7 @@ import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
-import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
+import { getRedeploySourceDeploymentId, patchResourceAfterRedeploy, resourceIsBuilding } from '@/lib/utils/deployment-status'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -82,11 +82,6 @@ function SiteLayoutContent() {
     useIsFetching({
       queryKey: ['logs', 'site', projectId, siteId],
     }) > 0
-  const siteUsageRefreshing =
-    useIsFetching({
-      queryKey: ['usage-events'],
-      predicate: (query) => query.queryKey.includes(siteId),
-    }) > 0
   const { data: site } = useProjectSite(projectId, siteId)
 
   const activeTab = useMemo(() => {
@@ -96,14 +91,9 @@ function SiteLayoutContent() {
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
       if (
-        [
-          'deployments',
-          'logs',
-          'domains',
-          'usage',
-          'variables',
-          'settings',
-        ].includes(tab)
+        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
+          tab,
+        )
       ) {
         return tab
       }
@@ -169,7 +159,16 @@ function SiteLayoutContent() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (deployment) => {
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        (current: Models.Site | undefined) =>
+          current ? patchResourceAfterRedeploy(current, deployment) : current,
+      )
+      queryClient.setQueryData(
+        siteDeploymentQueryOptions(projectId, siteId, deployment.$id).queryKey,
+        deployment,
+      )
       await queryClient.refetchQueries({
         queryKey: ['deployments', 'site', projectId, siteId],
       })
@@ -187,10 +186,8 @@ function SiteLayoutContent() {
   const handleCancelBuild = () => setCancelBuildDialogOpen(true)
 
   const isBuilding = useMemo(
-    () =>
-      activeDeployment?.status === 'building' ||
-      activeDeployment?.status === 'processing',
-    [activeDeployment?.status],
+    () => resourceIsBuilding(site, activeDeployment),
+    [site, activeDeployment],
   )
 
   const handleBack = () => {
@@ -292,16 +289,6 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
-      ...(features.usageStats
-        ? [
-            {
-              id: 'usage' as const,
-              label: t('Usage'),
-              to: '/projects/$projectId/sites/$siteId/usage',
-              params: { projectId: projectId!, siteId: siteId! },
-            },
-          ]
-        : []),
       ...(showSettingsTab
         ? [
             {
@@ -319,7 +306,7 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [features.usageStats, projectId, siteId, showSettingsTab, t],
+    [projectId, siteId, showSettingsTab, t],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -476,20 +463,9 @@ function SiteLayoutContent() {
                 />
               ) : undefined
             }
-            showRefresh={
-              (activeTab === 'logs' || activeTab === 'usage') &&
-              hasRefreshHandler
-            }
-            onRefresh={
-              activeTab === 'logs' || activeTab === 'usage'
-                ? triggerRefresh
-                : undefined
-            }
-            isRefreshing={
-              activeTab === 'usage'
-                ? siteUsageRefreshing
-                : siteLogsListRefreshing
-            }
+            showRefresh={activeTab === 'logs' && hasRefreshHandler}
+            onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
+            isRefreshing={siteLogsListRefreshing}
             createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
             createAnalyticsAction={
               activeTab === 'domains' ? 'create-site-domain' : undefined
