@@ -75,7 +75,6 @@ export function ScopeEditor({
     const base = consoleKeyScopesToEditorRows(scopeList, {
       isCloud,
       oauth2Server: features.oauth2Server,
-      selectedScopeIds: value,
       catalog,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
@@ -177,15 +176,35 @@ export function ScopeEditor({
     }
   }
 
+  /**
+   * Rows the category checkbox grants: deprecated scopes are left out, unless
+   * the whole category is deprecated (e.g. organization "Other").
+   */
+  const getCategoryGrantableRows = (category: string): ScopeEditorRow[] => {
+    const categoryScopes = scopesByCategory[category] || []
+    const grantable = categoryScopes.filter((row) => !row.deprecated)
+    return grantable.length > 0 ? grantable : categoryScopes
+  }
+
+  /** Grantable rows plus deprecated ones already on the key. */
+  const getCategoryStateRows = (category: string): ScopeEditorRow[] => {
+    const grantable = getCategoryGrantableRows(category)
+    const grantableIds = new Set(grantable.map((row) => row.scope))
+    const extras = (scopesByCategory[category] || []).filter(
+      (row) => !grantableIds.has(row.scope) && displayScopes.includes(row.scope),
+    )
+    return extras.length > 0 ? [...grantable, ...extras] : grantable
+  }
+
   const handleCategoryToggle = (category: string, checked: boolean) => {
     isUserInteractionRef.current = true
     const categoryScopes = scopesByCategory[category] || []
-    const ids = categoryScopes.map((r) => r.scope)
-    const idSet = new Set(ids)
 
     if (checked) {
+      const ids = getCategoryGrantableRows(category).map((r) => r.scope)
       onChange([...new Set([...value, ...ids])])
     } else {
+      const idSet = new Set(categoryScopes.map((r) => r.scope))
       onChange(value.filter((s) => !idSet.has(s)))
     }
   }
@@ -237,7 +256,7 @@ export function ScopeEditor({
   const getCategoryState = (
     category: string,
   ): 'checked' | 'unchecked' | 'indeterminate' => {
-    const categoryScopes = scopesByCategory[category] || []
+    const categoryScopes = getCategoryStateRows(category)
     if (categoryScopes.length === 0) return 'unchecked'
 
     const selectedCount = categoryScopes.filter((scopeDef) =>
