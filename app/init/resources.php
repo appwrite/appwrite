@@ -109,20 +109,6 @@ $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
 
-$container->set('publisherDatabases', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherFunctions', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMigrations', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMails', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherDeletes', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMessaging', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherWebhooks', fn (Publisher $publisher) => $publisher, ['publisher']);
-
 $container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
@@ -204,10 +190,10 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
-    $publisherDatabases,
+$container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
+    $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
-), ['publisherDatabases']);
+), ['publisher']);
 
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
