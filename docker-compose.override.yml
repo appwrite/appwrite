@@ -301,7 +301,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-  dns: # Stand-in public resolver for the domain-verification tests (Proxy APIs)
+  dns:
     image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
     container_name: appwrite-dns
     restart: unless-stopped
@@ -310,11 +310,9 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    # The image entrypoint writes its own config; this fixture supplies one.
     entrypoint: ["unbound", "-d", "-c", "/mnt/resources/unbound.conf"]
     networks:
       appwrite:
-        # _APP_DNS points at this address.
         ipv4_address: 172.16.238.100
     volumes:
       - ./tests/resources/dns:/mnt/resources:ro
