@@ -122,6 +122,9 @@ FROM appwrite/base:2.0.0-xdebug AS xdebug
 
 FROM base AS development
 
+# Revalidate bind-mounted source files when development workers reload.
+RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
+
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
