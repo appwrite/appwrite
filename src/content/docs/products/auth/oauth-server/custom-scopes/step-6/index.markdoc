@@ -25,7 +25,6 @@ Create `consumer/src/lib/taskflow.ts`. Every request carries the access token as
 // consumer/src/lib/taskflow.ts
 // Vantage's client for TaskFlow's API. Every request carries the access
 // token the user granted, and TaskFlow enforces its scopes.
-import '@tanstack/react-start/server-only'
 
 const taskflowApi = process.env.TASKFLOW_API_URL!
 

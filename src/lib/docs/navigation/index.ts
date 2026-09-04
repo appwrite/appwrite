@@ -1,4 +1,4 @@
-import type { DocsNavParent, DocsNavTree } from '../types'
+import type { DocsNavLink, DocsNavParent, DocsNavTree } from '../types'
 import type { DocsSectionNavConfig } from './sections'
 import { getAllDocsSectionNavs } from './section-navs'
 
@@ -50,4 +50,40 @@ export function getDocsSectionNav(slug: string): {
   }
 
   return { parent: null, navigation: null }
+}
+
+export type DocsStepNeighbors = {
+  previous: DocsNavLink | null
+  next: DocsNavLink | null
+}
+
+function hrefToDocsSlug(href: string): string {
+  const pathname = href.split('#')[0].replace(/\/+$/, '')
+  if (pathname === '/docs') return ''
+  if (!pathname.startsWith('/docs/')) return pathname
+  return pathname.slice('/docs/'.length)
+}
+
+/**
+ * Previous/next links for a multi-step page, taken from the nav group that lists
+ * the current slug. Steps are ordered by the section nav, not by frontmatter.
+ */
+export function getDocsStepNeighbors(slug: string): DocsStepNeighbors {
+  const empty: DocsStepNeighbors = { previous: null, next: null }
+  if (!slug) return empty
+
+  const { navigation } = getDocsSectionNav(slug)
+  if (!navigation) return empty
+
+  for (const node of navigation) {
+    const items = isDocsNavGroup(node) ? node.items : [node]
+    const index = items.findIndex((item) => hrefToDocsSlug(item.href) === slug)
+    if (index === -1) continue
+    return {
+      previous: index > 0 ? items[index - 1] : null,
+      next: index < items.length - 1 ? items[index + 1] : null,
+    }
+  }
+
+  return empty
 }

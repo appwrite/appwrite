@@ -44,7 +44,7 @@ A raw scope string like `tasks.read` means something to you, not to your users. 
 
 Consent is not all-or-nothing. When approving a grant, the consent screen can pass the subset of scopes the user agreed to, and the OAuth2 server narrows the grant to exactly that. It rejects any scope that was not requested, and `openid` is always retained because it is the sign-in itself.
 
-Update the `approve` helper in `provider/src/lib/oauth-server.ts` to pass the chosen scopes:
+Replace the one-line `approve` export in `provider/src/lib/oauth-server.ts` with this function, which takes the chosen scopes. Delete the old `export const approve = ...` line, otherwise the two declarations collide. `reject` keeps using `decide`.
 
 ```ts
 // provider/src/lib/oauth-server.ts
