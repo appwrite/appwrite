@@ -5,10 +5,9 @@ description: Let users log in with their Appwrite account using the built-in OAu
 date: 2026-09-04
 cover: /images/blog/sign-in-with-appwrite-guide/cover.avif
 timeToRead: 6
-author: atharva
+author: matej-baco
 category: tutorial
 featured: false
-draft: true
 faqs:
   - question: "What is Sign in with Appwrite?"
     answer: "It is an OAuth2 provider built into Appwrite Auth that lets users log in to your app with their Appwrite account, the same way they would with Google or GitHub. Appwrite acts as the identity provider and handles the consent screen, token exchange, and session creation."
