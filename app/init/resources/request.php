@@ -1084,6 +1084,7 @@ return function (Container $context): void {
                     database: $originalDatabase,
                     context: $context,
                     resolvePublicId: Metadata::resolver($database, $dbForProject),
+                    tenant: $database,
                 ))
                 ->addHook(new Usage($usage, $originalDatabase->getAttribute('type', '')));
 

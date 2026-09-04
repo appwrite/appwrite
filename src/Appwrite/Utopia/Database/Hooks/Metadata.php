@@ -3,6 +3,8 @@
 namespace Appwrite\Utopia\Database\Hooks;
 
 use Appwrite\Utopia\Database\Adapter\Pool;
+use Closure;
+use Override;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
@@ -24,16 +26,22 @@ class Metadata implements Decorator
 
     private int $operations = 0;
 
+    /** @var Closure(string): string|null */
+    private readonly ?Closure $resolvePublicId;
+
     /**
      * @param  callable(string): string|null  $resolvePublicId
      */
     public function __construct(
-        private Document $database,
-        private string $context = 'collection',
-        private $resolvePublicId = null,
+        private readonly Document $database,
+        private readonly string $context = 'collection',
+        ?callable $resolvePublicId = null,
+        private readonly ?Database $tenant = null,
     ) {
+        $this->resolvePublicId = $resolvePublicId === null ? null : $resolvePublicId(...);
     }
 
+    #[Override]
     public function decorate(Event $event, Document $collection, Document $document): Document
     {
         if ($document->isEmpty() || $collection->getId() === '_metadata') {
@@ -46,7 +54,8 @@ class Metadata implements Decorator
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
-        $this->decorateRelationships($collection, $document);
+        $this->getRelationships($collection->getId(), $collection);
+        $this->decorateRelationships($collection->getId(), $document);
 
         return $document;
     }
@@ -115,14 +124,16 @@ class Metadata implements Decorator
         return $left->getHostname() === $right->getHostname();
     }
 
-    private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
+    /** @param array<int, true> $path */
+    private function decorateRelationships(string $collectionId, Document $document, int $depth = 0, array $path = []): void
     {
-        if ($depth >= Database::RELATION_MAX_DEPTH) {
+        if ($depth >= Database::RELATION_MAX_DEPTH - 1) {
             return;
         }
 
-        $parentPublicId = $this->publicId($collection->getId());
-        $relationships = $this->getRelationships($collection->getId(), $collection);
+        $path[\spl_object_id($document)] = true;
+        $parentPublicId = $this->publicId($collectionId);
+        $relationships = $this->getRelationships($collectionId);
 
         foreach ($relationships as $relationship) {
             $key = $relationship->getAttribute('key');
@@ -138,7 +149,7 @@ class Metadata implements Decorator
             $relations = \is_array($related) ? $related : [$related];
 
             foreach ($relations as $relation) {
-                if ($relation instanceof Document) {
+                if ($relation instanceof Document && !isset($path[\spl_object_id($relation)])) {
                     $this->operations++;
                     $relation->setAttribute('$databaseId', $this->database->getId());
                     $relatedInternalId = $relation->getCollection();
@@ -148,6 +159,11 @@ class Metadata implements Decorator
                             ? $this->publicId($relatedInternalId)
                             : $parentPublicId
                     );
+
+                    $relatedCollectionId = $relationship->getAttribute('options', [])['relatedCollection'] ?? '';
+                    if ($relatedCollectionId !== '') {
+                        $this->decorateRelationships($relatedCollectionId, $relation, $depth + 1, $path);
+                    }
                 }
             }
         }
@@ -156,12 +172,15 @@ class Metadata implements Decorator
     /**
      * @return array<Document>
      */
-    private function getRelationships(string $collectionId, Document $collection): array
+    private function getRelationships(string $collectionId, ?Document $collection = null): array
     {
         if (!isset($this->relationshipCache[$collectionId])) {
+            if ($collection === null && $this->tenant !== null) {
+                $collection = $this->tenant->silent(fn (): Document => $this->tenant->getCollection($collectionId));
+            }
             $this->relationshipCache[$collectionId] = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
+                $collection?->getAttribute('attributes', []) ?? [],
+                static fn (Document $attribute): bool => $attribute->getAttribute('type') === ColumnType::Relationship->value
             );
         }
 
