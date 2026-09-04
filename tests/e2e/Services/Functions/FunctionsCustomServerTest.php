@@ -7,6 +7,7 @@ namespace Tests\E2E\Services\Functions;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -1028,6 +1029,60 @@ final class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $deployment['headers']['status-code']);
+    }
+
+    /**
+     * Builds, executes and downloads through the configured local or S3 device.
+     */
+    #[Group('s3')]
+    public function testDeploymentBuildOutputIsServedFromTheBuildsDevice(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Build output',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        try {
+            $deployment = $this->createDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $this->assertSame(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+                $this->assertSame('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
+            }, 100000, 500);
+
+            /**
+             * Test for SUCCESS
+             */
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+
+            // The executor fetches the artifact through its own storage connection.
+            $execution = $this->createExecution($functionId);
+            $this->assertSame(201, $execution['headers']['status-code']);
+            $this->assertSame('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
+            $this->assertSame(200, $execution['body']['responseStatusCode']);
+            $this->assertSame($deploymentId, \json_decode($execution['body']['responseBody'], true)['APPWRITE_FUNCTION_DEPLOYMENT']);
+
+            // The download endpoint reads buildPath through the builds device. The
+            // artifact format depends on the storage strategy, so compare sizes.
+            $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
+            $this->assertSame(200, $output['headers']['status-code']);
+            $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
+
+            $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
+            $this->assertSame(200, $source['headers']['status-code']);
+            $this->assertStringStartsWith("\x1f\x8b", $source['body']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     #[Retry(count: 3)]

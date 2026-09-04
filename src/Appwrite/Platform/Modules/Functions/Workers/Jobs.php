@@ -27,6 +27,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 
 /**
@@ -258,7 +259,8 @@ class Jobs extends Action
     /**
      * Record a reported artifact: 'sourceSize' (remote-source builds) becomes
      * the deployment's sourceSize; 'manifest' (site builds) is the output file
-     * listing for adapter detection, saved as a marker that joins readiness.
+     * listing for adapter detection; and 'output' confirms remote delivery.
+     * Manifest and output callbacks save markers that join readiness.
      */
     protected function onArtifact(
         Database $dbForProject,
@@ -286,6 +288,23 @@ class Jobs extends Action
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
+        // On a remote builds device the sidecar delivers the artifact. Join its
+        // callback explicitly because complete is emitted after artifacts but
+        // the queue can deliver those callbacks out of order.
+        if (($data['artifactId'] ?? '') === 'output') {
+            if (($data['status'] ?? '') === 'failed') {
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($data['error'] ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            }
+
+            if (($data['status'] ?? '') !== 'success') {
+                return $deployment;
+            }
+
+            $cache->save('jobs-output-' . $deployment->getId(), true);
+
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        }
+
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
             return $deployment;
         }
@@ -304,9 +323,9 @@ class Jobs extends Action
 
     /**
      * Failures short-circuit here — no output is needed to fail. A success
-     * needs every terminal callback: exit carries the code but fires before
-     * post-job artifacts, complete confirms delivery, and site builds also
-     * need the manifest. Each leaves a cache marker and re-attempts the join
+     * needs every terminal callback: exit carries the code, complete confirms
+     * artifact processing, remote builds need successful output delivery, and
+     * site builds also need the manifest. Each leaves a marker and retries the join
      * via ready(), so whichever lands last finalizes.
      */
     protected function onExit(
@@ -335,8 +354,9 @@ class Jobs extends Action
     }
 
     /**
-     * The delivery half of the success join — see onExit. Fires once post-job
-     * artifacts have run, so the output is already where Appwrite reads it.
+     * The artifact-processing half of the success join — see onExit. It is
+     * emitted after post-job artifacts run, but can be dequeued before their
+     * callbacks, so remote output delivery has its own marker.
      */
     protected function onComplete(
         Database $dbForProject,
@@ -385,6 +405,10 @@ class Jobs extends Action
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
         if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+            return $deployment;
+        }
+
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 

@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
@@ -42,6 +43,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Logger\Logger;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -194,6 +196,36 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
+$container->set('executionStore', function (?Logger $logger): ExecutionStore {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'executions',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+    $connection = System::getEnv(
+        '_APP_CONNECTIONS_DB_EXECUTIONS',
+        System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection)
+    );
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new ExecutionStore(
+        enabled: System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted'
+            && System::getEnv('_APP_EXECUTIONS_DUAL_WRITE', 'enabled') !== 'disabled',
+        dsn: $connection,
+        client: $client,
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        logger: $logger,
+    );
+}, ['logger']);
+
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
@@ -301,7 +333,18 @@ $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Teleme
 
 function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+    $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+    $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+    $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+    $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+    $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+
+    // An explicit connection remains authoritative. Otherwise the generic S3
+    // configuration takes precedence and the legacy internal DSN is a fallback.
+    if ($connection === '' && (! \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true) || ! $hasS3Configuration)) {
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    }
 
     $device = DeviceType::Local;
     $accessKey = '';
@@ -321,20 +364,27 @@ function getDevice(string $root, string $connection = ''): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
     } else {
-        $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $device = $configuredDevice;
         $prefix = match ($device) {
-            DeviceType::S3, DeviceType::AwsS3 => 'S3',
+            DeviceType::S3, DeviceType::AwsS3 => null,
             DeviceType::DoSpaces => 'DO_SPACES',
             DeviceType::Backblaze => 'BACKBLAZE',
             DeviceType::Linode => 'LINODE',
             DeviceType::Wasabi => 'WASABI',
             DeviceType::Local => null,
         };
-        if ($prefix !== null) {
-            $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
-            $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
-            $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
-            $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        if ($device !== DeviceType::Local) {
+            if ($prefix === null || $hasS3Configuration) {
+                $accessKey = $s3AccessKey;
+                $accessSecret = $s3AccessSecret;
+                $region = $s3Region;
+                $bucket = $s3Bucket;
+            } else {
+                $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
+                $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
+                $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
+                $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+            }
         }
     }
 

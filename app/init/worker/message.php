@@ -3,6 +3,7 @@
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -21,6 +22,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
@@ -53,6 +55,13 @@ return function (Container $container): void {
     ), ['pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
+
+    $container->set('projectContext', function (Message $message): ProjectContext {
+        $payload = $message->getPayload();
+        $project = $payload['project'] ?? [];
+
+        return ProjectContext::fromArray(\is_array($project) ? $project : []);
+    }, ['message']);
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];

@@ -9,6 +9,7 @@ use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Execution\Store;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Workers\Deletes;
 use Executor\Executor;
@@ -169,6 +170,7 @@ final class DeletesTest extends TestCase
                 publisherForDeletes: new DeletePublisher($publisher, $queue),
                 publisherForUsage: new UsagePublisher($publisher, $queue),
                 bus: $this->createStub(Bus::class),
+                executionStore: new Store(enabled: false, dsn: 'http://localhost:8123/test', client: null),
             );
         };
 
