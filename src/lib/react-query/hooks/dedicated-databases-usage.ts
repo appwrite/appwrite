@@ -25,6 +25,7 @@ import {
 } from '@/lib/usage/usage-date-range'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
 import { DEFAULT_STALE_TIME } from './constants'
+import { dedicatedDatabaseUsageServiceQueries } from '@/lib/usage/usage-resource-queries'
 import {
   DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
   fetchDedicatedDatabaseConnectionsOverview,
@@ -32,6 +33,8 @@ import {
   fetchDedicatedDatabaseIopsReadOverview,
   fetchDedicatedDatabaseIopsWriteOverview,
   fetchDedicatedDatabaseMemoryOverview,
+  fetchDedicatedDatabaseNetworkInboundOverview,
+  fetchDedicatedDatabaseNetworkOutboundOverview,
   fetchDedicatedDatabaseQpsOverview,
   fetchDedicatedDatabaseStorageOverview,
   type DedicatedDatabaseUsageChartOverview,
@@ -114,12 +117,14 @@ function dedicatedMetricFetchOptions(
   resourceId: string
   resourceType: typeof DEDICATED_DATABASE_USAGE_RESOURCE_TYPE
   includeBreakdown: false
+  queries: string[]
   ordinal?: number
 } {
   return {
     resourceId: databaseId,
     resourceType: DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
     includeBreakdown: false,
+    queries: dedicatedDatabaseUsageServiceQueries(),
     ...(ordinal !== undefined ? { ordinal } : {}),
   }
 }
@@ -134,6 +139,7 @@ function dedicatedDatabaseMetricChartQueryOptions(
       resourceId: string
       includeBreakdown?: boolean
       ordinal?: number
+      queries?: string[]
     },
   ) => Promise<DedicatedDatabaseUsageChartOverview>,
   projectId: string | null | undefined,
@@ -307,6 +313,142 @@ export function dedicatedDatabaseIopsWriteChartQueryOptions(
   )
 }
 
+function dedicatedDatabaseNetworkMetricChartQueryOptions(
+  metricKey: string,
+  fetchFn: (
+    projectId: string,
+    internalId: string,
+    dateRange: DateRange | undefined,
+    interval: UsageChartInterval,
+    options?: { queries?: string[] },
+  ) => Promise<DedicatedDatabaseUsageChartOverview>,
+  projectId: string | null | undefined,
+  usageInternalId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'dedicated-databases',
+      metricKey,
+      'chart',
+      'project',
+      projectId,
+      'internalId',
+      usageInternalId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchFn(projectId!, usageInternalId!, getBounds(), interval, {
+        queries: dedicatedDatabaseUsageServiceQueries(),
+      }),
+    enabled: !!projectId && !!usageInternalId,
+    ...usageQueryOptionsBase,
+    placeholderData: (
+      previousData: DedicatedDatabaseUsageChartOverview | undefined,
+      previousQuery: Query<DedicatedDatabaseUsageChartOverview> | undefined,
+    ) => {
+      if (
+        previousData === undefined ||
+        !previousQuery ||
+        !projectId ||
+        !usageInternalId
+      ) {
+        return undefined
+      }
+      const key = previousQuery.queryKey as QueryKey
+      const projectIndex = key.indexOf('project')
+      const internalIdIndex = key.indexOf('internalId')
+      if (
+        projectIndex === -1 ||
+        internalIdIndex === -1 ||
+        key[projectIndex + 1] !== projectId ||
+        key[internalIdIndex + 1] !== usageInternalId
+      ) {
+        return undefined
+      }
+      return previousData
+    },
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && usageInternalId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function dedicatedDatabaseNetworkInboundChartQueryOptions(
+  projectId: string | null | undefined,
+  usageInternalId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return dedicatedDatabaseNetworkMetricChartQueryOptions(
+    'network-inbound',
+    fetchDedicatedDatabaseNetworkInboundOverview,
+    projectId,
+    usageInternalId,
+    dateRange,
+    interval,
+  )
+}
+
+export function dedicatedDatabaseNetworkOutboundChartQueryOptions(
+  projectId: string | null | undefined,
+  usageInternalId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return dedicatedDatabaseNetworkMetricChartQueryOptions(
+    'network-outbound',
+    fetchDedicatedDatabaseNetworkOutboundOverview,
+    projectId,
+    usageInternalId,
+    dateRange,
+    interval,
+  )
+}
+
+export function useDedicatedDatabaseNetworkInboundChart(
+  projectId: string | null | undefined,
+  usageInternalId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...dedicatedDatabaseNetworkInboundChartQueryOptions(
+      projectId,
+      usageInternalId,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!usageInternalId && enabled,
+  })
+}
+
+export function useDedicatedDatabaseNetworkOutboundChart(
+  projectId: string | null | undefined,
+  usageInternalId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...dedicatedDatabaseNetworkOutboundChartQueryOptions(
+      projectId,
+      usageInternalId,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!usageInternalId && enabled,
+  })
+}
+
 export function useDedicatedDatabaseStorageChart(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -454,7 +596,9 @@ export function useDedicatedDatabaseMonitorMetrics(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   ordinal?: number,
+  usageInternalId?: string | null,
 ) {
+  const resolvedInternalId = usageInternalId ?? databaseId
   const storage = useDedicatedDatabaseStorageChart(
     projectId,
     databaseId,
@@ -511,6 +655,20 @@ export function useDedicatedDatabaseMonitorMetrics(
     interval,
     ordinal,
   )
+  const networkInbound = useDedicatedDatabaseNetworkInboundChart(
+    projectId,
+    resolvedInternalId,
+    dateRange,
+    enabled,
+    interval,
+  )
+  const networkOutbound = useDedicatedDatabaseNetworkOutboundChart(
+    projectId,
+    resolvedInternalId,
+    dateRange,
+    enabled,
+    interval,
+  )
 
   const refetchAll = useCallback(async () => {
     await Promise.all([
@@ -521,6 +679,8 @@ export function useDedicatedDatabaseMonitorMetrics(
       qps.refetch(),
       iopsRead.refetch(),
       iopsWrite.refetch(),
+      networkInbound.refetch(),
+      networkOutbound.refetch(),
     ])
   }, [
     storage.refetch,
@@ -530,6 +690,8 @@ export function useDedicatedDatabaseMonitorMetrics(
     qps.refetch,
     iopsRead.refetch,
     iopsWrite.refetch,
+    networkInbound.refetch,
+    networkOutbound.refetch,
   ])
 
   return {
@@ -540,6 +702,8 @@ export function useDedicatedDatabaseMonitorMetrics(
     qps,
     iopsRead,
     iopsWrite,
+    networkInbound,
+    networkOutbound,
     refetchAll,
   }
 }
@@ -778,6 +942,10 @@ export async function refetchDedicatedDatabaseMonitorQueries(
       predicate: (query) =>
         query.queryKey.includes(projectId) &&
         query.queryKey.includes(databaseId),
+    }),
+    queryClient.refetchQueries({
+      queryKey: ['usage-events', 'dedicated-databases'],
+      predicate: (query) => query.queryKey.includes(projectId),
     }),
     queryClient.refetchQueries({
       queryKey: ['usage-events', 'databases'],

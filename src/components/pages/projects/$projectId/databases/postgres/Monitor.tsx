@@ -11,6 +11,7 @@ import {
   HardDrive,
   HeartPulse,
   MemoryStick,
+  Network,
   ScanLine,
   Table2,
   Timer,
@@ -57,11 +58,14 @@ import {
   DEDICATED_DATABASE_CPU_DESCRIPTION,
   DEDICATED_DATABASE_IOPS_DESCRIPTION,
   DEDICATED_DATABASE_MEMORY_DESCRIPTION,
+  DEDICATED_DATABASE_NETWORK_DESCRIPTION,
   DEDICATED_DATABASE_QPS_DESCRIPTION,
   DEDICATED_DATABASE_STORAGE_DESCRIPTION,
   getDedicatedDatabaseGaugeHeadline,
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
+  resolveDedicatedDatabaseUsageInternalId,
+  sumUsageChartPoints,
   usageChartPointsToMonitorSeries,
 } from '@/lib/usage/dedicated-databases-usage'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -225,6 +229,10 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const { database } = usePostgresDatabase(projectId, databaseId)
   const replicaCount = database?.replicas ?? 0
   const metricsOrdinal = replicaCount > 0 ? selectedOrdinal : undefined
+  const usageInternalId = resolveDedicatedDatabaseUsageInternalId(
+    databaseId,
+    database,
+  )
   const databaseCreatedAt = resolveDatabaseCreatedAt(database)
   const monitorChartEmptyMessage = useCallback(
     (defaultMessage: string) =>
@@ -283,6 +291,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
     true,
     resolvedInterval,
     metricsOrdinal,
+    usageInternalId,
   )
 
   const storageLimitGb = useMemo(() => {
@@ -333,6 +342,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
         { id: 'memory', label: 'Memory', icon: MemoryStick },
         { id: 'qps', label: 'Queries per second', icon: Zap },
         { id: 'iops', label: 'Disk IOPS', icon: HardDrive },
+        { id: 'network', label: 'Network', icon: Network },
       ],
     },
     {
@@ -468,6 +478,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const dedicatedConnectionsPoints = dedicatedMetrics.connections.isError
     ? []
     : (dedicatedMetrics.connections.data?.chartPoints ?? [])
+  const networkInboundPoints = dedicatedMetrics.networkInbound.isError
+    ? []
+    : (dedicatedMetrics.networkInbound.data?.chartPoints ?? [])
+  const networkOutboundPoints = dedicatedMetrics.networkOutbound.isError
+    ? []
+    : (dedicatedMetrics.networkOutbound.data?.chartPoints ?? [])
   const storageUsedBytes =
     dedicatedStoragePoints.length > 0
       ? getDedicatedDatabaseGaugeHeadline(dedicatedStoragePoints)
@@ -499,6 +515,10 @@ export function View({ projectId, databaseId }: MonitorProps) {
     () => mergeDualUsageChartSeries(iopsReadPoints, iopsWritePoints),
     [iopsReadPoints, iopsWritePoints],
   )
+  const networkSeries = useMemo(
+    () => mergeDualUsageChartSeries(networkInboundPoints, networkOutboundPoints),
+    [networkInboundPoints, networkOutboundPoints],
+  )
   const dedicatedStorageSeries = useMemo(
     () => usageChartPointsToMonitorSeries(dedicatedStoragePoints),
     [dedicatedStoragePoints],
@@ -513,6 +533,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const qpsLatest = getDedicatedDatabaseRateHeadline(qpsPoints)
   const iopsReadLatest = getDedicatedDatabaseRateHeadline(iopsReadPoints)
   const iopsWriteLatest = getDedicatedDatabaseRateHeadline(iopsWritePoints)
+  const networkInboundTotal = sumUsageChartPoints(networkInboundPoints)
+  const networkOutboundTotal = sumUsageChartPoints(networkOutboundPoints)
 
   const cpuChartLoading = shouldShowUsageChartSkeleton(
     dedicatedMetrics.cpu.isError,
@@ -544,6 +566,14 @@ export function View({ projectId, databaseId }: MonitorProps) {
     dedicatedMetrics.storage.isError,
     dedicatedMetrics.storage.isLoading,
     dedicatedMetrics.storage.isPlaceholderData,
+  )
+  const networkChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.networkInbound.isError ||
+      dedicatedMetrics.networkOutbound.isError,
+    dedicatedMetrics.networkInbound.isLoading ||
+      dedicatedMetrics.networkOutbound.isLoading,
+    dedicatedMetrics.networkInbound.isPlaceholderData ||
+      dedicatedMetrics.networkOutbound.isPlaceholderData,
   )
 
   const refetchDedicatedMetrics = dedicatedMetrics.refetchAll
@@ -779,6 +809,22 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     }
                     description={t(DEDICATED_DATABASE_IOPS_DESCRIPTION)}
                   />
+                  <PostgresMetricKpiCard
+                    label={t('Network')}
+                    value={
+                      networkChartLoading &&
+                      networkInboundPoints.length === 0 &&
+                      networkOutboundPoints.length === 0
+                        ? '-'
+                        : formatCompactBytes(networkInboundTotal)
+                    }
+                    subValue={
+                      networkOutboundPoints.length > 0
+                        ? `${formatCompactBytes(networkOutboundTotal)} ${t('outbound')}`
+                        : undefined
+                    }
+                    description={t(DEDICATED_DATABASE_NETWORK_DESCRIPTION)}
+                  />
                 </div>
 
                 <div className="space-y-6">
@@ -865,6 +911,38 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     onDateRangeChange={setDateRange}
                     emptyMessage={monitorChartEmptyMessage(
                       'No IOPS metrics for this date range',
+                    )}
+                  />
+
+                  <PostgresMetricChart
+                    id="network"
+                    title={t('Network')}
+                    description={t(DEDICATED_DATABASE_NETWORK_DESCRIPTION)}
+                    unit=""
+                    primaryLabel="Inbound"
+                    secondaryLabel="Outbound"
+                    data={networkSeries}
+                    formatY={(value) => formatCompactBytes(value)}
+                    formatSecondaryY={(value) => formatCompactBytes(value)}
+                    usageValue={
+                      networkInboundPoints.length > 0 ||
+                      networkOutboundPoints.length > 0
+                        ? networkInboundTotal
+                        : null
+                    }
+                    usageSecondaryValue={
+                      networkInboundPoints.length > 0 ||
+                      networkOutboundPoints.length > 0
+                        ? networkOutboundTotal
+                        : null
+                    }
+                    usageUnitLabel="inbound"
+                    usageSecondaryUnitLabel="outbound"
+                    isLoading={networkChartLoading}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={setDateRange}
+                    emptyMessage={monitorChartEmptyMessage(
+                      'No network metrics for this date range',
                     )}
                   />
                 </div>

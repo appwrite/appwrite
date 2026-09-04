@@ -2037,6 +2037,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Disk IOPS': 'IOPS של דיסק',
   'Disk read and write operations per second for instance storage.':
     'פעולות קריאה וכתיבה לדיסק לשנייה עבור אחסון המופע.',
+  'Inbound and outbound data transferred by this database instance during the selected period.':
+    'נתונים נכנסים ויוצאים שהועברו על ידי מופע מסד נתונים זה בטווח שנבחר.',
   'Disk read operations per second for instance storage.':
     'פעולות קריאה לדיסק לשנייה עבור אחסון המופע.',
   'Disk write operations per second for instance storage.':
@@ -2048,6 +2050,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No connection metrics for this date range': 'אין מדדי חיבורים לטווח תאריכים זה',
   'No CPU metrics for this date range': 'אין מדדי CPU לטווח תאריכים זה',
   'No IOPS metrics for this date range': 'אין מדדי IOPS לטווח תאריכים זה',
+  'No network metrics for this date range': 'אין מדדי רשת לטווח תאריכים זה',
   'No memory metrics for this date range': 'אין מדדי זיכרון לטווח תאריכים זה',
   'No QPS metrics for this date range': 'אין מדדי QPS לטווח תאריכים זה',
   'No storage metrics for this date range': 'אין מדדי אחסון לטווח תאריכים זה',
@@ -2069,6 +2072,11 @@ export const heDatabasesDictionary: Record<string, string> = {
   'utilization': 'ניצול',
   'read': 'קריאה',
   'write': 'כתיבה',
+  'inbound': 'נכנס',
+  'outbound': 'יוצא',
+  'Inbound': 'נכנס',
+  'Outbound': 'יוצא',
+  'Outbound total': 'סה"כ יוצא',
   'used': 'בשימוש',
   'Write IOPS latest': 'IOPS כתיבה אחרון',
   "We couldn't fetch usage data from the server. Check your connection and try again.":

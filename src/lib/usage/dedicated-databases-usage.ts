@@ -1,4 +1,5 @@
 import type { DateRange } from 'react-day-picker'
+import type { Models } from '@appwrite.io/console'
 import {
   formatCompactBytes,
   formatCompactBytesAxis,
@@ -12,15 +13,23 @@ import {
 import { fetchProjectUsageGaugesChartOverview } from '@/lib/usage/usage-gauges-common'
 import {
   computeChangePercent,
+  fetchProjectUsageChartOverview,
   sumUsageChartPoints,
   type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
-import { DEDICATED_DATABASE_USAGE_RESOURCE_TYPE } from '@/lib/usage/usage-resource-queries'
+import {
+  DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
+  DEDICATED_DATABASE_USAGE_SERVICE,
+  dedicatedDatabaseUsageServiceQueries,
+} from '@/lib/usage/usage-resource-queries'
 
-export { DEDICATED_DATABASE_USAGE_RESOURCE_TYPE }
+export {
+  DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
+  DEDICATED_DATABASE_USAGE_SERVICE,
+}
 
 export function formatDedicatedDatabasePercentTotal(value: number): string {
   return `${value.toFixed(1)}%`
@@ -95,10 +104,71 @@ export const DEDICATED_DATABASE_IOPS_WRITE_DESCRIPTION =
 export const DEDICATED_DATABASE_IOPS_DESCRIPTION =
   'Disk read and write operations per second for instance storage.'
 
+export const DEDICATED_DATABASE_NETWORK_DESCRIPTION =
+  'Inbound and outbound data transferred by this database instance during the selected period.'
+
+export type DedicatedDatabaseNetworkMetricKind =
+  | 'inbound'
+  | 'outbound'
+  | 'compute'
+
+/** Event metric names in `projects_usage_events`: `dedicatedDatabases.{internalId}.*`. */
+export function dedicatedDatabaseNetworkMetric(
+  internalId: string,
+  kind: DedicatedDatabaseNetworkMetricKind,
+): string {
+  return `dedicatedDatabases.${internalId}.${kind}`
+}
+
+/**
+ * Infrastructure tenant id embedded in dedicated database network metric names.
+ * Falls back to the public database id until the API exposes `tenant` directly.
+ */
+export function resolveDedicatedDatabaseUsageInternalId(
+  databaseId: string,
+  database?: Pick<Models.DedicatedDatabase, '$id'> | null,
+): string {
+  const tenant = (database as { tenant?: string } | null | undefined)?.tenant?.trim()
+  if (tenant) return tenant
+  const id = database?.$id?.trim()
+  if (id) return id
+  return databaseId.trim()
+}
+
+function dedicatedDatabaseGaugeFetchOptions(
+  databaseId: string,
+  ordinal?: number,
+): {
+  resourceId: string
+  resourceType: typeof DEDICATED_DATABASE_USAGE_RESOURCE_TYPE
+  includeBreakdown: false
+  queries: string[]
+  ordinal?: number
+} {
+  return {
+    resourceId: databaseId,
+    resourceType: DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
+    includeBreakdown: false,
+    queries: dedicatedDatabaseUsageServiceQueries(),
+    ...(ordinal !== undefined ? { ordinal } : {}),
+  }
+}
+
+function dedicatedDatabaseNetworkFetchOptions(
+  queries?: string[],
+): { queries: string[] } {
+  return {
+    queries: dedicatedDatabaseUsageServiceQueries(queries),
+  }
+}
+
 export {
   formatCompactBytes as formatDedicatedDatabaseStorageTotal,
   formatCompactBytes as formatDedicatedDatabaseStorageValue,
+  formatCompactBytes as formatDedicatedDatabaseNetworkTotal,
+  formatCompactBytes as formatDedicatedDatabaseNetworkValue,
   formatCompactBytesAxis as formatDedicatedDatabaseStorageAxisValue,
+  formatCompactBytesAxis as formatDedicatedDatabaseNetworkAxisValue,
   formatCompactCount as formatDedicatedDatabaseCountTotal,
   formatCompactCount as formatDedicatedDatabaseCountValue,
   formatCompactCountAxis as formatDedicatedDatabaseCountAxisValue,
@@ -113,16 +183,89 @@ export async function fetchDedicatedDatabaseMetricOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<DedicatedDatabaseUsageChartOverview> {
+  const scopedOptions = options?.resourceId
+    ? dedicatedDatabaseGaugeFetchOptions(options.resourceId, options.ordinal)
+    : undefined
+
   return fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     [metric],
     interval,
-    options?.queries,
+    scopedOptions?.queries ?? dedicatedDatabaseUsageServiceQueries(options?.queries),
     options?.logRetentionHours,
     options?.resourceId,
     options?.resourceType ?? DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
     options?.ordinal,
+  )
+}
+
+async function fetchDedicatedDatabaseNetworkMetricOverview(
+  projectId: string,
+  internalId: string,
+  kind: DedicatedDatabaseNetworkMetricKind,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<DedicatedDatabaseUsageChartOverview> {
+  return fetchProjectUsageChartOverview(
+    projectId,
+    dateRange,
+    [dedicatedDatabaseNetworkMetric(internalId, kind)],
+    interval,
+    dedicatedDatabaseNetworkFetchOptions(options?.queries).queries,
+    options?.logRetentionHours,
+  )
+}
+
+export async function fetchDedicatedDatabaseNetworkInboundOverview(
+  projectId: string,
+  internalId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<DedicatedDatabaseUsageChartOverview> {
+  return fetchDedicatedDatabaseNetworkMetricOverview(
+    projectId,
+    internalId,
+    'inbound',
+    dateRange,
+    interval,
+    options,
+  )
+}
+
+export async function fetchDedicatedDatabaseNetworkOutboundOverview(
+  projectId: string,
+  internalId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<DedicatedDatabaseUsageChartOverview> {
+  return fetchDedicatedDatabaseNetworkMetricOverview(
+    projectId,
+    internalId,
+    'outbound',
+    dateRange,
+    interval,
+    options,
+  )
+}
+
+export async function fetchDedicatedDatabaseNetworkComputeOverview(
+  projectId: string,
+  internalId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<DedicatedDatabaseUsageChartOverview> {
+  return fetchDedicatedDatabaseNetworkMetricOverview(
+    projectId,
+    internalId,
+    'compute',
+    dateRange,
+    interval,
+    options,
   )
 }
 

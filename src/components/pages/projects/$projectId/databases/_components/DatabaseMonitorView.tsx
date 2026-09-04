@@ -42,10 +42,13 @@ import {
   DEDICATED_DATABASE_CPU_DESCRIPTION,
   DEDICATED_DATABASE_IOPS_DESCRIPTION,
   DEDICATED_DATABASE_MEMORY_DESCRIPTION,
+  DEDICATED_DATABASE_NETWORK_DESCRIPTION,
   DEDICATED_DATABASE_QPS_DESCRIPTION,
   DEDICATED_DATABASE_STORAGE_DESCRIPTION,
   formatDedicatedDatabaseCountTotal,
   formatDedicatedDatabaseCountValue,
+  formatDedicatedDatabaseNetworkTotal,
+  formatDedicatedDatabaseNetworkValue,
   formatDedicatedDatabasePercentTotal,
   formatDedicatedDatabasePercentValue,
   formatDedicatedDatabaseStorageTotal,
@@ -53,6 +56,7 @@ import {
   getDedicatedDatabaseGaugeHeadline,
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
+  resolveDedicatedDatabaseUsageInternalId,
 } from '@/lib/usage/dedicated-databases-usage'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
@@ -190,6 +194,10 @@ export function DatabaseMonitorView({
     (database as { replicas?: number | null } | null)?.replicas ?? null
   const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
+  const usageInternalId = resolveDedicatedDatabaseUsageInternalId(
+    databaseId,
+    dedicated ?? null,
+  )
   const databaseCreatedAt = resolveDatabaseCreatedAt(
     (database as { createdAt?: string | null } | null) ?? dedicated,
   )
@@ -238,6 +246,7 @@ export function DatabaseMonitorView({
     !serverless,
     resolvedInterval,
     metricsOrdinal,
+    usageInternalId,
   )
 
   const resourceBreakdownItems = useMemo(
@@ -279,6 +288,7 @@ export function DatabaseMonitorView({
         { id: 'connections', label: 'Connections' },
         { id: 'qps', label: 'Queries per second' },
         { id: 'iops', label: 'Disk IOPS' },
+        { id: 'network', label: 'Network' },
       ]
 
   const scrollToChart = useCallback((id: string) => {
@@ -316,10 +326,20 @@ export function DatabaseMonitorView({
   const iopsWritePoints = dedicatedMetrics.iopsWrite.isError
     ? []
     : (dedicatedMetrics.iopsWrite.data?.chartPoints ?? [])
+  const networkInboundPoints = dedicatedMetrics.networkInbound.isError
+    ? []
+    : (dedicatedMetrics.networkInbound.data?.chartPoints ?? [])
+  const networkOutboundPoints = dedicatedMetrics.networkOutbound.isError
+    ? []
+    : (dedicatedMetrics.networkOutbound.data?.chartPoints ?? [])
 
   const iopsDualPoints = useMemo(
     () => mergeDualUsageChartSeries(iopsReadPoints, iopsWritePoints),
     [iopsReadPoints, iopsWritePoints],
+  )
+  const networkDualPoints = useMemo(
+    () => mergeDualUsageChartSeries(networkInboundPoints, networkOutboundPoints),
+    [networkInboundPoints, networkOutboundPoints],
   )
 
   return (
@@ -613,6 +633,53 @@ export function DatabaseMonitorView({
                       {t('Write IOPS latest')}:{' '}
                       {getDedicatedDatabaseRateHeadline(iopsWritePoints).toFixed(
                         1,
+                      )}
+                    </p>
+                  ) : null}
+                </MonitorChartAnchor>
+
+                <MonitorChartAnchor id="network">
+                  <UsageTimeSeriesChartCard
+                    title="Network"
+                    description={DEDICATED_DATABASE_NETWORK_DESCRIPTION}
+                    unitLabel="inbound"
+                    chartGradientId="monitor-dedicated-network-gradient"
+                    total={sumUsageChartPoints(networkInboundPoints)}
+                    changePercent={
+                      dedicatedMetrics.networkInbound.data?.changePercent ?? 0
+                    }
+                    chartPoints={networkInboundPoints}
+                    isLoading={shouldShowUsageChartSkeleton(
+                      dedicatedMetrics.networkInbound.isError ||
+                        dedicatedMetrics.networkOutbound.isError,
+                      dedicatedMetrics.networkInbound.isLoading ||
+                        dedicatedMetrics.networkOutbound.isLoading,
+                      dedicatedMetrics.networkInbound.isPlaceholderData ||
+                        dedicatedMetrics.networkOutbound.isPlaceholderData,
+                    )}
+                    isError={
+                      dedicatedMetrics.networkInbound.isError ||
+                      dedicatedMetrics.networkOutbound.isError
+                    }
+                    queryError={
+                      dedicatedMetrics.networkInbound.error ??
+                      dedicatedMetrics.networkOutbound.error
+                    }
+                    errorTitle={MONITOR_USAGE_ERROR.title}
+                    errorMessage={MONITOR_USAGE_ERROR.message}
+                    formatTotal={formatDedicatedDatabaseNetworkTotal}
+                    formatValue={formatDedicatedDatabaseNetworkValue}
+                    onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
+                  />
+                  {networkDualPoints.length > 0 ? (
+                    <p className="mt-2 text-[12px] text-muted-foreground">
+                      {t('Outbound total')}:{' '}
+                      {formatDedicatedDatabaseNetworkTotal(
+                        sumUsageChartPoints(networkOutboundPoints),
                       )}
                     </p>
                   ) : null}

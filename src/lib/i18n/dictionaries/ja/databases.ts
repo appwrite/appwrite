@@ -1974,6 +1974,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Disk IOPS': 'ディスク IOPS',
   'Disk read and write operations per second for instance storage.':
     'インスタンスストレージの1秒あたりのディスク読み取り/書き込み操作。',
+  'Inbound and outbound data transferred by this database instance during the selected period.':
+    '選択した期間中にこのデータベースインスタンスで転送された受信および送信データ。',
   'Disk read operations per second for instance storage.':
     'インスタンスストレージの1秒あたりのディスク読み取り操作。',
   'Disk write operations per second for instance storage.':
@@ -1986,6 +1988,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'この期間の接続メトリクスはありません',
   'No CPU metrics for this date range': 'この期間の CPU メトリクスはありません',
   'No IOPS metrics for this date range': 'この期間の IOPS メトリクスはありません',
+  'No network metrics for this date range': 'この期間のネットワークメトリクスはありません',
   'No memory metrics for this date range':
     'この期間のメモリメトリクスはありません',
   'No QPS metrics for this date range': 'この期間の QPS メトリクスはありません',
@@ -2009,6 +2012,11 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'utilization': '使用率',
   'read': '読み取り',
   'write': '書き込み',
+  'inbound': '受信',
+  'outbound': '送信',
+  'Inbound': '受信',
+  'Outbound': '送信',
+  'Outbound total': '送信合計',
   'used': '使用中',
   'Write IOPS latest': '最新の書き込み IOPS',
   'Restore to a point in time': '特定時点への復元',
