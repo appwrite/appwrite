@@ -113,7 +113,7 @@ $container->set('backgroundPublisherForAudits', function (Publisher $publisher, 
     $background = new BackgroundPublisher(
         $publisher,
         telemetry: $telemetry,
-        maxBatchInterval: 1.0,
+        maxBatchInterval: 10.0,
         maxBatchSize: 100,
     );
     $background->start();
@@ -145,7 +145,7 @@ $container->set('backgroundPublisherForUsage', function (Publisher $publisher, T
     $background = new BackgroundPublisher(
         $publisher,
         telemetry: $telemetry,
-        maxBatchInterval: 1.0,
+        maxBatchInterval: 10.0,
         maxBatchSize: 100,
     );
     $background->start();
