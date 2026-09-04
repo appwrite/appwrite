@@ -5,10 +5,9 @@ description: Appwrite Firewall adds project-level traffic rules to Appwrite Clou
 date: 2026-09-04
 cover: /images/blog-local/announcing-appwrite-firewall/cover.avif
 timeToRead: 6
-author: atharva
+author: arnab-chatterjee
 category: product, announcement
 featured: false
-draft: true
 faqs:
   - question: "What is Appwrite Firewall?"
     answer: "Appwrite Firewall is project-level traffic control on Appwrite Cloud. You create rules that match requests by attributes such as IP address, path, method, headers, user agent, or location, and each rule applies an action before the traffic reaches your API, Functions, or Sites."

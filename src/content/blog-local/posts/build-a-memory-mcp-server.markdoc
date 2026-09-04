@@ -2,7 +2,7 @@
 layout: post
 title: "Build a memory MCP server on Appwrite"
 description: Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.
-date: 2026-08-19
+date: 2026-09-04
 cover: /images/blog-local/build-a-memory-mcp-server/cover.avif
 timeToRead: 14
 author: atharva

@@ -436,14 +436,12 @@ export function getBlogPostsPage(options: {
   let featured: BlogPostMeta | null = null
   let secondaryFeatured: BlogPostMeta[] = []
   let categorySpotlights: BlogCategorySpotlight[] = []
-  let excludedSlugs = new Set<string>()
 
   if (showSpotlights) {
     const spotlights = buildBlogIndexSpotlights(posts)
     featured = spotlights.featured
     secondaryFeatured = spotlights.secondaryFeatured
     categorySpotlights = spotlights.categorySpotlights
-    excludedSlugs = spotlights.excludedSlugs
   }
 
   if (searchQuery || categoryQuery) {
@@ -456,11 +454,9 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  const listPosts = showSpotlights
-    ? posts.filter((post) => !excludedSlugs.has(post.slug))
-    : featured
-      ? posts.filter((post) => post.slug !== featured.slug)
-      : posts
+  // "All articles" is the full archive: posts already shown in the hero,
+  // secondary featured row, or a category spotlight still list here.
+  const listPosts = posts
 
   const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
