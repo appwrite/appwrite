@@ -355,6 +355,12 @@ class Create extends Action
                 }
             }
 
+            // Another chunk may have finalized the upload and removed its parts
+            // before upload() counted them. Check the completed document above first.
+            if (empty($chunksUploaded)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
+            }
+
             $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
@@ -525,10 +531,6 @@ class Create extends Action
                 $chunks,
                 $metadata
             );
-
-            if (empty($chunksUploaded)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
-            }
 
             $locks($lockKey, 600, fn () => $finalizeUpload($chunksUploaded), timeout: 120.0);
         } catch (LockContention) {
