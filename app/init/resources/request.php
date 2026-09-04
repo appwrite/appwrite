@@ -53,7 +53,7 @@ use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;

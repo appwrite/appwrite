@@ -4,7 +4,7 @@ namespace Appwrite\Event;
 
 use InvalidArgumentException;
 use Utopia\Database\Document;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 class Event
@@ -364,7 +364,7 @@ class Event
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
 
         try {
-            return $this->publisher->enqueue($queue, $payload);
+            return $this->publisher->publish($queue, $payload);
         } catch (\Throwable $th) {
             if ($this->critical) {
                 throw $th;
