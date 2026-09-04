@@ -38,7 +38,9 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher-webhook']);
 }
 
-$register->set('pools', function () {
+$register->set('poolAdapter', fn () => System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool(), fresh: true);
+
+$register->set('pools', function () use ($register) {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
@@ -223,7 +225,7 @@ $register->set('pools', function () {
                 },
             };
 
-            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+            $poolAdapter = $register->get('poolAdapter');
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
