@@ -717,9 +717,9 @@ return [
             ],
             [
                 'name' => '_APP_EMBEDDING',
-                'description' => 'Enables the embeddings API, backed by the resource-heavy appwrite-embedding container. That container is off by default (it is behind the "embedding" Compose profile), so start it and add "embedding" to COMPOSE_PROFILES before enabling this; until then the /v1/embeddings routes return a service disabled error. Default value is: disabled.',
+                'description' => 'Enables the embeddings API, backed by the resource-heavy appwrite-embedding container. That container sits behind the "embedding" Compose profile, so add "embedding" to COMPOSE_PROFILES to start it. Set this to "disabled" to have the /v1/embeddings routes return a service disabled error instead of reaching for the container. Default value is: enabled.',
                 'introduction' => '2.0.0',
-                'default' => 'disabled',
+                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
