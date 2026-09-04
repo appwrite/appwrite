@@ -674,6 +674,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not copy link': 'לא ניתן היה להעתיק את הקישור',
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
+  'Actor email': 'אימייל מבצע',
   'Actor type': 'סוג מבצע',
   'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',

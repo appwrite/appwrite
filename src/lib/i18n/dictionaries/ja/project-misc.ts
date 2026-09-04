@@ -406,6 +406,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このアクティビティへのリンクをコピーしました',
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
+  'Actor email': 'アクターのメール',
   'Actor type': 'アクタータイプ',
   'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',

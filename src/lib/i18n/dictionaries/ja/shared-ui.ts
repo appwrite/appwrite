@@ -524,6 +524,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Jump to last tab': '最後のタブに移動',
   // Table filters: column titles from filter configs
   'Resource type': 'リソースタイプ',
+  'Resource ID': 'リソース ID',
+  'Resource path': 'リソースパス',
+  'Resource parent': 'リソース親',
+  'Actor email': 'アクターのメール',
+  'Event ID': 'イベント ID',
   'Event path': 'イベントパス',
   'Deployment status': 'デプロイステータス',
   'Custom attribute': 'カスタム属性',
@@ -531,6 +536,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   // Table filters: enum value labels from filter configs
   'User / key': 'ユーザー / キー',
   'User (client API)': 'ユーザー (クライアント API)',
+  Hidden: '非表示',
+  'App installation': 'アプリインストール',
+  Subscriber: 'サブスクライバー',
+  Report: 'レポート',
   'String (deprecated)': '文字列 (非推奨)',
   'Scheduled maintenance is in progress.': '計画メンテナンスを実施中です。',
   'All regions are affected.': 'すべてのリージョンが影響を受けています。',
