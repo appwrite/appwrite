@@ -361,7 +361,9 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
             }
 
-            $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
+            // A local chunk file is visible before its write finishes. Only parts
+            // recorded after upload() returns are safe to include in finalization.
+            $chunksUploaded = max($uploaded, isset($metadata['parts']) ? \count($metadata['parts']) : $chunksUploaded);
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
