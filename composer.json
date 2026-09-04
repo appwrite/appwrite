@@ -117,7 +117,7 @@
         "utopia-php/client": "^0.3.0",
         "open-runtimes/sdk-for-php": "0.13.*",
         "utopia-php/schedule": "^0.2.0",
-        "utopia-php/usage": "^0.15.0",
+        "utopia-php/usage": "^0.16.0",
         "utopia-php/query": "0.6.*"
     },
     "require-dev": {
