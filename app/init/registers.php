@@ -18,7 +18,6 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Mongo\Client as MongoClient;
-use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
@@ -38,9 +37,7 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher-webhook']);
 }
 
-$register->set('poolAdapter', fn () => System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool(), fresh: true);
-
-$register->set('pools', function () use ($register) {
+$register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
@@ -225,8 +222,6 @@ $register->set('pools', function () use ($register) {
                 },
             };
 
-            $poolAdapter = $register->get('poolAdapter');
-
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
             $connectionPoolSize = match ($type) {
@@ -234,7 +229,7 @@ $register->set('pools', function () use ($register) {
                 default => $poolSize,
             };
 
-            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':

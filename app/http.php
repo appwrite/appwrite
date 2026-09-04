@@ -27,7 +27,6 @@ use Utopia\Http\Adapter\Swoole\Mode;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
-use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
@@ -43,9 +42,6 @@ $geoRecords->column('value', Table::TYPE_STRING, Geo::CACHE_VALUE_SIZE);
 $geoRecords->create();
 
 global $container;
-global $register;
-// Each pool needs its own channel so concurrent HTTP requests can wait for connections.
-$register->set('poolAdapter', fn () => new SwoolePool(), fresh: true);
 $container->set('certifiedDomains', fn () => $certifiedDomains);
 $container->set('geoRecords', fn () => $geoRecords);
 $container->set('pools', function ($register) {
