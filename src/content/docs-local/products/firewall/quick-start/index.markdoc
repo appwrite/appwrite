@@ -6,15 +6,13 @@ difficulty: beginner
 readtime: 5
 ---
 
-You can protect a project API path or block a noisy IP in a few minutes. This quick start creates a deny rule scoped to the project **API**, then points you to traffic monitoring.
+In this quick start you create a deny rule on the project **API**, send a request that it blocks, and find that request in the traffic overview.
 
 # Open Firewall {% #open-firewall %}
 
 1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
 2. Open a project.
 3. Open **Firewall** in the sidebar.
-
-If you do not see **Firewall**, confirm your Console profile includes the feature and that your role can view project navigation.
 
 # Create a deny rule {% #create-a-deny-rule %}
 
@@ -32,16 +30,10 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
    - Attribute: **Path**
    - Operator: **Starts with**
    - Value: a path you want to block (for example `/v1/account`)
-5. Set **Action** to **Deny**.
-6. Keep **Priority** at the default (`100`) or choose a lower number so this rule is evaluated earlier.
+5. Under **Then**, choose **Deny**.
+6. Keep **Priority** at `100`.
 7. Leave **Enabled** on.
 8. Review the impact preview in the sidebar, then click **Create rule**.
-
-{% info title="Path matching" %}
-Path conditions use the URL path only. Query strings are ignored. Prefer **starts with** for API prefixes.
-{% /info %}
-
-See the [guides](/docs/products/firewall#guides) for country blocks, IP allowlists, rate limits, challenges, and redirects.
 
 # Confirm the rule {% #confirm-the-rule %}
 
@@ -54,16 +46,32 @@ See the [guides](/docs/products/firewall#guides) for country blocks, IP allowlis
 
 1. On the Firewall page, make sure the resource selector above the rules list shows **API**.
 2. Find your rule in the list. It should show **Deny** and its status toggle should be on.
-3. Optionally open the rule's actions menu and choose **Update** to change conditions, priority, scope, or enabled state.
 
-# Monitor traffic {% #monitor-traffic %}
+To change the rule later, open its actions menu and choose **Update**.
 
-The Firewall overview chart shows requests that got through (**Passed**) plus Firewall outcomes: denied, challenged, rate-limited, and redirected. After traffic hits your deny rule, the denied series should rise when matching API requests arrive.
+# Test the rule {% #test-the-rule %}
 
-{% info title="Testing from the Console" %}
-Firewall does not block Console access. To verify a rule, send a request with a client SDK or API key.
-{% /info %}
+Firewall never blocks the Console, so send the request with a client SDK or an API key instead.
 
-See [Monitor traffic](/docs/products/firewall/monitor) for metrics and date ranges, and [Actions](/docs/products/firewall/actions) for what each outcome means.
+```sh
+curl -i https://cloud.appwrite.io/v1/account \
+  -H "X-Appwrite-Project: <PROJECT_ID>"
+```
 
-To protect a **site** during an incident, select that site on the Firewall page and turn on [Attack mode](/docs/products/firewall/attack-mode).
+The response is `403`, and its headers name the rule that stopped it:
+
+```
+HTTP/2 403
+x-appwrite-waf-rule: <RULE_ID>
+x-appwrite-waf-action: deny
+```
+
+# See it in traffic overview {% #see-it-in-traffic-overview %}
+
+Open **Firewall** in your project. The chart above the rules list shows requests that reached your project (**Passed**) alongside each Firewall outcome. The **Denied** series rises as matching requests arrive.
+
+See [Traffic overview](/docs/products/firewall/monitor) for metrics and date ranges, and [Actions](/docs/products/firewall/actions) for what each outcome means.
+
+# Next steps {% #next-steps %}
+
+The [guides](/docs/products/firewall#guides) cover country blocks, IP allowlists, rate limits, challenges, and redirects.

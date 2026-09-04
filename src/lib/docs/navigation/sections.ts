@@ -2037,10 +2037,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/network/tls',
           },
           {
-            label: 'WAF',
-            href: '/docs/products/network/waf',
-          },
-          {
             label: 'Compression',
             href: '/docs/products/network/compression',
           },

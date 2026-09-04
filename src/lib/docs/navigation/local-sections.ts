@@ -560,6 +560,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Priority',
             href: '/docs/products/firewall/priority',
           },
+          {
+            label: 'Traffic overview',
+            href: '/docs/products/firewall/monitor',
+          },
         ],
       },
       {
@@ -584,10 +588,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Redirect for maintenance',
             href: '/docs/products/firewall/site-maintenance',
-          },
-          {
-            label: 'Monitor traffic',
-            href: '/docs/products/firewall/monitor',
           },
           {
             label: 'Attack mode',
