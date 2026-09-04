@@ -23,7 +23,7 @@ Choose OAuth connect when:
 - You need explicit consent before accessing org or project data
 - Your product enhances an existing Appwrite workflow rather than provisioning new orgs
 
-For platform-owned provisioning inside your organization, use [Org API keys](/docs/partners/org-api-keys) instead or alongside OAuth connect.
+For platform-owned provisioning inside your organization, use [Partners keys](/docs/partners/org-api-keys) instead or alongside OAuth connect.
 
 # Getting started {% #getting-started %}
 

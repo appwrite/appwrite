@@ -4,8 +4,16 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
   {
     items: [
       { label: 'Overview', href: '/docs/partners', icon: 'home' },
-      { label: 'Quick start', href: '/docs/partners/quick-start', icon: 'play' },
-      { label: 'Architecture', href: '/docs/partners/architecture', icon: 'platform' },
+      {
+        label: 'Quick start',
+        href: '/docs/partners/quick-start',
+        icon: 'play',
+      },
+      {
+        label: 'Architecture',
+        href: '/docs/partners/architecture',
+        icon: 'platform',
+      },
     ],
   },
   {
@@ -19,10 +27,9 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
         new: true,
       },
       {
-        label: 'Org API keys',
+        label: 'Partners keys',
         href: '/docs/partners/org-api-keys',
         icon: 'key',
-        isParent: true,
         new: true,
       },
     ],
@@ -38,24 +45,14 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
       },
       {
         label: 'Project',
-        href: '/docs/partners/projects',
+        href: '/docs/partners/project',
         icon: 'boxes',
         isParent: true,
-      },
-      {
-        label: 'Domains',
-        href: '/docs/partners/domains',
-        icon: 'globe',
       },
       {
         label: 'Proxy',
         href: '/docs/partners/proxy',
         icon: 'arrow-start-right',
-      },
-      {
-        label: 'Usage',
-        href: '/docs/partners/usage',
-        icon: 'bar-chart-2',
       },
       {
         label: 'Apps',

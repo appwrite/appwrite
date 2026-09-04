@@ -20,8 +20,8 @@ Policies can be configured from the Appwrite Console, or programmatically throug
 To configure policies manually:
 
 1. Open your project in the Appwrite Console.
-2. Navigate to **Auth** in the sidebar.
-3. Open the **Security** tab.
+2. Navigate to **Auth** in the sidebar, then open the **Policies** tab.
+3. Pick the group that holds the policy: **Sessions**, **Users**, **Emails**, **Memberships**, or **Passwords**.
 4. Adjust the policy you want, then click **Update** on its card.
 
 # Available policies {% #available-policies %}

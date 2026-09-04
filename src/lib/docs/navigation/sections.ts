@@ -571,7 +571,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
   {
     prefix: 'partners/project',
     parent: {
-      href: '/docs',
+      href: '/docs/partners',
       label: 'Project',
     },
     navigation: [
@@ -581,6 +581,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Overview',
             href: '/docs/partners/project',
+          },
+          {
+            label: 'Create a project',
+            href: '/docs/partners/project/create',
           },
         ],
       },

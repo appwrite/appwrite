@@ -2,7 +2,7 @@
 layout: article
 title: Project
 description: Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.
-back: /docs
+back: /docs/partners
 ---
 
 An Appwrite **Project** is the top-level container for all the resources your app uses, from users and databases to storage buckets and functions. The settings on a project control which authentication methods are available, which client platforms can connect, which protocols and services are exposed, and which policies apply to the resources inside it.

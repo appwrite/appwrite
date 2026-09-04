@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Multi-tenancy
-description: Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.
+description: Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, Partners keys, and optional OAuth connect.
 ---
 
 Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side.
@@ -28,7 +28,7 @@ Use this mapping for every Console and project SDK call.
 
 Many platforms use:
 
-- **Org API keys** for automated provisioning in the platform org
+- **Partners keys** for automated provisioning in the platform organization
 - **OAuth connect** for enterprise customers who link their own Appwrite organization
 
 Route requests based on whether the tenant is platform-provisioned or OAuth-linked.
@@ -48,6 +48,6 @@ Route requests based on whether the tenant is platform-provisioned or OAuth-link
 Automate project creation on signup.
 {% /cards_item %}
 {% cards_item href="/docs/partners/architecture" title="Architecture" %}
-Compare OAuth connect and org API keys.
+Compare OAuth connect and Partners keys.
 {% /cards_item %}
 {% /cards %}

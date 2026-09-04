@@ -20,8 +20,8 @@ You can configure providers from the Appwrite Console or programmatically with a
 To configure a provider from the Console:
 
 1. Open your project in the Appwrite Console.
-2. Navigate to **Auth** in the sidebar, then open the **Settings** tab.
-3. Find the provider in the **OAuth2 Providers** list and click it.
+2. Navigate to **Auth** in the sidebar, then open the **Social providers** tab.
+3. Find the provider under **Popular** or **All providers**, or search for it, then click it.
 4. Enter the credentials from the provider (the field names vary per provider, see [Available providers](#available-providers)).
 5. Toggle the provider on and click **Update**.
 

@@ -1,11 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
-  BarChart2,
   Boxes,
   Building2,
   FileText,
-  Globe,
   Key,
   LayoutGrid,
 } from 'lucide-react'
@@ -63,7 +61,7 @@ export const DOCS_PARTNERS_HOME_INTEGRATIONS: DocsPartnersHomeCard[] = [
     new: true,
   },
   {
-    title: 'Org API keys',
+    title: 'Partners keys',
     description:
       'Use organization-scoped API keys to proxy Appwrite and manage resources on behalf of your users.',
     href: '/docs/partners/org-api-keys',
@@ -75,37 +73,29 @@ export const DOCS_PARTNERS_HOME_INTEGRATIONS: DocsPartnersHomeCard[] = [
 export const DOCS_PARTNERS_HOME_APIS: DocsPartnersHomeCard[] = [
   {
     title: 'Organization',
-    description: 'Create organizations, manage members, and read billing and plan information.',
+    description:
+      'Create organizations, manage members, and read billing and plan information.',
     href: '/docs/partners/organizations',
     icon: Building2,
   },
   {
     title: 'Project',
-    description: 'Create projects and manage databases, storage, functions, and other resources.',
-    href: '/docs/partners/projects',
+    description:
+      'Configure auth methods, platforms, API keys, SMTP, and policies for each project.',
+    href: '/docs/partners/project',
     icon: Boxes,
   },
   {
-    title: 'Domains',
-    description: 'Register, transfer, and manage organization domains and DNS records.',
-    href: '/docs/partners/domains',
-    icon: Globe,
-  },
-  {
     title: 'Proxy',
-    description: 'Wrap Console and project APIs so customers use your product while Appwrite stays the backend.',
+    description:
+      'Point custom domains at a project API, function, or site, and verify them.',
     href: '/docs/partners/proxy',
     icon: ArrowLeftRight,
   },
   {
-    title: 'Usage',
-    description: 'Read organization usage, plan limits, and billing aggregation for customer dashboards.',
-    href: '/docs/partners/usage',
-    icon: BarChart2,
-  },
-  {
     title: 'Apps',
-    description: 'Register OAuth apps, manage client credentials, and start authorization flows.',
+    description:
+      'Register OAuth apps, manage client credentials, and start authorization flows.',
     href: '/docs/partners/apps',
     icon: LayoutGrid,
   },
@@ -114,19 +104,22 @@ export const DOCS_PARTNERS_HOME_APIS: DocsPartnersHomeCard[] = [
 export const DOCS_PARTNERS_HOME_GUIDES: DocsPartnersHomeCard[] = [
   {
     title: 'Provisioning',
-    description: 'Choose an integration model and provision projects for your customers.',
+    description:
+      'Choose an integration model and provision projects for your customers.',
     href: '/docs/partners/guides/provisioning',
     icon: FileText,
   },
   {
     title: 'Marketplaces',
-    description: 'Publish OAuth apps, run install flows, and manage integrations with the Apps and OAuth APIs.',
+    description:
+      'Publish OAuth apps, run install flows, and manage integrations with the Apps and OAuth APIs.',
     href: '/docs/partners/guides/marketplaces',
     icon: FileText,
   },
   {
     title: 'Multi-tenancy',
-    description: 'Isolate customer data and resources across organizations and projects.',
+    description:
+      'Isolate customer data and resources across organizations and projects.',
     href: '/docs/partners/guides/multi-tenancy',
     icon: FileText,
   },

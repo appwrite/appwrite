@@ -34,37 +34,9 @@ Your marketplace backend owns the catalog and installation state. Integration ba
 
 # Step 1: Register apps with the Apps API {% #step-1-register-apps-with-the-apps-api %}
 
-Each listing in your marketplace maps to an OAuth app. Create apps programmatically when a developer submits an integration, or register them in the Console and import the `appId` into your catalog.
+Each listing in your marketplace maps to one app. Register the app in the Console, in your organization's **Marketplace** tab, then import its client ID into your catalog. The slug you choose during registration becomes the client ID.
 
-{% multicode %}
-```server-nodejs
-import { Client, Apps, ID } from 'node-appwrite';
-
-const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('console')
-    .setKey(process.env.APPWRITE_ORG_API_KEY);
-
-const apps = new Apps(client);
-
-const app = await apps.create({
-    appId: ID.unique(),
-    name: 'Acme Analytics',
-    teamId: '<DEVELOPER_OR_PLATFORM_ORG_ID>',
-    redirectUris: ['https://marketplace.example.com/oauth/callback'],
-    description: 'Usage dashboards for Appwrite projects.',
-    tagline: 'Analytics for your backend',
-    tags: ['analytics', 'billing'],
-    enabled: true,
-    type: 'confidential',
-});
-
-const secret = await apps.createSecret({ appId: app.$id });
-// Store secret.secret for token exchange on your server
-```
-{% /multicode %}
-
-Save metadata your marketplace UI needs: `app.$id`, name, logo URIs, requested scopes, and developer contact. See [Apps API](/docs/partners/apps) for update, list, and secret rotation.
+Save the metadata your marketplace UI needs: the client ID, name, logo URIs, requested scopes, and developer contact. See [Registration](/docs/partners/apps/registration) for the full set of Console fields, and [Installations](/docs/partners/apps/installations) for app keys and the install flow.
 
 # Step 2: Build your catalog {% #step-2-build-your-catalog %}
 
@@ -134,21 +106,21 @@ After install, the integration backend calls your marketplace API with an instal
 
 {% multicode %}
 ```server-nodejs
-import { Client, Projects } from 'node-appwrite';
+import { Client, Organization } from 'node-appwrite';
 
 const install = await marketplaceInstalls.get(orgId, appId);
 
 const userClient = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('console')
-    .setJWT(await refreshAccessToken(install));
+    .setOrganization(install.organizationId)
+    .setBearer(await refreshAccessToken(install));
 
-const projects = new Projects(userClient);
-const list = await projects.list();
+const organization = new Organization(userClient);
+const list = await organization.listProjects();
 ```
 {% /multicode %}
 
-Alternatively, pass a short-lived token or scoped proxy credential to the integration if you do not want third-party servers to hold long-lived refresh tokens. See [Proxy](/docs/partners/proxy) for wrapping Console APIs behind your platform.
+If you would rather not let third-party servers hold long-lived refresh tokens, mint a short-lived token per request and pass that to the integration instead.
 
 # Developer onboarding {% #developer-onboarding %}
 

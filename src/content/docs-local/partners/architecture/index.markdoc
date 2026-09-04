@@ -1,15 +1,15 @@
 ---
 layout: article
 title: Architecture
-description: Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.
+description: Understand how partner platforms connect to Appwrite with OAuth connect, Partners keys, and project API keys.
 ---
 
-Partner platforms sit **above** Appwrite organizations and projects. Your backend orchestrates Console-level resources, then uses project-scoped credentials to manage each customer's Appwrite backend.
+Partner platforms sit above Appwrite organizations and projects. Your backend creates the organization-level resources, then uses project credentials to manage each customer's Appwrite backend.
 
 # High-level flow {% #high-level-flow %}
 
-1. **Your platform** authenticates with Appwrite using OAuth tokens (user-linked) or an organization API key (platform-owned).
-2. **Console APIs** manage organizations, projects, domains, billing context, and org-level settings.
+1. **Your platform** authenticates with Appwrite using an OAuth token (user-linked) or a Partners key (platform-owned).
+2. **Console APIs** manage organizations, projects, domains, and organization settings.
 3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project.
 4. **Your product UI** exposes a subset of these capabilities to your customers.
 
@@ -17,44 +17,42 @@ Partner platforms sit **above** Appwrite organizations and projects. Your backen
 
 With OAuth connect, a user signs in to Appwrite and grants your OAuth app permission to act on their organizations:
 
-- Your platform stores refresh tokens securely on the server
+- Your platform stores refresh tokens on the server
 - Console API calls use the user's delegated access
-- Scopes limit which organizations and operations your app can perform
-- Users can revoke access from Appwrite at any time
+- Scopes limit which organizations your app can access and which operations it can perform
+- Users can revoke the grant from Appwrite at any time
 
 This model fits products where customers bring their own Appwrite organization or want explicit consent before you manage their infrastructure.
 
 Learn more in [OAuth connect](/docs/partners/oauth-connect).
 
-# Org API key architecture {% #org-api-key-architecture %}
+# Partners key architecture {% #partners-key-architecture %}
 
-With organization API keys, your platform acts as a trusted backend inside **your** Appwrite organization:
+With a Partners key, your platform acts as a trusted backend inside your own Appwrite organization:
 
-- You create projects, domains, and resources for each customer
-- Org API keys authenticate Console API calls with organization-scoped permissions
+- You create a project per customer and provision the resources it needs
+- A Partners key authenticates Console API calls against one organization
 - You map customers in your database to Appwrite project IDs
-- Your backend proxies or wraps Appwrite APIs for your product's UI
+- Your backend calls Appwrite APIs on behalf of your product's UI
 
 This model fits multi-tenant platforms that provision isolated Appwrite projects per customer.
 
-Learn more in [Org API keys](/docs/partners/org-api-keys).
+Learn more in [Partners keys](/docs/partners/org-api-keys).
 
-# Console SDK vs project SDK {% #console-sdk-vs-project-sdk %}
+# Two credentials, two boundaries {% #two-credentials-two-boundaries %}
 
-| SDK | Endpoint project | Manages |
-| --- | ---------------- | ------- |
-| Console (`setProject('console')`) | `console` | Organizations, projects, domains, org settings |
-| Project (`setProject('<PROJECT_ID>')`) | Customer project | Databases, storage, functions, users, messaging |
+Partner platforms hold two kinds of credential, and each one reaches a different layer.
 
-Partner platforms typically use **both**: Console SDK for provisioning, project SDK (with a project API key) for day-to-day resource management.
+| Credential | Client setup | Reaches |
+| ---------- | ------------ | ------- |
+| Partners key | `setOrganization('<ORGANIZATION_ID>')` and `setKey()` | The organization, its members, and each project's existence, name, and region |
+| Project API key | `setProject('<PROJECT_ID>')` and `setKey()` | Databases, storage, functions, users, messaging, and proxy rules in one project |
+
+A Partners key carries no project, so it never sends a project ID. It creates and deletes projects but cannot see inside them. Use it for provisioning, then switch to a project API key for the resources the customer works with every day.
 
 # Security considerations {% #security-considerations %}
 
-- Store API keys and OAuth tokens only on your server
-- Use the minimum scopes required for each integration path
-- Rotate organization and project API keys on a schedule
-- Audit Console API usage and map actions to customers in your platform
-- Never pass organization API keys to browser or mobile clients
+Both credentials belong on your server and nowhere else. [Keep the key safe](/docs/partners/org-api-keys#keep-the-key-safe) covers scoping, storage, and rotation.
 
 # Related guides {% #related-guides %}
 

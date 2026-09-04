@@ -20,8 +20,8 @@ Protocols can be toggled from the Appwrite Console, or programmatically through 
 To toggle a protocol manually:
 
 1. Open your project in the Appwrite Console.
-2. Open **Settings** from the bottom of the side nav.
-3. Scroll to the **Protocols** card.
+2. Open **Settings** at the bottom of the project sidebar.
+3. On the **Overview** tab, scroll to the **Protocols** card.
 4. Flip the switch next to REST, GraphQL, or WebSocket. Use **Disable all** to turn off every protocol at once.
 
 # Available protocols {% #available-protocols %}

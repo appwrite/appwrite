@@ -18,10 +18,9 @@ This guide walks through provisioning a dedicated Appwrite project when a custom
 
 {% multicode %}
 ```server-nodejs
-const project = await projects.create({
+const project = await organization.createProject({
     projectId: ID.unique(),
     name: `${customer.name} workspace`,
-    teamId: platformOrgId,
     region: customer.preferredRegion ?? 'fra',
 });
 
@@ -34,7 +33,7 @@ await db.customers.update(customer.id, {
 
 # Step 2: Create a project API key {% #step-2-create-a-project-api-key %}
 
-Create a key with scopes for the services your platform manages. Store the secret in your secrets manager keyed by customer ID.
+Create a key with scopes for the services your platform manages. Store the secret in your secrets manager keyed by customer ID. A Partners key cannot mint project API keys, so create this key in the Console.
 
 # Step 3: Bootstrap resources {% #step-3-bootstrap-resources %}
 
@@ -46,6 +45,6 @@ Your customer-facing UI calls **your** API. Your backend uses the stored project
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/projects/create" %}
-Create projects
+{% arrow_link href="/docs/partners/project/provisioning" %}
+Provision a project
 {% /arrow_link %}
