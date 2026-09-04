@@ -75,7 +75,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
       - appwrite-geo
     environment:
       - _APP_ENV
@@ -260,6 +259,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-console:
     logging:
       driver: json-file
@@ -314,7 +314,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -356,6 +355,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
       - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker:
@@ -373,7 +373,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -525,6 +524,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
 
   appwrite-task-scheduler:
     entrypoint: schedule
@@ -541,7 +541,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -622,7 +621,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -662,7 +660,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -753,7 +750,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -792,6 +788,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-worker-builds:
     profiles:
       - separate
@@ -812,7 +809,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -1043,7 +1039,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -1093,7 +1088,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_PASS
@@ -1498,7 +1492,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1541,7 +1534,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1583,7 +1575,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
@@ -1838,6 +1829,8 @@ services:
       - postgres
   appwrite-embedding:
     image: appwrite/embedding:0.1.0
+    profiles:
+      - embedding
     environment:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
