@@ -465,14 +465,18 @@ Http::init()
             // installation deploys just the engine backing the platform, so neither is on
             // until an operator provisions that engine and says so. Closed to everyone --
             // keys and privileged roles included -- rather than answering and then failing
-            // on the first write with the reason only in the logs.
+            // against an absent service with the reason only in the logs. Embeddings ran
+            // on every installation before it had a switch, so it stays on unless an
+            // operator turns it off; the resource-heavy container is what sits behind a
+            // Compose profile.
             $products = [
-                'documentsdb' => '_APP_DOCUMENTSDB',
-                'vectorsdb' => '_APP_VECTORSDB',
+                'documentsdb' => ['_APP_DOCUMENTSDB', 'disabled'],
+                'vectorsdb' => ['_APP_VECTORSDB', 'disabled'],
+                'embeddings' => ['_APP_EMBEDDING', 'enabled'],
             ];
             if (
                 isset($products[$namespace])
-                && System::getEnv($products[$namespace], 'disabled') !== 'enabled'
+                && System::getEnv(...$products[$namespace]) !== 'enabled'
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }

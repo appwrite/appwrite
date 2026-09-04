@@ -26,13 +26,7 @@ final class Audit extends Base
     public function toArray(): array
     {
         return [
-            'project' => [
-                '$id' => $this->project->getId(),
-                '$sequence' => $this->project->getSequence(),
-                'database' => $this->project->getAttribute('database', ''),
-                'teamId' => $this->project->getAttribute('teamId', ''),
-                'teamInternalId' => $this->project->getAttribute('teamInternalId', ''),
-            ],
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'user' => $this->user->getArrayCopy(),
             'impersonatorUser' => $this->impersonatorUser->getArrayCopy(),
             'payload' => $this->payload,
