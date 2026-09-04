@@ -502,7 +502,7 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $container) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -531,6 +531,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         advisory: ['ExplicitBucketBoundaries' => $realtimeDelayBuckets],
     ));
     $register->get('telemetry.workerCounter')->add(1);
+
+    Coroutine::create(function () use ($container): void {
+        $container->get('backgroundPublisherForAudits');
+        $container->get('backgroundPublisherForUsage');
+    });
 
     $attempts = 0;
     $start = time();
@@ -852,8 +857,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onWorkerStop(function (int $workerId) use ($register) {
+$server->onWorkerStop(function (int $workerId) use ($register, $container) {
     Console::warning('Worker ' . $workerId . ' stopping');
+
+    Coroutine::create(function () use ($container): void {
+        $container->get('backgroundPublisherForAudits')->shutdown();
+        $container->get('backgroundPublisherForUsage')->shutdown();
+    });
 
     try {
         $register->get('telemetry.workerCounter')->add(-1);

@@ -46,6 +46,7 @@ use Utopia\Lock\Distributed;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
+use Utopia\Queue\Broker\Background as BackgroundPublisher;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
@@ -108,10 +109,22 @@ $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
 
-$container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
+$container->set('backgroundPublisherForAudits', function (Publisher $publisher, Telemetry $telemetry) {
+    $background = new BackgroundPublisher(
+        $publisher,
+        telemetry: $telemetry,
+        maxBatchInterval: 0.01,
+        maxBatchSize: 100,
+    );
+    $background->start();
+
+    return $background;
+}, ['publisher', 'telemetry']);
+
+$container->set('publisherForAudits', fn (BackgroundPublisher $publisher) => new AuditPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
-), ['publisher']);
+), ['backgroundPublisherForAudits']);
 
 $container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
     $publisher,
@@ -128,10 +141,22 @@ $container->set('publisherForScreenshots', fn (Publisher $publisher) => new Scre
     new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+$container->set('backgroundPublisherForUsage', function (Publisher $publisher, Telemetry $telemetry) {
+    $background = new BackgroundPublisher(
+        $publisher,
+        telemetry: $telemetry,
+        maxBatchInterval: 0.01,
+        maxBatchSize: 100,
+    );
+    $background->start();
+
+    return $background;
+}, ['publisher', 'telemetry']);
+
+$container->set('publisherForUsage', fn (BackgroundPublisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
-), ['publisher']);
+), ['backgroundPublisherForUsage']);
 
 $container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
     $publisher,

@@ -3,6 +3,7 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Base as BaseMessage;
+use Utopia\Queue\Publisher\Asynchronous;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
@@ -19,6 +20,12 @@ readonly class Base
     public function publish(Queue $queue, BaseMessage $message): string|bool
     {
         $payload = $message->toArray();
+
+        if ($this->publisher instanceof Asynchronous) {
+            $this->publisher->enqueue($queue, $payload);
+
+            return true;
+        }
 
         return $this->publisher->publish($queue, $payload);
     }
