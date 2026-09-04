@@ -139,7 +139,7 @@ class Mails extends Listener
             ];
         }
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $event->user['email'],
             subject: $subject,

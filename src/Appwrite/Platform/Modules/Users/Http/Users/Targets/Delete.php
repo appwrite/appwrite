@@ -80,7 +80,7 @@ class Delete extends Action
         $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_TARGET,
             document: $target,

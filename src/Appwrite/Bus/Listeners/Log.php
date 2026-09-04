@@ -46,7 +46,7 @@ class Log extends Listener
             Span::add('execution.status', $execution->getAttribute('status', ''));
         }
 
-        $publisherForExecutions->enqueue(new ExecutionMessage(
+        $publisherForExecutions->publish(new ExecutionMessage(
             project: $project,
             execution: $execution,
         ));

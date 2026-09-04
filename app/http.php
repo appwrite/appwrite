@@ -67,8 +67,8 @@ $http = $swoole->getServer();
 
 $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use ($swoole) {
     Coroutine::create(function () use ($swoole): void {
-        $swoole->resources()->get('backgroundPublisherForAudits');
-        $swoole->resources()->get('backgroundPublisherForUsage');
+        $swoole->resources()->get('publisherForAudits')->start();
+        $swoole->resources()->get('publisherForUsage')->start();
     });
 });
 
@@ -76,8 +76,8 @@ $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) use ($swool
     Timer::clearAll();
 
     Coroutine::create(function () use ($swoole): void {
-        $swoole->resources()->get('backgroundPublisherForAudits')->shutdown();
-        $swoole->resources()->get('backgroundPublisherForUsage')->shutdown();
+        $swoole->resources()->get('publisherForAudits')->shutdown();
+        $swoole->resources()->get('publisherForUsage')->shutdown();
     });
 
     Console::success('Worker ' . ++$workerId . ' stopped successfully');

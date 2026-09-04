@@ -127,7 +127,7 @@ class Functions extends Action
                 project: $project,
                 execution: $execution,
                 functionId: $functionId,
-                enqueue: fn (FunctionMessage $message) => $publisherForFunctions->enqueue($message),
+                enqueue: fn (FunctionMessage $message) => $publisherForFunctions->publish($message),
             );
             return;
         }
@@ -782,7 +782,7 @@ class Functions extends Action
             ->trigger();
 
         /** Trigger Functions */
-        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+        $publisherForFunctions->publish(FunctionMessage::fromEvent(
             event: $queueForEvents->getEvent(),
             params: $queueForEvents->getParams(),
             project: $queueForEvents->getProject(),

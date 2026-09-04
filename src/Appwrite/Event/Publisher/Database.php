@@ -2,30 +2,20 @@
 
 namespace Appwrite\Event\Publisher;
 
+use Appwrite\Event\Message\Base as BaseMessage;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
+/** @extends Base<DatabaseMessage> */
 readonly class Database extends Base
 {
-    public function __construct(
-        Publisher $publisher,
-        protected Queue $queue,
-    ) {
-        parent::__construct($publisher);
+    protected function dispatch(BaseMessage $message, ?Queue $queue, bool $background): string|bool
+    {
+        return parent::dispatch($message, $queue ?? $this->getQueueFromProject($message->project), $background);
     }
 
-    public function enqueue(DatabaseMessage $message, ?Queue $queue = null): string|bool
-    {
-        return $this->publish($queue ?? $this->getQueueFromProject($message->project), $message);
-    }
-
-    public function getSize(bool $failed = false, ?Queue $queue = null): int
-    {
-        return $this->getQueueSize($queue ?? $this->queue, $failed);
-    }
 
     private function getQueueFromProject(?Document $project): Queue
     {

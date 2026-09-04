@@ -556,7 +556,7 @@ Http::delete('/v1/account')
 
         $dbForProject->deleteDocument('users', $targetUser->getId());
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $targetUser,
@@ -679,7 +679,7 @@ Http::delete('/v1/account/sessions')
                 $queueForEvents
                     ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-                $publisherForDeletes->enqueue(new DeleteMessage(
+                $publisherForDeletes->publish(new DeleteMessage(
                     project: $queueForEvents->getProject(),
                     type: DELETE_TYPE_SESSION_TARGETS,
                     document: $session,
@@ -827,7 +827,7 @@ Http::delete('/v1/account/sessions/:sessionId')
                 ->setParam('sessionId', $session->getId())
                 ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $queueForEvents->getProject(),
                 type: DELETE_TYPE_SESSION_TARGETS,
                 document: $session,
@@ -2605,7 +2605,7 @@ Http::post('/v1/account/tokens/magic-url')
             'team' => '',
         ];
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $email,
             subject: $subject,
@@ -2953,7 +2953,7 @@ Http::post('/v1/account/tokens/email')
             ]);
         }
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $email,
             subject: $subject,
@@ -3256,7 +3256,7 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $publisherForMessaging->publish(new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
@@ -4022,7 +4022,7 @@ Http::post('/v1/account/recovery')
             ];
         }
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $profile->getAttribute('email', ''),
             name: $profile->getAttribute('name', ''),
@@ -4378,7 +4378,7 @@ Http::post('/v1/account/verifications/email')
             ]);
         }
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name') ?? '',
@@ -4602,7 +4602,7 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $publisherForMessaging->publish(new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
@@ -4895,7 +4895,7 @@ Http::delete('/v1/account/targets/:targetId/push')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_TARGET,
             document: $target,

@@ -40,7 +40,7 @@ class ExecutionCancelledCleanup extends Listener
         Span::add('function.id', $execution->getAttribute('resourceId', ''));
         Span::add('execution.id', $execution->getId());
 
-        $publisherForExecutions->enqueue(new ExecutionCancelledMessage(
+        $publisherForExecutions->publish(new ExecutionCancelledMessage(
             project: $project,
             execution: $execution,
         ));

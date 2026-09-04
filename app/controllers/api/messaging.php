@@ -2792,7 +2792,7 @@ Http::delete('/v1/messaging/topics/:topicId')
 
         $dbForProject->deleteDocument('topics', $topicId);
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_TOPIC,
             document: $topic,
@@ -3238,7 +3238,7 @@ Http::post('/v1/messaging/messages/email')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
                     project: $project,
                     messageId: $message->getId(),
@@ -3385,7 +3385,7 @@ Http::post('/v1/messaging/messages/sms')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
                     project: $project,
                     messageId: $message->getId(),
@@ -3610,7 +3610,7 @@ Http::post('/v1/messaging/messages/push')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
                     project: $project,
                     messageId: $message->getId(),
@@ -4020,7 +4020,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $publisherForMessaging->publish(new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_EXTERNAL,
                 project: $project,
                 messageId: $message->getId(),
@@ -4206,7 +4206,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $publisherForMessaging->publish(new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_EXTERNAL,
                 project: $project,
                 messageId: $message->getId(),
@@ -4473,7 +4473,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $publisherForMessaging->publish(new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_EXTERNAL,
                 project: $project,
                 messageId: $message->getId(),

@@ -796,7 +796,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ? RESOURCE_TYPE_FUNCTIONS
                 : RESOURCE_TYPE_SITES;
 
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $project,
                 type: DELETE_TYPE_EXECUTIONS_LIMIT,
                 resource: (string) $resource->getSequence(),
@@ -1189,7 +1189,7 @@ Http::init()
                $bus->dispatch(new RuleCreated($document->getArrayCopy()));
 
                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-               $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+               $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
                    project: $console,
                    domain: $document,
                    skipRenewCheck: true,

@@ -114,13 +114,13 @@ try {
     });
 
     $worker->workerStart()->action(function () use ($container): void {
-        $container->get('backgroundPublisherForAudits');
-        $container->get('backgroundPublisherForUsage');
+        $container->get('publisherForAudits')->start();
+        $container->get('publisherForUsage')->start();
     });
 
     $worker->workerStop()->action(function () use ($container): void {
-        $container->get('backgroundPublisherForAudits')->shutdown();
-        $container->get('backgroundPublisherForUsage')->shutdown();
+        $container->get('publisherForAudits')->shutdown();
+        $container->get('publisherForUsage')->shutdown();
     });
 
     $container->set('bus', function ($register) use ($worker) {

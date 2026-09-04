@@ -114,7 +114,7 @@ class Delete extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->output($index, $this->getResponseModel()));
 
-        $publisherForDatabase->enqueue(new DatabaseMessage(
+        $publisherForDatabase->publish(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_INDEX,

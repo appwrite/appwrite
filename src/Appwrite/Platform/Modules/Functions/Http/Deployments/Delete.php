@@ -144,7 +144,7 @@ class Delete extends Action
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_DOCUMENT,
             document: $deployment,

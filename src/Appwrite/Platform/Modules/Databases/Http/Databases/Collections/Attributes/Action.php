@@ -476,7 +476,7 @@ abstract class Action extends DatabasesAction
             ->setParam('columnId', $attribute->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
-        $publisherForDatabase->enqueue(new DatabaseMessage(
+        $publisherForDatabase->publish(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_CREATE_ATTRIBUTE,

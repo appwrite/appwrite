@@ -85,7 +85,7 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove report from DB');
         }
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_REPORT,
             document: $report,

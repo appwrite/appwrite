@@ -109,22 +109,17 @@ $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
 
-$container->set('backgroundPublisherForAudits', function (Publisher $publisher, Telemetry $telemetry) {
-    $background = new BackgroundPublisher(
-        $publisher,
-        telemetry: $telemetry,
-        maxBatchInterval: 10.0,
-        maxBatchSize: 100,
+$container->set('publisherForAudits', function (Publisher $publisher, Telemetry $telemetry) {
+    return new AuditPublisher(
+        new BackgroundPublisher(
+            $publisher,
+            telemetry: $telemetry,
+            maxBatchInterval: 10.0,
+            maxBatchSize: 100,
+        ),
+        new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME)),
     );
-    $background->start();
-
-    return $background;
 }, ['publisher', 'telemetry']);
-
-$container->set('publisherForAudits', fn (BackgroundPublisher $publisher) => new AuditPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
-), ['backgroundPublisherForAudits']);
 
 $container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
     $publisher,
@@ -141,22 +136,17 @@ $container->set('publisherForScreenshots', fn (Publisher $publisher) => new Scre
     new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('backgroundPublisherForUsage', function (Publisher $publisher, Telemetry $telemetry) {
-    $background = new BackgroundPublisher(
-        $publisher,
-        telemetry: $telemetry,
-        maxBatchInterval: 10.0,
-        maxBatchSize: 100,
+$container->set('publisherForUsage', function (Publisher $publisher, Telemetry $telemetry) {
+    return new UsagePublisher(
+        new BackgroundPublisher(
+            $publisher,
+            telemetry: $telemetry,
+            maxBatchInterval: 10.0,
+            maxBatchSize: 100,
+        ),
+        new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME)),
     );
-    $background->start();
-
-    return $background;
 }, ['publisher', 'telemetry']);
-
-$container->set('publisherForUsage', fn (BackgroundPublisher $publisher) => new UsagePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
-), ['backgroundPublisherForUsage']);
 
 $container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
     $publisher,

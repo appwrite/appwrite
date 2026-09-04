@@ -115,7 +115,7 @@ class Interval extends Action
 
         foreach ($rules as $rule) {
             try {
-                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
                     project: new Document([
                         '$id' => $rule->getAttribute('projectId', ''),
                         '$sequence' => $rule->getAttribute('projectInternalId', 0),

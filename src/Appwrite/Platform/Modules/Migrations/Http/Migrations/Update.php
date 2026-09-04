@@ -79,7 +79,7 @@ class Update extends Action
             ->setAttribute('status', 'pending')
             ->setAttribute('dateUpdated', \time());
 
-        $publisherForMigrations->enqueue(new MigrationMessage(
+        $publisherForMigrations->publish(new MigrationMessage(
             project: $project,
             migration: $migration,
             platform: $platform,

@@ -3,20 +3,8 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Jobs as JobsMessage;
-use Utopia\Queue\Publisher\Synchronous as Publisher;
-use Utopia\Queue\Queue;
 
+/** @extends Base<JobsMessage> */
 readonly class Jobs extends Base
 {
-    public function __construct(
-        Publisher $publisher,
-        protected Queue $queue
-    ) {
-        parent::__construct($publisher);
-    }
-
-    public function enqueue(JobsMessage $message, ?Queue $queue = null): string|bool
-    {
-        return $this->publish($queue ?? $this->queue, $message);
-    }
 }

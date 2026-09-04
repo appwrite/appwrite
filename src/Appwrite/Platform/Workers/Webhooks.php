@@ -326,7 +326,7 @@ class Webhooks extends Action
                 : "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
-            $publisherForNotifications->enqueue(new NotificationMessage(
+            $publisherForNotifications->publish(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
                 deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),

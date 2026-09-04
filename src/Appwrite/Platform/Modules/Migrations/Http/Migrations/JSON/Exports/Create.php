@@ -163,7 +163,7 @@ class Create extends Action
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        $publisherForMigrations->enqueue(new MigrationMessage(
+        $publisherForMigrations->publish(new MigrationMessage(
             project: $project,
             migration: $migration,
             platform: $platform,

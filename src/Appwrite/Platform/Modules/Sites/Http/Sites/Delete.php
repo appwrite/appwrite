@@ -80,7 +80,7 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove site from DB');
         }
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_DOCUMENT,
             document: $site,

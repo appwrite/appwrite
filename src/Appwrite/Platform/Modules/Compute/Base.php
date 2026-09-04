@@ -195,7 +195,7 @@ class Base extends Action
                 'status' => 'waiting',
             ]));
 
-            $publisherForBuilds->enqueue(new BuildMessage(
+            $publisherForBuilds->publish(new BuildMessage(
                 project: $project,
                 resource: $function,
                 deployment: $deployment,
@@ -412,7 +412,7 @@ class Base extends Action
                 $site->getAttribute('providerRootDirectory', ''),
             );
         } else {
-            $publisherForBuilds->enqueue(new BuildMessage(
+            $publisherForBuilds->publish(new BuildMessage(
                 project: $project,
                 resource: $site,
                 deployment: $deployment,

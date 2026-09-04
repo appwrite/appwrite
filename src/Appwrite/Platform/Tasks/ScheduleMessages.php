@@ -116,7 +116,7 @@ class ScheduleMessages extends Action
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_EXTERNAL,
                     project: $schedule['project'],
                     messageId: $schedule['resourceId'],

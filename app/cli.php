@@ -199,8 +199,8 @@ $container->set('bus', function (Registry $register) use ($container) {
 $exitCode = 0;
 
 $cli->init()->action(function () use ($container): void {
-    $container->get('backgroundPublisherForAudits');
-    $container->get('backgroundPublisherForUsage');
+    $container->get('publisherForAudits')->start();
+    $container->get('publisherForUsage')->start();
 });
 
 $cli
@@ -215,14 +215,14 @@ $cli
         ]);
 
         $exitCode = 1;
-        $container->get('backgroundPublisherForAudits')->shutdown();
-        $container->get('backgroundPublisherForUsage')->shutdown();
+        $container->get('publisherForAudits')->shutdown();
+        $container->get('publisherForUsage')->shutdown();
         Timer::clearAll();
     });
 
 $cli->shutdown()->action(function () use ($container): void {
-    $container->get('backgroundPublisherForAudits')->shutdown();
-    $container->get('backgroundPublisherForUsage')->shutdown();
+    $container->get('publisherForAudits')->shutdown();
+    $container->get('publisherForUsage')->shutdown();
     Timer::clearAll();
 });
 

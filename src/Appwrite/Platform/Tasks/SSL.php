@@ -106,7 +106,7 @@ class SSL extends Action
             Console::info('Updated existing rule ' . $rule->getId() . ' for domain: ' . $domain->get());
         }
 
-        $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+        $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
             project: $console,
             domain: new Document([
                 'domain' => $domain->get(),

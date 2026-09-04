@@ -533,8 +533,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $register->get('telemetry.workerCounter')->add(1);
 
     Coroutine::create(function () use ($container): void {
-        $container->get('backgroundPublisherForAudits');
-        $container->get('backgroundPublisherForUsage');
+        $container->get('publisherForAudits')->start();
+        $container->get('publisherForUsage')->start();
     });
 
     $attempts = 0;
@@ -861,8 +861,8 @@ $server->onWorkerStop(function (int $workerId) use ($register, $container) {
     Console::warning('Worker ' . $workerId . ' stopping');
 
     Coroutine::create(function () use ($container): void {
-        $container->get('backgroundPublisherForAudits')->shutdown();
-        $container->get('backgroundPublisherForUsage')->shutdown();
+        $container->get('publisherForAudits')->shutdown();
+        $container->get('publisherForUsage')->shutdown();
     });
 
     try {
