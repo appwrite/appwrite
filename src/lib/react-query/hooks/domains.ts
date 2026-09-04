@@ -18,6 +18,7 @@ import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isPendingDomainTransferStatus } from '@/lib/domains/transfer-status'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
@@ -337,6 +338,11 @@ export async function retryDomainVerification(domainId: string) {
  * @param teamId - The target organization/team ID
  */
 export async function updateDomainTeam(domainId: string, teamId: string) {
+  if (!getActiveProfileFeatures().multiTenancy) {
+    throw new Error(
+      'This console profile does not support transferring between organizations',
+    )
+  }
   if (!domainId) {
     throw new Error('Domain ID is required')
   }

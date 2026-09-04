@@ -214,8 +214,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Self-hosted Appwrite - cloud-only features disabled',
     features: {
       billing: false,
-      domains: true,
-      marketplace: true,
+      domains: false,
+      marketplace: false,
       usageStats: true,
       activity: false,
       init: false,
@@ -229,7 +229,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       extraVcsOAuth: false,
       compliance: false,
       oauthApps: false,
-      oauth2Server: true,
+      oauth2Server: false,
       orgApiKeys: false,
       agent: false,
       notifications: false,
@@ -245,7 +245,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
-      firewall: true,
+      firewall: false,
       storageS3: false,
       affiliates: false,
       cookieBanner: false,
@@ -492,9 +492,11 @@ function applyCloudOnlyFeatureGates(
   if (profileId === 'self-hosted') {
     return {
       ...features,
+      marketplace: false,
       init: false,
       marketing: false,
       multiTenancy: false,
+      oauth2Server: false,
     }
   }
   return features

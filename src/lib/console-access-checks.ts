@@ -319,20 +319,12 @@ export function canShowOrgDomainsTab(
   return canAccessOrgDomains(access, features)
 }
 
-/**
- * Buy domain and transfer-in (registrar commerce). Needs the domains profile
- * flag and billing: both checkout flows require a payment method (and buying
- * also a billing address), which a profile without billing cannot provide.
- */
+/** Buy domain and transfer-in (registrar commerce). Gated by the domains profile flag. */
 export function canBuyOrTransferOrgDomain(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(
-    features.domains &&
-    features.billing &&
-    canAccessOrgDomains(access, features)
-  )
+  return !!(features.domains && canAccessOrgDomains(access, features))
 }
 
 /** Organization marketplace tab (cloud profile + feature flag; browse integrations). */
