@@ -1236,6 +1236,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化されたリクエスト量。',
   'Request volume grouped by caller city.':
     '呼び出し元の都市別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化されたリクエスト量。',
   'Request volume grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化されたリクエスト量。',
   'Request volume grouped by caller IP address.':
@@ -1266,6 +1278,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化された帯域幅。',
   'Bandwidth grouped by caller city.':
     '呼び出し元の都市別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化された帯域幅。',
   'Bandwidth grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化された帯域幅。',
   'Bandwidth grouped by caller IP address.':
@@ -1287,6 +1311,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'SDK バージョン',
   'Caller city': '呼び出し元の都市',
+  'AS number': 'AS 番号',
+  'AS organization': 'AS 組織',
+  'Connection usage type': '接続用途タイプ',
+  'Connection organization': '接続組織',
+  ISPs: 'ISP',
+  'AS numbers': 'AS 番号',
+  'AS organizations': 'AS 組織',
+  'Connection types': '接続タイプ',
+  'Connection usage types': '接続用途タイプ',
+  'Connection organizations': '接続組織',
   'API paths': 'API パス',
   'Operations grouped by database.': 'データベース別にグループ化された操作。',
   'Operations grouped by resource.': 'リソース別にグループ化された操作。',

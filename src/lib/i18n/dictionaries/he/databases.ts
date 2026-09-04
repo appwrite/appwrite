@@ -379,6 +379,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Dead tuples': 'רשומות מתות (Dead tuples)',
   'Decrease replica count': 'הקטנת מספר הרפליקות',
   'Dedicated': 'ייעודי',
+  'Dedicated database': 'מסד נתונים ייעודי',
   'Dedicated databases': 'מסדי נתונים ייעודיים',
   'Default': 'ברירת מחדל',
   'Leave empty for': 'השאירו ריק עבור',

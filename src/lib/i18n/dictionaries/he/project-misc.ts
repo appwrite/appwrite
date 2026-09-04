@@ -1743,6 +1743,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מדינת המקור.',
   'Request volume grouped by caller city.':
     'נפח בקשות מקובץ לפי עיר המקור.',
+  'Request volume grouped by caller internet service provider.':
+    'נפח בקשות מקובץ לפי ספק האינטרנט של המקור.',
+  'Request volume grouped by caller autonomous system number.':
+    'נפח בקשות מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Request volume grouped by caller autonomous system organization.':
+    'נפח בקשות מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Request volume grouped by caller connection type.':
+    'נפח בקשות מקובץ לפי סוג החיבור של המקור.',
+  'Request volume grouped by caller connection usage type.':
+    'נפח בקשות מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Request volume grouped by caller connection organization.':
+    'נפח בקשות מקובץ לפי ארגון החיבור של המקור.',
   'Request volume grouped by caller hostname.':
     'נפח בקשות מקובץ לפי שם המארח של המקור.',
   'Request volume grouped by caller IP address.':
@@ -1766,6 +1778,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
   'Bandwidth grouped by caller city.': 'רוחב פס מקובץ לפי עיר המקור.',
+  'Bandwidth grouped by caller internet service provider.':
+    'רוחב פס מקובץ לפי ספק האינטרנט של המקור.',
+  'Bandwidth grouped by caller autonomous system number.':
+    'רוחב פס מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Bandwidth grouped by caller autonomous system organization.':
+    'רוחב פס מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Bandwidth grouped by caller connection type.':
+    'רוחב פס מקובץ לפי סוג החיבור של המקור.',
+  'Bandwidth grouped by caller connection usage type.':
+    'רוחב פס מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Bandwidth grouped by caller connection organization.':
+    'רוחב פס מקובץ לפי ארגון החיבור של המקור.',
   'Bandwidth grouped by caller hostname.':
     'רוחב פס מקובץ לפי שם המארח של המקור.',
   'Bandwidth grouped by caller IP address.':
@@ -1782,6 +1806,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'גרסת SDK',
   'Caller city': 'עיר מקור',
+  'AS number': 'מספר AS',
+  'AS organization': 'ארגון AS',
+  'Connection usage type': 'סוג שימוש בחיבור',
+  'Connection organization': 'ארגון חיבור',
+  ISPs: 'ספקי ISP',
+  'AS numbers': 'מספרי AS',
+  'AS organizations': 'ארגוני AS',
+  'Connection types': 'סוגי חיבור',
+  'Connection usage types': 'סוגי שימוש בחיבור',
+  'Connection organizations': 'ארגוני חיבור',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
   'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',

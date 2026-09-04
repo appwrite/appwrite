@@ -106,6 +106,8 @@ const USAGE_RESOURCE_TYPE_ICON_MAP: Record<string, LucideIcon> = {
   site: Globe,
   bucket: Folder,
   database: Database,
+  dedicateddatabase: Database,
+  dedicateddatabases: Database,
 }
 
 /** Leading icon for usage breakdown rows grouped by resource type. */

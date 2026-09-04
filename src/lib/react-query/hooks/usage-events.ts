@@ -53,6 +53,7 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   USAGE_BREAKDOWN_DRAWER_LIMIT,
 } from '@/lib/usage/breakdown-limits'
+import { PREMIUM_GEO_REQUEST_DIMENSIONS } from '@/lib/usage/usage-filter-configs'
 import { partitionUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import {
   fetchProjectImageTransformationsUsageOverview,
@@ -1906,20 +1907,8 @@ export type RequestsBreakdownQueryEntry = {
   items: UsageBreakdownItem[]
 }
 
-/**
- * Premium Geo DB dimensions the CE (self-hosted) backend does not enumerate in
- * its listEvents VALID_DIMENSIONS. Hidden alongside `city` when premium geo is
- * unavailable so the cards don't error on self-hosted.
- */
-export const PREMIUM_GEO_REQUEST_DIMENSIONS = new Set<string>([
-  'city',
-  'isp',
-  'autonomousSystemNumber',
-  'autonomousSystemOrganization',
-  'connectionType',
-  'connectionUsageType',
-  'connectionOrganization',
-])
+/** Re-exported for firewall/usage breakdown gating (self-hosted vs premium geo). */
+export { PREMIUM_GEO_REQUEST_DIMENSIONS }
 
 /** Fetches all request breakdown dimensions in parallel. */
 export function useProjectRequestsBreakdowns(
@@ -2140,7 +2129,8 @@ export function useProjectBandwidthBreakdowns(
   const sections = useMemo(
     () =>
       BANDWIDTH_BREAKDOWN_SECTIONS.filter(
-        (section) => allowCity || section.dimension !== 'city',
+        (section) =>
+          allowCity || !PREMIUM_GEO_REQUEST_DIMENSIONS.has(section.dimension),
       ),
     [allowCity],
   )

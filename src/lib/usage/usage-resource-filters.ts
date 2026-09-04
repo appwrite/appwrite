@@ -15,6 +15,7 @@ import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
+import { translate } from '@/lib/i18n/translate'
 
 export type UsageBreakdownFilterEntry = {
   dimension: string
@@ -37,17 +38,25 @@ export function parseTableUsageResourceType(
   return match?.[1]
 }
 
+export function isDedicatedDatabaseUsageResourceType(
+  resourceType: string | null | undefined,
+): boolean {
+  const key = resourceType?.trim().toLowerCase()
+  return key === 'dedicateddatabase' || key === 'dedicateddatabases'
+}
+
 export function formatUsageResourceTypeLabel(value: string): string {
   const trimmed = value.trim()
-  if (!trimmed) return 'Unknown'
+  if (!trimmed) return translate('Unknown')
 
-  if (trimmed === 'bucket') return 'Bucket'
-  if (trimmed === 'function') return 'Function'
-  if (trimmed === 'site') return 'Site'
-  if (trimmed === 'database' || trimmed === 'dedicatedDatabases') {
-    return 'Database'
+  if (trimmed === 'bucket') return translate('Bucket')
+  if (trimmed === 'function') return translate('Function')
+  if (trimmed === 'site') return translate('Site')
+  if (trimmed === 'database') return translate('Database')
+  if (isDedicatedDatabaseUsageResourceType(trimmed)) {
+    return translate('Dedicated database')
   }
-  if (trimmed === 'project') return 'Project'
+  if (trimmed === 'project') return translate('Project')
 
   const tableMatch = /^database\/([^/]+)\/table$/.exec(trimmed)
   if (tableMatch) {
@@ -113,7 +122,10 @@ export function resolveUsageResourceBreakdownItem(
     }
   }
 
-  if (resourceType === 'database' || resourceType === 'dedicatedDatabases') {
+  if (
+    resourceType === 'database' ||
+    isDedicatedDatabaseUsageResourceType(resourceType)
+  ) {
     const databaseResource = resolveDatabaseBreakdownResource(
       resourceId,
       lookups.databaseLookup,

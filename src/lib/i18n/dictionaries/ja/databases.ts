@@ -378,6 +378,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Dead tuples': 'デッドタプル',
   'Decrease replica count': 'レプリカ数を減らす',
   'Dedicated': '専用',
+  'Dedicated database': '専用データベース',
   'Dedicated databases': '専用データベース',
   'Default': 'デフォルト',
   'Leave empty for': '空欄の場合',
