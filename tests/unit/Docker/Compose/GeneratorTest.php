@@ -149,15 +149,7 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame([
-            'postgres',
-            '-c',
-            'fsync=off',
-            '-c',
-            'synchronous_commit=off',
-            '-c',
-            'full_page_writes=off',
-        ], $postgresql['services']['postgresql']['command']);
+        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
         $this->assertSame([
             'redis-server',
             '--maxmemory',
