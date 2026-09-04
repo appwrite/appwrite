@@ -767,7 +767,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.',
     layout: 'article',
-    readingTimeMinutes: 4,
+    readingTimeMinutes: 5,
   },
   {
     slug: 'partners/guides/multi-tenancy',
@@ -775,7 +775,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, Partners keys, and optional OAuth connect.',
     layout: 'article',
-    readingTimeMinutes: 1,
+    readingTimeMinutes: 2,
   },
   {
     slug: 'partners/guides/provisioning',
@@ -783,7 +783,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.',
     layout: 'article',
-    readingTimeMinutes: 1,
+    readingTimeMinutes: 2,
   },
   {
     slug: 'partners/oauth-connect',

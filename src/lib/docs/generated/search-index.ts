@@ -844,7 +844,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Understand how partner platforms connect to Appwrite with OAuth connect, Partners keys, and project API keys.',
     excerpt:
-      "Partner platforms sit above Appwrite organizations and projects. Your backend creates the organization-level resources, then uses project credentials to manage each customer's Appwrite backend. High-level flow 1. **Your platform** authenticates with Appwrite using an OAuth token (user-linked) or a Partners key (platform-owned). 2. **Console APIs** manage organizations, projects, domains, and organization settings. 3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project. 4. **Your product UI** exposes a subset of these capabilities to your customers.…",
+      "Partner platforms sit above Appwrite organizations and projects. Your backend creates the organization-level resources, then uses project credentials to manage each customer's Appwrite backend. High-level flow 1. **Your platform** authenticates with Appwrite using an OAuth token (user-linked) or a Partners key (platform-owned). 2. **Console APIs** manage the organization, its members, and the projects inside it. 3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project. 4. **Your product UI** exposes a subset of these capabilities…",
     breadcrumbs: ['Architecture', 'Partners', 'Architecture'],
   },
   {
@@ -862,8 +862,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.',
     excerpt:
-      'Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization. Marketplace roles | Role | Responsibility | | ---- | -------------- | | **Marketplace operator** (you) | Curates the catalog, registers or approves OAuth apps, runs install and uninstall flows | | **Integration developer** | Builds the app that requests Console scopes after install…',
-    breadcrumbs: ['Marketplaces', 'Partners', 'guides', 'Marketplaces'],
+      'This page is not in the Partners navigation. The Apps API and its install flows are still settling, so the steps below are not verified end to end. Relink this page once the flow is confirmed. Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization. Marketplace roles | Role | Responsibility | |…',
+    breadcrumbs: ['Partners', 'guides', 'Marketplaces'],
   },
   {
     slug: 'partners/guides/multi-tenancy',
@@ -871,8 +871,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, Partners keys, and optional OAuth connect.',
     excerpt:
-      'Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side. Tenant isolation model The recommended pattern is **one Appwrite project per tenant**: - Data and permissions stay isolated by project boundary - Project API keys can be scoped per tenant - Blast radius of a leaked key is limited to one customer - You can place tenants in different regions Mapping tenants Maintain a table in your platform: | Your tenant ID | Appwrite…',
-    breadcrumbs: ['Multi-tenancy', 'Partners', 'guides', 'Multi-tenancy'],
+      'This page is not in the Partners navigation. It predates the Partners key and still describes credentials and flows that do not match the current Organization API. Relink it once the patterns are rewritten against a Partners key. Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side. Tenant isolation model The recommended pattern is **one Appwrite project per tenant**: - Data and permissions stay isolated by project boundary - Project API keys can…',
+    breadcrumbs: ['Partners', 'guides', 'Multi-tenancy'],
   },
   {
     slug: 'partners/guides/provisioning',
@@ -880,8 +880,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.',
     excerpt:
-      'This guide walks through provisioning a dedicated Appwrite project when a customer signs up for your platform. Flow overview 1. Customer completes signup in your product 2. Your backend creates or selects an Appwrite organization 3. Console API creates a new project in the target region 4. Your backend creates a scoped project API key 5. Your platform stores the mapping and initializes default resources Step 1: Create the project Step 2: Create a project API key Create a key…',
-    breadcrumbs: ['Provisioning', 'Partners', 'guides', 'Provisioning'],
+      'This page is not in the Partners navigation. It predates the Partners key and still describes credentials and flows that do not match the current Organization API. Relink it once the flow is rewritten against a Partners key. This guide walks through provisioning a dedicated Appwrite project when a customer signs up for your platform. Flow overview 1. Customer completes signup in your product 2. Your backend creates or selects an Appwrite organization 3. Console API creates a new project…',
+    breadcrumbs: ['Partners', 'guides', 'Provisioning'],
   },
   {
     slug: 'partners/oauth-connect',
@@ -925,7 +925,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.',
     excerpt:
-      "The Organization API manages one organization and everything inside it: projects, members, app installations, and the organization's own API keys. Partner platforms call it to provision customer workspaces without a Console session. Authentication Authenticate with a Partners key or a user's OAuth access token. A Partners key is bound to the organization that issued it, so every call applies to that organization and no other. Pass the organization ID with the key. Operations | Group | Operations | Scopes |…",
+      "The Organization API manages one organization and everything inside it: projects, members, app installations, and the organization's own API keys. Partner platforms call it from a backend to provision customer workspaces. Authentication Authenticate with a Partners key or a user's OAuth access token. A Partners key is bound to the organization that issued it, so every call applies to that organization and no other. Pass the organization ID with the key. Operations | Group | Operations | Scopes | |…",
     breadcrumbs: ['Organization', 'Partners API', 'Overview'],
   },
   {
@@ -1123,7 +1123,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.',
     excerpt:
-      'This page is not in the Partners navigation. Organization usage and billing sit behind and , which a Partners key cannot hold, so every operation below still needs a Console session. Relink this page once a key-authenticated usage surface exists. The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage. Access usage through with an organization API key or OAuth-delegated access that…',
+      'This page is not in the Partners navigation. Organization usage and billing sit behind and , which a Partners key cannot hold, so no operation below is reachable from a backend today. Relink this page once a key-authenticated usage surface exists. The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage. Access usage through with an organization API key or OAuth-delegated access…',
     breadcrumbs: ['Partners', 'Usage'],
   },
   {

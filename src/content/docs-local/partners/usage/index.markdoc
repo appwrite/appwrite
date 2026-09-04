@@ -5,7 +5,7 @@ description: Read organization usage, plan limits, and billing aggregation with 
 ---
 
 {% info title="Unlinked draft" %}
-This page is not in the Partners navigation. Organization usage and billing sit behind `billing.read` and `billing.write`, which a Partners key cannot hold, so every operation below still needs a Console session. Relink this page once a key-authenticated usage surface exists.
+This page is not in the Partners navigation. Organization usage and billing sit behind `billing.read` and `billing.write`, which a Partners key cannot hold, so no operation below is reachable from a backend today. Relink this page once a key-authenticated usage surface exists.
 {% /info %}
 
 The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage.

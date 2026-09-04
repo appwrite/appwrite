@@ -4,6 +4,10 @@ title: Multi-tenancy
 description: Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, Partners keys, and optional OAuth connect.
 ---
 
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. It predates the Partners key and still describes credentials and flows that do not match the current Organization API. Relink it once the patterns are rewritten against a Partners key.
+{% /info %}
+
 Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side.
 
 # Tenant isolation model {% #tenant-isolation-model %}

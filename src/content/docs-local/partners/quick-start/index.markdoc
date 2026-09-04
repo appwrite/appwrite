@@ -15,7 +15,7 @@ This quick start helps you pick an integration path and make your first Console 
 
 Use **OAuth connect** when your customers already use Appwrite and want to grant your product access to their organizations.
 
-Use a **Partners key** when your platform creates and manages Appwrite projects, domains, and resources inside an organization you control.
+Use a **Partners key** when your platform creates and manages the projects inside an organization you control. Each project's own resources need a project API key, covered in [Project](/docs/partners/project).
 
 # Prerequisites {% #prerequisites %}
 
@@ -96,7 +96,7 @@ Register an OAuth app and request access to user organizations.
 {% cards_item href="/docs/partners/org-api-keys#scopes" title="Configure Partners key scopes" %}
 Grant only the Console scopes your platform needs.
 {% /cards_item %}
-{% cards_item href="/docs/partners/guides/provisioning" title="Provisioning guide" %}
-End-to-end flow for creating a project per customer.
+{% cards_item href="/docs/partners/project/create" title="Create a project" %}
+Provision a project per customer from your backend.
 {% /cards_item %}
 {% /cards %}

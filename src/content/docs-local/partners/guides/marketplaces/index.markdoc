@@ -4,6 +4,10 @@ title: Marketplaces
 description: Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.
 ---
 
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. The Apps API and its install flows are still settling, so the steps below are not verified end to end. Relink this page once the flow is confirmed.
+{% /info %}
+
 Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization.
 
 # Marketplace roles {% #marketplace-roles %}

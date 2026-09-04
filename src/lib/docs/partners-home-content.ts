@@ -3,7 +3,6 @@ import {
   ArrowLeftRight,
   Boxes,
   Building2,
-  FileText,
   Key,
   LayoutGrid,
 } from 'lucide-react'
@@ -25,7 +24,7 @@ export type DocsPartnersHomeAudience = {
 export const DOCS_PARTNERS_HOME_HERO = {
   title: 'Integrate Appwrite into your platform',
   description:
-    'Use OAuth connect, organization API keys, and Console SDK APIs to provision organizations, projects, and domains for your users.',
+    'Use OAuth connect and Partners keys to provision and configure Appwrite projects for your users from your own backend.',
 } as const
 
 export const DOCS_PARTNERS_HOME_AUDIENCES: DocsPartnersHomeAudience[] = [
@@ -74,7 +73,7 @@ export const DOCS_PARTNERS_HOME_APIS: DocsPartnersHomeCard[] = [
   {
     title: 'Organization',
     description:
-      'Create organizations, manage members, and read billing and plan information.',
+      'Provision projects for your customers, manage members, and read the organization.',
     href: '/docs/partners/organizations',
     icon: Building2,
   },
@@ -98,29 +97,5 @@ export const DOCS_PARTNERS_HOME_APIS: DocsPartnersHomeCard[] = [
       'Register OAuth apps, manage client credentials, and start authorization flows.',
     href: '/docs/partners/apps',
     icon: LayoutGrid,
-  },
-]
-
-export const DOCS_PARTNERS_HOME_GUIDES: DocsPartnersHomeCard[] = [
-  {
-    title: 'Provisioning',
-    description:
-      'Choose an integration model and provision projects for your customers.',
-    href: '/docs/partners/guides/provisioning',
-    icon: FileText,
-  },
-  {
-    title: 'Marketplaces',
-    description:
-      'Publish OAuth apps, run install flows, and manage integrations with the Apps and OAuth APIs.',
-    href: '/docs/partners/guides/marketplaces',
-    icon: FileText,
-  },
-  {
-    title: 'Multi-tenancy',
-    description:
-      'Isolate customer data and resources across organizations and projects.',
-    href: '/docs/partners/guides/multi-tenancy',
-    icon: FileText,
   },
 ]

@@ -4,7 +4,7 @@ title: Organization API
 description: Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.
 ---
 
-The Organization API manages one organization and everything inside it: projects, members, app installations, and the organization's own API keys. Partner platforms call it to provision customer workspaces without a Console session.
+The Organization API manages one organization and everything inside it: projects, members, app installations, and the organization's own API keys. Partner platforms call it from a backend to provision customer workspaces.
 
 # Authentication {% #authentication %}
 
@@ -56,7 +56,7 @@ With OAuth connect, the access token carries the scopes the user granted, and th
 
 {% cards %}
 {% cards_item href="/docs/partners/organizations/manage" title="Manage organizations" %}
-Create and update organizations programmatically.
+Read, rename, and delete the organization your key belongs to.
 {% /cards_item %}
 {% cards_item href="/docs/partners/organizations/members" title="Members and roles" %}
 Invite members and assign organization roles from your platform.

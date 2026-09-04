@@ -9,7 +9,7 @@ Partner platforms sit above Appwrite organizations and projects. Your backend cr
 # High-level flow {% #high-level-flow %}
 
 1. **Your platform** authenticates with Appwrite using an OAuth token (user-linked) or a Partners key (platform-owned).
-2. **Console APIs** manage organizations, projects, domains, and organization settings.
+2. **Console APIs** manage the organization, its members, and the projects inside it.
 3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project.
 4. **Your product UI** exposes a subset of these capabilities to your customers.
 
@@ -54,8 +54,8 @@ A Partners key carries no project, so it never sends a project ID. It creates an
 
 Both credentials belong on your server and nowhere else. [Keep the key safe](/docs/partners/org-api-keys#keep-the-key-safe) covers scoping, storage, and rotation.
 
-# Related guides {% #related-guides %}
+# Next steps {% #next-steps %}
 
-{% arrow_link href="/docs/partners/guides/multi-tenancy" %}
-Multi-tenant platforms
+{% arrow_link href="/docs/partners/project/create" %}
+Create a project
 {% /arrow_link %}

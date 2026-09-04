@@ -61,24 +61,4 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
       },
     ],
   },
-  {
-    label: 'Guides',
-    items: [
-      {
-        label: 'Provisioning',
-        href: '/docs/partners/guides/provisioning',
-        icon: 'document-text',
-      },
-      {
-        label: 'Marketplaces',
-        href: '/docs/partners/guides/marketplaces',
-        icon: 'document-text',
-      },
-      {
-        label: 'Multi-tenancy',
-        href: '/docs/partners/guides/multi-tenancy',
-        icon: 'document-text',
-      },
-    ],
-  },
 ]
