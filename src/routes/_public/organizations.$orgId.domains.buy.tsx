@@ -25,7 +25,8 @@ export const Route = createFileRoute(
   head: () => ({ meta: [{ title: pageTitle('Buy domain', 'Domains') }] }),
   validateSearch: buyDomainSearchSchema,
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().domains) {
+    const features = getActiveProfileFeatures()
+    if (!features.domains || !features.billing) {
       throw redirect({
         to: '/organizations/$orgId/domains',
         params: { orgId: params.orgId },
