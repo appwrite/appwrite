@@ -37,6 +37,7 @@ COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
+COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
@@ -120,6 +121,9 @@ CMD [ "php", "app/http.php" ]
 FROM appwrite/base:2.0.0-xdebug AS xdebug
 
 FROM base AS development
+
+# Revalidate bind-mounted source files when development workers reload.
+RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
 
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev

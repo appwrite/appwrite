@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\DI\Container;
+use Utopia\Http\Adapter\Swoole\Mode;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
@@ -54,8 +55,9 @@ $swoole = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
     settings: [
+        // Apply Cloud's coroutine preset, retaining Appwrite's worker and payload limits.
+        ...Mode::HYPERLOOP_B->settings(),
         Constant::OPTION_WORKER_NUM => $totalWorkers,
-        Constant::OPTION_HTTP_COMPRESSION => false,
         Constant::OPTION_PACKAGE_MAX_LENGTH => $payloadSize,
         Constant::OPTION_OUTPUT_BUFFER_SIZE => $payloadSize,
     ],
