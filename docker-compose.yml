@@ -1836,12 +1836,6 @@ services:
       start_period: 10s
     command:
       - postgres
-      - -c
-      - fsync=off
-      - -c
-      - synchronous_commit=off
-      - -c
-      - full_page_writes=off
   appwrite-embedding:
     image: appwrite/embedding:0.1.0
     environment:
