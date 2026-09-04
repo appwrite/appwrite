@@ -5,7 +5,7 @@ namespace Appwrite\Event\Publisher;
 use Appwrite\Event\Message\Execution as ExecutionMessage;
 use Appwrite\Event\Message\ExecutionCancelled as ExecutionCancelledMessage;
 use Appwrite\Event\Message\Executions as ExecutionsMessage;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Execution extends Base

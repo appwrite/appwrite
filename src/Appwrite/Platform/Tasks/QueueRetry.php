@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Utopia\Console;
 use Utopia\Platform\Action;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Validator\Text;
 use Utopia\Validator\Wildcard;

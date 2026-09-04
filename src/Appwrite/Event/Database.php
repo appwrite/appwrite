@@ -4,7 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\System\System;
 
 class Database extends Event
