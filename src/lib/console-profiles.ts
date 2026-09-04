@@ -170,7 +170,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Appwrite Cloud - full feature set',
     features: {
       billing: true,
-      domains: false,
+      domains: true,
       marketplace: false,
       usageStats: true,
       activity: true,
