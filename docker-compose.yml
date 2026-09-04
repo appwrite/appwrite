@@ -267,7 +267,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.8
+    image: appwrite/new:1.1.16
     restart: unless-stopped
     networks:
       - appwrite
@@ -1828,7 +1828,7 @@ services:
     command:
       - postgres
   appwrite-embedding:
-    image: appwrite/embedding:0.1.0
+    image: appwrite/embedding:0.3.1
     profiles:
       - embedding
     environment:
