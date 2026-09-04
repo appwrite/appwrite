@@ -1,5 +1,4 @@
 import type { DateRange } from 'react-day-picker'
-import type { Models } from '@appwrite.io/console'
 import {
   formatCompactBytes,
   formatCompactBytesAxis,
@@ -21,6 +20,7 @@ import {
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import {
+  buildUsageResourceFilterQueries,
   DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
   DEDICATED_DATABASE_USAGE_SERVICE,
   dedicatedDatabaseUsageServiceQueries,
@@ -107,33 +107,49 @@ export const DEDICATED_DATABASE_IOPS_DESCRIPTION =
 export const DEDICATED_DATABASE_NETWORK_DESCRIPTION =
   'Inbound and outbound data transferred by this database instance during the selected period.'
 
-export type DedicatedDatabaseNetworkMetricKind =
+/** Network bytes received by a dedicated database instance. */
+export const DEDICATED_DATABASE_NETWORK_INBOUND_METRIC =
+  'dedicatedDatabases.inbound' as const
+
+/** Network bytes sent by a dedicated database instance. */
+export const DEDICATED_DATABASE_NETWORK_OUTBOUND_METRIC =
+  'dedicatedDatabases.outbound' as const
+
+/** Compute resources consumed by a dedicated database instance. */
+export const DEDICATED_DATABASE_NETWORK_COMPUTE_METRIC =
+  'dedicatedDatabases.compute' as const
+
+/** Cold starts for a dedicated database instance. */
+export const DEDICATED_DATABASE_COLD_STARTS_METRIC =
+  'dedicatedDatabases.coldStarts' as const
+
+export type DedicatedDatabaseEventMetricKind =
   | 'inbound'
   | 'outbound'
   | 'compute'
+  | 'coldStarts'
 
-/** Event metric names in `projects_usage_events`: `dedicatedDatabases.{internalId}.*`. */
-export function dedicatedDatabaseNetworkMetric(
-  internalId: string,
-  kind: DedicatedDatabaseNetworkMetricKind,
-): string {
-  return `dedicatedDatabases.${internalId}.${kind}`
+const DEDICATED_DATABASE_EVENT_METRICS: Record<
+  DedicatedDatabaseEventMetricKind,
+  string
+> = {
+  inbound: DEDICATED_DATABASE_NETWORK_INBOUND_METRIC,
+  outbound: DEDICATED_DATABASE_NETWORK_OUTBOUND_METRIC,
+  compute: DEDICATED_DATABASE_NETWORK_COMPUTE_METRIC,
+  coldStarts: DEDICATED_DATABASE_COLD_STARTS_METRIC,
 }
 
-/**
- * Infrastructure tenant id embedded in dedicated database network metric names.
- * Falls back to the public database id until the API exposes `tenant` directly.
- */
-export function resolveDedicatedDatabaseUsageInternalId(
-  databaseId: string,
-  database?: Pick<Models.DedicatedDatabase, '$id'> | null,
+export function dedicatedDatabaseEventMetric(
+  kind: DedicatedDatabaseEventMetricKind,
 ): string {
-  const tenant = (database as { tenant?: string } | null | undefined)?.tenant?.trim()
-  if (tenant) return tenant
-  const id = database?.$id?.trim()
-  if (id) return id
-  return databaseId.trim()
+  return DEDICATED_DATABASE_EVENT_METRICS[kind]
 }
+
+export const DEDICATED_DATABASE_COMPUTE_DESCRIPTION =
+  'Compute resources consumed by this database instance during the selected period.'
+
+export const DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION =
+  'Cold starts for this database instance during the selected period.'
 
 function dedicatedDatabaseGaugeFetchOptions(
   databaseId: string,
@@ -154,12 +170,20 @@ function dedicatedDatabaseGaugeFetchOptions(
   }
 }
 
-function dedicatedDatabaseNetworkFetchOptions(
+function dedicatedDatabaseEventFetchQueries(
+  databaseId: string,
+  ordinal?: number,
   queries?: string[],
-): { queries: string[] } {
-  return {
-    queries: dedicatedDatabaseUsageServiceQueries(queries),
-  }
+): string[] {
+  return (
+    buildUsageResourceFilterQueries({
+      service: DEDICATED_DATABASE_USAGE_SERVICE,
+      resourceType: DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
+      resourceId: databaseId,
+      ordinal,
+      queries,
+    }) ?? dedicatedDatabaseUsageServiceQueries(queries)
+  )
 }
 
 export {
@@ -200,34 +224,39 @@ export async function fetchDedicatedDatabaseMetricOverview(
   )
 }
 
-async function fetchDedicatedDatabaseNetworkMetricOverview(
+async function fetchDedicatedDatabaseEventMetricOverview(
   projectId: string,
-  internalId: string,
-  kind: DedicatedDatabaseNetworkMetricKind,
+  kind: DedicatedDatabaseEventMetricKind,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<DedicatedDatabaseUsageChartOverview> {
+  const queries = options?.resourceId
+    ? dedicatedDatabaseEventFetchQueries(
+        options.resourceId,
+        options.ordinal,
+        options.queries,
+      )
+    : dedicatedDatabaseUsageServiceQueries(options?.queries)
+
   return fetchProjectUsageChartOverview(
     projectId,
     dateRange,
-    [dedicatedDatabaseNetworkMetric(internalId, kind)],
+    [dedicatedDatabaseEventMetric(kind)],
     interval,
-    dedicatedDatabaseNetworkFetchOptions(options?.queries).queries,
+    queries,
     options?.logRetentionHours,
   )
 }
 
 export async function fetchDedicatedDatabaseNetworkInboundOverview(
   projectId: string,
-  internalId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<DedicatedDatabaseUsageChartOverview> {
-  return fetchDedicatedDatabaseNetworkMetricOverview(
+  return fetchDedicatedDatabaseEventMetricOverview(
     projectId,
-    internalId,
     'inbound',
     dateRange,
     interval,
@@ -237,14 +266,12 @@ export async function fetchDedicatedDatabaseNetworkInboundOverview(
 
 export async function fetchDedicatedDatabaseNetworkOutboundOverview(
   projectId: string,
-  internalId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<DedicatedDatabaseUsageChartOverview> {
-  return fetchDedicatedDatabaseNetworkMetricOverview(
+  return fetchDedicatedDatabaseEventMetricOverview(
     projectId,
-    internalId,
     'outbound',
     dateRange,
     interval,
@@ -254,15 +281,28 @@ export async function fetchDedicatedDatabaseNetworkOutboundOverview(
 
 export async function fetchDedicatedDatabaseNetworkComputeOverview(
   projectId: string,
-  internalId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<DedicatedDatabaseUsageChartOverview> {
-  return fetchDedicatedDatabaseNetworkMetricOverview(
+  return fetchDedicatedDatabaseEventMetricOverview(
     projectId,
-    internalId,
     'compute',
+    dateRange,
+    interval,
+    options,
+  )
+}
+
+export async function fetchDedicatedDatabaseColdStartsOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<DedicatedDatabaseUsageChartOverview> {
+  return fetchDedicatedDatabaseEventMetricOverview(
+    projectId,
+    'coldStarts',
     dateRange,
     interval,
     options,

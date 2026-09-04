@@ -2039,6 +2039,15 @@ export const heDatabasesDictionary: Record<string, string> = {
     'פעולות קריאה וכתיבה לדיסק לשנייה עבור אחסון המופע.',
   'Inbound and outbound data transferred by this database instance during the selected period.':
     'נתונים נכנסים ויוצאים שהועברו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Compute resources consumed by this database instance during the selected period.':
+    'משאבי compute שנצרכו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Cold starts for this database instance during the selected period.':
+    'Cold starts עבור מופע מסד נתונים זה בטווח שנבחר.',
+  'Debug metrics': 'מדדי debug',
+  'Cold starts': 'Cold starts',
+  'No compute metrics for this date range': 'אין מדדי compute לטווח תאריכים זה',
+  'No cold start metrics for this date range':
+    'אין מדדי cold start לטווח תאריכים זה',
   'Disk read operations per second for instance storage.':
     'פעולות קריאה לדיסק לשנייה עבור אחסון המופע.',
   'Disk write operations per second for instance storage.':

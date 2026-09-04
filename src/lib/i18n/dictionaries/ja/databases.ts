@@ -1976,6 +1976,16 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'インスタンスストレージの1秒あたりのディスク読み取り/書き込み操作。',
   'Inbound and outbound data transferred by this database instance during the selected period.':
     '選択した期間中にこのデータベースインスタンスで転送された受信および送信データ。',
+  'Compute resources consumed by this database instance during the selected period.':
+    '選択した期間中にこのデータベースインスタンスが消費したコンピュートリソース。',
+  'Cold starts for this database instance during the selected period.':
+    '選択した期間中のこのデータベースインスタンスのコールドスタート。',
+  'Debug metrics': 'デバッグメトリクス',
+  'Cold starts': 'コールドスタート',
+  'No compute metrics for this date range':
+    'この期間のコンピュートメトリクスはありません',
+  'No cold start metrics for this date range':
+    'この期間のコールドスタートメトリクスはありません',
   'Disk read operations per second for instance storage.':
     'インスタンスストレージの1秒あたりのディスク読み取り操作。',
   'Disk write operations per second for instance storage.':

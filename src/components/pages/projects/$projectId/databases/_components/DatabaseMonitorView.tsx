@@ -22,11 +22,13 @@ import {
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
 import { useT } from '@/lib/i18n/translate'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   DEFAULT_MONITOR_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 import { DatabaseMonitorNodeSelect } from './DatabaseMonitorNodeSelect'
+import { DedicatedDatabaseDebugMetricsSection } from './DedicatedDatabaseDebugMetricsSection'
 import { UsageTimeSeriesChartCard } from '@/components/pages/projects/$projectId/usage/_components/UsageTimeSeriesChartCard'
 import { DatabaseOperationBentoCard } from '@/components/pages/projects/$projectId/usage/_components/DatabaseOperationBentoCard'
 import { UsageBreakdownDrawer } from '@/components/pages/projects/$projectId/usage/_components/UsageBreakdownDrawer'
@@ -38,6 +40,8 @@ import {
   sumUsageChartPoints,
 } from '@/lib/usage/database-usage'
 import {
+  DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION,
+  DEDICATED_DATABASE_COMPUTE_DESCRIPTION,
   DEDICATED_DATABASE_CONNECTIONS_DESCRIPTION,
   DEDICATED_DATABASE_CPU_DESCRIPTION,
   DEDICATED_DATABASE_IOPS_DESCRIPTION,
@@ -56,7 +60,6 @@ import {
   getDedicatedDatabaseGaugeHeadline,
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
-  resolveDedicatedDatabaseUsageInternalId,
 } from '@/lib/usage/dedicated-databases-usage'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
@@ -155,6 +158,7 @@ export function DatabaseMonitorView({
   onDateRangeChange,
 }: DatabaseMonitorViewProps) {
   const t = useT()
+  const { isDebugModeOpen } = useDebugMode()
   const queryClient = useQueryClient()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
@@ -194,10 +198,6 @@ export function DatabaseMonitorView({
     (database as { replicas?: number | null } | null)?.replicas ?? null
   const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
-  const usageInternalId = resolveDedicatedDatabaseUsageInternalId(
-    databaseId,
-    dedicated ?? null,
-  )
   const databaseCreatedAt = resolveDatabaseCreatedAt(
     (database as { createdAt?: string | null } | null) ?? dedicated,
   )
@@ -246,7 +246,7 @@ export function DatabaseMonitorView({
     !serverless,
     resolvedInterval,
     metricsOrdinal,
-    usageInternalId,
+    { includeDebugMetrics: isDebugModeOpen },
   )
 
   const resourceBreakdownItems = useMemo(
@@ -332,6 +332,12 @@ export function DatabaseMonitorView({
   const networkOutboundPoints = dedicatedMetrics.networkOutbound.isError
     ? []
     : (dedicatedMetrics.networkOutbound.data?.chartPoints ?? [])
+  const networkComputePoints = dedicatedMetrics.networkCompute.isError
+    ? []
+    : (dedicatedMetrics.networkCompute.data?.chartPoints ?? [])
+  const coldStartsPoints = dedicatedMetrics.coldStarts.isError
+    ? []
+    : (dedicatedMetrics.coldStarts.data?.chartPoints ?? [])
 
   const iopsDualPoints = useMemo(
     () => mergeDualUsageChartSeries(iopsReadPoints, iopsWritePoints),
@@ -684,6 +690,72 @@ export function DatabaseMonitorView({
                     </p>
                   ) : null}
                 </MonitorChartAnchor>
+
+                <DedicatedDatabaseDebugMetricsSection>
+                  <MonitorChartAnchor id="network-compute">
+                    <div className="overflow-hidden rounded-lg border border-purple-500/20">
+                      <UsageTimeSeriesChartCard
+                        title="Compute"
+                        description={DEDICATED_DATABASE_COMPUTE_DESCRIPTION}
+                        unitLabel="total"
+                        chartGradientId="monitor-dedicated-network-compute-gradient"
+                        total={sumUsageChartPoints(networkComputePoints)}
+                        changePercent={
+                          dedicatedMetrics.networkCompute.data?.changePercent ?? 0
+                        }
+                        chartPoints={networkComputePoints}
+                        isLoading={shouldShowUsageChartSkeleton(
+                          dedicatedMetrics.networkCompute.isError,
+                          dedicatedMetrics.networkCompute.isLoading,
+                          dedicatedMetrics.networkCompute.isPlaceholderData,
+                        )}
+                        isError={dedicatedMetrics.networkCompute.isError}
+                        queryError={dedicatedMetrics.networkCompute.error}
+                        errorTitle={MONITOR_USAGE_ERROR.title}
+                        errorMessage={MONITOR_USAGE_ERROR.message}
+                        formatTotal={formatDedicatedDatabaseNetworkTotal}
+                        formatValue={formatDedicatedDatabaseNetworkValue}
+                        onRetry={() => void refetchMonitor()}
+                        dateRange={dateRange}
+                        chartInterval={resolvedInterval}
+                        onDateRangeChange={onDateRangeChange}
+                        emptyMessage={usageChartEmptyMessage}
+                      />
+                    </div>
+                  </MonitorChartAnchor>
+
+                  <MonitorChartAnchor id="cold-starts">
+                    <div className="overflow-hidden rounded-lg border border-purple-500/20">
+                      <UsageTimeSeriesChartCard
+                        title="Cold starts"
+                        description={DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION}
+                        unitLabel="starts"
+                        chartGradientId="monitor-dedicated-cold-starts-gradient"
+                        total={sumUsageChartPoints(coldStartsPoints)}
+                        changePercent={
+                          dedicatedMetrics.coldStarts.data?.changePercent ?? 0
+                        }
+                        chartPoints={coldStartsPoints}
+                        isLoading={shouldShowUsageChartSkeleton(
+                          dedicatedMetrics.coldStarts.isError,
+                          dedicatedMetrics.coldStarts.isLoading,
+                          dedicatedMetrics.coldStarts.isPlaceholderData,
+                        )}
+                        isError={dedicatedMetrics.coldStarts.isError}
+                        queryError={dedicatedMetrics.coldStarts.error}
+                        errorTitle={MONITOR_USAGE_ERROR.title}
+                        errorMessage={MONITOR_USAGE_ERROR.message}
+                        formatTotal={formatDedicatedDatabaseCountTotal}
+                        formatValue={formatDedicatedDatabaseCountValue}
+                        onRetry={() => void refetchMonitor()}
+                        dateRange={dateRange}
+                        chartInterval={resolvedInterval}
+                        onDateRangeChange={onDateRangeChange}
+                        emptyMessage={usageChartEmptyMessage}
+                      />
+                    </div>
+                  </MonitorChartAnchor>
+                </DedicatedDatabaseDebugMetricsSection>
               </>
             )}
           </div>
