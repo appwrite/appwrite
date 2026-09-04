@@ -5,6 +5,7 @@ namespace Utopia\Queue;
 use Exception;
 use Throwable;
 use Utopia\DI\Container;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Servers\Hook;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -236,7 +237,7 @@ class Server
         $gauge = $telemetry->createObservableGauge($name, '{message}', $description);
 
         $gauge->observe(function (callable $observe) use ($failedJobs): void {
-            if (!$this->adapter->consumer instanceof Publisher) {
+            if (!$this->adapter->consumer instanceof Synchronous) {
                 return;
             }
 

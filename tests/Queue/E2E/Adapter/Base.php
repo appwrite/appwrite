@@ -8,7 +8,7 @@ use function Co\run;
 
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 abstract class Base extends TestCase
@@ -57,7 +57,7 @@ abstract class Base extends TestCase
         ];
     }
 
-    abstract protected function getPublisher(): Publisher;
+    abstract protected function getPublisher(): Synchronous;
 
     abstract protected function getQueue(): Queue;
 
@@ -66,7 +66,7 @@ abstract class Base extends TestCase
         $publisher = $this->getPublisher();
 
         foreach ($this->payloads as $payload) {
-            $this->assertTrue($publisher->enqueue($this->getQueue(), $payload));
+            $this->assertTrue($publisher->publish($this->getQueue(), $payload));
         }
 
         sleep(1);
@@ -78,7 +78,7 @@ abstract class Base extends TestCase
             $publisher = $this->getPublisher();
             go(function () use ($publisher): void {
                 foreach ($this->payloads as $payload) {
-                    $this->assertTrue($publisher->enqueue($this->getQueue(), $payload));
+                    $this->assertTrue($publisher->publish($this->getQueue(), $payload));
                 }
 
                 sleep(1);
@@ -90,7 +90,7 @@ abstract class Base extends TestCase
     {
         $publisher = $this->getPublisher();
 
-        $result = $publisher->enqueue($this->getQueue(), ['type' => 'test_string', 'value' => 'priority'], priority: true);
+        $result = $publisher->publish($this->getQueue(), ['type' => 'test_string', 'value' => 'priority'], priority: true);
 
         $this->assertTrue($result);
     }
@@ -100,28 +100,28 @@ abstract class Base extends TestCase
         $publisher = $this->getPublisher();
 
         // Resolves via canonical key
-        $this->assertTrue($publisher->enqueue($this->getQueue(), [
+        $this->assertTrue($publisher->publish($this->getQueue(), [
             'type' => 'test_alias',
             'aliasValue' => 'canonical',
             'value' => 'canonical',
         ]));
 
         // Resolves via first alias when canonical absent
-        $this->assertTrue($publisher->enqueue($this->getQueue(), [
+        $this->assertTrue($publisher->publish($this->getQueue(), [
             'type' => 'test_alias',
             'alias_value' => 'first-alias',
             'value' => 'first-alias',
         ]));
 
         // Falls through to later alias when earlier ones absent
-        $this->assertTrue($publisher->enqueue($this->getQueue(), [
+        $this->assertTrue($publisher->publish($this->getQueue(), [
             'type' => 'test_alias',
             'aliased' => 'second-alias',
             'value' => 'second-alias',
         ]));
 
         // Canonical key wins when both canonical and aliases are present
-        $this->assertTrue($publisher->enqueue($this->getQueue(), [
+        $this->assertTrue($publisher->publish($this->getQueue(), [
             'type' => 'test_alias',
             'aliasValue' => 'canonical-wins',
             'alias_value' => 'should-lose',
@@ -137,28 +137,28 @@ abstract class Base extends TestCase
     {
         $publisher = $this->getPublisher();
 
-        $published = $publisher->enqueue($this->getQueue(), [
+        $published = $publisher->publish($this->getQueue(), [
             'type' => 'test_exception',
             'id' => 1,
         ]);
 
         $this->assertTrue($published);
 
-        $published = $publisher->enqueue($this->getQueue(), [
+        $published = $publisher->publish($this->getQueue(), [
             'type' => 'test_exception',
             'id' => 2,
         ]);
 
         $this->assertTrue($published);
 
-        $published = $publisher->enqueue($this->getQueue(), [
+        $published = $publisher->publish($this->getQueue(), [
             'type' => 'test_exception',
             'id' => 3,
         ]);
 
         $this->assertTrue($published);
 
-        $published = $publisher->enqueue($this->getQueue(), [
+        $published = $publisher->publish($this->getQueue(), [
             'type' => 'test_exception',
             'id' => 4,
         ]);

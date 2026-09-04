@@ -6,12 +6,12 @@ namespace Tests\E2E\Adapter;
 
 use Utopia\Queue\Broker\Redis as RedisPublisher;
 use Utopia\Queue\Connection\Redis;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 final class WorkermanTest extends Base
 {
-    protected function getPublisher(): Publisher
+    protected function getPublisher(): Synchronous
     {
         return new RedisPublisher(new Redis('127.0.0.1', 16379), new Redis('127.0.0.1', 16379));
     }

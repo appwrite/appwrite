@@ -87,7 +87,7 @@ final class BatchedEnqueueTest extends TestCase
         $connection = new PushRecordingConnection();
         $broker = new Broker($connection, $connection);
 
-        $broker->enqueue(new Queue('mail'), ['recipients' => [['to' => 'a'], ['to' => 'b']]]);
+        $broker->publish(new Queue('mail'), ['recipients' => [['to' => 'a'], ['to' => 'b']]]);
 
         $this->assertSame([['leftPushArray', 'utopia-queue.queue.mail']], $connection->calls);
         $this->assertSame(

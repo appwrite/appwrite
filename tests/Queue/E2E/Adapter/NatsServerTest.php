@@ -6,7 +6,7 @@ namespace Tests\E2E\Adapter;
 
 use Utopia\NATS\Connection;
 use Utopia\Queue\Broker\Nats;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 /**
@@ -16,7 +16,7 @@ use Utopia\Queue\Queue;
  */
 final class NatsServerTest extends Base
 {
-    protected function getPublisher(): Publisher
+    protected function getPublisher(): Synchronous
     {
         // A fresh connection per publisher (Base publishes from multiple coroutines;
         // a NATS connection is single-owner, so never share one).

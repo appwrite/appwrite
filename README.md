@@ -68,7 +68,7 @@ $publisher = new Queue\Broker\Redis(
     receive: new Queue\Connection\Redis('redis'),
     commands: new Queue\Connection\Redis('redis'),
 );
-$publisher->enqueue(new Queue\Queue('my-queue'), [
+$publisher->publish(new Queue\Queue('my-queue'), [
     'type' => 'test_number',
     'value' => 123,
 ]);
@@ -76,7 +76,7 @@ $publisher->enqueue(new Queue\Queue('my-queue'), [
 
 ## NATS JetStream broker
 
-`Broker\Nats` runs the queue on [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) instead of Redis, giving durable, server-persisted jobs and native at-least-once redelivery. It implements the same `Publisher` + `Consumer` interfaces as `Broker\Redis`, so it drops into the same `Server` and adapter setup.
+`Broker\Nats` runs the queue on [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) instead of Redis, giving durable, server-persisted jobs and native at-least-once redelivery. It implements the same `Publisher\Synchronous` + `Consumer` interfaces as `Broker\Redis`, so it drops into the same `Server` and adapter setup.
 
 ```php
 use Utopia\NATS\Connection;
@@ -91,12 +91,38 @@ $broker = new Nats(
     maxDeliver: 5,   // delivery attempts before a message is dead-lettered
 );
 
-$broker->enqueue(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123]);
+$broker->publish(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123]);
 ```
 
 Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters, `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
 > A NATS connection is single-owner. Run one message at a time per connection (`job('…', 1)`) or lease one connection per coroutine via `Broker\Pool` / `Utopia\Pools`.
+
+## Background publishing
+
+`Broker\Background` wraps a synchronous publisher with a bounded in-process buffer. `enqueue()` hands work to reader coroutines, applying back pressure when the buffer is full; `publish()` bypasses the buffer and remains synchronous. Call `shutdown()` to drain accepted messages before the process exits.
+
+```php
+use Swoole\Coroutine;
+use Utopia\Queue\Broker\Background;
+
+$publisher = new Background(
+    $broker,
+    capacity: 512,
+    coroutines: 1,
+    timeout: 0.1,
+    maxBatchInterval: 0.01,
+    maxBatchSize: 100,
+);
+
+Coroutine\run(function () use ($publisher, $queue, $payload): void {
+    $publisher->start();
+    $publisher->enqueue($queue, $payload);
+    $publisher->shutdown();
+});
+```
+
+When the configured timeout expires, `enqueue()` throws `Publisher\BufferFullException`. Set `maxBatchInterval` and `maxBatchSize` together to opt into batching; a batch flushes when either limit is reached, and messages with different queues or priorities are never mixed. More than one reader coroutine requires a concurrency-safe wrapped publisher, such as `Broker\Pool`; it also gives up FIFO dispatch order.
 
 ## Multiple queues in one process
 
@@ -140,7 +166,7 @@ $server->error()->inject('error')->action(function ($error) {
 $server->start();
 ```
 
-Publishers are unchanged: enqueue to each queue by name (`$publisher->enqueue(new Queue('v1-functions'), $payload)`, etc.).
+Publish synchronously to each queue by name (`$publisher->publish(new Queue('v1-functions'), $payload)`, etc.).
 
 With [`utopia-php/platform`](https://github.com/utopia-php/platform), pass `workers` and `jobs` (`queue` / `maxCoroutines` per action) into `Platform::init(Service::TYPE_WORKER, …)`.
 

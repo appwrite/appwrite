@@ -16,7 +16,7 @@ use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 /**
@@ -34,7 +34,7 @@ use Utopia\Queue\Queue;
  * queues that map to the same stream — a duplicate name across namespaces, or names
  * that sanitize alike — are rejected loudly by ensure() rather than silently shared.
  */
-class Nats implements Publisher, Consumer
+class Nats implements Synchronous, Consumer
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';
@@ -198,7 +198,7 @@ class Nats implements Publisher, Consumer
         return $this->controlConsumers[$stream][$durable] ??= $this->controlJs()->getConsumer($stream, $durable);
     }
 
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool
     {
         $this->ensure($queue);
 

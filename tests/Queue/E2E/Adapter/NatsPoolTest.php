@@ -10,7 +10,7 @@ use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as UtopiaPool;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Pool;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 /**
@@ -20,7 +20,7 @@ use Utopia\Queue\Queue;
  */
 final class NatsPoolTest extends Base
 {
-    protected function getPublisher(): Publisher
+    protected function getPublisher(): Synchronous
     {
         $factory = fn(): Nats => new Nats(
             fn(): Connection => Connection::connect('nats://127.0.0.1:14225'),
@@ -84,7 +84,7 @@ final class NatsPoolTest extends Base
         $before = $broker->getQueueSize($queue);
 
         // Open the connection, then leave it idle in the pool.
-        $this->assertTrue($broker->enqueue($queue, ['seq' => 'first']));
+        $this->assertTrue($broker->publish($queue, ['seq' => 'first']));
 
         // ~3s of nothing but upkeep, an order of magnitude past the budget.
         for ($sweep = 0; $sweep < 12; $sweep++) {
@@ -98,7 +98,7 @@ final class NatsPoolTest extends Base
 
         // And it is still usable: the message really is on the stream, not
         // written into a socket the server has already dropped.
-        $this->assertTrue($broker->enqueue($queue, ['seq' => 'second']));
+        $this->assertTrue($broker->publish($queue, ['seq' => 'second']));
         $this->assertSame($before + 2, $broker->getQueueSize($queue));
     }
 }

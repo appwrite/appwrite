@@ -49,8 +49,8 @@ final class SwooleConcurrencyTest extends TestCase
         $pendingDuringFirstMessage = null;
 
         \Swoole\Coroutine\run(function () use ($broker, $queue, &$processed, &$pendingDuringFirstMessage): void {
-            $broker->enqueue($queue, ['n' => 0]);
-            $broker->enqueue($queue, ['n' => 1]);
+            $broker->publish($queue, ['n' => 0]);
+            $broker->publish($queue, ['n' => 1]);
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);
 
@@ -95,7 +95,7 @@ final class SwooleConcurrencyTest extends TestCase
 
         \Swoole\Coroutine\run(function () use ($broker, $queue, $messages, $maxCoroutines, &$active, &$maxActive, &$processed): void {
             for ($i = 0; $i < $messages; $i++) {
-                $broker->enqueue($queue, ['n' => $i]);
+                $broker->publish($queue, ['n' => $i]);
             }
 
             $adapter = new Swoole($broker, 1, self::NAMESPACE);

@@ -54,7 +54,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testReapRequeuesAStrandedClaim(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $this->assertSame(1, $this->processingSize(), 'the claim is on the processing list');
@@ -73,7 +73,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testReapLeavesClaimsYoungerThanTheCutoff(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $this->broker->receive($this->queue, 0);
 
         $requeued = $this->broker->reap($this->queue, olderThan: 3600);
@@ -84,7 +84,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testReapDropsClaimsWhosePayloadExpired(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $this->connection->remove('tests.jobs.recovery.' . $claimed->getPid());
@@ -98,7 +98,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testReapParksExhaustedClaimsOnTheDeadQueue(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
 
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertSame(0, $claimed->getAttempts());
@@ -120,7 +120,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testRetryRequeuesARejectedMessageWithItsAttemptCount(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $this->broker->reject($this->queue, $claimed);
@@ -139,7 +139,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testRetryParksExhaustedMessagesOnTheDeadQueue(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $claimed->setAttempts(3);
@@ -156,8 +156,8 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testRetrySkipsEntriesWhosePayloadExpired(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
-        $this->broker->enqueue($this->queue, ['n' => 2]);
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 2]);
         $first = $this->broker->receive($this->queue, 0);
         $second = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $first);
@@ -176,7 +176,7 @@ final class RedisBrokerRecoveryTest extends TestCase
     }
     public function testRetryParksEntriesOlderThanTheAgeGate(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $this->broker->reject($this->queue, $claimed);
@@ -191,7 +191,7 @@ final class RedisBrokerRecoveryTest extends TestCase
 
     public function testReapParksClaimsOlderThanTheAgeGate(): void
     {
-        $this->broker->enqueue($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 1]);
         $claimed = $this->broker->receive($this->queue, 0);
         $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
         $this->backdate($claimed->getPid(), 3600);

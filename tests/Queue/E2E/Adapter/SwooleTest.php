@@ -6,7 +6,7 @@ namespace Tests\E2E\Adapter;
 
 use Utopia\Queue\Broker\Redis as RedisBroker;
 use Utopia\Queue\Connection\Redis;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 final class SwooleTest extends Base
@@ -16,7 +16,7 @@ final class SwooleTest extends Base
         return new Redis('127.0.0.1', 16379);
     }
 
-    protected function getPublisher(): Publisher
+    protected function getPublisher(): Synchronous
     {
         return new RedisBroker($this->getConnection(), $this->getConnection());
     }
@@ -42,12 +42,12 @@ final class SwooleTest extends Base
         }
 
         // Enqueue three normal jobs (pushed to head/left).
-        $this->getPublisher()->enqueue($queue, ['order' => 'normal-1']);
-        $this->getPublisher()->enqueue($queue, ['order' => 'normal-2']);
-        $this->getPublisher()->enqueue($queue, ['order' => 'normal-3']);
+        $this->getPublisher()->publish($queue, ['order' => 'normal-1']);
+        $this->getPublisher()->publish($queue, ['order' => 'normal-2']);
+        $this->getPublisher()->publish($queue, ['order' => 'normal-3']);
 
         // Enqueue one priority job (pushed to tail/right — same end BRPOP reads from).
-        $this->getPublisher()->enqueue($queue, ['order' => 'priority'], priority: true);
+        $this->getPublisher()->publish($queue, ['order' => 'priority'], priority: true);
 
         // The first pop should yield the priority job.
         $first = $connection->rightPopArray($key, 1);

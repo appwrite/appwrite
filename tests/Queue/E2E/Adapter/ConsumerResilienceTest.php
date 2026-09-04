@@ -73,7 +73,7 @@ final class ConsumerResilienceTest extends TestCase
         $reportedMessages = [];
 
         \Swoole\Coroutine\run(function () use ($broker, $flaky, $queue, &$processed, &$reported, &$reportedMessages): void {
-            $broker->enqueue($queue, ['n' => 1]);
+            $broker->publish($queue, ['n' => 1]);
 
             $adapter = new class ($flaky, 1, self::NAMESPACE) extends Swoole {
                 // Keep the test quick; the production pause is RECEIVE_BACKOFF seconds.
@@ -108,7 +108,7 @@ final class ConsumerResilienceTest extends TestCase
         $connection = new InMemoryConnection();
         $broker = new Redis($connection, $connection);
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
-        $broker->enqueue($queue, ['n' => 1]);
+        $broker->publish($queue, ['n' => 1]);
 
         $adapter = new class ($broker, 1, self::NAMESPACE) extends Swoole {
             /** @var resource */

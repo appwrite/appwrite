@@ -38,7 +38,7 @@ final class KubernetesJobAdapterTest extends TestCase
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
         foreach (range(1, 5) as $n) {
-            $broker->enqueue($queue, ['n' => $n]);
+            $broker->publish($queue, ['n' => $n]);
         }
 
         $processed = [];
@@ -69,8 +69,8 @@ final class KubernetesJobAdapterTest extends TestCase
         $broker = new Redis($connection, $connection);
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
-        $broker->enqueue($queue, ['ok' => false]);
-        $broker->enqueue($queue, ['ok' => true]);
+        $broker->publish($queue, ['ok' => false]);
+        $broker->publish($queue, ['ok' => true]);
 
         $succeeded = 0;
         $this->server($broker, function (Message $message) use (&$succeeded): void {
@@ -91,8 +91,8 @@ final class KubernetesJobAdapterTest extends TestCase
         $broker = new Redis($connection, $connection);
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
 
-        $broker->enqueue($queue, ['n' => 1]);
-        $broker->enqueue($queue, ['n' => 2]);
+        $broker->publish($queue, ['n' => 1]);
+        $broker->publish($queue, ['n' => 2]);
 
         $lifecycleCid = null;
         $handlerCids = [];

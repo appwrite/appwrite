@@ -9,7 +9,7 @@ use Utopia\DI\Container;
 use Utopia\Queue\Adapter;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
@@ -339,7 +339,7 @@ final class ServerTelemetryMultiMessageConsumer implements Consumer
     public function close(): void {}
 }
 
-final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer implements Publisher
+final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer implements Synchronous
 {
     /**
      * @param int[] $queueSizes
@@ -347,7 +347,7 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
      */
     public function __construct(private array $queueSizes, private array $failedQueueSizes = []) {}
 
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool
     {
         return true;
     }
@@ -369,9 +369,9 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
     }
 }
 
-final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsumer implements Publisher
+final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsumer implements Synchronous
 {
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool
     {
         return true;
     }

@@ -9,6 +9,7 @@
             <directory>./tests/Queue/Unit</directory>
             <file>./tests/Queue/E2E/Adapter/ConsumerResilienceTest.php</file>
             <file>./tests/Queue/E2E/Adapter/KubernetesJobAdapterTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/BackgroundTest.php</file>
             <file>./tests/Queue/E2E/Adapter/LockingTest.php</file>
             <file>./tests/Queue/E2E/Adapter/RedisBrokerRecoveryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/RedisReconnectCallbackTest.php</file>

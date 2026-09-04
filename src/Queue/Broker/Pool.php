@@ -5,17 +5,17 @@ namespace Utopia\Queue\Broker;
 use Utopia\Pools\Pool as UtopiaPool;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
-readonly class Pool implements Publisher, Consumer
+readonly class Pool implements Synchronous, Consumer
 {
     public function __construct(
         private ?UtopiaPool $publisher = null,
         private ?UtopiaPool $consumer = null,
     ) {}
 
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
@@ -83,7 +83,7 @@ readonly class Pool implements Publisher, Consumer
      */
     public function extend(Queue $queue, Message $message): void
     {
-        $this->consumer?->use(function (Publisher|Consumer $adapter) use ($queue, $message): void {
+        $this->consumer?->use(function (Synchronous|Consumer $adapter) use ($queue, $message): void {
             $extend = [$adapter, 'extend'];
 
             if (\is_callable($extend)) {
@@ -103,7 +103,7 @@ readonly class Pool implements Publisher, Consumer
      */
     public function extendInterval(): ?float
     {
-        return $this->consumer?->use(function (Publisher|Consumer $adapter): ?float {
+        return $this->consumer?->use(function (Synchronous|Consumer $adapter): ?float {
             $interval = [$adapter, 'extendInterval'];
 
             return \is_callable($interval) ? (float) $interval() : null;
@@ -142,6 +142,6 @@ readonly class Pool implements Publisher, Consumer
      */
     protected function delegate(?UtopiaPool $pool, string $method, array $args): mixed
     {
-        return $pool?->use(fn(Publisher|Consumer $adapter) => $adapter->$method(...$args));
+        return $pool?->use(fn(Synchronous|Consumer $adapter) => $adapter->$method(...$args));
     }
 }

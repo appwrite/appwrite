@@ -2,16 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Queue;
+namespace Utopia\Queue\Publisher;
 
-interface Publisher
+use Utopia\Queue\Queue;
+
+/**
+ * A publisher that hands messages to the broker synchronously: publish() blocks
+ * until the broker accepts the message and returns whether it did. Brokers such
+ * as Redis and Pool implement this directly; Broker\Background wraps one to add
+ * background dispatch.
+ */
+interface Synchronous
 {
     /**
-     * Publishes a new message onto the queue.
+     * Publishes a message onto the queue, blocking until the broker accepts it.
      *
      * @param array<string, mixed> $payload
      */
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool;
+    public function publish(Queue $queue, array $payload, bool $priority = false): bool;
 
     /**
      * Publishes several messages in one round trip.
