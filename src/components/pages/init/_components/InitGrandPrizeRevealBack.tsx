@@ -13,7 +13,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { ArrowUpRight, FileSpreadsheet, Loader2, Sparkles, Trophy, Upload, X } from 'lucide-react'
+import { ArrowUpRight, Loader2, Sparkles, Trophy, Upload, X } from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -85,7 +85,6 @@ export function InitGrandPrizeRevealBack({
   )
   const platformMeta = grandPrize.platform ? PLATFORM_META[grandPrize.platform] : null
 
-  const [fileName, setFileName] = useState<string | null>(null)
   const [isReadingFile, setIsReadingFile] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -140,7 +139,6 @@ export function InitGrandPrizeRevealBack({
         const text = await file.text()
         const parsed = parseInitGrandPrizeEntries(text)
         onEntriesChange(parsed)
-        setFileName(file.name)
         setRotation(0)
 
         if (parsed.entries.length === 0) {
@@ -149,7 +147,6 @@ export function InitGrandPrizeRevealBack({
       } catch (error) {
         // A rejected file must never leave the previous upload drawable.
         onEntriesChange(null)
-        setFileName(null)
         setRotation(0)
 
         if (error instanceof InitGrandPrizeCsvError) {
@@ -220,10 +217,6 @@ export function InitGrandPrizeRevealBack({
     }, INIT_GIVEAWAY_RAFFLE_SPIN_MS)
   }, [canSpin, eligible, raffleContext, rotation])
 
-  const entriesSummary = entries
-    ? `${eligible.length} ${eligible.length === 1 ? t('verified entry') : t('verified entries')}`
-    : t('No entries loaded yet.')
-
   return (
     <div
       className={cn(
@@ -286,17 +279,6 @@ export function InitGrandPrizeRevealBack({
           )}
 
           <div className="flex flex-col items-center gap-2">
-            <p className="text-center text-[12px] text-muted-foreground">
-              {isReadingFile ? t('Reading CSV…') : entriesSummary}
-            </p>
-            {fileName && !isReadingFile ? (
-              <p className="flex max-w-[320px] items-center gap-1.5 text-[11px] text-muted-foreground">
-                <FileSpreadsheet className="size-3.5 shrink-0" aria-hidden />
-                <span className="truncate" title={fileName}>
-                  {fileName}
-                </span>
-              </p>
-            ) : null}
             {fileError ? (
               <p className="max-w-[360px] text-center text-[12px] text-destructive" role="alert">
                 {fileError}
