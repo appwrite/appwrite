@@ -165,6 +165,43 @@ final class MetadataRelationshipsTest extends TestCase
         $this->assertSame($roles, $authorization->getRoles());
     }
 
+    public function testParentReadsWithoutATenantDoNotCacheMissingChildSchemas(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $connections = new Connections(new Stack(), 'optional-tenant', 1, static fn (): Memory => new Memory(), 0.0);
+        $tenant = $this->database($connections, $authorization);
+        $tenant->create();
+        foreach (['roots', 'children', 'leaves'] as $id) {
+            $tenant->createCollection(new Collection(id: $id));
+        }
+        $tenant->addHook(new Relationships($tenant));
+        foreach ([['roots', 'children', 'child'], ['children', 'leaves', 'leaf']] as [$from, $to, $key]) {
+            $tenant->createRelationship(new Relationship(
+                collection: $from,
+                relatedCollection: $to,
+                type: RelationType::ManyToOne,
+                key: $key,
+            ));
+        }
+        $tenant->createDocument('leaves', new Document(['$id' => 'leaf']));
+        $tenant->createDocument('children', new Document(['$id' => 'child', 'leaf' => 'leaf']));
+        $tenant->createDocument('roots', new Document(['$id' => 'root', 'child' => 'child']));
+        $tenant->addHook(new Metadata(new Document(['$id' => 'public-database'])));
+
+        $root = $tenant->getDocument('roots', 'root');
+        $this->assertSame('roots', $root->getAttribute('$collectionId'));
+        $this->assertSame('children', $root->getAttribute('child')->getAttribute('$collectionId'));
+
+        $child = $tenant->getDocument('children', 'child');
+        $this->assertSame('children', $child->getAttribute('$collectionId'));
+        $leaf = $child->getAttribute('leaf');
+        $this->assertInstanceOf(Document::class, $leaf);
+        $this->assertSame('leaves', $leaf->getAttribute('$collectionId'));
+        $this->assertSame('public-database', $leaf->getAttribute('$databaseId'));
+        $this->assertSame(1, $connections->count());
+    }
+
     public function testSchemaTraversalPreservesCyclesSharedNodesAndDepthBoundary(): void
     {
         $authorization = new Authorization();

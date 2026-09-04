@@ -178,8 +178,11 @@ class Metadata implements Decorator
             if ($collection === null && $this->tenant !== null) {
                 $collection = $this->tenant->silent(fn (): Document => $this->tenant->getCollection($collectionId));
             }
+            if ($collection === null) {
+                return [];
+            }
             $this->relationshipCache[$collectionId] = \array_filter(
-                $collection?->getAttribute('attributes', []) ?? [],
+                $collection->getAttribute('attributes', []),
                 static fn (Document $attribute): bool => $attribute->getAttribute('type') === ColumnType::Relationship->value
             );
         }
