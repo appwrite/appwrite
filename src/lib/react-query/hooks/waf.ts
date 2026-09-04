@@ -14,7 +14,7 @@ import {
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
@@ -59,8 +59,11 @@ import type {
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import type { DateRange } from 'react-day-picker'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import { fetchProjectFunctionsByIds } from './functions'
-import { fetchProjectSitesByIds } from './sites'
+import {
+  fetchProjectFunctionsByIds,
+  functionsQueryOptions,
+} from './functions'
+import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -884,4 +887,58 @@ export function useFirewallConditionBreakdowns(
       }),
     [entries, queries],
   )
+}
+
+/** Page size for the firewall resource scope picker (API / sites / functions). */
+export const FIREWALL_RESOURCE_PICKER_LIMIT = 25
+
+/**
+ * Isolated query keys for the firewall resource picker so project realtime
+ * invalidations on `['functions'|'sites', 'project', …]` do not refetch the
+ * open dropdown on every deployment or execution event.
+ */
+export function firewallResourcePickerFunctionsQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = functionsQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'functions',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+export function firewallResourcePickerSitesQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = sitesQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'sites',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
 }
