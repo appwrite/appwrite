@@ -22,6 +22,7 @@ final class VCSGiteaConsoleClientTest extends Scope
     // Admin user created by gitea-bootstrap (docker-compose.override.yml, `gitea` profile)
     private const GITEA_USERNAME = 'appwrite';
     private const GITEA_PASSWORD = 'password';
+    private const GITEA_USERNAME_SECOND = 'appwrite2';
 
     private array $giteaCookies = [];
 
@@ -113,17 +114,24 @@ final class VCSGiteaConsoleClientTest extends Scope
      * Walk the full OAuth2 dance against the local Gitea and return the
      * resulting installation, asserting every hop on the way.
      */
-    private function createInstallationHelper(): array
+    private function createInstallationHelper(?string $projectId = null, ?array $headers = null, string $username = self::GITEA_USERNAME, string $password = self::GITEA_PASSWORD, bool $redirects = true): array
     {
-        $projectId = $this->getProject()['$id'];
-        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+        $projectId ??= $this->getProject()['$id'];
+        $headers ??= $this->getHeaders();
+
+        // Each dance starts from a fresh jar; Gitea reuses session cookies, so
+        // a stale jar would silently keep the previous user logged in.
+        /** @var array<string, string> $cookies */
+        $cookies = [];
+        $this->giteaCookies = $cookies;
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
+        ], $headers), $redirects ? [
             'success' => $consoleUrl,
             'failure' => $consoleUrl,
-        ], true, false);
+        ] : [], true, false);
 
         $this->assertEquals(301, $authorize['headers']['status-code']);
 
@@ -146,8 +154,8 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $login = $this->giteaCallHelper($gitea, Client::METHOD_POST, '/user/login', [
             '_csrf' => $this->giteaCookies['_csrf'],
-            'user_name' => self::GITEA_USERNAME,
-            'password' => self::GITEA_PASSWORD,
+            'user_name' => $username,
+            'password' => $password,
         ]);
         $this->assertContains($login['headers']['status-code'], [302, 303], 'Gitea login failed.');
         $this->assertNotEmpty($this->giteaCookies['i_like_gitea'] ?? '', 'Gitea did not issue a session cookie.');
@@ -184,7 +192,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $callback = $this->client->call(Client::METHOD_GET, '/vcs/gitea/callback', \array_merge([
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
+        ], $headers), [
             'code' => $callbackQuery['code'],
             'state' => $callbackQuery['state'],
         ], true, false);
@@ -194,7 +202,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', \array_merge([
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()));
+        ], $headers));
 
         $this->assertEquals(200, $installations['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $installations['body']['total']);
@@ -328,5 +336,466 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code'], \json_encode($execution['body']));
         $this->assertEquals('completed', $execution['body']['status'] ?? '', \json_encode($execution['body']));
         $this->assertEquals($output, $execution['body']['responseBody'] ?? '');
+    }
+
+    private function buildGiteaState(string $projectId, string $success, string $failure): string
+    {
+        return (string) \json_encode([
+            'projectId' => $projectId,
+            'success' => $success,
+            'failure' => $failure,
+            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return array<string, mixed>
+     */
+    private function callGiteaCallbackHelper(array $params): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/vcs/gitea/callback', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params, true, false);
+    }
+
+    public function testCreateInstallationWithoutState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithEmptyState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => '']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithTamperedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['projectId'] = 'victim-project';
+
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => (string) \json_encode($state),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithoutCode(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
+
+        // Signed state, no code: the failure redirect carries the error as a query string
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithEmptyRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Authorize signs empty redirect URLs when none were given, so the
+        // callback has to fall back to the computed console URL instead of
+        // redirecting nowhere.
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, '', ''),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($this->gitInstallationsUrl($projectId) . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithInvalidState(): void
+    {
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => 'not-json']);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithUnknownProject(): void
+    {
+        $consoleUrl = $this->gitInstallationsUrl('missing');
+
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => $this->buildGiteaState('missing-project', $consoleUrl, $consoleUrl),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithLongState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->gitInstallationsUrl($projectId);
+
+        // Past the old 2048 cap: redirect URLs are not length-limited, so the
+        // authorize endpoint can produce a state this size itself.
+        $failure = $consoleUrl . '?pad=' . \str_repeat('a', 2400);
+
+        $response = $this->callGiteaCallbackHelper([
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $failure),
+        ]);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($failure, (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithoutRedirects(): void
+    {
+        // Authorize signs empty success and failure URLs when none are given;
+        // the helper asserts the callback still lands on the console default
+        // rather than redirecting to an empty location.
+        $installation = $this->createInstallationHelper(redirects: false);
+
+        $this->assertNotEmpty($installation['$id']);
+    }
+
+    /**
+     * The callback builds its fallback redirect from the project's region, so the
+     * expected URL follows the region the scope's project was created in: Cloud
+     * CI creates projects in a region other than default.
+     */
+    private function gitInstallationsUrl(string $projectId): string
+    {
+        $region = $this->getProject()['region'];
+
+        return "http://localhost/console/project-{$region}-{$projectId}/settings/git-installations";
+    }
+
+    /**
+     * @return array{userId: string, email: string, session: string, teamId: string, projectId: string, headers: array<string, string>}
+     */
+    private function createTenantHelper(): array
+    {
+        $email = \uniqid('tenant-', true) . \getmypid() . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $password = 'password';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'VCS Tenant',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionCookie = $session['cookies']['a_session_console'];
+
+        // Sessions propagate slowly under parallel load, so retry 401s
+        $team = null;
+        for ($i = 0; $i < 5; $i++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $sessionCookie,
+                'x-appwrite-project' => 'console',
+            ], [
+                'teamId' => ID::unique(),
+                'name' => 'VCS Tenant Team',
+            ]);
+
+            if ($team['headers']['status-code'] !== 401) {
+                break;
+            }
+
+            \usleep(500000);
+        }
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $project = null;
+        for ($i = 0; $i < 5; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $sessionCookie,
+                'x-appwrite-project' => 'console',
+            ], [
+                'projectId' => ID::unique(),
+                'region' => System::getEnv('_APP_REGION', 'default'),
+                'name' => 'VCS Tenant Project',
+                'teamId' => $team['body']['$id'],
+            ]);
+
+            if ($project['headers']['status-code'] !== 401) {
+                break;
+            }
+
+            \usleep(500000);
+        }
+        $this->assertEquals(201, $project['headers']['status-code']);
+
+        return [
+            'userId' => $user['body']['$id'],
+            'email' => $email,
+            'session' => $sessionCookie,
+            'teamId' => $team['body']['$id'],
+            'projectId' => $project['body']['$id'],
+            'headers' => [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $sessionCookie,
+                'x-appwrite-mode' => 'admin',
+            ],
+        ];
+    }
+
+    private function createGiteaUserHelper(string $username, string $password): void
+    {
+        $response = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/admin/users', [
+            'username' => $username,
+            'email' => $username . '@localhost.test',
+            'password' => $password,
+            // Defaults to true, which redirects the OAuth2 authorize to the change-password page
+            'must_change_password' => false,
+        ]);
+
+        // 422 means the user survived a previous run; the Gitea volume persists.
+        $this->assertContains($response['headers']['status-code'], [201, 422], \json_encode($response['body']));
+    }
+
+    /**
+     * @param array{projectId: string, session: string} $tenant
+     * @return array<string, string>
+     */
+    private function getTenantHeaders(array $tenant, ?string $projectId = null): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $tenant['session'],
+            'x-appwrite-mode' => 'admin',
+            'x-appwrite-project' => $projectId ?? $tenant['projectId'],
+        ];
+    }
+
+    public function testListRepositoriesRejectsForeignInstallation(): void
+    {
+        $this->createGiteaUserHelper(self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
+
+        $a = $this->createTenantHelper();
+        $b = $this->createTenantHelper();
+
+        $installationA = $this->createInstallationHelper($a['projectId'], $a['headers']);
+        $installationB = $this->createInstallationHelper($b['projectId'], $b['headers'], self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
+
+        $this->assertNotEquals($installationA['$id'], $installationB['$id']);
+        // Different Gitea accounts make a leak visible as the other owner's repositories
+        $this->assertNotEquals($installationA['organization'], $installationB['organization']);
+
+        // Foreign installation id on the caller's own project never reaches the
+        // provider: the ownership guard answers before any Gitea call.
+        $foreign = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationA['$id'] . '/providerRepositories', $this->getTenantHeaders($b), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(404, $foreign['headers']['status-code']);
+        $this->assertEquals('installation_not_found', $foreign['body']['type']);
+
+        $foreign = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationB['$id'] . '/providerRepositories', $this->getTenantHeaders($a), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(404, $foreign['headers']['status-code']);
+        $this->assertEquals('installation_not_found', $foreign['body']['type']);
+
+        // Addressing the other tenant's project directly dies earlier, on team
+        // membership, before any VCS code runs.
+        $foreignProject = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationA['$id'] . '/providerRepositories', $this->getTenantHeaders($b, $a['projectId']), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(401, $foreignProject['headers']['status-code']);
+
+        $own = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationA['$id'] . '/providerRepositories', $this->getTenantHeaders($a), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $own['headers']['status-code']);
+
+        $own = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationB['$id'] . '/providerRepositories', $this->getTenantHeaders($b), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $own['headers']['status-code']);
+    }
+
+    public function testRepositoryEndpointsRejectForeignInstallation(): void
+    {
+        $a = $this->createTenantHelper();
+        $b = $this->createTenantHelper();
+
+        $installationA = $this->createInstallationHelper($a['projectId'], $a['headers']);
+        $base = '/vcs/github/installations/' . $installationA['$id'];
+
+        // Dummy repository ids are safe: the ownership guard answers before any provider call
+        $probes = [
+            [Client::METHOD_GET, $base . '/providerRepositories/1', []],
+            [Client::METHOD_GET, $base . '/providerRepositories/1/branches', []],
+            [Client::METHOD_GET, $base . '/providerRepositories/1/contents', []],
+            [Client::METHOD_POST, $base . '/providerRepositories', ['name' => 'cross-' . \uniqid(), 'private' => true]],
+            [Client::METHOD_POST, $base . '/detections', ['providerRepositoryId' => '1', 'type' => 'runtime']],
+        ];
+
+        foreach ($probes as [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $this->getTenantHeaders($b), $params);
+
+            $this->assertEquals(404, $response['headers']['status-code'], $method . ' ' . $path);
+            $this->assertEquals('installation_not_found', $response['body']['type'], $method . ' ' . $path);
+        }
+
+        // On the owning project the guard must pass; whatever the provider
+        // answers about the dummy repository, it is not installation_not_found.
+        foreach ($probes as [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $this->getTenantHeaders($a), $params);
+
+            $this->assertNotEquals('installation_not_found', $response['body']['type'] ?? '', $method . ' ' . $path);
+        }
+    }
+
+    public function testInvitedMemberCanUseInstallation(): void
+    {
+        $a = $this->createTenantHelper();
+        $b = $this->createTenantHelper();
+
+        $installationA = $this->createInstallationHelper($a['projectId'], $a['headers']);
+        $path = '/vcs/github/installations/' . $installationA['$id'] . '/providerRepositories';
+
+        $before = $this->client->call(Client::METHOD_GET, $path, $this->getTenantHeaders($b, $a['projectId']), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(401, $before['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $a['teamId'] . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $a['session'],
+        ], [
+            'userId' => $b['userId'],
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $email = $this->getLastEmailByAddress($b['email'], fn ($email) => $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? '')));
+        $params = $this->extractQueryParamsFromEmailLink($email['html']);
+        $this->assertNotEmpty($params['secret'] ?? '');
+
+        $accept = $this->client->call(Client::METHOD_PATCH, '/teams/' . $a['teamId'] . '/memberships/' . $membership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $b['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $accept['headers']['status-code']);
+
+        // Membership in the team now authorizes B on project A, where the installation lives
+        $after = $this->client->call(Client::METHOD_GET, $path, $this->getTenantHeaders($b, $a['projectId']), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code']);
+
+        // Membership does not launder the installation into B's own project.
+        $stillForeign = $this->client->call(Client::METHOD_GET, $path, $this->getTenantHeaders($b), [
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(404, $stillForeign['headers']['status-code']);
+        $this->assertEquals('installation_not_found', $stillForeign['body']['type']);
+    }
+
+    public function testCreateInstallationWithUnsignedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        unset($state['signature']);
+
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithTamperedRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        foreach (['success', 'failure'] as $field) {
+            $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+            $state[$field] = 'https://evil.example/steal';
+
+            $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+            $this->assertEquals(400, $response['headers']['status-code'], $field);
+        }
+    }
+
+    public function testCreateInstallationWithReplayedSignature(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['signature'] = \json_decode($this->buildGiteaState('victim-project', $consoleUrl, $consoleUrl), true)['signature'];
+
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithNonStringSignature(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        $state = \json_decode($this->buildGiteaState($projectId, $consoleUrl, $consoleUrl), true);
+        $state['signature'] = 1234;
+
+        // hash_equals() throws on non-string input, so this must reject as an
+        // invalid state rather than surface a 500.
+        $response = $this->callGiteaCallbackHelper(['code' => 'unused', 'state' => (string) \json_encode($state)]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateInstallationWithOversizedRedirects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
+
+        // Authorize must refuse rather than mint a state its own callback would reject.
+        $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'success' => $consoleUrl,
+            'failure' => $consoleUrl . '?pad=' . \str_repeat('a', APP_LIMIT_VCS_STATE),
+        ], true, false);
+
+        $this->assertEquals(400, $authorize['headers']['status-code']);
     }
 }

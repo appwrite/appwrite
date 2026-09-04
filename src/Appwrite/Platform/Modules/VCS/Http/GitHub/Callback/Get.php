@@ -38,7 +38,7 @@ class Get extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
-            ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
+            ->param('state', '', new Text(APP_LIMIT_VCS_STATE, 0), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
             ->inject('vcsFactory')
             ->inject('project')
@@ -60,13 +60,26 @@ class Get extends Action
         array $platform
     ) {
         if (empty($state)) {
-            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
         }
 
-        $state = \json_decode($state, true);
+        $state = \json_decode($state, true) ?? [];
         $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
+
+        // This endpoint is public -- without verifying the signature the
+        // Authorize action put in state, anyone could pass an arbitrary
+        // projectId here and attach an installation to another project.
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
+        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
+        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -74,7 +87,7 @@ class Get extends Action
             $error = 'Project with the ID from state could not be found.';
 
             if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
@@ -94,10 +107,8 @@ class Get extends Action
             'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
         ];
 
-        $state = \array_merge($defaultState, $state ?? []);
-
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
+        $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
+        $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
@@ -165,10 +176,19 @@ class Get extends Action
                 ]));
             }
         } else {
-            $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
+            // GitHub sends setup_action=install on a completed installation,
+            // update from the app's Configure page, and request when a member
+            // asked the owners for approval. install and update should always
+            // carry an installation_id, so without one they mean the caller
+            // lacked permission to install.
+            $error = match ($setupAction) {
+                'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
+                'install', 'update', '' => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
+                default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
+            };
 
             if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
+                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')

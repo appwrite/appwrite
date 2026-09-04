@@ -297,16 +297,24 @@ class Create extends Action
             $formatOptions = ['elements' => $attribute['elements']];
         }
 
-        if (isset($attribute['min']) || isset($attribute['max'])) {
+        // The dedicated endpoints store a range on every numeric attribute, falling
+        // back to the full width of the type, so omitting min/max here has to produce
+        // the same document rather than one with no range at all.
+        if (\in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+            $isFloat = $type === Database::VAR_FLOAT;
+
             $format = match($type) {
                 Database::VAR_INTEGER => APP_DATABASE_ATTRIBUTE_INT_RANGE,
                 Database::VAR_BIGINT => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
+            $min = $attribute['min'] ?? ($isFloat ? -\PHP_FLOAT_MAX : \PHP_INT_MIN);
+            $max = $attribute['max'] ?? ($isFloat ? \PHP_FLOAT_MAX : \PHP_INT_MAX);
+
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $isFloat ? \floatval($min) : $min,
+                'max' => $isFloat ? \floatval($max) : $max,
             ];
         }
 
