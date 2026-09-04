@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Functions and Sites builds skip npm audit by default for faster deploys"
+date: 2026-09-04
+---
+
+[Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites) now disable npm's security audit step during dependency installation by default. npm runs this check automatically on install, even though it is not required to resolve or download packages. When npm's advisory service is slow or unavailable, builds can stall for several minutes while the same install finishes in seconds under normal conditions.
+
+Turning audit off by default makes builds faster and more predictable, shortens iteration loops, and reduces build compute on Appwrite Cloud. The change applies to Appwrite Cloud and self-hosted deployments running updated runtimes. Builds that use Bun, pnpm, or Yarn are unchanged.
+
+If you still want dependency auditing during builds, set the environment variable `npm_config_audit` to `true` on your function or site and redeploy. npm will run its advisory checks again on install. You can also add `npm audit` to your install or build commands for a one-off check without changing the default for every deployment.
+
+{% arrow_link href="/docs/products/functions/environment-variables" %}
+Configure function environment variables
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/environment-variables" %}
+Configure site environment variables
+{% /arrow_link %}
