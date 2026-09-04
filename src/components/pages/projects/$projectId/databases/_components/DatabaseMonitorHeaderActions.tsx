@@ -38,19 +38,18 @@ export function DatabaseMonitorHeaderActions({
           onValueChange={onChartIntervalChange}
           dateRange={dateRange}
           allowedIntervals={allowedIntervals}
-          className="h-7"
+          className="h-9"
         />
       ) : null}
       <DateRangePicker
         dateRange={dateRange}
         onDateRangeChange={onDateRangeChange}
         presetId={dateRangePresetId}
-        className="h-7 min-w-[120px] text-[12px] @[560px]:min-w-[160px]"
+        className="h-9"
       />
       <RefreshButton
         onClick={onRefresh}
         isRefreshing={isRefreshing}
-        className="h-7 w-7"
       />
     </div>
   )
