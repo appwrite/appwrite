@@ -183,7 +183,7 @@
     "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^5.0.3",
     "dotenv": "^16.4.5",
-    "editorconfig-checker": "6.1.1",
+    "editorconfig-checker": "6.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
     "prettier": "^3.5.3",

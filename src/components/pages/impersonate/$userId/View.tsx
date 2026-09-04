@@ -115,7 +115,10 @@ export function View({ userId, email, initialData }: ViewProps) {
   const targetLabel = target?.name || target?.email || email || userId || ''
 
   return (
-    <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10">
+    <main
+      id="main-content"
+      className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10"
+    >
       <div className="w-full max-w-md">
         <Card className="overflow-hidden p-6 md:p-8">
           <div className="space-y-6">
@@ -200,6 +203,6 @@ export function View({ userId, email, initialData }: ViewProps) {
           </div>
         </Card>
       </div>
-    </div>
+    </main>
   )
 }

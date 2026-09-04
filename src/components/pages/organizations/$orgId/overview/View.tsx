@@ -155,6 +155,8 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -219,6 +221,18 @@ import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
+
+/** Organization routes the overview navigates between; keeps `navigate` and `Link` typed. */
+type OrgRoutePath =
+  | '/organizations/$orgId'
+  | '/organizations/$orgId/marketplace'
+  | '/organizations/$orgId/domains'
+  | '/organizations/$orgId/settings'
+  | '/organizations/$orgId/settings/members'
+  | '/organizations/$orgId/settings/billing'
+  | '/organizations/$orgId/settings/compliance'
+  | '/organizations/$orgId/settings/oauth-apps'
+  | '/organizations/$orgId/settings/partners'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
@@ -353,8 +367,6 @@ function EmptyMemberAvatarSlot({
   )
 }
 
-import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
-import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'marketplace' | 'domains' | 'settings'
@@ -769,22 +781,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handleOrgNavigate = useCallback(
     (tab: string) => {
-      const tabRoutes: Record<string, string> = {
+      const tabRoutes = {
         projects: '/organizations/$orgId',
-        marketplace: '/organizations/$orgId/marketplace/',
-        domains: '/organizations/$orgId/domains/',
+        marketplace: '/organizations/$orgId/marketplace',
+        domains: '/organizations/$orgId/domains',
         settings: '/organizations/$orgId/settings',
         'settings/members': '/organizations/$orgId/settings/members',
         'settings/billing': '/organizations/$orgId/settings/billing',
         'settings/compliance': '/organizations/$orgId/settings/compliance',
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
-        'settings/partners': '/organizations/$orgId/settings/partners'}
+        'settings/partners': '/organizations/$orgId/settings/partners',
+      } as const satisfies Record<string, OrgRoutePath>
 
-      const route = tabRoutes[tab]
-      if (route) {
+      const route = tabRoutes[tab as keyof typeof tabRoutes]
+      if (route && orgId) {
         navigate({
-          to: route as unknown,
-          params: { orgId: orgId! } as unknown,
+          to: route,
+          params: { orgId },
           replace: true})
       }
     },
@@ -1773,7 +1786,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    const tabs: { id: string; label: string; to: string }[] = []
+    const tabs: { id: string; label: string; to: OrgRoutePath }[] = []
     if (canSeeProjects(access, features)) {
       tabs.push({
         id: 'projects',
@@ -1784,13 +1797,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       tabs.push({
         id: 'marketplace',
         label: 'Marketplace',
-        to: '/organizations/$orgId/marketplace/'})
+        to: '/organizations/$orgId/marketplace'})
     }
     if (canShowOrgDomainsTab(access, features)) {
       tabs.push({
         id: 'domains',
         label: 'Domains',
-        to: '/organizations/$orgId/domains/'})
+        to: '/organizations/$orgId/domains'})
     }
     if (canShowOrgSettingsTab(access)) {
       tabs.push({
@@ -2021,23 +2034,28 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setOrgSwitcherOpen(false)
 
     // Navigate to the new organization route, preserving the current tab
-    const tabRoutes: Record<string, string> = {
+    const tabRoutes = {
       projects: '/organizations/$orgId',
-      marketplace: '/organizations/$orgId/marketplace/',
-      domains: '/organizations/$orgId/domains/',
-      settings: '/organizations/$orgId/settings'}
+      marketplace: '/organizations/$orgId/marketplace',
+      domains: '/organizations/$orgId/domains',
+      settings: '/organizations/$orgId/settings',
+    } as const satisfies Record<string, OrgRoutePath>
 
     // Preserve settings sub-tab when switching orgs
+    const settingsSubRoutes = {
+      members: '/organizations/$orgId/settings/members',
+      billing: '/organizations/$orgId/settings/billing',
+      compliance: '/organizations/$orgId/settings/compliance',
+      'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+      partners: '/organizations/$orgId/settings/partners',
+    } as const satisfies Record<string, OrgRoutePath>
     const settingsSubRoute =
-      activeTab === 'settings' &&
-      ['members', 'billing', 'compliance', 'oauth-apps', 'partners'].includes(
-        settingsSubTab,
-      )
-        ? `/organizations/$orgId/settings/${settingsSubTab}`
-        : null
-    const route =
-      settingsSubRoute ||
-      (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
+      activeTab === 'settings'
+        ? settingsSubRoutes[settingsSubTab as keyof typeof settingsSubRoutes]
+        : undefined
+    const route: OrgRoutePath =
+      settingsSubRoute ??
+      tabRoutes[activeTab as keyof typeof tabRoutes] ??
       '/organizations/$orgId'
 
     try {
@@ -2047,8 +2065,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
 
     navigate({
-      to: route as unknown,
-      params: { orgId: org.$id } as unknown,
+      to: route,
+      params: { orgId: org.$id },
       replace: true})
 
     // Update user prefs with the selected organization
@@ -2378,8 +2396,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   return (
                   <Link
                     key={tab.id}
-                    to={tab.to as unknown}
-                    params={{ orgId: orgId! } as unknown}
+                    to={tab.to}
+                    params={{ orgId: orgId ?? '' }}
                     replace
                     role="tab"
                     aria-selected={activeTab === tab.id}
@@ -3672,10 +3690,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             )
                                                           } catch (error: unknown) {
                                                             toast.error(
-                                                              error?.message ||
+                                                              getErrorMessage(
+                                                                error,
                                                                 t(
                                                                   'Failed to resend invitation',
                                                                 ),
+                                                              ),
                                                             )
                                                           }
                                                         }}
@@ -4433,7 +4453,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(error?.message || t('Failed to update role'))
+                  toast.error(getErrorMessage(error, t('Failed to update role')))
                 }
               }}
             >
@@ -4513,7 +4533,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(error?.message || t('Failed to remove member'))
+                  toast.error(
+                    getErrorMessage(error, t('Failed to remove member')),
+                  )
                 }
               }}
             >
@@ -4532,6 +4554,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           onCreate={async (orgData) => {
             try {
               const newOrg = await createOrgMutation.mutateAsync(orgData)
+              if (isPaymentAuthentication(newOrg)) {
+                throw new Error(t('Payment authentication is required'))
+              }
               toast.success(t('Organization created successfully'))
               setCreateOrgDialogOpen(false)
               // Navigate to the newly created organization
@@ -4540,7 +4565,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 params: { orgId: newOrg.$id },
                 replace: true})
             } catch (error: unknown) {
-              toast.error(error?.message || t('Failed to create organization'))
+              toast.error(
+                getErrorMessage(error, t('Failed to create organization')),
+              )
             }
           }}
           isLoading={createOrgMutation.isPending}

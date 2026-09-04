@@ -668,19 +668,6 @@ function ProjectLayout() {
     isFunctionExecutionsTab ||
     isSiteLogsTab
 
-  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, functions editor, and storage workspace
-  const hideFooter =
-    isDatabaseSpreadsheetView ||
-    isDatabaseVisualizerView ||
-    activeSection === 'usage' ||
-    isFunctionExecutionsTab ||
-    isSiteLogsTab ||
-    activeSection === 'activity' ||
-    activeSection === 'realtime' ||
-    activeSection === 'storage' ||
-    activeSection === 'explorer' ||
-    isFunctionsEditorView
-
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false)
