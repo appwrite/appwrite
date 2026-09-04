@@ -171,7 +171,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     features: {
       billing: true,
       domains: true,
-      marketplace: false,
+      marketplace: true,
       usageStats: true,
       activity: true,
       init: true,
