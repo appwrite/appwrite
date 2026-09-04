@@ -773,7 +773,9 @@ function ProjectLayout() {
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
-          <BuildNotificationsProvider projectId={projectId} />
+          {features.browserAlerts ? (
+            <BuildNotificationsProvider projectId={projectId} />
+          ) : null}
           <ProjectCliShellLayout
             projectId={projectId}
             sidebar={{

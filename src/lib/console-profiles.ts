@@ -61,6 +61,8 @@ export type ConsoleProfileFeatures = {
   agent: boolean
   /** Console notifications center (header bell and inbox popover) */
   notifications: boolean
+  /** Account browser alerts and build-completion desktop notifications */
+  browserAlerts: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
   /** Dedicated database PITR restore UI (backups restore button and settings restore card). */
@@ -131,6 +133,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
   notifications: 'Notifications',
+  browserAlerts: 'Browser alerts',
   databaseBackups: 'Database backups',
   databasePitrRestore: 'Database PITR restore',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
@@ -186,6 +189,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       agent: false,
       notifications: false,
+      browserAlerts: false,
       databaseBackups: true,
       databasePitrRestore: false,
       dedicatedDbsSupport: true,
@@ -229,6 +233,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       agent: false,
       notifications: false,
+      browserAlerts: false,
       databaseBackups: false,
       databasePitrRestore: false,
       dedicatedDbsSupport: false,
@@ -510,7 +515,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE,
+ * VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -538,6 +544,10 @@ function applyEnvFeatureOverrides(
   const databasePitrRestore = parseEnvFeatureOverride(config.databasePitrRestore)
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
+  }
+  const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
+  if (browserAlerts !== null) {
+    next = { ...next, browserAlerts }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {

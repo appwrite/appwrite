@@ -565,8 +565,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'buildNotificationsOptedOut',
     scope: 'account',
     key: USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT,
-    description: 'User dismissed the build completion notifications prompt.',
-    category: 'Notifications',
+    description: 'User opted out of Console browser alerts.',
+    category: 'Browser alerts',
   },
   {
     id: 'communitySupport',

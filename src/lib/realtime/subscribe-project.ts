@@ -20,8 +20,10 @@ import {
   isDedicatedDatabaseRealtimeSignal,
 } from './dedicated-database-cache'
 import { mergeMigrationPayloadIntoCache } from './migration-cache'
-
-type DeploymentResourceType = 'site' | 'function'
+import {
+  resolveDeploymentResourceId,
+  type DeploymentResourceType,
+} from './deployment-events'
 
 /**
  * Merge a deployment realtime payload into list and detail caches.
@@ -118,19 +120,6 @@ function isDeploymentCreateEvent(events: string[]): boolean {
   )
 }
 
-function extractDeploymentResourceIdFromEvents(
-  events: string[],
-  resourceType: DeploymentResourceType,
-): string | undefined {
-  const prefix = resourceType === 'site' ? 'sites.' : 'functions.'
-  for (const event of events) {
-    const match = event.match(new RegExp(`^${prefix}([^.]+)\\.deployments\\.`))
-    const id = match?.[1]
-    if (id && id !== '*') return id
-  }
-  return undefined
-}
-
 function handleDeploymentRealtimeEvent(
   queryClient: QueryClient,
   projectId: string,
@@ -141,9 +130,11 @@ function handleDeploymentRealtimeEvent(
 ): void {
   const isCreate = isDeploymentCreateEvent(events)
   const isDelete = isDeploymentDeleteEvent(events)
-  const resourceId =
-    (payload?.resourceId as string | undefined) ??
-    extractDeploymentResourceIdFromEvents(events, resourceType)
+  const resourceId = resolveDeploymentResourceId(
+    events,
+    resourceType,
+    payload,
+  )
   const canMerge =
     payload != null &&
     typeof payload.$id === 'string' &&
