@@ -92,6 +92,7 @@ import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
 import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
@@ -137,7 +138,6 @@ type ViewProps = {
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const supportsMultiTenancy = features.multiTenancy
   const { orgId, domainId } = useParams({
     strict: false})
   const navigate = useNavigate()
@@ -741,6 +741,10 @@ export function View({ initialData }: ViewProps = {}) {
         value: org.$id,
         label: org.name}))
   }, [allOrganizations, domain])
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    allOrganizations.length,
+  )
 
   // Transfer domain mutation
   const transferDomainMutation = useUpdateDomainTeam(orgId)

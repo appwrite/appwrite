@@ -30,6 +30,8 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
+import { useOrganizations } from '@/lib/react-query/hooks/organizations'
 import {
   useProject,
   APPWRITE_RESOURCES,
@@ -130,7 +132,11 @@ export function ImportWizardView() {
   const { project } = useProject(pid)
   const region = project?.region
   const { isCloud, features } = useConsoleProfile()
-  const supportsMultiTenancy = features.multiTenancy
+  const { organizations } = useOrganizations()
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    organizations.length,
+  )
 
   const [step, setStep] = useState(1)
   const [provider, setProvider] = useState<ImportProvider | null>(null)

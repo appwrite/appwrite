@@ -366,11 +366,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           retry: false,
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
-        features.multiTenancy
-          ? queryClient
-              .ensureQueryData(organizationsQueryOptions())
-              .catch(() => {})
-          : Promise.resolve(),
+        queryClient
+          .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
       ])
 
       registerProjectRegionFromProject(projectData)

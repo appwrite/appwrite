@@ -96,7 +96,8 @@ import {
   canAccessOrgOverviewTab,
   getFirstAllowedOrgOverviewPath,
   canShowOrgBillingNav,
-  canShowOrgComplianceNav} from '@/lib/console-access-checks'
+  canShowOrgComplianceNav,
+  canSwitchOrganizations} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import {
@@ -967,6 +968,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
     isOrganizationBillingReadonlyStatus(selectedOrg?.status)
+  const canSwitchOrgs = canSwitchOrganizations(features, organizations.length)
 
   const showBudgetLimitAlert =
     features.billing && isBudgetLimitReached(organizationDetail)
@@ -2081,7 +2083,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
             <div className="flex h-8 min-h-8 max-h-8 min-w-0 flex-1 items-center gap-2">
               {selectedOrg ? (
-                supportsMultiTenancy ? (
+                canSwitchOrgs ? (
                   <Popover
                     open={orgSwitcherOpen}
                     onOpenChange={setOrgSwitcherOpen}
@@ -2166,20 +2168,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </button>
                         ))}
                       </div>
-                      <div className="border-t border-border p-2">
-                        <button
-                          type="button"
-                          {...analyticsAttrs('create-organization')}
-                          onClick={() => {
-                            setOrgSwitcherOpen(false)
-                            handleOpenCreateOrganization()
-                          }}
-                          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {t('Create organization')}
-                        </button>
-                      </div>
+                      {supportsMultiTenancy && (
+                        <div className="border-t border-border p-2">
+                          <button
+                            type="button"
+                            {...analyticsAttrs('create-organization')}
+                            onClick={() => {
+                              setOrgSwitcherOpen(false)
+                              handleOpenCreateOrganization()
+                            }}
+                            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <Plus className="h-4 w-4" />
+                            {t('Create organization')}
+                          </button>
+                        </div>
+                      )}
                     </PopoverContent>
                   </Popover>
                 ) : (
@@ -2200,7 +2204,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {isCloud && (
                     <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
                   )}
-                  {supportsMultiTenancy && (
+                  {canSwitchOrgs && (
                     <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
                   )}
                 </div>

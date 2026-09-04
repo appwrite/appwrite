@@ -11,6 +11,19 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 export type AccessCheckFeatures = Pick<ConsoleProfileFeatures, 'orgRoles'> &
   Partial<ConsoleProfileFeatures>
 
+/**
+ * Organization switcher and transfer targets. Multi-tenant profiles always
+ * expose them. Single-tenant profiles only block creating a second
+ * organization; an account that already belongs to several (a self-hosted
+ * 1.x instance upgraded to 2.0) must still be able to reach every one of them.
+ */
+export function canSwitchOrganizations(
+  features: Pick<ConsoleProfileFeatures, 'multiTenancy'>,
+  organizationCount: number,
+): boolean {
+  return features.multiTenancy || organizationCount > 1
+}
+
 function whenOrgRoles(
   _access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -19,7 +32,6 @@ function whenOrgRoles(
   return !features.orgRoles || hasAccess
 }
 
-// ─── Project: settings, connect, get started ───────────────────────────────────
 
 export function canShowProjectSettings(
   access: ConsoleAccess,
@@ -68,7 +80,6 @@ export function canPinProjects(
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
-// ─── Project: create permissions ──────────────────────────────────────────────
 
 export function canCreateProject(
   access: ConsoleAccess,
@@ -181,7 +192,6 @@ export function canWriteRules(
   return whenOrgRoles(access, features, access.canWriteRules)
 }
 
-// ─── Project: service security/settings tabs ────────────────────────────────
 
 export function canShowDatabaseSecuritySettings(
   access: ConsoleAccess,
@@ -243,7 +253,6 @@ export function canShowTopicSettingsTab(
   return whenOrgRoles(access, features, access.canWriteTopics)
 }
 
-// ─── Project: sidebar nav item visibility ───────────────────────────────────
 
 export function canSeeProjectNavItem(
   access: ConsoleAccess,
@@ -302,7 +311,6 @@ export function canSeeProjects(
   return whenOrgRoles(access, features, access.canSeeProjects)
 }
 
-// ─── Org: tabs and settings ──────────────────────────────────────────────────
 
 export function canShowOrgDomainsTab(
   access: ConsoleAccess,
@@ -409,7 +417,6 @@ export function canInviteOrgMember(
   return whenOrgRoles(access, features, access.isOwner)
 }
 
-// ─── Messaging: write per tab ───────────────────────────────────────────────
 
 export function canWriteMessages(
   access: ConsoleAccess,
@@ -432,7 +439,6 @@ export function canWriteProviders(
   return whenOrgRoles(access, features, access.canWriteProviders)
 }
 
-// ─── Org settings: first allowed sub-tab (menu order) ─────────────────────────
 
 /** Returns the first org settings sub-path the current role can access (menu order). */
 export function getFirstAllowedOrgSettingsPath(
