@@ -39,7 +39,7 @@ Rules on a **Function** or a **Site** stop the request at the edge, so Appwrite 
 
 Use the date range picker and interval controls to zoom into an incident, or drag across the chart to select a range.
 
-The chart always covers the whole project. It does not follow the resource selector that filters the rules list below it.
+The chart follows the resource selector above the rules list: **API** shows project API traffic, and a selected **Site** or **Function** shows traffic for that resource only.
 
 # What the metrics tell you {% #reading-the-metrics %}
 
@@ -51,7 +51,11 @@ If **Rate limited** climbs with normal load, raise the limit, lengthen the inter
 
 When you create or edit a rule, the wizard sidebar estimates how many recent requests would have matched. Use it to tighten a broad path or country filter before you turn on deny, and to size a rate limit quota against real volume.
 
-The estimate covers IP, path, method, country, city, hostname, operating system, browser, and user agent. A rule that uses any other attribute, a **does not contain** condition, or more than eight conditions shows **Preview unavailable** instead of a number. IP addresses are compared as text, so a CIDR range shows zero matches. The rule still matches every address in the range.
+The estimate covers IP address, path, method, country, continent, state, city, hostname, operating system, browser, and user agent. With the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db), it also covers ISP, AS number, AS organization, connection type, connection usage type, and connection organization.
+
+When a condition uses an attribute that usage can break down, the wizard also charts the top values seen in recent traffic for that attribute, scoped to the rule's resource. Use these charts to pick country codes, ISP names, paths, and similar values. Premium city and network breakdowns require the addon; without it the charts show an upgrade prompt. Attributes with no usage breakdown, such as **Continent** and **State**, still contribute to the match estimate but do not get a distribution chart.
+
+A rule that uses **Header**, **Query parameter**, **Query parameter name**, **Protocol**, **Accept**, **Accept-Language**, **Cookie**, or other attributes without usage data, a **does not contain** condition, or more than eight estimable conditions shows **Preview unavailable** instead of a number. The rule still enforces every condition. IP addresses are compared as text, so a CIDR range shows zero matches. The rule still matches every address in the range.
 
 To confirm which rule handled a request once the rule is live, read the `X-Appwrite-WAF-Rule` response header. See [Find out which rule fired](/docs/products/firewall/actions#which-rule-fired).
 

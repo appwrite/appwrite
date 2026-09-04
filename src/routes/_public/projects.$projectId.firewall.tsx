@@ -98,6 +98,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
           dateRange,
           chartInterval,
           logRetentionHours,
+          selection.resourceType,
+          selection.resourceId,
         ),
       )
       .catch(() => undefined)

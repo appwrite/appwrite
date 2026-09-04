@@ -73,6 +73,12 @@ export type UsageEventBreakdownDimension =
   | 'clientType'
   | 'clientName'
   | 'deviceName'
+  | 'isp'
+  | 'autonomousSystemNumber'
+  | 'autonomousSystemOrganization'
+  | 'connectionType'
+  | 'connectionUsageType'
+  | 'connectionOrganization'
   | 'teamId'
   | 'resourceId'
   | 'resourceType'
@@ -105,6 +111,12 @@ export type UsageEventApiDimension =
   | 'clientType'
   | 'clientName'
   | 'deviceName'
+  | 'isp'
+  | 'autonomousSystemNumber'
+  | 'autonomousSystemOrganization'
+  | 'connectionType'
+  | 'connectionUsageType'
+  | 'connectionOrganization'
   | 'sdk'
   | 'sdkVersion'
   | 'teamId'
@@ -149,6 +161,18 @@ function getUsageDataPointBreakdownLabel(
       return point.clientName?.trim() || 'Unknown'
     case 'deviceName':
       return point.deviceName?.trim() || 'Unknown'
+    case 'isp':
+      return point.isp?.trim() || 'Unknown'
+    case 'autonomousSystemNumber':
+      return point.autonomousSystemNumber?.trim() || 'Unknown'
+    case 'autonomousSystemOrganization':
+      return point.autonomousSystemOrganization?.trim() || 'Unknown'
+    case 'connectionType':
+      return point.connectionType?.trim() || 'Unknown'
+    case 'connectionUsageType':
+      return point.connectionUsageType?.trim() || 'Unknown'
+    case 'connectionOrganization':
+      return point.connectionOrganization?.trim() || 'Unknown'
     case 'teamId':
       return point.teamId?.trim() || 'Unknown'
     case 'resourceId':
@@ -1260,7 +1284,14 @@ async function listUsageEventGroupsByMetric(
     request.queries = queries
   }
 
-  const response = await projectSdk.usage.listEvents(request)
+  // The bundled SDK's dimension enum is generated from the backend and lags the
+  // newer network/geo dimensions (isp / ASN / connection*) the backend already
+  // accepts via VALID_DIMENSIONS. Bridge past the stale enum here until the SDK
+  // is regenerated; the values are validated server-side regardless.
+  const response = await projectSdk.usage.listEvents({
+    ...request,
+    dimensions: request.dimensions as unknown as never[] | undefined,
+  })
   const result = new Map<string, Models.UsageDataPoint[]>()
 
   for (const metric of params.metrics) {

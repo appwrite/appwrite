@@ -17,6 +17,8 @@ import {
   type ProjectBandwidthOverview,
 } from '@/lib/usage/bandwidth-events'
 import { fetchProjectFirewallTrafficOverview } from '@/lib/usage/firewall-events'
+import { resolveFirewallUsageResourceScope } from '@/lib/firewall/usage'
+import type { FirewallResourceType } from '@/lib/firewall/conditions'
 import {
   fetchProjectExecutionsOverview,
   fetchProjectFunctionExecutionsOverview,
@@ -325,15 +327,41 @@ export function bandwidthOverviewQueryOptions(
   })
 }
 
+function normalizeFirewallTrafficResource(
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
+): {
+  resourceType: FirewallResourceType
+  resourceId: string | undefined
+  usageResourceType: string
+} {
+  const scope = resolveFirewallUsageResourceScope(resourceType, resourceId)
+  if (resourceType === 'api' || !resourceId?.trim()) {
+    return {
+      resourceType: 'api',
+      resourceId: undefined,
+      usageResourceType: scope.usageResourceType,
+    }
+  }
+  return {
+    resourceType,
+    resourceId: scope.resourceId!,
+    usageResourceType: scope.usageResourceType,
+  }
+}
+
 export function firewallTrafficOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
   dateRangePresetId?: string | null,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
     normalizeDateRangeKey(dateRange, dateRangePresetId)
+  const resource = normalizeFirewallTrafficResource(resourceType, resourceId)
 
   return queryOptions({
     queryKey: [
@@ -342,6 +370,8 @@ export function firewallTrafficOverviewQueryOptions(
       'traffic',
       'project',
       projectId,
+      resource.resourceType,
+      resource.resourceId ?? null,
       rangeKeyPart,
       interval,
       logRetentionHours ?? null,
@@ -352,6 +382,8 @@ export function firewallTrafficOverviewQueryOptions(
         getBounds(),
         interval,
         logRetentionHours,
+        resource.resourceId,
+        resource.usageResourceType,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -368,6 +400,8 @@ export function useProjectFirewallTrafficOverview(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
   dateRangePresetId?: string | null,
 ) {
   return useQuery({
@@ -376,6 +410,8 @@ export function useProjectFirewallTrafficOverview(
       dateRange,
       interval,
       logRetentionHours,
+      resourceType,
+      resourceId,
       dateRangePresetId,
     ),
     enabled: !!projectId,
@@ -1870,6 +1906,21 @@ export type RequestsBreakdownQueryEntry = {
   items: UsageBreakdownItem[]
 }
 
+/**
+ * Premium Geo DB dimensions the CE (self-hosted) backend does not enumerate in
+ * its listEvents VALID_DIMENSIONS. Hidden alongside `city` when premium geo is
+ * unavailable so the cards don't error on self-hosted.
+ */
+export const PREMIUM_GEO_REQUEST_DIMENSIONS = new Set<string>([
+  'city',
+  'isp',
+  'autonomousSystemNumber',
+  'autonomousSystemOrganization',
+  'connectionType',
+  'connectionUsageType',
+  'connectionOrganization',
+])
+
 /** Fetches all request breakdown dimensions in parallel. */
 export function useProjectRequestsBreakdowns(
   projectId: string | null | undefined,
@@ -1881,7 +1932,8 @@ export function useProjectRequestsBreakdowns(
   const sections = useMemo(
     () =>
       REQUESTS_BREAKDOWN_SECTIONS.filter(
-        (section) => allowCity || section.dimension !== 'city',
+        (section) =>
+          allowCity || !PREMIUM_GEO_REQUEST_DIMENSIONS.has(section.dimension),
       ),
     [allowCity],
   )

@@ -53,6 +53,10 @@ The condition builder groups attributes by what they describe. A further 13 attr
 
 With the premium Geo DB addon you can also match on **City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization**. The network attributes tell data center traffic apart from residential and mobile connections.
 
+{% info title="Operator limits on premium attributes" %}
+**Latitude**, **Longitude**, and **AS number** support only equals, not equal, is empty, and is not empty. See [Operators](#operators) for the full list.
+{% /info %}
+
 Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error.
 
 If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **Not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
@@ -103,7 +107,13 @@ Which operators appear depends on the attribute:
 | Most attributes | Equals, not equal, contains, starts with, ends with, is empty, is not empty |
 | **Method** | Equals, not equal, is empty, is not empty |
 | **Country**, **Continent** | Equals, not equal, contains, does not contain |
-| **Latitude**, **Longitude**, **AS number** | Equals, not equal, is empty, is not empty |
+| **Latitude**, **Longitude**, **AS number** (Premium Geo DB) | Equals, not equal, is empty, is not empty |
+
+{% info title="Premium Geo DB attributes" %}
+**City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization** require the [premium Geo DB addon](#premium-geo-db). All other attributes in this table are available on every plan.
+
+**Latitude**, **Longitude**, and **AS number** support only equality and presence operators (equals, not equal, is empty, is not empty). The other premium attributes use the full operator set under **Most attributes**.
+{% /info %}
 
 **Is empty** matches attributes the request did not send, such as a missing header. It does not match **User agent**: when that header is absent, Appwrite stores an empty string rather than leaving it unset.
 
@@ -127,6 +137,10 @@ The Console previews how many recent requests a rule would match. See [Impact pr
 # Attribute names for the API {% #api-attribute-names %}
 
 The Console sends these names for you. Use them when you create rules through the API. Any other name returns a `400` error.
+
+{% info title="Premium Geo DB API names" %}
+From **City** through **Connection organization**, the API names in this table require the [premium Geo DB addon](#premium-geo-db).
+{% /info %}
 
 | Console label | API name |
 |---------------|----------|

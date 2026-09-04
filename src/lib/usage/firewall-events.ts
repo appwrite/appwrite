@@ -128,12 +128,16 @@ function mergeFirewallTrafficPoints(
 /**
  * Firewall traffic chart: passed (network.requests) + waf.requests.{denied,challenged,rateLimited,redirected}.
  * Top total is the sum of those series (no extra API call).
+ * Pass usage `resourceType` `project` for API traffic, or `function` / `site`
+ * with `resourceId` for a specific compute resource.
  */
 export async function fetchProjectFirewallTrafficOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<ProjectFirewallTrafficOverview> {
   if (!projectId) {
     return emptyFirewallTrafficOverview()
@@ -146,6 +150,8 @@ export async function fetchProjectFirewallTrafficOverview(
     interval,
     undefined,
     logRetentionHours,
+    resourceId,
+    resourceType,
   )
 
   const requestsSeries = seriesByMetric.get(FIREWALL_REQUESTS_METRIC) ?? {
