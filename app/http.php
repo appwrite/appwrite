@@ -1,5 +1,9 @@
 <?php
 
+// Hyperloop B needs pools that yield while a connection is in use. The legacy
+// stack adapter cannot wait for another request to return its connection.
+putenv('_APP_POOL_ADAPTER=swoole');
+
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init/span.php';
 
