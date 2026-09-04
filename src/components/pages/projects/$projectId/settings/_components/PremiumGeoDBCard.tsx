@@ -15,6 +15,7 @@ import {
   isPaymentAuthentication,
   resolveStripeProviderMethodId,
 } from '@/lib/billing/addons'
+import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
 import {
   projectAddonsQueryOptions,
   useBillingPlans,
@@ -115,6 +116,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
           queryKey: projectAddonsQueryOptions(projectId).queryKey,
         }),
         queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+        ...(orgId
+          ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+          : []),
       ])
       toast.success(t('Premium Geo DB addon has been enabled'))
     } catch (error) {
@@ -125,6 +129,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
             queryKey: projectAddonsQueryOptions(projectId).queryKey,
           }),
           queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+          ...(orgId
+            ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+            : []),
         ])
         toast.success(t('Premium Geo DB addon has been enabled'))
         return
@@ -228,6 +235,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
           queryKey: projectAddonsQueryOptions(projectId).queryKey,
         }),
         queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+        ...(orgId
+          ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+          : []),
       ])
       toast.success(t('Premium Geo DB addon has been re-enabled'))
     } catch (error) {
