@@ -4,6 +4,10 @@ title: Usage
 description: Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.
 ---
 
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. Organization usage and billing sit behind `billing.read` and `billing.write`, which a Partners key cannot hold, so no operation below is reachable from a backend today. Relink this page once a key-authenticated usage surface exists.
+{% /info %}
+
 The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage.
 
 Access usage through `sdk.forConsole.organizations` with an organization API key or OAuth-delegated access that includes billing scopes.
@@ -12,14 +16,14 @@ Access usage through `sdk.forConsole.organizations` with an organization API key
 
 {% multicode %}
 ```server-nodejs
-import { Client, Organizations } from 'node-appwrite';
+import { Client, Organization } from 'node-appwrite';
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('console')
-    .setKey(process.env.APPWRITE_ORG_API_KEY);
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey(process.env.APPWRITE_PARTNERS_KEY);
 
-const organizations = new Organizations(client);
+const organization = new Organization(client);
 ```
 {% /multicode %}
 

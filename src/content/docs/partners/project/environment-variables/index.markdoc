@@ -38,7 +38,7 @@ Manage variables for a single site.
 You can create and manage project variables from the Appwrite Console. The Console refers to them as **Global variables**:
 
 1. Navigate to your project.
-2. Open **Settings** and scroll to the **Global variables** section.
+2. Open **Settings** at the bottom of the project sidebar, then select the **Variables** tab. The **Global variables** card is on that tab.
 3. Click **Create a global variable** and enter a key and value.
 4. Optionally select the **Secret** checkbox to prevent any team member from reading the value after creation.
 5. Click **Create**, then redeploy your functions and sites for the change to take effect.

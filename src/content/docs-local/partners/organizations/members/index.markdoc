@@ -24,6 +24,6 @@ When using [OAuth connect](/docs/partners/oauth-connect), membership changes may
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/advanced/platform/roles" %}
+{% arrow_link href="/docs/advanced/security/roles" %}
 Platform roles
 {% /arrow_link %}
