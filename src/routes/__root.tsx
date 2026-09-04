@@ -466,13 +466,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
             ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
         <I18nProvider>
-          {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready.
-              Kept outside ClientThemeProvider remount boundaries. Always mount when the
-              debug override is on (auth/marketing pages set skipStaticLoader). */}
+          {/* Branded loader from first paint (isLoading starts true on console routes).
+              Do not force-visible on !clientMounted: remounting RootDocument used to
+              flash this overlay on later navigations. */}
           <FullscreenLoader
             isVisible={
-              showFullscreenLoader ||
-              (!skipStaticLoader && (clientMounted ? isLoading : true))
+              showFullscreenLoader || (!skipStaticLoader && isLoading)
             }
             statusBanner={
               clientMounted && isLoaderVisible ? statusBanner : undefined

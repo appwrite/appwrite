@@ -718,8 +718,8 @@ export function ProjectSelector({
 
   // Do not reset the shell gate on unmount. Access-denied / not-found layouts
   // unmount this selector after releasing the gate; a cleanup reset would put
-  // the fullscreen loader back over the error UI. Pathname changes in
-  // useInitialLoader already clear the gate when leaving project routes.
+  // the fullscreen loader back over the error UI. useInitialLoader clears the
+  // gate when leaving project routes, not on every in-project path change.
 
   if (isProjectSelectorLoading) {
     return (
