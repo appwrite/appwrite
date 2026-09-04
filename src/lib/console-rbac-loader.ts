@@ -212,9 +212,10 @@ export async function canAccessOrganizationDomains(
   queryClient: QueryClient,
   organizationId: string,
 ): Promise<boolean> {
+  const features = getActiveProfileFeatures()
+  if (!features.domains) return false
   const access = await getOrganizationAccess(queryClient, organizationId)
   if (!access) return true
-  const features = getActiveProfileFeatures()
   return canAccessOrgDomains(access, features)
 }
 

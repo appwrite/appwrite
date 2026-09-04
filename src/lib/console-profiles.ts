@@ -16,9 +16,8 @@ export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
   /**
-   * Domain registrar commerce (buy domain, transfer in) plus marketing/docs Domains
-   * product surfaces. Org Domains tab (add domain, DNS, verification) stays available
-   * when this is false.
+   * Organization Domains (tab, DNS, verification, buy/transfer) plus marketing
+   * and docs Domains product surfaces. The `/v1/domains` API is cloud-only.
    */
   domains: boolean
   /** Organization marketplace (browse and publish apps) */
@@ -114,7 +113,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   string
 > = {
   billing: 'Billing',
-  domains: 'Domain buy/transfer',
+  domains: 'Domains',
   marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
@@ -541,7 +540,9 @@ function applyEnvFeatureOverrides(
   if (extraVcsOAuth !== null) {
     next = { ...next, extraVcsOAuth }
   }
-  const databasePitrRestore = parseEnvFeatureOverride(config.databasePitrRestore)
+  const databasePitrRestore = parseEnvFeatureOverride(
+    config.databasePitrRestore,
+  )
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
   }

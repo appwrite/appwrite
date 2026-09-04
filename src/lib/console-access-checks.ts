@@ -32,7 +32,6 @@ function whenOrgRoles(
   return !features.orgRoles || hasAccess
 }
 
-
 export function canShowProjectSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -79,7 +78,6 @@ export function canPinProjects(
 ): boolean {
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
-
 
 export function canCreateProject(
   access: ConsoleAccess,
@@ -192,7 +190,6 @@ export function canWriteRules(
   return whenOrgRoles(access, features, access.canWriteRules)
 }
 
-
 export function canShowDatabaseSecuritySettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -243,7 +240,9 @@ export function canShowProjectOAuth2Server(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!features.oauth2Server && canShowAuthSecuritySettings(access, features)
+  return (
+    !!features.oauth2Server && canShowAuthSecuritySettings(access, features)
+  )
 }
 
 export function canShowTopicSettingsTab(
@@ -252,7 +251,6 @@ export function canShowTopicSettingsTab(
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteTopics)
 }
-
 
 export function canSeeProjectNavItem(
   access: ConsoleAccess,
@@ -311,7 +309,6 @@ export function canSeeProjects(
   return whenOrgRoles(access, features, access.canSeeProjects)
 }
 
-
 export function canShowOrgDomainsTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -319,12 +316,12 @@ export function canShowOrgDomainsTab(
   return canAccessOrgDomains(access, features)
 }
 
-/** Buy domain and transfer-in (registrar commerce). Gated by the domains profile flag. */
+/** Buy domain and transfer-in (registrar commerce). */
 export function canBuyOrTransferOrgDomain(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(features.domains && canAccessOrgDomains(access, features))
+  return canAccessOrgDomains(access, features)
 }
 
 /** Organization marketplace tab (cloud profile + feature flag; browse integrations). */
@@ -332,9 +329,7 @@ export function canShowOrgMarketplaceTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(
-    features.marketplace && canSeeProjects(access, features)
-  )
+  return !!(features.marketplace && canSeeProjects(access, features))
 }
 
 export function canShowOrgSettingsTab(access: ConsoleAccess): boolean {
@@ -388,11 +383,16 @@ export function canCreateOrgApiKey(
   return canShowOrgApiKeysSettings(access, features)
 }
 
-/** Organization Domains (route access): owners and developers when orgRoles enabled. */
+/**
+ * Organization Domains (route access). The `/v1/domains` API is cloud-only, so
+ * the whole surface is hidden unless the domains profile flag is on; with org
+ * roles enabled it is further limited to owners and developers.
+ */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
+  if (!features.domains) return false
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
@@ -417,7 +417,6 @@ export function canInviteOrgMember(
   return whenOrgRoles(access, features, access.isOwner)
 }
 
-
 export function canWriteMessages(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -439,7 +438,6 @@ export function canWriteProviders(
   return whenOrgRoles(access, features, access.canWriteProviders)
 }
 
-
 /** Returns the first org settings sub-path the current role can access (menu order). */
 export function getFirstAllowedOrgSettingsPath(
   access: ConsoleAccess,
@@ -453,8 +451,7 @@ export function getFirstAllowedOrgSettingsPath(
     return `${basePath}/compliance`
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
-  if (canShowOrgApiKeysSettings(access, features))
-    return `${basePath}/partners`
+  if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
   return basePath
 }
 

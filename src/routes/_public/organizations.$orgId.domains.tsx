@@ -2,7 +2,9 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { canAccessOrganizationDomains } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/domains')({
-  loader: async ({ params, context }) => {
+  // beforeLoad runs before child loaders, so a redirect here prevents the
+  // domains list request from ever being sent on profiles without the API.
+  beforeLoad: async ({ params, context }) => {
     if (typeof window === 'undefined') return
     const { orgId } = params
     const { queryClient } = context
