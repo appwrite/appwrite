@@ -191,7 +191,7 @@ class Certificates extends Action
 
         // Issue a TLS certificate when domain is verified
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+            $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
                 project: new Document([
                     '$id' => $rule->getAttribute('projectId', ''),
                     '$sequence' => $rule->getAttribute('projectInternalId', 0),
@@ -462,7 +462,7 @@ class Certificates extends Action
             ->trigger();
 
         /** Trigger Functions */
-        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+        $publisherForFunctions->publish(FunctionMessage::fromEvent(
             event: $queueForEvents->getEvent(),
             params: $queueForEvents->getParams(),
             project: $queueForEvents->getProject(),
@@ -573,7 +573,7 @@ class Certificates extends Action
         $subject = $locale->getText("emails.certificate.subject");
         $preview = $locale->getText("emails.certificate.preview");
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,

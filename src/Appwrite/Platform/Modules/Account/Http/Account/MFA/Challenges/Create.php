@@ -195,7 +195,7 @@ class Create extends Action
                 $message = $message->render();
 
                 $phone = $user->getAttribute('phone');
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_INTERNAL,
                     project: $project,
                     message: new Document([
@@ -338,7 +338,7 @@ class Create extends Action
                     ]);
                 }
 
-                $publisherForMails->enqueue(new MailMessage(
+                $publisherForMails->publish(new MailMessage(
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,

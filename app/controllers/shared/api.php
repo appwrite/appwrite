@@ -897,7 +897,7 @@ Http::shutdown()
         if (! empty($functionsEvents)) {
             foreach ($generatedEvents as $event) {
                 if (isset($functionsEvents[$event])) {
-                    $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                    $publisherForFunctions->publish(FunctionMessage::fromEvent(
                         event: $queueForEvents->getEvent(),
                         params: $queueForEvents->getParams(),
                         project: $queueForEvents->getProject(),

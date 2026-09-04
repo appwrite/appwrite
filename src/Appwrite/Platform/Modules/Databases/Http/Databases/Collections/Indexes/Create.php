@@ -239,7 +239,7 @@ class Create extends Action
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
-        $publisherForDatabase->enqueue(new DatabaseMessage(
+        $publisherForDatabase->publish(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_CREATE_INDEX,

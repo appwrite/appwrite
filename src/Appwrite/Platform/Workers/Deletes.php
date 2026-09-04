@@ -600,7 +600,7 @@ class Deletes extends Action
                 $queries,
                 $dbForProject,
                 function (Document $deployment) use ($publisherForDeletes, $project) {
-                    $publisherForDeletes->enqueue(new DeleteMessage(
+                    $publisherForDeletes->publish(new DeleteMessage(
                         project: $project,
                         type: DELETE_TYPE_DOCUMENT,
                         document: $deployment,

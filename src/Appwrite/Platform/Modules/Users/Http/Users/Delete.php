@@ -76,7 +76,7 @@ class Delete extends Action
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_DOCUMENT,
             document: $clone,

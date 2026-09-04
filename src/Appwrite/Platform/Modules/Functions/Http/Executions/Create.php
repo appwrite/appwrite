@@ -302,7 +302,7 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $publisherForFunctions->enqueue(new FunctionMessage(
+                $publisherForFunctions->publish(new FunctionMessage(
                     project: $project,
                     user: $user,
                     function: $function,
@@ -350,7 +350,7 @@ class Create extends Base
             ));
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-                $publisherForDeletes->enqueue(new DeleteMessage(
+                $publisherForDeletes->publish(new DeleteMessage(
                     project: $project,
                     type: DELETE_TYPE_EXECUTIONS_LIMIT,
                     resource: (string) $function->getSequence(),
@@ -534,7 +534,7 @@ class Create extends Base
         }
 
         if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $project,
                 type: DELETE_TYPE_EXECUTIONS_LIMIT,
                 resource: (string) $function->getSequence(),

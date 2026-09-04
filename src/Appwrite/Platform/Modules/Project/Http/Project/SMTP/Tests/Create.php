@@ -150,7 +150,7 @@ class Create extends Action
             ->setParam('{{replyTo}}', "{$replyToNameDisplay} ({$replyToEmailDisplay})");
 
         foreach ($emails as $email) {
-            $publisherForMails->enqueue(new MailMessage(
+            $publisherForMails->publish(new MailMessage(
                 project: $project,
                 recipient: $email,
                 subject: $subject,

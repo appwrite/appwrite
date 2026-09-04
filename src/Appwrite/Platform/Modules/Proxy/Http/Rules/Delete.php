@@ -87,7 +87,7 @@ class Delete extends Action
 
         $bus->dispatch(new RuleDeleted($rule->getArrayCopy()));
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $rule,

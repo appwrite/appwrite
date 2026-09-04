@@ -163,7 +163,7 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $publisherForDeletes->enqueue(new DeleteMessage(
+                $publisherForDeletes->publish(new DeleteMessage(
                     project: $project,
                     type: DELETE_TYPE_DOCUMENT,
                     document: $transaction,
@@ -304,7 +304,7 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $publisherForDeletes->enqueue(new DeleteMessage(
+                $publisherForDeletes->publish(new DeleteMessage(
                     project: $project,
                     type: DELETE_TYPE_DOCUMENT,
                     document: $transaction,
@@ -486,7 +486,7 @@ class Update extends Action
                     if (!empty($functionsEvents)) {
                         foreach ($generatedEvents as $event) {
                             if (isset($functionsEvents[$event])) {
-                                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                                $publisherForFunctions->publish(FunctionMessage::fromEvent(
                                     event: $queueForEvents->getEvent(),
                                     params: $queueForEvents->getParams(),
                                     project: $queueForEvents->getProject(),
@@ -524,7 +524,7 @@ class Update extends Action
                 new Document(['status' => 'failed'])
             ));
 
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $project,
                 type: DELETE_TYPE_DOCUMENT,
                 document: $transaction,

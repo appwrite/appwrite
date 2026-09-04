@@ -77,7 +77,7 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove bucket from DB');
         }
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_DOCUMENT,
             document: $bucket,

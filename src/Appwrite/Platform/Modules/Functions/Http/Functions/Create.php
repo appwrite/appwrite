@@ -455,7 +455,7 @@ class Create extends Base
                     ->trigger();
 
                 /** Trigger Functions */
-                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                $publisherForFunctions->publish(FunctionMessage::fromEvent(
                     event: $ruleCreate->getEvent(),
                     params: $ruleCreate->getParams(),
                     project: $ruleCreate->getProject(),
@@ -475,7 +475,7 @@ class Create extends Base
                     'domain' => $domain,
                     'owner' => 'Appwrite',
                 ]))) {
-                    $publisherForCertificates->enqueue(new CertificateMessage(
+                    $publisherForCertificates->publish(new CertificateMessage(
                         project: $project,
                         domain: new Document([
                             'domain' => $domain,

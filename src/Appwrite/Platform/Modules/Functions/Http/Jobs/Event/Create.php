@@ -62,7 +62,7 @@ class Create extends Action
         // worker reloads the full project document from this id.
         $projectId = $event['data']['meta']['projectId'] ?? '';
 
-        $publisherForJobs->enqueue(new JobsMessage(
+        $publisherForJobs->publish(new JobsMessage(
             project: new Document(['$id' => $projectId]),
             id: $event['id'] ?? '',
             event: $event['type'] ?? '',

@@ -97,7 +97,7 @@ class Delete extends Action
             ->setParam($this->getEventsParamKey(), $collection->getId())
             ->setPayload($response->output($collection, $this->getResponseModel()));
 
-        $publisherForDatabase->enqueue(new DatabaseMessage(
+        $publisherForDatabase->publish(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_COLLECTION,

@@ -700,7 +700,7 @@ return function (Container $context): void {
                 ->setPayload($response->output($document, Response::MODEL_USER));
 
             // Trigger functions, webhooks, and realtime events
-            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+            $publisherForFunctions->publish(FunctionMessage::fromEvent(
                 event: $queueForEvents->getEvent(),
                 params: $queueForEvents->getParams(),
                 project: $queueForEvents->getProject(),

@@ -457,7 +457,7 @@ class Create extends Action
                     ];
                 }
 
-                $publisherForMails->enqueue(new MailMessage(
+                $publisherForMails->publish(new MailMessage(
                     project: $project,
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
@@ -488,7 +488,7 @@ class Create extends Action
                     ],
                 ]);
 
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $publisherForMessaging->publish(new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_INTERNAL,
                     project: $project,
                     message: $messageDoc,

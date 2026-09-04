@@ -68,7 +68,7 @@ class Delete extends Action
 
         $dbForProject->deleteDocument('transactions', $transactionId);
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $transaction,

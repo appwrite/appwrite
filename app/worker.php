@@ -113,6 +113,16 @@ try {
         Span::current()?->finish();
     });
 
+    $worker->workerStart()->action(function () use ($container): void {
+        $container->get('publisherForAudits')->start();
+        $container->get('publisherForUsage')->start();
+    });
+
+    $worker->workerStop()->action(function () use ($container): void {
+        $container->get('publisherForAudits')->shutdown();
+        $container->get('publisherForUsage')->shutdown();
+    });
+
     $container->set('bus', function ($register) use ($worker) {
         return $register->get('bus')->setResolver(
             fn (string $name) => $worker->context()->get($name)

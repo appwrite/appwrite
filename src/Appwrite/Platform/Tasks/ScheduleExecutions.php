@@ -77,7 +77,7 @@ class ScheduleExecutions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
-                $publisherForFunctions->enqueue(new FunctionMessage(
+                $publisherForFunctions->publish(new FunctionMessage(
                     project: $schedule['project'],
                     functionId: $schedule['resource']->getAttribute('resourceId', ''),
                     execution: new Document([

@@ -9,6 +9,7 @@ use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
+use Swoole\Coroutine;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
@@ -64,11 +65,21 @@ $swoole = new Server(
 
 $http = $swoole->getServer();
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use ($swoole) {
+    Coroutine::create(function () use ($swoole): void {
+        $swoole->resources()->get('publisherForAudits')->start();
+        $swoole->resources()->get('publisherForUsage')->start();
+    });
 });
 
-$http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) use ($swoole) {
     Timer::clearAll();
+
+    Coroutine::create(function () use ($swoole): void {
+        $swoole->resources()->get('publisherForAudits')->shutdown();
+        $swoole->resources()->get('publisherForUsage')->shutdown();
+    });
+
     Console::success('Worker ' . ++$workerId . ' stopped successfully');
 });
 

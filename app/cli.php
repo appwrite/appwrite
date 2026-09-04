@@ -198,11 +198,16 @@ $container->set('bus', function (Registry $register) use ($container) {
 
 $exitCode = 0;
 
+$cli->init()->action(function () use ($container): void {
+    $container->get('publisherForAudits')->start();
+    $container->get('publisherForUsage')->start();
+});
+
 $cli
     ->error()
     ->inject('error')
     ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
+    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode, $container) {
         call_user_func_array($logError, [
             $error,
             'Task',
@@ -210,10 +215,16 @@ $cli
         ]);
 
         $exitCode = 1;
+        $container->get('publisherForAudits')->shutdown();
+        $container->get('publisherForUsage')->shutdown();
         Timer::clearAll();
     });
 
-$cli->shutdown()->action(fn () => Timer::clearAll());
+$cli->shutdown()->action(function () use ($container): void {
+    $container->get('publisherForAudits')->shutdown();
+    $container->get('publisherForUsage')->shutdown();
+    Timer::clearAll();
+});
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';

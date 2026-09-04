@@ -117,7 +117,7 @@ class Update extends Action
         }
 
         // Issue a TLS certificate when DNS verification is successful
-        $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+        $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
             project: $project,
             domain: new Document([
                 'domain' => $rule->getAttribute('domain'),

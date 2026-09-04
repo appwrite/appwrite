@@ -82,9 +82,9 @@ class StatsResources extends Action
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                     Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
                 ], function ($project) use ($publisherForStatsResources, &$projectsQueued, &$projectsFailed): void {
-                    // enqueue() swallows a publish failure, reporting it only to
+                    // publish() swallows a broker failure, reporting it only to
                     // Console and returning false — as it does when stats are off.
-                    if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project)) === false) {
+                    if ($publisherForStatsResources->publish(new StatsResourcesMessage(project: $project)) === false) {
                         $projectsFailed++;
                         return;
                     }

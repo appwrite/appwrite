@@ -155,7 +155,7 @@ class Create extends Action
             || $certificateIssuer->isAutoIssueEnabled($rule);
 
         if ($needsCertificate) {
-            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+            $publisherForCertificates->publish(new \Appwrite\Event\Message\Certificate(
                 project: $project,
                 domain: new Document([
                     'domain' => $rule->getAttribute('domain'),

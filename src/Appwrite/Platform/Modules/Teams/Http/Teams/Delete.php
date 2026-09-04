@@ -80,14 +80,14 @@ class Delete extends Action
 
         // Async delete
         if ($project->getId() === 'console') {
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $project,
                 type: DELETE_TYPE_TEAM_PROJECTS,
                 document: $team,
             ));
         }
 
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $team,

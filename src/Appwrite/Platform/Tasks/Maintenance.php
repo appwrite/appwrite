@@ -75,7 +75,7 @@ class Maintenance extends Action
                 fn () => $dbForPlatform->foreach(
                     'projects',
                     function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
-                        $publisherForDeletes->enqueue(new DeleteMessage(
+                        $publisherForDeletes->publish(new DeleteMessage(
                             project: $project,
                             type: DELETE_TYPE_MAINTENANCE,
                             hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
@@ -91,7 +91,7 @@ class Maintenance extends Action
                 APP_PROJECTS_SUBQUERIES
             );
 
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
                 hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
@@ -117,7 +117,7 @@ class Maintenance extends Action
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
     {
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             type: DELETE_TYPE_REALTIME,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -60),
         ));
@@ -125,7 +125,7 @@ class Maintenance extends Action
 
     private function notifyDeleteCSVExports(DeletePublisher $publisherForDeletes): void
     {
-        $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
+        $publisherForDeletes->publish(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
     }
 
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void
@@ -169,7 +169,7 @@ class Maintenance extends Action
                 continue;
             }
 
-            $publisherForCertificate->enqueue(new \Appwrite\Event\Message\Certificate(
+            $publisherForCertificate->publish(new \Appwrite\Event\Message\Certificate(
                 project: new Document([
                     '$id' => $rule->getAttribute('projectId', ''),
                     '$sequence' => $rule->getAttribute('projectInternalId', 0),
@@ -185,7 +185,7 @@ class Maintenance extends Action
 
     private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
     {
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
         ));
@@ -193,7 +193,7 @@ class Maintenance extends Action
 
     private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
     {
-        $publisherForDeletes->enqueue(new DeleteMessage(
+        $publisherForDeletes->publish(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
         ));

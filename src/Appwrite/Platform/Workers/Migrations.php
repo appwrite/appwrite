@@ -1041,7 +1041,7 @@ class Migrations extends Action
             'type' => $exportType,
         ];
 
-        $publisherForMails->enqueue(new MailMessage(
+        $publisherForMails->publish(new MailMessage(
             project: $project,
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name', $user->getAttribute('email')),

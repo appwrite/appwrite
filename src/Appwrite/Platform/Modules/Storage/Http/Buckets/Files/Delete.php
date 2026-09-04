@@ -128,7 +128,7 @@ class Delete extends Action
         }
 
         if ($deviceDeleted) {
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $publisherForDeletes->publish(new DeleteMessage(
                 project: $queueForEvents->getProject(),
                 type: DELETE_TYPE_CACHE_BY_RESOURCE,
                 resource: 'file/' . $fileId,

@@ -550,7 +550,7 @@ class Jobs extends Action
             // Every successful site build, activated or not, repoints the
             // branch preview rule and refreshes the console screenshots.
             Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $bus, $platform['sitesDomain']);
-            $publisherForScreenshots->enqueue(new \Appwrite\Event\Message\Screenshot(
+            $publisherForScreenshots->publish(new \Appwrite\Event\Message\Screenshot(
                 project: $project,
                 deploymentId: $deployment->getId(),
             ));
@@ -752,7 +752,7 @@ class Jobs extends Action
 
         $queueForWebhooks->from($update)->trigger();
 
-        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+        $publisherForFunctions->publish(FunctionMessage::fromEvent(
             event: $update->getEvent(),
             params: $update->getParams(),
             project: $update->getProject(),
