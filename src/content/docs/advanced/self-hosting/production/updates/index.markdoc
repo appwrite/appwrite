@@ -20,6 +20,14 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
+# Upgrading to 2.0.0 {% #upgrading-to-2 %}
+
+Appwrite 2.0.0 requires a migration. Upgrade to `1.9.6` first, then to `2.0.0`.
+
+Your existing database stays as it is. The database you installed with, whether MariaDB, MongoDB, or PostgreSQL, is the database you keep. PostgreSQL is the default for new installations only, and upgrading does not move your data onto it.
+
+The upgrade also keeps the [worker topology](/docs/advanced/self-hosting/configuration/topologies) of your existing installation. Appwrite reads the topology from your Compose file and writes the new one to match. To change the topology at the same time, pass `--topology=combined` or `--topology=separate` to the upgrade command.
+
 # Installing the next version {% #install-next-version %}
 
 The first step is to install the latest version of Appwrite. Head to the directory where you ran your previous Appwrite install command.
@@ -37,7 +45,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `1.7.4`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.0.0`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix
@@ -82,7 +90,7 @@ docker ps | grep appwrite/appwrite
 
 Verify that the `STATUS` doesn't have any errors and all the `appwrite/appwrite` containers have the same version.
 
-# Running the Migration {% #running-the-migration %}
+# Running the migration {% #running-the-migration %}
 
 We can now start the migration. Navigate to the `appwrite` directory where your `docker-compose.yml` is present and run the following command.
 

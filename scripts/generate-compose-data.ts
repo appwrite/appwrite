@@ -25,33 +25,105 @@ const APPWRITE_REPO =
 const OUTPUT_DIR = join(VIBES_ROOT, 'src', 'lib', 'docs', 'compose-generator')
 const OUTPUT_FILE = join(OUTPUT_DIR, 'composeData.ts')
 
-// Mirrors TOPOLOGY_SERVICE_GROUPS in src/Appwrite/Docker/Compose/Generator.php.
-const TOPOLOGY_SERVICES: Record<string, string[]> = {
-  combined: ['appwrite-worker', 'appwrite-task-scheduler'],
-  separate: [
-    'appwrite-worker-webhooks',
-    'appwrite-worker-deletes',
-    'appwrite-worker-databases',
-    'appwrite-worker-builds',
-    'appwrite-worker-jobs',
-    'appwrite-worker-screenshots',
-    'appwrite-worker-certificates',
-    'appwrite-worker-executions',
-    'appwrite-worker-functions',
-    'appwrite-worker-mails',
-    'appwrite-worker-notifications',
-    'appwrite-worker-messaging',
-    'appwrite-worker-migrations',
-    'appwrite-task-scheduler-functions',
-    'appwrite-task-scheduler-executions',
-    'appwrite-task-scheduler-messages',
-  ],
-}
+// Mirrors TOPOLOGY_SERVICE_GROUPS in src/Appwrite/Docker/Compose/Generator.php,
+// which names the combined services and selects the separate ones by Compose
+// profile. The separate list is read off the profiles below for the same reason,
+// so a service added to the profile upstream cannot drift out of this list.
+const COMBINED_TOPOLOGY_SERVICES = [
+  'appwrite-worker',
+  'appwrite-task-scheduler',
+]
+const SEPARATE_TOPOLOGY_PROFILE = 'separate'
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
 const ASSISTANT_SERVICE = 'appwrite-assistant'
 
+// The appwrite repo's .env is a development file. These keys are dropped from the
+// .env the docs hand to a self-hoster:
+//   - COMPOSE_PROFILES selects services by Compose profile, and stripProfiles()
+//     removes every profile from the docs compose, so the key does nothing here.
+//   - The DocumentsDB and VectorsDB keys point at engines a self-hosted install
+//     does not deploy. Both products ship disabled, so the keys have no effect.
+const OMITTED_ENV_KEYS = [
+  'COMPOSE_PROFILES',
+  '_APP_DOCUMENTSDB',
+  '_APP_VECTORSDB',
+  '_APP_DB_ADAPTER_DOCUMENTSDB',
+  '_APP_DB_HOST_DOCUMENTSDB',
+  '_APP_DB_PORT_DOCUMENTSDB',
+  '_APP_DB_SCHEMA_DOCUMENTSDB',
+  '_APP_DB_USER_DOCUMENTSDB',
+  '_APP_DB_PASS_DOCUMENTSDB',
+  '_APP_DB_ADAPTER_VECTORSDB',
+  '_APP_DB_HOST_VECTORSDB',
+  '_APP_DB_PORT_VECTORSDB',
+  '_APP_DB_SCHEMA_VECTORSDB',
+  '_APP_DB_USER_VECTORSDB',
+  '_APP_DB_PASS_VECTORSDB',
+  '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
+  '_APP_CONNECTIONS_DATABASE_VECTORSDB',
+]
+
+/**
+ * Removes the OMITTED_ENV_KEYS pass-through entries from a service's
+ * `environment:` list. Compose passes an unset key through as unset, and both
+ * products default to disabled, so dropping the entries changes no behaviour.
+ */
+function stripOmittedServiceEnv(block: string): string {
+  const omitted = new Set(OMITTED_ENV_KEYS)
+  return block
+    .split('\n')
+    .filter((line) => {
+      const match = line.match(/^      - ([A-Z0-9_]+)$/)
+      return match === null || !omitted.has(match[1])
+    })
+    .join('\n')
+}
+
+/**
+ * Drops the keys in OMITTED_ENV_KEYS, and the comment lines directly above them,
+ * from the .env template.
+ */
+function filterEnv(env: string): string {
+  const omitted = new Set(OMITTED_ENV_KEYS)
+  const kept: string[] = []
+  let pendingComments: string[] = []
+  for (const line of env.split('\n')) {
+    if (line.startsWith('#')) {
+      pendingComments.push(line)
+      continue
+    }
+    const key = line.split('=', 1)[0]
+    if (omitted.has(key)) {
+      pendingComments = []
+      continue
+    }
+    kept.push(...pendingComments, line)
+    pendingComments = []
+  }
+  kept.push(...pendingComments)
+  return kept.join('\n')
+}
+
 async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(join(APPWRITE_REPO, relativePath), 'utf-8')
+}
+
+/** Profile names listed under a service's `profiles:` key. */
+function readProfiles(block: string): string[] {
+  const lines = block.split('\n')
+  const profiles: string[] = []
+  let reading = false
+  for (const line of lines) {
+    if (/^    profiles:\s*$/.test(line)) {
+      reading = true
+      continue
+    }
+    if (!reading) continue
+    const match = line.match(/^      - (.+)$/)
+    if (match === null) break
+    profiles.push(match[1].trim())
+  }
+  return profiles
 }
 
 function stripProfiles(block: string): string {
@@ -128,17 +200,31 @@ async function main() {
       `appwrite/appwrite:${version}`,
     )
 
-  const services = splitBlocks(servicesSection, '  ').map((s) => ({
+  const rawServices = splitBlocks(servicesSection, '  ')
+  const separateServices = rawServices
+    .filter((s) => readProfiles(s.block).includes(SEPARATE_TOPOLOGY_PROFILE))
+    .map((s) => s.name)
+  const TOPOLOGY_SERVICES: Record<string, string[]> = {
+    combined: COMBINED_TOPOLOGY_SERVICES,
+    separate: separateServices,
+  }
+
+  const services = rawServices.map((s) => ({
     name: s.name,
-    block: pinImage(stripProfiles(s.block)),
+    block: pinImage(stripOmittedServiceEnv(stripProfiles(s.block))),
   }))
   const volumes = splitBlocks(volumesSection, '  ', true)
+
+  if (separateServices.length === 0) {
+    throw new Error(
+      `No service carries the "${SEPARATE_TOPOLOGY_PROFILE}" Compose profile`,
+    )
+  }
 
   const knownNames = new Set(services.map((s) => s.name))
   const expected = [
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
-    ...TOPOLOGY_SERVICES.separate,
     ASSISTANT_SERVICE,
   ]
   for (const name of expected) {
@@ -147,7 +233,7 @@ async function main() {
     }
   }
 
-  const env = await readRepoFile('.env')
+  const env = filterEnv(await readRepoFile('.env'))
   const mongoInit = await readRepoFile('mongo-init.js')
   const mongoEntrypoint = await readRepoFile('mongo-entrypoint.sh')
 

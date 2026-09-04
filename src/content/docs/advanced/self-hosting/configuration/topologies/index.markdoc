@@ -53,6 +53,9 @@ The separate topology replaces `appwrite-worker` with one container per queue, a
 | `appwrite-worker-notifications` | |
 | `appwrite-worker-messaging` | |
 | `appwrite-worker-migrations` | |
+| `appwrite-worker-stats-usage` | |
+| `appwrite-worker-stats-resources` | |
+| `appwrite-task-stats-resources` | |
 
 In Appwrite's `docker-compose.yml`, these services sit behind the `separate` Compose profile. To run the separate topology from a manual installation, include the override file and enable the profile:
 

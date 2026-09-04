@@ -77,6 +77,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "appwrite-2-self-hosted",
+    "href": "/blog/post/appwrite-2-self-hosted",
+    "title": "Appwrite 2.0 is now available for self-hosting",
+    "description": "Appwrite 2.0 brings a rebuilt Console, PostgreSQL as the default database, a browser-based installer, and a combined worker topology that runs your instance on 16 containers instead of 33.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "product, announcement",
+    "draft": true,
+    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-rate-limit-strategies",
     "href": "/blog/post/firewall-rate-limit-strategies",
     "title": "Fixed window, sliding window, or token bucket? Choosing a rate limit strategy in Appwrite Firewall",
