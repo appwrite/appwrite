@@ -19,11 +19,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
-use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
@@ -35,8 +33,6 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * must be fresh for each worker job.
  */
 return function (Container $container): void {
-    $container->set('log', fn () => new Log(), []);
-
     $container->set('usage', fn () => new Context(), []);
 
     $container->set('authorization', function () {
@@ -202,50 +198,17 @@ return function (Container $container): void {
         return new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);
 
-    $container->set('logError', function (Registry $register, Document $project) {
-        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
-            $logger = $register->get('logger');
-
-            if ($logger) {
-                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-                $log = new Log();
-                $log->setNamespace($namespace);
-                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->addTag('code', $error->getCode());
-                $log->addTag('verboseType', \get_class($error));
-                $log->addTag('projectId', $project->getId());
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-
-                if ($error->getPrevious() !== null) {
-                    if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                        $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
-                    }
-                    $log->addExtra('previousFile', $error->getPrevious()->getFile());
-                    $log->addExtra('previousLine', $error->getPrevious()->getLine());
-                }
-
+    $container->set('logError', function (Document $project) {
+        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
+            $span = Span::current();
+            if ($span !== null) {
+                $span->setError($error);
+                $span->set('project.id', $project->getId());
+                $span->set('error.action', $action);
                 foreach (($extras ?? []) as $key => $value) {
-                    $log->addExtra($key, $value);
-                }
-
-                $log->setAction($action);
-
-                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                try {
-                    $responseCode = $logger->addLog($log);
-                    Console::info('Error log pushed with status code: ' . $responseCode);
-                } catch (Throwable $th) {
-                    Console::error('Error pushing log: ' . $th->getMessage());
+                    if (\is_scalar($value) || $value === null) {
+                        $span->set('error.' . $key, $value);
+                    }
                 }
             }
 
@@ -259,7 +222,7 @@ return function (Container $container): void {
                 Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
             }
         };
-    }, ['register', 'project']);
+    }, ['project']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

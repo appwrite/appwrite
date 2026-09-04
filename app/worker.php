@@ -11,8 +11,6 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -36,8 +34,6 @@ $container->set('authorization', function () {
 }, []);
 
 $container->set('project', fn () => new Document([]), []);
-
-$container->set('log', fn () => new Log(), []);
 
 $container->set('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
@@ -154,40 +150,10 @@ Console::success('Listening for jobs…');
 $worker
     ->error()
     ->inject('error')
-    ->inject('logger')
-    ->inject('log')
     ->inject('project')
-    ->inject('authorization')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
+    ->action(function (Throwable $error, Document $project) {
         Span::current()?->setError($error);
-
-        if ($logger) {
-            $log->setNamespace('appwrite-worker');
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-worker');
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', $authorization->getRoles());
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
-        }
+        Span::add('project.id', $project->getId());
 
         Console::error('[Error] Type: ' . get_class($error));
         Console::error('[Error] Message: ' . $error->getMessage());

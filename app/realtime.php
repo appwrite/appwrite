@@ -47,7 +47,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -412,55 +411,22 @@ $server = new Server($adapter);
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
-        global $register;
+        // Server callbacks (pub/sub, stats) run outside a connection span; open one
+        // so the failure still reaches the exporters.
+        $span = Span::current();
+        $owned = $span === null;
+        $span ??= Span::init($action);
 
-        $logger = $register->get('realtimeLogger');
-
-        // Match HTTP semantics (app/controllers/general.php): AppwriteException uses its
-        // configured publish flag; everything else publishes only for code 0 or >= 500.
-        // Without this, expected client errors (e.g. Utopia DB Authorization) hit Sentry.
-        if ($error instanceof AppwriteException) {
-            $publish = $error->isPublishable();
-        } else {
-            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+        $span->setError($error);
+        $span->set('error.action', $action);
+        $span->set('project.id', $project?->getId() ?: 'n/a');
+        $span->set('user.id', $user?->getId() ?: 'n/a');
+        foreach ($tags as $key => $value) {
+            $span->set($key, \is_scalar($value) || $value === null ? $value : \json_encode($value));
         }
 
-        if ($logger && $publish) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace("realtime");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('projectId', $project?->getId() ?: 'n/a');
-            $log->addTag('userId', $user?->getId() ?: 'n/a');
-
-            foreach ($tags as $key => $value) {
-                $log->addTag($key, $value ?: 'n/a');
-            }
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $authorization?->getRoles() ?? []);
-
-            $log->setAction($action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
+        if ($owned) {
+            $span->finish(error: $error);
         }
 
         Console::error('[Error] Type: ' . get_class($error));

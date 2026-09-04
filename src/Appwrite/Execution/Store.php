@@ -10,14 +10,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\Statement;
-use Utopia\System\System;
+use Utopia\Span\Span;
 
 /**
  * ClickHouse persistence for function and site executions.
@@ -117,7 +115,6 @@ class Store
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
-        private readonly ?Logger $logger = null,
     ) {
         $this->requestFactory = new RequestFactory();
     }
@@ -899,7 +896,8 @@ class Store
 
     private function report(string $operation, Throwable $th): void
     {
-        if ($this->logger === null) {
+        // Nothing to record on: skip the rate-limit bookkeeping as well.
+        if (Span::current() === null) {
             return;
         }
 
@@ -909,27 +907,12 @@ class Store
         }
         self::$lastReports[$operation] = $now;
 
-        $log = new Log();
-        $log->setNamespace('executions');
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage("ClickHouse execution mirror {$operation} failed: {$th->getMessage()}");
-        $log->setAction("executions.mirror.{$operation}");
-        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
-            ? Log::ENVIRONMENT_PRODUCTION
-            : Log::ENVIRONMENT_STAGING);
-        $log->addTag('operation', $operation);
-        $log->addTag('exception', $th::class);
-        $log->addTag('code', $th->getCode());
-        $log->addExtra('file', $th->getFile());
-        $log->addExtra('line', $th->getLine());
-        $log->addExtra('trace', $th->getTraceAsString());
-
-        try {
-            $this->logger->addLog($log);
-        } catch (Throwable) {
-        }
+        // The mirror is best effort, so the failure is recorded on the request
+        // span without failing it.
+        Span::add('executions.mirror.operation', $operation);
+        Span::add('executions.mirror.error', $th->getMessage());
+        Span::add('executions.mirror.exception', $th::class);
+        Span::add('executions.mirror.code', $th->getCode());
     }
 
     /** @param array<string, mixed> $params */

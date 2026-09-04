@@ -14,10 +14,8 @@ use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Enum;
-use Utopia\System\System;
+use Utopia\Span\Span;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -81,12 +79,10 @@ class Create extends CreateDocumentAction
             ->inject('project')
             ->inject('embeddingAgent')
             ->inject('usage')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage): void
     {
         $adapter = $embeddingAgent->getAdapter();
         $adapter->setModel($model);
@@ -116,7 +112,7 @@ class Create extends CreateDocumentAction
                 }
             } catch (\Exception $e) {
                 $totalErrors += \count($batch);
-                $this->logError($e, $model, $project, $log, $logger);
+                $this->logError($e, $model);
 
                 // One error result per text in the failed batch.
                 foreach ($batch as $ignored) {
@@ -160,26 +156,10 @@ class Create extends CreateDocumentAction
         ]);
     }
 
-    private function logError(\Throwable $e, string $model, Document $project, Log $log, ?Logger $logger): void
+    private function logError(\Throwable $e, string $model): void
     {
-        if ($logger === null) {
-            return;
-        }
-
-        $log->setNamespace('http');
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($e->getMessage());
-
-        $log->addTag('embeddingModel', $model);
-        $log->addTag('code', $e->getCode());
-        $log->addTag('projectId', $project->getId());
-
-        $log->addExtra('file', $e->getFile());
-        $log->addExtra('line', $e->getLine());
-        $log->addExtra('trace', $e->getTraceAsString());
-
-        $logger->addLog($log);
+        Span::add('embedding.model', $model);
+        Span::add('embedding.error', $e->getMessage());
+        Span::add('embedding.error_code', $e->getCode());
     }
 }
