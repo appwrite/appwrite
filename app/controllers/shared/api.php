@@ -664,6 +664,10 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
+        // Unlike hostname (the host that served the request) this identifies the
+        // caller. Browsers always send it and cannot forge it, so an empty
+        // origin on a session-authenticated request means no browser made it.
+        $auditContext->origin = $request->getOrigin();
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;

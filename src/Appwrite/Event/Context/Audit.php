@@ -16,6 +16,7 @@ class Audit
         public string $hostname = '',
         public string $sdk = '',
         public string $sdkVersion = '',
+        public string $origin = '',
         public string $event = '',
         public string $resource = '',
         public array $payload = [],
@@ -33,6 +34,7 @@ class Audit
             && $this->hostname === ''
             && $this->sdk === ''
             && $this->sdkVersion === ''
+            && $this->origin === ''
             && $this->event === ''
             && $this->resource === ''
             && $this->payload === [];
