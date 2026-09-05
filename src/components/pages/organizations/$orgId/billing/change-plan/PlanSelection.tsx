@@ -15,9 +15,11 @@ import {
   getPlanCanonicalFromRecord,
   getPlanNameFromTier,
   isFreePlanRef,
+  isPaidToFreeDowngradeBlocked,
   resolveBillingPlanRecord,
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
+import { getLegacyConsoleOrganizationBillingUrl } from '@/lib/legacy-console-path'
 import { cn } from '@/lib/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
@@ -59,6 +61,13 @@ const ENTERPRISE_COLLAPSED_HINT =
 const FREE_PLAN_CONFLICT_DESCRIPTION =
   'Only one free organization per account.'
 
+const FREE_DOWNGRADE_ALERT_TITLE = 'Downgrade to Free'
+const FREE_DOWNGRADE_ALERT_DESCRIPTION =
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.'
+const FREE_DOWNGRADE_ALERT_CTA = 'Continue in the old console'
+const FREE_DOWNGRADE_PLAN_DESCRIPTION =
+  'Temporarily available in the old console'
+
 interface PlanSelectionProps {
   plans: Record<string, unknown>
   currentPlan: BillingPlanTier | string
@@ -68,6 +77,7 @@ interface PlanSelectionProps {
   hasFreeOrgs: boolean
   isCreateMode?: boolean
   variant?: 'card' | 'inline'
+  organizationId?: string
 }
 
 export function PlanSelection({
@@ -79,6 +89,7 @@ export function PlanSelection({
   hasFreeOrgs,
   isCreateMode = false,
   variant = 'card',
+  organizationId,
 }: PlanSelectionProps) {
   const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
@@ -112,11 +123,26 @@ export function PlanSelection({
     hasFreeOrgs &&
     (isCreateMode || !isOrganizationOnFreePlan)
 
+  const isFreeDowngradeBlocked = (planTier: string) =>
+    isPaidToFreeDowngradeBlocked(currentPlan as string, planTier, planCatalog, {
+      isCreateMode,
+    })
+
   const isDisabled = (planTier: string) => {
     if (!selfService) return true
     if (isCreateMode && isFreeDisabledByAccountLimit(planTier)) return true
+    if (isFreeDowngradeBlocked(planTier)) return true
     return false
   }
+
+  const showFreeDowngradeNotice =
+    !isCreateMode &&
+    !isOrganizationOnFreePlan &&
+    availablePlans.some(([planTier]) => isFreePlan(planTier))
+
+  const legacyConsoleBillingUrl = organizationId
+    ? getLegacyConsoleOrganizationBillingUrl(organizationId)
+    : 'https://cloud.appwrite.io'
 
   const hasFreePlanConflict = (planTier: string) =>
     isFreeDisabledByAccountLimit(planTier)
@@ -269,9 +295,38 @@ export function PlanSelection({
         </Alert>
       )}
 
+      {showFreeDowngradeNotice && (
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>{t(FREE_DOWNGRADE_ALERT_TITLE)}</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p>{t(FREE_DOWNGRADE_ALERT_DESCRIPTION)}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 h-8 text-[13px]"
+              asChild
+            >
+              <a
+                href={legacyConsoleBillingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                {...analyticsAttrs('upgrade-legacy-console-downgrade')}
+              >
+                {t(FREE_DOWNGRADE_ALERT_CTA)}
+                <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
+              </a>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <RadioGroup
         value={selectedPlan || undefined}
-        onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
+        onValueChange={(value) => {
+          if (isDisabled(value)) return
+          onPlanSelect(value as BillingPlanTier)
+        }}
         className={planListClassName}
 >
         {availablePlans.map(([planTier, planData]) => {
@@ -287,9 +342,11 @@ export function PlanSelection({
             const price = planData?.price || 0
             // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
-            const planDescription = hasFreePlanConflict(planTier)
-              ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
-              : description
+            const planDescription = isFreeDowngradeBlocked(planTier)
+              ? t(FREE_DOWNGRADE_PLAN_DESCRIPTION)
+              : hasFreePlanConflict(planTier)
+                ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
+                : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
               getPlanCanonicalFromRecord(

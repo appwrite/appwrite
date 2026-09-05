@@ -140,6 +140,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Contact emails': '連絡先メール',
   'Contact for price': '価格はお問い合わせください',
   'Contact sales': '営業に連絡',
+  'Continue in the old console': '旧コンソールで続行',
   'Copied to clipboard': 'クリップボードにコピーしました',
   'Copy ID': 'ID をコピー',
   'Copy as JSON': 'JSON としてコピー',
@@ -208,6 +209,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Domain transfer started': 'ドメイン移管を開始しました',
   'Domain verification successful': 'ドメインの検証に成功しました',
   'Downgrade impact': 'ダウングレードの影響',
+  'Downgrade to Free': 'Free へのダウングレード',
+  'Downgrade to Free is temporarily unavailable here. Continue in the old console.':
+    'Free へのダウングレードはここでは一時的に利用できません。旧コンソールで続行してください。',
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
+    '体験を改善している間、Free プランへのダウングレードはここでは一時的に利用できません。この変更は旧コンソールで完了できます。',
   'Downgrading to Free Plan': 'Free プランにダウングレード',
   'Downgrading your plan': 'プランをダウングレード中',
   'Download DPA': 'DPA をダウンロード',
@@ -579,6 +585,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Tax ID': '税務 ID',
   'Tax ID (Optional)': '税務 ID (任意)',
   'Tax ID updated': '税務 ID を更新しました',
+  'Temporarily available in the old console':
+    '旧コンソールで一時的に利用できます',
   'Team ID is required': 'チーム ID は必須です',
   'Terms of service': '利用規約',
   'The target plan allows': '対象プランでは次が許可されます',
