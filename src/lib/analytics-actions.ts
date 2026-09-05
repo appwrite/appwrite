@@ -117,7 +117,6 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-contact-sales': 'Upgrade Contact Sales Clicked',
   'upgrade-enterprise-learn-more': 'Upgrade Enterprise Learn More Clicked',
   'upgrade-view-pricing': 'Upgrade View Pricing Clicked',
-  'upgrade-legacy-console-downgrade': 'Upgrade Legacy Console Downgrade Clicked',
   'upgrade-cancel': 'Upgrade Cancel Clicked',
   'upgrade-submit': 'Upgrade Submit Clicked',
   'upgrade-create-org': 'Upgrade Create Org Clicked',

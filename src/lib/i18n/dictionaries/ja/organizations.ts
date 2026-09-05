@@ -1192,4 +1192,44 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Addons: 'アドオン',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': '専用 DB コンピュートクレジット',
+  'Organization resources': '組織のリソース',
+  'Project resources': 'プロジェクトのリソース',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '組織の使用量を選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '残っている各プロジェクトを選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    '削除したい超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'The selected plan allows': '選択したプランで利用できるのは',
+  'Still over the plan limit.': 'まだプラン上限を超えています。',
+  'Delete at least': '少なくとも次を削除してください:',
+  'to fit the selected plan.': '選択したプランに合わせるために必要です。',
+  'Delete selected projects': '選択したプロジェクトを削除',
+  'Delete selected members': '選択したメンバーを削除',
+  'Delete selected domains': '選択したドメインを削除',
+  'Only the selected items will be deleted.': '選択した項目だけが削除されます。',
+  'We will check the plan limits again after that.':
+    'その後、プラン上限を再度確認します。',
+  'Finish deleting project resources that exceed the selected plan.':
+    '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
+  'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'The selected plan still exceeds usage limits. Delete remaining extras, then try again.':
+    '選択したプランはまだ使用上限を超えています。残っている超過分を削除してから再試行してください。',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    '選択したプランをまだ超えている超過分です。それ以外は削除されません。',
+  'Usage fits the selected plan. No further deletions are required.':
+    '使用量は選択したプランに収まっています。これ以上の削除は不要です。',
+  'Calculating remaining extras...': '残っている超過分を計算しています...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    '選択したプランをまだ超えている超過分です。マークした項目だけを削除します。',
+  'still over limit': 'まだ上限超過',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    '各プロジェクトで削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Over limit': '上限超過',
+  Marked: 'マーク済み',
+  'This resource type fits the selected plan.':
+    'このリソースタイプは選択したプランに収まっています。',
+  'Failed to delete selected items.': '選択した項目の削除に失敗しました。',
 }

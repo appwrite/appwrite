@@ -186,44 +186,17 @@ export function projectHasResourceViolations(
   })
 }
 
-export function isResourceSelectionValid(
-  items: DowngradeResourceItem[],
-  selectedIds: Set<string>,
-  limit: number | null,
-): boolean {
-  if (limit === null || items.length <= limit) return true
-  return selectedIds.size === limit
-}
-
-export function getDefaultKeepIds(
-  items: DowngradeResourceItem[],
-  limit: number | null,
-): Set<string> {
-  if (limit === null) {
-    return new Set(items.map((item) => item.$id))
-  }
-  return new Set(items.slice(0, limit).map((item) => item.$id))
-}
-
 export function countResourcesToDeleteForProject(
   resources: ProjectDowngradeResources,
-  keepSelections: Partial<Record<DowngradeResourceType, Set<string>>>,
   limits: DowngradeResourceLimits,
 ): Partial<Record<DowngradeResourceType, number>> {
   const counts: Partial<Record<DowngradeResourceType, number>> = {}
 
   for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
-    const limit = limits[id]
-    if (limit === null) continue
-
-    const items = resources[id].items
-    const keepIds =
-      keepSelections[id] ??
-      (items.length <= limit
-        ? new Set(items.map((item) => item.$id))
-        : getDefaultKeepIds(items, limit))
-
-    const deleteCount = items.filter((item) => !keepIds.has(item.$id)).length
+    const deleteCount = getResourceViolationCount(
+      resources[id].total,
+      limits[id],
+    )
     if (deleteCount > 0) {
       counts[id] = deleteCount
     }

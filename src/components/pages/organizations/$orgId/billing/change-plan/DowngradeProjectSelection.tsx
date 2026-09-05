@@ -19,8 +19,10 @@ interface DowngradeProjectSelectionProps {
   projectsLimit: number
   selectedProjectIds: Set<string>
   onToggleProject: (projectId: string) => void
+  onDeleteSelected: () => void
   onPageChange: (page: number) => void
   loading?: boolean
+  deleting?: boolean
   paginationDisabled?: boolean
 }
 
@@ -31,12 +33,15 @@ export function DowngradeProjectSelection({
   projectsLimit,
   selectedProjectIds,
   onToggleProject,
+  onDeleteSelected,
   onPageChange,
   loading = false,
+  deleting = false,
   paginationDisabled = false,
 }: DowngradeProjectSelectionProps) {
   const t = useT()
-  const projectSelectionValid = selectedProjectIds.size === projectsLimit
+  const overage = Math.max(0, total - projectsLimit)
+  const stillOver = overage > 0
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
   const pageStart = (safePage - 1) * SELECTION_PAGE_SIZE
@@ -48,16 +53,18 @@ export function DowngradeProjectSelection({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-[15px] font-semibold leading-normal text-foreground">
-              {t('Choose projects to keep')}
+              {t('Projects')}
             </h3>
             <p className="text-[13px] leading-normal text-muted-foreground mt-2">
-              {t('The target plan allows')} {projectsLimit}{' '}
+              {t('The selected plan allows')} {projectsLimit}{' '}
               {projectsLimit === 1 ? t('project') : t('projects')}.{' '}
-              {t('Unselected projects and everything in them will be deleted.')}
+              {t(
+                'Mark the extras you want to remove. Only selected items are deleted after you confirm.',
+              )}
             </p>
           </div>
           <p className="text-[13px] font-medium leading-normal text-foreground shrink-0">
-            {selectedProjectIds.size} / {projectsLimit}
+            {total}/{projectsLimit}
           </p>
         </div>
       </div>
@@ -65,11 +72,11 @@ export function DowngradeProjectSelection({
       <div className="border-t border-border" />
 
       <div className="px-6 py-4 space-y-4">
-        {!projectSelectionValid ? (
-          <WarningAlert title={t('Select projects to keep')}>
-            {t('Choose exactly')} {projectsLimit}{' '}
-            {projectsLimit === 1 ? t('project') : t('projects')}{' '}
-            {t('to continue.')}
+        {stillOver ? (
+          <WarningAlert title={t('Still over the plan limit.')}>
+            {t('Delete at least')} {overage}{' '}
+            {overage === 1 ? t('project') : t('projects')}{' '}
+            {t('to fit the selected plan.')}
           </WarningAlert>
         ) : null}
 
@@ -82,8 +89,6 @@ export function DowngradeProjectSelection({
             <>
               {projects.map((project) => {
                 const selected = selectedProjectIds.has(project.$id)
-                const disabled =
-                  !selected && selectedProjectIds.size >= projectsLimit
 
                 return (
                   <div
@@ -94,22 +99,17 @@ export function DowngradeProjectSelection({
                       selected
                         ? 'border-primary bg-primary/5'
                         : 'border-border bg-background/60',
-                      disabled && 'opacity-50',
                     )}
                   >
                     <Checkbox
-                      id={`keep-project-${project.$id}`}
+                      id={`delete-project-${project.$id}`}
                       checked={selected}
-                      disabled={disabled}
                       onCheckedChange={() => onToggleProject(project.$id)}
                       className="mt-0.5 shrink-0"
                     />
                     <Label
-                      htmlFor={`keep-project-${project.$id}`}
-                      className={cn(
-                        'min-w-0 flex-1 cursor-pointer',
-                        disabled && 'cursor-not-allowed',
-                      )}
+                      htmlFor={`delete-project-${project.$id}`}
+                      className="min-w-0 flex-1 cursor-pointer"
                     >
                       <p
                         className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground"
@@ -134,38 +134,53 @@ export function DowngradeProjectSelection({
           )}
         </div>
 
-        {total > SELECTION_PAGE_SIZE ? (
-          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-            <p className="text-[12px] text-muted-foreground">
-              {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
-              {t('projects')}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage - 1)}
-                disabled={safePage <= 1 || loading || paginationDisabled}
-                aria-label={t('Previous projects page')}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage + 1)}
-                disabled={safePage >= totalPages || loading || paginationDisabled}
-                aria-label={t('Next projects page')}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          {total > SELECTION_PAGE_SIZE ? (
+            <>
+              <p className="text-[12px] text-muted-foreground">
+                {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+                {t('projects')}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(safePage - 1)}
+                  disabled={safePage <= 1 || loading || paginationDisabled}
+                  aria-label={t('Previous projects page')}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(safePage + 1)}
+                  disabled={
+                    safePage >= totalPages || loading || paginationDisabled
+                  }
+                  aria-label={t('Next projects page')}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <span />
+          )}
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 text-[13px]"
+            disabled={selectedProjectIds.size === 0 || deleting}
+            onClick={onDeleteSelected}
+          >
+            {t('Delete selected')}
+          </Button>
+        </div>
       </div>
     </div>
   )

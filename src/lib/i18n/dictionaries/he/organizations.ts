@@ -1415,4 +1415,44 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Addons: 'תוספים',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': 'זיכוי חישוב למסד נתונים ייעודי',
+  'Organization resources': 'משאבי הארגון',
+  'Project resources': 'משאבי פרויקט',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו את השימוש בארגון לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו כל פרויקט שנותר לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    'סמנו את העודפים שברצונכם להסיר. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'The selected plan allows': 'התוכנית שנבחרה מאפשרת',
+  'Still over the plan limit.': 'עדיין מעל מגבלת התוכנית.',
+  'Delete at least': 'מחקו לפחות',
+  'to fit the selected plan.': 'כדי להתאים לתוכנית שנבחרה.',
+  'Delete selected projects': 'מחיקת הפרויקטים שנבחרו',
+  'Delete selected members': 'מחיקת החברים שנבחרו',
+  'Delete selected domains': 'מחיקת הדומיינים שנבחרו',
+  'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
+  'We will check the plan limits again after that.':
+    'נבדוק שוב את מגבלות התוכנית לאחר מכן.',
+  'Finish deleting project resources that exceed the selected plan.':
+    'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
+  'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
+  'The selected plan still exceeds usage limits. Delete remaining extras, then try again.':
+    'התוכנית שנבחרה עדיין חורגת ממגבלות השימוש. מחקו את העודפים שנותרו ונסו שוב.',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    'עודפים שנותרו וחורגים מהתוכנית שנבחרה. שום דבר אחר לא יימחק.',
+  'Usage fits the selected plan. No further deletions are required.':
+    'השימוש מתאים לתוכנית שנבחרה. אין צורך במחיקות נוספות.',
+  'Calculating remaining extras...': 'מחשבים עודפים שנותרו...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    'עודפים שעדיין מעל התוכנית שנבחרה. מחקו רק את הפריטים שסימנתם.',
+  'still over limit': 'עדיין מעל המגבלה',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    'סמנו עודפים למחיקה בכל פרויקט. רק הפריטים שנבחרו יוסרו אחרי האישור.',
+  'Over limit': 'מעל המגבלה',
+  Marked: 'מסומן',
+  'This resource type fits the selected plan.':
+    'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
+  'Failed to delete selected items.': 'מחיקת הפריטים שנבחרו נכשלה.',
 }

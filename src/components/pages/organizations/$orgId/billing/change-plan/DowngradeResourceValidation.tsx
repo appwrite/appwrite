@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { useQueries } from '@tanstack/react-query'
+import { useQueries, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { toast } from 'sonner'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
 import {
@@ -32,16 +33,16 @@ import {
 import {
   DOWNGRADE_RESOURCE_TYPES,
   countResourcesToDeleteForProject,
-  getDefaultKeepIds,
   getDowngradePlanLimits,
   getResourceViolationCount,
-  isResourceSelectionValid,
+  projectHasResourceViolations,
   mergeResourceImpacts,
   type DowngradeResourceImpact,
   type DowngradeResourceLimits,
   type DowngradeResourceType,
   type ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
+import { ConfirmDowngradeDeletes } from './ConfirmDowngradeDeletes'
 import {
   getNonCompliantProjectIds,
   getServerResourceLimits,
@@ -184,9 +185,7 @@ function PaginatedListSlots({
 }
 
 export type DowngradeResourceValidationHandle = {
-  getSelectedProjects: () => string[]
   isValid: () => boolean
-  deleteMarkedResources: () => Promise<void>
 }
 
 type ProjectResourceSelections = Partial<
@@ -222,6 +221,7 @@ export function DowngradeResourceValidation({
   onImpactChange,
 }: DowngradeResourceValidationProps) {
   const t = useT()
+  const queryClient = useQueryClient()
   const clientLimits = useMemo(
     () => getDowngradePlanLimits(targetPlan),
     [targetPlan],
@@ -259,12 +259,8 @@ export function DowngradeResourceValidation({
   const [resourceSelections, setResourceSelections] = useState<
     Record<string, ProjectResourceSelections>
   >({})
-  // Defaults are pre-filled, which makes an untouched project look identical to
-  // a deliberate one. Track confirmation explicitly so nothing is deleted on a
-  // selection the user never looked at.
-  const [reviewedProjectIds, setReviewedProjectIds] = useState<Set<string>>(
-    () => new Set(),
-  )
+  const [confirmingDeletes, setConfirmingDeletes] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [resourceTypeSearch, setResourceTypeSearch] = useState('')
   const [resourceTypePage, setResourceTypePage] = useState(1)
   const [selectionSearch, setSelectionSearch] = useState('')
@@ -321,12 +317,6 @@ export function DowngradeResourceValidation({
       )
       return Object.keys(next).length === Object.keys(prev).length ? prev : next
     })
-
-    setReviewedProjectIds((prev) => {
-      const keptIds = new Set(projects.map((project) => project.$id))
-      const next = new Set([...prev].filter((id) => keptIds.has(id)))
-      return next.size === prev.size ? prev : next
-    })
   }, [keptProjectIds, projects])
 
   useEffect(() => {
@@ -365,42 +355,6 @@ export function DowngradeResourceValidation({
     setSelectionPage(1)
   }, [selectionSearch])
 
-  useEffect(() => {
-    setResourceSelections((prev) => {
-      let changed = false
-      const next = { ...prev }
-
-      for (const project of projects) {
-        const resources = resourcesByProjectId.get(project.$id)
-        if (!resources) continue
-
-        const projectLimits = limitsForProject(project.$id)
-        const current = next[project.$id] ?? {}
-        const updated: ProjectResourceSelections = { ...current }
-        let projectChanged = false
-
-        for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
-          const limit = projectLimits[id]
-          const items = resources[id].items
-          if (
-            !updated[id] &&
-            getResourceViolationCount(items.length, limit) > 0
-          ) {
-            updated[id] = getDefaultKeepIds(items, limit)
-            projectChanged = true
-          }
-        }
-
-        if (projectChanged) {
-          next[project.$id] = updated
-          changed = true
-        }
-      }
-
-      return changed ? next : prev
-    })
-  }, [projects, limitsForProject, resourcesLoadedSignature])
-
   const getProjectIssueCount = useCallback(
     (projectId: string) => {
       const resources = resourcesByProjectId.get(projectId)
@@ -416,63 +370,26 @@ export function DowngradeResourceValidation({
     [limitsForProject, resourcesByProjectId],
   )
 
-  const resourceSelectionValid = useMemo(() => {
+  const remainingWithinLimits = useMemo(() => {
     return projects.every((project) => {
       const resources = resourcesByProjectId.get(project.$id)
       if (!resources) return !resourcesLoading
-
-      const projectLimits = limitsForProject(project.$id)
-      return DOWNGRADE_RESOURCE_TYPES.every(({ id }) => {
-        const limit = projectLimits[id]
-        const selection = resourceSelections[project.$id]?.[id]
-        return isResourceSelectionValid(
-          resources[id].items,
-          selection ?? new Set(),
-          limit,
-        )
-      })
+      return !projectHasResourceViolations(
+        resources,
+        limitsForProject(project.$id),
+      )
     })
-  }, [
-    projects,
-    limitsForProject,
-    resourceSelections,
-    resourcesByProjectId,
-    resourcesLoading,
-  ])
+  }, [projects, limitsForProject, resourcesByProjectId, resourcesLoading])
 
-  // Only projects that actually lose something need confirming; a project that
-  // fits the target plan has nothing for the user to decide.
-  const projectsNeedingReview = useMemo(
-    () => projects.filter((project) => getProjectIssueCount(project.$id) > 0),
-    [projects, getProjectIssueCount],
-  )
-
-  const unreviewedProjects = useMemo(
-    () =>
-      projectsNeedingReview.filter(
-        (project) => !reviewedProjectIds.has(project.$id),
-      ),
-    [projectsNeedingReview, reviewedProjectIds],
-  )
-
-  const isValid =
-    resourceSelectionValid &&
-    !resourcesLoading &&
-    unreviewedProjects.length === 0
+  const isValid = remainingWithinLimits && !resourcesLoading
 
   const blockReason = useMemo(() => {
     if (resourcesLoading) return 'Loading project resources...'
-    if (!resourceSelectionValid) {
-      return 'Choose which resources to keep in each flagged project.'
-    }
-    if (unreviewedProjects.length > 0) {
-      const names = unreviewedProjects
-        .map((project) => project.name || project.$id)
-        .join(', ')
-      return `Confirm the resources to keep in ${names}.`
+    if (!remainingWithinLimits) {
+      return 'Finish deleting project resources that exceed the selected plan.'
     }
     return null
-  }, [resourcesLoading, resourceSelectionValid, unreviewedProjects])
+  }, [resourcesLoading, remainingWithinLimits])
 
   const projectResourceImpacts = useMemo<ProjectResourceImpact[]>(() => {
     return projects.map((project) => {
@@ -480,7 +397,6 @@ export function DowngradeResourceValidation({
       const impact = resources
         ? countResourcesToDeleteForProject(
             resources,
-            resourceSelections[project.$id] ?? {},
             limitsForProject(project.$id),
           )
         : {}
@@ -517,37 +433,58 @@ export function DowngradeResourceValidation({
     )
   }, [projectResourceImpacts, resourceImpact, resourcesLoading])
 
-  const getSelectedProjects = useCallback(
-    () => projects.map((project) => project.$id),
-    [projects],
-  )
+  const confirmSelectedDeletes = useCallback(async () => {
+    if (!activeProjectId || !activeResourceType) return
+    const resources = resourcesByProjectId.get(activeProjectId)
+    if (!resources) return
 
-  const deleteMarkedResources = useCallback(async () => {
     const payload: ResourcesToDelete = {}
+    const toDelete = buildResourcesToDelete(resources, {
+      [activeResourceType]:
+        resourceSelections[activeProjectId]?.[activeResourceType] ??
+        new Set(),
+    })
 
-    for (const project of projects) {
-      const resources = resourcesByProjectId.get(project.$id)
-      if (!resources) continue
+    if (Object.keys(toDelete).length === 0) return
+    payload[activeProjectId] = toDelete
 
-      const toDelete = buildResourcesToDelete(
-        project.$id,
-        resources,
-        resourceSelections[project.$id] ?? {},
+    setConfirmingDeletes(true)
+    try {
+      await deleteDowngradeResources(payload)
+      setResourceSelections((prev) => {
+        const projectSelection = { ...(prev[activeProjectId] ?? {}) }
+        delete projectSelection[activeResourceType]
+        return { ...prev, [activeProjectId]: projectSelection }
+      })
+      setConfirmOpen(false)
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['downgrade-resources', activeProjectId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['plan-estimation'],
+        }),
+      ])
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('Failed to delete selected items.'),
       )
-
-      if (Object.keys(toDelete).length > 0) {
-        payload[project.$id] = toDelete
-      }
+    } finally {
+      setConfirmingDeletes(false)
     }
-
-    if (Object.keys(payload).length === 0) return
-    await deleteDowngradeResources(payload)
-  }, [projects, resourceSelections, resourcesByProjectId])
+  }, [
+    activeProjectId,
+    activeResourceType,
+    queryClient,
+    resourceSelections,
+    resourcesByProjectId,
+    t,
+  ])
 
   const onRefRef = useRef(onRef)
   const onValidityChangeRef = useRef(onValidityChange)
-  const getSelectedProjectsRef = useRef(getSelectedProjects)
-  const deleteMarkedResourcesRef = useRef(deleteMarkedResources)
   const isValidRef = useRef(isValid)
 
   useEffect(() => {
@@ -558,40 +495,17 @@ export function DowngradeResourceValidation({
     onValidityChangeRef.current = onValidityChange
   }, [onValidityChange])
 
-  getSelectedProjectsRef.current = getSelectedProjects
-  deleteMarkedResourcesRef.current = deleteMarkedResources
   isValidRef.current = isValid
 
   useEffect(() => {
     onRefRef.current({
-      getSelectedProjects: () => getSelectedProjectsRef.current(),
       isValid: () => isValidRef.current,
-      deleteMarkedResources: () => deleteMarkedResourcesRef.current(),
     })
 
     return () => {
       onRefRef.current(null)
     }
   }, [])
-
-  const activeProjectIssueCount = activeProjectId
-    ? getProjectIssueCount(activeProjectId)
-    : 0
-  const activeProjectReviewed = activeProjectId
-    ? reviewedProjectIds.has(activeProjectId)
-    : false
-
-  const toggleProjectReviewed = (projectId: string) => {
-    setReviewedProjectIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(projectId)) {
-        next.delete(projectId)
-      } else {
-        next.add(projectId)
-      }
-      return next
-    })
-  }
 
   const lastReportedValidRef = useRef<boolean | null>(null)
   const lastReportedReasonRef = useRef<string | null | undefined>(undefined)
@@ -612,17 +526,14 @@ export function DowngradeResourceValidation({
     projectId: string,
     resourceType: DowngradeResourceType,
     resourceId: string,
-    limit: number | null,
   ) => {
-    if (limit === null) return
-
     setResourceSelections((prev) => {
       const projectSelection = prev[projectId] ?? {}
       const current = new Set(projectSelection[resourceType] ?? [])
 
       if (current.has(resourceId)) {
         current.delete(resourceId)
-      } else if (current.size < limit) {
+      } else {
         current.add(resourceId)
       }
 
@@ -761,17 +672,11 @@ export function DowngradeResourceValidation({
         <h3 className="text-[15px] font-semibold text-foreground">
           {t('Adjust resources for the target plan')}
         </h3>
-        {projectsNeedingReview.length > 0 ? (
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {unreviewedProjects.length > 0
-              ? `${t('We pre-selected which resources to keep. Review and confirm each flagged project before continuing:')} ${unreviewedProjects
-                  .map((project) => project.name || project.$id)
-                  .join(', ')}`
-              : t(
-                  'All flagged projects are confirmed. Anything not kept is deleted when you change the plan.',
-                )}
-          </p>
-        ) : null}
+        <p className="text-[13px] text-muted-foreground mt-2">
+          {t(
+            'Mark extras to delete in each project. Only selected items are removed after you confirm.',
+          )}
+        </p>
       </div>
 
       <div className="border-t border-border" />
@@ -841,23 +746,15 @@ export function DowngradeResourceValidation({
                                 }
                               >
                                 <Badge
-                                  variant={
-                                    reviewedProjectIds.has(project.$id)
-                                      ? 'success'
-                                      : 'warning'
-                                  }
+                                  variant="warning"
                                   className="text-[10px] shrink-0"
                                 >
-                                  {reviewedProjectIds.has(project.$id)
-                                    ? t('Reviewed')
-                                    : t('Review')}
+                                  {t('Over limit')}
                                 </Badge>
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="left">
-                              {reviewedProjectIds.has(project.$id)
-                                ? `${issueCount} ${t('over limit, selection confirmed')}`
-                                : `${issueCount} ${t('over limit, needs review')}`}
+                              {`${issueCount} ${t('over limit')}`}
                             </TooltipContent>
                           </TooltipPrimitive.Root>
                         ) : null}
@@ -1017,11 +914,6 @@ export function DowngradeResourceValidation({
                   >
                     {paginatedSelectionItems.paginated.map((item) => {
                       const selected = activeSelected.has(item.$id)
-                      const disabled =
-                        !selected &&
-                        activeLimit !== null &&
-                        activeSelected.size >= activeLimit &&
-                        activeViolation > 0
 
                       return (
                         <div
@@ -1033,43 +925,35 @@ export function DowngradeResourceValidation({
                             selected
                               ? listRowActiveClassName
                               : listRowButtonClassName,
-                            disabled && 'opacity-50',
                           )}
                         >
                           <div className="flex min-w-0 flex-1 items-center gap-3">
                             <Checkbox
                               id={`${activeProject.$id}-${activeResourceType}-${item.$id}`}
                               checked={selected}
-                              disabled={disabled || activeViolation === 0}
                               onCheckedChange={() =>
                                 activeResourceType &&
                                 toggleResource(
                                   activeProject.$id,
                                   activeResourceType,
                                   item.$id,
-                                  activeLimit,
                                 )
                               }
                               className="shrink-0"
                             />
                             <Label
                               htmlFor={`${activeProject.$id}-${activeResourceType}-${item.$id}`}
-                              className={cn(
-                                'min-w-0 truncate text-[13px] font-medium leading-normal text-foreground',
-                                disabled || activeViolation === 0
-                                  ? 'cursor-default'
-                                  : 'cursor-pointer',
-                              )}
+                              className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground cursor-pointer"
                             >
                               {item.name}
                             </Label>
                           </div>
-                          {!selected && activeViolation > 0 ? (
+                          {selected ? (
                             <Badge
                               variant="error"
                               className="text-[10px] shrink-0"
                             >
-                              {t('Will delete')}
+                              {t('Marked')}
                             </Badge>
                           ) : null}
                         </div>
@@ -1092,26 +976,37 @@ export function DowngradeResourceValidation({
           </div>
         </div>
 
-        {activeProject && activeProjectIssueCount > 0 ? (
+        {activeProject && activeResourceType ? (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13px] text-muted-foreground">
-              {activeProjectReviewed
-                ? `${t('Confirmed for')} ${activeProject.name || activeProject.$id}. ${t('Anything not kept is deleted.')}`
-                : `${t('Review what stays in')} ${activeProject.name || activeProject.$id}, ${t('then confirm.')}`}
+              {activeViolation > 0
+                ? `${t('Delete at least')} ${activeViolation} ${t('to fit the selected plan.')}`
+                : t('This resource type fits the selected plan.')}
             </p>
             <Button
-              variant={activeProjectReviewed ? 'outline' : 'default'}
               size="sm"
               className="h-8 text-[13px]"
-              onClick={() => toggleProjectReviewed(activeProject.$id)}
+              disabled={activeSelected.size === 0 || confirmingDeletes}
+              onClick={() => setConfirmOpen(true)}
             >
-              {activeProjectReviewed
-                ? t('Undo confirmation')
-                : t('Confirm selection')}
+              {t('Delete selected')}
             </Button>
           </div>
         ) : null}
       </div>
+
+      <ConfirmDowngradeDeletes
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!confirmingDeletes) setConfirmOpen(open)
+        }}
+        title={t('Delete selected')}
+        count={activeSelected.size}
+        confirming={confirmingDeletes}
+        onConfirm={() => {
+          void confirmSelectedDeletes()
+        }}
+      />
     </div>
   )
 }

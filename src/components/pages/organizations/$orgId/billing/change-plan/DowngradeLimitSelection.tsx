@@ -28,8 +28,10 @@ interface DowngradeLimitSelectionProps {
   page: number
   selectedIds: Set<string>
   onToggle: (id: string) => void
+  onDeleteSelected: () => void
   onPageChange: (page: number) => void
   loading?: boolean
+  deleting?: boolean
   paginationDisabled?: boolean
 }
 
@@ -43,12 +45,15 @@ export function DowngradeLimitSelection({
   page,
   selectedIds,
   onToggle,
+  onDeleteSelected,
   onPageChange,
   loading = false,
+  deleting = false,
   paginationDisabled = false,
 }: DowngradeLimitSelectionProps) {
   const t = useT()
-  const selectionValid = selectedIds.size === limit
+  const overage = Math.max(0, total - limit)
+  const stillOver = overage > 0
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
   const pageStart = (safePage - 1) * SELECTION_PAGE_SIZE
@@ -67,7 +72,7 @@ export function DowngradeLimitSelection({
             </p>
           </div>
           <p className="text-[13px] font-medium leading-normal text-foreground shrink-0">
-            {selectedIds.size} / {limit}
+            {total}/{limit}
           </p>
         </div>
       </div>
@@ -75,10 +80,10 @@ export function DowngradeLimitSelection({
       <div className="border-t border-border" />
 
       <div className="px-6 py-4 space-y-4">
-        {!selectionValid ? (
-          <WarningAlert title={`${t('Select')} ${t(resourceLabel)} ${t('to keep')}`}>
-            {t('Choose exactly')} {limit} {t(resourceLabel)}{' '}
-            {t('to continue.')}
+        {stillOver ? (
+          <WarningAlert title={t('Still over the plan limit.')}>
+            {t('Delete at least')} {overage} {t(resourceLabel)}{' '}
+            {t('to fit the selected plan.')}
           </WarningAlert>
         ) : null}
 
@@ -89,8 +94,6 @@ export function DowngradeLimitSelection({
             <>
               {items.map((item) => {
                 const selected = selectedIds.has(item.id)
-                const disabled =
-                  item.locked || (!selected && selectedIds.size >= limit)
 
                 return (
                   <div
@@ -101,21 +104,21 @@ export function DowngradeLimitSelection({
                       selected
                         ? 'border-primary bg-primary/5'
                         : 'border-border bg-background/60',
-                      disabled && !item.locked && 'opacity-50',
+                      item.locked && 'opacity-50',
                     )}
                   >
                     <Checkbox
-                      id={`keep-${resourceLabel}-${item.id}`}
+                      id={`delete-${resourceLabel}-${item.id}`}
                       checked={selected}
-                      disabled={disabled}
+                      disabled={item.locked}
                       onCheckedChange={() => onToggle(item.id)}
                       className="mt-0.5 shrink-0"
                     />
                     <Label
-                      htmlFor={`keep-${resourceLabel}-${item.id}`}
+                      htmlFor={`delete-${resourceLabel}-${item.id}`}
                       className={cn(
                         'min-w-0 flex-1',
-                        disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                        item.locked ? 'cursor-not-allowed' : 'cursor-pointer',
                       )}
                     >
                       <div className="flex items-center gap-2 min-w-0">
@@ -148,38 +151,53 @@ export function DowngradeLimitSelection({
           )}
         </div>
 
-        {total > SELECTION_PAGE_SIZE ? (
-          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-            <p className="text-[12px] text-muted-foreground">
-              {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
-              {t(resourceLabel)}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage - 1)}
-                disabled={safePage <= 1 || loading || paginationDisabled}
-                aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage + 1)}
-                disabled={safePage >= totalPages || loading || paginationDisabled}
-                aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          {total > SELECTION_PAGE_SIZE ? (
+            <>
+              <p className="text-[12px] text-muted-foreground">
+                {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+                {t(resourceLabel)}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(safePage - 1)}
+                  disabled={safePage <= 1 || loading || paginationDisabled}
+                  aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onPageChange(safePage + 1)}
+                  disabled={
+                    safePage >= totalPages || loading || paginationDisabled
+                  }
+                  aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <span />
+          )}
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 text-[13px]"
+            disabled={selectedIds.size === 0 || deleting}
+            onClick={onDeleteSelected}
+          >
+            {t('Delete selected')}
+          </Button>
+        </div>
       </div>
     </div>
   )
