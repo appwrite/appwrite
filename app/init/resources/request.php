@@ -1173,7 +1173,7 @@ return function (Container $context): void {
             }
 
             // Document counts and per-collection storage are produced by the
-            // StatsResources full-count as ClickHouse gauges (broken down by
+            // StatsCalculations full-count as ClickHouse gauges (broken down by
             // resourceId/resourceType), so no per-event usage emission here.
 
             return $database;
