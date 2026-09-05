@@ -70,6 +70,12 @@ class Identity extends Model
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
+            ->addRule('providerIdToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Identity Provider ID Token. Set by OpenID Connect providers; empty for providers that do not issue one.',
+                'default' => '',
+                'example' => 'eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxMjM0NTYifQ.MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+            ])
         ;
     }
 
