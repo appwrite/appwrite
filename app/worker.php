@@ -150,15 +150,10 @@ Console::success('Listening for jobs…');
 $worker
     ->error()
     ->inject('error')
-    ->inject('project')
-    ->action(function (Throwable $error, Document $project) {
-        Span::current()?->setError($error);
-        Span::add('project.id', $project->getId());
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
+    ->action(function (Throwable $error) use ($workerName) {
+        // Initialization can fail before the message span or project is available.
+        $span = Span::current() ?? Span::init("worker.{$workerName}");
+        $span->finish(error: $error);
     });
 
 $worker->start();

@@ -325,8 +325,6 @@ final class MigrationsTest extends TestCase
                 Authorization $authorization,
             ): void {
                 $this->project = $project;
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

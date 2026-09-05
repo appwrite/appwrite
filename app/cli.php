@@ -177,21 +177,6 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 $container->set('usage', function () {
     return new UsageContext();
 }, []);
-$container->set('logError', function () {
-    return function (Throwable $error, string $namespace, string $action) {
-        Console::error('[Error] Timestamp: ' . date('c', time()));
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-        Console::error('[Error] Trace: ' . $error->getTraceAsString());
-
-        // Tasks run outside a request span; open one so the failure reaches the exporters.
-        $span = Span::current() ?? Span::init($action);
-        $span->finish(error: $error);
-    };
-}, []);
-
 $container->set('bus', function (Registry $register) use ($container) {
     return $register->get('bus')->setResolver(fn (string $name) => $container->get($name));
 }, ['register']);
@@ -201,19 +186,22 @@ $exitCode = 0;
 $cli
     ->error()
     ->inject('error')
-    ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
-        call_user_func_array($logError, [
-            $error,
-            'Task',
-            $taskName,
-        ]);
+    ->action(function (Throwable $error) use ($taskName, &$exitCode) {
+        $span = Span::current() ?? Span::init("task.$taskName");
+        $span->finish(error: $error);
 
         $exitCode = 1;
         Timer::clearAll();
     });
 
-$cli->shutdown()->action(fn () => Timer::clearAll());
+$cli->init()->action(function () use ($taskName) {
+    Span::init("task.$taskName");
+});
+
+$cli->shutdown()->action(function () {
+    Span::current()?->finish();
+    Timer::clearAll();
+});
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';

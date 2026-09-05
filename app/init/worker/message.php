@@ -13,7 +13,6 @@ use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -197,32 +196,6 @@ return function (Container $container): void {
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
         return new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);
-
-    $container->set('logError', function (Document $project) {
-        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
-            $span = Span::current();
-            if ($span !== null) {
-                $span->setError($error);
-                $span->set('project.id', $project->getId());
-                $span->set('error.action', $action);
-                foreach (($extras ?? []) as $key => $value) {
-                    if (\is_scalar($value) || $value === null) {
-                        $span->set('error.' . $key, $value);
-                    }
-                }
-            }
-
-            Console::warning("Failed: {$error->getMessage()}");
-            Console::warning($error->getTraceAsString());
-
-            if ($error->getPrevious() !== null) {
-                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
-                }
-                Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
-            }
-        };
-    }, ['project']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

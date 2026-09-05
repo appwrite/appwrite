@@ -12,13 +12,6 @@ use Utopia\Platform\Action as UtopiaAction;
 
 class Action extends UtopiaAction
 {
-    /**
-     * Log Error Callback
-     *
-     * @var callable
-     */
-    protected mixed $logError;
-
     protected array $filters = [
         ...APP_PROJECTS_SUBQUERIES, // Project
         ...APP_USERS_SUBQUERIES, // Users
@@ -54,19 +47,11 @@ class Action extends UtopiaAction
 
         while ($sum === $limit) {
             $newQueries = $queries;
-            try {
-                if ($latestDocument !== null) {
-                    array_unshift($newQueries, Query::cursorAfter($latestDocument));
-                }
-                $newQueries[] = Query::limit($limit);
-                $database->disableValidation();
-                $results = $database->find($collection, $newQueries);
-                $database->enableValidation();
-            } catch (\Exception $e) {
-                if (!empty($this->logError)) {
-                    call_user_func_array($this->logError, [$e, "CLI", "fetch_documents_namespace_{$database->getNamespace()}_collection{$collection}"]);
-                }
+            if ($latestDocument !== null) {
+                array_unshift($newQueries, Query::cursorAfter($latestDocument));
             }
+            $newQueries[] = Query::limit($limit);
+            $results = $database->skipValidation(fn () => $database->find($collection, $newQueries));
 
             if (empty($results)) {
                 return;

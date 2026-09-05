@@ -18,12 +18,23 @@ $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
 $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 
 $sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
+    // Terminal diagnostics must survive tracing filters, including failures
+    // before project or function resolution.
+    if ($span->getError() !== null) {
+        return true;
+    }
+
+    $warning = $span->get('warning.message') !== null || (int) $span->get('embedding.errors') > 0;
+    if ($warning) {
+        $span->set('level', 'warn');
+    }
+
     if (\str_starts_with($span->getAction(), 'listener.')) {
-        return $span->getError() !== null;
+        return $warning;
     }
 
     // Selective tracing: when _APP_TRACE_PROJECT_ID / _APP_TRACE_FUNCTION_ID are set,
-    // only export spans tagged with matching project.id / function.id.
+    // only export non-terminal spans tagged with matching project.id / function.id.
     if ($traceEnabled) {
         if ($traceProjectId !== '' && $span->get('project.id') !== $traceProjectId) {
             return false;
