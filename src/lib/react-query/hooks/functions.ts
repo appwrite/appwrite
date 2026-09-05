@@ -25,6 +25,7 @@ import {
   SMALL_PAGE_SIZE,
 } from './constants'
 import { Dependencies } from './dependencies'
+import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
 
@@ -673,6 +674,8 @@ export function projectFunctionQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    structuralSharing: (oldData, newData) =>
+      keepNewerLatestDeployment(oldData, newData),
   })
 }
 

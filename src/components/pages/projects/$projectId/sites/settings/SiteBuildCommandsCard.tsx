@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -46,15 +47,12 @@ export function SiteBuildCommandsCard({
     [currentFramework, adapterKey],
   )
 
-  const [installCommand, setInstallCommand] = useState('')
-  const [buildCommand, setBuildCommand] = useState('')
-
-  useEffect(() => {
-    if (site) {
-      setInstallCommand(site.installCommand ?? '')
-      setBuildCommand(site.buildCommand ?? '')
-    }
-  }, [site])
+  const [installCommand, setInstallCommand] = useSyncStateFromServer(
+    site?.installCommand ?? '',
+  )
+  const [buildCommand, setBuildCommand] = useSyncStateFromServer(
+    site?.buildCommand ?? '',
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,18 +37,13 @@ export function View() {
     functionId,
   )
 
-  const [name, setName] = useState('')
-  const [enabled, setEnabled] = useState(false)
+  const [name, setName] = useSyncStateFromServer(func?.name || '')
+  const [enabled, setEnabled] = useSyncStateFromServer(
+    func ? func.enabled !== false : false,
+  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const deleteFunctionMutation = useDeleteFunction(projectId)
-
-  useEffect(() => {
-    if (func) {
-      setName(func.name || '')
-      setEnabled(func.enabled !== false)
-    }
-  }, [func])
 
   const updateFunctionMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {

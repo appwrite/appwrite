@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,16 +32,9 @@ export function View() {
     functionId,
   )
 
-  const [schedule, setSchedule] = useState('')
-  const [events, setEvents] = useState<string[]>([])
+  const [schedule, setSchedule] = useSyncStateFromServer(func?.schedule || '')
+  const [events, setEvents] = useSyncStateFromServer(func?.events || [])
   const [eventDialogOpen, setEventDialogOpen] = useState(false)
-
-  useEffect(() => {
-    if (func) {
-      setSchedule(func.schedule || '')
-      setEvents(func.events || [])
-    }
-  }, [func])
 
   const syncFunctionCache = (updated: Models.Function) => {
     queryClient.setQueryData(

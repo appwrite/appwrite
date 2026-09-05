@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -15,6 +16,7 @@ import {
 } from '@/lib/specifications'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
+import { cacheUpdatedFunctionOrSite } from '@/lib/utils/settings-redeploy-alert'
 import { useT } from '@/lib/i18n/translate'
 
 interface SiteBuildSpecificationCardProps {
@@ -43,13 +45,9 @@ export function SiteBuildSpecificationCard({
     [specificationsData],
   )
 
-  const [buildSpecification, setBuildSpecification] = useState('')
-
-  useEffect(() => {
-    if (site) {
-      setBuildSpecification(site.buildSpecification || '')
-    }
-  }, [site])
+  const [buildSpecification, setBuildSpecification] = useSyncStateFromServer(
+    site?.buildSpecification || '',
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
@@ -60,7 +58,8 @@ export function SiteBuildSpecificationCard({
     },
     onSuccess: (updated) => {
       toast.success(t('Specification updated successfully'))
-      queryClient.setQueryData(
+      cacheUpdatedFunctionOrSite(
+        queryClient,
         ['site', 'project', projectId, siteId],
         updated,
       )
