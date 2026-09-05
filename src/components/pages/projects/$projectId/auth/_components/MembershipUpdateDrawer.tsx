@@ -360,7 +360,10 @@ export function MembershipUpdateDrawer({
       </BaseDrawer>
 
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Remove from team')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
