@@ -34,7 +34,7 @@ export function TransferDomainInSummary({
 }: TransferDomainInSummaryProps) {
   const t = useT()
   const hasDomain = quotedDomain.length > 0
-  const hasTransferPrice = quote != null && quote.price > 0
+  const hasTransferPrice = quote?.price != null && quote.price > 0
   const periodYears = quote?.periodYears ?? 1
   const periodLabel =
     periodYears === 1 ? t('1 year') : `${periodYears} ${t('years')}`
@@ -93,15 +93,13 @@ export function TransferDomainInSummary({
             <>
               <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground">
-                    {t('Transfer')}
-                  </p>
+                  <p className="font-medium text-foreground">{t('Transfer')}</p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
                     {t('Registry transfer')} · {periodLabel}
                   </p>
                 </div>
                 <p className="shrink-0 tabular-nums font-semibold text-foreground">
-                  ${formatUsd(quote.price)}
+                  ${formatUsd(quote.price ?? 0)}
                 </p>
               </div>
               {hasRenewal ? (
@@ -142,7 +140,7 @@ export function TransferDomainInSummary({
               {t('Total due today')}
             </p>
             <p className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">
-              ${formatUsd(quote.price)}
+              ${formatUsd(quote.price ?? 0)}
             </p>
           </div>
         ) : null}
