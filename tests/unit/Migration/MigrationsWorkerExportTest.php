@@ -244,13 +244,13 @@ final class MigrationsWorkerExportTest extends TestCase
         ]));
     }
 
-    public function testNotificationAndLoggerFailuresDoNotEscape(): void
+    public function testNotificationFailureIsReportedAsWarning(): void
     {
-        $reported = 0;
+        \Utopia\Span\Span::setStorage(new \Utopia\Span\Storage\Memory());
+        $span = \Utopia\Span\Span::init('worker.migrations');
         $worker = new class () extends Migrations {
-            public function notify(Document $migration, MailPublisher $publisherForMails, callable $logError): void
+            public function notify(Document $migration, MailPublisher $publisherForMails): void
             {
-                $this->logError = $logError;
                 $this->notifyExport(
                     migration: $migration,
                     success: true,
@@ -284,13 +284,12 @@ final class MigrationsWorkerExportTest extends TestCase
                 'destination' => DestinationJSON::getName(),
             ]),
             $this->createStub(MailPublisher::class),
-            function () use (&$reported): void {
-                $reported++;
-                throw new \RuntimeException('Logger unavailable');
-            }
         );
 
-        $this->assertSame(1, $reported);
+        \Utopia\Span\Span::setStorage(null);
+        $this->assertSame('Mail unavailable', $span->get('warning.message'));
+        $this->assertSame('migration-id', $span->get('migration.id'));
+        $this->assertNull($span->getError());
     }
 
     public function testArtifactFinalizationFailureMarksMigrationFailed(): void
@@ -320,8 +319,6 @@ final class MigrationsWorkerExportTest extends TestCase
                     '$id' => 'project-id',
                     '$sequence' => 1,
                 ]);
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

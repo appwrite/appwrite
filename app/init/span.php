@@ -18,8 +18,13 @@ $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
 $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 
 $sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
+    $warning = $span->get('warning.message') !== null || (int) $span->get('embedding.errors') > 0;
+    if ($warning && $span->getError() === null) {
+        $span->set('level', 'warn');
+    }
+
     if (\str_starts_with($span->getAction(), 'listener.')) {
-        return $span->getError() !== null;
+        return $span->getError() !== null || $warning;
     }
 
     // Selective tracing: when _APP_TRACE_PROJECT_ID / _APP_TRACE_FUNCTION_ID are set,

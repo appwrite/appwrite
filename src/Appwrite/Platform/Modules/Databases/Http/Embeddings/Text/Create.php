@@ -112,7 +112,9 @@ class Create extends CreateDocumentAction
                 }
             } catch (\Exception $e) {
                 $totalErrors += \count($batch);
-                $this->logError($e, $model);
+                Span::add('embedding.model', $model);
+                Span::add('warning.message', $e->getMessage());
+                Span::add('warning.code', $e->getCode());
 
                 // One error result per text in the failed batch.
                 foreach ($batch as $ignored) {
@@ -120,6 +122,8 @@ class Create extends CreateDocumentAction
                 }
             }
         }
+
+        Span::add('embedding.errors', $totalErrors);
 
         $embeddings = new Document([
             'embeddings' => $results,
@@ -156,10 +160,4 @@ class Create extends CreateDocumentAction
         ]);
     }
 
-    private function logError(\Throwable $e, string $model): void
-    {
-        Span::add('embedding.model', $model);
-        Span::add('embedding.error', $e->getMessage());
-        Span::add('embedding.error_code', $e->getCode());
-    }
 }
