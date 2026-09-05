@@ -279,7 +279,6 @@ class OpenAPI3 extends Format
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
-                    'cookies' => $route->getLabel('sdk.cookies', false),
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
