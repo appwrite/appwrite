@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "35704e3e15b6146538aed2bdeab97ca3",
+    "content-hash": "1894661a7a85782143bcf13ad458427d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3789,22 +3789,22 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "3.0.3",
+            "version": "3.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "fa6d4c4e6a726ab86455e715327f971e50f4f485"
+                "reference": "fc925f6ff2090948d2381c19a6bc5e8bf6e1bee2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/fa6d4c4e6a726ab86455e715327f971e50f4f485",
-                "reference": "fa6d4c4e6a726ab86455e715327f971e50f4f485",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/fc925f6ff2090948d2381c19a6bc5e8bf6e1bee2",
+                "reference": "fc925f6ff2090948d2381c19a6bc5e8bf6e1bee2",
                 "shasum": ""
             },
             "require": {
                 "ext-sockets": "*",
                 "php": ">=8.5",
-                "utopia-php/domains": "^3.0",
+                "utopia-php/domains": "^4.0.0",
                 "utopia-php/telemetry": "^0.4",
                 "utopia-php/validators": "^0.6"
             },
@@ -3840,33 +3840,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/3.0.3"
+                "source": "https://github.com/utopia-php/dns/tree/3.0.5"
             },
-            "time": "2026-08-27T06:13:20+00:00"
+            "time": "2026-09-04T19:22:41+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "3.0.2",
+            "version": "4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "021ce3ce8066d52e8672070b3cb1b43935bd2b67"
+                "reference": "6029a55444bd32be85cd06c42576250ed88ac2e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/021ce3ce8066d52e8672070b3cb1b43935bd2b67",
-                "reference": "021ce3ce8066d52e8672070b3cb1b43935bd2b67",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/6029a55444bd32be85cd06c42576250ed88ac2e3",
+                "reference": "6029a55444bd32be85cd06c42576250ed88ac2e3",
                 "shasum": ""
             },
             "require": {
+                "ext-curl": "*",
+                "ext-mbstring": "*",
+                "ext-simplexml": "*",
                 "php": ">=8.5",
                 "utopia-php/cache": "^4.0 || ^5.0",
                 "utopia-php/validators": "^0.6"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "phpstan/phpstan": "^1.12",
-                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -3888,7 +3886,7 @@
                     "email": "wess@appwrite.io"
                 }
             ],
-            "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
+            "description": "Domain parsing and registrar adapters powered by the Public Suffix List",
             "keywords": [
                 "domains",
                 "framework",
@@ -3902,9 +3900,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/3.0.2"
+                "source": "https://github.com/utopia-php/domains/tree/4.0.0"
             },
-            "time": "2026-08-27T06:33:44+00:00"
+            "time": "2026-09-04T18:31:54+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -3955,21 +3953,21 @@
         },
         {
             "name": "utopia-php/emails",
-            "version": "0.8.1",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/emails.git",
-                "reference": "6ee4f75279c8b4e27bd34f05e8310ab44284523c"
+                "reference": "962d8927fbfc704f6c0c182d2fc92bdf44df7803"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/6ee4f75279c8b4e27bd34f05e8310ab44284523c",
-                "reference": "6ee4f75279c8b4e27bd34f05e8310ab44284523c",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/962d8927fbfc704f6c0c182d2fc92bdf44df7803",
+                "reference": "962d8927fbfc704f6c0c182d2fc92bdf44df7803",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.5",
-                "utopia-php/domains": "^3.0",
+                "utopia-php/domains": "^4.0.0",
                 "utopia-php/validators": "^0.6"
             },
             "require-dev": {
@@ -4010,9 +4008,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/0.8.1"
+                "source": "https://github.com/utopia-php/emails/tree/0.8.2"
             },
-            "time": "2026-08-27T06:18:11+00:00"
+            "time": "2026-09-04T19:22:41+00:00"
         },
         {
             "name": "utopia-php/fetch",
