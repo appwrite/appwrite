@@ -29,7 +29,6 @@ export type AppwriteOpenApiExtension = {
   platforms?: Array<'console' | 'client' | 'server'>
   packaging?: boolean
   public?: boolean
-  edit?: string
   auth?: Record<string, string[]>
   methods?: AppwriteAdditionalMethod[]
   deprecated?: {
