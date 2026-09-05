@@ -35,6 +35,7 @@ namespace Tests\Unit\Platform\Modules\Migrations\Appwrite\Report {
     use Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report\Get;
     use Appwrite\Utopia\Response;
     use PHPUnit\Framework\TestCase;
+    use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 
     final class GetTest extends TestCase
     {
@@ -64,31 +65,29 @@ namespace Tests\Unit\Platform\Modules\Migrations\Appwrite\Report {
         public function testGetAppwriteReportFallbackMessageWhenExceptionMessageIsEmpty(): void
         {
             $action = new class () extends Get {
-                public function throwEmptyException(Response $response): void
+                protected function getSource(string $projectID, string $endpoint, string $key, callable $getDatabasesDB): AppwriteSource
                 {
-                    try {
-                        throw new \Exception('');
-                    } catch (\Throwable $e) {
-                        $message = !empty($e->getMessage())
-                            ? 'Failed to generate migration report: ' . $e->getMessage()
-                            : 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.';
-
-                        throw new Exception(
-                            type: Exception::MIGRATION_PROVIDER_ERROR,
-                            message: $message,
-                            previous: $e
-                        );
-                    }
+                    throw new \Exception('');
                 }
             };
 
             try {
-                $action->throwEmptyException($this->createMock(Response::class));
+                $action->action(
+                    resources: ['databases'],
+                    endpoint: 'http://localhost/v1',
+                    projectID: 'dummy-project',
+                    key: 'dummy-key',
+                    response: $this->createMock(Response::class),
+                    getDatabasesDB: fn () => null
+                );
                 $this->fail('Expected Exception was not thrown');
             } catch (Exception $e) {
                 $this->assertSame(Exception::MIGRATION_PROVIDER_ERROR, $e->getType());
                 $this->assertNotNull($e->getPrevious());
-                $this->assertStringStartsWith('Unable to connect to the migration source.', $e->getMessage());
+                $this->assertSame(
+                    'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.',
+                    $e->getMessage()
+                );
             }
         }
     }
