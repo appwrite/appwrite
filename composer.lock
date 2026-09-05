@@ -5522,16 +5522,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "4.7.6",
+            "version": "4.7.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3a6e28f03ccdeadae79c6de5ec5c8a652a094226"
+                "reference": "0f1b33dc784d8a2243555464e3543c01c0f2393b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3a6e28f03ccdeadae79c6de5ec5c8a652a094226",
-                "reference": "3a6e28f03ccdeadae79c6de5ec5c8a652a094226",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0f1b33dc784d8a2243555464e3543c01c0f2393b",
+                "reference": "0f1b33dc784d8a2243555464e3543c01c0f2393b",
                 "shasum": ""
             },
             "require": {
@@ -5568,9 +5568,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/4.7.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/4.7.8"
             },
-            "time": "2026-08-31T20:15:18+00:00"
+            "time": "2026-09-05T14:37:38+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -8602,16 +8602,16 @@
         },
         {
             "name": "utopia-php/openapi",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/openapi.git",
-                "reference": "d74fe62fcb16f810986ad91a2727604e5f83e63e"
+                "reference": "725109d69e298ae8d88f1ffc05f6d86624233abd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/openapi/zipball/d74fe62fcb16f810986ad91a2727604e5f83e63e",
-                "reference": "d74fe62fcb16f810986ad91a2727604e5f83e63e",
+                "url": "https://api.github.com/repos/utopia-php/openapi/zipball/725109d69e298ae8d88f1ffc05f6d86624233abd",
+                "reference": "725109d69e298ae8d88f1ffc05f6d86624233abd",
                 "shasum": ""
             },
             "require": {
@@ -8636,9 +8636,9 @@
             "description": "Framework-independent OpenAPI 2.0, 3.0, and 3.1 parser with an immutable canonical model",
             "support": {
                 "issues": "https://github.com/utopia-php/openapi/issues",
-                "source": "https://github.com/utopia-php/openapi/tree/0.2.0"
+                "source": "https://github.com/utopia-php/openapi/tree/0.2.1"
             },
-            "time": "2026-08-21T04:56:47+00:00"
+            "time": "2026-09-04T16:56:24+00:00"
         }
     ],
     "aliases": [],
