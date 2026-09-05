@@ -289,7 +289,7 @@ final class MigrationsWorkerExportTest extends TestCase
 
             $this->assertSame('Mail unavailable', $span->get('warning.message'));
             $this->assertSame('migration-id', $span->get('migration.id'));
-            $this->assertNull($span->getError());
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError());
         } finally {
             \Utopia\Span\Span::setStorage(null);
         }
