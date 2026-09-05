@@ -80,6 +80,48 @@ class InstallationTokens
         }
 
         if (!$acquired) {
+            // Before giving up, check whether the lock document is stale. A Swoole worker crash
+            // skips the finally block, leaving an orphaned document. Any lock older than 120 s
+            // must be abandoned (our own wait cycle is at most 9 s), so it is safe to evict it
+            // and reclaim the critical section.
+            $existingLock = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+            if (!$existingLock->isEmpty()) {
+                try {
+                    $lockAge = (new \DateTime('now'))->getTimestamp() - (new \DateTime($existingLock->getAttribute('$createdAt', 'now')))->getTimestamp();
+                } catch (\Throwable) {
+                    $lockAge = 0;
+                }
+                if ($lockAge > 120) {
+                    // Double-check: re-read the lock before deleting to guard against a concurrent
+                    // worker that evicted the same stale document and placed a fresh one between our
+                    // initial read and this delete. If $createdAt changed, a fresh lock is now active
+                    // and we must not touch it.
+                    $currentLock = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+                    $stillStale = !$currentLock->isEmpty()
+                        && $currentLock->getAttribute('$createdAt') === $existingLock->getAttribute('$createdAt');
+
+                    if ($stillStale) {
+                        try {
+                            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+                        } catch (\Throwable) {
+                            // Another worker won the race — the stale lock is already gone.
+                            $stillStale = false;
+                        }
+                    }
+
+                    if ($stillStale) {
+                        try {
+                            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
+                            $acquired = true;
+                        } catch (\Throwable) {
+                            // Another process created a new lock after our delete — fall through.
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$acquired) {
             // The holder outlasted our wait. Reuse its token if it landed, never replay ours.
             $current = $this->getCurrentInstallation($dbForPlatform, $installation);
             if ($this->isUsable($current)) {
