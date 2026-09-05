@@ -8,6 +8,7 @@ import {
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
+import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
@@ -1456,7 +1457,7 @@ function UpdatePreferencesSection({
     setPreferences(
       Object.entries(prefs).map(([key, value]) => ({
         key,
-        value: String(value),
+        value: formatPrefValue(value),
       })),
     )
     if (Object.keys(prefs).length === 0) {
@@ -1489,7 +1490,7 @@ function UpdatePreferencesSection({
     setPreferences(updated)
   }
 
-  const originalPrefs = user.prefs || {}
+  const originalPrefs = formatPrefsForEditor(user.prefs || {})
   const currentPrefs: Record<string, string> = {}
   preferences.forEach((pref) => {
     if (pref.key && pref.value) {
