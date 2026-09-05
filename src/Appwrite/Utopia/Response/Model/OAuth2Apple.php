@@ -78,6 +78,13 @@ class OAuth2Apple extends OAuth2Base
                 'description' => 'Apple OAuth2 .p8 private key file contents. The secret key wrapped by the PEM markers is 200 characters long.',
                 'default' => '',
                 'example' => '-----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----',
+            ])
+            ->addRule('nativeClientIds', [
+                'type' => self::TYPE_STRING,
+                'description' => 'App bundle IDs accepted as ID token audiences for native Sign in with Apple.',
+                'default' => [],
+                'example' => ['com.example.app'],
+                'array' => true,
             ]);
     }
 

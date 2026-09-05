@@ -22,6 +22,7 @@ return [
         'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
+        'idToken' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
     ],
     'appwrite' => [
@@ -231,6 +232,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
+        'idToken' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\Google',
     ],
     'huggingface' => [
@@ -548,6 +550,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
+        'idToken' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
     ],
     'mock-unverified' => [

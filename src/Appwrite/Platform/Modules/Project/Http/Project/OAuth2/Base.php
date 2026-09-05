@@ -371,6 +371,10 @@ abstract class Base extends Action
      * Providers that need to serialize multiple values into a single secret
      * (e.g. GitLab, which stores `{clientSecret, endpoint}` as JSON) should
      * encode those values into `$clientSecret` before calling this method.
+     *
+     * `$clientIds` are the additional client IDs accepted as ID token
+     * audiences by providers that support native ID token sign-in. Null
+     * leaves the stored list untouched; an empty array clears it.
      */
     protected function persistCredentials(
         Document $project,
@@ -378,7 +382,8 @@ abstract class Base extends Action
         Authorization $authorization,
         ?string $clientId,
         ?string $clientSecret,
-        ?bool $enabled
+        ?bool $enabled,
+        ?array $clientIds = null
     ): Document {
         $providerId = static::getProviderId();
         if (!(\in_array($providerId, \array_keys(Config::getParam('oAuthProviders'))))) {
@@ -397,6 +402,10 @@ abstract class Base extends Action
 
         if (!\is_null($clientSecret)) {
             $oAuthProviders[$appSecretKey] = $clientSecret;
+        }
+
+        if (!\is_null($clientIds)) {
+            $oAuthProviders[$providerId . 'ClientIds'] = \array_values($clientIds);
         }
 
         if (!\is_null($enabled)) {

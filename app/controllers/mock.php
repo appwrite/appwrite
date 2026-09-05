@@ -2,10 +2,12 @@
 
 global $utopia, $request, $response;
 
+use Appwrite\Auth\OIDC\MockKeys;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -192,6 +194,43 @@ Http::get('/v1/mock/tests/general/oauth2/user-no-email')
         $response->json([
             'id' => 3,
             'name' => 'User Name NoEmail',
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/jwks')
+    ->desc('OAuth2 JWKS')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->inject('cache')
+    ->action(function (Response $response, Cache $cache) {
+        $response->json([
+            'keys' => [MockKeys::jwk($cache)],
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/id-token')
+    ->desc('OAuth2 ID Token')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('claims', '', new Text(4096, 0), 'JSON encoded ID token claims.')
+    ->param('header', '', new Text(1024, 0), 'JSON encoded ID token header overrides.', true)
+    ->inject('response')
+    ->inject('cache')
+    ->action(function (string $claims, string $header, Response $response, Cache $cache) {
+        $claims = \json_decode($claims, true);
+        $header = $header === '' ? [] : \json_decode($header, true);
+
+        if (!\is_array($claims) || !\is_array($header)) {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid claims or header');
+        }
+
+        $response->json([
+            'token' => MockKeys::sign($cache, $claims, $header),
         ]);
     });
 
