@@ -116,7 +116,7 @@ class State
         Database $dbForProject,
         Document $presenceDocument,
         string $presenceId,
-        mixed $userInternalId,
+        string $userId,
         ?callable $onPresenceCreated = null
     ): Document {
         if ($presenceId === 'unique()') {
@@ -126,9 +126,10 @@ class State
 
         $presenceCreated = false;
 
+        // Match the lookup to the unique key used by native database upserts.
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])]);
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
                 } else {
@@ -136,8 +137,8 @@ class State
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
-                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$presenceCreated) {
+                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])]);
 
                     if ($existingPresence->isEmpty()) {
                         $presenceCreated = true;
