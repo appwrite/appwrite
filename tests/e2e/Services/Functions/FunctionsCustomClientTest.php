@@ -551,4 +551,130 @@ final class FunctionsCustomClientTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testTablesDBTransactionRowCreateEventPayload(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test TablesDB Row Event Payload',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'databases.*.tables.*.rows.*.create',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('event-payload'),
+            'activate' => true,
+        ]);
+
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test TablesDB Event Database',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'tableId' => ID::unique(),
+            'name' => 'Test Table',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+            'rowSecurity' => false,
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 30_000, 500);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $rowId = ID::unique();
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'rowId' => $rowId,
+            'data' => [
+                'name' => 'Test Row Event',
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $transactionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'commit' => true,
+        ]);
+        $this->assertEquals(200, $commit['headers']['status-code']);
+
+        $this->assertEventually(function () use ($functionId, $databaseId, $tableId, $rowId) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertNotEmpty($executions['body']['executions']);
+
+            $lastExecution = $executions['body']['executions'][0];
+            $this->assertEquals('completed', $lastExecution['status']);
+
+            $payload = json_decode($lastExecution['logs'], true);
+            $this->assertIsArray($payload);
+            $this->assertSame($rowId, $payload['$id'] ?? null);
+            $this->assertSame($databaseId, $payload['$databaseId'] ?? null);
+            $this->assertSame($tableId, $payload['$tableId'] ?? null);
+            $this->assertArrayNotHasKey('$collectionId', $payload);
+        }, 20_000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
 }
