@@ -77,6 +77,7 @@ import {
   reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { resolveAndPrefetchDefaultOrganization, prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -390,6 +391,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     null,
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
+  const leavingOrganizationRef = useRef(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
@@ -709,6 +711,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false)
   const [removeMemberDialogOpen, setRemoveMemberDialogOpen] = useState(false)
+  const [leavingOrganization, setLeavingOrganization] = useState(false)
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
   const [selectedRole, setSelectedRole] = useState<
     'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
@@ -1088,8 +1091,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     location.pathname,
   ])
 
+  useEffect(() => {
+    if (!leavingOrganizationRef.current) return
+    leavingOrganizationRef.current = false
+    setLeavingOrganization(false)
+    setRemoveMemberDialogOpen(false)
+    setSelectedMember(null)
+  }, [orgId])
+
   // Handle missing organization: redirect to next org or open creation wizard
   useEffect(() => {
+    // Leaving this org (e.g. removing yourself) goes through `/` instead.
+    if (leavingOrganizationRef.current) return
     // Only act if organizations have finished loading and we have an orgId in the URL
     if (organizationsLoading || !orgId) return
 
@@ -3428,6 +3441,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           projectId
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
+                                        const isCurrentMember =
+                                          !!account &&
+                                          ((!!member.userId &&
+                                            member.userId === account.$id) ||
+                                            member.userEmail.toLowerCase() ===
+                                              account.email.toLowerCase())
+                                        const canRemoveThisMember =
+                                          canManageMembers ||
+                                          (isCurrentMember &&
+                                            member.status !== 'pending')
+                                        const openRemoveMember = () => {
+                                          setSelectedMember(member)
+                                          setRemoveMemberDialogOpen(true)
+                                        }
                                         return (
                                           <OrgMemberContextMenu
                                             key={member.$id}
@@ -3463,13 +3490,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 : undefined
                                             }
                                             onRemove={
-                                              canManageMembers
-                                                ? () => {
-                                                    setSelectedMember(member)
-                                                    setRemoveMemberDialogOpen(
-                                                      true,
-                                                    )
-                                                  }
+                                              canRemoveThisMember
+                                                ? openRemoveMember
                                                 : undefined
                                             }
                                           >
@@ -3654,7 +3676,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center justify-end">
-                                                {member.status === 'pending' ? (
+                                                {!canRemoveThisMember ? (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <span className="inline-flex">
+                                                        <RowActionsMenuTrigger
+                                                          disabled
+                                                        />
+                                                      </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      {t(
+                                                        "You don't have permission to manage members.",
+                                                      )}
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                ) : member.status ===
+                                                  'pending' ? (
                                                   <DropdownMenu>
                                                     <DropdownMenuTrigger
                                                       asChild
@@ -3711,14 +3749,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </DropdownMenuItem>
                                                       <DropdownMenuSeparator />
                                                       <DropdownMenuItem
-                                                        onClick={() => {
-                                                          setSelectedMember(
-                                                            member,
-                                                          )
-                                                          setRemoveMemberDialogOpen(
-                                                            true,
-                                                          )
-                                                        }}
+                                                        onClick={
+                                                          openRemoveMember
+                                                        }
                                                       >
                                                         <MenuItemContent icon={Trash2}>
                                                           {t('Remove')}
@@ -3737,10 +3770,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       align="end"
                                                       className="w-48"
                                                     >
-                                                      {canInviteOrgMember(
-                                                        access,
-                                                        features,
-                                                      ) && (
+                                                      {canManageMembers && (
                                                         <>
                                                           <DropdownMenuItem
                                                             onClick={() => {
@@ -3769,25 +3799,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           <DropdownMenuSeparator />
                                                         </>
                                                       )}
-                                                      {canInviteOrgMember(
-                                                        access,
-                                                        features,
-                                                      ) && (
-                                                        <DropdownMenuItem
-                                                          onClick={() => {
-                                                            setSelectedMember(
-                                                              member,
-                                                            )
-                                                            setRemoveMemberDialogOpen(
-                                                              true,
-                                                            )
-                                                          }}
-                                                        >
-                                                          <MenuItemContent icon={Trash2}>
-                                                            {t('Remove')}
-                                                          </MenuItemContent>
-                                                        </DropdownMenuItem>
-                                                      )}
+                                                      <DropdownMenuItem
+                                                        onClick={
+                                                          openRemoveMember
+                                                        }
+                                                      >
+                                                        <MenuItemContent icon={Trash2}>
+                                                          {t('Remove')}
+                                                        </MenuItemContent>
+                                                      </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                   </DropdownMenu>
                                                 )}
@@ -4467,6 +4487,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <Dialog
         open={removeMemberDialogOpen}
         onOpenChange={(open) => {
+          if (leavingOrganizationRef.current) return
           setRemoveMemberDialogOpen(open)
           if (!open) {
             setSelectedMember(null)
@@ -4507,6 +4528,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               variant="outline"
               size="sm"
               className="h-9 text-[13px]"
+              disabled={
+                removeMemberMutation.isPending || leavingOrganization
+              }
               onClick={() => {
                 setRemoveMemberDialogOpen(false)
                 setSelectedMember(null)
@@ -4518,13 +4542,34 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               variant="destructive"
               size="sm"
               className="h-9 text-[13px]"
-              disabled={!selectedMember || removeMemberMutation.isPending}
+              disabled={
+                !selectedMember ||
+                removeMemberMutation.isPending ||
+                leavingOrganization
+              }
               onClick={async () => {
                 if (!selectedMember) return
+                const leavingSelf =
+                  !!account &&
+                  ((!!selectedMember.userId &&
+                    selectedMember.userId === account.$id) ||
+                    selectedMember.userEmail.toLowerCase() ===
+                      account.email.toLowerCase())
                 try {
                   await removeMemberMutation.mutateAsync(
                     selectedMember.membershipId || selectedMember.$id,
                   )
+                } catch (error: unknown) {
+                  toast.error(
+                    getErrorMessage(error, t('Failed to remove member')),
+                  )
+                  return
+                }
+
+                if (!leavingSelf || !orgId) {
+                  await queryClient.refetchQueries({
+                    queryKey: ['memberships', 'organization', orgId],
+                  })
                   toast.success(
                     selectedMember.status === 'pending'
                       ? t('Invitation cancelled successfully')
@@ -4532,10 +4577,93 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
-                } catch (error: unknown) {
-                  toast.error(
-                    getErrorMessage(error, t('Failed to remove member')),
+                  return
+                }
+
+                leavingOrganizationRef.current = true
+                setLeavingOrganization(true)
+                toast.success(t('Member removed successfully'))
+
+                const closeLeaveDialog = () => {
+                  setRemoveMemberDialogOpen(false)
+                  setSelectedMember(null)
+                  setLeavingOrganization(false)
+                }
+
+                try {
+                  const nextPrefs = {
+                    ...((account as { prefs?: Record<string, unknown> } | null)
+                      ?.prefs ?? {}),
+                  }
+                  if (nextPrefs.organization === orgId) {
+                    delete nextPrefs.organization
+                  }
+                  const updatedAccount = await updateAccountPrefs(nextPrefs)
+                  queryClient.setQueriesData<{
+                    prefs?: Record<string, unknown>
+                  }>({ queryKey: ['account', 'console'] }, (current) => {
+                    if (!current) return current
+                    return { ...current, prefs: nextPrefs }
+                  })
+                  syncConsoleAccountAfterMutation(queryClient, {
+                    apiResult: updatedAccount,
+                  })
+
+                  await queryClient.refetchQueries({
+                    queryKey: ['organizations', 'console'],
+                  })
+                  const remainingOrgs =
+                    queryClient
+                      .getQueryData(organizationsQueryOptions().queryKey)
+                      ?.teams?.filter((team) => team.$id !== orgId) ?? []
+                  queryClient.setQueryData(
+                    organizationsQueryOptions().queryKey,
+                    (current) => {
+                      if (!current) return current
+                      return {
+                        ...current,
+                        teams: remainingOrgs,
+                        total: remainingOrgs.length,
+                      }
+                    },
                   )
+
+                  let nextOrgId = remainingOrgs[0]?.$id
+                  if (nextOrgId) {
+                    await prefetchOrganizationOverviewData(
+                      queryClient,
+                      nextOrgId,
+                    )
+                  } else {
+                    const nextAccount = {
+                      ...(updatedAccount &&
+                      typeof updatedAccount === 'object' &&
+                      '$id' in updatedAccount
+                        ? updatedAccount
+                        : account),
+                      prefs: nextPrefs,
+                    }
+                    nextOrgId = await resolveAndPrefetchDefaultOrganization(
+                      queryClient,
+                      nextAccount,
+                    )
+                  }
+
+                  if (!nextOrgId || nextOrgId === orgId) {
+                    closeLeaveDialog()
+                    await navigate({ to: '/account', replace: true })
+                    return
+                  }
+
+                  closeLeaveDialog()
+                  await navigate({
+                    to: '/organizations/$orgId',
+                    params: { orgId: nextOrgId },
+                    replace: true,
+                  })
+                } catch {
+                  closeLeaveDialog()
+                  await navigate({ to: '/account', replace: true })
                 }
               }}
             >

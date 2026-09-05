@@ -1231,6 +1231,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור פרויקטים.',
   "You don't have permission to invite members.":
     'אין לכם הרשאה להזמין חברים.',
+  "You don't have permission to manage members.":
+    'אין לכם הרשאה לנהל חברים.',
   'You have': 'יש לכם',
   'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',

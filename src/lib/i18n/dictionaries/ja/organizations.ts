@@ -921,6 +921,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   "You don't have any credits. Credits can be used to offset your monthly charges.": 'クレジットがありません。クレジットは月々の料金の相殺に使用できます。',
   "You don't have permission to create projects.": 'プロジェクトを作成する権限がありません。',
   "You don't have permission to invite members.": 'メンバーを招待する権限がありません。',
+  "You don't have permission to manage members.": 'メンバーを管理する権限がありません。',
   'You will be charged for each organization member beyond the plan limit.': 'プランの上限を超える組織メンバーごとに料金が請求されます。',
   'You will lose access to premium features and organization members beyond the free limit will be removed.': 'プレミアム機能へのアクセスを失い、無料プランの上限を超える組織メンバーは削除されます。',
   "You've reached the limit for projects on your plan": 'プランのプロジェクト上限に達しました',
