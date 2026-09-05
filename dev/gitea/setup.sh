@@ -1,8 +1,6 @@
 #!/bin/sh
 set -eu
-
 su git -c "gitea admin user create --username $GITEA_ADMIN_USERNAME --password $GITEA_ADMIN_PASSWORD --email $GITEA_ADMIN_EMAIL --admin --must-change-password=false" || true
-
 if [ ! -f /data/gitea/oauth.json ]; then
     curl -sf -X POST -u "$GITEA_ADMIN_USERNAME:$GITEA_ADMIN_PASSWORD" \
         -H 'Content-Type: application/json' \
