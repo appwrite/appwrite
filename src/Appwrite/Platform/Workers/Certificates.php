@@ -284,14 +284,30 @@ class Certificates extends Action
                 Query::limit(1),
             ]);
 
-        // Rule not found (or) not in the expected state
-        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
+        // Rule not found (or) not in the expected state. A rule whose last attempt
+        // failed is included: refusing it here made every retry a silent no-op.
+        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATION_FAILED])) {
             Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
             return;
         }
 
         // Get associated certificate for the rule
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+
+        if ($rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED) {
+            // Only automatic retries arrive in the failed state, so they alone are
+            // capped. A retry asked for from the Console resets the rule to
+            // generating first and is always attempted.
+            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as it ran out of attempts.');
+                return;
+            }
+
+            // Back to generating for the duration of the attempt. Delayed issuers
+            // leave the status untouched on success, and this is the state both the
+            // Console and the status sync read as "in progress".
+            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+        }
 
         // If we don't have certificate for the rule yet, let's create one.
         if ($certificate->isEmpty()) {

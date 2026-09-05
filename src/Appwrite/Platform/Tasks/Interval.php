@@ -18,6 +18,16 @@ use Utopia\System\System;
 
 class Interval extends Action
 {
+    private const int CERTIFICATE_GENERATION_INTERVAL = 300; // 5 minutes
+
+    /**
+     * How long a queued retry holds its rule. It has to outlast a whole attempt
+     * — the queue wait plus the issuer call — or a slow attempt becomes eligible
+     * again while it is still running and picks up a second job. It is also the
+     * gap between attempts, since finishing one writes the rule too.
+     */
+    private const int CERTIFICATE_GENERATION_LEASE = 900; // 15 minutes
+
     public static function getName(): string
     {
         return 'interval';
@@ -84,6 +94,13 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
+            ],
+            [
+                'name' => 'certificateGeneration',
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->generateCertificate($dbForPlatform, $publisherForCertificates);
+                },
+                'interval' => $this->certificateGenerationInterval() * 1000,
             ]
         ];
     }
@@ -134,5 +151,94 @@ class Interval extends Action
 
         Span::add("interval.domain_verification.processed", $processed);
         Span::add("interval.domain_verification.failed", $failed);
+    }
+
+    private function certificateGenerationInterval(): int
+    {
+        return (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', (string) self::CERTIFICATE_GENERATION_INTERVAL);
+    }
+
+    /**
+     * Retry certificate generation for domains whose last attempt failed.
+     *
+     * DNS verification already retries on its own schedule; issuance had no
+     * equivalent, so a single failed attempt — a transient issuer error included
+     * — left the domain without a certificate until someone pressed retry in the
+     * Console. Both this task and the worker stop at the shared attempt limit.
+     */
+    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    {
+        $fromTime = new DateTime('-3 days'); // Max 3 days old
+
+        // Anything written more recently than the lease either has an attempt in
+        // flight or has just finished one. Deliberately longer than the tick:
+        // scanning often keeps newly failed domains from waiting, while the
+        // lease is sized to an attempt.
+        $leasedUntil = new DateTime('-' . self::CERTIFICATE_GENERATION_LEASE . ' seconds');
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::createdAfter(DatabaseDateTime::format($fromTime)),
+            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATION_FAILED]), // Verified DNS, but no certificate yet
+            Query::updatedBefore(DatabaseDateTime::format($leasedUntil)),
+            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
+            Query::limit(100), // Reasonable pagination limit
+        ]);
+
+        $scanned = \count($rules);
+        Span::add("interval.certificate_generation.scanned", $scanned);
+
+        if ($scanned === 0) {
+            Span::add("interval.certificate_generation.processed", 0);
+            Span::add("interval.certificate_generation.skipped", 0);
+            Span::add("interval.certificate_generation.failed", 0);
+            return; // No rules to retry
+        }
+
+        $processed = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        foreach ($rules as $rule) {
+            // A certificate that used up its attempts stays in the failed state
+            // for the rest of the window, and the worker would only skip the job.
+            $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+
+            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                // Take the lease before handing the job off. The worker writes the
+                // rule only once the issuer answers, so claiming here is what
+                // keeps a later pass from queueing the same domain. The rule keeps
+                // its failed status, so a lease that is never used lapses and the
+                // rule comes back on a later pass instead of being stranded in a
+                // state nothing scans.
+                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    '$updatedAt' => DatabaseDateTime::now(),
+                ]));
+
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                ));
+                $processed++;
+            } catch (\Throwable $th) {
+                $failed++;
+            }
+        }
+
+        Span::add("interval.certificate_generation.processed", $processed);
+        Span::add("interval.certificate_generation.skipped", $skipped);
+        Span::add("interval.certificate_generation.failed", $failed);
     }
 }
