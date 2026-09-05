@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Trash2 } from 'lucide-react'
 import { useHashScroll } from '@/lib/hooks/useHashScroll'
+import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 import { useT } from '@/lib/i18n/translate'
 
 export function TeamOverview() {
@@ -52,7 +53,7 @@ export function TeamOverview() {
       const prefsArray = Object.entries(team.prefs || {}).map(
         ([key, value]) => ({
           key,
-          value: String(value),
+          value: formatPrefValue(value),
         }),
       )
       setPreferences(
@@ -81,7 +82,10 @@ export function TeamOverview() {
       )
 
     // Simple comparison using JSON.stringify for flat objects
-    return JSON.stringify(currentPrefs) !== JSON.stringify(team.prefs || {})
+    return (
+      JSON.stringify(currentPrefs) !==
+      JSON.stringify(formatPrefsForEditor(team.prefs || {}))
+    )
   }, [preferences, team])
 
   // Check if last preference row is complete
