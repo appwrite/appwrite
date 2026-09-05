@@ -290,10 +290,6 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if ($sdk->getDescriptionFilePath() !== null) {
-                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
-            }
-
             if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
                     'since' => $sdk->getDeprecated()->getSince(),
