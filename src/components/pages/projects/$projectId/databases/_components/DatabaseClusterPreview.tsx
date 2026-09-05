@@ -28,6 +28,7 @@ import {
   VIEWPORT_PAN_ZOOM_MAX,
 } from '@/lib/hooks/useViewportPanZoom'
 import { cn } from '@/lib/utils'
+import { isDedicatedDatabaseFailingOver } from '@/lib/databases/dedicated-database-status'
 import { useT } from '@/lib/i18n/translate'
 
 /** Mid-card cluster area; taller so node headers + live metric placeholders stay readable. */
@@ -142,7 +143,9 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
   if (normalized === 'provisioning' || normalized === 'restoring') {
     return 'provisioning'
   }
-  if (normalized === 'scaling') return 'scaling'
+  if (normalized === 'scaling' || isDedicatedDatabaseFailingOver(normalized)) {
+    return 'scaling'
+  }
   if (normalized === 'starting') return 'starting'
   if (
     normalized === 'failed' ||
@@ -165,9 +168,9 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
 }
 
 /**
- * Compute-tier scaling keeps the cluster available, so existing nodes should
- * keep live metrics and only switch the status dot to blue. Leave draft
- * add/remove and failed states alone.
+ * Compute-tier scaling and failover keep the cluster available, so existing
+ * nodes should keep live metrics and only switch the status dot to blue.
+ * Leave draft add/remove and failed states alone.
  */
 function overlayScalingLifecycle(
   status: ClusterNodeStatus,

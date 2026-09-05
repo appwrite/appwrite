@@ -1487,6 +1487,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Removing': '削除予定',
   'Restoring': '復元中',
   'Scaling': 'スケーリング中',
+  'Failing over': 'フェイルオーバー中',
   'Upgrading': 'アップグレード中',
   'Migrating': '移行中',
   'Pausing': '一時停止中',
@@ -1610,6 +1611,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Compute tier update started': 'コンピュートティアの更新を開始しました',
   'Failed to update compute tier': 'コンピュートティアの更新に失敗しました',
   'Database is scaling': 'データベースをスケーリング中',
+  'Database is failing over': 'データベースはフェイルオーバー中',
   'Database is provisioning': 'データベースをプロビジョニング中',
   'Database is restoring': 'データベースを復元中',
   'Database is paused': 'データベースは一時停止中',
@@ -1622,6 +1624,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current status': '現在のステータス',
   'A compute tier change is in progress. Your cluster remains available during this operation.':
     'コンピュートティアの変更を実行中です。この操作中もクラスターは利用可能なままです。',
+  'A failover is in progress. Your cluster remains available during this operation.':
+    'フェイルオーバーを実行中です。この操作中もクラスターは利用可能なままです。',
   'Dedicated compute is being provisioned for this database.':
     'このデータベース用の専用コンピュートをプロビジョニングしています。',
   'This database is being restored. Some operations may be unavailable until it is ready again.':

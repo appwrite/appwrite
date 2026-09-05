@@ -97,7 +97,7 @@ export async function expectToast(
 }
 
 const DEDICATED_BUSY_TITLE =
-  /^Database is (provisioning|starting|not ready|scaling|upgrading|migrating|restoring|pausing|resuming|deleting)$/i
+  /^Database is (provisioning|starting|not ready|scaling|failing over|upgrading|migrating|restoring|pausing|resuming|deleting)$/i
 const DEDICATED_FAILED_TITLE = /Database update failed|^Database is deleted$/i
 const DEDICATED_STATUS_RELOAD_MS = 15_000
 

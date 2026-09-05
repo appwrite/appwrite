@@ -86,12 +86,25 @@ export function isDedicatedDatabaseDeleting(
   return normalized === 'deleting' || normalized === 'deleted'
 }
 
+/** Manual or automatic replica promotion. Cluster stays available, like spec changes. */
+export function isDedicatedDatabaseFailingOver(
+  status: string | null | undefined,
+): boolean {
+  const normalized = coerceTrimmedString(status).toLowerCase()
+  return (
+    normalized === 'failing-over' ||
+    normalized === 'failingover' ||
+    normalized === 'failing_over'
+  )
+}
+
 export const DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE =
   'Available once the database is ready.'
 
 export function dedicatedDatabaseStatusBadgeVariant(
   status: string | null | undefined,
 ): DedicatedDatabaseStatusBadgeVariant {
+  if (isDedicatedDatabaseFailingOver(status)) return 'info'
   switch (coerceTrimmedString(status).toLowerCase()) {
     case 'ready':
       return 'success'
@@ -136,6 +149,9 @@ export function dedicatedDatabaseHeaderAlertVariant(
 export function dedicatedDatabaseStatusAlertTitleKey(
   status: string,
 ): string {
+  if (isDedicatedDatabaseFailingOver(status)) {
+    return 'Database is failing over'
+  }
   switch (coerceTrimmedString(status).toLowerCase()) {
     case 'scaling':
       return 'Database is scaling'
@@ -169,6 +185,9 @@ export function dedicatedDatabaseStatusAlertTitleKey(
 export function dedicatedDatabaseStatusAlertDescriptionKey(
   status: string,
 ): string {
+  if (isDedicatedDatabaseFailingOver(status)) {
+    return 'A failover is in progress. Your cluster remains available during this operation.'
+  }
   switch (coerceTrimmedString(status).toLowerCase()) {
     case 'scaling':
       return 'A compute tier change is in progress. Your cluster remains available during this operation.'

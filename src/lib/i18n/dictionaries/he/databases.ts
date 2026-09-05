@@ -1616,6 +1616,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Removing': 'בהסרה',
   'Restoring': 'משחזר',
   'Scaling': 'משנה קנה מידה',
+  'Failing over': 'Failover',
   'Upgrading': 'משדרג',
   'Migrating': 'מעביר',
   'Pausing': 'משהה',
@@ -1671,6 +1672,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Compute tier update started': 'עדכון רמת המחשוב התחיל',
   'Failed to update compute tier': 'עדכון רמת המחשוב נכשל',
   'Database is scaling': 'מסד הנתונים משנה קנה מידה',
+  'Database is failing over': 'מסד הנתונים ב-failover',
   'Database is provisioning': 'מסד הנתונים בהקצאה',
   'Database is restoring': 'מסד הנתונים משוחזר',
   'Database is paused': 'מסד הנתונים מושהה',
@@ -1683,6 +1685,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current status': 'סטטוס נוכחי',
   'A compute tier change is in progress. Your cluster remains available during this operation.':
     'שינוי רמת המחשוב מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
+  'A failover is in progress. Your cluster remains available during this operation.':
+    'Failover מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
   'Dedicated compute is being provisioned for this database.':
     'מוקצה מחשוב ייעודי עבור מסד נתונים זה.',
   'This database is being restored. Some operations may be unavailable until it is ready again.':
