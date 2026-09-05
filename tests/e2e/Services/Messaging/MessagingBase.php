@@ -108,6 +108,13 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'vonage-messages' => [
+                'providerId' => ID::unique(),
+                'name' => 'VonageMessages1',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
@@ -201,6 +208,11 @@ trait MessagingBase
             ],
             'vonage' => [
                 'name' => 'Vonage2',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+            ],
+            'vonage-messages' => [
+                'name' => 'VonageMessages2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
@@ -821,6 +833,13 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'vonage-messages' => [
+                'providerId' => ID::unique(),
+                'name' => 'VonageMessages1',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
@@ -909,6 +928,11 @@ trait MessagingBase
             ],
             'vonage' => [
                 'name' => 'Vonage2',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+            ],
+            'vonage-messages' => [
+                'name' => 'VonageMessages2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],

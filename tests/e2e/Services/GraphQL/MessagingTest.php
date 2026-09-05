@@ -91,6 +91,13 @@ final class MessagingTest extends Scope
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'VonageMessages' => [
+                'providerId' => ID::unique(),
+                'name' => 'VonageMessages1',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
+            ],
             'Fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
@@ -193,8 +200,14 @@ final class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'Fcm' => [
+            'VonageMessages' => [
                 'providerId' => $providers[8]['_id'],
+                'name' => 'VonageMessages2',
+                'apiKey' => 'my-apikey',
+                'apiSecret' => 'my-apisecret',
+            ],
+            'Fcm' => [
+                'providerId' => $providers[9]['_id'],
                 'name' => 'FCM2',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
@@ -206,7 +219,7 @@ final class MessagingTest extends Scope
                 ]
             ],
             'Apns' => [
-                'providerId' => $providers[9]['_id'],
+                'providerId' => $providers[10]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -885,7 +898,7 @@ final class MessagingTest extends Scope
     public function testCreateProviders(): void
     {
         $providers = $this->setupProviders();
-        $this->assertCount(10, $providers);
+        $this->assertCount(11, $providers);
     }
 
     public function testUpdateProviders(): void
