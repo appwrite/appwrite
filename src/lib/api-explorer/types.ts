@@ -20,7 +20,6 @@ export type AppwriteOpenApiExtension = {
   method: string
   group?: string
   weight?: number
-  cookies?: boolean
   type?: string
   demo?: string
   'rate-limit'?: number
