@@ -247,6 +247,7 @@ const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
 
 // Database Worker Types
+const DATABASE_TYPE_CREATE_DATABASE = 'createDatabase';
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
