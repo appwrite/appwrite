@@ -32,6 +32,7 @@ export const ANALYTICS_ACTIONS = {
   'header-docs': 'Header Docs Clicked',
   'create-affiliate-link': 'Create Affiliate Link Clicked',
   'copy-affiliate-link': 'Copy Affiliate Link Clicked',
+  'impersonation-share': 'Impersonation Share Clicked',
   'delete-affiliate-link': 'Delete Affiliate Link Clicked',
   'claim-affiliate-reward': 'Claim Affiliate Reward Clicked',
 

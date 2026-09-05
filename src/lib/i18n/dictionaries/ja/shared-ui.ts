@@ -123,6 +123,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Execute function': '関数を実行',
   'Execution ID': '実行 ID',
   'Exit impersonation': 'なりすましを終了',
+  Share: '共有',
+  'Copy impersonation link': 'なりすましリンクをコピー',
   'Expanded image': '拡大画像',
   // Errors and failures
   'Failed to activate deployment': 'デプロイの有効化に失敗しました',
@@ -1218,4 +1220,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'なりすましを終了するまで、コンソールはこのユーザーの権限で動作します。操作はオペレーターアカウントに記録されたままです。',
   'Operator access': 'オペレーターアクセス',
   'Operator account': 'オペレーターアカウント',
+  'After you confirm, the Console will open this page.':
+    '確認後、コンソールはこのページを開きます。',
 }

@@ -135,6 +135,10 @@ async function mockAppwriteApi(page: Page, scenario: ApiScenario) {
       return json(200, {})
     }
 
+    if (request.method() === 'GET' && path === '/account/sessions') {
+      return json(200, { total: 0, sessions: [] })
+    }
+
     if (request.method() === 'GET' && path === `/users/${TARGET.$id}`) {
       return json(200, mockUserResponse(TARGET))
     }
@@ -195,6 +199,82 @@ test.describe('impersonation deep link (mocked API)', () => {
       window.sessionStorage.getItem('console.impersonation.targetUserId'),
     )
     expect(storedTarget).toBe(TARGET.$id)
+  })
+
+  test('share copies an email link for the current console page', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { account: OPERATOR })
+
+    await page.goto(`/impersonate/${TARGET.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await page.getByRole('button', { name: 'Start impersonation' }).click()
+
+    const banner = page.getByRole('status', { name: /Impersonation active/ })
+    await expect(banner).toBeVisible({ timeout: 30_000 })
+    await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 30_000 })
+
+    await page.evaluate(() => {
+      Object.defineProperty(window, '__copiedText', {
+        value: '',
+        writable: true,
+        configurable: true,
+      })
+      navigator.clipboard.writeText = async (text: string) => {
+        ;(window as unknown as { __copiedText: string }).__copiedText = text
+      }
+    })
+
+    await banner.getByRole('button', { name: 'Copy impersonation link' }).click()
+    await expect(page.getByText('Link copied')).toBeVisible()
+
+    const copied = await page.evaluate(
+      () => (window as unknown as { __copiedText: string }).__copiedText,
+    )
+    const shared = new URL(copied)
+    expect(shared.pathname).toBe('/impersonate')
+    expect(shared.searchParams.get('email')).toBe(TARGET.email)
+    expect(shared.searchParams.get('redirect')).toBe('/account')
+  })
+
+  test('email link with redirect confirms then opens that console page', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { account: OPERATOR })
+
+    const redirectPath = '/account/sessions'
+    await page.goto(
+      `/impersonate?email=${encodeURIComponent(TARGET.email)}&redirect=${encodeURIComponent(redirectPath)}`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const card = page.locator('#main-content')
+    await expect(
+      card.getByRole('heading', { name: 'Impersonate user' }),
+    ).toBeVisible()
+    await expect(card.getByText(TARGET.email)).toBeVisible()
+    await expect(
+      card.getByText('After you confirm, the Console will open this page.'),
+    ).toBeVisible()
+    await expect(card.getByText(redirectPath, { exact: true })).toBeVisible()
+
+    const impersonatedAccountRequest = page.waitForRequest(
+      (request) =>
+        request.method() === 'GET' &&
+        appwriteApiPath(request.url()) === '/account' &&
+        request.headers()[IMPERSONATE_HEADER] === TARGET.$id,
+      { timeout: 30_000 },
+    )
+
+    await card.getByRole('button', { name: 'Start impersonation' }).click()
+    await impersonatedAccountRequest
+    await expect(page).toHaveURL(/\/account\/sessions(?:\/|$|\?)/, {
+      timeout: 30_000,
+    })
+    await expect(
+      page.getByRole('status', { name: /Impersonation active/ }),
+    ).toBeVisible({ timeout: 30_000 })
   })
 
   test('operator can open the link by email instead of user id', async ({

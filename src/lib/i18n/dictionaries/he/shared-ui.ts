@@ -222,6 +222,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Execution ID': 'מזהה הרצה',
   Exit: 'יציאה',
   'Exit impersonation': 'יציאה מהתחזות',
+  Share: 'שיתוף',
+  'Copy impersonation link': 'העתקת קישור התחזות',
   'Expanded image': 'תמונה מוגדלת',
 
   // Errors and failures
@@ -1259,4 +1261,6 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המסוף יפעל עם ההרשאות של המשתמש הזה עד שתצאו ממצב ההתחזות. הפעולות יישארו משויכות לחשבון האופרטור שלכם.',
   'Operator access': 'גישת אופרטור',
   'Operator account': 'חשבון אופרטור',
+  'After you confirm, the Console will open this page.':
+    'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
 }
