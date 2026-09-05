@@ -321,16 +321,7 @@ class Install extends Action
         }
         $userInput['_APP_DB_ADAPTER'] = $userInput['_APP_DB_ADAPTER'] ?? $database;
         $database = $userInput['_APP_DB_ADAPTER'];
-        if ($database === 'postgresql') {
-            $userInput['_APP_DB_HOST'] = 'postgresql';
-            $userInput['_APP_DB_PORT'] = 5432;
-        } elseif ($database === 'mongodb') {
-            $userInput['_APP_DB_HOST'] = 'mongodb';
-            $userInput['_APP_DB_PORT'] = 27017;
-        } elseif ($database === 'mariadb') {
-            $userInput['_APP_DB_HOST'] = 'mariadb';
-            $userInput['_APP_DB_PORT'] = 3306;
-        }
+        $this->applyContainerDatabaseHost($userInput, $database, $vars['_APP_DB_HOST']['default'] ?? null);
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
@@ -454,18 +445,32 @@ class Install extends Action
 
         // Set database-specific connection details
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
-        if ($database === 'mongodb') {
-            $input['_APP_DB_HOST'] = 'mongodb';
-            $input['_APP_DB_PORT'] = 27017;
-        } elseif ($database === 'mariadb') {
-            $input['_APP_DB_HOST'] = 'mariadb';
-            $input['_APP_DB_PORT'] = 3306;
-        } elseif ($database === 'postgresql') {
-            $input['_APP_DB_HOST'] = 'postgresql';
-            $input['_APP_DB_PORT'] = 5432;
-        }
+        $this->applyContainerDatabaseHost($input, $database, $input['_APP_DB_HOST'] ?? null);
 
         return $input;
+    }
+
+    /**
+     * Point _APP_DB_HOST/_APP_DB_PORT at the bundled database container for
+     * the given adapter, unless the current host is already a custom value
+     * (e.g. an external database preserved from an existing installation).
+     */
+    private function applyContainerDatabaseHost(array &$input, string $database, ?string $currentHost): void
+    {
+        $containerHosts = [
+            'postgresql' => 5432,
+            'mongodb' => 27017,
+            'mariadb' => 3306,
+        ];
+
+        if (!empty($currentHost) && !array_key_exists($currentHost, $containerHosts)) {
+            return;
+        }
+
+        if (isset($containerHosts[$database])) {
+            $input['_APP_DB_HOST'] = $database;
+            $input['_APP_DB_PORT'] = $containerHosts[$database];
+        }
     }
 
     public function hasExistingConfig(): bool
