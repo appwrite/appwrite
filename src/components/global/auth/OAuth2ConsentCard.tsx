@@ -14,7 +14,6 @@ import {
   Lock,
   ShieldCheck,
   SlidersHorizontal,
-  ArrowLeftRight,
   TriangleAlert,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -22,17 +21,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { OAuth2AppAvatar } from '@/components/global/auth/OAuth2AppAvatar'
+import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
 import {
   buildConsentPermissions,
   buildTierEditorRows,
@@ -185,7 +179,6 @@ export function OAuth2ConsentCard({
     organizationScopesRequested && organizationIdentifiers.length > 0
 
   const redirectHost = hostnameOf(grant.redirectUri)
-  const accountInitial = (accountLabel || '?').charAt(0).toUpperCase()
 
   // Reset the selection to exactly what the client requested whenever the grant
   // changes, so a stale selection can't leak across requests.
@@ -602,45 +595,11 @@ export function OAuth2ConsentCard({
           </div>
 
           {accountLabel ? (
-            onSwitchAccount ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild disabled={isBusy}>
-                  <button
-                    type="button"
-                    className="cursor-pointer text-muted-foreground hover:text-foreground border-border hover:bg-muted/50 flex max-w-full items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition disabled:opacity-60"
-                  >
-                    <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
-                      {accountInitial}
-                    </span>
-                    <span className="truncate">{accountLabel}</span>
-                    <ChevronDown className="size-3.5 shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="w-72">
-                  <div className="flex items-center gap-2 px-2 py-1.5">
-                    <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
-                      {accountInitial}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-start text-[13px]">
-                      {accountLabel}
-                    </span>
-                    <Check className="text-muted-foreground size-4 shrink-0" />
-                  </div>
-                  <DropdownMenuItem
-                    disabled={isBusy}
-                    onSelect={() => void onSwitchAccount()}
-                  >
-                    <ArrowLeftRight className="size-4" />
-                    {t('Use a different account')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <p className="text-muted-foreground text-[12px]">
-                {t('Signed in as')}{' '}
-                <span className="text-foreground font-medium">{accountLabel}</span>
-              </p>
-            )
+            <AuthAccountChip
+              accountLabel={accountLabel}
+              onSwitchAccount={onSwitchAccount}
+              disabled={isBusy}
+            />
           ) : null}
         </div>
 
