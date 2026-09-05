@@ -12,40 +12,21 @@ export async function clickInPage(locator: Locator): Promise<void> {
   })
 }
 
-/**
- * Open a Radix Select and choose an option. Force-clicks skip animation
- * stability checks that otherwise detach the trigger mid-action.
- */
+/** Open a Radix Select using pointer actionability checks, including motion. */
 export async function openSelectAndChoose(
   page: Page,
   trigger: Locator,
   optionName: string,
 ): Promise<void> {
   await expect(trigger).toBeVisible({ timeout: 15_000 })
-  let lastError: unknown
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      await trigger.evaluate((el: HTMLElement) => {
-        el.scrollIntoView({ block: 'center', inline: 'nearest' })
-      })
-      await trigger.click({ force: true })
-      const option = page.getByRole('option', { name: optionName }).first()
-      await expect(option).toBeVisible({ timeout: 10_000 })
-      await option.click({ force: true })
-      await expect(page.getByRole('listbox')).toHaveCount(0, { timeout: 5_000 })
-      return
-    } catch (error) {
-      lastError = error
-      const listbox = page.getByRole('listbox')
-      if (await listbox.isVisible().catch(() => false)) {
-        await page.keyboard.press('Escape').catch(() => undefined)
-        await expect(listbox)
-          .toHaveCount(0, { timeout: 2_000 })
-          .catch(() => undefined)
-      }
-    }
-  }
-  throw lastError
+  await trigger.click()
+  // Some options include a resource ID after the human-readable name.
+  const option = page.getByRole('option', { name: optionName }).first()
+  await expect(option).toBeVisible({ timeout: 10_000 })
+  await option.click()
+  await expect(page.getByRole('listbox')).toHaveCount(0, { timeout: 5_000 })
+  // Callers may locate the trigger by its placeholder, which selection replaces.
+  // Verify the selected value at the call site with a stable locator instead.
 }
 
 /**
@@ -61,30 +42,20 @@ export async function chooseCommandItem(
   optionPattern: RegExp,
 ): Promise<void> {
   await expect(trigger).toBeVisible({ timeout: 15_000 })
-  let lastError: unknown
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      await trigger.click({ force: true })
-      const search = page.getByPlaceholder(searchPlaceholder).last()
-      await expect(search).toBeVisible({ timeout: 10_000 })
-      const option = page
-        .locator('[cmdk-item], [data-slot="command-item"]')
-        .filter({ has: page.getByText(optionPattern) })
-        .first()
-      await search.fill(searchText)
-      await expect(option).toBeVisible({ timeout: 10_000 })
-      await option.click({ force: true })
-      await expect(search).toBeHidden({ timeout: 5_000 })
-      return
-    } catch (error) {
-      lastError = error
-      const search = page.getByPlaceholder(searchPlaceholder).last()
-      if (await search.isVisible().catch(() => false)) {
-        await page.keyboard.press('Escape').catch(() => undefined)
-      }
-    }
-  }
-  throw lastError
+  await trigger.click()
+  const search = page.getByPlaceholder(searchPlaceholder).last()
+  await expect(search).toBeVisible({ timeout: 10_000 })
+  const option = page
+    .locator('[cmdk-item], [data-slot="command-item"]')
+    .filter({ has: page.getByText(optionPattern) })
+    .first()
+  await search.fill(searchText)
+  await expect(option).toBeVisible({ timeout: 10_000 })
+  await option.click()
+  await expect(search).toBeHidden({ timeout: 5_000 })
+  // A dismissed parent drawer also hides the search. It is not a selection.
+  await expect(trigger).toBeVisible()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
 }
 
 /** Sonner can keep a previous toast in the DOM; assert the newest match. */
