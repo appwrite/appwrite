@@ -590,17 +590,18 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                $extras = [];
+                Span::add('warning.message', $th->getMessage());
+                Span::add('warning.code', $th->getCode());
+                Span::add('migration.id', $migration->getId());
+                Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+                Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
 
                 // Include source identifiers for Appwrite sources to make warning spans
                 // self-debuggable. Never include the apiKey or any other secret.
                 if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                    $credentials = $migration->getAttribute('credentials', []) ?? [];
-                    $extras['source_project_id'] = $credentials['projectId'] ?? '';
-                    $extras['source_endpoint'] = $credentials['endpoint'] ?? '';
+                    Span::add('migration.source_project_id', (string) ($migration->getAttribute('credentials', [])['projectId'] ?? ''));
+                    Span::add('migration.source_endpoint', (string) ($migration->getAttribute('credentials', [])['endpoint'] ?? ''));
                 }
-
-                $this->reportWarning($th, $migration, $extras);
             }
         } finally {
             try {
@@ -865,9 +866,12 @@ class Migrations extends Action
 
         $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
         if (!$valid) {
-            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportWarning($error, $migration);
+            Console::error('Invalid initiating user sequence for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Invalid initiating user sequence for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
             return new Document([]);
         }
 
@@ -876,9 +880,12 @@ class Migrations extends Action
         ]);
 
         if ($user->isEmpty()) {
-            $error = new \RuntimeException('Initiating user not found for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportWarning($error, $migration);
+            Console::error('Initiating user not found for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Initiating user not found for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
 
         return $user;
@@ -910,24 +917,11 @@ class Migrations extends Action
             );
         } catch (\Throwable $error) {
             Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
-            $this->reportWarning($error, $migration);
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $extras
-     */
-    protected function reportWarning(\Throwable $error, Document $migration, array $extras = []): void
-    {
-        Span::add('warning.message', $error->getMessage());
-        Span::add('warning.code', $error->getCode());
-        Span::add('migration.id', $migration->getId());
-        Span::add('migration.source', $migration->getAttribute('source', ''));
-        Span::add('migration.destination', $migration->getAttribute('destination', ''));
-        foreach ($extras as $key => $value) {
-            if (\is_scalar($value) || $value === null) {
-                Span::add('migration.' . $key, $value);
-            }
+            Span::add('warning.message', $error->getMessage());
+            Span::add('warning.code', $error->getCode());
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
     }
 

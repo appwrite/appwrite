@@ -188,7 +188,7 @@ $cli
     ->inject('error')
     ->action(function (Throwable $error) use ($taskName, &$exitCode) {
         $span = Span::current() ?? Span::init("task.$taskName");
-        $span->set('cli.task', $taskName);
+        Span::add('cli.task', $taskName);
         $span->finish(error: $error);
 
         $exitCode = 1;
@@ -196,7 +196,8 @@ $cli
     });
 
 $cli->init()->action(function () use ($taskName) {
-    Span::init("task.$taskName")->set('cli.task', $taskName);
+    Span::init("task.$taskName");
+    Span::add('cli.task', $taskName);
 });
 
 $cli->shutdown()->action(function () {
