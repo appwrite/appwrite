@@ -426,6 +426,8 @@ $container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $p
 
 $container->set('plan', fn () => []);
 
+$container->set('plans', fn () => []);
+
 $container->set('smsRates', fn () => []);
 
 $container->set(
