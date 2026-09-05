@@ -1659,6 +1659,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
 
+        $identityByProvider = new Document();
+        if (empty($providerEmail)) {
+            $identityByProvider = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+        }
+
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
             $userId = $user->getId();
@@ -1680,7 +1688,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
-
                 $userWithMatchingEmail = $dbForProject->find('users', [
                     Query::equal('email', [$email]),
                     Query::notEqual('$id', $userId),
@@ -1688,6 +1695,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!empty($userWithMatchingEmail)) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
+            } elseif (!$identityByProvider->isEmpty() && $identityByProvider->getAttribute('userId') !== $userId) {
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
             $sessionUpgrade = true;
@@ -1716,7 +1725,73 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $newUser = null;
         $newTarget = null;
 
+        if ($user->isEmpty() && empty($providerEmail)) {
+            if (!$identityByProvider->isEmpty()) {
+                $identityUser = $dbForProject->getDocument('users', $identityByProvider->getAttribute('userId'));
+                if ($identityUser->isEmpty()) {
+                    $failureRedirect(Exception::USER_NOT_FOUND);
+                }
+
+                $user->setAttributes($identityUser->getArrayCopy());
+            } else {
+                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+                if ($limit !== 0) {
+                    $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                    if ($total >= $limit) {
+                        $failureRedirect(Exception::USER_COUNT_EXCEEDED);
+                    }
+                }
+
+                try {
+                    $userId = ID::unique();
+                    $user->setAttributes([
+                        '$id' => $userId,
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($userId)),
+                            Permission::delete(Role::user($userId)),
+                        ],
+                        'email' => null,
+                        'emailVerification' => false,
+                        'status' => true,
+                        'password' => null,
+                        'hash' => $proofForPassword->getHash()->getName(),
+                        'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                        'passwordUpdate' => null,
+                        'registration' => DateTime::now(),
+                        'reset' => false,
+                        'name' => empty($name) ? null : $name,
+                        'mfa' => false,
+                        'prefs' => new \stdClass(),
+                        'sessions' => null,
+                        'tokens' => null,
+                        'memberships' => null,
+                        'authenticators' => null,
+                        'search' => implode(' ', [$userId, $name]),
+                        'accessedAt' => DateTime::now(),
+                        'emailCanonical' => null,
+                        'emailIsCanonical' => null,
+                        'emailIsCorporate' => null,
+                        'emailIsDisposable' => null,
+                        'emailIsFree' => null,
+                    ]);
+
+                    $user->removeAttribute('$sequence');
+                    $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $newUser = $user;
+                } catch (Duplicate) {
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                }
+            }
+        }
+
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+            if (empty($email)) {
+                $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
+            }
+
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $identity = $dbForProject->findOne('identities', [
