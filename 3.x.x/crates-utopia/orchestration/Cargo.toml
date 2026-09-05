@@ -1,0 +1,31 @@
+[package]
+name = "utopia-orchestration"
+description = "Container orchestration for Utopia (Rust port of utopia-php/orchestration)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["docker", "orchestration", "container", "utopia"]
+categories = ["virtualization"]
+
+[dependencies]
+base64 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-console = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "orchestration"
+harness = false
+
+[lints]
+workspace = true

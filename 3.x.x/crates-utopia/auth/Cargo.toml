@@ -1,0 +1,53 @@
+[package]
+name = "utopia-auth"
+description = "Authentication and authorization for Utopia (Rust port of utopia-php/auth)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["auth", "jwt", "password", "hashing", "utopia"]
+categories = ["authentication", "cryptography", "web-programming"]
+
+[features]
+default = ["argon2", "bcrypt", "jwt", "legacy", "oauth2"]
+argon2 = ["dep:argon2"]
+bcrypt = ["dep:bcrypt"]
+jwt = ["dep:jsonwebtoken", "dep:rsa", "dep:sha2", "dep:hmac", "dep:time"]
+legacy = ["dep:md-5", "dep:sha1", "dep:sha2", "dep:scrypt", "dep:aes", "dep:ctr"]
+oauth2 = ["dep:url"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }
+subtle = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+hmac = { workspace = true, optional = true }
+
+argon2 = { workspace = true, optional = true }
+bcrypt = { workspace = true, optional = true }
+md-5 = { workspace = true, optional = true }
+sha1 = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+jsonwebtoken = { workspace = true, optional = true }
+rsa = { workspace = true, optional = true }
+time = { workspace = true, optional = true }
+scrypt = { version = "0.11.0", optional = true }
+aes = { version = "0.8.4", optional = true }
+ctr = { version = "0.9.2", optional = true }
+url = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[[bench]]
+name = "auth"
+harness = false
+
+[lints]
+workspace = true

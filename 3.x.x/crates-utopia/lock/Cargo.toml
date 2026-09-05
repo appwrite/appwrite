@@ -1,0 +1,33 @@
+[package]
+name = "utopia-lock"
+description = "Locks for coordinating access to shared resources (Rust port of utopia-php/lock)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["lock", "mutex", "semaphore", "redis", "utopia"]
+categories = ["concurrency"]
+
+[features]
+default = []
+redis = ["dep:redis"]
+
+[dependencies]
+fs2 = { workspace = true }
+parking_lot = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }
+redis = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bench]]
+name = "lock"
+harness = false
+
+[lints]
+workspace = true

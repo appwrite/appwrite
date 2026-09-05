@@ -1,0 +1,39 @@
+[package]
+name = "utopia-nats"
+description = "NATS client for Utopia (Rust port of utopia-php/nats)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["nats", "jetstream", "messaging", "utopia"]
+categories = ["network-programming", "asynchronous"]
+
+[dependencies]
+async-nats = { workspace = true }
+base64 = { workspace = true }
+ed25519-dalek = { workspace = true }
+indexmap = { workspace = true }
+parking_lot = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+serde = { workspace = true }
+time = { workspace = true, features = ["formatting", "parsing", "macros"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-rustls = { workspace = true }
+tokio-tungstenite = { workspace = true }
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+rustls-pki-types = { workspace = true }
+url = { workspace = true }
+
+[[bench]]
+name = "nats"
+harness = false
+
+[lints]
+workspace = true

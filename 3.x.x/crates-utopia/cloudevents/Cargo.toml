@@ -1,0 +1,29 @@
+[package]
+name = "utopia-cloudevents"
+description = "CloudEvents v1.0 types for Utopia (Rust port of utopia-php/cloudevents)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["cloudevents", "events", "utopia"]
+categories = ["web-programming"]
+
+[dependencies]
+base64 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[[bench]]
+name = "cloudevents"
+harness = false
+
+[lints]
+workspace = true

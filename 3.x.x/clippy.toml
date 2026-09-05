@@ -1,0 +1,13 @@
+# Shared Clippy config for the Utopia Rust workspace.
+# https://doc.rust-lang.org/clippy/configuration.html
+
+msrv = "1.97.0"
+cognitive-complexity-threshold = 30
+too-many-arguments-threshold = 8
+too-many-lines-threshold = 400
+type-complexity-threshold = 250
+avoid-breaking-exported-api = true
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+allow-dbg-in-tests = true
+allow-print-in-tests = true

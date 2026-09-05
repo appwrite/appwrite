@@ -1,0 +1,24 @@
+[package]
+name = "utopia-servers"
+description = "Shared Hook/action builders for Utopia servers (Rust port of utopia-php/servers)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["utopia", "hook", "servers"]
+categories = ["web-programming"]
+
+[dependencies]
+utopia-validators = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "hook"
+harness = false
+
+[lints]
+workspace = true
