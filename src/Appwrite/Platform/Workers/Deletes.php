@@ -885,6 +885,16 @@ class Deletes extends Action
             Console::error('Failed to delete installations: ' . $th->getMessage());
         }
 
+        // Delete VCS Installation Requests
+        try {
+            $this->deleteByGroup('installationRequests', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete installation requests: ' . $th->getMessage());
+        }
+
         // Delete VCS Repositories
         try {
             $this->deleteByGroup('repositories', [

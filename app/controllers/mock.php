@@ -9,6 +9,7 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -333,6 +334,62 @@ Http::get('/v1/mock/github/callback')
 
         $response->json([
             'installationId' => $installation->getId(),
+        ]);
+    });
+
+Http::get('/v1/mock/github/request')
+    ->desc('Create installation request document, standing in for the request callback whose OAuth code cannot be faked')
+    ->groups(['mock', 'api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID of the project the installation was requested for')
+    ->param('requester', '', new Text(256), 'Provider login of the account that requested the installation')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $requester, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project with the requested ID could not be found.');
+        }
+
+        $teamId = $project->getAttribute('teamId', '');
+
+        try {
+            $request = $dbForPlatform->createDocument('installationRequests', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::read(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+                    Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+                    Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+                    Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+                    Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+                    Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+                ],
+                'projectId' => $projectId,
+                'projectInternalId' => $project->getSequence(),
+                'provider' => 'github',
+                'requester' => $requester,
+                'status' => 'requested',
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::INSTALLATION_REQUEST_ALREADY_EXISTS);
+        }
+
+        $response->json([
+            'requestId' => $request->getId(),
         ]);
     });
 

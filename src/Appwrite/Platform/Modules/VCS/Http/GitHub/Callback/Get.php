@@ -7,9 +7,11 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
@@ -176,14 +178,43 @@ class Get extends Action
                 ]));
             }
         } else {
+            // A member's request carries an OAuth code even though nothing was
+            // installed; the requester's login is what later matches the
+            // installation webhook back to this project.
+            $duplicate = false;
+
+            if ($setupAction === 'request' && !empty($code)) {
+                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                $requester = $oauth2->getUserSlug($oauth2->getAccessToken($code));
+
+                if (!empty($requester)) {
+                    try {
+                        $dbForPlatform->createDocument('installationRequests', new Document([
+                            '$id' => ID::unique(),
+                            '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $projectId),
+                            'projectId' => $projectId,
+                            'projectInternalId' => $project->getSequence(),
+                            'provider' => 'github',
+                            'requester' => $requester,
+                            'status' => 'requested',
+                        ]));
+                    } catch (Duplicate) {
+                        // An approval names the requester but not the request,
+                        // so a second open request could not be attributed.
+                        $duplicate = true;
+                    }
+                }
+            }
+
             // GitHub sends setup_action=install on a completed installation,
             // update from the app's Configure page, and request when a member
             // asked the owners for approval. install and update should always
             // carry an installation_id, so without one they mean the caller
             // lacked permission to install.
-            $error = match ($setupAction) {
-                'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
-                'install', 'update', '' => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
+            $error = match (true) {
+                $duplicate => Config::getParam('errors')[Exception::INSTALLATION_REQUEST_ALREADY_EXISTS]['description'],
+                $setupAction === 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
+                \in_array($setupAction, ['install', 'update', ''], true) => 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite Console.',
                 default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
             };
 

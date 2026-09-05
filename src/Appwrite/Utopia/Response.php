@@ -192,6 +192,8 @@ class Response extends SwooleResponse
     // VCS
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
+    public const MODEL_INSTALLATION_REQUEST = 'installationRequest';
+    public const MODEL_INSTALLATION_REQUEST_LIST = 'installationRequestList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
