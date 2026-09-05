@@ -299,69 +299,90 @@ class Functions extends Action
         }
     }
 
-    protected function enqueueScheduledExecution(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
+    /**
+     * @param callable(string, int, callable, float): mixed|null $locks
+     */
+    protected function enqueueScheduledExecution(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue, ?callable $locks = null): bool
     {
         $scheduleId = $execution->getAttribute('scheduleId', '');
-        $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
-            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
-                return new Document();
-            }
-
-            $claimed = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                'resourceUpdatedAt' => DateTime::now(),
-                'active' => false,
-            ]));
-
-            return $claimed->isEmpty() ? new Document() : $schedule;
-        });
-
-        if ($schedule->isEmpty()) {
-            return false;
+        $lock = $locks ?? $this->locks;
+        if (!is_callable($lock)) {
+            $lock = static function (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed {
+                return $callback();
+            };
         }
 
-        $data = $schedule->getAttribute('data', []);
-        $functionId = $data['functionId'] ?? $functionId;
+        return $lock(
+            'lock:platform:schedules:' . $scheduleId,
+            30,
+            function () use ($dbForPlatform, $project, $execution, $functionId, $enqueue, $scheduleId): bool {
+                $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+                    $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
 
-        if (empty($functionId)) {
-            Console::error("Missing functionId for scheduled execution {$execution->getId()}, skipping");
-            $dbForPlatform->deleteDocument('schedules', $scheduleId);
-            return false;
-        }
+                    if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                        return new Document();
+                    }
 
-        $published = false;
-        try {
-            $enqueue(new FunctionMessage(
-                project: $project,
-                userId: $data['userId'] ?? '',
-                functionId: $functionId,
-                execution: new Document(['$id' => $execution->getId()]),
-                type: 'schedule',
-                body: $data['body'] ?? '',
-                path: $data['path'] ?? '/',
-                headers: $data['headers'] ?? [],
-                method: $data['method'] ?? 'POST',
-            ));
-            $published = true;
+                    $claimed = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                        'resourceUpdatedAt' => DateTime::now(),
+                        'active' => false,
+                    ]));
 
-            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
-                throw new \RuntimeException('Failed to remove claimed execution schedule');
-            }
+                    return $claimed->isEmpty() ? new Document() : $schedule;
+                });
 
-            return true;
-        } catch (\Throwable $error) {
-            // A failed publish releases the claim for a later retry. Once the
-            // publish succeeds, keep the schedule inactive even if cleanup
-            // fails so another worker cannot publish it again.
-            if (!$published) {
-                $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'active' => true,
-                ]));
-            }
-            throw $error;
-        }
+                if ($schedule->isEmpty()) {
+                    return false;
+                }
+
+                $data = $schedule->getAttribute('data', []);
+                $functionId = $data['functionId'] ?? $functionId;
+
+                if (empty($functionId)) {
+                    Console::error("Missing functionId for scheduled execution {$execution->getId()}, skipping");
+                    $dbForPlatform->deleteDocument('schedules', $scheduleId);
+                    return false;
+                }
+
+                $published = false;
+                try {
+                    $enqueue(new FunctionMessage(
+                        project: $project,
+                        userId: $data['userId'] ?? '',
+                        functionId: $functionId,
+                        execution: new Document(['$id' => $execution->getId()]),
+                        type: 'schedule',
+                        body: $data['body'] ?? '',
+                        path: $data['path'] ?? '/',
+                        headers: $data['headers'] ?? [],
+                        method: $data['method'] ?? 'POST',
+                    ));
+                    $published = true;
+
+                    if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                        throw new \RuntimeException('Failed to remove claimed execution schedule');
+                    }
+
+                    return true;
+                } catch (\Throwable $error) {
+                    // A failed publish releases the claim for a later retry. Once the
+                    // publish succeeds, keep the schedule inactive even if cleanup
+                    // fails so another worker cannot publish it again.
+                    // Cancellation shares lock:platform:schedules:{id}, so a cancel
+                    // that raced the publish runs only after this block releases
+                    // the lock (and can then delete a revived schedule, or no-op
+                    // if publish already succeeded and left active=false).
+                    if (!$published) {
+                        $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                            'resourceUpdatedAt' => DateTime::now(),
+                            'active' => true,
+                        ]));
+                    }
+                    throw $error;
+                }
+            },
+            10.0,
+        );
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
