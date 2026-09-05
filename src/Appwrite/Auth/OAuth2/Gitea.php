@@ -110,6 +110,13 @@ class Gitea extends OAuth2
         return $user['full_name'] ?? '';
     }
 
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
     public function getUserSlug(string $accessToken): string
     {
         $user = $this->getUser($accessToken);

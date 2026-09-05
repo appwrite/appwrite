@@ -156,6 +156,18 @@ class Gitlab extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);

@@ -146,6 +146,18 @@ class Notion extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['bot']['owner']['user']['avatar_url'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
