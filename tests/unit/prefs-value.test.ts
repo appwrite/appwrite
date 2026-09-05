@@ -2,10 +2,14 @@ import { describe, expect, test } from 'bun:test'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 
 describe('formatPrefValue', () => {
-  test('passes strings through and blanks out empty values', () => {
+  test('passes strings through', () => {
     expect(formatPrefValue('admin')).toBe('admin')
     expect(formatPrefValue('')).toBe('')
-    expect(formatPrefValue(null)).toBe('')
+  })
+
+  test('keeps a stored null editable so a save does not drop the key', () => {
+    // Empty values are excluded from the prefs object the editors submit.
+    expect(formatPrefValue(null)).toBe('null')
     expect(formatPrefValue(undefined)).toBe('')
   })
 
@@ -47,11 +51,13 @@ describe('formatPrefsForEditor', () => {
         name: 'Bob',
         age: 30,
         meta: { role: 'admin' },
+        empty: null,
       }),
     ).toEqual({
       name: 'Bob',
       age: '30',
       meta: '{"role":"admin"}',
+      empty: 'null',
     })
   })
 })
