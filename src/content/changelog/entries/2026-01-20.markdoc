@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Screenshots API: Generate pixel-perfect webpage screenshots on demand"
 date: 2026-01-21
 cover: /images/blog/announcing-screenshots-api/cover.avif
+tags: api
 ---
 
 We're excited to announce the **Screenshots API**, a new addition to Appwrite Avatars that lets you generate fully customizable webpage screenshots with a single API call.

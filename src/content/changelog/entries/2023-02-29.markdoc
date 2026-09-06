@@ -3,6 +3,7 @@ layout: changelog
 title: "New Database operators: OR & contains query methods"
 date: 2024-02-29
 cover: /images/changelog/2024-02-29.avif
+tags: databases
 ---
 
 We’re excited to announce the addition of two new database operators for performing queries, the `or` and `contains` operators for Appwrite Databases. 

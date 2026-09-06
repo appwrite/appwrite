@@ -2,6 +2,7 @@
 layout: changelog
 title: Upload safeguards and Messaging improvements
 date: 2025-01-31
+tags: storage, functions, messaging, infrastructure
 ---
 
 Appwrite Cloud now includes a new warning system for active uploads and improvements to help you manage your apps more effectively.

@@ -2,6 +2,7 @@
 layout: changelog
 title: "Functions and Sites builds skip npm audit by default for faster deploys"
 date: 2026-09-04
+tags: functions, sites, performance, security
 ---
 
 [Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites) now disable npm's security audit step during dependency installation by default. npm runs this check automatically on install, even though it is not required to resolve or download packages. When npm's advisory service is slow or unavailable, builds can stall for several minutes while the same install finishes in seconds under normal conditions.

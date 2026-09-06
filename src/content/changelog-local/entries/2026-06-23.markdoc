@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite Explorer brings the REST API into the Console"
 date: 2026-06-23
 cover: /images/blog-local/announcing-appwrite-explorer/cover.avif
+tags: console, api
 ---
 
 **Appwrite Explorer** is an API workspace in every project. Browse the Appwrite REST surface by product, fill in path, query, and body fields with guided forms, and send live requests against the project you are viewing.

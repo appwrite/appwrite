@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.5 has been released to self hosted
 date: 2024-03-08
 cover: /images/changelog/2024-03-08.avif
+tags: functions, messaging
 ---
 
 Appwrite 1.5 has been released to self hosted.

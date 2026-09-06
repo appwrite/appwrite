@@ -2,6 +2,7 @@
 layout: changelog
 title: More control and compatibility for custom domains
 date: 2025-08-26
+tags: domains, security
 ---
 
 We've added new DNS records to improve security and reliability for Appwrite domains.

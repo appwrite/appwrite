@@ -2,6 +2,7 @@
 layout: changelog
 title: New function runtimes and GitHub identity improvements
 date: 2025-01-14
+tags: integrations, auth, functions, messaging
 ---
 
 We've added new runtimes and resolved identity conflicts to make Appwrite even more developer-friendly.

@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.5.7 is released
 date: 2024-05-29
 cover:
+tags: databases, storage, functions, messaging
 ---
 
 Appwrite 1.5.7 is released with fixes for Databases, Functions and Console.

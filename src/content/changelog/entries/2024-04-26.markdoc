@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.5.5 is released
 date: 2024-04-26
 cover:
+tags: auth, databases, functions, messaging
 ---
 
 Appwrite 1.5.5 is released with fixes for Databases, MFA, and Console.

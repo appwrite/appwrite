@@ -2,6 +2,7 @@
 layout: changelog
 title: Improved workflow and usability
 date: 2024-12-09
+tags: databases, infrastructure
 ---
 
 We've updated Appwrite Cloud to improve usability and workflows:

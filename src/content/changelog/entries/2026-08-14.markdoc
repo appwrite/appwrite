@@ -3,6 +3,7 @@ layout: changelog
 title: 'Send your MFA code through any channel with the custom factor'
 date: 2026-08-14
 cover: /images/blog/custom-mfa-factor/cover.avif
+tags: auth, functions, messaging
 ---
 
 The new **custom** factor for [multi-factor authentication](/docs/products/auth/mfa) removes the channel limit. Appwrite generates and verifies a 6-digit code, and your application decides how the user receives it: WhatsApp, a voice call, an internal messaging system, or any provider that Appwrite does not support directly.

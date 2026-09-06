@@ -2,6 +2,7 @@
 layout: changelog
 title: "Fixed file token URL consistency for non-expiring tokens"
 date: 2025-12-01
+tags: storage
 ---
 
 File tokens allow you to generate custom URLs for accessing files in Storage buckets.

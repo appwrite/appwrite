@@ -2,6 +2,7 @@
 layout: changelog
 title: Fixes and improvements to Appwrite Cloud
 date: 2024-11-29
+tags: databases, functions, messaging, infrastructure
 ---
 
 We've shipped several updates and improvements to Appwrite Cloud for a smoother experience:

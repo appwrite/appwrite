@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Appwrite's new pricing plans"
 date: 2025-08-08
 cover: /images/changelog/2025-08-08.avif
+tags: storage, messaging, sites, infrastructure
 ---
 
 We are updating Appwrite’s pricing as part of Appwrite Cloud’s move from beta to General Availability. For an extended period, Appwrite Cloud beta remained free for all users. As of January 2024, we introduced pricing for beta. Today, we are introducing a new base price and an updated pricing model that aligns with developer needs and industry standards. This will include pricing for Appwrite Sites and Messaging.

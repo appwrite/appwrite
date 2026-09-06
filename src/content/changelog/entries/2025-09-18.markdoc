@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing API for spatial columns: Build scalable location-aware apps with ease"
 date: 2025-09-18
 cover: /images/blog/announcing-spatial-columns/cover.avif
+tags: databases, api
 ---
 Working with geo data usually means storing raw coordinates and writing custom logic that slows down as your dataset grows.
 

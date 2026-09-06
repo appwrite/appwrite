@@ -3,6 +3,7 @@ layout: changelog
 title: 'Announcing the Appwrite React library'
 date: 2026-06-26
 cover: /images/blog/announcing-appwrite-react-library/cover.avif
+tags: auth
 ---
 
 The **Appwrite React library** is now available. It is primarily made for authentication for now, shipping an `AppwriteProvider` and a small set of hooks (`useAuth`, `useUser`, `useSignIn`, `useSignUp`, `useSignOut`) that handle the boilerplate around session hydration, OAuth, and current user state.

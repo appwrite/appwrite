@@ -2,6 +2,7 @@
 layout: changelog
 title: "New runtimes and expanded capabilities"
 date: 2024-11-15
+tags: functions, performance
 ---
 
 We've added support for new function runtimes and capabilities:

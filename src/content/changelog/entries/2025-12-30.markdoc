@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Full Schema Creation: Provision complete tables in one atomic call"
 date: 2025-12-30
 cover: /images/blog/full-schema.avif
+tags: databases
 ---
 
 Introducing a new Database feature called Full Schema Creation.

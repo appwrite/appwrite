@@ -3,6 +3,7 @@ layout: changelog
 title: "Deploy your own MCP server with the new Functions template"
 date: 2026-08-06
 cover: /images/blog/announcing-mcp-server-template/cover.avif
+tags: mcp, functions
 ---
 
 The new **MCP server** [function template](/docs/products/functions/templates) deploys a stateless [Model Context Protocol](https://modelcontextprotocol.io/) server over HTTPS, built with the official MCP Python SDK. It ships with two demo tools, optional **bearer authentication**, and support for both the legacy MCP handshake and the stateless `2026-07-28` protocol.
