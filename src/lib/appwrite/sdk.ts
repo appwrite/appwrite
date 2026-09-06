@@ -214,6 +214,75 @@ function wrapConsoleAccountGet<T extends { account: Account }>(sdkRaw: T): T {
   return sdkRaw
 }
 
+type StorageFileUrlParams = {
+  bucketId: string
+  fileId: string
+  token?: string
+  width?: number
+  height?: number
+  gravity?: string
+  quality?: number
+  borderWidth?: number
+  borderColor?: string
+  borderRadius?: number
+  opacity?: number
+  rotation?: number
+  background?: string
+  output?: ImageFormat
+}
+
+type StorageWithFileUrls = Omit<
+  Storage,
+  'getFileDownload' | 'getFilePreview' | 'getFileView'
+> & {
+  getFileDownload(params: StorageFileUrlParams): string
+  getFilePreview(params: StorageFileUrlParams): string
+  getFileView(params: StorageFileUrlParams): string
+}
+
+function buildStorageFileUrl(
+  client: Client,
+  action: 'download' | 'preview' | 'view',
+  params: StorageFileUrlParams,
+): string {
+  const uri = new URL(
+    `${client.config.endpoint}/storage/buckets/${encodeURIComponent(params.bucketId)}/files/${encodeURIComponent(params.fileId)}/${action}`,
+  )
+
+  for (const [key, value] of Object.entries(params)) {
+    if (key === 'bucketId' || key === 'fileId' || value === undefined) continue
+    uri.searchParams.set(key, String(value))
+  }
+
+  if (client.config.project) {
+    uri.searchParams.set('project', client.config.project)
+  }
+
+  const impersonateUserId = (client.config as { impersonateuserid?: string })
+    .impersonateuserid
+  if (impersonateUserId) {
+    uri.searchParams.set('impersonateuserid', impersonateUserId)
+  }
+
+  return uri.toString()
+}
+
+/**
+ * Keep the URL-builder contract declared by the Console SDK types. Some preview
+ * SDK builds execute these binary requests and return a Promise at runtime,
+ * which turns image src values into "[object Promise]".
+ */
+function installStorageFileUrlBuilders(storage: Storage): StorageWithFileUrls {
+  const storageWithFileUrls = storage as unknown as StorageWithFileUrls
+  storageWithFileUrls.getFileDownload = (params) =>
+    buildStorageFileUrl(storage.client, 'download', params)
+  storageWithFileUrls.getFilePreview = (params) =>
+    buildStorageFileUrl(storage.client, 'preview', params)
+  storageWithFileUrls.getFileView = (params) =>
+    buildStorageFileUrl(storage.client, 'view', params)
+  return storageWithFileUrls
+}
+
 // Create Console SDK instance (raw, no slow-call wrapping)
 function createConsoleSdkRaw(client: Client) {
   return {
@@ -239,7 +308,7 @@ function createConsoleSdkRaw(client: Client) {
     assistant: new Assistant(client),
     sites: new Sites(client),
     domains: new Domains(client),
-    storage: new Storage(client),
+    storage: installStorageFileUrlBuilders(new Storage(client)),
     /**
      * Organization-scoped console API (`X-Appwrite-Organization`).
      * Required for `/organization/projects` and related org project routes.
@@ -500,7 +569,7 @@ export function getSiteScreenshotFilePreviewUrl(
   Object.assign(c.config, clientConsole.config)
   Object.assign(c.headers, clientConsole.headers)
   c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
-  return new Storage(c).getFilePreview(params)
+  return buildStorageFileUrl(c, 'preview', params)
 }
 
 /**
@@ -519,6 +588,9 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 const tablesDBForProject = new TablesDB(clientProject)
 const documentsDBForProject = new DocumentsDB(clientProject)
 const vectorsDBForProject = new VectorsDB(clientProject)
+const storageForProject = installStorageFileUrlBuilders(
+  new Storage(clientProject),
+)
 
 /**
  * Upstream product `update()` only serializes name / enabled / replicas.
@@ -590,10 +662,7 @@ function installProductDatabaseUpdateSpecificationSupport(
   }) as typeof service.update
 }
 
-installProductDatabaseUpdateSpecificationSupport(
-  tablesDBForProject,
-  'tablesdb',
-)
+installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
 installProductDatabaseUpdateSpecificationSupport(
   documentsDBForProject,
   'documentsdb',
@@ -618,7 +687,7 @@ const sdkForProjectRaw = {
   messaging: new Messaging(clientProject),
   project: new Project(clientProject),
   projectApi: new ProjectApi(clientProject),
-  storage: new Storage(clientProject),
+  storage: storageForProject,
   tokens: new Tokens(clientProject),
   teams: new Teams(clientProject),
   users: new Users(clientProject),
