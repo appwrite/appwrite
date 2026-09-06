@@ -978,12 +978,10 @@ final class FormatTest extends TestCase
         $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
     }
 
-    public static function binaryResponseTypes(): array
+    public static function binaryResponseTypes(): \Iterator
     {
-        return [
-            'PNG image' => [ContentType::IMAGE_PNG, 'image/png'],
-            'PDF document' => [ContentType::PDF, 'application/pdf'],
-        ];
+        yield 'PNG image' => [ContentType::IMAGE_PNG, 'image/png'];
+        yield 'PDF document' => [ContentType::PDF, 'application/pdf'];
     }
 
     #[DataProvider('binaryResponseTypes')]
