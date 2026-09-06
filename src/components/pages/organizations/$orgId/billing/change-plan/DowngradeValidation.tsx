@@ -22,6 +22,7 @@ import {
 import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
 import type { ResourcesToDelete } from '@/lib/billing/delete-downgrade-resources'
 import {
+  getNonCompliantProjectIds,
   getOrganizationLimits,
   type PlanChangeLimits,
 } from '@/lib/billing/plan-change-compliance'
@@ -332,6 +333,22 @@ export function DowngradeValidation({
       ),
     [remainingProjects, confirmedProjectIds],
   )
+
+  // Inspecting a project costs nine list calls, so only the projects the
+  // estimation already flagged are inspected, and only once the user has
+  // settled which survive. Submit stays blocked by the project overage for
+  // exactly as long as that is pending.
+  const projectSelectionSettled =
+    !needsProjectSelection || confirmedProjectIds.size > 0
+  const projectsToInspect = useMemo(() => {
+    if (!planChangeLimits) return keptProjects
+    const flagged = new Set(getNonCompliantProjectIds(planChangeLimits))
+    return keptProjects.filter((project) => flagged.has(project.$id))
+  }, [planChangeLimits, keptProjects])
+  const resourceValidationApplies =
+    projectSelectionSettled &&
+    !planChangeLimitsLoading &&
+    projectsToInspect.length > 0
   const membersAfterDeletes = membershipsTotal - confirmedMemberIds.size
   const domainsAfterDeletes = domainsTotal - confirmedDomainIds.size
 
@@ -471,7 +488,7 @@ export function DowngradeValidation({
         domainsAfterDeletes - domainsLimit === 1 ? t('domain') : t('domains')
       } ${t('to fit the selected plan.')}`
     }
-    if (keptProjects.length > 0 && !resourceValidRef.current) {
+    if (resourceValidationApplies && !resourceValidRef.current) {
       return resourceBlockReason
         ? t(resourceBlockReason)
         : t('Finish deleting project resources that exceed the selected plan.')
@@ -486,7 +503,7 @@ export function DowngradeValidation({
     membersLimit,
     domainsAfterDeletes,
     domainsLimit,
-    keptProjects.length,
+    resourceValidationApplies,
     resourceBlockReason,
   ])
 
@@ -494,10 +511,10 @@ export function DowngradeValidation({
   blockReasonRef.current = blockReason
 
   const syncValidity = useCallback(() => {
-    const resourceValid = keptProjects.length === 0 || resourceValidRef.current
+    const resourceValid = !resourceValidationApplies || resourceValidRef.current
     const valid = orgWithinLimits && resourceValid
     onValidityChange?.(valid, valid ? null : blockReasonRef.current)
-  }, [onValidityChange, orgWithinLimits, keptProjects.length])
+  }, [onValidityChange, orgWithinLimits, resourceValidationApplies])
 
   const handleResourceRef = useCallback(
     (ref: DowngradeResourceValidationHandle | null) => {
@@ -521,7 +538,7 @@ export function DowngradeValidation({
 
   const onRefRef = useRef(onRef)
   const orgWithinLimitsRef = useRef(orgWithinLimits)
-  const keptProjectsLengthRef = useRef(keptProjects.length)
+  const resourceValidationAppliesRef = useRef(resourceValidationApplies)
   const confirmedProjectIdsRef = useRef(confirmedProjectIds)
   const confirmedMemberIdsRef = useRef(confirmedMemberIds)
   const confirmedDomainIdsRef = useRef(confirmedDomainIds)
@@ -531,7 +548,7 @@ export function DowngradeValidation({
   }, [onRef])
 
   orgWithinLimitsRef.current = orgWithinLimits
-  keptProjectsLengthRef.current = keptProjects.length
+  resourceValidationAppliesRef.current = resourceValidationApplies
   confirmedProjectIdsRef.current = confirmedProjectIds
   confirmedMemberIdsRef.current = confirmedMemberIds
   confirmedDomainIdsRef.current = confirmedDomainIds
@@ -540,7 +557,7 @@ export function DowngradeValidation({
     onRefRef.current({
       isValid: () => {
         const resourceValid =
-          keptProjectsLengthRef.current === 0 || resourceValidRef.current
+          !resourceValidationAppliesRef.current || resourceValidRef.current
         return orgWithinLimitsRef.current && resourceValid
       },
       getPendingDeletions: () => ({
@@ -589,7 +606,7 @@ export function DowngradeValidation({
   const hasOrgLevelSelections =
     needsProjectSelection || needsMemberSelection || needsDomainSelection
 
-  const showProjectResourceValidation = keptProjects.length > 0
+  const showProjectResourceValidation = resourceValidationApplies
 
   const pendingItems =
     pendingDeleteKind === 'projects'
@@ -735,7 +752,7 @@ export function DowngradeValidation({
             </p>
           </div>
           <DowngradeResourceValidation
-            projects={keptProjects}
+            projects={projectsToInspect}
             targetPlan={targetPlan}
             planChangeLimits={planChangeLimits}
             planChangeLimitsLoading={planChangeLimitsLoading}
@@ -763,11 +780,16 @@ export function DowngradeValidation({
         projectsStaged={confirmedProjectIds.size}
         membersStaged={confirmedMemberIds.size}
         domainsStaged={confirmedDomainIds.size}
-        resourceImpact={resourceImpact}
+        resourceImpact={resourceValidationApplies ? resourceImpact : {}}
         stagedResourceImpact={stagedResourceImpact}
-        keptProjectResourceImpacts={projectResourceImpacts}
+        keptProjectResourceImpacts={
+          resourceValidationApplies ? projectResourceImpacts : []
+        }
         keptProjectStagedImpacts={stagedProjectResourceImpacts}
-        resourcesLoading={resourceImpactLoading || orgSelectionsLoading}
+        resourcesLoading={
+          (resourceValidationApplies && resourceImpactLoading) ||
+          orgSelectionsLoading
+        }
         deletedOrganizationImpact={deletedOrganizationImpact}
         deletedOrganizationLoading={deletedOrganizationLoading}
         expectDeletedOrganizationImpact={expectDeletedOrganizationImpact}
