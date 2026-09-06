@@ -2,7 +2,6 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
-use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -245,9 +244,19 @@ class OpenAPI3 extends Format
                 continue;
             }
 
+            $sdkPlatforms = [];
+            foreach (\is_array($sdk) ? $sdk : [$sdk] as $method) {
+                $sdkPlatforms = \array_merge($sdkPlatforms, $method->getPlatforms());
+            }
+            $sdkPlatforms = \array_values(\array_unique($sdkPlatforms));
+            if (!\in_array($this->platform, $sdkPlatforms, true)) {
+                continue;
+            }
+
             $additionalMethods = null;
             if (\is_array($sdk)) {
                 $additionalMethods = $sdk;
+                // Keep the original base descriptor's schemas and auth, even when only a sibling is eligible.
                 $sdk = $sdk[0];
             }
 
@@ -260,12 +269,6 @@ class OpenAPI3 extends Format
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
-            $routeSecurity = $sdk->getAuth();
-
-            $specs = new Specs();
-            $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
@@ -303,10 +306,9 @@ class OpenAPI3 extends Format
                     /** @var Method $methodObj */
                     $desc = $methodObj->getDescriptionFilePath();
 
-                    $methodSecurities = $methodObj->getAuth();
-                    $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
+                    $methodSdkPlatforms = $methodObj->getPlatforms();
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (!\in_array($this->platform, $methodSdkPlatforms, true)) {
                         continue;
                     }
 
@@ -320,6 +322,7 @@ class OpenAPI3 extends Format
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
+                        'platforms' => $methodSdkPlatforms,
                         'desc' => $methodObj->getDesc(),
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
