@@ -476,6 +476,7 @@ export function ChangePlanWizardFullscreen() {
   const [freePlanDeleteChoiceId, setFreePlanDeleteChoiceId] = useState<
     string | null
   >(null)
+  const [freePlanDeleteConfirmed, setFreePlanDeleteConfirmed] = useState(false)
 
   const handleDowngradeValidationRef = useCallback(
     (ref: DowngradeValidationHandle | null) => {
@@ -821,6 +822,7 @@ export function ChangePlanWizardFullscreen() {
   useEffect(() => {
     if (!showFreePlanConflict || !otherFreeOrg || isCreateMode) {
       setFreePlanDeleteChoiceId(null)
+      setFreePlanDeleteConfirmed(false)
       return
     }
     setFreePlanDeleteChoiceId((prev) => prev ?? otherFreeOrg.$id)
@@ -1062,6 +1064,11 @@ export function ChangePlanWizardFullscreen() {
       if (selectedPlanIsFree && hasFreeOrgs && !orgToDelete) {
         return t('Choose which organization to delete.')
       }
+
+      // Deleting a whole organization must never ride on an untouched default.
+      if (showFreePlanConflict && !freePlanDeleteConfirmed) {
+        return t('Confirm which organization to delete.')
+      }
     }
 
     return null
@@ -1086,6 +1093,8 @@ export function ChangePlanWizardFullscreen() {
     hasPlanChangeBlockers,
     downgradeBlockReason,
     updateEstimation.isFetching,
+    showFreePlanConflict,
+    freePlanDeleteConfirmed,
     t,
   ])
 
@@ -1784,7 +1793,12 @@ export function ChangePlanWizardFullscreen() {
               : null
           }
           deleteChoiceId={freePlanDeleteChoiceId ?? otherFreeOrg.$id}
-          onDeleteChoiceChange={setFreePlanDeleteChoiceId}
+          onDeleteChoiceChange={(id) => {
+            setFreePlanDeleteChoiceId(id)
+            setFreePlanDeleteConfirmed(false)
+          }}
+          confirmed={freePlanDeleteConfirmed}
+          onConfirmedChange={setFreePlanDeleteConfirmed}
         />
       )}
 

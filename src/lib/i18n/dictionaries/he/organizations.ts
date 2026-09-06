@@ -1463,4 +1463,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'השימוש שלכם ב-30 הימים האחרונים היה מעל המגבלות האלה. זהו חלון מתגלגל, לא מחזור החיוב שלכם.',
   'Going over a plan limit can block the affected projects until the next billing cycle.':
     'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
+  '1 organization marked for deletion': 'ארגון אחד מסומן למחיקה',
+  'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
 }

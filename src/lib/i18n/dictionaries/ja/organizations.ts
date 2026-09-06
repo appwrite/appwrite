@@ -1241,4 +1241,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '過去 30 日間の使用量がこれらの上限を超えていました。これは請求サイクルではなく、直近 30 日間の移動ウィンドウです。',
   'Going over a plan limit can block the affected projects until the next billing cycle.':
     'プランの上限を超えると、影響を受けるプロジェクトが次の請求サイクルまでブロックされる可能性があります。',
+  '1 organization marked for deletion': '1 件の組織を削除対象としてマーク済み',
+  'Confirm which organization to delete.': '削除する組織を確定してください。',
 }
