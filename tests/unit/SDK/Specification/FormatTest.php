@@ -45,6 +45,7 @@ use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
@@ -977,18 +978,27 @@ final class FormatTest extends TestCase
         $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
     }
 
-    public function testBinaryResponsesEmitResponseContent(): void
+    public static function binaryResponseTypes(): array
+    {
+        return [
+            'PNG image' => [ContentType::IMAGE_PNG, 'image/png'],
+            'PDF document' => [ContentType::PDF, 'application/pdf'],
+        ];
+    }
+
+    #[DataProvider('binaryResponseTypes')]
+    public function testBinaryResponsesEmitResponseContent(ContentType $contentType, string $mediaType): void
     {
         Method::$processed = [];
         Method::$errors = [];
 
-        $route = (new Route('GET', '/v1/tests/icon'))
-            ->desc('Get test icon')
+        $route = (new Route('GET', '/v1/tests/file'))
+            ->desc('Get test file')
             ->label('sdk', new Method(
                 namespace: 'test',
                 group: null,
-                name: 'getTestIcon',
-                description: 'Get test icon.',
+                name: 'getTestFile',
+                description: 'Get test file.',
                 auth: [],
                 responses: [
                     new SDKResponse(
@@ -996,16 +1006,16 @@ final class FormatTest extends TestCase
                         model: Response::MODEL_NONE,
                     ),
                 ],
-                contentType: ContentType::IMAGE_PNG,
+                contentType: $contentType,
             ));
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
 
-        $openApiMethod = $openApi['paths']['/tests/icon']['get'];
+        $openApiMethod = $openApi['paths']['/tests/file']['get'];
 
         $this->assertSame(
-            ['type' => 'string', 'format' => 'binary'],
-            $openApiMethod['responses']['200']['content']['image/png']['schema']
+            [$mediaType => ['schema' => ['type' => 'string', 'format' => 'binary']]],
+            $openApiMethod['responses']['200']['content']
         );
         $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
