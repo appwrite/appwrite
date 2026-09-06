@@ -49,8 +49,6 @@
     "generate:sitemap": "bun run scripts/generate-sitemap.ts",
     "generate:specs": "bun run scripts/generate-specs.ts",
     "specs": "bun run scripts/specs.ts",
-    "socials": "bun run scripts/socials.ts",
-    "cloudflare-stats": "bun run scripts/cloudflare-stats.ts",
     "i18n:audit:he": "bun run scripts/i18n-audit-he.ts",
     "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts",
     "benchmark:init-server-memory": "bun run scripts/benchmark-init-server-memory.ts",
