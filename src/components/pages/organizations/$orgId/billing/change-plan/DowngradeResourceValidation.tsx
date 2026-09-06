@@ -1066,6 +1066,7 @@ export function DowngradeResourceValidation({
             </p>
             {selectionLocked ? null : (
               <Button
+                type="button"
                 size="sm"
                 className="h-8 text-[13px]"
                 disabled={activeSelected.size === 0}
