@@ -1225,8 +1225,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'This resource type fits the selected plan.':
     'このリソースタイプは選択したプランに収まっています。',
   'Confirm selection': '選択を確定',
-  'They are removed when you submit the plan change.':
-    'プラン変更を送信したときに削除されます。',
   'marked for deletion': '削除対象としてマーク済み',
   'Edit selection': '選択を編集',
   'Will be deleted': '削除される項目',
@@ -1243,4 +1241,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えると、影響を受けるプロジェクトが次の請求サイクルまでブロックされる可能性があります。',
   '1 organization marked for deletion': '1 件の組織を削除対象としてマーク済み',
   'Confirm which organization to delete.': '削除する組織を確定してください。',
+  'Confirm plan change': 'プラン変更の確認',
+  'Confirm organization deletion': '組織削除の確認',
+  'The following will be permanently deleted when your plan changes.':
+    'プランを変更すると、以下が完全に削除されます。',
+  'Everything below will be permanently deleted.':
+    '以下のすべてが完全に削除されます。',
+  'Your organization will move to the {plan} plan.':
+    '組織は {plan} プランに移行します。',
+  'Delete and change plan': '削除してプランを変更',
 }

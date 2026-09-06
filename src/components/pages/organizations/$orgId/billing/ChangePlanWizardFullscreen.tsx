@@ -48,6 +48,7 @@ import type {
   PendingDowngradeDeletions,
 } from './change-plan/DowngradeValidation'
 import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
+import { ConfirmPlanChange } from './change-plan/ConfirmPlanChange'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
 import {
@@ -64,12 +65,19 @@ import {
   deleteDowngradeDomains,
   deleteDowngradeMemberships,
 } from '@/lib/billing/delete-downgrade-org-resources'
-import { deleteDowngradeResources } from '@/lib/billing/delete-downgrade-resources'
+import {
+  deleteDowngradeResources,
+  narrowResourcesToType,
+} from '@/lib/billing/delete-downgrade-resources'
 import { deleteProject } from '@/lib/react-query/hooks/projects'
 import {
   DOWNGRADE_RESOURCE_TYPES,
   type DowngradeResourceImpact,
 } from '@/lib/billing/downgrade-plan-limits'
+import {
+  buildDowngradeDeletionSteps,
+  type DowngradeDeletionStep,
+} from '@/lib/billing/downgrade-deletion-steps'
 import {
   getComplianceErrors,
   getUnresolvableResources,
@@ -156,44 +164,21 @@ function getInitialDowngradeProgressPhase({
   return 'complete'
 }
 
-function buildDowngradeDeletionSummary(
-  pending: PendingDowngradeDeletions | undefined,
-): { label: string; count: number }[] {
-  if (!pending) return []
-
-  const entries = [
-    { label: 'Projects', count: pending.projectIds.length },
-    { label: 'Members', count: pending.membershipIds.length },
-    { label: 'Domains', count: pending.domainIds.length },
-    ...DOWNGRADE_RESOURCE_TYPES.map(({ id, label }) => ({
-      label,
-      count: Object.values(pending.resources).reduce(
-        (total, entry) => total + (entry[id]?.length ?? 0),
-        0,
-      ),
-    })),
-  ]
-
-  return entries.filter(({ count }) => count > 0)
-}
-
-async function runDowngradeDeletions(
+async function runDowngradeDeletionStep(
   organizationId: string,
   pending: PendingDowngradeDeletions,
+  step: DowngradeDeletionStep,
 ) {
-  if (Object.keys(pending.resources).length > 0) {
-    await deleteDowngradeResources(pending.resources)
-  }
-
-  if (pending.projectIds.length > 0) {
+  if (step.id === 'projects') {
     const ids = new Set(pending.projectIds)
     const allProjects = await fetchAllDowngradeProjects(organizationId)
     for (const project of allProjects.filter((item) => ids.has(item.$id))) {
       await deleteProject(project.$id, project.region)
     }
+    return
   }
 
-  if (pending.membershipIds.length > 0) {
+  if (step.id === 'members') {
     const ids = new Set(pending.membershipIds)
     const memberships = await fetchAllDowngradeMemberships(organizationId)
     await deleteDowngradeMemberships(
@@ -201,9 +186,10 @@ async function runDowngradeDeletions(
       memberships.filter((item) => ids.has(item.$id)).map((item) => item.$id),
       memberships.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
     )
+    return
   }
 
-  if (pending.domainIds.length > 0) {
+  if (step.id === 'domains') {
     const ids = new Set(pending.domainIds)
     const domains = await fetchAllDowngradeDomains(organizationId)
     await deleteDowngradeDomains(
@@ -211,6 +197,38 @@ async function runDowngradeDeletions(
       domains.filter((item) => ids.has(item.$id)).map((item) => item.$id),
       domains.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
     )
+    return
+  }
+
+  const resourceType = DOWNGRADE_RESOURCE_TYPES.find(({ id }) => id === step.id)
+  if (!resourceType) return
+
+  await deleteDowngradeResources(
+    narrowResourcesToType(pending.resources, resourceType.id),
+  )
+}
+
+const ORG_DELETION_STEP_IDS = new Set(['projects', 'members', 'domains'])
+
+async function runDowngradeDeletions(
+  organizationId: string,
+  pending: PendingDowngradeDeletions,
+  steps: DowngradeDeletionStep[],
+  onStepStatus: (id: string, status: 'running' | 'done') => void,
+) {
+  // Resources before the organization-level deletes: a resource delete queued
+  // inside a project would 404 once that project is gone. Display order stays
+  // as built.
+  const ordered = [...steps].sort(
+    (a, b) =>
+      Number(ORG_DELETION_STEP_IDS.has(a.id)) -
+      Number(ORG_DELETION_STEP_IDS.has(b.id)),
+  )
+
+  for (const step of ordered) {
+    onStepStatus(step.id, 'running')
+    await runDowngradeDeletionStep(organizationId, pending, step)
+    onStepStatus(step.id, 'done')
   }
 }
 
@@ -466,6 +484,10 @@ export function ChangePlanWizardFullscreen() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>('')
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [confirmPlanChangeOpen, setConfirmPlanChangeOpen] = useState(false)
+  const [confirmDeletionSteps, setConfirmDeletionSteps] = useState<
+    DowngradeDeletionStep[]
+  >([])
   const [setupProgress, setSetupProgress] =
     useState<OrganizationSetupProgressState | null>(null)
   const downgradeValidationRef = useRef<DowngradeValidationHandle | null>(null)
@@ -1242,8 +1264,8 @@ export function ChangePlanWizardFullscreen() {
     const pendingDeletions = needsDowngradeValidation
       ? downgradeValidationRef.current?.getPendingDeletions()
       : undefined
-    const deletionSummary = buildDowngradeDeletionSummary(pendingDeletions)
-    const hasStagedDeletions = deletionSummary.length > 0
+    const deletionSteps = buildDowngradeDeletionSteps(pendingDeletions)
+    const hasStagedDeletions = deletionSteps.length > 0
 
     setSetupProgress({
       mode: 'downgrade',
@@ -1258,7 +1280,10 @@ export function ChangePlanWizardFullscreen() {
       showPlanUpdateStep,
       showOrganizationDeletionStep,
       showResourceDeletionStep: hasStagedDeletions,
-      deletionSummary,
+      deletionSummary: deletionSteps.map((step) => ({
+        ...step,
+        status: 'pending' as const,
+      })),
       deletedOrganizationName: orgToDelete?.name,
     })
 
@@ -1267,7 +1292,23 @@ export function ChangePlanWizardFullscreen() {
         setSetupProgress((prev) =>
           prev ? { ...prev, phase: 'deleting-resources' } : prev,
         )
-        await runDowngradeDeletions(orgId, pendingDeletions)
+        await runDowngradeDeletions(
+          orgId,
+          pendingDeletions,
+          deletionSteps,
+          (stepId, status) => {
+            setSetupProgress((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    deletionSummary: prev.deletionSummary?.map((step) =>
+                      step.id === stepId ? { ...step, status } : step,
+                    ),
+                  }
+                : prev,
+            )
+          },
+        )
         await invalidateAfterDowngradeDeletes(orgId)
       }
 
@@ -1524,7 +1565,18 @@ export function ChangePlanWizardFullscreen() {
     if (isUpgrade) {
       handleUpgrade()
     } else if (isDowngrade) {
-      handleDowngrade()
+      const steps = buildDowngradeDeletionSteps(
+        needsDowngradeValidation
+          ? downgradeValidationRef.current?.getPendingDeletions()
+          : undefined,
+      )
+      // Only the destructive path needs a last confirmation.
+      if (steps.length === 0 && !orgToDelete) {
+        handleDowngrade()
+        return
+      }
+      setConfirmDeletionSteps(steps)
+      setConfirmPlanChangeOpen(true)
     }
   }
 
@@ -1910,6 +1962,25 @@ export function ChangePlanWizardFullscreen() {
         organizationId={orgId}
         onSuccess={handlePaymentMethodAdded}
         elevatedForWizard
+      />
+
+      {/* Final downgrade confirmation */}
+      <ConfirmPlanChange
+        open={confirmPlanChangeOpen}
+        onOpenChange={setConfirmPlanChangeOpen}
+        planLabel={
+          // Deleting the organization being downgraded leaves no plan to move to.
+          selectedPlan && orgToDelete?.$id !== orgId
+            ? getBillingPlanDisplayLabel(selectedPlan)
+            : undefined
+        }
+        steps={confirmDeletionSteps}
+        deletedOrganizationName={orgToDelete?.name}
+        confirming={isSubmitting}
+        onConfirm={() => {
+          setConfirmPlanChangeOpen(false)
+          handleDowngrade()
+        }}
       />
 
       {/* Coupon Modal */}

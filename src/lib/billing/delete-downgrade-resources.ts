@@ -25,6 +25,38 @@ export type ResourcesToDeleteEntry = {
 
 export type ResourcesToDelete = Record<string, ResourcesToDeleteEntry>
 
+/**
+ * Slice a payload down to one resource type across all projects, so the
+ * downgrade can run (and report) one deletion step at a time.
+ */
+export function narrowResourcesToType(
+  resourcesToDelete: ResourcesToDelete,
+  type: DowngradeResourceType,
+): ResourcesToDelete {
+  const narrowed: ResourcesToDelete = {}
+
+  for (const [projectId, entry] of Object.entries(resourcesToDelete)) {
+    if (!entry) continue
+
+    if (type === 'databases') {
+      const databases = entry.databases
+      if (databases && databases.length > 0) {
+        narrowed[projectId] = { databases }
+      }
+      continue
+    }
+
+    const ids = entry[type]
+    if (ids && ids.length > 0) {
+      const projectEntry: ResourcesToDeleteEntry = {}
+      projectEntry[type] = ids
+      narrowed[projectId] = projectEntry
+    }
+  }
+
+  return narrowed
+}
+
 export async function deleteDowngradeResources(
   resourcesToDelete: ResourcesToDelete,
 ): Promise<void> {

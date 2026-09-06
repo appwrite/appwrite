@@ -39,8 +39,9 @@ export function ConfirmDowngradeDeletes({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t('Only the selected items will be deleted.')}{' '}
-            {t('They are removed when you submit the plan change.')}{' '}
-            {t('This action cannot be undone.')}
+            {t(
+              'Nothing is removed yet, you can still edit this selection before the plan change.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -71,7 +72,6 @@ export function ConfirmDowngradeDeletes({
             {t('Cancel')}
           </Button>
           <Button
-            variant="destructive"
             disabled={confirming || items.length === 0}
             onClick={onConfirm}
           >

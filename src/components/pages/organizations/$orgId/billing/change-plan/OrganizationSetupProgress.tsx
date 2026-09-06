@@ -1,6 +1,7 @@
 import { Check, Loader2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import type { DowngradeDeletionStep } from '@/lib/billing/downgrade-deletion-steps'
 
 export type OrganizationSetupPhase =
   | 'submitting'
@@ -25,8 +26,10 @@ export type OrganizationSetupProgressState = {
   showResourceDeletionStep?: boolean
   showMembershipDeletionStep?: boolean
   showOrganizationDeletionStep?: boolean
-  /** What the run will delete, fixed for its whole duration. */
-  deletionSummary?: { label: string; count: number }[]
+  /** What the run deletes, with live status. Listed order, not run order. */
+  deletionSummary?: (DowngradeDeletionStep & {
+    status: 'pending' | 'running' | 'done'
+  })[]
   deletedOrganizationName?: string
 }
 
@@ -220,12 +223,35 @@ export function OrganizationSetupProgress({
                 {progress.deletedOrganizationName} {t('and all its resources')}
               </li>
             ) : null}
-            {deletionSummary.map(({ label, count }) => (
+            {deletionSummary.map(({ id, label, count, status }) => (
               <li
-                key={label}
+                key={id}
                 className="flex items-start justify-between gap-3 text-[13px] leading-normal"
               >
-                <span className="text-foreground">{t(label)}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                    {status === 'done' ? (
+                      <Check
+                        className="h-3.5 w-3.5 text-green-600 dark:text-green-500"
+                        strokeWidth={2.5}
+                      />
+                    ) : status === 'running' ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-foreground" />
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      'truncate',
+                      status === 'pending'
+                        ? 'text-muted-foreground'
+                        : 'text-foreground',
+                    )}
+                  >
+                    {t(label)}
+                  </span>
+                </span>
                 <span className="shrink-0 tabular-nums text-muted-foreground">
                   {count}
                 </span>

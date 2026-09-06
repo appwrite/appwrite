@@ -3,7 +3,11 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { buildResourcesToDelete } from '@/lib/billing/delete-downgrade-resources'
+import {
+  buildResourcesToDelete,
+  narrowResourcesToType,
+  type ResourcesToDelete,
+} from '@/lib/billing/delete-downgrade-resources'
 import {
   countResourcesToDeleteForProject,
   countStagedResourcesForProject,
@@ -77,6 +81,29 @@ describe('buildResourcesToDelete', () => {
 
     expect(toDelete.functions).toEqual(['fn-2'])
     expect(toDelete.databases).toBeUndefined()
+  })
+})
+
+describe('narrowResourcesToType', () => {
+  const payload: ResourcesToDelete = {
+    'p-1': { buckets: ['b-1', 'b-2'], functions: ['fn-1'] },
+    'p-2': { buckets: [], databases: [{ $id: 'db-1', dbKind: 'tablesdb' }] },
+  }
+
+  test('keeps only the requested type across projects', () => {
+    expect(narrowResourcesToType(payload, 'buckets')).toEqual({
+      'p-1': { buckets: ['b-1', 'b-2'] },
+    })
+  })
+
+  test('keeps database refs intact', () => {
+    expect(narrowResourcesToType(payload, 'databases')).toEqual({
+      'p-2': { databases: [{ $id: 'db-1', dbKind: 'tablesdb' }] },
+    })
+  })
+
+  test('returns nothing when no project has that type', () => {
+    expect(narrowResourcesToType(payload, 'topics')).toEqual({})
   })
 })
 

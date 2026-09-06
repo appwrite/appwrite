@@ -1447,8 +1447,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'This resource type fits the selected plan.':
     'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
   'Confirm selection': 'אישור הבחירה',
-  'They are removed when you submit the plan change.':
-    'הם יימחקו כשתבצעו את שינוי התוכנית.',
   'marked for deletion': 'מסומנים למחיקה',
   'Edit selection': 'עריכת הבחירה',
   'Will be deleted': 'פריטים שיימחקו',
@@ -1465,4 +1463,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
   '1 organization marked for deletion': 'ארגון אחד מסומן למחיקה',
   'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
+  'Confirm plan change': 'אישור שינוי התוכנית',
+  'Confirm organization deletion': 'אישור מחיקת הארגון',
+  'The following will be permanently deleted when your plan changes.':
+    'הפריטים הבאים יימחקו לצמיתות כשהתוכנית תשתנה.',
+  'Everything below will be permanently deleted.':
+    'כל מה שמופיע למטה יימחק לצמיתות.',
+  'Your organization will move to the {plan} plan.':
+    'הארגון שלכם יעבור לתוכנית {plan}.',
+  'Delete and change plan': 'מחיקה ושינוי תוכנית',
 }
