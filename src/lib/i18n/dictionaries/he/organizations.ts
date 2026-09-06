@@ -221,8 +221,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Choose File': 'בחירת קובץ',
   'Choose a PNG from the app assets bucket or upload a new one.':
     'בחרו קובץ PNG מבאקט נכסי האפליקציה או העלו קובץ חדש.',
-  'Choose a paid plan for the new organization instead.':
-    'בחרו תוכנית בתשלום עבור הארגון החדש במקום זאת.',
   'Choose domains to keep': 'בחרו דומיינים לשמירה',
   'Choose exactly': 'בחרו בדיוק',
   'Choose existing address': 'בחירת כתובת קיימת',
@@ -233,7 +231,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'בחרו את התוכנית המתאימה ביותר לצרכים שלכם.',
   'Choose whether this domain should renew automatically before it expires.':
     'בחרו אם הדומיין הזה יתחדש אוטומטית לפני שתוקפו יפוג.',
-  'Choose which organization to keep': 'בחרו איזה ארגון לשמור',
   City: 'עיר',
   'Clear search': 'ניקוי חיפוש',
   'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
@@ -687,7 +684,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Network: 'רשת',
   'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
     'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או ב-repos ציבוריים. השתמשו במשתני סביבה כגון',
-  'New organization': 'ארגון חדש',
   Next: 'הבא',
   'Next page': 'הדף הבא',
   'Next payment of': 'התשלום הבא בסך',
@@ -1431,13 +1427,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Delete selected members': 'מחיקת החברים שנבחרו',
   'Delete selected domains': 'מחיקת הדומיינים שנבחרו',
   'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
-  'We will check the plan limits again after that.':
-    'נבדוק שוב את מגבלות התוכנית לאחר מכן.',
   'Finish deleting project resources that exceed the selected plan.':
     'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
   'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
-  'The selected plan still exceeds usage limits. Delete remaining extras, then try again.':
-    'התוכנית שנבחרה עדיין חורגת ממגבלות השימוש. מחקו את העודפים שנותרו ונסו שוב.',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
     'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
   'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
@@ -1454,5 +1446,21 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Marked: 'מסומן',
   'This resource type fits the selected plan.':
     'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
-  'Failed to delete selected items.': 'מחיקת הפריטים שנבחרו נכשלה.',
+  'Confirm selection': 'אישור הבחירה',
+  'They are removed when you submit the plan change.':
+    'הם יימחקו כשתבצעו את שינוי התוכנית.',
+  'marked for deletion': 'מסומנים למחיקה',
+  'Edit selection': 'עריכת הבחירה',
+  'Will be deleted': 'פריטים שיימחקו',
+  'and all its resources': 'וכל המשאבים שלו',
+  'Removing the items you marked for deletion.':
+    'מוחקים את הפריטים שסימנתם למחיקה.',
+  'Choose which organization to delete': 'בחרו איזה ארגון למחוק',
+  'Choose which organization to delete.': 'בחרו איזה ארגון למחוק.',
+  'You may hit limits on the selected plan':
+    'ייתכן שתגיעו למגבלות בתוכנית שנבחרה',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    'השימוש שלכם ב-30 הימים האחרונים היה מעל המגבלות האלה. זהו חלון מתגלגל, לא מחזור החיוב שלכם.',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
 }

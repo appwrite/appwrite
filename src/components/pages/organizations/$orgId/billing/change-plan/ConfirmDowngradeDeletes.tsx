@@ -8,22 +8,26 @@ import {
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 
+const CONFIRM_ITEM_PREVIEW_LIMIT = 10
+
 export function ConfirmDowngradeDeletes({
   open,
   onOpenChange,
   title,
-  count,
+  items,
   confirming,
   onConfirm,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  count: number
+  items: { id: string; label: string }[]
   confirming: boolean
   onConfirm: () => void
 }) {
   const t = useT()
+  const preview = items.slice(0, CONFIRM_ITEM_PREVIEW_LIMIT)
+  const hiddenCount = items.length - preview.length
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,15 +36,28 @@ export function ConfirmDowngradeDeletes({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t('Only the selected items will be deleted.')}{' '}
-            {t('We will check the plan limits again after that.')}{' '}
+            {t('They are removed when you submit the plan change.')}{' '}
             {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
-          <p className="text-[13px] text-foreground">
-            {t('Selected:')} {count}
-          </p>
+          <ul className="space-y-1">
+            {preview.map((item) => (
+              <li
+                key={item.id}
+                className="truncate text-[13px] leading-normal text-foreground"
+                title={item.label}
+              >
+                {item.label}
+              </li>
+            ))}
+          </ul>
+          {hiddenCount > 0 ? (
+            <p className="mt-2 text-[13px] leading-normal text-muted-foreground">
+              +{hiddenCount} {t('more')}
+            </p>
+          ) : null}
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
@@ -52,10 +69,10 @@ export function ConfirmDowngradeDeletes({
           </Button>
           <Button
             variant="destructive"
-            disabled={confirming || count === 0}
+            disabled={confirming || items.length === 0}
             onClick={onConfirm}
           >
-            {t('Delete selected')}
+            {t('Confirm selection')}
           </Button>
         </div>
       </DialogContent>

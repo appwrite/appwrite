@@ -13,8 +13,13 @@ interface DowngradeImpactSummaryProps {
   projectsOverage?: number
   membersOverage?: number
   domainsOverage?: number
+  projectsStaged?: number
+  membersStaged?: number
+  domainsStaged?: number
   resourceImpact: DowngradeResourceImpact
+  stagedResourceImpact?: DowngradeResourceImpact
   keptProjectResourceImpacts?: ProjectResourceImpact[]
+  keptProjectStagedImpacts?: ProjectResourceImpact[]
   resourcesLoading?: boolean
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
@@ -29,16 +34,44 @@ export type ProjectResourceImpact = {
   resourceImpact: DowngradeResourceImpact
 }
 
+/** Staged deletions read muted; only what is left over the limit reads red. */
+function ImpactCounts({
+  staged,
+  overage,
+}: {
+  staged: number
+  overage: number
+}) {
+  const t = useT()
+
+  return (
+    <span className="flex shrink-0 flex-wrap justify-end gap-x-2">
+      {staged > 0 ? (
+        <span className="text-muted-foreground">
+          {staged} {t('will be deleted')}
+        </span>
+      ) : null}
+      {overage > 0 ? (
+        <span className="text-red-600 dark:text-red-400">
+          {overage} {t('still over limit')}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
 function ResourceImpactSection({
   title,
   resourceImpact,
+  stagedImpact,
 }: {
   title: string
   resourceImpact: DowngradeResourceImpact
+  stagedImpact?: DowngradeResourceImpact
 }) {
   const t = useT()
   const resourceLines = DOWNGRADE_RESOURCE_TYPES.filter(
-    ({ id }) => (resourceImpact[id] ?? 0) > 0,
+    ({ id }) => (resourceImpact[id] ?? 0) > 0 || (stagedImpact?.[id] ?? 0) > 0,
   )
 
   if (resourceLines.length === 0) return null
@@ -53,9 +86,10 @@ function ResourceImpactSection({
             className="flex items-start justify-between gap-3 text-[13px] leading-normal"
           >
             <span className="text-foreground">{t(label)}</span>
-            <span className="text-red-600 dark:text-red-400 shrink-0">
-              {resourceImpact[id]} {t('still over limit')}
-            </span>
+            <ImpactCounts
+              staged={stagedImpact?.[id] ?? 0}
+              overage={resourceImpact[id] ?? 0}
+            />
           </li>
         ))}
       </ul>
@@ -65,12 +99,22 @@ function ResourceImpactSection({
 
 function ProjectResourceImpactSection({
   projects,
+  stagedProjects = [],
 }: {
   projects: ProjectResourceImpact[]
+  stagedProjects?: ProjectResourceImpact[]
 }) {
   const t = useT()
+  const stagedByProjectId = new Map(
+    stagedProjects.map(({ projectId, resourceImpact }) => [
+      projectId,
+      resourceImpact,
+    ]),
+  )
   const projectsWithResources = projects.filter(
-    ({ resourceImpact }) => getTotalResourceDeletions(resourceImpact) > 0,
+    ({ projectId, resourceImpact }) =>
+      getTotalResourceDeletions(resourceImpact) > 0 ||
+      getTotalResourceDeletions(stagedByProjectId.get(projectId) ?? {}) > 0,
   )
 
   if (projectsWithResources.length === 0) return null
@@ -83,8 +127,10 @@ function ProjectResourceImpactSection({
       <div className="space-y-2">
         {projectsWithResources.map(
           ({ projectId, projectName, resourceImpact }) => {
+            const stagedImpact = stagedByProjectId.get(projectId) ?? {}
             const resourceLines = DOWNGRADE_RESOURCE_TYPES.filter(
-              ({ id }) => (resourceImpact[id] ?? 0) > 0,
+              ({ id }) =>
+                (resourceImpact[id] ?? 0) > 0 || (stagedImpact[id] ?? 0) > 0,
             )
 
             return (
@@ -105,9 +151,10 @@ function ProjectResourceImpactSection({
                       className="flex items-start justify-between gap-3 text-[13px] leading-normal"
                     >
                       <span className="text-foreground">{t(label)}</span>
-                      <span className="shrink-0 text-red-600 dark:text-red-400">
-                        {resourceImpact[id]} {t('still over limit')}
-                      </span>
+                      <ImpactCounts
+                        staged={stagedImpact[id] ?? 0}
+                        overage={resourceImpact[id] ?? 0}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -144,19 +191,31 @@ function OrganizationImpactSection({
   )
 }
 
-function OverageLine({
+function ImpactLine({
   label,
-  count,
+  overage,
+  staged = 0,
 }: {
   label: string
-  count: number
+  overage: number
+  staged?: number
 }) {
   const t = useT()
-  if (count <= 0) return null
+  if (overage <= 0 && staged <= 0) return null
+
   return (
-    <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
-      {count} {t(label)} {t('still over limit')}
-    </p>
+    <div className="space-y-1">
+      {staged > 0 ? (
+        <p className="text-[13px] leading-normal text-muted-foreground">
+          {staged} {t(label)} {t('will be deleted')}
+        </p>
+      ) : null}
+      {overage > 0 ? (
+        <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
+          {overage} {t(label)} {t('still over limit')}
+        </p>
+      ) : null}
+    </div>
   )
 }
 
@@ -165,8 +224,13 @@ export function DowngradeImpactSummary({
   projectsOverage = 0,
   membersOverage = 0,
   domainsOverage = 0,
+  projectsStaged = 0,
+  membersStaged = 0,
+  domainsStaged = 0,
   resourceImpact,
+  stagedResourceImpact = {},
   keptProjectResourceImpacts = [],
+  keptProjectStagedImpacts = [],
   resourcesLoading = false,
   deletedOrganizationImpact = null,
   deletedOrganizationLoading = false,
@@ -175,16 +239,25 @@ export function DowngradeImpactSummary({
 }: DowngradeImpactSummaryProps) {
   const t = useT()
   const keptResourceDeletions = getTotalResourceDeletions(resourceImpact)
+  const stagedResourceDeletions =
+    getTotalResourceDeletions(stagedResourceImpact)
   const deletedResourceDeletions = deletedOrganizationImpact
     ? getTotalResourceDeletions(deletedOrganizationImpact.resourceImpact)
     : 0
 
+  const hasKeptOverage =
+    projectsOverage > 0 ||
+    membersOverage > 0 ||
+    domainsOverage > 0 ||
+    keptResourceDeletions > 0
+  const hasKeptStaged =
+    projectsStaged > 0 ||
+    membersStaged > 0 ||
+    domainsStaged > 0 ||
+    stagedResourceDeletions > 0
+
   const hasKeptOrgImpact =
-    keptOrganizationImpactReady &&
-    (projectsOverage > 0 ||
-      membersOverage > 0 ||
-      domainsOverage > 0 ||
-      keptResourceDeletions > 0)
+    keptOrganizationImpactReady && (hasKeptOverage || hasKeptStaged)
 
   const hasDeletedOrgImpact = !!deletedOrganizationImpact
   const deletedSectionLoading =
@@ -280,17 +353,31 @@ export function DowngradeImpactSummary({
                     'Extras still over the selected plan. Delete only the items you mark.',
                   )}
                 >
-                  <OverageLine label="projects" count={projectsOverage} />
-                  <OverageLine label="members" count={membersOverage} />
-                  <OverageLine label="domains" count={domainsOverage} />
+                  <ImpactLine
+                    label="projects"
+                    overage={projectsOverage}
+                    staged={projectsStaged}
+                  />
+                  <ImpactLine
+                    label="members"
+                    overage={membersOverage}
+                    staged={membersStaged}
+                  />
+                  <ImpactLine
+                    label="domains"
+                    overage={domainsOverage}
+                    staged={domainsStaged}
+                  />
 
                   <ResourceImpactSection
                     title={t('Project resources')}
                     resourceImpact={resourceImpact}
+                    stagedImpact={stagedResourceImpact}
                   />
 
                   <ProjectResourceImpactSection
                     projects={keptProjectResourceImpacts}
+                    stagedProjects={keptProjectStagedImpacts}
                   />
                 </OrganizationImpactSection>
               ) : null
@@ -327,7 +414,21 @@ export function DowngradeImpactSummary({
                       )
                     </li>
                   ) : null}
-                  {hasKeptOrgImpact ? (
+                  {hasKeptStaged ? (
+                    <li>
+                      <span className="font-medium text-foreground">
+                        {keptOrgLabel}
+                      </span>
+                      : {projectsStaged} {t('projects')}, {membersStaged}{' '}
+                      {t('members')}, {domainsStaged} {t('domains')},{' '}
+                      {stagedResourceDeletions}{' '}
+                      {stagedResourceDeletions === 1
+                        ? t('resource')
+                        : t('resources')}{' '}
+                      {t('will be deleted')}
+                    </li>
+                  ) : null}
+                  {hasKeptOverage ? (
                     <li>
                       <span className="font-medium text-foreground">
                         {keptOrgLabel}

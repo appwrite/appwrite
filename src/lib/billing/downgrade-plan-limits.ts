@@ -173,28 +173,67 @@ export function getResourceViolationCount(
   return Math.max(0, total - limit)
 }
 
+/** Ids marked for deletion that are only removed when the plan change is submitted. */
+export type StagedResourceDeletions = Partial<
+  Record<DowngradeResourceType, Set<string>>
+>
+
+export function countStagedResourceDeletions(
+  resources: ProjectDowngradeResources,
+  type: DowngradeResourceType,
+  staged: StagedResourceDeletions | undefined,
+): number {
+  const ids = staged?.[type]
+  if (!ids || ids.size === 0) return 0
+  // Ids that already left the list must not keep counting, or a stale mark
+  // would hide a real overage.
+  return resources[type].items.filter((item) => ids.has(item.$id)).length
+}
+
+export function countStagedResourcesForProject(
+  resources: ProjectDowngradeResources,
+  staged: StagedResourceDeletions | undefined,
+): Partial<Record<DowngradeResourceType, number>> {
+  const counts: Partial<Record<DowngradeResourceType, number>> = {}
+
+  for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
+    const count = countStagedResourceDeletions(resources, id, staged)
+    if (count > 0) {
+      counts[id] = count
+    }
+  }
+
+  return counts
+}
+
 export function projectHasResourceViolations(
   resources: ProjectDowngradeResources | undefined,
   limits: DowngradeResourceLimits,
+  staged?: StagedResourceDeletions,
 ): boolean {
   if (!resources) return false
 
   return DOWNGRADE_RESOURCE_TYPES.some(({ id }) => {
     const limit = limits[id]
     if (limit === null) return false
-    return resources[id].total > limit
+    return (
+      resources[id].total -
+        countStagedResourceDeletions(resources, id, staged) >
+      limit
+    )
   })
 }
 
 export function countResourcesToDeleteForProject(
   resources: ProjectDowngradeResources,
   limits: DowngradeResourceLimits,
+  staged?: StagedResourceDeletions,
 ): Partial<Record<DowngradeResourceType, number>> {
   const counts: Partial<Record<DowngradeResourceType, number>> = {}
 
   for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
     const deleteCount = getResourceViolationCount(
-      resources[id].total,
+      resources[id].total - countStagedResourceDeletions(resources, id, staged),
       limits[id],
     )
     if (deleteCount > 0) {

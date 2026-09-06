@@ -7,6 +7,7 @@ import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { useT } from '@/lib/i18n/translate'
+import { DowngradeConfirmedSelection } from './DowngradeConfirmedSelection'
 
 const SELECTION_PAGE_SIZE = 5
 const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
@@ -18,11 +19,13 @@ interface DowngradeProjectSelectionProps {
   page: number
   projectsLimit: number
   selectedProjectIds: Set<string>
+  confirmedIds: Set<string>
+  confirmedLabels: string[]
   onToggleProject: (projectId: string) => void
-  onDeleteSelected: () => void
+  onConfirmSelection: () => void
+  onEditSelection: () => void
   onPageChange: (page: number) => void
   loading?: boolean
-  deleting?: boolean
   paginationDisabled?: boolean
 }
 
@@ -32,15 +35,18 @@ export function DowngradeProjectSelection({
   page,
   projectsLimit,
   selectedProjectIds,
+  confirmedIds,
+  confirmedLabels,
   onToggleProject,
-  onDeleteSelected,
+  onConfirmSelection,
+  onEditSelection,
   onPageChange,
   loading = false,
-  deleting = false,
   paginationDisabled = false,
 }: DowngradeProjectSelectionProps) {
   const t = useT()
-  const overage = Math.max(0, total - projectsLimit)
+  const locked = confirmedIds.size > 0
+  const overage = Math.max(0, total - confirmedIds.size - projectsLimit)
   const stillOver = overage > 0
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -80,107 +86,120 @@ export function DowngradeProjectSelection({
           </WarningAlert>
         ) : null}
 
-        <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
-          {loading ? (
-            <p className="text-[13px] text-muted-foreground">
-              {t('Loading projects...')}
-            </p>
-          ) : (
-            <>
-              {projects.map((project) => {
-                const selected = selectedProjectIds.has(project.$id)
+        {locked ? (
+          <DowngradeConfirmedSelection
+            className={SELECTION_LIST_MIN_HEIGHT_CLASS}
+            title={`${confirmedIds.size} ${
+              confirmedIds.size === 1 ? t('project') : t('projects')
+            } ${t('marked for deletion')}`}
+            labels={confirmedLabels}
+            onEditSelection={onEditSelection}
+          />
+        ) : (
+          <>
+            <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
+              {loading ? (
+                <p className="text-[13px] text-muted-foreground">
+                  {t('Loading projects...')}
+                </p>
+              ) : (
+                <>
+                  {projects.map((project) => {
+                    const selected = selectedProjectIds.has(project.$id)
 
-                return (
-                  <div
-                    key={project.$id}
-                    className={cn(
-                      'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                      SELECTION_ROW_HEIGHT_CLASS,
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-background/60',
-                    )}
-                  >
-                    <Checkbox
-                      id={`delete-project-${project.$id}`}
-                      checked={selected}
-                      onCheckedChange={() => onToggleProject(project.$id)}
-                      className="mt-0.5 shrink-0"
-                    />
-                    <Label
-                      htmlFor={`delete-project-${project.$id}`}
-                      className="min-w-0 flex-1 cursor-pointer"
-                    >
-                      <p
-                        className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground"
-                        title={project.name}
+                    return (
+                      <div
+                        key={project.$id}
+                        className={cn(
+                          'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                          SELECTION_ROW_HEIGHT_CLASS,
+                          selected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-background/60',
+                        )}
                       >
-                        {formatProjectNameForDisplay(project.name)}
-                      </p>
-                    </Label>
-                  </div>
-                )
-              })}
-              {Array.from({
-                length: Math.max(0, SELECTION_PAGE_SIZE - projects.length),
-              }).map((_, index) => (
-                <div
-                  key={`project-selection-spacer-${index}`}
-                  className={SELECTION_ROW_HEIGHT_CLASS}
-                  aria-hidden
-                />
-              ))}
-            </>
-          )}
-        </div>
+                        <Checkbox
+                          id={`delete-project-${project.$id}`}
+                          checked={selected}
+                          onCheckedChange={() => onToggleProject(project.$id)}
+                          className="mt-0.5 shrink-0"
+                        />
+                        <Label
+                          htmlFor={`delete-project-${project.$id}`}
+                          className="min-w-0 flex-1 cursor-pointer"
+                        >
+                          <p
+                            className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground"
+                            title={project.name}
+                          >
+                            {formatProjectNameForDisplay(project.name)}
+                          </p>
+                        </Label>
+                      </div>
+                    )
+                  })}
+                  {Array.from({
+                    length: Math.max(0, SELECTION_PAGE_SIZE - projects.length),
+                  }).map((_, index) => (
+                    <div
+                      key={`project-selection-spacer-${index}`}
+                      className={SELECTION_ROW_HEIGHT_CLASS}
+                      aria-hidden
+                    />
+                  ))}
+                </>
+              )}
+            </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          {total > SELECTION_PAGE_SIZE ? (
-            <>
-              <p className="text-[12px] text-muted-foreground">
-                {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
-                {t('projects')}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onPageChange(safePage - 1)}
-                  disabled={safePage <= 1 || loading || paginationDisabled}
-                  aria-label={t('Previous projects page')}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onPageChange(safePage + 1)}
-                  disabled={
-                    safePage >= totalPages || loading || paginationDisabled
-                  }
-                  aria-label={t('Next projects page')}
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <span />
-          )}
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 text-[13px]"
-            disabled={selectedProjectIds.size === 0 || deleting}
-            onClick={onDeleteSelected}
-          >
-            {t('Delete selected')}
-          </Button>
-        </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+              {total > SELECTION_PAGE_SIZE ? (
+                <>
+                  <p className="text-[12px] text-muted-foreground">
+                    {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+                    {t('projects')}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage - 1)}
+                      disabled={safePage <= 1 || loading || paginationDisabled}
+                      aria-label={t('Previous projects page')}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage + 1)}
+                      disabled={
+                        safePage >= totalPages || loading || paginationDisabled
+                      }
+                      aria-label={t('Next projects page')}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <span />
+              )}
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 text-[13px]"
+                disabled={selectedProjectIds.size === 0}
+                onClick={onConfirmSelection}
+              >
+                {t('Confirm selection')}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

@@ -43,14 +43,29 @@ import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
 import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
 import { PlanComparisonBox } from './change-plan/PlanComparisonBox'
 import { DowngradeValidation } from './change-plan/DowngradeValidation'
-import type { DowngradeValidationHandle } from './change-plan/DowngradeValidation'
+import type {
+  DowngradeValidationHandle,
+  PendingDowngradeDeletions,
+} from './change-plan/DowngradeValidation'
 import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
+import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
 import {
   fetchDeletedOrganizationImpact,
   type DeletedOrganizationImpact,
 } from '@/lib/billing/fetch-deleted-org-impact'
 import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
+import {
+  fetchAllDowngradeDomains,
+  fetchAllDowngradeMemberships,
+  fetchAllDowngradeProjects,
+} from '@/lib/billing/fetch-downgrade-org-resources'
+import {
+  deleteDowngradeDomains,
+  deleteDowngradeMemberships,
+} from '@/lib/billing/delete-downgrade-org-resources'
+import { deleteDowngradeResources } from '@/lib/billing/delete-downgrade-resources'
+import { deleteProject } from '@/lib/react-query/hooks/projects'
 import {
   DOWNGRADE_RESOURCE_TYPES,
   type DowngradeResourceImpact,
@@ -127,15 +142,76 @@ function catalogPlanForId(
 }
 
 function getInitialDowngradeProgressPhase({
+  hasStagedDeletions,
   showOrganizationDeletionStep,
   showPlanUpdateStep,
 }: {
+  hasStagedDeletions: boolean
   showOrganizationDeletionStep: boolean
   showPlanUpdateStep: boolean
 }): OrganizationSetupPhase {
+  if (hasStagedDeletions) return 'deleting-resources'
   if (showOrganizationDeletionStep) return 'deleting-organization'
   if (showPlanUpdateStep) return 'updating-plan'
   return 'complete'
+}
+
+function buildDowngradeDeletionSummary(
+  pending: PendingDowngradeDeletions | undefined,
+): { label: string; count: number }[] {
+  if (!pending) return []
+
+  const entries = [
+    { label: 'Projects', count: pending.projectIds.length },
+    { label: 'Members', count: pending.membershipIds.length },
+    { label: 'Domains', count: pending.domainIds.length },
+    ...DOWNGRADE_RESOURCE_TYPES.map(({ id, label }) => ({
+      label,
+      count: Object.values(pending.resources).reduce(
+        (total, entry) => total + (entry[id]?.length ?? 0),
+        0,
+      ),
+    })),
+  ]
+
+  return entries.filter(({ count }) => count > 0)
+}
+
+async function runDowngradeDeletions(
+  organizationId: string,
+  pending: PendingDowngradeDeletions,
+) {
+  if (Object.keys(pending.resources).length > 0) {
+    await deleteDowngradeResources(pending.resources)
+  }
+
+  if (pending.projectIds.length > 0) {
+    const ids = new Set(pending.projectIds)
+    const allProjects = await fetchAllDowngradeProjects(organizationId)
+    for (const project of allProjects.filter((item) => ids.has(item.$id))) {
+      await deleteProject(project.$id, project.region)
+    }
+  }
+
+  if (pending.membershipIds.length > 0) {
+    const ids = new Set(pending.membershipIds)
+    const memberships = await fetchAllDowngradeMemberships(organizationId)
+    await deleteDowngradeMemberships(
+      organizationId,
+      memberships.filter((item) => ids.has(item.$id)).map((item) => item.$id),
+      memberships.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
+    )
+  }
+
+  if (pending.domainIds.length > 0) {
+    const ids = new Set(pending.domainIds)
+    const domains = await fetchAllDowngradeDomains(organizationId)
+    await deleteDowngradeDomains(
+      organizationId,
+      domains.filter((item) => ids.has(item.$id)).map((item) => item.$id),
+      domains.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
+    )
+  }
 }
 
 export function ChangePlanWizardFullscreen() {
@@ -397,7 +473,7 @@ export function ChangePlanWizardFullscreen() {
   const [downgradeBlockReason, setDowngradeBlockReason] = useState<
     string | null
   >(null)
-  const [freePlanKeepChoiceId, setFreePlanKeepChoiceId] = useState<
+  const [freePlanDeleteChoiceId, setFreePlanDeleteChoiceId] = useState<
     string | null
   >(null)
 
@@ -604,22 +680,18 @@ export function ChangePlanWizardFullscreen() {
     const currentOrg = organization
       ? { $id: organization.$id, name: organization.name }
       : null
-    const keepChoiceId = freePlanKeepChoiceId ?? organization?.$id
-
-    if (!keepChoiceId) return null
 
     return resolveOrgToDelete(
-      keepChoiceId,
+      freePlanDeleteChoiceId ?? otherFreeOrg.$id,
       otherFreeOrg,
       currentOrg,
-      !isCreateMode,
     )
   }, [
     showFreePlanConflict,
     otherFreeOrg,
     organization,
     isCreateMode,
-    freePlanKeepChoiceId,
+    freePlanDeleteChoiceId,
   ])
 
   const deletedOrganizationFallbackProjects = useMemo(() => {
@@ -747,12 +819,12 @@ export function ChangePlanWizardFullscreen() {
     deletedOrganizationImpactPending
 
   useEffect(() => {
-    if (!showFreePlanConflict || !organization || isCreateMode) {
-      setFreePlanKeepChoiceId(null)
+    if (!showFreePlanConflict || !otherFreeOrg || isCreateMode) {
+      setFreePlanDeleteChoiceId(null)
       return
     }
-    setFreePlanKeepChoiceId((prev) => prev ?? organization.$id)
-  }, [showFreePlanConflict, organization?.$id, isCreateMode])
+    setFreePlanDeleteChoiceId((prev) => prev ?? otherFreeOrg.$id)
+  }, [showFreePlanConflict, otherFreeOrg, isCreateMode])
 
   // Clear coupon when downgrading an existing organization
   useEffect(() => {
@@ -872,12 +944,13 @@ export function ChangePlanWizardFullscreen() {
       paymentMethodsLoading)
 
   // Get target plan info
-  const targetPlanInfo = useMemo(() => {
-    return resolveBillingPlanRecord(selectedPlan, billingPlans) as Record<
-      string,
-      unknown
-    > | null
+  const targetBillingPlan = useMemo(() => {
+    return resolveBillingPlanRecord(
+      selectedPlan,
+      billingPlans,
+    ) as Models.BillingPlan | null
   }, [billingPlans, selectedPlan])
+  const targetPlanInfo = targetBillingPlan as Record<string, unknown> | null
 
   const extraSeatPrice =
     typeof targetPlanInfo?.addons === 'object' &&
@@ -981,23 +1054,13 @@ export function ChangePlanWizardFullscreen() {
         return t('Checking whether the plan can be changed...')
       }
 
-      if (
-        needsDowngradeValidation &&
-        planChangeLimits &&
-        planChangeLimits.canChangePlan === false
-      ) {
-        return t(
-          'The selected plan still exceeds usage limits. Delete remaining extras, then try again.',
-        )
-      }
-
       // For free plan: feedback required (message only, like old console)
       if (shouldCollectDowngradeFeedback && !feedbackMessage.trim()) {
         return t('Tell us why you are downgrading.')
       }
 
       if (selectedPlanIsFree && hasFreeOrgs && !orgToDelete) {
-        return t('Choose which organization to keep.')
+        return t('Choose which organization to delete.')
       }
     }
 
@@ -1023,7 +1086,6 @@ export function ChangePlanWizardFullscreen() {
     hasPlanChangeBlockers,
     downgradeBlockReason,
     updateEstimation.isFetching,
-    planChangeLimits,
     t,
   ])
 
@@ -1140,6 +1202,27 @@ export function ChangePlanWizardFullscreen() {
     }
   }
 
+  const invalidateAfterDowngradeDeletes = useCallback(
+    async (organizationId: string) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['projects', 'organization', organizationId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['memberships', 'organization', organizationId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['domains', 'organization', organizationId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['plan-estimation', organizationId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['downgrade-resources'] }),
+      ])
+    },
+    [queryClient],
+  )
+
   // Handle downgrade
   const handleDowngrade = async () => {
     if (!orgId || !selectedPlan) return
@@ -1147,10 +1230,16 @@ export function ChangePlanWizardFullscreen() {
     const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showOrganizationDeletionStep = !!orgToDelete
     const showPlanUpdateStep = orgToDelete?.$id !== orgId
+    const pendingDeletions = needsDowngradeValidation
+      ? downgradeValidationRef.current?.getPendingDeletions()
+      : undefined
+    const deletionSummary = buildDowngradeDeletionSummary(pendingDeletions)
+    const hasStagedDeletions = deletionSummary.length > 0
 
     setSetupProgress({
       mode: 'downgrade',
       phase: getInitialDowngradeProgressPhase({
+        hasStagedDeletions,
         showOrganizationDeletionStep,
         showPlanUpdateStep,
       }),
@@ -1159,9 +1248,20 @@ export function ChangePlanWizardFullscreen() {
       showActivationStep: false,
       showPlanUpdateStep,
       showOrganizationDeletionStep,
+      showResourceDeletionStep: hasStagedDeletions,
+      deletionSummary,
+      deletedOrganizationName: orgToDelete?.name,
     })
 
     try {
+      if (pendingDeletions && hasStagedDeletions) {
+        setSetupProgress((prev) =>
+          prev ? { ...prev, phase: 'deleting-resources' } : prev,
+        )
+        await runDowngradeDeletions(orgId, pendingDeletions)
+        await invalidateAfterDowngradeDeletes(orgId)
+      }
+
       if (needsDowngradeValidation) {
         const estimationResult = await updateEstimation.refetch()
         if (estimationResult.data?.limits?.canChangePlan === false) {
@@ -1252,6 +1352,9 @@ export function ChangePlanWizardFullscreen() {
       })
     } catch (error) {
       setSetupProgress(null)
+      // Whatever was deleted before the failure is gone; re-render the
+      // selection against fresh data so the user re-confirms what is left.
+      await invalidateAfterDowngradeDeletes(orgId)
       toast.error(
         error instanceof Error ? error.message : t('Failed to update plan'),
       )
@@ -1680,16 +1783,8 @@ export function ChangePlanWizardFullscreen() {
               ? { $id: organization.$id, name: organization.name }
               : null
           }
-          pendingOrgName={organizationName}
-          showCurrentOrgOption={!isCreateMode}
-          keepChoiceId={
-            !isCreateMode && organization
-              ? (freePlanKeepChoiceId ?? organization.$id)
-              : undefined
-          }
-          onKeepChoiceChange={
-            !isCreateMode ? setFreePlanKeepChoiceId : undefined
-          }
+          deleteChoiceId={freePlanDeleteChoiceId ?? otherFreeOrg.$id}
+          onDeleteChoiceChange={setFreePlanDeleteChoiceId}
         />
       )}
 
@@ -1698,7 +1793,7 @@ export function ChangePlanWizardFullscreen() {
         <>
           {needsDowngradeValidation && orgId ? (
             <DowngradeValidation
-              key={`${orgId}-${freePlanKeepChoiceId ?? 'default'}`}
+              key={`${orgId}-${freePlanDeleteChoiceId ?? 'default'}`}
               organizationId={orgId}
               organizationName={organization?.name}
               projects={allProjects}
@@ -1722,6 +1817,13 @@ export function ChangePlanWizardFullscreen() {
               deletedOrganizationLoading={effectiveDeletedOrganizationLoading}
               expectDeletedOrganizationImpact
               keptOrganizationImpactReady={false}
+            />
+          ) : null}
+
+          {orgId && orgToDelete?.$id !== orgId ? (
+            <DowngradeUsageWarning
+              organizationId={orgId}
+              targetPlan={targetBillingPlan}
             />
           ) : null}
 

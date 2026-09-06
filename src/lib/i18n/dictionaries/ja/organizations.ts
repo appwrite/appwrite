@@ -127,7 +127,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Choose existing card': '既存のカードを選択',
   'Choose members to keep': '保持するメンバーを選択',
   'Choose projects to keep': '保持するプロジェクトを選択',
-  'Choose which organization to keep': '保持する組織を選択',
   'Clear search': '検索をクリア',
   'Click to upload or drag and drop': 'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client type': 'クライアントタイプ',
@@ -386,7 +385,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name is required': '名前は必須です',
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?': '24時間365日またはエンタープライズサポートが必要ですか?',
-  'New organization': '新しい組織',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -753,7 +751,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Can modify most resources but not critical backend.': 'ほとんどのリソースを変更できますが、重要なバックエンドは変更できません。',
   'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.': '未払いの請求書が支払われるまで、プロジェクトとサービスへの変更は制限されます。支払いを完了すると、フルアクセスが復元されます。',
   'Choose a PNG from the app assets bucket or upload a new one.': 'app assets バケットから PNG を選択するか、新しいファイルをアップロードしてください。',
-  'Choose a paid plan for the new organization instead.': '代わりに新しい組織用の有料プランを選択してください。',
   'Choose the plan that best fits your needs.': 'ニーズに最も合ったプランを選択してください。',
   'Choose whether this domain should renew automatically before it expires.': 'このドメインの有効期限が切れる前に自動更新するかどうかを選択してください。',
   'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': 'Appwrite トークンを集めて雷の危険を避けましょう。デバッグセッション用の持久力ミニゲームです。',
@@ -1208,13 +1205,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Delete selected members': '選択したメンバーを削除',
   'Delete selected domains': '選択したドメインを削除',
   'Only the selected items will be deleted.': '選択した項目だけが削除されます。',
-  'We will check the plan limits again after that.':
-    'その後、プラン上限を再度確認します。',
   'Finish deleting project resources that exceed the selected plan.':
     '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
   'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
-  'The selected plan still exceeds usage limits. Delete remaining extras, then try again.':
-    '選択したプランはまだ使用上限を超えています。残っている超過分を削除してから再試行してください。',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
     'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
   'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
@@ -1231,5 +1224,21 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Marked: 'マーク済み',
   'This resource type fits the selected plan.':
     'このリソースタイプは選択したプランに収まっています。',
-  'Failed to delete selected items.': '選択した項目の削除に失敗しました。',
+  'Confirm selection': '選択を確定',
+  'They are removed when you submit the plan change.':
+    'プラン変更を送信したときに削除されます。',
+  'marked for deletion': '削除対象としてマーク済み',
+  'Edit selection': '選択を編集',
+  'Will be deleted': '削除される項目',
+  'and all its resources': 'とそのすべてのリソース',
+  'Removing the items you marked for deletion.':
+    '削除対象としてマークした項目を削除しています。',
+  'Choose which organization to delete': '削除する組織を選択してください',
+  'Choose which organization to delete.': '削除する組織を選択してください。',
+  'You may hit limits on the selected plan':
+    '選択したプランの上限に達する可能性があります',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    '過去 30 日間の使用量がこれらの上限を超えていました。これは請求サイクルではなく、直近 30 日間の移動ウィンドウです。',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'プランの上限を超えると、影響を受けるプロジェクトが次の請求サイクルまでブロックされる可能性があります。',
 }

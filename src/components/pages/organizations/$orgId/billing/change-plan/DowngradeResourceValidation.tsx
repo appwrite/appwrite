@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { useQueries, useQueryClient } from '@tanstack/react-query'
+import { useQueries } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
@@ -22,17 +22,17 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { toast } from 'sonner'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
 import {
   buildResourcesToDelete,
-  deleteDowngradeResources,
   type ResourcesToDelete,
 } from '@/lib/billing/delete-downgrade-resources'
 import {
   DOWNGRADE_RESOURCE_TYPES,
   countResourcesToDeleteForProject,
+  countStagedResourceDeletions,
+  countStagedResourcesForProject,
   getDowngradePlanLimits,
   getResourceViolationCount,
   projectHasResourceViolations,
@@ -43,6 +43,7 @@ import {
   type ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
 import { ConfirmDowngradeDeletes } from './ConfirmDowngradeDeletes'
+import { DowngradeConfirmedSelection } from './DowngradeConfirmedSelection'
 import {
   getNonCompliantProjectIds,
   getServerResourceLimits,
@@ -186,6 +187,7 @@ function PaginatedListSlots({
 
 export type DowngradeResourceValidationHandle = {
   isValid: () => boolean
+  getPendingResourceDeletions: () => ResourcesToDelete
 }
 
 type ProjectResourceSelections = Partial<
@@ -204,11 +206,16 @@ interface DowngradeResourceValidationProps {
   planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeResourceValidationHandle | null) => void
   onValidityChange?: (valid: boolean, reason?: string | null) => void
-  onImpactChange?: (
-    impact: DowngradeResourceImpact,
-    loading: boolean,
-    projectImpacts: ProjectResourceImpact[],
-  ) => void
+  onImpactChange?: (payload: DowngradeResourceImpactPayload) => void
+}
+
+export type DowngradeResourceImpactPayload = {
+  /** Still over the plan limit once the staged deletions are applied. */
+  impact: DowngradeResourceImpact
+  stagedImpact: DowngradeResourceImpact
+  loading: boolean
+  projectImpacts: ProjectResourceImpact[]
+  stagedProjectImpacts: ProjectResourceImpact[]
 }
 
 export function DowngradeResourceValidation({
@@ -221,7 +228,6 @@ export function DowngradeResourceValidation({
   onImpactChange,
 }: DowngradeResourceValidationProps) {
   const t = useT()
-  const queryClient = useQueryClient()
   const clientLimits = useMemo(
     () => getDowngradePlanLimits(targetPlan),
     [targetPlan],
@@ -259,7 +265,9 @@ export function DowngradeResourceValidation({
   const [resourceSelections, setResourceSelections] = useState<
     Record<string, ProjectResourceSelections>
   >({})
-  const [confirmingDeletes, setConfirmingDeletes] = useState(false)
+  const [confirmedSelections, setConfirmedSelections] = useState<
+    Record<string, ProjectResourceSelections>
+  >({})
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [resourceTypeSearch, setResourceTypeSearch] = useState('')
   const [resourceTypePage, setResourceTypePage] = useState(1)
@@ -310,13 +318,15 @@ export function DowngradeResourceValidation({
   }, [projects, resourcesLoadedSignature])
 
   useEffect(() => {
-    setResourceSelections((prev) => {
-      const keptIds = new Set(projects.map((project) => project.$id))
+    const keptIds = new Set(projects.map((project) => project.$id))
+    const prune = (prev: Record<string, ProjectResourceSelections>) => {
       const next = Object.fromEntries(
         Object.entries(prev).filter(([projectId]) => keptIds.has(projectId)),
       )
       return Object.keys(next).length === Object.keys(prev).length ? prev : next
-    })
+    }
+    setResourceSelections(prune)
+    setConfirmedSelections(prune)
   }, [keptProjectIds, projects])
 
   useEffect(() => {
@@ -361,13 +371,21 @@ export function DowngradeResourceValidation({
       if (!resources) return 0
 
       const projectLimits = limitsForProject(projectId)
+      const staged = confirmedSelections[projectId]
       return DOWNGRADE_RESOURCE_TYPES.reduce((count, { id }) => {
         const limit = projectLimits[id]
         if (limit === null) return count
-        return count + getResourceViolationCount(resources[id].total, limit)
+        return (
+          count +
+          getResourceViolationCount(
+            resources[id].total -
+              countStagedResourceDeletions(resources, id, staged),
+            limit,
+          )
+        )
       }, 0)
     },
-    [limitsForProject, resourcesByProjectId],
+    [confirmedSelections, limitsForProject, resourcesByProjectId],
   )
 
   const remainingWithinLimits = useMemo(() => {
@@ -377,9 +395,16 @@ export function DowngradeResourceValidation({
       return !projectHasResourceViolations(
         resources,
         limitsForProject(project.$id),
+        confirmedSelections[project.$id],
       )
     })
-  }, [projects, limitsForProject, resourcesByProjectId, resourcesLoading])
+  }, [
+    projects,
+    confirmedSelections,
+    limitsForProject,
+    resourcesByProjectId,
+    resourcesLoading,
+  ])
 
   const isValid = remainingWithinLimits && !resourcesLoading
 
@@ -398,6 +423,7 @@ export function DowngradeResourceValidation({
         ? countResourcesToDeleteForProject(
             resources,
             limitsForProject(project.$id),
+            confirmedSelections[project.$id],
           )
         : {}
 
@@ -407,13 +433,36 @@ export function DowngradeResourceValidation({
         resourceImpact: impact,
       }
     })
-  }, [projects, resourceSelections, resourcesByProjectId, limitsForProject])
+  }, [projects, confirmedSelections, resourcesByProjectId, limitsForProject])
+
+  const stagedProjectResourceImpacts = useMemo<ProjectResourceImpact[]>(() => {
+    return projects.map((project) => {
+      const resources = resourcesByProjectId.get(project.$id)
+
+      return {
+        projectId: project.$id,
+        projectName: project.name || project.$id,
+        resourceImpact: resources
+          ? countStagedResourcesForProject(
+              resources,
+              confirmedSelections[project.$id],
+            )
+          : {},
+      }
+    })
+  }, [projects, confirmedSelections, resourcesByProjectId])
 
   const resourceImpact = useMemo(() => {
     return mergeResourceImpacts(
       projectResourceImpacts.map(({ resourceImpact }) => resourceImpact),
     )
   }, [projectResourceImpacts])
+
+  const stagedResourceImpact = useMemo(() => {
+    return mergeResourceImpacts(
+      stagedProjectResourceImpacts.map(({ resourceImpact }) => resourceImpact),
+    )
+  }, [stagedProjectResourceImpacts])
 
   const onImpactChangeRef = useRef(onImpactChange)
   useEffect(() => {
@@ -423,69 +472,53 @@ export function DowngradeResourceValidation({
   const lastImpactSignatureRef = useRef('')
 
   useEffect(() => {
-    const signature = `${resourcesLoading}:${JSON.stringify(projectResourceImpacts)}`
+    const signature = `${resourcesLoading}:${JSON.stringify(projectResourceImpacts)}:${JSON.stringify(stagedProjectResourceImpacts)}`
     if (lastImpactSignatureRef.current === signature) return
     lastImpactSignatureRef.current = signature
-    onImpactChangeRef.current?.(
-      resourceImpact,
-      resourcesLoading,
-      projectResourceImpacts,
-    )
-  }, [projectResourceImpacts, resourceImpact, resourcesLoading])
-
-  const confirmSelectedDeletes = useCallback(async () => {
-    if (!activeProjectId || !activeResourceType) return
-    const resources = resourcesByProjectId.get(activeProjectId)
-    if (!resources) return
-
-    const payload: ResourcesToDelete = {}
-    const toDelete = buildResourcesToDelete(resources, {
-      [activeResourceType]:
-        resourceSelections[activeProjectId]?.[activeResourceType] ??
-        new Set(),
+    onImpactChangeRef.current?.({
+      impact: resourceImpact,
+      stagedImpact: stagedResourceImpact,
+      loading: resourcesLoading,
+      projectImpacts: projectResourceImpacts,
+      stagedProjectImpacts: stagedProjectResourceImpacts,
     })
-
-    if (Object.keys(toDelete).length === 0) return
-    payload[activeProjectId] = toDelete
-
-    setConfirmingDeletes(true)
-    try {
-      await deleteDowngradeResources(payload)
-      setResourceSelections((prev) => {
-        const projectSelection = { ...(prev[activeProjectId] ?? {}) }
-        delete projectSelection[activeResourceType]
-        return { ...prev, [activeProjectId]: projectSelection }
-      })
-      setConfirmOpen(false)
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ['downgrade-resources', activeProjectId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['plan-estimation'],
-        }),
-      ])
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t('Failed to delete selected items.'),
-      )
-    } finally {
-      setConfirmingDeletes(false)
-    }
   }, [
-    activeProjectId,
-    activeResourceType,
-    queryClient,
-    resourceSelections,
-    resourcesByProjectId,
-    t,
+    projectResourceImpacts,
+    stagedProjectResourceImpacts,
+    resourceImpact,
+    stagedResourceImpact,
+    resourcesLoading,
   ])
+
+  const confirmSelectedDeletes = useCallback(() => {
+    if (!activeProjectId || !activeResourceType) return
+    const selected = resourceSelections[activeProjectId]?.[activeResourceType]
+    if (!selected || selected.size === 0) return
+
+    setConfirmedSelections((prev) => ({
+      ...prev,
+      [activeProjectId]: {
+        ...(prev[activeProjectId] ?? {}),
+        [activeResourceType]: new Set(selected),
+      },
+    }))
+    setConfirmOpen(false)
+  }, [activeProjectId, activeResourceType, resourceSelections])
+
+  const editSelectedDeletes = useCallback(() => {
+    if (!activeProjectId || !activeResourceType) return
+    setConfirmedSelections((prev) => {
+      const projectSelection = { ...(prev[activeProjectId] ?? {}) }
+      delete projectSelection[activeResourceType]
+      return { ...prev, [activeProjectId]: projectSelection }
+    })
+  }, [activeProjectId, activeResourceType])
 
   const onRefRef = useRef(onRef)
   const onValidityChangeRef = useRef(onValidityChange)
   const isValidRef = useRef(isValid)
+  const confirmedSelectionsRef = useRef(confirmedSelections)
+  const resourcesByProjectIdRef = useRef(resourcesByProjectId)
 
   useEffect(() => {
     onRefRef.current = onRef
@@ -496,10 +529,26 @@ export function DowngradeResourceValidation({
   }, [onValidityChange])
 
   isValidRef.current = isValid
+  confirmedSelectionsRef.current = confirmedSelections
+  resourcesByProjectIdRef.current = resourcesByProjectId
 
   useEffect(() => {
     onRefRef.current({
       isValid: () => isValidRef.current,
+      getPendingResourceDeletions: () => {
+        const payload: ResourcesToDelete = {}
+
+        for (const [projectId, selections] of Object.entries(
+          confirmedSelectionsRef.current,
+        )) {
+          const resources = resourcesByProjectIdRef.current.get(projectId)
+          if (!resources) continue
+          const entry = buildResourcesToDelete(resources, selections)
+          if (Object.keys(entry).length > 0) payload[projectId] = entry
+        }
+
+        return payload
+      },
     })
 
     return () => {
@@ -585,8 +634,22 @@ export function DowngradeResourceValidation({
     activeResourceType && activeProjectId
       ? (activeSelections[activeResourceType] ?? new Set<string>())
       : new Set<string>()
+  const activeConfirmedSelections = activeProjectId
+    ? (confirmedSelections[activeProjectId] ?? {})
+    : {}
+  const activeConfirmed =
+    activeResourceType && activeProjectId
+      ? (activeConfirmedSelections[activeResourceType] ?? new Set<string>())
+      : new Set<string>()
+  const activeConfirmedItems = activeItems.filter((item) =>
+    activeConfirmed.has(item.$id),
+  )
+  const selectionLocked = activeConfirmedItems.length > 0
+  const activeSelectedItems = activeItems
+    .filter((item) => activeSelected.has(item.$id))
+    .map((item) => ({ id: item.$id, label: item.name }))
   const activeViolation = getResourceViolationCount(
-    activeItems.length,
+    activeItems.length - activeConfirmedItems.length,
     activeLimit,
   )
 
@@ -807,9 +870,15 @@ export function DowngradeResourceValidation({
                     itemCount={paginatedResourceTypes.paginated.length}
                   >
                     {paginatedResourceTypes.paginated.map(({ id, label }) => {
-                      const total = activeResources[id].total
+                      const remaining =
+                        activeResources[id].total -
+                        countStagedResourceDeletions(
+                          activeResources,
+                          id,
+                          activeConfirmedSelections,
+                        )
                       const limit = activeProjectLimits?.[id] ?? null
-                      const overLimit = limit !== null && total > limit
+                      const overLimit = limit !== null && remaining > limit
                       const isActive = activeResourceType === id
 
                       return (
@@ -834,14 +903,14 @@ export function DowngradeResourceValidation({
                               variant="error"
                               className="text-[10px] shrink-0"
                             >
-                              {total}/{limit}
+                              {remaining}/{limit}
                             </Badge>
                           ) : (
                             <Badge
                               variant="success"
                               className="text-[10px] shrink-0"
                             >
-                              {total}/{limit}
+                              {remaining}/{limit}
                             </Badge>
                           )}
                         </button>
@@ -872,7 +941,9 @@ export function DowngradeResourceValidation({
                 </p>
               </div>
 
-              {showSelectionList && activeItems.length > 0 ? (
+              {showSelectionList &&
+              activeItems.length > 0 &&
+              !selectionLocked ? (
                 <ColumnSearchBar
                   value={selectionSearch}
                   onChange={setSelectionSearch}
@@ -882,12 +953,20 @@ export function DowngradeResourceValidation({
 
               <div
                 className={cn(
-                  showSelectionItems
+                  showSelectionItems || selectionLocked
                     ? paginatedColumnBodyClassName
                     : 'flex items-center justify-center p-8',
                 )}
               >
-                {!activeResourceType ? (
+                {selectionLocked && activeTypeConfig ? (
+                  <DowngradeConfirmedSelection
+                    title={`${activeConfirmedItems.length} ${t(
+                      activeTypeConfig.label,
+                    ).toLowerCase()} ${t('marked for deletion')}`}
+                    labels={activeConfirmedItems.map((item) => item.name)}
+                    onEditSelection={editSelectedDeletes}
+                  />
+                ) : !activeResourceType ? (
                   <p className={columnEmptyPlaceholderClassName}>
                     {t('Select a resource type to review items.')}
                   </p>
@@ -963,7 +1042,9 @@ export function DowngradeResourceValidation({
                 )}
               </div>
 
-              {showSelectionList && activeItems.length > 0 ? (
+              {showSelectionList &&
+              activeItems.length > 0 &&
+              !selectionLocked ? (
                 <ColumnPaginationFooter
                   currentPage={paginatedSelectionItems.safePage}
                   totalPages={paginatedSelectionItems.totalPages}
@@ -983,29 +1064,27 @@ export function DowngradeResourceValidation({
                 ? `${t('Delete at least')} ${activeViolation} ${t('to fit the selected plan.')}`
                 : t('This resource type fits the selected plan.')}
             </p>
-            <Button
-              size="sm"
-              className="h-8 text-[13px]"
-              disabled={activeSelected.size === 0 || confirmingDeletes}
-              onClick={() => setConfirmOpen(true)}
-            >
-              {t('Delete selected')}
-            </Button>
+            {selectionLocked ? null : (
+              <Button
+                size="sm"
+                className="h-8 text-[13px]"
+                disabled={activeSelected.size === 0}
+                onClick={() => setConfirmOpen(true)}
+              >
+                {t('Confirm selection')}
+              </Button>
+            )}
           </div>
         ) : null}
       </div>
 
       <ConfirmDowngradeDeletes
         open={confirmOpen}
-        onOpenChange={(open) => {
-          if (!confirmingDeletes) setConfirmOpen(open)
-        }}
+        onOpenChange={setConfirmOpen}
         title={t('Delete selected')}
-        count={activeSelected.size}
-        confirming={confirmingDeletes}
-        onConfirm={() => {
-          void confirmSelectedDeletes()
-        }}
+        items={activeSelectedItems}
+        confirming={false}
+        onConfirm={confirmSelectedDeletes}
       />
     </div>
   )

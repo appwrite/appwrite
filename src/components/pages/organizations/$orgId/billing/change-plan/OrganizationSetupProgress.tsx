@@ -25,6 +25,9 @@ export type OrganizationSetupProgressState = {
   showResourceDeletionStep?: boolean
   showMembershipDeletionStep?: boolean
   showOrganizationDeletionStep?: boolean
+  /** What the run will delete, fixed for its whole duration. */
+  deletionSummary?: { label: string; count: number }[]
+  deletedOrganizationName?: string
 }
 
 type SetupStep = {
@@ -54,7 +57,7 @@ function buildSteps(state: OrganizationSetupProgressState): SetupStep[] {
       steps.push({
         phase: 'deleting-resources',
         label: 'Deleting resources',
-        description: 'Removing resources that are not kept for the target plan.',
+        description: 'Removing the items you marked for deletion.',
       })
     }
 
@@ -183,6 +186,9 @@ export function OrganizationSetupProgress({
   const t = useT()
   const steps = buildSteps(progress)
   const activeIndex = getPhaseIndex(steps, progress.phase)
+  const deletionSummary = progress.deletionSummary ?? []
+  const showDeletionSummary =
+    deletionSummary.length > 0 || !!progress.deletedOrganizationName
   const headline =
     progress.mode === 'create'
       ? t('Setting up your organization')
@@ -202,6 +208,32 @@ export function OrganizationSetupProgress({
       <p className="mt-2 max-w-xs text-center text-[13px] leading-relaxed text-muted-foreground">
         {t('This usually takes a few seconds. Please keep this window open.')}
       </p>
+
+      {showDeletionSummary ? (
+        <div className="mt-8 w-full max-w-xs rounded-lg border border-border bg-background/60 p-4">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Will be deleted')}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {progress.deletedOrganizationName ? (
+              <li className="text-[13px] leading-normal text-foreground">
+                {progress.deletedOrganizationName} {t('and all its resources')}
+              </li>
+            ) : null}
+            {deletionSummary.map(({ label, count }) => (
+              <li
+                key={label}
+                className="flex items-start justify-between gap-3 text-[13px] leading-normal"
+              >
+                <span className="text-foreground">{t(label)}</span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {count}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <ol className="mt-10 mx-auto w-full max-w-xs space-y-0">
         {steps.map((step, index) => {

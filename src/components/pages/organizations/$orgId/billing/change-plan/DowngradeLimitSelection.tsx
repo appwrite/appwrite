@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { DowngradeConfirmedSelection } from './DowngradeConfirmedSelection'
 
 const SELECTION_PAGE_SIZE = 5
 const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
@@ -27,11 +28,13 @@ interface DowngradeLimitSelectionProps {
   total: number
   page: number
   selectedIds: Set<string>
+  confirmedIds: Set<string>
+  confirmedLabels: string[]
   onToggle: (id: string) => void
-  onDeleteSelected: () => void
+  onConfirmSelection: () => void
+  onEditSelection: () => void
   onPageChange: (page: number) => void
   loading?: boolean
-  deleting?: boolean
   paginationDisabled?: boolean
 }
 
@@ -44,15 +47,18 @@ export function DowngradeLimitSelection({
   total,
   page,
   selectedIds,
+  confirmedIds,
+  confirmedLabels,
   onToggle,
-  onDeleteSelected,
+  onConfirmSelection,
+  onEditSelection,
   onPageChange,
   loading = false,
-  deleting = false,
   paginationDisabled = false,
 }: DowngradeLimitSelectionProps) {
   const t = useT()
-  const overage = Math.max(0, total - limit)
+  const locked = confirmedIds.size > 0
+  const overage = Math.max(0, total - confirmedIds.size - limit)
   const stillOver = overage > 0
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -87,117 +93,132 @@ export function DowngradeLimitSelection({
           </WarningAlert>
         ) : null}
 
-        <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
-          {loading ? (
-            <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
-          ) : (
-            <>
-              {items.map((item) => {
-                const selected = selectedIds.has(item.id)
+        {locked ? (
+          <DowngradeConfirmedSelection
+            className={SELECTION_LIST_MIN_HEIGHT_CLASS}
+            title={`${confirmedIds.size} ${t(resourceLabel)} ${t('marked for deletion')}`}
+            labels={confirmedLabels}
+            onEditSelection={onEditSelection}
+          />
+        ) : (
+          <>
+            <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
+              {loading ? (
+                <p className="text-[13px] text-muted-foreground">
+                  {t('Loading...')}
+                </p>
+              ) : (
+                <>
+                  {items.map((item) => {
+                    const selected = selectedIds.has(item.id)
 
-                return (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                      SELECTION_ROW_HEIGHT_CLASS,
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-background/60',
-                      item.locked && 'opacity-50',
-                    )}
-                  >
-                    <Checkbox
-                      id={`delete-${resourceLabel}-${item.id}`}
-                      checked={selected}
-                      disabled={item.locked}
-                      onCheckedChange={() => onToggle(item.id)}
-                      className="mt-0.5 shrink-0"
-                    />
-                    <Label
-                      htmlFor={`delete-${resourceLabel}-${item.id}`}
-                      className={cn(
-                        'min-w-0 flex-1',
-                        item.locked ? 'cursor-not-allowed' : 'cursor-pointer',
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
-                          {item.label}
-                        </p>
-                        {item.locked ? (
-                          <Badge
-                            variant="info"
-                            className="text-[10px] shrink-0"
-                          >
-                            {t('You')}
-                          </Badge>
-                        ) : null}
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                          SELECTION_ROW_HEIGHT_CLASS,
+                          selected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-background/60',
+                          item.locked && 'opacity-50',
+                        )}
+                      >
+                        <Checkbox
+                          id={`delete-${resourceLabel}-${item.id}`}
+                          checked={selected}
+                          disabled={item.locked}
+                          onCheckedChange={() => onToggle(item.id)}
+                          className="mt-0.5 shrink-0"
+                        />
+                        <Label
+                          htmlFor={`delete-${resourceLabel}-${item.id}`}
+                          className={cn(
+                            'min-w-0 flex-1',
+                            item.locked
+                              ? 'cursor-not-allowed'
+                              : 'cursor-pointer',
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
+                              {item.label}
+                            </p>
+                            {item.locked ? (
+                              <Badge
+                                variant="info"
+                                className="text-[10px] shrink-0"
+                              >
+                                {t('You')}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </Label>
                       </div>
-                    </Label>
-                  </div>
-                )
-              })}
-              {Array.from({
-                length: Math.max(0, SELECTION_PAGE_SIZE - items.length),
-              }).map((_, index) => (
-                <div
-                  key={`limit-selection-spacer-${index}`}
-                  className={SELECTION_ROW_HEIGHT_CLASS}
-                  aria-hidden
-                />
-              ))}
-            </>
-          )}
-        </div>
+                    )
+                  })}
+                  {Array.from({
+                    length: Math.max(0, SELECTION_PAGE_SIZE - items.length),
+                  }).map((_, index) => (
+                    <div
+                      key={`limit-selection-spacer-${index}`}
+                      className={SELECTION_ROW_HEIGHT_CLASS}
+                      aria-hidden
+                    />
+                  ))}
+                </>
+              )}
+            </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          {total > SELECTION_PAGE_SIZE ? (
-            <>
-              <p className="text-[12px] text-muted-foreground">
-                {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
-                {t(resourceLabel)}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onPageChange(safePage - 1)}
-                  disabled={safePage <= 1 || loading || paginationDisabled}
-                  aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onPageChange(safePage + 1)}
-                  disabled={
-                    safePage >= totalPages || loading || paginationDisabled
-                  }
-                  aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <span />
-          )}
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 text-[13px]"
-            disabled={selectedIds.size === 0 || deleting}
-            onClick={onDeleteSelected}
-          >
-            {t('Delete selected')}
-          </Button>
-        </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+              {total > SELECTION_PAGE_SIZE ? (
+                <>
+                  <p className="text-[12px] text-muted-foreground">
+                    {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+                    {t(resourceLabel)}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage - 1)}
+                      disabled={safePage <= 1 || loading || paginationDisabled}
+                      aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage + 1)}
+                      disabled={
+                        safePage >= totalPages || loading || paginationDisabled
+                      }
+                      aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <span />
+              )}
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 text-[13px]"
+                disabled={selectedIds.size === 0}
+                onClick={onConfirmSelection}
+              >
+                {t('Confirm selection')}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

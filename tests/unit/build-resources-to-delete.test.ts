@@ -6,6 +6,8 @@ import { describe, expect, test } from 'bun:test'
 import { buildResourcesToDelete } from '@/lib/billing/delete-downgrade-resources'
 import {
   countResourcesToDeleteForProject,
+  countStagedResourcesForProject,
+  projectHasResourceViolations,
   type DowngradeResourceLimits,
   type ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
@@ -92,5 +94,74 @@ describe('countResourcesToDeleteForProject', () => {
         limits,
       ),
     ).toEqual({ functions: 2 })
+  })
+
+  test('subtracts staged deletions from the overage', () => {
+    expect(
+      countResourcesToDeleteForProject(
+        resources({
+          functions: {
+            items: [item('fn-1'), item('fn-2'), item('fn-3')],
+            total: 3,
+          },
+        }),
+        limits,
+        { functions: new Set(['fn-2']) },
+      ),
+    ).toEqual({ functions: 1 })
+  })
+
+  test('ignores staged ids that already left the list', () => {
+    expect(
+      countResourcesToDeleteForProject(
+        resources({
+          functions: {
+            items: [item('fn-1'), item('fn-2')],
+            total: 2,
+          },
+        }),
+        limits,
+        { functions: new Set(['fn-2', 'fn-gone']) },
+      ),
+    ).toEqual({})
+  })
+})
+
+describe('projectHasResourceViolations', () => {
+  const overLimit = resources({
+    functions: {
+      items: [item('fn-1'), item('fn-2'), item('fn-3')],
+      total: 3,
+    },
+  })
+
+  test('is true while the staged deletions do not cover the overage', () => {
+    expect(
+      projectHasResourceViolations(overLimit, limits, {
+        functions: new Set(['fn-3']),
+      }),
+    ).toBe(true)
+  })
+
+  test('is false once the staged deletions bring usage within the limit', () => {
+    expect(
+      projectHasResourceViolations(overLimit, limits, {
+        functions: new Set(['fn-2', 'fn-3']),
+      }),
+    ).toBe(false)
+  })
+})
+
+describe('countStagedResourcesForProject', () => {
+  test('counts only staged ids still present in the list', () => {
+    expect(
+      countStagedResourcesForProject(
+        resources({
+          buckets: { items: [item('b-1'), item('b-2')], total: 2 },
+          functions: { items: [item('fn-1')], total: 1 },
+        }),
+        { buckets: new Set(['b-1', 'b-gone']), functions: new Set() },
+      ),
+    ).toEqual({ buckets: 1 })
   })
 })
