@@ -31,7 +31,10 @@ export function ConfirmDowngradeDeletes({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="z-[10000] sm:max-w-md p-0"
+        overlayClassName="z-[9999]"
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
