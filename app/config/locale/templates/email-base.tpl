@@ -2,36 +2,12 @@
 <html>
     <head>
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
-        <meta name="color-scheme" content="light dark">
-        <meta name="supported-color-schemes" content="light dark">
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style type="text/css">
             :root {
-                color-scheme: light dark;
-                supported-color-schemes: light dark;
-            }
-
-            @media (prefers-color-scheme: dark ) {
-                body {
-                    color: #616b7c !important;
-                    background-color: #ffffff !important;
-                }
-                a {
-                    color: currentColor !important;
-                }
-                a.button {
-                    color: #ffffff !important;
-                    background-color: #2D2D31 !important;
-                    border-color: #414146 !important;
-                }
-                h1, h2, h3 {
-                    color: #373b4d !important;
-                }
-                h4 {
-                    color: #4f5769 !important;
-                }
-                p.security-phrase:not(:empty), hr {
-                    border-color: #e8e9f0 !important;
-                }
+                color-scheme: light;
+                supported-color-schemes: light;
             }
         </style>
         <style>
