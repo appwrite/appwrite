@@ -76,6 +76,7 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
+      - appwrite-autogravity
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -163,6 +164,7 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
+      - _APP_AUTOGRAVITY_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -1575,6 +1577,13 @@ services:
   appwrite-browser:
     container_name: appwrite-browser
     image: appwrite/browser:0.3.4
+    networks:
+      - appwrite
+
+  appwrite-autogravity:
+    container_name: appwrite-autogravity
+    image: ghcr.io/appwrite/autogravity:0.0.6
+    restart: unless-stopped
     networks:
       - appwrite
 
