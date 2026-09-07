@@ -18,8 +18,6 @@ use Utopia\System\System;
 
 class Interval extends Action
 {
-    private const int CERTIFICATE_GENERATION_INTERVAL = 300; // 5 minutes
-
     private const int CERTIFICATE_GENERATION_LEASE = 900; // 15 minutes, must outlast one attempt
 
     public static function getName(): string
@@ -80,6 +78,7 @@ class Interval extends Action
     protected function getTasks(): array
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
+        $intervalCertificateGeneration = (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', '300'); // 5 minutes
 
         return [
             [
@@ -94,7 +93,7 @@ class Interval extends Action
                 "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
                     $this->generateCertificate($dbForPlatform, $publisherForCertificates);
                 },
-                'interval' => $this->certificateGenerationInterval() * 1000,
+                'interval' => $intervalCertificateGeneration * 1000,
             ]
         ];
     }
@@ -145,11 +144,6 @@ class Interval extends Action
 
         Span::add("interval.domain_verification.processed", $processed);
         Span::add("interval.domain_verification.failed", $failed);
-    }
-
-    private function certificateGenerationInterval(): int
-    {
-        return (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', (string) self::CERTIFICATE_GENERATION_INTERVAL);
     }
 
     /**
