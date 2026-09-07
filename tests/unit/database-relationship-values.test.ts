@@ -64,6 +64,17 @@ describe('getRelationshipColumnKeys', () => {
     ])
   })
 
+  test('accepts raw collection attributes, which carry no status', () => {
+    // Documents/Vectors collections expose their schema as `attributes`, and the
+    // loader reads them unmapped.
+    expect(
+      getRelationshipColumnKeys([
+        { key: 'name', type: 'string' },
+        { key: 'orders', type: 'relationship', relationType: 'oneToMany' },
+      ]),
+    ).toEqual(['orders'])
+  })
+
   test('tolerates a missing or empty column list', () => {
     expect(getRelationshipColumnKeys(undefined)).toEqual([])
     expect(getRelationshipColumnKeys([])).toEqual([])

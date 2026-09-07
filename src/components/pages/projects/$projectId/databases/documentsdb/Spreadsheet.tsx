@@ -1350,13 +1350,20 @@ function RowEditDrawer({
         (typeof currentValue === 'string' && currentValue.trim() === '') ||
         (Array.isArray(currentValue) && currentValue.length === 0)
 
-      // Relationships: send only what the user actually edited. The API merges an
-      // update onto the stored row, so an omitted key keeps its related rows -
-      // while sending null either fails ("Invalid relationship value ... NULL
-      // given") or, for a to-one, silently unlinks the related row.
+      // Relationships: on update, send only what the user actually edited. The API
+      // merges an update onto the stored row, so an omitted key keeps its related
+      // rows - while sending null either fails ("Invalid relationship value ...
+      // NULL given") or, for a to-one, silently unlinks the related row. On
+      // create there is nothing stored to preserve, so an untouched optional
+      // relationship is simply left out and a required one still has to be filled.
       if (fieldType === 'relationship') {
-        if (!touchedFields.has(fieldKey)) {
+        const untouched = !touchedFields.has(fieldKey)
+        if (untouched && (!isCreateMode || !required)) {
           delete payload[fieldKey]
+          return
+        }
+        if (required && isEmptyValue) {
+          missingRequiredFields.push(fieldKey)
           return
         }
         payload[fieldKey] = toRelationshipPayloadValue(
@@ -3767,6 +3774,12 @@ export function RowsSpreadsheet({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
+      // Relationship values are populated rows; posting them back would create or
+      // rewrite the related rows instead of linking to them.
+      for (const key of relationshipKeys) {
+        if (!Object.prototype.hasOwnProperty.call(data, key)) continue
+        data[key] = toRelationshipPayloadValue(data[key], columnInfoByKey.get(key))
+      }
       return createProjectTableRow(projectId, databaseId, DB_KIND, tableId, data)
     },
     onSuccess: async () => {

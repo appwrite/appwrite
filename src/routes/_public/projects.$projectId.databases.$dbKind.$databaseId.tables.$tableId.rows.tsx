@@ -170,13 +170,14 @@ export const Route = createFileRoute(
           : null
 
       // From the already-awaited tables list, so the loader and the View build the
-      // same query key (a mismatch means a second listRows on mount).
+      // same query key (a mismatch means a second listRows on mount). This route
+      // serves every `dbKind`: tables expose their schema as `columns`, while
+      // Documents/Vectors collections expose it as `attributes`.
+      const tableEntity = tablesData.tables.find(
+        (table: unknown) => (table as { $id?: string }).$id === tableId,
+      ) as { columns?: unknown[]; attributes?: unknown[] } | undefined
       const relationshipKeys = getRelationshipColumnKeys(
-        (
-          tablesData.tables.find(
-            (table: unknown) => (table as { $id?: string }).$id === tableId,
-          ) as { columns?: unknown[] } | undefined
-        )?.columns,
+        tableEntity?.columns ?? tableEntity?.attributes,
       )
 
       await Promise.all([
