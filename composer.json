@@ -24,6 +24,6 @@
         "swoole/ide-helper": "5.1.2",
         "phpunit/phpunit": "^10.5",
         "phpstan/phpstan": "^1.12",
-        "laravel/pint": "^1.15"
+        "laravel/pint": "^1.15 <1.21"
     }
 }
