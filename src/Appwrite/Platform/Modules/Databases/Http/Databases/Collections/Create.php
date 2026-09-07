@@ -303,12 +303,18 @@ class Create extends Action
         // The dedicated endpoints store a range on every numeric attribute, falling
         // back to the full width of the type, so omitting min/max here has to produce
         // the same document rather than one with no range at all.
-        if (\in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, ColumnType::Float->value])) {
-            $isFloat = $type === ColumnType::Float->value;
+        if (\in_array($type, [
+            ColumnType::Integer->value,
+            ColumnType::BigInteger->value,
+            'bigint',
+            ColumnType::Float->value,
+            ColumnType::Double->value,
+        ], true)) {
+            $isFloat = \in_array($type, [ColumnType::Float->value, ColumnType::Double->value], true);
 
-            $format = match($type) {
+            $format = match ($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                ColumnType::BigInteger->value => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 

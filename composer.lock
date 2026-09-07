@@ -3352,16 +3352,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.0",
+            "version": "5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc"
+                "reference": "1b1f999a0095e9614d466d01d1cc3fffd9756acd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/0d0752785fc81b5afd6571f4291763166a6532bc",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/1b1f999a0095e9614d466d01d1cc3fffd9756acd",
+                "reference": "1b1f999a0095e9614d466d01d1cc3fffd9756acd",
                 "shasum": ""
             },
             "require": {
@@ -3405,9 +3405,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.0.0"
+                "source": "https://github.com/utopia-php/cache/tree/5.0.2"
             },
-            "time": "2026-08-21T11:04:48+00:00"
+            "time": "2026-09-03T09:15:30+00:00"
         },
         {
             "name": "utopia-php/cdn",
@@ -3798,12 +3798,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6cc5f8be5d7f5730846b95b44d61d6d846ba973e"
+                "reference": "8092d6130ce00898f822cbeb1cf88f2555e82622"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6cc5f8be5d7f5730846b95b44d61d6d846ba973e",
-                "reference": "6cc5f8be5d7f5730846b95b44d61d6d846ba973e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/8092d6130ce00898f822cbeb1cf88f2555e82622",
+                "reference": "8092d6130ce00898f822cbeb1cf88f2555e82622",
                 "shasum": ""
             },
             "require": {
@@ -3889,7 +3889,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-09-01T07:32:13+00:00"
+            "time": "2026-09-07T00:54:07+00:00"
         },
         {
             "name": "utopia-php/detector",

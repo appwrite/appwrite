@@ -1598,7 +1598,7 @@ trait DatabasesBase
             $schemaResource => [
                 ['key' => 'counter', 'type' => ColumnType::Integer->value],
                 ['key' => 'total', 'type' => ColumnType::BigInteger->value],
-                ['key' => 'ratio', 'type' => ColumnType::Float->value],
+                ['key' => 'ratio', 'type' => ColumnType::Double->value],
                 ['key' => 'bounded', 'type' => ColumnType::Integer->value, 'min' => 0, 'max' => 100],
                 // The numeric endpoints take no size, so this one cannot narrow the
                 // column below the int64 range the definition still declares

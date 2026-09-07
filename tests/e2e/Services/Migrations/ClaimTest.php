@@ -47,6 +47,7 @@ final class ClaimTest extends TestCase
                 password: \getenv('_APP_TEST_MIGRATION_MONGO_PASSWORD') ?: '',
                 authSource: 'admin',
             ))->connect()),
+            default => throw new \InvalidArgumentException('Unsupported adapter: ' . $adapter),
         };
         $database = new Database($connection, new Cache(new NoCache()));
         $database
