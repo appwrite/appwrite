@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Platform\Tasks\Interval;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Fixtures\CertificateDatabase;
+use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Queue;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Fixtures;
+namespace Tests\Unit\Platform;
 
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;

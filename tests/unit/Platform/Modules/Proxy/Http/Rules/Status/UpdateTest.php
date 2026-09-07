@@ -11,7 +11,7 @@ use Appwrite\Platform\Modules\Proxy\Http\Rules\Status\Update;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Fixtures\CertificateDatabase;
+use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

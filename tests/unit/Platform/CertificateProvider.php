@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Fixtures;
+namespace Tests\Unit\Platform;
 
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;

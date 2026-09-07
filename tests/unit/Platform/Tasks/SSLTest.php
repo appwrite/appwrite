@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Platform\Tasks\SSL;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Fixtures\CertificateDatabase;
+use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
