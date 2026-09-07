@@ -43,6 +43,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-apps-for-appwrite-partners",
+    "href": "/blog/post/announcing-apps-for-appwrite-partners",
+    "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",
+    "description": "Register an app in your organization and build dashboards, deployment tools, CLIs, and agents for other Appwrite developers, with consent-based, scoped tokens instead of pasted API keys.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog/announcing-apps-for-appwrite-partners/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-domains",
     "href": "/blog/post/announcing-appwrite-domains",
     "title": "Announcing Appwrite Domains: your registrar and DNS host",
@@ -223,6 +237,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "build-a-help-center-with-appwrite-vectorsdb",
+    "href": "/blog/post/build-a-help-center-with-appwrite-vectorsdb",
+    "title": "Build a help center with semantic search using Appwrite VectorsDB",
+    "description": "Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.",
+    "date": "2026-09-02",
+    "lastUpdated": "2026-09-02",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "comparing-embedding-models-in-vectorsdb",
     "href": "/blog/post/comparing-embedding-models-in-vectorsdb",
     "title": "Comparing the embedding models available in VectorsDB",
@@ -392,20 +420,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "build-a-help-center-with-appwrite-vectorsdb",
-    "href": "/blog/post/build-a-help-center-with-appwrite-vectorsdb",
-    "title": "Build a help center with semantic search using Appwrite VectorsDB",
-    "description": "Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.",
-    "date": "2026-08-17",
-    "lastUpdated": "2026-08-17",
-    "timeToRead": 11,
-    "author": "atharva",
-    "category": "tutorial",
-    "featured": false,
-    "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "gemini-37-flash",
     "href": "/blog/post/gemini-37-flash",
     "title": "Gemini 3.7 Flash: Benchmarks, pricing, and API details",
@@ -533,21 +547,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "ai",
     "featured": false,
     "cover": "/images/blog/what-gpt-56-sols-chatgpt-update-means-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-apps-for-appwrite-partners",
-    "href": "/blog/post/announcing-apps-for-appwrite-partners",
-    "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",
-    "description": "Register an app in your organization and build dashboards, deployment tools, CLIs, and agents for other Appwrite developers, with consent-based, scoped tokens instead of pasted API keys.",
-    "date": "2026-08-06",
-    "lastUpdated": "2026-08-06",
-    "timeToRead": 6,
-    "author": "atharva",
-    "category": "announcement",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/announcing-apps-for-appwrite-partners/cover.avif",
     "hasCover": true
   },
   {

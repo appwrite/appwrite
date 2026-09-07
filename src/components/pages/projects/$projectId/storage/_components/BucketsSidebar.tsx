@@ -385,8 +385,8 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
         </div>
 
         {isCloud && projectId ? (
-          <div className="shrink-0 border-t border-border px-2 py-2">
-            <S3ConnectionCard projectId={projectId} />
+          <div className="flex h-[54px] shrink-0 items-center border-t border-border bg-background px-2">
+            <S3ConnectionCard />
           </div>
         ) : null}
       </div>
