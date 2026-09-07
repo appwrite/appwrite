@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
@@ -1829,8 +1830,18 @@ trait StorageBase
         ]);
     }
 
-    public function testCreateBucketFileParallelChunksLargeFile(): void
+    public static function parallelChunksProvider(): array
     {
+        return [
+            'distinct chunks' => [false],
+            'duplicate chunks' => [true],
+        ];
+    }
+
+    #[DataProvider('parallelChunksProvider')]
+    public function testCreateBucketFileParallelChunksLargeFile(bool $duplicate): void
+    {
+        // Test for SUCCESS
         $totalSize = 20 * 1024 * 1024;
         $chunkSize = 5 * 1024 * 1024;
         $chunksTotal = (int) ceil($totalSize / $chunkSize);
@@ -1867,8 +1878,9 @@ trait StorageBase
             $this->assertNotFalse($handle, 'Could not create test file');
 
             $remaining = $totalSize;
-            $block = str_repeat(hash('sha256', $fileId, binary: true), 1024);
             while ($remaining > 0) {
+                // Distinct blocks expose reordered or duplicated chunks in the hash check.
+                $block = str_repeat(hash('sha256', $fileId . ':' . $remaining, binary: true), 1024);
                 $bytes = substr($block, 0, min(strlen($block), $remaining));
                 fwrite($handle, $bytes);
                 $remaining -= strlen($bytes);
@@ -1899,6 +1911,10 @@ trait StorageBase
                 ];
             }
             fclose($sourceHandle);
+
+            if ($duplicate) {
+                $requests = array_merge($requests, $requests);
+            }
 
             $responses = [];
             $endpoint = parse_url($this->client->getEndpoint());
@@ -1958,6 +1974,7 @@ trait StorageBase
 
             ksort($responses);
 
+            $this->assertCount(count($requests), $responses);
             foreach ($responses as $response) {
                 $this->assertSame('', $response['error']);
                 $this->assertContains($response['statusCode'], [200, 201], (string) $response['body']);
@@ -1972,6 +1989,21 @@ trait StorageBase
             $this->assertEquals(200, $uploadedFile['headers']['status-code']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksTotal']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksUploaded']);
+
+            // A late retry must return the completed file without writing or finalizing again.
+            $retry = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge(
+                $requests[0]['headers'],
+                ['content-type' => 'multipart/form-data']
+            ), [
+                'fileId' => $fileId,
+                'file' => new CURLFile($requests[0]['chunkPath'], 'application/octet-stream', 'large-parallel-upload.bin'),
+                'permissions' => [Permission::read(Role::any()), Permission::delete(Role::any())],
+            ]);
+
+            $this->assertEquals(200, $retry['headers']['status-code']);
+            $this->assertEquals($fileId, $retry['body']['$id']);
+            $this->assertEquals($chunksTotal, $retry['body']['chunksUploaded']);
+            $this->assertEquals($uploadedFile['body']['signature'], $retry['body']['signature']);
 
             $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
                 'content-type' => 'application/json',

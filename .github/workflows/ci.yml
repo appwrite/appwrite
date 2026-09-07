@@ -196,7 +196,7 @@ jobs:
               { name: 'Account',           runner: runner4, functional: true,  processes: null },
               { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
               { name: 'Console',           runner: runner4, functional: true,  processes: null },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true, embedding: true },
               { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
               { name: 'Functions',         runner: runner4, functional: false, processes: null },
               { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
@@ -467,6 +467,13 @@ jobs:
           # Gitea runs alongside Appwrite only where VCS tests need it.
           if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
+          fi
+
+          # The embedding container is resource-heavy and off by default, so start it and
+          # enable the API only for the suites that exercise the embeddings routes.
+          if [ "${{ matrix.service.embedding }}" = "true" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},embedding"
+            echo "_APP_EMBEDDING=enabled" >> $GITHUB_ENV
           fi
 
           echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV

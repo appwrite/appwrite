@@ -45,6 +45,7 @@ use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
@@ -173,7 +174,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'listTests',
                 description: 'List tests.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('metrics', [], new AnyOf([
@@ -211,7 +212,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum(
@@ -244,7 +245,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('kind', 'basic', new WhiteList(['basic', 'advanced']), 'Test kind.', enum: new Enum());
@@ -277,7 +278,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'get',
                 description: 'Get health.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [new SDKResponse(code: Response::STATUS_CODE_OK, model: Response::MODEL_HEALTH_STATUS)],
             ));
 
@@ -306,7 +307,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('userId', '', new CustomId(), 'User ID.');
@@ -332,7 +333,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('metadata', [], new Assoc(), 'Metadata.', example: '{"enabled":true}')
@@ -367,7 +368,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('percents', [], new ArrayList(new FloatValidator()), 'Percents.', optional: true)
@@ -397,7 +398,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTestWithOverrides',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
                 parameters: [
                     new Parameter('engine', hide: true),
@@ -426,7 +427,7 @@ final class FormatTest extends TestCase
             group: null,
             name: 'createTestWithNullDefault',
             description: 'Create test.',
-            auth: [],
+            auth: [AuthType::ADMIN],
             responses: [],
             parameters: [
                 new Parameter('engine', default: null),
@@ -470,7 +471,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'deleteTest',
                 description: 'Delete test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('testId', '', new Text(256), 'Test ID.')
@@ -503,7 +504,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getOrUpdateTest',
                 description: 'Get or update test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('testId', '', new Text(256), 'Test ID.')
@@ -536,7 +537,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getTeamTest',
                 description: 'Get test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -614,7 +615,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getParent',
                 description: 'Get parent.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -642,7 +643,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getError',
                 description: 'Get error.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 500,
@@ -670,7 +671,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getPathTest',
                 description: 'Get test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(code: 200, model: Response::MODEL_NONE),
                 ],
@@ -711,7 +712,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getUsageTest',
                 description: 'Get test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -755,7 +756,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getMigration',
                 description: 'Get migration.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -823,7 +824,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getUserTest',
                 description: 'Get test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -868,7 +869,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createSpatialTest',
                 description: 'Create spatial test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value.', true);
@@ -880,7 +881,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getSpatialTest',
                 description: 'Get spatial test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -916,7 +917,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -959,7 +960,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'deleteTest',
                 description: 'Delete test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 204,
@@ -977,35 +978,42 @@ final class FormatTest extends TestCase
         $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
     }
 
-    public function testBinaryResponsesEmitResponseContent(): void
+    public static function binaryResponseTypes(): \Iterator
+    {
+        yield 'PNG image' => [ContentType::IMAGE_PNG, 'image/png'];
+        yield 'PDF document' => [ContentType::PDF, 'application/pdf'];
+    }
+
+    #[DataProvider('binaryResponseTypes')]
+    public function testBinaryResponsesEmitResponseContent(ContentType $contentType, string $mediaType): void
     {
         Method::$processed = [];
         Method::$errors = [];
 
-        $route = (new Route('GET', '/v1/tests/icon'))
-            ->desc('Get test icon')
+        $route = (new Route('GET', '/v1/tests/file'))
+            ->desc('Get test file')
             ->label('sdk', new Method(
                 namespace: 'test',
                 group: null,
-                name: 'getTestIcon',
-                description: 'Get test icon.',
-                auth: [],
+                name: 'getTestFile',
+                description: 'Get test file.',
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
                         model: Response::MODEL_NONE,
                     ),
                 ],
-                contentType: ContentType::IMAGE_PNG,
+                contentType: $contentType,
             ));
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
 
-        $openApiMethod = $openApi['paths']['/tests/icon']['get'];
+        $openApiMethod = $openApi['paths']['/tests/file']['get'];
 
         $this->assertSame(
-            ['type' => 'string', 'format' => 'binary'],
-            $openApiMethod['responses']['200']['content']['image/png']['schema']
+            [$mediaType => ['schema' => ['type' => 'string', 'format' => 'binary']]],
+            $openApiMethod['responses']['200']['content']
         );
         $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
@@ -1022,7 +1030,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'queryTest',
                 description: 'GraphQL test endpoint.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
                 additionalParameters: [
                     'query' => [
@@ -1053,7 +1061,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'getTestProvider',
                 description: 'Get test provider.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: 200,
@@ -1086,7 +1094,7 @@ final class FormatTest extends TestCase
                     group: null,
                     name: 'get' . \ucfirst($model),
                     description: 'Get test response model.',
-                    auth: [],
+                    auth: [AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: 200,
@@ -1132,7 +1140,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'listTests',
                 description: 'List tests.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
@@ -1164,7 +1172,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('min', 0, new Range(0, 100), 'Minimum.', example: '0')
@@ -1192,7 +1200,7 @@ final class FormatTest extends TestCase
                 group: null,
                 name: 'createTest',
                 description: 'Create test.',
-                auth: [],
+                auth: [AuthType::ADMIN],
                 responses: [],
             ))
             ->param('key', '', new Key(), 'Column key.')

@@ -12,6 +12,9 @@ class Method
 
     public static array $errors = [];
 
+    /** @var list<string>|null Null derives membership from auth; an explicit empty list stays empty. */
+    protected ?array $platforms = null;
+
     /**
      * Initialise a new SDK method
      *
@@ -200,6 +203,33 @@ class Method
     public function isHidden(): bool|array
     {
         return $this->hide;
+    }
+
+    /**
+     * @param list<string> $platforms Auth membership resolved by the active specs producer.
+     */
+    public function setPlatforms(array $platforms): self
+    {
+        $this->platforms = $platforms;
+        return $this;
+    }
+
+    /**
+     * @return list<string> Eligible platforms, independent of the currently selected spec platform.
+     */
+    public function getPlatforms(): array
+    {
+        $hide = $this->isHidden();
+        if ($hide === true || empty($this->getNamespace())) {
+            return [];
+        }
+
+        $platforms = $this->platforms ?? \array_filter(\array_map(
+            fn ($auth) => $auth instanceof AuthType ? $auth->getPlatform() : null,
+            $this->getAuth()
+        ));
+
+        return \array_values(\array_unique(\array_diff($platforms, \is_array($hide) ? $hide : [])));
     }
 
     public function isPackaging(): bool

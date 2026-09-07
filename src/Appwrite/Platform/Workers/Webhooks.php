@@ -15,13 +15,13 @@ use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Webhooks extends Action
@@ -45,7 +45,6 @@ class Webhooks extends Action
             ->inject('dbForPlatform')
             ->inject('publisherForNotifications')
             ->inject('publisherForUsage')
-            ->inject('log')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -56,12 +55,11 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
-     * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): void
     {
         $payload = $message->getPayload();
 
@@ -73,7 +71,7 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
+        Span::add('project.id', $project->getId());
 
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {

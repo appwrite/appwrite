@@ -32,7 +32,6 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -74,7 +73,6 @@ class Deletes extends Action
             ->inject('executor')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
-            ->inject('log')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
@@ -106,7 +104,6 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        Log $log,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
@@ -141,7 +138,6 @@ class Deletes extends Action
             $executor,
             $executionRetention,
             $executionsRetentionCount,
-            $log,
             $publisherForDeletes,
             $publisherForUsage,
             $bus,
@@ -236,7 +232,6 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        Log $log,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
@@ -256,8 +251,8 @@ class Deletes extends Action
         $resourceType = $deleteMessage->resourceType;
         $document = $deleteMessage->document ?? new Document();
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
