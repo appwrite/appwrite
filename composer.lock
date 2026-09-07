@@ -4453,12 +4453,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mqtt.git",
-                "reference": "e25b603c77499c516279e37ed3229f1e5d025c42"
+                "reference": "b36f0f47b20dfdac20ec2275e9b1e54300e68e50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/e25b603c77499c516279e37ed3229f1e5d025c42",
-                "reference": "e25b603c77499c516279e37ed3229f1e5d025c42",
+                "url": "https://api.github.com/repos/utopia-php/mqtt/zipball/b36f0f47b20dfdac20ec2275e9b1e54300e68e50",
+                "reference": "b36f0f47b20dfdac20ec2275e9b1e54300e68e50",
                 "shasum": ""
             },
             "require": {
@@ -4511,7 +4511,7 @@
                 "source": "https://github.com/utopia-php/mqtt/tree/dev",
                 "issues": "https://github.com/utopia-php/mqtt/issues"
             },
-            "time": "2026-08-28T06:28:12+00:00"
+            "time": "2026-09-07T12:31:12+00:00"
         },
         {
             "name": "utopia-php/platform",

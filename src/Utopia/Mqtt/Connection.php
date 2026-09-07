@@ -4,8 +4,9 @@ namespace Utopia\Mqtt;
 
 /**
  * Per-connection state, keyed by the transport's file descriptor. Handlers mutate
- * it across the packet lifecycle: CONNECT records the protocol level and resolved
- * identity, PUBLISH draws outbound packet ids for QoS 1 delivery.
+ * it across the packet lifecycle: CONNECT records the protocol level, client id,
+ * clean-start flag, and resolved identity; PUBLISH draws outbound packet ids for
+ * QoS 1 delivery.
  */
 class Connection
 {
@@ -14,6 +15,12 @@ class Connection
 
     /** Project id from the CONNECT User Property. */
     public string $projectId = '';
+
+    /** Client Identifier from CONNECT; the per-device session anchor. Empty when the client sends none. */
+    public string $clientId = '';
+
+    /** Clean Start (5.0) / Clean Session (3.1.1): true discards any stored session, so delivery is live-only. */
+    public bool $cleanStart = true;
 
     /** @var array<string, string> resolved identity (project/user ids) from the authenticator */
     public array $identity = [];
