@@ -94,7 +94,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
   }, [debouncedSearch, sortBy, sortOrder])
 
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const noCreatePermission = !canCreateBucket(access, features)
@@ -384,7 +384,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
           </div>
         </div>
 
-        {features.storageS3 && projectId ? (
+        {isCloud && projectId ? (
           <div className="shrink-0 border-t border-border px-2 py-2">
             <S3ConnectionCard projectId={projectId} />
           </div>

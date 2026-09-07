@@ -1069,7 +1069,7 @@ export function ConsoleHeader({
                             </DropdownMenuItem>
                           )}
 
-                          {features.firewall ? (
+                          {isCloud ? (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">

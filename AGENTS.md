@@ -1124,9 +1124,9 @@ Profiles control which features are available based on deployment type (cloud vs
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.nativeDbsMongo`, `features.agent`, `features.notifications`, `features.cookieBanner`). Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
-**Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
+**Feature-driven keys:** Each remaining flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `orgApiKeys` for org settings; `databaseBackups`, `databasePitrRestore`, `nativeDbsMongo` for database).
 
 ---
 

@@ -48,6 +48,7 @@ import {
 } from '@/lib/react-query/hooks/users'
 import {
   canShowAuthSecuritySettings,
+  canShowProjectOAuth2Server,
   canCreateUser,
   canCreateTeam,
 } from '@/lib/console-access-checks'
@@ -269,7 +270,7 @@ export function View({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
-  const showOAuth2Server = features.oauth2Server && showAuthSecuritySettings
+  const showOAuth2Server = canShowProjectOAuth2Server(access, features)
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE

@@ -194,10 +194,6 @@ function ApiReferenceSectionSubnavShell({
       serviceCounts,
       version,
       platform,
-      features.dedicatedDbsDocumentsDB,
-      features.dedicatedDbsVectorsDB,
-      features.nativeDbsPostgres,
-      features.nativeDbsMySQL,
       features.nativeDbsMongo,
     ],
   )

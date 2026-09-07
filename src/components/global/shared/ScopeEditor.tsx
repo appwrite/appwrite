@@ -17,7 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useQuery } from '@tanstack/react-query'
 import {
   consoleOrganizationScopesQueryOptions,
@@ -55,7 +55,6 @@ export function ScopeEditor({
 }: ScopeEditorProps) {
   const t = useT()
   const isCloud = isCloudEnvironment()
-  const { features } = useConsoleProfile()
   const { data: scopeList, isLoading, isError, error } = useQuery(
     catalog === 'organization'
       ? consoleOrganizationScopesQueryOptions()
@@ -74,7 +73,7 @@ export function ScopeEditor({
     )
     const base = consoleKeyScopesToEditorRows(scopeList, {
       isCloud,
-      oauth2Server: features.oauth2Server,
+      oauth2Server: isCloudProfile(),
       catalog,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
@@ -83,7 +82,7 @@ export function ScopeEditor({
       const orphanEntry = scopeById.get(v)
       if (
         catalog !== 'organization' &&
-        !features.oauth2Server &&
+        !isCloudProfile() &&
         isOAuth2AppsCatalogScope(v, orphanEntry?.category)
       ) {
         continue
@@ -110,11 +109,11 @@ export function ScopeEditor({
       .filter(
         (row) =>
           catalog === 'organization' ||
-          features.oauth2Server ||
+          isCloudProfile() ||
           !isOAuth2AppsScopeEditorRow(row),
       )
       .sort(compareScopeEditorRowsForDisplay)
-  }, [catalog, features.oauth2Server, scopeList, isCloud, value])
+  }, [catalog, scopeList, isCloud, value])
 
   const filteredScopes = useMemo(
     () => filterScopeEditorRows(availableScopes, searchQuery),

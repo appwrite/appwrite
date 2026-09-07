@@ -8,13 +8,12 @@ const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 const DEBUG_PROFILE_COOKIE = 'debug_console_profile'
 const DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
-/** Feature flags required for dedicated / native / product database UI against Cloud. */
+/**
+ * Feature flags required for database e2e against Cloud.
+ * Dedicated/product/native Postgres and MySQL are cloud-only (no flag override).
+ * Mongo rollout and billing/multi-region still use debug overrides when needed.
+ */
 export const DATABASE_E2E_FEATURE_OVERRIDES = {
-  dedicatedDbsSupport: true,
-  dedicatedDbsDocumentsDB: true,
-  dedicatedDbsVectorsDB: true,
-  nativeDbsPostgres: true,
-  nativeDbsMySQL: true,
   nativeDbsMongo: true,
   databaseBackups: true,
   billing: true,
@@ -58,8 +57,8 @@ function persistDatabaseFeatureFlagsInPage(args: {
 
 /**
  * Persist database feature flags for every document in this context.
- * Must run before the first console navigation so wizard cards are not
- * "coming soon" (DocumentsDB / VectorsDB are off in the canonical cloud profile).
+ * Must run before the first console navigation so MongoDB wizard cards are
+ * not "coming soon" when `nativeDbsMongo` is off in the canonical cloud profile.
  */
 export async function seedDatabaseFeatureFlags(
   context: BrowserContext,

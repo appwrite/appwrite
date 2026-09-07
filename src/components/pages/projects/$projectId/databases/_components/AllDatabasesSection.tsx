@@ -68,6 +68,7 @@ import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
 import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
+import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import {
@@ -622,9 +623,9 @@ export function AllDatabasesSection({
         specificationsData?.specifications,
       ),
       rawSpecifications: specificationsData?.specifications ?? null,
-      unspecifiedLabel: features.dedicatedDbsSupport ? undefined : '',
+      unspecifiedLabel: isCloudDedicatedDatabasesEnabled() ? undefined : '',
     }),
-    [features.dedicatedDbsSupport, specificationsData?.specifications],
+    [specificationsData?.specifications],
   )
 
   const listedDedicatedById = useMemo(() => {

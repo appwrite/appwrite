@@ -618,7 +618,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               ]},
           ]
         : []),
-      ...(features.oauthApps
+      ...(canShowOrgOAuthAppsSettings(access, features)
         ? [
             {
               id: 'oauth-apps',
@@ -747,7 +747,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
     if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
-      (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
+      (settingsSubTab === 'oauth-apps' &&
+        !canShowOrgOAuthAppsSettings(access, features)) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys)
     ) {
       navigate({

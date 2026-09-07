@@ -34,7 +34,7 @@ export function ProjectConnectDialogProvider({
   children: ReactNode
 }) {
   const { account } = useAuth()
-  const { features } = useConsoleProfile()
+  const { isCloud } = useConsoleProfile()
   const { tab: savedConnectTab, setTab: persistConnectTab } =
     useConnectProjectTab(account)
   const [open, setOpen] = useState(false)
@@ -47,14 +47,14 @@ export function ProjectConnectDialogProvider({
         tab ??
         (savedConnectTab as ConnectProjectTab) ??
         DEFAULT_CONNECT_PROJECT_TAB
-      if (nextTab === 's3' && !features.storageS3) {
+      if (nextTab === 's3' && !isCloud) {
         nextTab = DEFAULT_CONNECT_PROJECT_TAB
       }
       setInitialConnectTab(nextTab)
       persistConnectTab(nextTab)
       setOpen(true)
     },
-    [features.storageS3, persistConnectTab, savedConnectTab],
+    [isCloud, persistConnectTab, savedConnectTab],
   )
 
   const value = useMemo(

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   attackModeRuleQueryOptions,
   firewallRulesQueryOptions,
@@ -21,7 +21,7 @@ import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retenti
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().firewall) {
+    if (!isCloudProfile()) {
       throw redirect({
         to: '/projects/$projectId',
         params: { projectId: params.projectId },

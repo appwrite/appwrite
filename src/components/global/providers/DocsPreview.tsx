@@ -47,6 +47,7 @@ import {
   openInNewTab,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { useDocsPreview } from './DocsPreviewContext'
@@ -62,8 +63,8 @@ export function DocsPreviewContent() {
   const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
-  const domainsDocsEnabled = features.domains
-  const firewallDocsEnabled = features.firewall
+  const domainsDocsEnabled = isCloudProfile()
+  const firewallDocsEnabled = isCloudProfile()
   const agentDocsEnabled = features.agent
 
   const showMenu =
@@ -160,10 +161,6 @@ export function DocsPreviewContent() {
   }, [
     agentDocsEnabled,
     domainsDocsEnabled,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.nativeDbsMySQL,
-    features.nativeDbsPostgres,
     firewallDocsEnabled,
     isOpen,
     openDocsPreview,

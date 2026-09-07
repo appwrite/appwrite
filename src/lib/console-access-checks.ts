@@ -6,6 +6,7 @@
 
 import type { ConsoleAccess } from '@/lib/console-roles'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 /** Minimal features needed for most checks; pass full features from useConsoleProfile() where available. */
 export type AccessCheckFeatures = Pick<ConsoleProfileFeatures, 'orgRoles'> &
@@ -241,7 +242,7 @@ export function canShowProjectOAuth2Server(
   features: AccessCheckFeatures,
 ): boolean {
   return (
-    !!features.oauth2Server && canShowAuthSecuritySettings(access, features)
+    isCloudProfile() && canShowAuthSecuritySettings(access, features)
   )
 }
 
@@ -324,12 +325,12 @@ export function canBuyOrTransferOrgDomain(
   return canAccessOrgDomains(access, features)
 }
 
-/** Organization marketplace tab (cloud profile + feature flag; browse integrations). */
+/** Organization marketplace tab (cloud profile; browse integrations). */
 export function canShowOrgMarketplaceTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(features.marketplace && canSeeProjects(access, features))
+  return isCloudProfile() && canSeeProjects(access, features)
 }
 
 export function canShowOrgSettingsTab(access: ConsoleAccess): boolean {
@@ -359,12 +360,12 @@ export function canAccessOrgSettingsOAuthOrApiKeys(
   return access.isOwner || access.isDeveloper
 }
 
-/** Organization settings → OAuth apps (console profile + owners/developers). */
+/** Organization settings → OAuth apps (cloud profile + owners/developers). */
 export function canShowOrgOAuthAppsSettings(
   access: ConsoleAccess,
-  features: AccessCheckFeatures,
+  _features: AccessCheckFeatures,
 ): boolean {
-  return !!features.oauthApps && canAccessOrgSettingsOAuthOrApiKeys(access)
+  return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
 /** Organization settings → Org API keys (console profile + owners/developers). */
@@ -385,14 +386,14 @@ export function canCreateOrgApiKey(
 
 /**
  * Organization Domains (route access). The `/v1/domains` API is cloud-only, so
- * the whole surface is hidden unless the domains profile flag is on; with org
- * roles enabled it is further limited to owners and developers.
+ * the whole surface is hidden on self-hosted; with org roles enabled it is
+ * further limited to owners and developers.
  */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  if (!features.domains) return false
+  if (!isCloudProfile()) return false
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 

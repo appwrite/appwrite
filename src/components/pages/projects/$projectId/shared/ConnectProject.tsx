@@ -388,7 +388,7 @@ export function ConnectProject({
   }, [sdkId])
 
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const noCreatePermission = !canCreateKey(access, features)
   const createMutation = useCreateApiKey(projectId)
@@ -426,9 +426,9 @@ export function ConnectProject({
   const connectTabIds = useMemo(
     () =>
       CONNECT_PROJECT_TAB_IDS.filter(
-        (tabId) => tabId !== 's3' || features.storageS3,
+        (tabId) => tabId !== 's3' || isCloud,
       ),
-    [features.storageS3],
+    [isCloud],
   )
 
   const selectConnectTab = useCallback(
@@ -442,11 +442,11 @@ export function ConnectProject({
   useEffect(() => {
     if (!open) return
     const nextTab =
-      initialConnectTab === 's3' && !features.storageS3
+      initialConnectTab === 's3' && !isCloud
         ? DEFAULT_CONNECT_PROJECT_TAB
         : initialConnectTab
     setConnectTab(nextTab)
-  }, [open, initialConnectTab, features.storageS3])
+  }, [open, initialConnectTab, isCloud])
 
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
@@ -1071,7 +1071,7 @@ export function ConnectProject({
                 onViewApiKeys={handleViewApiKeys}
               />
             </TabsContent>
-            {features.storageS3 ? (
+            {isCloud ? (
             <TabsContent
               value="s3"
               className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"

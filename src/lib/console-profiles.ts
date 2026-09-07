@@ -15,13 +15,6 @@ export type ConsoleProfileId = 'cloud' | 'self-hosted'
 export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
-  /**
-   * Organization Domains (tab, DNS, verification, buy/transfer) plus marketing
-   * and docs Domains product surfaces. The `/v1/domains` API is cloud-only.
-   */
-  domains: boolean
-  /** Organization marketplace (browse and publish apps) */
-  marketplace: boolean
   /** Project usage statistics, charts, and project overview main chart */
   usageStats: boolean
   /** Activity logs and audit trail */
@@ -50,10 +43,6 @@ export type ConsoleProfileFeatures = {
   extraVcsOAuth: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
-  /** Organization OAuth apps */
-  oauthApps: boolean
-  /** Project-level OAuth2 authorization server settings */
-  oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
   /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
@@ -66,16 +55,6 @@ export type ConsoleProfileFeatures = {
   databaseBackups: boolean
   /** Dedicated database PITR restore UI (backups restore button and settings restore card). */
   databasePitrRestore: boolean
-  /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
-  dedicatedDbsSupport: boolean
-  /** Dedicated DBs support for Documents DB. */
-  dedicatedDbsDocumentsDB: boolean
-  /** Dedicated DBs support for Vectors DB. */
-  dedicatedDbsVectorsDB: boolean
-  /** Native Postgres databases via the `postgresql` SDK service. */
-  nativeDbsPostgres: boolean
-  /** Native MySQL databases via the `mysql` SDK service. */
-  nativeDbsMySQL: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -88,10 +67,6 @@ export type ConsoleProfileFeatures = {
   edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
   userVerification: boolean
-  /** Project Firewall (rules, analytics, logs) under Protect */
-  firewall: boolean
-  /** Storage S3-compatible API (Connect S3 tab, storage sidebar card, and S3 docs) */
-  storageS3: boolean
   /** Account affiliates program (referral codes, rewards, credit claims) */
   affiliates: boolean
   /**
@@ -113,8 +88,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   string
 > = {
   billing: 'Billing',
-  domains: 'Domains',
-  marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
   init: 'Init',
@@ -127,25 +100,16 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountIdentities: 'Account identities',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
-  oauthApps: 'OAuth apps',
-  oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
   notifications: 'Notifications',
   browserAlerts: 'Browser alerts',
   databaseBackups: 'Database backups',
   databasePitrRestore: 'Database PITR restore',
-  dedicatedDbsSupport: 'Dedicated DBs (global)',
-  dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
-  dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
-  nativeDbsPostgres: 'Native DBs: PostgreSQL',
-  nativeDbsMySQL: 'Native DBs: MySQL',
   nativeDbsMongo: 'Native DBs: MongoDB',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
-  firewall: 'Firewall',
-  storageS3: 'Storage S3',
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
@@ -169,8 +133,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Appwrite Cloud - full feature set',
     features: {
       billing: true,
-      domains: true,
-      marketplace: true,
       usageStats: true,
       activity: true,
       init: true,
@@ -183,25 +145,16 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountIdentities: true,
       extraVcsOAuth: false,
       compliance: true,
-      oauthApps: true,
-      oauth2Server: true,
       orgApiKeys: false,
       agent: false,
       notifications: false,
       browserAlerts: false,
       databaseBackups: true,
       databasePitrRestore: false,
-      dedicatedDbsSupport: true,
-      dedicatedDbsDocumentsDB: true,
-      dedicatedDbsVectorsDB: true,
-      nativeDbsPostgres: true,
-      nativeDbsMySQL: true,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: true,
-      storageS3: true,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
@@ -213,8 +166,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Self-hosted Appwrite - cloud-only features disabled',
     features: {
       billing: false,
-      domains: false,
-      marketplace: false,
       usageStats: true,
       activity: false,
       init: false,
@@ -227,25 +178,16 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountIdentities: false,
       extraVcsOAuth: false,
       compliance: false,
-      oauthApps: false,
-      oauth2Server: false,
       orgApiKeys: false,
       agent: false,
       notifications: false,
       browserAlerts: false,
       databaseBackups: false,
       databasePitrRestore: false,
-      dedicatedDbsSupport: false,
-      dedicatedDbsDocumentsDB: false,
-      dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: false,
-      nativeDbsMySQL: false,
       nativeDbsMongo: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
-      firewall: false,
-      storageS3: false,
       affiliates: false,
       cookieBanner: false,
       blogDrafts: false,
@@ -340,6 +282,23 @@ const DEBUG_PROFILE_COOKIE = 'debug_console_profile'
 const DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 /** Map legacy stored feature keys onto the current schema. */
+const REMOVED_PROFILE_FEATURE_KEYS = [
+  'domains',
+  'marketplace',
+  'oauthApps',
+  'oauth2Server',
+  'dedicatedDbsSupport',
+  'dedicatedDbsDocumentsDB',
+  'dedicatedDbsVectorsDB',
+  'nativeDbsPostgres',
+  'nativeDbsMySQL',
+  'firewall',
+  'storageS3',
+  'aiAssistant',
+  'executionLogs',
+  'extraOAuthLogin',
+] as const
+
 function migrateStoredProfileFeatures(
   features: Partial<ConsoleProfileFeatures> & Record<string, unknown>,
 ): Partial<ConsoleProfileFeatures> {
@@ -348,8 +307,9 @@ function migrateStoredProfileFeatures(
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
   }
-  delete next.aiAssistant
-  delete next.executionLogs
+  for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
+    delete next[key]
+  }
   return next
 }
 
@@ -440,6 +400,13 @@ export function getActiveProfileId(): ConsoleProfileId {
   return getProfileFromEnv()
 }
 
+/** True when the active console profile is Cloud (not self-hosted). */
+export function isCloudProfile(
+  profileId: ConsoleProfileId = getActiveProfileId(),
+): boolean {
+  return profileId === 'cloud'
+}
+
 /**
  * Returns the currently active console profile (stored value when set, else from env).
  * Stored profile features are merged with the canonical profile for that id so new
@@ -491,11 +458,9 @@ function applyCloudOnlyFeatureGates(
   if (profileId === 'self-hosted') {
     return {
       ...features,
-      marketplace: false,
       init: false,
       marketing: false,
       multiTenancy: false,
-      oauth2Server: false,
     }
   }
   return features

@@ -94,6 +94,7 @@ import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
+  isCloudDedicatedDatabasesEnabled,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
@@ -449,7 +450,7 @@ export function Workspace({
   const queryClient = useQueryClient()
 
   const { project } = useProject(projectId)
-  const useCreateDatabaseWizard = features.dedicatedDbsSupport
+  const useCreateDatabaseWizard = isCloudDedicatedDatabasesEnabled()
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const {
     dateRange: monitorDateRange,

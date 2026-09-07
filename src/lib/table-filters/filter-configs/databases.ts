@@ -3,7 +3,7 @@
  */
 
 import { DatabaseType } from '@/lib/databases/database-type'
-import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
 import { buildFilterQueryString } from '../operators'
 import { findCompactFilterKeyInMap } from '../url'
@@ -17,18 +17,10 @@ const DATABASE_TYPE_ORDER: DatabaseType[] = [
   DatabaseType.Vectorsdb,
 ]
 
-function databaseTypeFilterElements(
-  features: Pick<
-    ConsoleProfileFeatures,
-    'dedicatedDbsDocumentsDB' | 'dedicatedDbsVectorsDB'
-  >,
-): Array<{ value: string; label: string }> {
+function databaseTypeFilterElements(): Array<{ value: string; label: string }> {
   const types: DatabaseType[] = [DatabaseType.Tablesdb]
-  if (features.dedicatedDbsDocumentsDB) {
-    types.push(DatabaseType.Documentsdb)
-  }
-  if (features.dedicatedDbsVectorsDB) {
-    types.push(DatabaseType.Vectorsdb)
+  if (isCloudProfile()) {
+    types.push(DatabaseType.Documentsdb, DatabaseType.Vectorsdb)
   }
   return types.map((value) => ({
     value,
@@ -36,26 +28,19 @@ function databaseTypeFilterElements(
   }))
 }
 
-/** Filter columns for the databases list (type options depend on profile features). */
-export function getDatabasesFilterColumns(
-  features: Pick<
-    ConsoleProfileFeatures,
-    | 'dedicatedDbsSupport'
-    | 'dedicatedDbsDocumentsDB'
-    | 'dedicatedDbsVectorsDB'
-  >,
-): FilterColumn[] {
+/** Filter columns for the databases list (type options depend on profile). */
+export function getDatabasesFilterColumns(): FilterColumn[] {
   const columns: FilterColumn[] = [
     { id: '$id', title: '$id', type: 'string' },
     { id: 'name', title: 'Name', type: 'string' },
   ]
-  if (features.dedicatedDbsSupport) {
+  if (isCloudProfile()) {
     columns.push({
       id: DATABASE_TYPE_FILTER_COLUMN_ID,
       title: 'Type',
       type: 'enum',
       format: 'enum',
-      elements: databaseTypeFilterElements(features),
+      elements: databaseTypeFilterElements(),
       optional: false,
     })
   }
@@ -66,22 +51,15 @@ export function getDatabasesFilterColumns(
   return columns
 }
 
-/** @deprecated Prefer getDatabasesFilterColumns(features) for type-aware options. */
-export const databasesFilterColumns: FilterColumn[] =
-  getDatabasesFilterColumns({
-    dedicatedDbsSupport: true,
-    dedicatedDbsDocumentsDB: true,
-    dedicatedDbsVectorsDB: true,
-  })
+/** @deprecated Prefer getDatabasesFilterColumns() for type-aware options. */
+export const databasesFilterColumns: FilterColumn[] = getDatabasesFilterColumns()
 
 /** Available database types for the droplist (same set as filter column elements). */
-export function getDatabaseTypeFilterOptions(
-  features: Pick<
-    ConsoleProfileFeatures,
-    'dedicatedDbsDocumentsDB' | 'dedicatedDbsVectorsDB'
-  >,
-): Array<{ value: DatabaseType; label: string }> {
-  return databaseTypeFilterElements(features).map((el) => ({
+export function getDatabaseTypeFilterOptions(): Array<{
+  value: DatabaseType
+  label: string
+}> {
+  return databaseTypeFilterElements().map((el) => ({
     value: el.value as DatabaseType,
     label: el.label,
   }))

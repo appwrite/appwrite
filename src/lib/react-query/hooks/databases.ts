@@ -27,7 +27,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
+  isCloudProfile,
 } from '@/lib/console-profiles'
+import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
@@ -99,15 +101,14 @@ function listProductDatabasesIfEnabled(
   backend: DatabaseType,
   queries: string[],
 ): Promise<Models.DatabaseList> {
-  const features = getActiveProfileFeatures()
   if (backend === DatabaseType.Documentsdb) {
-    if (!features.dedicatedDbsDocumentsDB) {
+    if (!isCloudProfile()) {
       return Promise.resolve({ total: 0, databases: [] })
     }
     return projectSdk.documentsDB.list({ queries })
   }
   if (backend === DatabaseType.Vectorsdb) {
-    if (!features.dedicatedDbsVectorsDB) {
+    if (!isCloudProfile()) {
       return Promise.resolve({ total: 0, databases: [] })
     }
     return projectSdk.vectorsDB.list({ queries })
@@ -1147,14 +1148,13 @@ async function getProductDatabase(
   backend: DatabaseType,
   databaseId: string,
 ): Promise<Models.Database | null> {
-  const features = getActiveProfileFeatures()
   try {
     if (backend === DatabaseType.Documentsdb) {
-      if (!features.dedicatedDbsDocumentsDB) return null
+      if (!isCloudProfile()) return null
       return await projectSdk.documentsDB.get({ databaseId })
     }
     if (backend === DatabaseType.Vectorsdb) {
-      if (!features.dedicatedDbsVectorsDB) return null
+      if (!isCloudProfile()) return null
       return await projectSdk.vectorsDB.get({ databaseId })
     }
     return await projectSdk.tablesDB.get({ databaseId })
@@ -1788,14 +1788,7 @@ export async function createNativeDatabase(
 /** True when any feature needing a compute-tier specs endpoint is on. */
 function isDatabaseSpecificationsSupported(): boolean {
   const features = getActiveProfileFeatures()
-  return (
-    features.dedicatedDbsSupport ||
-    features.dedicatedDbsDocumentsDB ||
-    features.dedicatedDbsVectorsDB ||
-    features.nativeDbsPostgres ||
-    features.nativeDbsMySQL ||
-    features.nativeDbsMongo
-  )
+  return isCloudProfile() || features.nativeDbsMongo
 }
 
 function isDatabaseSpecificationsSourceSupported(
@@ -1803,14 +1796,12 @@ function isDatabaseSpecificationsSourceSupported(
 ): boolean {
   const features = getActiveProfileFeatures()
   if (source.type === 'product') {
-    if (source.api === 'documentsdb') return features.dedicatedDbsDocumentsDB
-    if (source.api === 'vectorsdb') return features.dedicatedDbsVectorsDB
-    return features.dedicatedDbsSupport
+    return isCloudProfile()
   }
   const engine = source.engine.toLowerCase()
-  if (engine === 'mysql' || engine === 'mariadb') return features.nativeDbsMySQL
+  if (engine === 'mysql' || engine === 'mariadb') return isCloudProfile()
   if (engine === 'mongodb' || engine === 'mongo') return features.nativeDbsMongo
-  return features.nativeDbsPostgres || features.dedicatedDbsVectorsDB
+  return isCloudProfile()
 }
 
 /**
@@ -1820,19 +1811,11 @@ function isDatabaseSpecificationsSourceSupported(
 export function enabledDatabaseSpecificationsSources(): DedicatedDatabaseSource[] {
   const features = getActiveProfileFeatures()
   const sources: DedicatedDatabaseSource[] = []
-  if (features.dedicatedDbsSupport) {
+  if (isCloudProfile()) {
     sources.push({ type: 'product', api: 'tablesdb' })
-  }
-  if (features.dedicatedDbsDocumentsDB) {
     sources.push({ type: 'product', api: 'documentsdb' })
-  }
-  if (features.dedicatedDbsVectorsDB) {
     sources.push({ type: 'product', api: 'vectorsdb' })
-  }
-  if (features.nativeDbsPostgres || features.dedicatedDbsVectorsDB) {
     sources.push({ type: 'engine', engine: 'postgresql' })
-  }
-  if (features.nativeDbsMySQL) {
     sources.push({ type: 'engine', engine: 'mysql' })
   }
   if (features.nativeDbsMongo) {
@@ -1968,11 +1951,7 @@ export {
 /** True when at least one native DB engine (PostgreSQL/MySQL/MongoDB) is available. */
 function isNativeDatabasesSupported(): boolean {
   const features = getActiveProfileFeatures()
-  return (
-    features.nativeDbsPostgres ||
-    features.nativeDbsMySQL ||
-    features.nativeDbsMongo
-  )
+  return isCloudProfile() || features.nativeDbsMongo
 }
 
 /**
@@ -1981,13 +1960,7 @@ function isNativeDatabasesSupported(): boolean {
  * native DB UI flags are off.
  */
 function isDedicatedEngineAccessSupported(): boolean {
-  const features = getActiveProfileFeatures()
-  return (
-    isNativeDatabasesSupported() ||
-    features.dedicatedDbsSupport ||
-    features.dedicatedDbsDocumentsDB ||
-    features.dedicatedDbsVectorsDB
-  )
+  return isNativeDatabasesSupported() || isCloudDedicatedDatabasesEnabled()
 }
 
 /** Engines to list/probe for native + product-owned dedicated compute. */
@@ -1996,21 +1969,10 @@ function dedicatedEnginesForProfile(): Array<
 > {
   const features = getActiveProfileFeatures()
   const engines: Array<'postgresql' | 'mysql' | 'mongodb'> = []
-  if (
-    features.nativeDbsPostgres ||
-    features.dedicatedDbsVectorsDB ||
-    features.dedicatedDbsSupport
-  ) {
-    engines.push('postgresql')
+  if (isCloudProfile()) {
+    engines.push('postgresql', 'mysql')
   }
-  if (features.nativeDbsMySQL || features.dedicatedDbsSupport) {
-    engines.push('mysql')
-  }
-  if (
-    features.nativeDbsMongo ||
-    features.dedicatedDbsDocumentsDB ||
-    features.dedicatedDbsSupport
-  ) {
+  if (isCloudProfile() && features.nativeDbsMongo) {
     engines.push('mongodb')
   }
   return engines
