@@ -4,6 +4,11 @@ import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { getDowngradePlanLimits } from '@/lib/billing/downgrade-plan-limits'
+import {
+  downgradeAddonsQueryOptions,
+  getUnsupportedAddonRemovals,
+  type DowngradeAddonRemoval,
+} from '@/lib/billing/downgrade-addons'
 import { fetchAllDowngradeProjects } from '@/lib/billing/fetch-downgrade-org-resources'
 import { findCurrentUserMembership } from '@/lib/billing/fetch-downgrade-org-resources'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
@@ -45,10 +50,15 @@ export type DowngradeProjectResourceDeletions = {
   }[]
 }
 
+/** Manifest row (`id`, `name`) plus what the disable call needs. */
+export type DowngradeAddonDeletion = DowngradeDeletionItem &
+  DowngradeAddonRemoval
+
 export type PendingDowngradeDeletions = {
   projects: DowngradeDeletionItem[]
   memberships: DowngradeDeletionItem[]
   domains: DowngradeDeletionItem[]
+  addons: DowngradeAddonDeletion[]
   projectResources: DowngradeProjectResourceDeletions[]
   /** Execution payload, unchanged in shape. */
   resources: ResourcesToDelete
@@ -151,6 +161,23 @@ export function DowngradeValidation({
 
   const remainingProjects = remainingProjectsData ?? projects
   const remainingProjectsTotal = remainingProjectsData?.length ?? projectsTotal
+
+  const { data: addonSnapshot } = useQuery(
+    downgradeAddonsQueryOptions(organizationId),
+  )
+  // Disabled by the run itself, so these never gate validity - they only need
+  // to reach the confirmation manifest and the deletion step.
+  const addonDeletions = useMemo<DowngradeAddonDeletion[]>(
+    () =>
+      getUnsupportedAddonRemovals(addonSnapshot, targetPlan).map((removal) => ({
+        ...removal,
+        id: removal.addonId,
+        name: removal.projectName
+          ? `${removal.label} · ${removal.projectName}`
+          : removal.label,
+      })),
+    [addonSnapshot, targetPlan],
+  )
 
   const needsProjectSelection =
     projectsLimit !== null && remainingProjectsTotal > projectsLimit
@@ -556,6 +583,7 @@ export function DowngradeValidation({
   const confirmedProjectIdsRef = useRef(confirmedProjectIds)
   const confirmedMemberIdsRef = useRef(confirmedMemberIds)
   const confirmedDomainIdsRef = useRef(confirmedDomainIds)
+  const addonDeletionsRef = useRef(addonDeletions)
   const projectLabelByIdRef = useRef(new Map<string, string>())
 
   useEffect(() => {
@@ -567,6 +595,7 @@ export function DowngradeValidation({
   confirmedProjectIdsRef.current = confirmedProjectIds
   confirmedMemberIdsRef.current = confirmedMemberIds
   confirmedDomainIdsRef.current = confirmedDomainIds
+  addonDeletionsRef.current = addonDeletions
 
   const memberItems = useMemo(
     () =>
@@ -623,6 +652,7 @@ export function DowngradeValidation({
             confirmedDomainIdsRef.current,
             domainLabels.current,
           ),
+          addons: addonDeletionsRef.current,
           projectResources: resourceDeletions?.projectResources ?? [],
           resources: resourceDeletions?.resources ?? {},
         }

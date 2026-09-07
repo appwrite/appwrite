@@ -1,4 +1,5 @@
 import { sdk } from '@/lib/appwrite/sdk'
+import type { DowngradeAddonRemoval } from '@/lib/billing/downgrade-addons'
 import { deleteOrganizationDomain } from '@/lib/react-query/hooks/domains'
 
 /**
@@ -22,5 +23,27 @@ export async function deleteDowngradeDomains(
 ): Promise<void> {
   await Promise.all(
     domainIds.map((domainId) => deleteOrganizationDomain(domainId)),
+  )
+}
+
+/**
+ * On an active addon this only sets `nextValue = 0`; the addon stays on until
+ * the current billing cycle closes.
+ */
+export async function deleteDowngradeAddons(
+  addons: DowngradeAddonRemoval[],
+): Promise<void> {
+  await Promise.all(
+    addons.map((addon) =>
+      addon.scope === 'organization'
+        ? sdk.forConsole.organizations.deleteAddon({
+            organizationId: addon.resourceId,
+            addonId: addon.addonId,
+          })
+        : sdk.forConsole.projects.deleteAddon({
+            projectId: addon.resourceId,
+            addonId: addon.addonId,
+          }),
+    ),
   )
 }

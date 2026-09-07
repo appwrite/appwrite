@@ -50,6 +50,7 @@ import type {
 import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
 import { ConfirmPlanChange } from './change-plan/ConfirmPlanChange'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { DowngradeAddonWarning } from './change-plan/DowngradeAddonWarning'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
 import {
@@ -64,9 +65,14 @@ import {
   findCurrentUserMembership,
 } from '@/lib/billing/fetch-downgrade-org-resources'
 import {
+  deleteDowngradeAddons,
   deleteDowngradeDomains,
   deleteDowngradeMemberships,
 } from '@/lib/billing/delete-downgrade-org-resources'
+import {
+  getUnresolvedUnsupportedAddons,
+  isDisableableDowngradeAddon,
+} from '@/lib/billing/downgrade-addons'
 import {
   deleteDowngradeResources,
   narrowResourcesToType,
@@ -82,7 +88,10 @@ import {
 } from '@/lib/billing/downgrade-deletion-steps'
 import {
   getComplianceErrors,
+  getNonCompliantProjectIds,
+  getOrganizationViolations,
   getUnresolvableResources,
+  type PlanChangeLimits,
 } from '@/lib/billing/plan-change-compliance'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { fetchOrganizationMemberships } from '@/lib/react-query/hooks/teams'
@@ -205,6 +214,11 @@ async function runDowngradeDeletionStep(
     return
   }
 
+  if (step.id === 'addons') {
+    await deleteDowngradeAddons(pending.addons)
+    return
+  }
+
   const resourceType = DOWNGRADE_RESOURCE_TYPES.find(({ id }) => id === step.id)
   if (!resourceType) return
 
@@ -214,6 +228,35 @@ async function runDowngradeDeletionStep(
 }
 
 const ORG_DELETION_STEP_IDS = new Set(['projects', 'members', 'domains'])
+
+/**
+ * Post-deletion gate. Still fails closed on anything the run cannot account
+ * for, but an addon it just disabled is not a real block: the server reads
+ * `currentValue` and ignores the `nextValue = 0` that schedules the removal.
+ */
+async function isPlanChangeStillBlocked(
+  organizationId: string,
+  limits: PlanChangeLimits | null | undefined,
+): Promise<boolean> {
+  if (!limits) return true
+  if (limits.canChangePlan === true) return false
+
+  const reportedAddons = limits.unsupportedAddons ?? []
+  if (
+    reportedAddons.length === 0 ||
+    getOrganizationViolations(limits).length > 0 ||
+    getNonCompliantProjectIds(limits).length > 0 ||
+    getComplianceErrors(limits).length > 0
+  ) {
+    return true
+  }
+
+  const unresolved = await getUnresolvedUnsupportedAddons(
+    organizationId,
+    reportedAddons,
+  )
+  return unresolved.length > 0
+}
 
 async function runDowngradeDeletions(
   organizationId: string,
@@ -1005,6 +1048,13 @@ export function ChangePlanWizardFullscreen() {
     () => planChangeLimits?.unsupportedAddons ?? [],
     [planChangeLimits],
   )
+  // Addons this flow disables as part of the run are covered by the warning
+  // card and the confirmation manifest, so only the rest stay hard blockers.
+  const unresolvableAddons = useMemo(
+    () =>
+      unsupportedAddons.filter((addon) => !isDisableableDowngradeAddon(addon)),
+    [unsupportedAddons],
+  )
   const unresolvableResources = useMemo(
     () => getUnresolvableResources(planChangeLimits),
     [planChangeLimits],
@@ -1014,7 +1064,7 @@ export function ChangePlanWizardFullscreen() {
     [planChangeLimits],
   )
   const hasPlanChangeBlockers =
-    unsupportedAddons.length > 0 ||
+    unresolvableAddons.length > 0 ||
     unresolvableResources.length > 0 ||
     complianceErrors.length > 0
 
@@ -1260,6 +1310,8 @@ export function ChangePlanWizardFullscreen() {
           queryKey: ['plan-estimation', organizationId],
         }),
         queryClient.invalidateQueries({ queryKey: ['downgrade-resources'] }),
+        queryClient.invalidateQueries({ queryKey: ['downgrade-addons'] }),
+        queryClient.invalidateQueries({ queryKey: ['addons'] }),
       ])
     },
     [queryClient],
@@ -1329,10 +1381,10 @@ export function ChangePlanWizardFullscreen() {
       if (needsDowngradeValidation) {
         const estimationResult = await updateEstimation.refetch()
         // Fail closed: the query does not retry, so an errored refetch leaves
-        // the previous cached value behind and `=== false` would not fire.
+        // the previous cached value behind and it would read as compliant.
         if (
           estimationResult.isError ||
-          estimationResult.data?.limits?.canChangePlan !== true
+          (await isPlanChangeStillBlocked(orgId, estimationResult.data?.limits))
         ) {
           setSetupProgress(null)
           toast.error(
@@ -1814,7 +1866,7 @@ export function ChangePlanWizardFullscreen() {
       {hasPlanChangeBlockers && (
         <WarningAlert title={t('This plan change is blocked')}>
           <ul className="list-disc space-y-1 ps-4">
-            {unsupportedAddons.map((addon) => (
+            {unresolvableAddons.map((addon) => (
               <li key={`addon-${addon}`}>
                 {t('The selected plan does not support the')} {addon}{' '}
                 {t('addon. Remove it before changing plans.')}
@@ -1901,6 +1953,13 @@ export function ChangePlanWizardFullscreen() {
               deletedOrganizationLoading={effectiveDeletedOrganizationLoading}
               expectDeletedOrganizationImpact
               keptOrganizationImpactReady={false}
+            />
+          ) : null}
+
+          {orgId && orgToDelete?.$id !== orgId ? (
+            <DowngradeAddonWarning
+              organizationId={orgId}
+              targetPlan={targetPlanInfo}
             />
           ) : null}
 

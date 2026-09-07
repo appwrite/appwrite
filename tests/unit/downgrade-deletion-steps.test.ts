@@ -14,6 +14,7 @@ function pending(
     projects: [],
     memberships: [],
     domains: [],
+    addons: [],
     projectResources: [],
     resources: {},
     ...overrides,
@@ -26,7 +27,7 @@ describe('buildDowngradeDeletionSteps', () => {
     expect(buildDowngradeDeletionSteps(pending())).toEqual([])
   })
 
-  test('orders projects, members and domains before resource types', () => {
+  test('orders organization deletes and addons before resource types', () => {
     const steps = buildDowngradeDeletionSteps(
       pending({
         projects: [{ id: 'p-1', name: 'Project one' }],
@@ -35,6 +36,17 @@ describe('buildDowngradeDeletionSteps', () => {
           { id: 'm-2', name: 'Grace' },
         ],
         domains: [{ id: 'd-1', name: 'example.com' }],
+        addons: [
+          {
+            id: 'addon-1',
+            name: 'HIPAA BAA',
+            key: 'baa',
+            label: 'HIPAA BAA',
+            scope: 'organization',
+            resourceId: 'org-1',
+            addonId: 'addon-1',
+          },
+        ],
         resources: {
           'p-2': {
             buckets: ['b-1'],
@@ -48,6 +60,7 @@ describe('buildDowngradeDeletionSteps', () => {
       'projects',
       'members',
       'domains',
+      'addons',
       'databases',
       'buckets',
     ])
@@ -55,6 +68,7 @@ describe('buildDowngradeDeletionSteps', () => {
       'Projects',
       'Members',
       'Domains',
+      'Addons',
       'Databases',
       'Buckets',
     ])

@@ -1254,4 +1254,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'for this project.': '(このプロジェクト)',
   'Some project resources could not be loaded. Reload and try again.':
     '一部のプロジェクトリソースを読み込めませんでした。再読み込みしてやり直してください。',
+  'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    '現在の請求サイクルの終了までは有効なままで、その後に削除されます。',
 }

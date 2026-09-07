@@ -35,6 +35,7 @@ export function buildDowngradeDeletionSteps(
     { id: 'projects', label: 'Projects', count: pending.projects.length },
     { id: 'members', label: 'Members', count: pending.memberships.length },
     { id: 'domains', label: 'Domains', count: pending.domains.length },
+    { id: 'addons', label: 'Addons', count: pending.addons.length },
     ...DOWNGRADE_RESOURCE_TYPES.map(({ id, label }) => ({
       id,
       label,

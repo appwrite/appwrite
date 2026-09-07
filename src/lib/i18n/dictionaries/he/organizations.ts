@@ -1476,4 +1476,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'for this project.': 'עבור הפרויקט הזה.',
   'Some project resources could not be loaded. Reload and try again.':
     'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
+  'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    'הם יישארו פעילים עד סוף מחזור החיוב הנוכחי, ואז יוסרו.',
 }

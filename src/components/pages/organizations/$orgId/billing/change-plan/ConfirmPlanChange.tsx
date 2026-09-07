@@ -78,6 +78,7 @@ export function ConfirmPlanChange({
     (deletions.projects.length > 0 ||
       deletions.memberships.length > 0 ||
       deletions.domains.length > 0 ||
+      deletions.addons.length > 0 ||
       deletions.projectResources.length > 0)
   const showBody = !!deletedOrganizationName || hasManifest
 
@@ -128,6 +129,7 @@ export function ConfirmPlanChange({
                   items={deletions.memberships}
                 />
                 <DeletionGroup title={t('Domains')} items={deletions.domains} />
+                <DeletionGroup title={t('Addons')} items={deletions.addons} />
                 {deletions.projectResources.map((project) => (
                   <div
                     key={project.projectId}
