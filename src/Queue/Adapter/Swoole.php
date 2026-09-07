@@ -5,7 +5,9 @@ namespace Utopia\Queue\Adapter;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\WaitGroup;
+use Swoole\Event;
 use Swoole\Process;
+use Swoole\Timer;
 use Utopia\DI\Container;
 use Utopia\Queue\Adapter;
 use Utopia\Queue\Consumer;
@@ -28,6 +30,9 @@ class Swoole extends Adapter
     /** @var Process[] */
     protected array $workers = [];
 
+    /** @var array<int, int> Process ID to worker ID. */
+    protected array $workerIds = [];
+
     /** @var callable[] */
     protected array $onWorkerStart = [];
 
@@ -48,21 +53,35 @@ class Swoole extends Adapter
 
     public function start(): self
     {
-        for ($i = 0; $i < $this->workerNum; $i++) {
-            $this->spawnWorker($i);
-        }
+        $this->stopped = false;
+        // Dispatch signals without a persistent coroutine: Swoole cannot fork
+        // a replacement while any coroutine is running in the supervisor.
+        $timer = Timer::tick(1000, static fn(): null => null);
+        Process::signal(SIGTERM, fn(): \Utopia\Queue\Adapter\Swoole => $this->stop());
+        Process::signal(SIGINT, fn(): \Utopia\Queue\Adapter\Swoole => $this->stop());
+        Process::signal(SIGCHLD, static fn(): null => null);
 
-        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
-
-        Coroutine\run(function (): void {
-            Process::signal(SIGTERM, fn(): \Utopia\Queue\Adapter\Swoole => $this->stop());
-            Process::signal(SIGINT, fn(): \Utopia\Queue\Adapter\Swoole => $this->stop());
-            Process::signal(SIGCHLD, fn() => $this->reap());
-
-            while (\count($this->workers) > 0) {
-                Coroutine::sleep(1);
+        try {
+            for ($i = 0; $i < $this->workerNum; $i++) {
+                $this->spawnWorker($i);
             }
-        });
+
+            while ($this->workers !== []) {
+                Event::dispatch();
+                $this->reap();
+            }
+        } finally {
+            $this->stop();
+            while ($this->workers !== []) {
+                Event::dispatch();
+                $this->reap();
+            }
+            Timer::clear($timer);
+            Process::signal(SIGTERM, null);
+            Process::signal(SIGINT, null);
+            Process::signal(SIGCHLD, null);
+            Event::wait();
+        }
 
         return $this;
     }
@@ -70,6 +89,9 @@ class Swoole extends Adapter
     protected function spawnWorker(int $workerId): void
     {
         $process = new Process(function () use ($workerId): void {
+            // Only the supervisor owns sibling processes.
+            $this->workers = [];
+            $this->workerIds = [];
             Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
 
             Coroutine\run(function () use ($workerId): void {
@@ -99,7 +121,11 @@ class Swoole extends Adapter
         }, false, 0, false);
 
         $pid = $process->start();
+        if ($pid === false) {
+            throw new \RuntimeException('Failed to start queue worker ' . $workerId);
+        }
         $this->workers[$pid] = $process;
+        $this->workerIds[$pid] = $workerId;
     }
 
     /**
@@ -466,18 +492,25 @@ class Swoole extends Adapter
 
     protected function reap(): void
     {
+        $exited = [];
         while (($ret = Process::wait(false)) !== false) {
-            unset($this->workers[$ret['pid']]);
+            $pid = $ret['pid'];
+            if (isset($this->workerIds[$pid])) {
+                $exited[] = $this->workerIds[$pid];
+                unset($this->workers[$pid], $this->workerIds[$pid]);
+            }
+        }
+
+        if (! $this->stopped) {
+            foreach ($exited as $workerId) {
+                $this->spawnWorker($workerId);
+            }
         }
     }
 
     public function stop(): self
     {
-        // Flip the flag only — same as main. Closing consumers here races with
-        // in-flight commit/reject after the handler that called stop(), and is
-        // unnecessary to end the loop (the next receive returns and isStopped
-        // is checked). SIGTERM still closes every consumer so a blocking
-        // receive unblocks on worker shutdown.
+        // Let in-flight handlers finish before their consumers are closed.
         $this->stopped = true;
 
         foreach (array_keys($this->workers) as $pid) {
