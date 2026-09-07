@@ -34,6 +34,19 @@ abstract class Adapter
     abstract public function count(): int;
 
     /**
+     * Release anyone currently blocked in {@see pop()}, without handing over a
+     * resource. They will find out for themselves whether the state they were
+     * waiting on has changed; this says only that it is worth looking again.
+     *
+     * Adapters with no way to block satisfy this by construction: a caller that
+     * never waits has nothing to release.
+     */
+    public function unblock(): static
+    {
+        return $this;
+    }
+
+    /**
      * Run $callback atomically with respect to other pool operations.
      *
      * Adapters without concurrency satisfy this by construction and may call
