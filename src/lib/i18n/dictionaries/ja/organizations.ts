@@ -1259,4 +1259,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
   'They stay active until the end of your current billing cycle, then they are removed.':
     '現在の請求サイクルの終了までは有効なままで、その後に削除されます。',
+  'What changes in the projects you are keeping': '残すプロジェクトで変わること',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
+  'Backups stop running': 'バックアップが停止します',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    '現在の請求サイクルの終了時に、これらのバックアップポリシーは無効化され、バックアップの作成を停止します。ポリシー自体は削除されませんが、選択したプランにはバックアップ画面がないため、確認も管理もできなくなります。',
+  'Dedicated databases are spun down': '専用データベースが停止されます',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
 }

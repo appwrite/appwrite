@@ -110,6 +110,8 @@ interface DowngradeValidationProps {
   planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeValidationHandle | null) => void
   onValidityChange?: (valid: boolean, reason?: string | null) => void
+  /** The projects that survive the downgrade, for the "what changes" warnings. */
+  onKeptProjectsChange?: (projects: Models.Project[]) => void
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
   deletedOrganizationLoading?: boolean
   expectDeletedOrganizationImpact?: boolean
@@ -125,6 +127,7 @@ export function DowngradeValidation({
   planChangeLimitsLoading = false,
   onRef,
   onValidityChange,
+  onKeptProjectsChange,
   deletedOrganizationImpact = null,
   deletedOrganizationLoading = false,
   expectDeletedOrganizationImpact = false,
@@ -390,6 +393,12 @@ export function DowngradeValidation({
     projectSelectionSettled && projectsToInspect.length > 0
   const projectResourceStepPending =
     !projectSelectionSettled && keptProjects.length > 0
+
+  const onKeptProjectsChangeRef = useRef(onKeptProjectsChange)
+  onKeptProjectsChangeRef.current = onKeptProjectsChange
+  useEffect(() => {
+    onKeptProjectsChangeRef.current?.(keptProjects)
+  }, [keptProjects])
   const membersAfterDeletes = membershipsTotal - confirmedMemberIds.size
   const domainsAfterDeletes = domainsTotal - confirmedDomainIds.size
 

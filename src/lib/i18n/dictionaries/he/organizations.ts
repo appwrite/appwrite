@@ -1481,4 +1481,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
   'They stay active until the end of your current billing cycle, then they are removed.':
     'הם יישארו פעילים עד סוף מחזור החיוב הנוכחי, ואז יוסרו.',
+  'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
+  'Backups stop running': 'הגיבויים מפסיקים לפעול',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'בסוף מחזור החיוב הנוכחי מדיניות הגיבוי הזו תכובה ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
+  'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
 }

@@ -52,6 +52,7 @@ import { ConfirmPlanChange } from './change-plan/ConfirmPlanChange'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { DowngradeAddonWarning } from './change-plan/DowngradeAddonWarning'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
+import { DowngradePlanLossWarning } from './change-plan/DowngradePlanLossWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
 import {
   fetchDeletedOrganizationImpact,
@@ -549,6 +550,10 @@ export function ChangePlanWizardFullscreen() {
     string | null
   >(null)
   const [freePlanDeleteConfirmed, setFreePlanDeleteConfirmed] = useState(false)
+  // Warnings must describe the projects that survive, not the ones being deleted.
+  const [keptProjects, setKeptProjects] = useState<Models.Project[] | null>(
+    null,
+  )
 
   const handleDowngradeValidationRef = useCallback(
     (ref: DowngradeValidationHandle | null) => {
@@ -1941,6 +1946,7 @@ export function ChangePlanWizardFullscreen() {
               }
               onRef={handleDowngradeValidationRef}
               onValidityChange={handleDowngradeValidationValid}
+              onKeptProjectsChange={setKeptProjects}
               deletedOrganizationImpact={effectiveDeletedOrganizationImpact}
               deletedOrganizationLoading={effectiveDeletedOrganizationLoading}
               expectDeletedOrganizationImpact={!!orgToDelete}
@@ -1966,6 +1972,14 @@ export function ChangePlanWizardFullscreen() {
           {orgId && orgToDelete?.$id !== orgId ? (
             <DowngradeUsageWarning
               organizationId={orgId}
+              targetPlan={targetBillingPlan}
+            />
+          ) : null}
+
+          {orgId && orgToDelete?.$id !== orgId ? (
+            <DowngradePlanLossWarning
+              organizationId={orgId}
+              projects={keptProjects ?? allProjects}
               targetPlan={targetBillingPlan}
             />
           ) : null}
