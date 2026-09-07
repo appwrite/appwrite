@@ -1,7 +1,8 @@
 /**
  * Screenshot mode - demo-friendly overlays for marketing captures.
  * Toggle by typing "smile" (see ScreenshotModeProvider).
- * Replaces the signed-in user's name and avatar, and organization names.
+ * Replaces the signed-in user's name, email, and avatar, organization names,
+ * and hides the DEV construction stripe.
  */
 
 import type { Models } from '@appwrite.io/console'
