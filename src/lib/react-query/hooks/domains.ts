@@ -172,17 +172,12 @@ export async function fetchDomainPrices(
 }
 
 /**
- * Registration quote from listPrices plus optional renewal quote (same period rules).
- * Renewal uses registrationType `renewal`; if the API returns an error, renewal fields are omitted.
+ * Quote from listPrices. Every priced domain carries its renewal price for the same period.
  */
-export type DomainPriceQuote = Models.DomainPrice & {
-  renewalPrice?: number
-  renewalPeriodYears?: number
-}
+export type DomainPriceQuote = Models.DomainPrice
 
 /**
- * Quotes for the domains that could be priced, and the domains whose registration
- * batch failed. A failed renewal batch only leaves the renewal fields empty.
+ * Quotes for the domains that could be priced, and the domains whose batch failed.
  */
 export type DomainPriceQuotesResult = {
   quotes: Map<string, DomainPriceQuote>
@@ -190,8 +185,7 @@ export type DomainPriceQuotesResult = {
 }
 
 /**
- * Fetches quotes for many domains in two requests per batch of 50: one for the
- * requested registration type and one for renewal.
+ * Fetches quotes for many domains in one request per batch of 50.
  */
 export async function fetchDomainPriceQuotes(
   domains: string[],
@@ -199,23 +193,8 @@ export async function fetchDomainPriceQuotes(
 ): Promise<DomainPriceQuotesResult> {
   if (domains.length === 0) return { quotes: new Map(), failed: [] }
 
-  const [registration, renewal] = await Promise.all([
-    fetchDomainPrices(domains, registrationType),
-    fetchDomainPrices(domains, DomainRegistrationType.Renewal).catch(
-      (): DomainPricesResult => ({ prices: new Map(), failed: [] }),
-    ),
-  ])
-
-  const quotes = new Map<string, DomainPriceQuote>()
-  registration.prices.forEach((price, domain) => {
-    const renewalPrice = renewal.prices.get(domain)
-    quotes.set(domain, {
-      ...price,
-      renewalPrice: renewalPrice?.price,
-      renewalPeriodYears: renewalPrice?.periodYears,
-    })
-  })
-  return { quotes, failed: registration.failed }
+  const { prices, failed } = await fetchDomainPrices(domains, registrationType)
+  return { quotes: prices, failed }
 }
 
 /**
@@ -955,10 +934,9 @@ export function useOrganizationDomains(
 }
 
 /**
- * Hook to fetch domain prices via batched getPrice calls
+ * Hook to fetch domain prices via batched listPrices calls
  *
- * Fires one getPrice request per TLD in parallel. Results stream in as each
- * completes for fast perceived performance.
+ * One request per batch of 50 domains; each result carries its renewal price.
  *
  * @param baseName - Base name (e.g. "myapp")
  * @param tlds - TLDs to fetch prices for
