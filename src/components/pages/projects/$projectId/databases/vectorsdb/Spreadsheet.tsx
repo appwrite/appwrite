@@ -86,6 +86,7 @@ import {
   createProjectTableRow,
   updateProjectTableRow,
   fetchProjectTableRow,
+  getRelationshipColumnKeys,
   useProjectTable,
   updateProjectTable,
   deleteProjectTable,
@@ -120,6 +121,12 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
+import {
+  isMultiRelationship,
+  relatedRowLabel,
+  toRelatedRowId,
+  toRelationshipPayloadValue,
+} from '@/lib/database-relationship-values'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
@@ -534,6 +541,7 @@ function defaultFormValueForColumn(col: unknown): FormFieldValue {
     return c.default as FormFieldValue
   }
   if (c.type === 'boolean') return false
+  if (c.type === 'relationship') return isMultiRelationship(col) ? [] : null
   if (c.type === 'vector' || c.array) return []
   if (c.type === 'object') return null
   return ''
@@ -582,14 +590,6 @@ function getRelationshipTableId(columnInfo?: unknown): string | undefined {
     | undefined
 
   return col?.relatedTableId || col?.relatedTable || undefined
-}
-
-function getRelationshipKind(columnInfo?: unknown): string | undefined {
-  const col = columnInfo as
-    | { relationType?: string; relationshipType?: string }
-    | undefined
-
-  return col?.relationshipType || col?.relationType || undefined
 }
 
 function getRelationshipRowLabel(
@@ -644,9 +644,7 @@ function RelationshipField({
   const projectId = params.projectId as string | undefined
   const databaseId = params.databaseId as string | undefined
   const relatedTableId = getRelationshipTableId(columnInfo)
-  const relationType = getRelationshipKind(columnInfo)
-  const isMulti =
-    relationType === 'oneToMany' || relationType === 'manyToMany'
+  const isMulti = isMultiRelationship(columnInfo)
 
   const { rows: relatedRows, isLoading: relatedRowsLoading } =
     useProjectTableRows(
@@ -670,21 +668,36 @@ function RelationshipField({
     100,
   )
 
-  const selectedValues = Array.isArray(currentValue)
+  // Values arrive as populated rows: ids drive the selection, the rows label
+  // entries that are outside the related table's first page.
+  const currentItems = Array.isArray(currentValue)
     ? currentValue
-        .map((value) => (typeof value === 'string' ? value : null))
-        .filter((value): value is string => Boolean(value))
-    : typeof currentValue === 'string' && currentValue.length > 0
-      ? [currentValue]
-      : []
+    : currentValue === null || currentValue === undefined || currentValue === ''
+      ? []
+      : [currentValue]
+  const selectedValues = currentItems
+    .map((item) => toRelatedRowId(item))
+    .filter((id): id is string => id !== null)
 
-  const options = relatedRows
-    .map((row) => row as Record<string, unknown>)
-    .filter((row) => typeof row.$id === 'string')
-    .map((row) => ({
-      value: row.$id as string,
+  const optionsById = new Map<string, { value: string; label: string }>()
+  for (const item of currentItems) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    if (typeof row.$id !== 'string') continue
+    optionsById.set(row.$id, {
+      value: row.$id,
       label: getRelationshipRowLabel(row, relatedColumns),
-    }))
+    })
+  }
+  for (const relatedRow of relatedRows) {
+    const row = relatedRow as Record<string, unknown>
+    if (typeof row.$id !== 'string') continue
+    optionsById.set(row.$id, {
+      value: row.$id,
+      label: getRelationshipRowLabel(row, relatedColumns),
+    })
+  }
+  const options = [...optionsById.values()]
 
   if (!relatedTableId) {
     return (
@@ -881,6 +894,7 @@ function RowEditDrawer({
   }, [dataTabFieldKeys, columns])
 
   const [formData, setFormData] = useState<Record<string, FormFieldValue>>({})
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const [embeddingGenerateIntents, setEmbeddingGenerateIntents] = useState<
     Record<string, EmbeddingGenerateIntent | null>
   >({})
@@ -979,6 +993,7 @@ function RowEditDrawer({
         initialData[colKey] = defaultFormValueForColumn(col)
       }
       setFormData(initialData)
+      setTouchedFields(new Set())
       fieldRefs.current = {}
       // Reset custom row ID when editing existing row
       setCustomRowId(undefined)
@@ -994,6 +1009,7 @@ function RowEditDrawer({
       initialData['$createdAt'] = new Date().toISOString()
       initialData['$updatedAt'] = new Date().toISOString()
       setFormData(initialData)
+      setTouchedFields(new Set())
       fieldRefs.current = {}
       // Reset custom row ID when creating new row
       setCustomRowId(undefined)
@@ -1098,11 +1114,22 @@ function RowEditDrawer({
     onOpenChange(newOpen)
   }
 
+  const markFieldTouched = (key: string) => {
+    setTouchedFields((prev) => {
+      if (prev.has(key)) return prev
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+  }
+
   const handleFieldChange = (key: string, value: FormFieldValue) => {
+    markFieldTouched(key)
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
 
   const handleNullToggle = (key: string, isNull: boolean) => {
+    markFieldTouched(key)
     if (isNull) {
       // Set to null explicitly
       setFormData((prev) => ({ ...prev, [key]: null }))
@@ -1451,6 +1478,25 @@ function RowEditDrawer({
           return
         }
         payload[fieldKey] = normalized
+        return
+      }
+
+      // An update is merged onto the stored row, so omitting an untouched
+      // relationship keeps it; sending null fails, or unlinks a to-one.
+      if (fieldType === 'relationship') {
+        const untouched = !touchedFields.has(fieldKey)
+        if (untouched && (!isCreateMode || !required)) {
+          delete payload[fieldKey]
+          return
+        }
+        if (required && isEmptyValue) {
+          missingRequiredFields.push(fieldKey)
+          return
+        }
+        payload[fieldKey] = toRelationshipPayloadValue(
+          currentValue,
+          columnInfo,
+        ) as string | unknown[] | null
         return
       }
 
@@ -3321,6 +3367,25 @@ export function RowsSpreadsheet({
     ? displayedFilterQueries
     : undefined
 
+  // Read before the rows queries, which need the relationship keys.
+  const { columns: apiColumns, isLoading: columnsLoading } =
+    useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
+
+  const relationshipKeys = useMemo(
+    () => getRelationshipColumnKeys(apiColumns),
+    [apiColumns],
+  )
+
+  const columnInfoByKey = useMemo(() => {
+    const map = new Map<string, unknown>()
+    for (const column of apiColumns) {
+      const col = column as { key?: unknown; $id?: unknown }
+      const key = typeof col.key === 'string' ? col.key : col.$id
+      if (typeof key === 'string') map.set(key, column)
+    }
+    return map
+  }, [apiColumns])
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -3337,6 +3402,8 @@ export function RowsSpreadsheet({
     sortOrder,
     sortBy,
     effectiveFilterQueries,
+    undefined,
+    relationshipKeys,
   )
 
   const {
@@ -3354,6 +3421,8 @@ export function RowsSpreadsheet({
     displayedSortOrder,
     displayedSortBy,
     effectiveDisplayedFilterQueries,
+    undefined,
+    relationshipKeys,
   )
 
   useEffect(() => {
@@ -3447,9 +3516,6 @@ export function RowsSpreadsheet({
       replace: true,
     })
   }, [urlDriven, openRowCreateFlag, navigate])
-
-  const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
 
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
@@ -3730,7 +3796,14 @@ export function RowsSpreadsheet({
         return
       }
 
-      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId).then(
+      fetchProjectTableRow(
+        projectId,
+        databaseId,
+        DB_KIND,
+        tableId,
+        rowId,
+        relationshipKeys,
+      ).then(
         (apiRow: unknown) => {
           if (!apiRow || typeof apiRow !== 'object') return
           const rowObj = apiRow as Record<string, unknown>
@@ -3772,7 +3845,7 @@ export function RowsSpreadsheet({
         },
       )
     },
-    [projectId, databaseId, tableId],
+    [projectId, databaseId, tableId, relationshipKeys],
   )
 
   useEffect(() => {
@@ -3958,6 +4031,11 @@ export function RowsSpreadsheet({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
+      // Posting populated rows back would rewrite them instead of linking.
+      for (const key of relationshipKeys) {
+        if (!Object.prototype.hasOwnProperty.call(data, key)) continue
+        data[key] = toRelationshipPayloadValue(data[key], columnInfoByKey.get(key))
+      }
       return createProjectTableRow(projectId, databaseId, DB_KIND, tableId, data)
     },
     onSuccess: async () => {
@@ -4081,13 +4159,43 @@ export function RowsSpreadsheet({
       | Record<string, unknown>
       | null
       | undefined,
+    columnInfo?: unknown,
   ) => {
+    if ((columnInfo as { type?: string } | undefined)?.type === 'relationship') {
+      return formatRelationshipCellValue(value, columnInfo)
+    }
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
       const stringValue = stringifyStructuredValue(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
+  }
+
+  /** Related rows come back populated; label them instead of dumping JSON. */
+  function formatRelationshipCellValue(
+    value: unknown,
+    columnInfo?: unknown,
+  ): { full: string; display: string; isNull: boolean } {
+    if (isMultiRelationship(columnInfo)) {
+      const items = Array.isArray(value) ? value : value == null ? [] : [value]
+      const labels = items.map((item) => relatedRowLabel(item))
+      const count = labels.length
+      return {
+        full: labels.join(', '),
+        display: `${count} ${count === 1 ? t('item') : t('items')}`,
+        isNull: false,
+      }
+    }
+    if (value === null || value === undefined || value === '') {
+      return { full: 'null', display: 'null', isNull: true }
+    }
+    const label = relatedRowLabel(value)
+    return {
+      full: label,
+      display: label.length > 80 ? `${label.slice(0, 77)}…` : label,
+      isNull: false,
+    }
   }
 
   // Detect RTL content
@@ -4907,6 +5015,7 @@ export function RowsSpreadsheet({
                           | Record<string, unknown>
                           | null
                           | undefined,
+                          columnInfoByKey.get(col),
                         )
                         // Only apply RTL detection to string values
                         const cellValue = row.data[col as keyof typeof row.data]

@@ -2700,11 +2700,53 @@ export function buildRowListOrderQueries(
   return [primary, secondary]
 }
 
-function buildRowListSelectQuery(
+/**
+ * Relationship column keys, sorted so the query key stays stable. Only
+ * `available` ones: asking for a pending relationship fails the request.
+ */
+export function getRelationshipColumnKeys(
+  columns: unknown[] | null | undefined,
+): string[] {
+  if (!columns?.length) return []
+  const keys = new Set<string>()
+  for (const column of columns) {
+    const col = column as
+      | { key?: unknown; $id?: unknown; type?: unknown; status?: unknown }
+      | undefined
+    if (col?.type !== 'relationship') continue
+    if (col.status !== undefined && col.status !== 'available') continue
+    const key = typeof col.key === 'string' ? col.key : col.$id
+    if (typeof key !== 'string') continue
+    const trimmed = key.trim()
+    if (!trimmed || trimmed.startsWith('$') || trimmed.length > 512) continue
+    keys.add(trimmed)
+  }
+  return [...keys].sort()
+}
+
+/**
+ * Nested selections (`key.*`), the only form that makes the API resolve a
+ * relationship: no select at all skips relationships, a flat select skips them
+ * too, and a bare relationship key is rejected outright.
+ */
+function buildRelationshipSelections(relationshipKeys: string[]): string[] {
+  return relationshipKeys.map((key) => `${key}.*`)
+}
+
+export function buildRowListSelectQuery(
   listSelectAttrKeys: string[] | null | undefined,
   sortBy: RowsSortBy,
+  relationshipKeys?: string[] | null,
 ): string | undefined {
-  if (!listSelectAttrKeys?.length) return undefined
+  const relKeys = relationshipKeys ?? []
+  const relKeySet = new Set(relKeys)
+
+  if (!listSelectAttrKeys?.length) {
+    // No saved layout, so the only reason to select is to resolve relationships.
+    if (!relKeys.length) return undefined
+    return Query.select(['*', ...buildRelationshipSelections(relKeys)])
+  }
+
   const fields = new Set<string>([
     '$id',
     '$createdAt',
@@ -2713,14 +2755,23 @@ function buildRowListSelectQuery(
     // Always include: used as the secondary orderBy tie-breaker.
     ROWS_LIST_ORDER_TIEBREAKER,
   ])
-  if (sortBy) fields.add(sortBy)
+  // Selecting a relationship bare 400s, and it is not sortable anyway.
+  if (sortBy && !relKeySet.has(sortBy)) fields.add(sortBy)
+  const visibleRelKeys: string[] = []
   for (const k of listSelectAttrKeys) {
     if (typeof k !== 'string') continue
     const t = k.trim()
     if (!t || t.startsWith('$') || t.length > 512) continue
+    if (relKeySet.has(t)) {
+      if (!visibleRelKeys.includes(t)) visibleRelKeys.push(t)
+      continue
+    }
     fields.add(t)
   }
-  return Query.select([...fields])
+  return Query.select([
+    ...fields,
+    ...buildRelationshipSelections(visibleRelKeys),
+  ])
 }
 
 /**
@@ -2738,6 +2789,7 @@ function buildRowListSelectQuery(
  * @param sortBy - Column to sort by
  * @param filterQueries - Optional filter query strings
  * @param listSelectAttrKeys - When set (tables/documents/vectors), adds `Query.select` so only these attributes plus system fields are returned
+ * @param relationshipKeys - Relationship column keys, requested as `key.*` so the API resolves them
  * @returns Paginated rows with total count
  */
 export async function fetchProjectTableRows(
@@ -2752,6 +2804,7 @@ export async function fetchProjectTableRows(
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
   listSelectAttrKeys?: string[] | null,
+  relationshipKeys?: string[] | null,
 ) {
   // listRows/listDocuments have no top-level search param; use filterQueries instead.
   void _search
@@ -2767,6 +2820,7 @@ export async function fetchProjectTableRows(
   const selectQuery = buildRowListSelectQuery(
     listSelectAttrKeys,
     sortBy,
+    relationshipKeys,
   )
   const queries = [
     ...(selectQuery ? [selectQuery] : []),
@@ -2816,6 +2870,7 @@ export async function fetchProjectTableRow(
   dbKind: DatabaseRouteKind,
   tableId: string,
   rowId: string,
+  relationshipKeys?: string[] | null,
 ) {
   if (!projectId || !databaseId || !tableId || !rowId) {
     return null
@@ -2823,12 +2878,19 @@ export async function fetchProjectTableRow(
   const projectSdk = sdk.forProject(projectId)
   const kind = resolveProjectDatabaseType(dbKind)
 
+  // A read with no queries skips relationships, and the row editor would then
+  // write those absent values back as null.
+  const queries = relationshipKeys?.length
+    ? [Query.select(['*', ...relationshipKeys.map((key) => `${key}.*`)])]
+    : undefined
+
   try {
     if (kind === DatabaseType.Documentsdb) {
       const doc = await projectSdk.documentsDB.getDocument({
         databaseId,
         collectionId: tableId,
         documentId: rowId,
+        ...(queries ? { queries } : {}),
       })
       return flattenDocumentForTableRow(doc as Record<string, unknown>)
     }
@@ -2837,6 +2899,7 @@ export async function fetchProjectTableRow(
         databaseId,
         collectionId: tableId,
         documentId: rowId,
+        ...(queries ? { queries } : {}),
       })
       return flattenDocumentForTableRow(doc as Record<string, unknown>)
     }
@@ -2844,6 +2907,7 @@ export async function fetchProjectTableRow(
       databaseId,
       tableId,
       rowId,
+      ...(queries ? { queries } : {}),
     })
   } catch {
     /* not found or no permission */
@@ -4393,12 +4457,16 @@ export function tableRowsQueryOptions(
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
   listSelectAttrKeys?: string[] | null,
+  relationshipKeys?: string[] | null,
 ) {
   const normalizedSearch = search?.trim() || undefined
   const listSelectKey =
     (listSelectAttrKeys?.length ?? 0) > 0
       ? [...listSelectAttrKeys!].sort().join('\u0001')
       : null
+  const relationshipKey = relationshipKeys?.length
+    ? [...relationshipKeys].sort().join('\u0001')
+    : null
   // Include tie-breaker in the key so caches from before secondary `$sequence`
   // ordering are not reused (and so loader/View stay aligned).
   const orderTieBreaker =
@@ -4420,6 +4488,7 @@ export function tableRowsQueryOptions(
       filterQueries,
       listSelectKey,
       dbKind,
+      relationshipKey,
     ],
     queryFn: () =>
       fetchProjectTableRows(
@@ -4434,6 +4503,7 @@ export function tableRowsQueryOptions(
         sortBy,
         filterQueries,
         listSelectAttrKeys,
+        relationshipKeys,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -5028,6 +5098,7 @@ export function useProjectTableRows(
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
   listSelectAttrKeys?: string[] | null,
+  relationshipKeys?: string[] | null,
 ) {
   const normalizedSearch = search?.trim() || undefined
 
@@ -5052,6 +5123,7 @@ export function useProjectTableRows(
       sortBy,
       filterQueries,
       listSelectAttrKeys,
+      relationshipKeys,
     ),
   )
 
