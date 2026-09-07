@@ -931,6 +931,9 @@ export function DowngradeResourceValidation({
                       const limit = activeProjectLimits?.[id] ?? null
                       const overLimit = limit !== null && remaining > limit
                       const isActive = activeResourceType === id
+                      // A failed list call also reads 0; showing it as a count
+                      // would claim the project is empty.
+                      const failed = activeResources[id].failed
 
                       return (
                         <button
@@ -949,7 +952,14 @@ export function DowngradeResourceValidation({
                           <span className="text-[13px] font-medium leading-normal text-foreground">
                             {t(label)}
                           </span>
-                          {overLimit ? (
+                          {failed ? (
+                            <Badge
+                              variant="warning"
+                              className="text-[10px] shrink-0"
+                            >
+                              {t('Failed')}
+                            </Badge>
+                          ) : overLimit ? (
                             <Badge
                               variant="error"
                               className="text-[10px] shrink-0"
