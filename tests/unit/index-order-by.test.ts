@@ -1,10 +1,5 @@
-/**
- * Index column order sent to the API.
- *
- * The index form works in `'ASC'`/`'DESC'` and the API in `'asc'`/`'desc'`. A
- * case-sensitive comparison against `'asc'` never matched, so every index the
- * console created came out descending no matter what was picked.
- */
+// Regression: comparing the form's `'ASC'` against lowercase `'asc'` never
+// matched, so every index the console created came out descending.
 
 import { describe, expect, test } from 'bun:test'
 import { OrderBy } from '@appwrite.io/console'

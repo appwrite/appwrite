@@ -3930,22 +3930,7 @@ export async function deleteProjectTableColumn(
   })
 }
 
-/**
- * Create an index in a table
- *
- * @param projectId - The project ID
- * @param databaseId - The database ID
- * @param tableId - The table ID
- * @param indexData - The index data to create
- */
-/**
- * Index column orders in the shape the API takes.
- *
- * The index form works in `'ASC'`/`'DESC'`, the API in `'asc'`/`'desc'`, so the
- * comparison has to be case-insensitive - matching only lowercase `'asc'` made
- * every index the console created descending. Anything unset becomes ascending:
- * that is the form's own default, and the API rejects a null inside `orders`.
- */
+/** Index column orders as the API takes them; the form works in `'ASC'`/`'DESC'`. */
 export function toIndexOrderBy(
   orders: Array<string | null | undefined> | undefined,
 ): OrderBy[] | undefined {
@@ -3954,6 +3939,14 @@ export function toIndexOrderBy(
   )
 }
 
+/**
+ * Create an index in a table
+ *
+ * @param projectId - The project ID
+ * @param databaseId - The database ID
+ * @param tableId - The table ID
+ * @param indexData - The index data to create
+ */
 export async function createProjectTableIndex(
   projectId: string,
   databaseId: string,
