@@ -3,6 +3,7 @@ layout: changelog
 title: "New SDK versions released"
 date: 2024-10-03
 cover:
+tags: integrations, auth, sdk
 ---
 
 We've released version [16.0.2](https://github.com/appwrite/sdk-for-web/releases/tag/16.0.2) of the Web SDK to fix bugs with creating an OAuth2 session and cookies missing from requests.

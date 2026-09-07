@@ -29,7 +29,7 @@ Use fictional ranges (such as North American `555` numbers) to avoid collision w
 
 # Manage with a Server SDK {% #manage-with-sdk %}
 
-The Project service exposes endpoints to list, create, get, update, and delete mock phones. All endpoints require an API key with the appropriate scope or a Console session.
+The Project service exposes endpoints to list, create, get, update, and delete mock phones. All endpoints require an API key with the appropriate scope.
 
 {% info title="Required scopes" %}
 Reading mock phones requires the `mocks.read` scope. Creating, updating, or deleting requires `mocks.write`.

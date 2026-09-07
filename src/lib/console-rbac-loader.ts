@@ -5,7 +5,7 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { getActiveProfileFeatures, isCloudProfile } from '@/lib/console-profiles'
 import {
   canShowDatabaseSecuritySettings,
   canShowTableSecuritySettings,
@@ -18,6 +18,7 @@ import {
   canShowTopicSettingsTab,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
+  canShowOrgApiKeysSettings,
   canShowGetStartedSection,
   canCreateDatabase,
   canSeeActivityNav,
@@ -146,9 +147,8 @@ export async function canAccessProjectOAuth2Server(
   projectId: string,
 ): Promise<boolean> {
   const access = await getProjectAccess(queryClient, projectId)
-  const features = getActiveProfileFeatures()
-  if (!features.oauth2Server) return false
   if (!access) return true
+  const features = getActiveProfileFeatures()
   return canShowProjectOAuth2Server(access, features)
 }
 
@@ -211,10 +211,22 @@ export async function canAccessOrganizationDomains(
   queryClient: QueryClient,
   organizationId: string,
 ): Promise<boolean> {
+  if (!isCloudProfile()) return false
   const access = await getOrganizationAccess(queryClient, organizationId)
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canAccessOrgDomains(access, features)
+}
+
+/** Organization settings → Partners (org API keys). */
+export async function canAccessOrganizationApiKeys(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<boolean> {
+  const access = await getOrganizationAccess(queryClient, organizationId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowOrgApiKeysSettings(access, features)
 }
 
 /** Onboarding checklist (same audience as sidebar Get started). */

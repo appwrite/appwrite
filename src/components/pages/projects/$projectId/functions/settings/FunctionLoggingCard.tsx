@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -23,11 +23,7 @@ export function FunctionLoggingCard({
 }: FunctionLoggingCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [logging, setLogging] = useState(true)
-
-  useEffect(() => {
-    setLogging(func.logging ?? true)
-  }, [func])
+  const [logging, setLogging] = useSyncStateFromServer(func.logging ?? true)
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {

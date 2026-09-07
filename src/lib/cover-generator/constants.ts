@@ -21,8 +21,10 @@ export const COVER_SIZE_PRESETS = [
   { id: 'og', label: 'Open Graph', width: 1200, height: 630 },
   { id: 'twitter', label: 'Twitter / X', width: 1600, height: 900 },
   { id: 'square', label: 'Square', width: 1080, height: 1080 },
+  { id: 'instagram-portrait', label: 'Instagram 4:5', width: 1080, height: 1350 },
   { id: 'story', label: 'Story', width: 1080, height: 1920 },
   { id: 'twitter-header', label: 'Twitter header', width: 1500, height: 500 },
+  { id: 'newsletter', label: 'Newsletter', width: 610, height: 243 },
 ] as const
 
 export type CoverSizePresetId = (typeof COVER_SIZE_PRESETS)[number]['id']

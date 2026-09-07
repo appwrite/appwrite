@@ -14,7 +14,6 @@ import {
 } from '@/lib/usage/usage-chart-filters'
 import {
   getStableUsageChartDateRange,
-  isRollingUsageDateRangePresetId,
   normalizeUsageDateRangeSelection,
   resetStableUsageChartDateRange,
 } from '@/lib/usage/usage-date-range'
@@ -93,10 +92,8 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
   ])
 
   const refreshRollingDateRange = useCallback(() => {
-    if (dateRangePresetId && isRollingUsageDateRangePresetId(dateRangePresetId)) {
-      setRollingRangeNonce((nonce) => nonce + 1)
-    }
-  }, [dateRangePresetId])
+    setRollingRangeNonce((nonce) => nonce + 1)
+  }, [])
 
   const updateMutation = useMutation({
     mutationFn: async (next: {

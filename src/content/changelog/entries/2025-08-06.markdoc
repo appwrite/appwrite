@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite Cloud is now Generally Available"
 date: 2025-08-06
 cover: /images/changelog/2025-08-06.avif
+tags: infrastructure
 ---
 
 Appwrite Cloud was designed to make it easier to build with Appwrite because we know self-hosting is not for everyone.

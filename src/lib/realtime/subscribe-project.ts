@@ -5,8 +5,8 @@
  * via the shared console hub, and the project's regional API host via
  * {@link ./regional-console-hub.ts} when that URL differs from the base. Events from
  * either socket are handled the same way. Filters by current project where needed and
- * invalidates React Query cache. For migration updates we merge into cache instead of
- * invalidating on every tick.
+ * invalidates React Query cache. Migration and dedicated database updates merge into
+ * cache instead of invalidating on every tick.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
@@ -15,70 +15,15 @@ import { refetchProjectTableRelatedQueries } from '@/lib/react-query/hooks/datab
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
 import { registerConsoleRealtimeListener } from './console-hub'
 import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
-
-/** Realtime payload may have statusCounters as JSON string; normalize to object */
-function normalizeMigrationPayload(
-  payload: Record<string, unknown>,
-): Record<string, unknown> {
-  const out = { ...payload }
-  if (typeof out.statusCounters === 'string') {
-    try {
-      out.statusCounters = JSON.parse(out.statusCounters as string) as object
-    } catch {
-      // leave as-is
-    }
-  }
-  if (typeof out.resourceData === 'string') {
-    try {
-      out.resourceData = JSON.parse(out.resourceData as string) as object
-    } catch {
-      // leave as-is
-    }
-  }
-  return out
-}
-
-/**
- * Merge a migration realtime payload into all migration list caches for this project.
- * Avoids refetching on every progress event.
- */
-function mergeMigrationPayloadIntoCache(
-  queryClient: QueryClient,
-  projectId: string,
-  payload: Record<string, unknown>,
-): void {
-  const id = payload.$id as string | undefined
-  if (!id) return
-
-  const normalized = normalizeMigrationPayload(payload)
-
-  queryClient.setQueriesData(
-    { queryKey: ['migrations', 'project', projectId], exact: false },
-    (old: unknown) => {
-      const data = old as
-        | { migrations?: Array<Record<string, unknown>> }
-        | undefined
-      if (!data?.migrations || !Array.isArray(data.migrations)) return old
-      const next = data.migrations.map((m) =>
-        m.$id === id ? { ...m, ...normalized } : m,
-      )
-      return { ...data, migrations: next }
-    },
-  )
-
-  // Single-migration caches from migrations.get (e.g. backup restore progress)
-  queryClient.setQueriesData(
-    { queryKey: ['migration', 'project', projectId], exact: false },
-    (old: unknown) => {
-      if (!old || typeof old !== 'object') return old
-      const migration = old as Record<string, unknown>
-      if (migration.$id !== id) return old
-      return { ...migration, ...normalized }
-    },
-  )
-}
-
-type DeploymentResourceType = 'site' | 'function'
+import {
+  handleDedicatedDatabaseRealtimeEvents,
+  isDedicatedDatabaseRealtimeSignal,
+} from './dedicated-database-cache'
+import { mergeMigrationPayloadIntoCache } from './migration-cache'
+import {
+  resolveDeploymentResourceId,
+  type DeploymentResourceType,
+} from './deployment-events'
 
 /**
  * Merge a deployment realtime payload into list and detail caches.
@@ -175,19 +120,6 @@ function isDeploymentCreateEvent(events: string[]): boolean {
   )
 }
 
-function extractDeploymentResourceIdFromEvents(
-  events: string[],
-  resourceType: DeploymentResourceType,
-): string | undefined {
-  const prefix = resourceType === 'site' ? 'sites.' : 'functions.'
-  for (const event of events) {
-    const match = event.match(new RegExp(`^${prefix}([^.]+)\\.deployments\\.`))
-    const id = match?.[1]
-    if (id && id !== '*') return id
-  }
-  return undefined
-}
-
 function handleDeploymentRealtimeEvent(
   queryClient: QueryClient,
   projectId: string,
@@ -198,9 +130,11 @@ function handleDeploymentRealtimeEvent(
 ): void {
   const isCreate = isDeploymentCreateEvent(events)
   const isDelete = isDeploymentDeleteEvent(events)
-  const resourceId =
-    (payload?.resourceId as string | undefined) ??
-    extractDeploymentResourceIdFromEvents(events, resourceType)
+  const resourceId = resolveDeploymentResourceId(
+    events,
+    resourceType,
+    payload,
+  )
   const canMerge =
     payload != null &&
     typeof payload.$id === 'string' &&
@@ -431,6 +365,16 @@ function handleRealtimeEvent(
     })
   }
 
+  // Dedicated database lifecycle, backups, restorations, extensions, branches, policies
+  if (isDedicatedDatabaseRealtimeSignal(events)) {
+    handleDedicatedDatabaseRealtimeEvents(
+      queryClient,
+      projectId,
+      events,
+      payload,
+    )
+  }
+
   // Migration events: always process (merge by $id only updates if in current project's list)
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
     if (
@@ -504,22 +448,28 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.ARCHIVES_ANY)) {
-    queryClient.invalidateQueries({
-      queryKey: ['backup-archives', 'project', projectId],
-    })
+    if (!isDedicatedDatabaseRealtimeSignal(events)) {
+      queryClient.invalidateQueries({
+        queryKey: ['backup-archives', 'project', projectId],
+      })
+    }
   }
   if (hasEvent(events, REALTIME_EVENTS.RESTORATIONS_ANY)) {
-    queryClient.invalidateQueries({
-      queryKey: ['restorations', 'project', projectId],
-    })
+    if (!isDedicatedDatabaseRealtimeSignal(events)) {
+      queryClient.invalidateQueries({
+        queryKey: ['restorations', 'project', projectId],
+      })
+    }
   }
   if (hasEvent(events, REALTIME_EVENTS.POLICIES_ANY)) {
-    queryClient.invalidateQueries({
-      queryKey: ['backup-policies', 'project', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['dedicated-backup-policies', 'project', projectId],
-    })
+    if (!isDedicatedDatabaseRealtimeSignal(events)) {
+      queryClient.invalidateQueries({
+        queryKey: ['backup-policies', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['dedicated-backup-policies', 'project', projectId],
+      })
+    }
   }
 
   if (events.includes(`projects.${projectId}.ping`)) {

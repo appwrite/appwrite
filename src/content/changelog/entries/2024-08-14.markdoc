@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.5.10 is released
 date: 2024-08-14
 cover: /images/changelog/2024-08-14.avif
+tags: databases, storage, functions, performance
 ---
 
 Appwrite 1.5.10 is now available. See below for all the improvements and fixes from 1.5.8 to 1.5.10.

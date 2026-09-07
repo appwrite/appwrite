@@ -2,6 +2,7 @@
 layout: changelog
 title: "JavaScript SDKs now use object arguments"
 date: 2025-09-02
+tags: integrations, storage, sdk
 ---
 
 We've updated the Appwrite JavaScript SDKs to support **object-based arguments** instead of positional ones.

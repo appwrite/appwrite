@@ -9,7 +9,6 @@ dist
 coverage
 test-results
 playwright-report
-remotion
 e2e/.auth
 .env
 .env.*

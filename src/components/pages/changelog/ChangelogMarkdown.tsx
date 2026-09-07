@@ -32,6 +32,7 @@ import { Tabs, TabsItem } from '@/components/pages/docs/markdoc/Tabs'
 import { MarkdocYoutube } from '@/components/pages/docs/markdoc/Youtube'
 import { RateLimitStrategyAnimation } from '@/components/pages/docs/markdoc/RateLimitStrategyAnimation'
 import { IndexLookupAnimation } from '@/components/pages/docs/markdoc/IndexLookupAnimation'
+import { HyperloopRaceAnimation } from '@/components/pages/docs/markdoc/HyperloopRaceAnimation'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
 import {
@@ -101,6 +102,7 @@ const markdocComponents = {
   Youtube: MarkdocYoutube,
   RateLimitStrategyAnimation,
   IndexLookupAnimation,
+  HyperloopRaceAnimation,
 }
 
 type ChangelogMarkdownProps = {

@@ -312,7 +312,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
@@ -334,12 +334,12 @@ export function ConsoleSidebar({
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
-            return features.firewall && canSeeProjectNavItem(access, features, item.id)
+            return isCloud && canSeeProjectNavItem(access, features, item.id)
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features, access, sidebarCopy])
+  }, [projectId, isDebugModeOpen, features, access, sidebarCopy, isCloud])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).

@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Atomic numeric operations: Safe, server-side increments and decrements"
 date: 2025-08-04
 cover: /images/changelog/2025-08-04.avif
+tags: databases
 ---
 
 Introducing: Atomic numeric operations

@@ -4,6 +4,10 @@ title: Provisioning
 description: End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.
 ---
 
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. It predates the Partners key and still describes credentials and flows that do not match the current Organization API. Relink it once the flow is rewritten against a Partners key.
+{% /info %}
+
 This guide walks through provisioning a dedicated Appwrite project when a customer signs up for your platform.
 
 # Flow overview {% #flow-overview %}
@@ -18,10 +22,9 @@ This guide walks through provisioning a dedicated Appwrite project when a custom
 
 {% multicode %}
 ```server-nodejs
-const project = await projects.create({
+const project = await organization.createProject({
     projectId: ID.unique(),
     name: `${customer.name} workspace`,
-    teamId: platformOrgId,
     region: customer.preferredRegion ?? 'fra',
 });
 
@@ -34,7 +37,7 @@ await db.customers.update(customer.id, {
 
 # Step 2: Create a project API key {% #step-2-create-a-project-api-key %}
 
-Create a key with scopes for the services your platform manages. Store the secret in your secrets manager keyed by customer ID.
+Create a key with scopes for the services your platform manages. Store the secret in your secrets manager keyed by customer ID. A Partners key cannot mint project API keys, so create this key in the Console.
 
 # Step 3: Bootstrap resources {% #step-3-bootstrap-resources %}
 
@@ -46,6 +49,6 @@ Your customer-facing UI calls **your** API. Your backend uses the stored project
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/projects/create" %}
-Create projects
+{% arrow_link href="/docs/partners/project/provisioning" %}
+Provision a project
 {% /arrow_link %}

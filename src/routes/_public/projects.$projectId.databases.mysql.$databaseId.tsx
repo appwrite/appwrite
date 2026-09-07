@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   mysqlDatabaseQueryOptions,
   projectQueryOptions,
@@ -23,7 +23,7 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    if (!getActiveProfileFeatures().nativeDbsMySQL) {
+    if (!isCloudProfile()) {
       return
     }
 
@@ -78,7 +78,7 @@ export const Route = createFileRoute(
 function MysqlDatabaseLayout() {
   const { projectId, databaseId } = Route.useParams()
 
-  if (!getActiveProfileFeatures().nativeDbsMySQL) {
+  if (!isCloudProfile()) {
     return <DatabaseTypeUnavailable projectId={projectId} />
   }
 

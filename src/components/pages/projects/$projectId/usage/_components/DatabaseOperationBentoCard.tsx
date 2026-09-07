@@ -66,6 +66,8 @@ type DatabaseOperationBentoCardProps = {
   docsHref?: string
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
+  emptyMessage?: string
 }
 
 function breakdownDrawerTitle(
@@ -106,6 +108,8 @@ export function DatabaseOperationBentoCard({
   docsHref,
   dateRange,
   chartInterval,
+  onDateRangeChange,
+  emptyMessage,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
   const breakdownHeadingId = useId()
@@ -140,6 +144,8 @@ export function DatabaseOperationBentoCard({
         docsHref={docsHref}
         dateRange={dateRange}
         chartInterval={chartInterval}
+        onDateRangeChange={onDateRangeChange}
+        emptyMessage={emptyMessage}
       />
 
       {showBreakdown ? (

@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite Sites now live for everyone."
 date: 2025-07-24
 cover: /images/changelog/2025-07-24.avif
+tags: integrations, sites, firewall, performance
 ---
 
 We’re excited to announce that Appwrite Sites is now available for everyone to use.

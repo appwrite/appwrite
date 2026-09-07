@@ -17,6 +17,8 @@ import {
   type ProjectBandwidthOverview,
 } from '@/lib/usage/bandwidth-events'
 import { fetchProjectFirewallTrafficOverview } from '@/lib/usage/firewall-events'
+import { resolveFirewallUsageResourceScope } from '@/lib/firewall/usage'
+import type { FirewallResourceType } from '@/lib/firewall/conditions'
 import {
   fetchProjectExecutionsOverview,
   fetchProjectFunctionExecutionsOverview,
@@ -51,6 +53,7 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   USAGE_BREAKDOWN_DRAWER_LIMIT,
 } from '@/lib/usage/breakdown-limits'
+import { PREMIUM_GEO_REQUEST_DIMENSIONS } from '@/lib/usage/usage-filter-configs'
 import { partitionUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import {
   fetchProjectImageTransformationsUsageOverview,
@@ -142,15 +145,21 @@ import {
 } from '@/lib/usage/usage-filter-queries'
 import { useUsageSectionFilterQueries } from '@/hooks/use-usage-section-filter-queries'
 
-function normalizeDateRangeKey(dateRange: DateRange | undefined): {
+function normalizeDateRangeKey(
+  dateRange: DateRange | undefined,
+  dateRangePresetId?: string | null,
+): {
   rangeKeyPart: string
   getBounds: () => { from: Date; to: Date }
   refetchOnMountRolling: boolean
 } {
-  const rangeKeyPart = getUsageChartQueryRangeKeyPart(dateRange)
+  const rangeKeyPart = getUsageChartQueryRangeKeyPart(
+    dateRange,
+    dateRangePresetId,
+  )
   return {
     rangeKeyPart,
-    getBounds: () => resolveUsageChartFetchBounds(dateRange),
+    getBounds: () => resolveUsageChartFetchBounds(dateRange, dateRangePresetId),
     refetchOnMountRolling: shouldRefetchUsageChartOnMount(rangeKeyPart),
   }
 }
@@ -319,14 +328,41 @@ export function bandwidthOverviewQueryOptions(
   })
 }
 
+function normalizeFirewallTrafficResource(
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
+): {
+  resourceType: FirewallResourceType
+  resourceId: string | undefined
+  usageResourceType: string
+} {
+  const scope = resolveFirewallUsageResourceScope(resourceType, resourceId)
+  if (resourceType === 'api' || !resourceId?.trim()) {
+    return {
+      resourceType: 'api',
+      resourceId: undefined,
+      usageResourceType: scope.usageResourceType,
+    }
+  }
+  return {
+    resourceType,
+    resourceId: scope.resourceId!,
+    usageResourceType: scope.usageResourceType,
+  }
+}
+
 export function firewallTrafficOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
+  dateRangePresetId?: string | null,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
-    normalizeDateRangeKey(dateRange)
+    normalizeDateRangeKey(dateRange, dateRangePresetId)
+  const resource = normalizeFirewallTrafficResource(resourceType, resourceId)
 
   return queryOptions({
     queryKey: [
@@ -335,6 +371,8 @@ export function firewallTrafficOverviewQueryOptions(
       'traffic',
       'project',
       projectId,
+      resource.resourceType,
+      resource.resourceId ?? null,
       rangeKeyPart,
       interval,
       logRetentionHours ?? null,
@@ -345,6 +383,8 @@ export function firewallTrafficOverviewQueryOptions(
         getBounds(),
         interval,
         logRetentionHours,
+        resource.resourceId,
+        resource.usageResourceType,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -361,6 +401,9 @@ export function useProjectFirewallTrafficOverview(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   logRetentionHours?: number,
+  resourceType: FirewallResourceType = 'api',
+  resourceId?: string,
+  dateRangePresetId?: string | null,
 ) {
   return useQuery({
     ...firewallTrafficOverviewQueryOptions(
@@ -368,6 +411,9 @@ export function useProjectFirewallTrafficOverview(
       dateRange,
       interval,
       logRetentionHours,
+      resourceType,
+      resourceId,
+      dateRangePresetId,
     ),
     enabled: !!projectId,
   })
@@ -572,54 +618,6 @@ export function useFunctionExecutionsForFunctionChart(
   })
 }
 
-export function siteExecutionsForSiteQueryOptions(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: [
-      'usage-events',
-      'site-executions',
-      'chart',
-      'project',
-      projectId,
-      'site',
-      siteId,
-      rangeKeyPart,
-      interval,
-    ],
-    queryFn: () =>
-      fetchProjectSiteExecutionsOverview(projectId!, getBounds(), interval, {
-        resourceId: siteId!,
-        resourceType: 'site',
-        includeBreakdown: false,
-      }),
-    enabled: !!projectId && !!siteId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForResource(
-      projectId,
-      'site',
-      siteId,
-    ),
-    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function useSiteExecutionsForSite(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  return useQuery(
-    siteExecutionsForSiteQueryOptions(projectId, siteId, dateRange, interval),
-  )
-}
-
 export function siteExecutionsOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -808,54 +806,6 @@ export function useFunctionGbHoursForFunctionChart(
     ),
     enabled: !!projectId && !!functionId && enabled,
   })
-}
-
-export function siteGbHoursForSiteQueryOptions(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { rangeKeyPart, getBounds } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: [
-      'usage-events',
-      'site-gb-hours',
-      'chart',
-      'project',
-      projectId,
-      'site',
-      siteId,
-      rangeKeyPart,
-      interval,
-    ],
-    queryFn: () =>
-      fetchProjectSiteGbHoursOverview(projectId!, getBounds(), interval, {
-        resourceId: siteId!,
-        resourceType: 'site',
-        includeBreakdown: false,
-      }),
-    enabled: !!projectId && !!siteId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForResource(
-      projectId,
-      'site',
-      siteId,
-    ),
-    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function useSiteGbHoursForSite(
-  projectId: string | null | undefined,
-  siteId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  return useQuery(
-    siteGbHoursForSiteQueryOptions(projectId, siteId, dateRange, interval),
-  )
 }
 
 export function siteGbHoursOverviewQueryOptions(
@@ -1957,6 +1907,9 @@ export type RequestsBreakdownQueryEntry = {
   items: UsageBreakdownItem[]
 }
 
+/** Re-exported for firewall/usage breakdown gating (self-hosted vs premium geo). */
+export { PREMIUM_GEO_REQUEST_DIMENSIONS }
+
 /** Fetches all request breakdown dimensions in parallel. */
 export function useProjectRequestsBreakdowns(
   projectId: string | null | undefined,
@@ -1968,7 +1921,8 @@ export function useProjectRequestsBreakdowns(
   const sections = useMemo(
     () =>
       REQUESTS_BREAKDOWN_SECTIONS.filter(
-        (section) => allowCity || section.dimension !== 'city',
+        (section) =>
+          allowCity || !PREMIUM_GEO_REQUEST_DIMENSIONS.has(section.dimension),
       ),
     [allowCity],
   )
@@ -2175,7 +2129,8 @@ export function useProjectBandwidthBreakdowns(
   const sections = useMemo(
     () =>
       BANDWIDTH_BREAKDOWN_SECTIONS.filter(
-        (section) => allowCity || section.dimension !== 'city',
+        (section) =>
+          allowCity || !PREMIUM_GEO_REQUEST_DIMENSIONS.has(section.dimension),
       ),
     [allowCity],
   )
@@ -3010,6 +2965,7 @@ function realtimeConnectionsChartQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -3046,7 +3002,12 @@ function realtimeMessagesChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeMessagesOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3082,7 +3043,12 @@ function realtimeBandwidthChartQueryOptions(
       filterQueries,
     ),
     queryFn: () =>
-      fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
+      fetchProjectRealtimeBandwidthOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -3099,7 +3065,8 @@ export function useProjectRealtimeConnectionsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries()
+  const { filterQueries, logRetentionHours } =
+    useUsageSectionFilterQueries('gauges')
 
   return useQuery({
     ...realtimeConnectionsChartQueryOptions(
@@ -3107,6 +3074,7 @@ export function useProjectRealtimeConnectionsChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3126,6 +3094,7 @@ export function useProjectRealtimeMessagesChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })
@@ -3145,6 +3114,7 @@ export function useProjectRealtimeBandwidthChart(
       dateRange,
       interval,
       filterQueries,
+      logRetentionHours,
     ),
     enabled: !!projectId && enabled,
   })

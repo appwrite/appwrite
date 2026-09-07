@@ -20,7 +20,6 @@ export type AppwriteOpenApiExtension = {
   method: string
   group?: string
   weight?: number
-  cookies?: boolean
   type?: string
   demo?: string
   'rate-limit'?: number
@@ -30,7 +29,6 @@ export type AppwriteOpenApiExtension = {
   platforms?: Array<'console' | 'client' | 'server'>
   packaging?: boolean
   public?: boolean
-  edit?: string
   auth?: Record<string, string[]>
   methods?: AppwriteAdditionalMethod[]
   deprecated?: {

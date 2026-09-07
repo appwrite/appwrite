@@ -2,6 +2,7 @@
 layout: changelog
 title: "Usage metrics now include OPTIONS requests and 4XX responses"
 date: 2025-02-26
+tags: infrastructure
 ---
 
 We've improved our usage metrics system to now properly account for OPTIONS requests and 4XX responses. These request types were wrongly omitted previously.

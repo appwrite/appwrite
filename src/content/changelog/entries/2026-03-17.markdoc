@@ -3,6 +3,7 @@ layout: changelog
 title: "Introducing Appwrite Arena"
 date: 2026-03-17
 cover: /images/blog/announcing-appwrite-arena/cover.avif
+tags: sdk
 ---
 
 Appwrite Arena is now live: an open-source benchmark for evaluating how well AI models understand and generate Appwrite code.

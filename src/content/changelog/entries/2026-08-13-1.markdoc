@@ -2,6 +2,7 @@
 layout: changelog
 title: "Better tool search and clearer schemas in the Appwrite MCP server"
 date: 2026-08-17
+tags: mcp
 ---
 
 The [**Appwrite MCP server**](/docs/tooling/ai/mcp-servers/api) has a set of improvements. These improvements help AI tools find the correct Appwrite tool quickly. They also help AI tools call each tool correctly on the first try.

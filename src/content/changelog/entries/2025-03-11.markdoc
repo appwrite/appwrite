@@ -2,6 +2,7 @@
 layout: changelog
 title: "Introducing Appwrite MCP: A new way to manage your Appwrite project with AI"
 date: 2025-03-11
+tags: mcp
 ---
 
 Appwrite now supports AI-driven project interactions with the introduction of **Appwrite MCP**. This server enables AI assistants to query databases and trigger actions within Appwrite projects.

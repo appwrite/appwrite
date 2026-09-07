@@ -3323,7 +3323,7 @@ export function mergeApiExplorerExpandedProductGroupIntoPrefs(
 export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 
 // ---------------------------------------------------------------------------
-// Build completion browser notifications (account prefs)
+// Browser alerts (account prefs) — master toggle for desktop notifications
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */
@@ -3539,6 +3539,28 @@ export function mergeUsageChartFiltersIntoPrefs(
     ...prefs,
     [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]: JSON.stringify(serializedDateRange),
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+/** Full key: `console.firewall.trafficLive` - live traffic chart polling when true. */
+export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE = 'console.firewall.trafficLive'
+
+export function parseFirewallTrafficLiveUpdatesEnabled(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]) ??
+    true
+  )
+}
+
+export function mergeFirewallTrafficLiveUpdatesIntoPrefs(
+  prefs: UserPrefs,
+  enabled: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]: enabled,
   }
 }
 

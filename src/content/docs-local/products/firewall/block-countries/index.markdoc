@@ -8,7 +8,7 @@ readtime: 4
 
 A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region.
 
-Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. City and state conditions require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions).
+Country conditions use the geo location of the client IP address, and work on every plan. Finer location attributes such as city need the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db).
 
 # Create the deny rule {% #create-the-deny-rule %}
 
@@ -26,28 +26,28 @@ Country conditions use the geo location of the client IP address. Country and co
 5. Under conditions, set the attribute to **Country**.
 6. Keep the operator set to **Equals**.
 7. Select the country in the country picker.
-8. Set **Action** to **Deny**.
+8. Under **Then**, choose **Deny**.
 9. Keep **Priority** at `100`.
 10. Review the impact preview, then click **Create rule**.
 
 Denied clients receive a `403` response. The denied requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Denied** series.
 
-To block more than one country, create one deny rule for each country. Conditions on a single rule must all match, so two country conditions on one rule never match together.
+To block more than one country, create one deny rule for each. Conditions on a single rule must all match, and a request comes from one country, so a rule with two **Country** **Equals** conditions never matches anything.
 
 # Allow only specific countries {% #allow-only-specific-countries %}
 
 To serve only specific countries, invert the pattern. Create one deny rule, and add one **Country** **Not equal** condition for each allowed country. A request matches the rule only when its country differs from every allowed country, and the rule denies it.
 
-Traffic without a resolved geo location also matches **Not equal** conditions. For API traffic, unresolved geo matches as the value `unresolved`. Add a **Country** **Not equal** `unresolved` condition if unresolved traffic must stay allowed.
+Traffic whose country Appwrite cannot resolve also matches **Not equal**, so this rule denies it. To let it through, add **Country** **Not equal** `unresolved`. See [When Appwrite cannot resolve a location](/docs/products/firewall/conditions#unresolved-location).
 
 # Verify the rule {% #verify-the-rule %}
 
-1. Send a request from the blocked country with a client SDK or an API key. Firewall does not block Console access.
+1. Send a request from the blocked country with a client SDK or an API key. Use one of those, because Firewall never blocks the Console.
 2. Confirm the client receives a `403` response.
 3. Open **Firewall** and confirm the **Denied** series rises in the traffic overview.
 
-To pause the rule, turn off its status toggle in the rules list. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
+To pause the rule, turn off its status toggle in the rules list.
 
 {% arrow_link href="/docs/products/firewall/monitor" %}
-Monitor traffic
+Traffic overview
 {% /arrow_link %}

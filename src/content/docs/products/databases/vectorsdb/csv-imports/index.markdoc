@@ -103,9 +103,9 @@ JSON keys and string values use double quotes, and a double quote inside a quote
 
 # Run the import {% #run-import %}
 
-CSV imports run as a background migration. First upload your CSV to a [storage bucket](/docs/products/storage/buckets), then start the import against the target collection with `POST /v1/migrations/csv/imports` and an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the `bucketId` and `fileId` that hold your CSV, plus the `databaseId` and `collectionId` of the collection you are importing into.
+CSV imports run as a background migration and can only be started from the Console. Open the collection, click **Import CSV** in the toolbar, then upload a CSV from your device or choose one that is already in a [storage bucket](/docs/products/storage/buckets). Imports cannot be started with an API key or a server SDK.
 
-The `onDuplicate` option controls what happens when a document with an existing `$id` is encountered: `fail` (the default) aborts on the first conflict, `skip` ignores it, and `overwrite` replaces the existing document.
+The import stops at the first document whose `$id` already exists in the collection.
 
 {% info title="Track imports in the Console" %}
 Open the database and select the **Export / Import** tab to watch a job run and see how many documents it wrote. Finished exports offer a **Download** action on the same tab.

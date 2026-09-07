@@ -2,6 +2,7 @@
 layout: changelog
 title: "You can now disable image transformations for buckets"
 date: 2025-11-21
+tags: storage
 ---
 
 You can now disable image transformations for any storage bucket.

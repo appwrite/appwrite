@@ -68,6 +68,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Database Reads and Writes',
             href: '/docs/advanced/billing/database-reads-and-writes',
           },
+          {
+            label: 'Text Embeddings',
+            href: '/docs/advanced/billing/embeddings',
+          },
         ],
       },
       {
@@ -567,7 +571,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
   {
     prefix: 'partners/project',
     parent: {
-      href: '/docs',
+      href: '/docs/partners',
       label: 'Project',
     },
     navigation: [
@@ -577,6 +581,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Overview',
             href: '/docs/partners/project',
+          },
+          {
+            label: 'Create a project',
+            href: '/docs/partners/project/create',
           },
         ],
       },
@@ -1001,6 +1009,90 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'products/auth/oauth-server/sign-in-with-your-product',
+    parent: {
+      href: '/docs/products/auth/oauth-server',
+      label: 'Sign in with your product',
+    },
+    navigation: [
+      {
+        label: 'Steps',
+        items: [
+          {
+            label: 'Introduction',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-1',
+          },
+          {
+            label: 'Enable the OAuth2 server',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-2',
+          },
+          {
+            label: 'Create the apps',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-3',
+          },
+          {
+            label: 'Add the sign-in button',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-4',
+          },
+          {
+            label: 'Build the consent screen',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-5',
+          },
+          {
+            label: 'Exchange the code for tokens',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-6',
+          },
+          {
+            label: 'Run the flow',
+            href: '/docs/products/auth/oauth-server/sign-in-with-your-product/step-7',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'products/auth/oauth-server/custom-scopes',
+    parent: {
+      href: '/docs/products/auth/oauth-server',
+      label: 'Custom scopes',
+    },
+    navigation: [
+      {
+        label: 'Steps',
+        items: [
+          {
+            label: 'Introduction',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-1',
+          },
+          {
+            label: 'Define the scopes',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-2',
+          },
+          {
+            label: 'Request the scopes',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-3',
+          },
+          {
+            label: 'Validate access tokens',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-4',
+          },
+          {
+            label: 'Protect the API route',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-5',
+          },
+          {
+            label: 'Call the API from Vantage',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-6',
+          },
+          {
+            label: 'Run the flow',
+            href: '/docs/products/auth/oauth-server/custom-scopes/step-7',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/avatars',
     parent: {
       href: '/docs',
@@ -1191,14 +1283,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Timestamp overrides',
             href: '/docs/products/databases/documentsdb/timestamp-overrides',
-          },
-          {
-            label: 'JSON imports',
-            href: '/docs/products/databases/documentsdb/json-imports',
-          },
-          {
-            label: 'JSON exports',
-            href: '/docs/products/databases/documentsdb/json-exports',
           },
         ],
       },
@@ -2035,10 +2119,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'TLS',
             href: '/docs/products/network/tls',
-          },
-          {
-            label: 'WAF',
-            href: '/docs/products/network/waf',
           },
           {
             label: 'Compression',

@@ -9,7 +9,7 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { getActiveProfileFeatures, isCloudProfile } from '@/lib/console-profiles'
 import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
 import { planSupportsDedicatedDatabases } from '@/lib/databases/dedicated-database-plan'
 import { DatabaseType } from '@/lib/databases/database-type'
@@ -72,14 +72,12 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
         planSupportsDedicatedDatabases(organizationPlan) === true
       const shouldPrefetchNativeDatabases =
         supportsDedicatedDatabaseCompute &&
-        (profileFeatures.nativeDbsPostgres ||
-          profileFeatures.nativeDbsMySQL ||
-          profileFeatures.nativeDbsMongo)
+        (isCloudProfile() || profileFeatures.nativeDbsMongo)
 
       await Promise.all([
         // TablesDB product section (cloud only). Self-hosted All Databases
         // already lists via TablesDB through consoleDatabasesQueryOptions.
-        profileFeatures.dedicatedDbsSupport
+        isCloudProfile()
           ? queryClient.ensureQueryData(
               productDatabasesQueryOptions(
                 projectId,
@@ -101,8 +99,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             undefined,
           ),
         ),
-        profileFeatures.dedicatedDbsDocumentsDB &&
-        supportsDedicatedDatabaseCompute
+        isCloudProfile() && supportsDedicatedDatabaseCompute
           ? queryClient.ensureQueryData(
               productDatabasesQueryOptions(
                 projectId,
@@ -112,8 +109,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               ),
             )
           : Promise.resolve(),
-        profileFeatures.dedicatedDbsVectorsDB &&
-        supportsDedicatedDatabaseCompute
+        isCloudProfile() && supportsDedicatedDatabaseCompute
           ? queryClient.ensureQueryData(
               productDatabasesQueryOptions(
                 projectId,

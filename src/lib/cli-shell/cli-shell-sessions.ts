@@ -1,3 +1,5 @@
+import { randomUUID } from '@/lib/random-uuid'
+
 export type CliShellSession = {
   id: string
   name: string
@@ -6,7 +8,7 @@ export type CliShellSession = {
 }
 
 export function createCliShellSessionId(): string {
-  return crypto.randomUUID()
+  return randomUUID()
 }
 
 export function formatCliShellSessionName(index: number): string {

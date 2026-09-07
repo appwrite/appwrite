@@ -2,13 +2,12 @@
 layout: post
 title: Build a help center with semantic search using Appwrite VectorsDB
 description: Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.
-date: 2026-08-17
+date: 2026-09-02
 cover: /images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif
 timeToRead: 11
 author: atharva
 category: tutorial
 featured: false
-draft: true
 faqs:
   - question: "How is semantic search different from keyword search in a help center?"
     answer: "Keyword search matches the words in the question against the words in the article. Semantic search compares meaning instead. A reader who asks about a rejected card finds the article about a declined payment, even though the two phrases share no words."

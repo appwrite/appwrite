@@ -6,6 +6,7 @@
 
 import { useMemo } from 'react'
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -17,10 +18,25 @@ import {
   mapAppsToMarketplaceApps,
   sortMarketplaceApps,
 } from '@/lib/marketplace/map-app'
-import type { MarketplaceApp } from '@/lib/marketplace/types'
+import {
+  MARKETPLACE_CATEGORY_ORDER,
+  type MarketplaceApp,
+  type MarketplaceAppCategory,
+} from '@/lib/marketplace/types'
 import { DEFAULT_STALE_TIME } from './constants'
 
 export const MARKETPLACE_APPS_LIMIT = 100
+export const MARKETPLACE_PAGE_SIZE = 15
+
+export type MarketplaceCatalogPageOptions = {
+  category?: MarketplaceAppCategory
+  page: number
+  /** Server-side text search across the whole catalog. */
+  search?: string
+}
+
+/** Labels only Appwrite can set; used for curated marketplace sections. */
+export type MarketplaceCurationLabel = 'official' | 'suggested'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -46,28 +62,162 @@ export async function fetchOrganizationAppsRaw(organizationId: string) {
   }
 }
 
-export async function fetchMarketplaceCatalogAppsRaw(organizationId: string) {
+/**
+ * Published marketplace apps, own organization's included. Note: `notEqual`
+ * on teamId must be avoided here — official apps have no teamId and Appwrite's
+ * notEqual drops null/empty values, returning an empty list.
+ */
+function marketplaceBaseQueries() {
+  return [
+    Query.equal('enabled', true),
+    // Every marketplace list only shows Appwrite-curated official apps.
+    Query.contains('labels', 'official'),
+    // DCR-registered OAuth clients must never surface in marketplace
+    // listings. The isNull branch keeps unlabeled apps included (notContains
+    // alone drops rows with empty labels).
+    Query.or([
+      Query.notContains('labels', 'oauth-dcr'),
+      Query.isNull('labels'),
+    ]),
+  ]
+}
+
+/**
+ * Server-side match for a category. Apps without any category tag resolve to
+ * devtools client-side (see resolveCategory), so the devtools query must also
+ * match apps whose tags contain no category at all (or are empty/null).
+ */
+function marketplaceCategoryQueries(category: MarketplaceAppCategory) {
+  if (category !== 'devtools') {
+    return [Query.contains('tags', category)]
+  }
+  return [
+    Query.or([
+      Query.contains('tags', 'devtools'),
+      Query.notContains('tags', [...MARKETPLACE_CATEGORY_ORDER]),
+      Query.isNull('tags'),
+    ]),
+  ]
+}
+
+/**
+ * Server-side text match, so search covers the whole catalog instead of only
+ * the first page. Apps have no fulltext index, so `contains` (substring) is
+ * used per attribute. `author` is derived client-side (official apps read as
+ * "Appwrite") and therefore cannot be matched here.
+ */
+function marketplaceSearchQueries(search: string | undefined) {
+  const term = search?.trim()
+  if (!term) return []
+  return [
+    Query.or([
+      Query.contains('name', term),
+      Query.contains('tagline', term),
+      Query.contains('description', term),
+      Query.contains('tags', term),
+    ]),
+  ]
+}
+
+export async function fetchMarketplaceCatalogPageRaw(
+  organizationId: string,
+  options: MarketplaceCatalogPageOptions,
+) {
   if (!organizationId) {
     return { apps: [], total: 0 }
   }
 
+  const queries = [
+    ...marketplaceBaseQueries(),
+    ...marketplaceSearchQueries(options.search),
+    Query.orderDesc('$createdAt'),
+    Query.limit(MARKETPLACE_PAGE_SIZE),
+    Query.offset(Math.max(0, options.page - 1) * MARKETPLACE_PAGE_SIZE),
+  ]
+  if (options.category) {
+    queries.push(...marketplaceCategoryQueries(options.category))
+  }
+
   const response = await sdk.forConsole.apps.list({
+    queries,
+    total: true,
+  })
+
+  return {
+    apps: response.apps ?? [],
+    total: response.total ?? 0,
+  }
+}
+
+export async function fetchMarketplaceLabeledAppsRaw(
+  organizationId: string,
+  label: MarketplaceCurationLabel,
+  category?: MarketplaceAppCategory,
+) {
+  if (!organizationId) {
+    return { apps: [], total: 0 }
+  }
+
+  const queries = [
+    ...marketplaceBaseQueries(),
+    Query.contains('labels', label),
+    Query.orderDesc('$createdAt'),
+    Query.limit(MARKETPLACE_PAGE_SIZE),
+  ]
+  if (category) {
+    queries.push(...marketplaceCategoryQueries(category))
+  }
+
+  const response = await sdk.forConsole.apps.list({
+    queries,
+    total: true,
+  })
+
+  return {
+    apps: response.apps ?? [],
+    total: response.total ?? 0,
+  }
+}
+
+/** Server-side totals for the sidebar and category tiles (limit-1 count queries). */
+export async function fetchMarketplaceNavCountsRaw(
+  organizationId: string,
+  search?: string,
+) {
+  if (!organizationId) {
+    return {
+      catalogTotal: 0,
+      categoryTotals: {} as Record<MarketplaceAppCategory, number>,
+    }
+  }
+
+  const countQueries = (extra: string[] = []) => ({
     queries: [
-      Query.contains('labels', 'official'),
-      Query.equal('enabled', true),
-      Query.orderDesc('$createdAt'),
-      Query.limit(MARKETPLACE_APPS_LIMIT),
+      ...marketplaceBaseQueries(),
+      ...marketplaceSearchQueries(search),
+      ...extra,
+      Query.limit(1),
     ],
     total: true,
   })
 
-  const apps = (response.apps ?? []).filter(
-    (app) => app.teamId !== organizationId,
-  )
+  const [catalog, ...categories] = await Promise.all([
+    sdk.forConsole.apps.list(countQueries()),
+    ...MARKETPLACE_CATEGORY_ORDER.map((category) =>
+      sdk.forConsole.apps.list(
+        countQueries(marketplaceCategoryQueries(category)),
+      ),
+    ),
+  ])
 
   return {
-    apps,
-    total: apps.length,
+    catalogTotal: catalog.total ?? 0,
+    categoryTotals: Object.fromEntries(
+      MARKETPLACE_CATEGORY_ORDER.map((category, index) => [
+        category,
+        categories[index]?.total ?? 0,
+      ]),
+    ) as Record<MarketplaceAppCategory, number>,
   }
 }
 
@@ -81,11 +231,6 @@ function sanitizeAppId(value: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 36)
   return cleaned
-}
-
-export function defaultMarketplaceRedirectUri(): string {
-  if (typeof window === 'undefined') return 'https://cloud.appwrite.io/oauth2/consent'
-  return `${window.location.origin}/oauth2/consent`
 }
 
 export type UpdateOrganizationAppInput = {
@@ -170,14 +315,69 @@ export function organizationAppsQueryOptions(
   })
 }
 
-export function marketplaceCatalogQueryOptions(
+export function marketplaceCatalogPageQueryOptions(
   organizationId: string | null | undefined,
+  options: MarketplaceCatalogPageOptions,
 ) {
   return queryOptions({
-    queryKey: ['apps', 'marketplace', 'catalog', organizationId],
-    queryFn: () => fetchMarketplaceCatalogAppsRaw(organizationId!),
+    queryKey: [
+      'apps',
+      'marketplace',
+      'catalog-page',
+      organizationId,
+      options.category ?? 'all',
+      options.search?.trim() || '',
+      options.page,
+    ],
+    queryFn: () => fetchMarketplaceCatalogPageRaw(organizationId!, options),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
+    placeholderData: keepPreviousData,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function marketplaceLabeledAppsQueryOptions(
+  organizationId: string | null | undefined,
+  label: MarketplaceCurationLabel,
+  category?: MarketplaceAppCategory,
+) {
+  return queryOptions({
+    queryKey: [
+      'apps',
+      'marketplace',
+      'labeled',
+      organizationId,
+      label,
+      category ?? 'all',
+    ],
+    queryFn: () =>
+      fetchMarketplaceLabeledAppsRaw(organizationId!, label, category),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function marketplaceNavCountsQueryOptions(
+  organizationId: string | null | undefined,
+  search?: string,
+) {
+  const term = search?.trim() || ''
+  return queryOptions({
+    queryKey: ['apps', 'marketplace', 'nav-counts', organizationId, term],
+    queryFn: () => fetchMarketplaceNavCountsRaw(organizationId!, term),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    placeholderData: keepPreviousData,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -227,12 +427,17 @@ export function useOrganizationApps(
   }
 }
 
-export function useMarketplaceCatalog(
+/**
+ * One 15-app page of the catalog (optionally scoped to a category and/or a
+ * search term) plus the server total.
+ */
+export function useMarketplaceCatalogPage(
   organizationId: string | null | undefined,
+  options: MarketplaceCatalogPageOptions,
   teamNamesById?: Record<string, string>,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    marketplaceCatalogQueryOptions(organizationId),
+    marketplaceCatalogPageQueryOptions(organizationId, options),
   )
 
   const apps = useMemo(
@@ -247,7 +452,64 @@ export function useMarketplaceCatalog(
 
   return {
     apps,
-    total: data?.total ?? apps.length,
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+/** Curated apps carrying an Appwrite-set label (official/suggested). */
+export function useMarketplaceLabeledApps(
+  organizationId: string | null | undefined,
+  label: MarketplaceCurationLabel,
+  options?: {
+    category?: MarketplaceAppCategory
+    teamNamesById?: Record<string, string>
+  },
+) {
+  const teamNamesById = options?.teamNamesById
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    marketplaceLabeledAppsQueryOptions(
+      organizationId,
+      label,
+      options?.category,
+    ),
+  )
+
+  const apps = useMemo(
+    () =>
+      data?.apps
+        ? sortMarketplaceApps(
+            mapListedApps(data.apps, organizationId!, teamNamesById),
+          )
+        : [],
+    [data?.apps, organizationId, teamNamesById],
+  )
+
+  return {
+    apps,
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+/** Server totals for sidebar badges and category tiles, scoped to the search term. */
+export function useMarketplaceNavCounts(
+  organizationId: string | null | undefined,
+  search?: string,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    marketplaceNavCountsQueryOptions(organizationId, search),
+  )
+
+  return {
+    catalogTotal: data?.catalogTotal ?? 0,
+    categoryTotals: data?.categoryTotals ?? null,
     isLoading,
     isFetching,
     error,
@@ -290,7 +552,7 @@ export type CreateOrganizationAppInput = {
   description?: string
   category?: string
   redirectUri?: string
-  /** Defaults to false (marketplace draft). Pass true for Sign in with Appwrite setup. */
+  /** Defaults to true. Pass false to create as a disabled draft. */
   enabled?: boolean
 }
 
@@ -308,9 +570,10 @@ export function useCreateOrganizationApp(
       const appId = input.slug?.trim()
         ? sanitizeAppId(input.slug) || ID.unique()
         : ID.unique()
+      // ?? (not ||) so an explicit empty description stays empty.
       const description = (
-        input.description ||
-        input.shortDescription ||
+        input.description ??
+        input.shortDescription ??
         input.name
       ).trim()
       const tagline = (input.shortDescription || input.name).trim()
@@ -319,14 +582,16 @@ export function useCreateOrganizationApp(
       return await sdk.forConsole.apps.create({
         appId,
         name: input.name.trim(),
-        redirectUris: [
-          input.redirectUri?.trim() || defaultMarketplaceRedirectUri(),
-        ],
+        // No implicit consent-URL fallback: apps start with no allowed
+        // redirect URIs unless the caller provides one.
+        redirectUris: input.redirectUri?.trim()
+          ? [input.redirectUri.trim()]
+          : [],
         description,
         tagline,
         tags,
         teamId: organizationId,
-        enabled: input.enabled ?? false,
+        enabled: input.enabled ?? true,
         type: 'confidential',
       })
     },

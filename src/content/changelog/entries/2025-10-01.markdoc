@@ -2,6 +2,7 @@
 layout: changelog
 title: "Performance improvements for Functions and static sites"
 date: 2025-10-01
+tags: functions, sites, performance
 ---
 
 We've shipped major performance improvements across functions and static sites.

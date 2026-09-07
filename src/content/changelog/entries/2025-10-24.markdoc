@@ -2,6 +2,7 @@
 layout: changelog
 title: "Email verification for Cloud accounts"
 date: 2025-10-24
+tags: infrastructure
 ---
 
 Email verification is now required for all new and existing accounts on Appwrite Cloud.

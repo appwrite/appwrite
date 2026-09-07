@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite plugin for Codex"
 date: 2026-05-11
 cover: /images/blog/announcing-appwrite-codex-plugin/cover.avif
+tags: mcp, cli, functions, sites
 ---
 
 The Appwrite plugin is now available for Codex. Install it to get agent skills for the Appwrite CLI and every major SDK, two guided deployment skills for Sites and Functions, and the Appwrite Docs MCP server, all in a single setup.

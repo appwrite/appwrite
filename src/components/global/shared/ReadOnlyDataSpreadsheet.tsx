@@ -283,7 +283,7 @@ export function ReadOnlyDataSpreadsheet({
     return (
       <div
         className={cn(
-          'flex h-full min-h-[12rem] items-center justify-center text-[13px] text-muted-foreground',
+          'flex h-full min-h-[8rem] items-center justify-center text-[13px] text-muted-foreground',
           className,
         )}
       >
@@ -293,7 +293,7 @@ export function ReadOnlyDataSpreadsheet({
   }
 
   return (
-    <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', className)}>
+    <div className={cn('flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden', className)}>
       {header ? (
         <div
           className={cn(

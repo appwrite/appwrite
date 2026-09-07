@@ -98,6 +98,8 @@ Both modes, measured on 4 cores with 200 virtual users, 20 seconds per run, acro
 | CPU bound | Hyperloop A | 3,285 | 169.19ms |
 | CPU bound | Hyperloop B | 3,112 | 84.48ms |
 
+{% hyperloop_race_animation /%}
+
 The minimal row is nearly identical between the modes, and that is the expected result rather than a disappointing one. An endpoint that does no I/O gives the scheduler nothing to yield on, so a coroutine has no idle time to trade away and the two modes are doing substantially the same work. It is a useful control: it shows the coroutine machinery is not costing anything measurable when there is nothing for it to exploit.
 
 That leaves the CPU row, which rewards a close read. Hyperloop B gives up about 5% of raw throughput there and halves p95 latency in exchange. That is the right trade for a service where the slowest requests are the ones users notice, but it is a trade, not a free win, and coroutines do not make CPU work faster.

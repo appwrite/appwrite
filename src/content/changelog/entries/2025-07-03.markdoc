@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Bulk API: Handle heavy data workloads with ease"
 date: 2025-07-03
 cover: /images/changelog/2025-07-03.avif
+tags: databases, api
 ---
 
 We're excited to introduce another Appwrite Databases feature, **Bulk API**.

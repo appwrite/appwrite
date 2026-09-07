@@ -37,7 +37,7 @@ export interface FetchActivitiesParams {
   mergedSince: string
   /** Optional upper bound for `time` (ISO 8601). */
   until?: string | null
-  /** Additional Query strings from the URL filter map (resource type, userId, event, …). */
+  /** Additional Query strings from the URL filter map (ActivityEvents allowed attributes only). */
   extraQueries?: string[]
 }
 

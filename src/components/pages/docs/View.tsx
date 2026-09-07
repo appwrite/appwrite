@@ -92,6 +92,7 @@ export function View({ page: initialPage }: ViewProps) {
         readingTimeMinutes={page.meta.readingTimeMinutes}
         toc={page.toc}
         headerActions={headerActions}
+        showStepNav={page.meta.layout === 'tutorial'}
       >
         {promptText ? (
           <DocsPromptBanner

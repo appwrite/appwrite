@@ -15,8 +15,15 @@ export type RequestsBreakdownSection = {
   labelVariant: 'mono' | 'default'
 }
 
-/** All listEvents dimensions supported for network.requests. */
+/**
+ * listEvents dimensions supported for network.requests, ordered into logical
+ * groups so the cards read top-to-bottom: request shape → caller identity →
+ * location → network (premium) → client software → resource. The premium geo
+ * fields (city + the network group) are kept contiguous so their upgrade
+ * curtains cluster together rather than scattering across the grid.
+ */
 export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = [
+  // Request shape
   {
     dimension: 'path',
     title: 'Paths',
@@ -46,6 +53,21 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     labelVariant: 'default',
   },
   {
+    dimension: 'hostname',
+    title: 'Hostnames',
+    description: 'Request volume grouped by caller hostname.',
+    metricId: 'breakdown-hostname',
+    labelVariant: 'mono',
+  },
+  // Caller identity + location
+  {
+    dimension: 'ip',
+    title: 'IP addresses',
+    description: 'Request volume grouped by caller IP address.',
+    metricId: 'breakdown-ip',
+    labelVariant: 'mono',
+  },
+  {
     dimension: 'country',
     title: 'Countries',
     description: 'Request volume grouped by caller country.',
@@ -59,20 +81,50 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     metricId: 'breakdown-city',
     labelVariant: 'default',
   },
+  // Network / ISP (premium geo DB addon)
   {
-    dimension: 'hostname',
-    title: 'Hostnames',
-    description: 'Request volume grouped by caller hostname.',
-    metricId: 'breakdown-hostname',
+    dimension: 'isp',
+    title: 'ISPs',
+    description: 'Request volume grouped by caller internet service provider.',
+    metricId: 'breakdown-isp',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'autonomousSystemNumber',
+    title: 'AS numbers',
+    description: 'Request volume grouped by caller autonomous system number.',
+    metricId: 'breakdown-asn',
     labelVariant: 'mono',
   },
   {
-    dimension: 'ip',
-    title: 'IP addresses',
-    description: 'Request volume grouped by caller IP address.',
-    metricId: 'breakdown-ip',
-    labelVariant: 'mono',
+    dimension: 'autonomousSystemOrganization',
+    title: 'AS organizations',
+    description: 'Request volume grouped by caller autonomous system organization.',
+    metricId: 'breakdown-aso',
+    labelVariant: 'default',
   },
+  {
+    dimension: 'connectionType',
+    title: 'Connection types',
+    description: 'Request volume grouped by caller connection type.',
+    metricId: 'breakdown-connection-type',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'connectionUsageType',
+    title: 'Connection usage types',
+    description: 'Request volume grouped by caller connection usage type.',
+    metricId: 'breakdown-connection-usage-type',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'connectionOrganization',
+    title: 'Connection organizations',
+    description: 'Request volume grouped by caller connection organization.',
+    metricId: 'breakdown-connection-organization',
+    labelVariant: 'default',
+  },
+  // Client software
   {
     dimension: 'osName',
     title: 'Operating systems',
@@ -108,6 +160,7 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     metricId: 'breakdown-sdk',
     labelVariant: 'mono',
   },
+  // Resource
   {
     dimension: 'resource',
     title: 'Resources',

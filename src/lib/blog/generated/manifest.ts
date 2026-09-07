@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-apps-for-appwrite-partners",
+    "href": "/blog/post/announcing-apps-for-appwrite-partners",
+    "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",
+    "description": "Register an app in your organization and build dashboards, deployment tools, CLIs, and agents for other Appwrite developers, with consent-based, scoped tokens instead of pasted API keys.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog/announcing-apps-for-appwrite-partners/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-domains",
     "href": "/blog/post/announcing-appwrite-domains",
     "title": "Announcing Appwrite Domains: your registrar and DNS host",
@@ -13,7 +27,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "product, announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-domains/cover.avif",
     "hasCover": true
   },
@@ -25,10 +38,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-04",
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "product, announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
     "hasCover": true
   },
@@ -43,7 +55,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "matej-baco",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-oauth2-server/cover.avif",
     "hasCover": true
   },
@@ -77,6 +88,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "build-a-memory-mcp-server",
+    "href": "/blog/post/build-a-memory-mcp-server",
+    "title": "Build a memory MCP server on Appwrite",
+    "description": "Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 14,
+    "author": "atharva",
+    "category": "tutorial",
+    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-rate-limit-strategies",
     "href": "/blog/post/firewall-rate-limit-strategies",
     "title": "Fixed window, sliding window, or token bucket? Choosing a rate limit strategy in Appwrite Firewall",
@@ -86,7 +110,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 9,
     "author": "atharva",
     "category": "security, best-practices",
-    "draft": true,
     "cover": "/images/blog-local/firewall-rate-limit-strategies/cover.avif",
     "hasCover": true
   },
@@ -98,11 +121,52 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-04",
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
+    "author": "matej-baco",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "turn-your-app-into-an-mcp-server",
+    "href": "/blog/post/turn-your-app-into-an-mcp-server",
+    "title": "Turn your app into an MCP server with the Appwrite OAuth2 server",
+    "description": "Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": true,
-    "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
+    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-bitbucket-support",
+    "href": "/blog/post/announcing-bitbucket-support",
+    "title": "Announcing Bitbucket support for Sites and Functions",
+    "description": "Appwrite now deploys from Bitbucket. Connect a workspace, pick a repository, and every push builds a Site or Function, with links that resolve to Bitbucket.",
+    "date": "2026-09-03",
+    "lastUpdated": "2026-09-03",
+    "timeToRead": 6,
+    "author": "harsh-mahajan",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-gitlab-support",
+    "href": "/blog/post/announcing-gitlab-support",
+    "title": "Announcing GitLab support for Appwrite Sites and Functions",
+    "description": "Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.",
+    "date": "2026-09-03",
+    "lastUpdated": "2026-09-03",
+    "timeToRead": 7,
+    "author": "matej-baco",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
@@ -116,7 +180,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "torsten-dittmann",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-s3-api/cover.avif",
     "hasCover": true
   },
@@ -128,10 +191,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-documentsdb/cover.avif",
     "hasCover": true
   },
@@ -143,10 +205,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 5,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-native-mysql-databases/cover.avif",
     "hasCover": true
   },
@@ -158,11 +219,24 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-02",
     "lastUpdated": "2026-09-02",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-vectorsdb/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "build-a-help-center-with-appwrite-vectorsdb",
+    "href": "/blog/post/build-a-help-center-with-appwrite-vectorsdb",
+    "title": "Build a help center with semantic search using Appwrite VectorsDB",
+    "description": "Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.",
+    "date": "2026-09-02",
+    "lastUpdated": "2026-09-02",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
   },
   {
@@ -191,23 +265,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "ai",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/vectorsdb-use-cases/cover.avif",
     "hasCover": true
   },
   {
-    "slug": "announcing-native-postgresql-databases",
-    "href": "/blog/post/announcing-native-postgresql-databases",
-    "title": "Announcing native PostgreSQL databases: The full engine, provisioned in minutes",
+    "slug": "appwrite-now-speaks-postgresql",
+    "href": "/blog/post/appwrite-now-speaks-postgresql",
+    "title": "Appwrite now speaks Postgres",
     "description": "Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.",
     "date": "2026-09-01",
     "lastUpdated": "2026-09-01",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "jake-barnby",
     "category": "announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog/announcing-native-postgresql-databases/cover.avif",
+    "featured": true,
+    "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },
   {
@@ -221,7 +293,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "comparisons",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/native-databases-vs-appwrite-databases/cover.avif",
     "hasCover": true
   },
@@ -277,7 +348,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "eldad-fux",
     "category": "product, announcement",
-    "featured": true,
+    "featured": false,
     "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
@@ -310,35 +381,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "build-a-memory-mcp-server",
-    "href": "/blog/post/build-a-memory-mcp-server",
-    "title": "Build a memory MCP server on Appwrite",
-    "description": "Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.",
-    "date": "2026-08-19",
-    "lastUpdated": "2026-08-19",
-    "timeToRead": 14,
-    "author": "atharva",
-    "category": "tutorial",
-    "draft": true,
-    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "turn-your-app-into-an-mcp-server",
-    "href": "/blog/post/turn-your-app-into-an-mcp-server",
-    "title": "Turn your app into an MCP server with the Appwrite OAuth2 server",
-    "description": "Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.",
-    "date": "2026-08-19",
-    "lastUpdated": "2026-08-19",
-    "timeToRead": 14,
-    "author": "atharva",
-    "category": "tutorial",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "cursor-origin-review-an-engineers-perspective",
     "href": "/blog/post/cursor-origin-review-an-engineers-perspective",
     "title": "Cursor Origin review: An engineer’s perspective",
@@ -364,21 +406,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "comparisons",
     "featured": false,
     "cover": "/images/blog/cursor-origin-vs-github-what-actually-changes-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "build-a-help-center-with-appwrite-vectorsdb",
-    "href": "/blog/post/build-a-help-center-with-appwrite-vectorsdb",
-    "title": "Build a help center with semantic search using Appwrite VectorsDB",
-    "description": "Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.",
-    "date": "2026-08-17",
-    "lastUpdated": "2026-08-17",
-    "timeToRead": 11,
-    "author": "atharva",
-    "category": "tutorial",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif",
     "hasCover": true
   },
   {
@@ -509,21 +536,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "ai",
     "featured": false,
     "cover": "/images/blog/what-gpt-56-sols-chatgpt-update-means-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-apps-for-appwrite-partners",
-    "href": "/blog/post/announcing-apps-for-appwrite-partners",
-    "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",
-    "description": "Register an app in your organization and build dashboards, deployment tools, CLIs, and agents for other Appwrite developers, with consent-based, scoped tokens instead of pasted API keys.",
-    "date": "2026-08-06",
-    "lastUpdated": "2026-08-06",
-    "timeToRead": 6,
-    "author": "atharva",
-    "category": "announcement",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/announcing-apps-for-appwrite-partners/cover.avif",
     "hasCover": true
   },
   {

@@ -2,7 +2,8 @@
 layout: changelog
 title: "The Appwrite MCP server is now remote"
 date: 2026-07-31
-cover: /images/changelog/2026-07-31.avif
+cover: /images/blog/announcing-remote-appwrite-mcp-server/cover.avif
+tags: mcp, functions
 ---
 
 The [**Appwrite MCP server**](/docs/tooling/ai/mcp-servers/api) is now available as a **hosted remote server** over the HTTP transport at `https://mcp.appwrite.io/`.

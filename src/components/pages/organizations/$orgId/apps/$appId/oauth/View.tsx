@@ -9,7 +9,9 @@ import {
   OAuth2ClientTypePicker,
 } from '@/components/global/shared/OAuth2ClientTypePicker'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
+import { ClientIdField } from '../_components/ClientIdField'
 import {
+  listsEqual,
   nonEmptyList,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
@@ -36,13 +38,20 @@ export function View() {
     setPostLogoutRedirectUris(app.postLogoutRedirectUris ?? [])
   }, [app])
 
+  const oauthDirty =
+    clientType !== (app.type || 'confidential') ||
+    deviceFlow !== (app.deviceFlow ?? false) ||
+    !listsEqual(nonEmptyList(redirectUris), app.redirectUris ?? []) ||
+    !listsEqual(
+      nonEmptyList(postLogoutRedirectUris),
+      app.postLogoutRedirectUris ?? [],
+    )
+
   const handleUpdate = async () => {
-    const uris = nonEmptyList(redirectUris)
-    if (uris.length === 0) return
     await submit({
       type: clientType,
       deviceFlow,
-      redirectUris: uris,
+      redirectUris: nonEmptyList(redirectUris),
       postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
     })
   }
@@ -59,6 +68,7 @@ export function View() {
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
+        <ClientIdField clientId={app.$id} />
         <OAuth2ClientTypePicker
           value={clientType}
           onChange={setClientType}
@@ -99,7 +109,7 @@ export function View() {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || nonEmptyList(redirectUris).length === 0}
+          disabled={isUpdating || !oauthDirty}
           onClick={handleUpdate}
         >
           {t('Update')}

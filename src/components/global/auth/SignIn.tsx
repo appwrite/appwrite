@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { Bug, Eye, EyeOff } from 'lucide-react'
@@ -22,27 +22,16 @@ import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   getLastLoginMethod,
   isOAuthLoginMethod,
   type LoginMethod,
   type OAuthLoginMethod,
 } from '@/lib/utils/auth-storage'
-import {
-  DEFAULT_CONSOLE_OAUTH_LOGIN,
-  getVisibleConsoleOAuthProviders,
-  isConsoleOAuthProviderEnabled,
-} from '@/lib/utils/console-oauth'
+import { DEFAULT_CONSOLE_OAUTH_LOGIN } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
-import {
-  BitbucketIcon,
-  GitHubIcon,
-  GitLabIcon,
-  OriginIcon,
-} from '@/lib/vcs/providers'
+import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -101,7 +90,6 @@ const OAUTH_PROVIDERS: {
   { id: 'github', Icon: GitHubIcon },
   { id: 'gitlab', Icon: GitLabIcon },
   { id: 'bitbucket', Icon: BitbucketIcon },
-  { id: 'cursor', Icon: OriginIcon },
 ]
 
 const OAUTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
@@ -212,13 +200,11 @@ function oauthProviderLabel(
     if (provider === 'google') return t('Sign up with Google')
     if (provider === 'gitlab') return t('Sign up with GitLab')
     if (provider === 'bitbucket') return t('Sign up with Bitbucket')
-    if (provider === 'cursor') return t('Sign up with Cursor')
     return t('Sign up with GitHub')
   }
   if (provider === 'google') return t('Login with Google')
   if (provider === 'gitlab') return t('Login with GitLab')
   if (provider === 'bitbucket') return t('Login with Bitbucket')
-  if (provider === 'cursor') return t('Login with Cursor')
   return t('Login with GitHub')
 }
 
@@ -241,13 +227,6 @@ export function SignIn({
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
-  const { features } = useConsoleProfile()
-  const oauthProviders = useMemo(() => {
-    const visible = new Set(
-      getVisibleConsoleOAuthProviders(features.extraOAuthLogin),
-    )
-    return OAUTH_PROVIDERS.filter((provider) => visible.has(provider.id))
-  }, [features.extraOAuthLogin])
   const schema =
     mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
   const form = useForm<FormValues>({
@@ -270,16 +249,7 @@ export function SignIn({
   const [showPassword, setShowPassword] = useState(false)
   const [expandedOAuth, setExpandedOAuth] = useState<OAuthLoginMethod>(() => {
     const last = getLastLoginMethod()
-    if (
-      isOAuthLoginMethod(last) &&
-      isConsoleOAuthProviderEnabled(
-        last,
-        getActiveProfileFeatures().extraOAuthLogin,
-      )
-    ) {
-      return last
-    }
-    return DEFAULT_CONSOLE_OAUTH_LOGIN
+    return isOAuthLoginMethod(last) ? last : DEFAULT_CONSOLE_OAUTH_LOGIN
   })
 
   // Function to update last login method from storage
@@ -316,12 +286,6 @@ export function SignIn({
   useEffect(() => {
     updateLastLoginMethod()
   }, [location.pathname])
-
-  useEffect(() => {
-    if (!oauthProviders.some((provider) => provider.id === expandedOAuth)) {
-      setExpandedOAuth(DEFAULT_CONSOLE_OAUTH_LOGIN)
-    }
-  }, [oauthProviders, expandedOAuth])
 
   const handleSubmit = (data: z.infer<typeof schema>) => {
     onSubmit(data)
@@ -399,7 +363,7 @@ export function SignIn({
                 <>
                   <style>{OAUTH_ACCORDION_STYLES}</style>
                   <div className="oauth-login-row">
-                    {oauthProviders.map(({ id, Icon }) => {
+                    {OAUTH_PROVIDERS.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
                       const isLastUsed =
                         mode === 'sign-in' && lastLoginMethod === id

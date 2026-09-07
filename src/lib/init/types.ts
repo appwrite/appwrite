@@ -85,7 +85,8 @@ export interface LaunchEventScheduleItem {
   href?: string
   /**
    * Authored: this session is a livestream that can show "Live now" after start.
-   * Display: set true only while the session is live (after `startsAt` on the current day).
+   * Display: set true only while the session is live (for one hour after
+   * `startsAt` on the current day).
    */
   isLive?: boolean
   /** Display-only: within 1 hour before `startsAt` on the current unlocked day. */
@@ -101,7 +102,7 @@ export interface LaunchEventActivity {
 
 export interface LaunchEventOnlineUser {
   id: string
-  /** Console account ID (`presence.$id`); use for self-matching when `id` is anonymized. */
+  /** Console account ID (`presence.userId`); use for self-matching when `id` is anonymized. */
   ownerId?: string
   name: string
   activity: string

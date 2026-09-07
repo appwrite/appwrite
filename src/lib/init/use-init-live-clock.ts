@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { getActiveLaunchEvent } from './events'
 import {
+  INIT_SCHEDULE_LIVE_DURATION_MS,
   INIT_SCHEDULE_STARTING_SOON_WINDOW_MS,
   parseInitScheduleTime,
 } from './schedule-time'
 
 /**
  * Wall-clock ms for Init session live / starting-soon state. Reticks when the
- * next starting-soon window opens or a session `startsAt` is reached.
+ * next starting-soon window opens, a session starts, or its live window ends.
  */
 export function useInitLiveClock(currentDay: number): number {
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -21,7 +22,14 @@ export function useInitLiveClock(currentDay: number): number {
       .flatMap((item) => {
         const startMs = parseInitScheduleTime(item.startsAt)?.getTime()
         if (typeof startMs !== 'number') return []
-        return [startMs - INIT_SCHEDULE_STARTING_SOON_WINDOW_MS, startMs]
+        const edges = [
+          startMs - INIT_SCHEDULE_STARTING_SOON_WINDOW_MS,
+          startMs,
+        ]
+        if (item.isLive) {
+          edges.push(startMs + INIT_SCHEDULE_LIVE_DURATION_MS)
+        }
+        return edges
       })
       .filter((ms) => ms > nowMs)
       .sort((a, b) => a - b)

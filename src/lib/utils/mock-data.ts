@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 // Mock data for Appwrite Console UI
 
 import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
@@ -38,6 +39,8 @@ export interface Project {
   pingCount?: number
   /** Last ping datetime in ISO 8601 format. */
   pingedAt?: string
+  /** Billing limits reached (cloud). */
+  billingLimits?: Models.BillingLimits | null
 }
 
 export interface Database {
@@ -286,83 +289,6 @@ export interface TeamMember {
   membershipId?: string // For pending invites, we need the membership ID to resend
   mfaEnabled?: boolean // Whether 2FA is enabled for this user
 }
-
-export const orgMembers: TeamMember[] = [
-  {
-    $id: '507f1f77bcf86cd799439012',
-    name: "Walter O'Brien",
-    email: 'walter@example.com',
-    avatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    role: 'owner',
-    orgId: '507f191e810c19729de860ea',
-    joinedAt: '2023-01-15T10:00:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439013',
-    name: 'Paige Dineen',
-    email: 'paige@example.com',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
-    role: 'admin',
-    orgId: '507f191e810c19729de860ea',
-    joinedAt: '2023-03-22T14:30:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439014',
-    name: 'Toby Curtis',
-    email: 'toby@example.com',
-    role: 'member',
-    orgId: '507f191e810c19729de860ea',
-    joinedAt: '2023-06-10T09:15:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439015',
-    name: 'Happy Quinn',
-    email: 'happy@example.com',
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    role: 'member',
-    orgId: '507f191e810c19729de860ea',
-    joinedAt: '2023-08-05T16:45:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439016',
-    name: 'Cabe Gallo',
-    email: 'cabe@example.com',
-    role: 'owner',
-    orgId: '507f191e810c19729de860eb',
-    joinedAt: '2022-11-01T08:00:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439017',
-    name: 'Eldad Fux',
-    email: 'eldad@appwrite.io',
-    avatar:
-      'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop&crop=face',
-    role: 'owner',
-    orgId: '507f191e810c19729de860eb',
-    joinedAt: '2022-06-15T10:00:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439018',
-    name: 'Christy Jacob',
-    email: 'christy@appwrite.io',
-    role: 'admin',
-    orgId: '507f191e810c19729de860eb',
-    joinedAt: '2022-08-20T14:30:00Z',
-  },
-  {
-    $id: '507f1f77bcf86cd799439019',
-    name: 'Torsten Dittmann',
-    email: 'torsten@appwrite.io',
-    avatar:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face',
-    role: 'admin',
-    orgId: '507f191e810c19729de860eb',
-    joinedAt: '2022-09-10T09:15:00Z',
-  },
-]
 
 // Teams
 export const teams: Team[] = [

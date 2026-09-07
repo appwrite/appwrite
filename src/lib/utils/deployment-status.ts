@@ -196,3 +196,125 @@ export function getRedeploySourceDeploymentId(
 ): string | undefined {
   return resource?.latestDeploymentId || resource?.deploymentId || undefined
 }
+
+/** Merge a redeploy response into cached function/site data for immediate UI updates. */
+export function patchResourceAfterRedeploy<
+  T extends {
+    latestDeploymentId?: string | null
+    latestDeploymentStatus?: string
+    latestDeploymentCreatedAt?: string
+  },
+>(
+  resource: T,
+  deployment: { $id: string; status: string; $createdAt?: string },
+): T {
+  return {
+    ...resource,
+    latestDeploymentId: deployment.$id,
+    latestDeploymentStatus: deployment.status,
+    latestDeploymentCreatedAt: new Date().toISOString(),
+  }
+}
+
+export function keepNewerLatestDeployment<
+  T extends {
+    live?: boolean
+    latestDeploymentId?: string | null
+    latestDeploymentStatus?: string
+    latestDeploymentCreatedAt?: string
+  },
+>(previous: T | undefined, incoming: T): T {
+  if (!previous || incoming.live) return incoming
+
+  const newerCreatedAt = newerTimestamp(
+    previous.latestDeploymentCreatedAt,
+    incoming.latestDeploymentCreatedAt,
+  )
+  if (newerCreatedAt !== previous.latestDeploymentCreatedAt) {
+    return incoming
+  }
+
+  return {
+    ...incoming,
+    latestDeploymentId: previous.latestDeploymentId,
+    latestDeploymentStatus: previous.latestDeploymentStatus,
+    latestDeploymentCreatedAt: previous.latestDeploymentCreatedAt,
+  }
+}
+
+function parseTimestamp(value?: string | null): number | null {
+  if (!value) return null
+  const time = Date.parse(value)
+  return Number.isFinite(time) ? time : null
+}
+
+function newerTimestamp(
+  left?: string | null,
+  right?: string | null,
+): string | undefined {
+  const leftTime = parseTimestamp(left)
+  const rightTime = parseTimestamp(right)
+  if (leftTime == null) return right ?? undefined
+  if (rightTime == null) return left ?? undefined
+  return rightTime > leftTime ? (right ?? undefined) : (left ?? undefined)
+}
+
+/**
+ * True when the latest build started at or after the resource's last update.
+ * Used so an in-progress build that predates a settings change does not
+ * replace the "settings are not live" alert.
+ */
+export function isLatestBuildAfterResourceUpdate(
+  resource?: {
+    $updatedAt?: string
+    latestDeploymentCreatedAt?: string
+  } | null,
+  activeDeployment?: { $createdAt?: string | null } | null,
+): boolean {
+  const updatedAt = parseTimestamp(resource?.$updatedAt)
+  const buildCreatedAt = parseTimestamp(
+    newerTimestamp(
+      resource?.latestDeploymentCreatedAt,
+      activeDeployment?.$createdAt,
+    ),
+  )
+  if (updatedAt == null || buildCreatedAt == null) return false
+  return buildCreatedAt >= updatedAt
+}
+
+/**
+ * The blue in-progress banner should replace the yellow settings alert only
+ * when a build is running and that build was created after the last update.
+ * While settings are live, any in-progress build can show the blue banner.
+ */
+export function shouldShowBuildingInsteadOfSettingsAlert(
+  resource?: {
+    live?: boolean
+    $updatedAt?: string
+    latestDeploymentCreatedAt?: string
+    latestDeploymentStatus?: string
+  } | null,
+  activeDeployment?: {
+    status?: string | null
+    $createdAt?: string | null
+  } | null,
+  settingsRedeployPending = false,
+): boolean {
+  const building =
+    settingsRedeployPending || resourceIsBuilding(resource, activeDeployment)
+  if (!building) return false
+  if (resource?.live !== false) return true
+  return isLatestBuildAfterResourceUpdate(resource, activeDeployment)
+}
+
+export function resourceIsBuilding(
+  resource?: {
+    latestDeploymentStatus?: string
+  } | null,
+  activeDeployment?: { status?: string | null } | null,
+): boolean {
+  if (isDeploymentInProgress(resource?.latestDeploymentStatus ?? '')) {
+    return true
+  }
+  return isDeploymentInProgress(activeDeployment?.status ?? '')
+}

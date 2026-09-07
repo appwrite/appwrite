@@ -162,6 +162,7 @@ import type {
 } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
+import { randomUUID } from '@/lib/random-uuid'
 
 export type ConsoleAccountCache = { prefs?: Record<string, unknown> }
 
@@ -915,6 +916,40 @@ export function useUpdateMembershipsPrivacy(
   })
 }
 
+/**
+ * Hook to update which factors can complete an MFA challenge.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdateMfaFactorsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (factors: {
+      totp: boolean
+      email: boolean
+      phone: boolean
+      custom: boolean
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.updateMFAFactorsPolicy({
+        totp: factors.totp,
+        email: factors.email,
+        phone: factors.phone,
+        custom: factors.custom,
+      })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 type ProjectEmailPolicyService = {
   updateDenyFreeEmailPolicy: (params: {
     enabled: boolean
@@ -1313,10 +1348,14 @@ function getAccountPrefsCallerStack(): string[] {
  * React Query with `{ prefs }` only - that crashed account UI after impersonation.
  *
  * @param reason - Short label for debug logs (which feature/hook requested the write).
+ * @param options.force - Send `updatePrefs` even when sanitized prefs match the
+ *   in-memory singleton. Needed after optimistic cache patches (the singleton
+ *   already looks like the write, so the unchanged check would skip the API).
  */
 export async function updateAccountPrefs(
   prefs: Record<string, unknown>,
   reason = 'unknown',
+  options?: { force?: boolean },
 ): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
     return undefined
@@ -1331,8 +1370,9 @@ export async function updateAccountPrefs(
     Object.keys(diff.changed).length > 0 ||
     diff.removed.length > 0
   const caller = getAccountPrefsCallerStack()
+  const force = options?.force === true
 
-  if (!hasDiff) {
+  if (!hasDiff && !force) {
     console.log('[account prefs] skip (unchanged)', {
       reason,
       keyCount: Object.keys(sanitized).length,
@@ -1345,6 +1385,7 @@ export async function updateAccountPrefs(
 
   console.log('[account prefs] update', diff, {
     reason,
+    force,
     keyCount: Object.keys(sanitized).length,
     caller,
   })
@@ -3411,7 +3452,7 @@ export function useSavedFilters(
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
       const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         name: trimmedName,
         query,
         ...(sort ? { sort } : {}),
@@ -3448,7 +3489,7 @@ export function useSavedFilters(
       await updateTeamPrefs.mutateAsync((freshPrefs) => {
         const current = parseSavedFilters(freshPrefs, scope)
         const newFilter: SavedFilter = {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           query,
           ...(sort ? { sort } : {}),
@@ -3740,7 +3781,7 @@ export function useImageTransformSavedPresets(
       }
       const next: SavedImageTransformPreset[] = [
         {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           name: trimmedName,
           json,
         },
@@ -3777,7 +3818,7 @@ export function useImageTransformSavedPresets(
           )
         }
         const next: SavedImageTransformPreset[] = [
-          { id: crypto.randomUUID(), name: trimmedName, json },
+          { id: randomUUID(), name: trimmedName, json },
           ...current,
         ]
         return buildSavedImageTransformPresetsPrefs(next)

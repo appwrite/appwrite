@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { MarkdownContent } from '@/components/global/shared/MarkdownContent'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
@@ -21,7 +22,9 @@ import {
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
-import { MarketplaceAppCreators } from '../_components/MarketplaceAppCreators'
+import { MarketplaceAppContacts } from '../_components/MarketplaceAppContacts'
+import { MarketplaceAppResourceLinks } from '../_components/MarketplaceAppResourceLinks'
+import { MarketplaceAppImages } from '../_components/MarketplaceAppImages'
 import { MarketplaceAppLogo } from '../_components/MarketplaceAppLogo'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -161,39 +164,31 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              <Button
-                disabled={installMutation.isPending}
-                onClick={() => installMutation.mutate()}
-              >
-                {t('Install app')}
-              </Button>
+              {mapped.installationScopes.length > 0 && (
+                <Button
+                  disabled={installMutation.isPending}
+                  onClick={() => installMutation.mutate()}
+                >
+                  {t('Install app')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
         <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:pb-8">
-          <div className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
-            <p className="text-[13px] text-muted-foreground leading-relaxed">
-              {mapped.description}
-            </p>
-            {mapped.clientUri && (
-              <p className="text-[13px]">
-                <span className="text-muted-foreground">{t('Homepage:')} </span>
-                <a
-                  href={mapped.clientUri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground underline-offset-4 hover:underline"
-                >
-                  {mapped.clientUri}
-                </a>
-              </p>
-            )}
-            <div className="space-y-2">
-              <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                {t('Creators')}
-              </h4>
-              <MarketplaceAppCreators creators={mapped.creators} />
+          <div className="space-y-4">
+            <MarketplaceAppImages
+              images={mapped.images ?? []}
+              appName={mapped.name}
+            />
+            <div className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
+              <MarkdownContent
+                content={mapped.description}
+                className="text-[13px] leading-relaxed text-muted-foreground"
+              />
+              <MarketplaceAppResourceLinks app={mapped} />
+              <MarketplaceAppContacts contacts={mapped.contacts ?? []} />
             </div>
           </div>
         </div>

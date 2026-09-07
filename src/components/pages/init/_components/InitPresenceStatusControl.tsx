@@ -127,6 +127,7 @@ function PresenceStatusPanel({
           {showPhoto ? (
             <PhotoAvatar
               userId={userId}
+              isCurrentUser
               size="sm"
               className="mt-0.5 rounded-full"
             />
@@ -307,6 +308,7 @@ export function InitPresenceStatusControl({
                   {showPhoto ? (
                     <PhotoAvatar
                       userId={account.$id}
+                      isCurrentUser
                       size="sm"
                       className="rounded-full"
                     />

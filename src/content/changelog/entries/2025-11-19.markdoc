@@ -3,6 +3,7 @@ layout: changelog
 title: "Skip total counts for faster list queries"
 date: 2025-11-19
 cover: /images/changelog/2025-11-19.avif
+tags: databases, performance
 ---
 You can now skip totals with a simple `total=false` flag and get faster, lighter list responses without the extra database work.
 

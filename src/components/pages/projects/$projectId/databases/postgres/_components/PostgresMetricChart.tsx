@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { format } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   Area,
@@ -24,6 +25,9 @@ import {
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { useT } from '@/lib/i18n/translate'
+import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
+import { UsageChartBrushReferenceArea } from '@/components/pages/projects/$projectId/usage/_components/UsageChartBrushReferenceArea'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 
 export type PostgresMetricSeriesPoint = {
   timestamp: number
@@ -59,6 +63,8 @@ type PostgresMetricChartProps = {
   placeholderNote?: string
   /** Keep chart/header height stable while date range or interval refetch. */
   isLoading?: boolean
+  chartInterval?: UsageChartInterval
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
   className?: string
 }
 
@@ -163,6 +169,8 @@ export function PostgresMetricChart({
   isPlaceholder = false,
   placeholderNote = POSTGRES_USAGE_PLACEHOLDER_NOTE,
   isLoading = false,
+  chartInterval = '1m',
+  onDateRangeChange,
   className,
 }: PostgresMetricChartProps) {
   const t = useT()
@@ -238,6 +246,23 @@ export function PostgresMetricChart({
       : null
 
   const showEmpty = !isLoading && data.length < 2
+
+  const brushPoints = useMemo(
+    () => data.map((point) => ({ day: new Date(point.timestamp) })),
+    [data],
+  )
+  const {
+    canSelect,
+    isSelecting,
+    brushLeft,
+    brushRight,
+    surfaceClassName,
+    chartProps,
+  } = useUsageChartBrushSelect({
+    points: brushPoints,
+    chartInterval,
+    onDateRangeChange,
+  })
 
   return (
     <div
@@ -375,11 +400,16 @@ export function PostgresMetricChart({
           </div>
         ) : (
           <div
-            className="shrink-0 text-muted-foreground"
+            className={cn('shrink-0 text-muted-foreground', surfaceClassName)}
             style={{ height: CHART_HEIGHT_PX }}
+            aria-label={
+              canSelect
+                ? t('Drag on the chart to select a date range')
+                : undefined
+            }
           >
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ ...AREA_MARGIN }}>
+              <AreaChart data={chartData} margin={{ ...AREA_MARGIN }} {...chartProps}>
                 <defs>
                   <linearGradient
                     id={gradientId}
@@ -457,8 +487,9 @@ export function PostgresMetricChart({
                   />
                 ) : null}
                 <Tooltip
+                  cursor={!isSelecting}
                   content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null
+                    if (isSelecting || !active || !payload?.length) return null
                     const row = payload[0].payload as {
                       fullDate: string
                       value: number
@@ -528,6 +559,10 @@ export function PostgresMetricChart({
                     isAnimationActive={false}
                   />
                 ) : null}
+                <UsageChartBrushReferenceArea
+                  left={brushLeft}
+                  right={brushRight}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -110,6 +110,8 @@ export function useCommunitySupportPrompt(
   const recordedShowGuardRef = useRef(false)
   /** Serialize prefs writes so active-day and show/skip cannot clobber each other. */
   const writeChainRef = useRef(Promise.resolve())
+  /** Last community-support slice we successfully sent to `updatePrefs`. */
+  const lastWrittenCsRef = useRef<string | null>(null)
 
   const state = useMemo(
     () =>
@@ -139,43 +141,59 @@ export function useCommunitySupportPrompt(
       writeChainRef.current = writeChainRef.current
         .catch(() => undefined)
         .then(async () => {
-          const currentAccount =
-            getConsoleAccountFromCache(queryClient) ?? accountRef.current
-          if (!currentAccount) return
+          try {
+            const currentAccount =
+              getConsoleAccountFromCache(queryClient) ?? accountRef.current
+            if (!currentAccount) return
 
-          // Always write the latest community-support slice from cache so a
-          // queued active-day write cannot overwrite a later show/skip.
-          const latestCs = parseCommunitySupportPrefs(
-            (getConsoleAccountFromCache(queryClient)?.prefs ??
-              currentAccount.prefs) as UserPrefs,
-          )
-          const basePrefs = (getConsoleAccountFromCache(queryClient)?.prefs ??
-            currentAccount.prefs ??
-            {}) as UserPrefs
-          const updatedAccount = await updateAccountPrefs(
-            mergeCommunitySupportPrefsIntoPrefs(basePrefs, latestCs),
-            'community-support-prompt',
-          )
-          if (!updatedAccount) return
-
-          const localBeforeSync = parseCommunitySupportPrefs(
-            getConsoleAccountFromCache(queryClient)?.prefs as
-              | UserPrefs
-              | undefined,
-          )
-          syncConsoleAccountAfterMutation(queryClient, {
-            apiResult: updatedAccount,
-          })
-          const remoteAfterSync = parseCommunitySupportPrefs(
-            updatedAccount.prefs as UserPrefs | undefined,
-          )
-          if (
-            isCommunitySupportStateAhead(
-              toPromptState(localBeforeSync),
-              toPromptState(remoteAfterSync),
+            // Always write the latest community-support slice from cache so a
+            // queued active-day write cannot overwrite a later show/skip.
+            const latestCs = parseCommunitySupportPrefs(
+              (getConsoleAccountFromCache(queryClient)?.prefs ??
+                currentAccount.prefs) as UserPrefs,
             )
-          ) {
-            patchAccountPrefsCache(queryClient, localBeforeSync)
+            const latestSerialized = JSON.stringify(latestCs)
+            if (latestSerialized === lastWrittenCsRef.current) return
+
+            const basePrefs = (getConsoleAccountFromCache(queryClient)?.prefs ??
+              currentAccount.prefs ??
+              {}) as UserPrefs
+            // Optimistic `patchAccountPrefsCache` already updated the singleton,
+            // so the unchanged-diff would skip the API and skip would not survive
+            // a reload. Force the write when this slice actually changed.
+            const updatedAccount = await updateAccountPrefs(
+              mergeCommunitySupportPrefsIntoPrefs(basePrefs, latestCs),
+              'community-support-prompt',
+              { force: true },
+            )
+            if (!updatedAccount) return
+            lastWrittenCsRef.current = latestSerialized
+
+            const localBeforeSync = parseCommunitySupportPrefs(
+              getConsoleAccountFromCache(queryClient)?.prefs as
+                | UserPrefs
+                | undefined,
+            )
+            syncConsoleAccountAfterMutation(queryClient, {
+              apiResult: updatedAccount,
+            })
+            const remoteAfterSync = parseCommunitySupportPrefs(
+              updatedAccount.prefs as UserPrefs | undefined,
+            )
+            if (
+              isCommunitySupportStateAhead(
+                toPromptState(localBeforeSync),
+                toPromptState(remoteAfterSync),
+              )
+            ) {
+              patchAccountPrefsCache(queryClient, localBeforeSync)
+            }
+          } catch (error) {
+            lastWrittenCsRef.current = null
+            console.error(
+              '[community-support-prompt] failed to persist prefs',
+              error,
+            )
           }
         })
     },
@@ -187,6 +205,7 @@ export function useCommunitySupportPrompt(
     recordedDayGuardRef.current = null
     recordedShowGuardRef.current = false
     writeChainRef.current = Promise.resolve()
+    lastWrittenCsRef.current = null
   }, [accountId])
 
   /** Record today's visit as a unique active day when needed. */

@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
 import {
   Bold,
   Code,
@@ -9,6 +8,7 @@ import {
   ListOrdered,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MarkdownContent } from '@/components/global/shared/MarkdownContent'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
@@ -235,9 +235,10 @@ export function MarkdownEditor({
       ) : (
         <div className="min-h-[7.5rem] px-3 py-2.5">
           {value.trim() ? (
-            <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] text-foreground prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-a:text-foreground prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none">
-              <ReactMarkdown>{value}</ReactMarkdown>
-            </div>
+            <MarkdownContent
+              content={value}
+              className="text-[13px] text-foreground"
+            />
           ) : (
             <p className="text-[13px] text-muted-foreground">
               {t('Nothing to preview')}

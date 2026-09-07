@@ -2,6 +2,7 @@
 layout: changelog
 title: "Bug fixes and stability updates"
 date: 2024-11-13
+tags: storage, functions
 ---
 
 We've resolved several issues to improve reliability across Appwrite:

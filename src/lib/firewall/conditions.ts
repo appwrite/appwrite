@@ -81,7 +81,11 @@ export function firewallListSearch(selection: FirewallResourceSelection): {
   }
 }
 
-/** Condition attributes shown in the rule builder, grouped for the picker. */
+/**
+ * Condition attributes shown in the rule builder, grouped for the picker.
+ * Kept in sync with the backend Firewall `ALLOWED` attribute list so a rule the
+ * console can build is always one the server will accept.
+ */
 export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
   {
     label: 'Request',
@@ -89,8 +93,13 @@ export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
       { value: 'host', label: 'Hostname' },
       { value: 'path', label: 'Path' },
       { value: 'method', label: 'Method' },
+      { value: 'protocol', label: 'Protocol' },
       { value: 'headers', label: 'Header' },
       { value: 'query', label: 'Query parameter' },
+      { value: 'queryKeys', label: 'Query parameter name' },
+      { value: 'accept', label: 'Accept' },
+      { value: 'acceptLanguage', label: 'Accept-Language' },
+      { value: 'cookie', label: 'Cookie' },
     ],
   },
   {
@@ -109,21 +118,64 @@ export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
       { value: 'continent', label: 'Continent' },
       { value: 'city', label: 'City' },
       { value: 'state', label: 'State' },
+      { value: 'postalCode', label: 'Postal code' },
+      { value: 'latitude', label: 'Latitude' },
+      { value: 'longitude', label: 'Longitude' },
+      { value: 'timeZone', label: 'Time zone' },
+      { value: 'weatherCode', label: 'Weather code' },
+    ],
+  },
+  {
+    label: 'Network',
+    attributes: [
+      { value: 'isp', label: 'ISP' },
+      { value: 'autonomousSystemNumber', label: 'AS number' },
+      {
+        value: 'autonomousSystemOrganization',
+        label: 'AS organization',
+      },
+      { value: 'connectionType', label: 'Connection type' },
+      { value: 'connectionUsageType', label: 'Connection usage type' },
+      {
+        value: 'connectionOrganization',
+        label: 'Connection organization',
+      },
     ],
   },
 ] as const
 
+/** One attribute entry (value + display label) from any picker group. */
+export type FirewallConditionAttributeDef =
+  (typeof FIREWALL_CONDITION_ATTRIBUTE_GROUPS)[number]['attributes'][number]
+
 /** Flat list of condition attributes (lookups, validation). */
-export const FIREWALL_CONDITION_ATTRIBUTES =
-  FIREWALL_CONDITION_ATTRIBUTE_GROUPS.flatMap((group) => group.attributes)
+export const FIREWALL_CONDITION_ATTRIBUTES: ReadonlyArray<FirewallConditionAttributeDef> =
+  FIREWALL_CONDITION_ATTRIBUTE_GROUPS.flatMap(
+    (group) => group.attributes as ReadonlyArray<FirewallConditionAttributeDef>,
+  )
 
-export type FirewallConditionAttribute =
-  (typeof FIREWALL_CONDITION_ATTRIBUTES)[number]['value']
+export type FirewallConditionAttribute = FirewallConditionAttributeDef['value']
 
-/** Attributes gated behind the premium Geo DB addon (enforced server-side). */
+/**
+ * Attributes gated behind the premium Geo DB addon (enforced server-side).
+ * Mirrors the backend Firewall `PREMIUM` list; the server compares
+ * case-insensitively, so the camelCase values here map 1:1 to its lowercase
+ * entries.
+ */
 export const FIREWALL_PREMIUM_ATTRIBUTES = new Set<FirewallConditionAttribute>([
   'city',
   'state',
+  'postalCode',
+  'latitude',
+  'longitude',
+  'timeZone',
+  'weatherCode',
+  'isp',
+  'autonomousSystemNumber',
+  'autonomousSystemOrganization',
+  'connectionType',
+  'connectionUsageType',
+  'connectionOrganization',
 ])
 
 export function isPremiumAttribute(
@@ -250,11 +302,23 @@ const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
 ]
 
 /**
+ * Attributes matched only by exact value or presence: coordinates (matched as
+ * strings, so text ops would compare lexicographically) and opaque numeric ids
+ * like the AS number, where contains / startsWith / endsWith are meaningless.
+ */
+const EQUALITY_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
+  'equal',
+  'notEqual',
+  'isNull',
+  'isNotNull',
+]
+
+/**
  * Operators offered per attribute. All values also exist in usage `listEvents`
  * so affected-traffic estimates stay accurate.
- * - Free text (ip / host / path / headers / query / city / state / os /
- *   browser / userAgent): full set. For `ip`, CIDR blocks only match on
- *   equal / not equal (other operators fall back to string comparison).
+ * - Free text (everything not listed below): full set. For `ip`, CIDR blocks
+ *   only match on equal / not equal (other operators fall back to string
+ *   comparison).
  * - `method`: enum-backed, equality + presence only (no text matching).
  * - `country` / `continent`: picker-backed, basic set (equal / not equal /
  *   contains / does not contain). `notContains` has no usage equivalent, so it
@@ -268,10 +332,33 @@ const OPERATORS_BY_ATTRIBUTE: Record<
   ip: FREE_TEXT_OPERATORS,
   host: FREE_TEXT_OPERATORS,
   path: FREE_TEXT_OPERATORS,
+  protocol: FREE_TEXT_OPERATORS,
   headers: FREE_TEXT_OPERATORS,
   query: FREE_TEXT_OPERATORS,
+  queryKeys: FREE_TEXT_OPERATORS,
+  accept: FREE_TEXT_OPERATORS,
+  acceptLanguage: FREE_TEXT_OPERATORS,
+  cookie: FREE_TEXT_OPERATORS,
   city: FREE_TEXT_OPERATORS,
   state: FREE_TEXT_OPERATORS,
+  postalCode: FREE_TEXT_OPERATORS,
+  // latitude / longitude are numeric coordinates the WAF matches as strings, so
+  // text matching (contains / startsWith / endsWith) would silently do
+  // lexicographic comparison — they get equality + presence only.
+  latitude: EQUALITY_OPERATORS,
+  longitude: EQUALITY_OPERATORS,
+  timeZone: FREE_TEXT_OPERATORS,
+  // weatherCode is an alphanumeric code (e.g. "USCA0746"), not a number, so the
+  // prefix (country) makes contains / startsWith genuinely useful.
+  weatherCode: FREE_TEXT_OPERATORS,
+  isp: FREE_TEXT_OPERATORS,
+  // AS number is an opaque identifier exposed as a string (e.g. "15169");
+  // prefix / range matching on it is meaningless, so equality + presence only.
+  autonomousSystemNumber: EQUALITY_OPERATORS,
+  autonomousSystemOrganization: FREE_TEXT_OPERATORS,
+  connectionType: FREE_TEXT_OPERATORS,
+  connectionUsageType: FREE_TEXT_OPERATORS,
+  connectionOrganization: FREE_TEXT_OPERATORS,
   os: FREE_TEXT_OPERATORS,
   browser: FREE_TEXT_OPERATORS,
   userAgent: FREE_TEXT_OPERATORS,

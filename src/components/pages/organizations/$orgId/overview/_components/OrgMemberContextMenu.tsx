@@ -151,7 +151,7 @@ export function OrgMemberContextMenu({
           {t('Open in new window')}
         </ContextMenuItem>
 
-        {canManageMembers && onRemove && (
+        {onRemove && (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={onRemove}>

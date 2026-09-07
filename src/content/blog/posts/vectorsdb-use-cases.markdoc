@@ -8,7 +8,6 @@ timeToRead: 8
 author: atharva
 category: ai
 featured: false
-draft: true
 faqs:
   - question: "What is the difference between a keyword search and a vector search?"
     answer: "A keyword search matches words. A document must contain the word that the user typed. A vector search matches meaning. It finds a document that has the same meaning in different words."

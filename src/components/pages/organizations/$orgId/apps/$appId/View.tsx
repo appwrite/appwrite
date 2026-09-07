@@ -3,6 +3,7 @@ import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -11,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
 import {
   buildMarketplaceAppTags,
@@ -36,6 +36,19 @@ export function View() {
   const mapped = mapAppToMarketplaceApp(app, { organizationId: orgId })
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
 
+  const handleEnabledToggle = async (enabled: boolean) => {
+    try {
+      await submit(
+        { enabled },
+        {
+          successMessage: enabled ? t('App enabled') : t('App disabled'),
+        },
+      )
+    } catch {
+      // toast handled in submit
+    }
+  }
+
   const [name, setName] = useState(app.name)
   const [tagline, setTagline] = useState(app.tagline ?? '')
   const [description, setDescription] = useState(app.description ?? '')
@@ -50,6 +63,12 @@ export function View() {
     setDescription(app.description ?? '')
     setCategory(nextMapped.category)
   }, [app, orgId])
+
+  const detailsDirty =
+    trimOrEmpty(name) !== app.name ||
+    trimOrEmpty(tagline) !== (app.tagline ?? '') ||
+    trimOrEmpty(description) !== (app.description ?? '') ||
+    category !== mapped.category
 
   const handleUpdate = async () => {
     if (!trimOrEmpty(name)) return
@@ -123,20 +142,46 @@ export function View() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>{t('App ID')}</Label>
-            <CopyableId id={app.$id} />
-          </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
           <Button
             size="sm"
             className="h-9 text-[13px]"
-            disabled={isUpdating || !trimOrEmpty(name)}
+            disabled={isUpdating || !trimOrEmpty(name) || !detailsDirty}
             onClick={handleUpdate}
           >
             {t('Update')}
           </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('App status')}
+          </h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            {t('Control whether this app can be used to authorize users.')}
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label htmlFor="app-general-enabled">{t('Enabled')}</Label>
+              <p className="text-[12px] text-muted-foreground mt-1">
+                {app.enabled
+                  ? t('This app is enabled and can authorize users.')
+                  : t('This app is disabled and cannot authorize users.')}
+              </p>
+            </div>
+            <Switch
+              id="app-general-enabled"
+              checked={app.enabled}
+              onCheckedChange={handleEnabledToggle}
+              disabled={isUpdating}
+            />
+          </div>
         </div>
       </div>
 

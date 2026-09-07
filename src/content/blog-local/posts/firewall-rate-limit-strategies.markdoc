@@ -7,7 +7,6 @@ cover: /images/blog-local/firewall-rate-limit-strategies/cover.avif
 timeToRead: 9
 author: atharva
 category: security, best-practices
-draft: true
 faqs:
   - question: "What is the difference between fixed window and sliding window rate limiting?"
     answer: "A fixed window counts requests inside clock-aligned intervals and resets the counter when each interval ends, which lets a client briefly send up to twice the limit around a boundary. A sliding window weighs the previous interval's count by how much of the current interval has passed, producing a continuously moving count with no shared reset moment."

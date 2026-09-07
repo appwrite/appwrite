@@ -1111,7 +1111,7 @@ Profiles control which features are available based on deployment type (cloud vs
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_EXTRA_OAUTH_LOGIN` – `true`/`false` to show extra console OAuth login/signup methods (Google, GitLab, Bitbucket, Cursor). GitHub stays available. Off in both profiles by default.
+- `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
 
 **Pre-launch mode** (not a profile feature; unset = off):
 
@@ -1119,14 +1119,14 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
-- Default is **day 1** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → day `1`).
+- Default is **after the event** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayAfter()`, recap mode with all days unlocked).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.nativeDbsMongo`, `features.agent`, `features.notifications`, `features.cookieBanner`). Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
-**Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
+**Feature-driven keys:** Each remaining flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `orgApiKeys` for org settings; `databaseBackups`, `databasePitrRestore`, `nativeDbsMongo` for database).
 
 ---
 
@@ -1644,7 +1644,6 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
 - **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env or debug menu, turn it off first (debug menu → Settings → Flags → Pre-launch, or unset / set `VITE_CONSOLE_PRE_LAUNCH=false`). The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
-- **`remotion/` subfolder** is an independent package (launch video) with its own deps and no lockfile; it is not needed to run or test the console.
 
 ### Console database e2e
 

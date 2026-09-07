@@ -3,6 +3,7 @@ layout: changelog
 title: Introducing Appwrite's React Native SDK in open beta
 date: 2024-04-09
 cover: /images/changelog/2024-04-09.avif
+tags: sdk
 ---
 
 We’re excited to announce the new React Native SDK in open beta.

@@ -18,11 +18,15 @@ import {
   buildPostgresIndexCommentSql,
 } from '@/lib/postgres-table-ddl'
 import { runPostgresDdlStatements } from '@/lib/postgres-sql'
+import { NativeDbIndexBuildNotice } from '../../_components/NativeDbIndexBuildNotice'
 import {
   useExecutePostgresSql,
   usePostgresTableColumns,
+  usePostgresTableInfo,
 } from '@/lib/react-query/hooks'
+import { getNativeIndexBuildEstimate } from '@/lib/databases/native-index-build-estimate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
 import { useT } from '@/lib/i18n/translate'
 
@@ -71,6 +75,11 @@ export function PostgresTableIndexDrawer({
   const { schema } = parsePostgresTableId(tableId)
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const { columns } = usePostgresTableColumns(projectId, databaseId, tableId)
+  const { tableInfo, isLoading: tableInfoLoading } = usePostgresTableInfo(
+    open ? projectId : null,
+    open ? databaseId : null,
+    open ? tableId : null,
+  )
 
   const [formState, setFormState] = useState<PostgresIndexFormState>(
     createDefaultPostgresIndexFormState(),
@@ -88,6 +97,26 @@ export function PostgresTableIndexDrawer({
         .filter((columnName) => !formState.columns.includes(columnName)),
     [columns, formState.columns],
   )
+
+  const showIndexBuildNotice = useMemo(() => {
+    if (tableInfoLoading) return false
+    return (
+      getNativeIndexBuildEstimate({
+        estimatedRows: tableInfo?.estimated_rows,
+        totalBytes: tableInfo?.total_bytes,
+        algorithm: formState.algorithm,
+        unique: formState.unique,
+        hasCondition: formState.condition.trim().length > 0,
+      }) != null
+    )
+  }, [
+    tableInfoLoading,
+    tableInfo?.estimated_rows,
+    tableInfo?.total_bytes,
+    formState.algorithm,
+    formState.unique,
+    formState.condition,
+  ])
 
   const handleSubmit = async () => {
     const validationError = validatePostgresIndexFormState(formState)
@@ -331,7 +360,23 @@ export function PostgresTableIndexDrawer({
               />
             </div>
           </div>
-          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
+          <div className="shrink-0 bg-muted/30">
+            <NativeDbIndexBuildNotice
+              placement="footer"
+              engine="postgres"
+              estimatedRows={tableInfo?.estimated_rows}
+              totalBytes={tableInfo?.total_bytes}
+              isLoading={tableInfoLoading}
+              algorithm={formState.algorithm}
+              unique={formState.unique}
+              hasCondition={formState.condition.trim().length > 0}
+            />
+            <div
+              className={cn(
+                'flex flex-col gap-2 px-6 py-4 sm:flex-row sm:justify-start',
+                !showIndexBuildNotice && 'border-t border-border',
+              )}
+            >
             <Button
               type="submit"
               disabled={
@@ -350,6 +395,7 @@ export function PostgresTableIndexDrawer({
             >
               {t('Cancel')}
             </Button>
+            </div>
           </div>
         </form>
       </>

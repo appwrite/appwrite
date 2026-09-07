@@ -3,6 +3,7 @@ layout: changelog
 title: "Control automatic Git deployments with build triggers"
 date: 2026-05-29
 cover: /images/blog/announcing-git-deployment-triggers/cover.avif
+tags: functions, sites
 ---
 
 Appwrite now supports **Git deployment triggers** for Functions and Sites. Use **branch filters** and **path filters** to control which Git pushes and pull requests create automatic deployments.

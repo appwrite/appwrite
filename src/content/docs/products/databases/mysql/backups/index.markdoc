@@ -28,10 +28,10 @@ const mysql = new Mysql(client);
 
 await mysql.createBackupPolicy({
     databaseId: '<DATABASE_ID>',
-    policyId: 'hourly',
-    name: 'Hourly',
-    schedule: '0 * * * *',
-    retention: 30,
+    policyId: 'daily',
+    name: 'Daily',
+    schedule: '0 3 * * *',
+    retention: 7,
 });
 ```
 
@@ -47,10 +47,10 @@ const mysql = new Mysql(client);
 
 await mysql.createBackupPolicy({
     databaseId: '<DATABASE_ID>',
-    policyId: 'hourly',
-    name: 'Hourly',
-    schedule: '0 * * * *',
-    retention: 30,
+    policyId: 'daily',
+    name: 'Daily',
+    schedule: '0 3 * * *',
+    retention: 7,
 });
 ```
 
@@ -69,10 +69,10 @@ $mysql = new Mysql($client);
 
 $mysql->createBackupPolicy(
     databaseId: '<DATABASE_ID>',
-    policyId: 'hourly',
-    name: 'Hourly',
-    schedule: '0 * * * *',
-    retention: 30,
+    policyId: 'daily',
+    name: 'Daily',
+    schedule: '0 3 * * *',
+    retention: 7,
 );
 ```
 
@@ -89,10 +89,10 @@ mysql = Mysql(client)
 
 mysql.create_backup_policy(
     database_id='<DATABASE_ID>',
-    policy_id='hourly',
-    name='Hourly',
-    schedule='0 * * * *',
-    retention=30,
+    policy_id='daily',
+    name='Daily',
+    schedule='0 3 * * *',
+    retention=7,
 )
 ```
 
@@ -110,10 +110,10 @@ mysql = Mysql.new(client)
 
 mysql.create_backup_policy(
     database_id: '<DATABASE_ID>',
-    policy_id: 'hourly',
-    name: 'Hourly',
-    schedule: '0 * * * *',
-    retention: 30,
+    policy_id: 'daily',
+    name: 'Daily',
+    schedule: '0 3 * * *',
+    retention: 7,
 )
 ```
 
@@ -130,10 +130,10 @@ Mysql mysql = new Mysql(client);
 
 await mysql.CreateBackupPolicy(
     databaseId: "<DATABASE_ID>",
-    policyId: "hourly",
-    name: "Hourly",
-    schedule: "0 * * * *",
-    retention: 30
+    policyId: "daily",
+    name: "Daily",
+    schedule: "0 3 * * *",
+    retention: 7
 );
 ```
 
@@ -149,10 +149,10 @@ Mysql mysql = Mysql(client);
 
 await mysql.createBackupPolicy(
     databaseId: '<DATABASE_ID>',
-    policyId: 'hourly',
-    name: 'Hourly',
-    schedule: '0 * * * *',
-    retention: 30,
+    policyId: 'daily',
+    name: 'Daily',
+    schedule: '0 3 * * *',
+    retention: 7,
 );
 ```
 
@@ -169,10 +169,10 @@ val mysql = Mysql(client)
 
 mysql.createBackupPolicy(
     databaseId = "<DATABASE_ID>",
-    policyId = "hourly",
-    name = "Hourly",
-    schedule = "0 * * * *",
-    retention = 30,
+    policyId = "daily",
+    name = "Daily",
+    schedule = "0 3 * * *",
+    retention = 7,
 )
 ```
 
@@ -188,10 +188,10 @@ let mysql = Mysql(client)
 
 _ = try await mysql.createBackupPolicy(
     databaseId: "<DATABASE_ID>",
-    policyId: "hourly",
-    name: "Hourly",
-    schedule: "0 * * * *",
-    retention: 30
+    policyId: "daily",
+    name: "Daily",
+    schedule: "0 3 * * *",
+    retention: 7
 )
 ```
 
@@ -211,7 +211,7 @@ func main() {
 
     service := appwrite.NewMysql(client)
 
-    _, err := service.CreateBackupPolicy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30)
+    _, err := service.CreateBackupPolicy("<DATABASE_ID>", "daily", "Daily", "0 3 * * *", 7)
     if err != nil {
         panic(err)
     }
@@ -231,7 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mysql = Mysql::new(&client);
 
-    mysql.create_backup_policy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30, None, None).await?;
+    mysql.create_backup_policy("<DATABASE_ID>", "daily", "Daily", "0 3 * * *", 7, None, None).await?;
 
     Ok(())
 }
@@ -243,10 +243,10 @@ curl -X POST \
   -H "X-Appwrite-Key: <API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
-      "policyId": "hourly",
-      "name": "Hourly",
-      "schedule": "0 * * * *",
-      "retention": 30
+      "policyId": "daily",
+      "name": "Daily",
+      "schedule": "0 3 * * *",
+      "retention": 7
   }' \
   https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/backups/policies
 ```
@@ -258,9 +258,9 @@ curl -X POST \
 | `policyId`  | custom ID or `unique()` | Policy identifier                          |
 | `name`      | text                    | Display name                               |
 | `schedule`  | cron expression         | When backups run, for example `0 3 * * *`  |
-| `retention` | 1 - 365 days            | How long backups from this policy are kept |
+| `retention` | days                    | How long backups from this policy are kept; 7 on Pro |
 
-List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. The number of policies you can create depends on your plan.
+List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. Plan limits apply: Pro allows one policy with a daily schedule and 7-day retention.
 
 # Manual backups {% #manual %}
 
@@ -467,7 +467,7 @@ The backup runs asynchronously with status `pending` until it completes. List ba
 
 # Restore from a backup {% #restore %}
 
-Restoring replaces the database's current data with the backup's contents. The database status moves to `restoring` and returns to `ready` when the restore completes; connections are unavailable during the restore.
+Restoring replaces the database's current data with the backup's contents. The database status moves to `restoring` and returns to `ready` when the restore completes. Connections are still accepted while the restore runs, but data is replaced when it completes.
 
 {% multicode %}
 
@@ -703,7 +703,7 @@ Everything written after the backup was taken is lost when you restore it. If yo
 
 Scheduled backups recover to fixed snapshots. Point-in-time recovery (PITR) continuously archives the binary log, so you can restore to any moment inside the retention window, for example the second before a bad migration ran.
 
-Enable PITR when creating the database, or through the API:
+PITR is enabled by default when you create a database through the API, with 7 days of retention. Change it when creating the database, or later through the API:
 
 {% multicode %}
 
@@ -1134,7 +1134,7 @@ curl -X GET \
 
 ## Restore to a point in time {% #pitr-restore %}
 
-Pass a Unix timestamp inside the recovery window:
+Pass an ISO 8601 timestamp inside the recovery window:
 
 {% multicode %}
 
@@ -1151,7 +1151,7 @@ const mysql = new Mysql(client);
 await mysql.createRestoration({
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 });
 ```
 
@@ -1168,7 +1168,7 @@ const mysql = new Mysql(client);
 await mysql.createRestoration({
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 });
 ```
 
@@ -1188,7 +1188,7 @@ $mysql = new Mysql($client);
 $mysql->createRestoration(
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: '2026-01-01T00:00:00.000+00:00',
 );
 ```
 
@@ -1206,7 +1206,7 @@ mysql = Mysql(client)
 mysql.create_restoration(
     database_id='<DATABASE_ID>',
     type='pitr',
-    target_time=1767225600,
+    target_time='2026-01-01T00:00:00.000+00:00',
 )
 ```
 
@@ -1225,7 +1225,7 @@ mysql = Mysql.new(client)
 mysql.create_restoration(
     database_id: '<DATABASE_ID>',
     type: 'pitr',
-    target_time: 1767225600,
+    target_time: '2026-01-01T00:00:00.000+00:00',
 )
 ```
 
@@ -1243,7 +1243,7 @@ Mysql mysql = new Mysql(client);
 await mysql.CreateRestoration(
     databaseId: "<DATABASE_ID>",
     type: "pitr",
-    targetTime: 1767225600
+    targetTime: "2026-01-01T00:00:00.000+00:00"
 );
 ```
 
@@ -1260,7 +1260,7 @@ Mysql mysql = Mysql(client);
 await mysql.createRestoration(
     databaseId: '<DATABASE_ID>',
     type: 'pitr',
-    targetTime: 1767225600,
+    targetTime: "2026-01-01T00:00:00.000+00:00",
 );
 ```
 
@@ -1278,7 +1278,7 @@ val mysql = Mysql(client)
 mysql.createRestoration(
     databaseId = "<DATABASE_ID>",
     type = "pitr",
-    targetTime = 1767225600,
+    targetTime = "2026-01-01T00:00:00.000+00:00",
 )
 ```
 
@@ -1295,7 +1295,7 @@ let mysql = Mysql(client)
 _ = try await mysql.createRestoration(
     databaseId: "<DATABASE_ID>",
     type: "pitr",
-    targetTime: 1767225600
+    targetTime: "2026-01-01T00:00:00.000+00:00"
 )
 ```
 
@@ -1319,7 +1319,7 @@ func main() {
     _, err := service.CreateRestoration(
         "<DATABASE_ID>",
         mysql.WithCreateRestorationType("pitr"),
-        mysql.WithCreateRestorationTargetTime(1767225600),
+        mysql.WithCreateRestorationTargetTime("2026-01-01T00:00:00.000+00:00"),
     )
     if err != nil {
         panic(err)
@@ -1340,7 +1340,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mysql = Mysql::new(&client);
 
-    mysql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some(1767225600)).await?;
+    mysql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some("2026-01-01T00:00:00.000+00:00")).await?;
 
     Ok(())
 }
@@ -1353,7 +1353,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
       "type": "pitr",
-      "targetTime": 1767225600
+      "targetTime": "2026-01-01T00:00:00.000+00:00"
   }' \
   https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/restorations
 ```

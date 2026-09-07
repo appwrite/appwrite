@@ -15,9 +15,10 @@ import type {
   DiagramNodeKind,
 } from '@/lib/diagram-generator/types'
 import { DEFAULT_COVER_THEME_ID } from '@/lib/cover-generator/themes'
+import { randomUUID } from '@/lib/random-uuid'
 
 function createId(): string {
-  return crypto.randomUUID()
+  return randomUUID()
 }
 
 export function snapDiagramValue(value: number): number {

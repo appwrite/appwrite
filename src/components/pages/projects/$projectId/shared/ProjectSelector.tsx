@@ -49,6 +49,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
@@ -246,7 +247,7 @@ export function ProjectSelector({
 }: ProjectSelectorProps) {
   const t = useT()
   const { features, isCloud } = useConsoleProfile()
-  const supportsMultiTenancy = features.multiTenancy
+  const canCreateOrganization = features.multiTenancy
   const selectionMode = typeof onProjectSelect === 'function'
   const navigate = useNavigate()
   const { account, isAuthenticated, isFetched: authFetched } = useAuth()
@@ -256,6 +257,12 @@ export function ProjectSelector({
   // Fetch organizations and teams (for team selector)
   // Note: We only fetch teams/organizations here, NOT all projects
   const { teams, organizations, isLoading: orgsLoading } = useTeams()
+  // Show the organization column whenever the account can move between orgs,
+  // even on single-tenant profiles that already hold several.
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    organizations.length,
+  )
 
   // Fetch current project separately by ID
   const {
@@ -643,7 +650,7 @@ export function ProjectSelector({
   }
 
   const handleCreateOrganization = useCallback(() => {
-    if (!supportsMultiTenancy) return
+    if (!canCreateOrganization) return
     const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
       ?.prefs
     const orgId =
@@ -658,7 +665,7 @@ export function ProjectSelector({
     currentProject?.teamId,
     navigate,
     onCreateOrganization,
-    supportsMultiTenancy,
+    canCreateOrganization,
   ])
 
   // Only skeleton when the current project is not available yet (orgs can hydrate after first paint)
@@ -711,8 +718,8 @@ export function ProjectSelector({
 
   // Do not reset the shell gate on unmount. Access-denied / not-found layouts
   // unmount this selector after releasing the gate; a cleanup reset would put
-  // the fullscreen loader back over the error UI. Pathname changes in
-  // useInitialLoader already clear the gate when leaving project routes.
+  // the fullscreen loader back over the error UI. useInitialLoader clears the
+  // gate when leaving project routes, not on every in-project path change.
 
   if (isProjectSelectorLoading) {
     return (
@@ -791,7 +798,9 @@ export function ProjectSelector({
     billingFailureTeamId,
     billingOrgReadonly,
     onCreateProject: () => setCreateProjectDialogOpen(true),
-    onCreateOrganization: handleCreateOrganization,
+    onCreateOrganization: canCreateOrganization
+      ? handleCreateOrganization
+      : undefined,
     prefetchTeamProjects,
     selectionMode,
   }
@@ -1066,7 +1075,8 @@ interface ProjectSelectorContentProps {
   /** That org's billing status is read-only (stronger invoice warning copy) */
   billingOrgReadonly: boolean
   onCreateProject: () => void
-  onCreateOrganization: () => void
+  /** Absent on profiles that block creating another organization */
+  onCreateOrganization?: () => void
   /** Preload pinned + paginated projects when the user hovers an organization row */
   prefetchTeamProjects: (teamId: string) => void
   /** When true, project rows select via callback instead of navigating */
@@ -1218,7 +1228,7 @@ function ProjectSelectorContent({
             </div>
           </div>
 
-          {!selectionMode ? (
+          {!selectionMode && onCreateOrganization ? (
             <div className="border-t border-border p-1.5">
               <button
                 type="button"
@@ -1560,7 +1570,7 @@ function MobileProjectSelectorContent({
             </div>
           </div>
 
-          {!selectionMode ? (
+          {!selectionMode && onCreateOrganization ? (
             <div className="border-t border-border p-2">
               <button
                 type="button"

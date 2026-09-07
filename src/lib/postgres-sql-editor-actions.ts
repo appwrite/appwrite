@@ -13,6 +13,7 @@ export type PostgresSqlEditorActions = {
   canFormat: boolean
   canRun: boolean
   canExplain: boolean
+  canAnalyze: boolean
   canCreateTab: boolean
   canCloseTab: boolean
   canSelectNextTab: boolean
@@ -25,6 +26,7 @@ export type PostgresSqlEditorActions = {
   format: () => void
   run: () => void
   explain: () => void
+  analyze: () => void
   createTab: () => void
   closeTab: () => void
   selectNextTab: () => void

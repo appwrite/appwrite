@@ -51,6 +51,12 @@ export function hasInitScheduleStarted(
 export const INIT_SCHEDULE_STARTING_SOON_WINDOW_MS = 60 * 60 * 1000
 
 /**
+ * How long after `startsAt` an authored livestream stays "Live now".
+ * Matches calendar export duration and the gap before each day's AMA.
+ */
+export const INIT_SCHEDULE_LIVE_DURATION_MS = 60 * 60 * 1000
+
+/**
  * True when `nowMs` is within the starting-soon window before `startsAt`
  * (after the window opens, before the session starts).
  */
@@ -63,6 +69,21 @@ export function isInitScheduleStartingSoon(
   if (!date) return false
   const startMs = date.getTime()
   return nowMs < startMs && nowMs >= startMs - windowMs
+}
+
+/**
+ * True when `nowMs` falls in the live window: at/after `startsAt`, before
+ * `startsAt + durationMs`.
+ */
+export function isInitScheduleLiveNow(
+  startsAt: string,
+  nowMs: number = Date.now(),
+  durationMs: number = INIT_SCHEDULE_LIVE_DURATION_MS,
+): boolean {
+  const date = parseInitScheduleTime(startsAt)
+  if (!date) return false
+  const startMs = date.getTime()
+  return nowMs >= startMs && nowMs < startMs + durationMs
 }
 
 /** `YYYY-MM-DD` for an instant in the given zone (viewer's zone when omitted). */

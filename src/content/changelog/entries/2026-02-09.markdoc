@@ -3,6 +3,7 @@ layout: changelog
 title: "Generate a type-safe SDK from your schema with the Appwrite CLI"
 date: 2026-02-09
 cover: /images/blog/appwrite-generate/cover.avif
+tags: cli, databases, functions, sdk
 ---
 
 The Appwrite CLI now includes a `generate` command that creates a type-safe, project-aware SDK directly from your database schema. The generated SDK includes typed helpers with autocomplete for querying and mutating rows, eliminating boilerplate and turning schema-related runtime bugs into type errors.

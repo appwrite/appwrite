@@ -43,6 +43,7 @@ import {
   USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
   USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
+  USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
   USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS,
@@ -478,6 +479,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     description: 'Usage chart interval (1m, 15m, 1h, or 1d).',
     category: 'Usage',
   },
+  {
+    id: 'firewallTrafficLive',
+    scope: 'account',
+    key: USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
+    description:
+      'Firewall traffic chart live polling enabled (shared across projects).',
+    category: 'Usage',
+  },
 
   // Generators / explorer
   {
@@ -556,8 +565,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'buildNotificationsOptedOut',
     scope: 'account',
     key: USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT,
-    description: 'User dismissed the build completion notifications prompt.',
-    category: 'Notifications',
+    description: 'User opted out of Console browser alerts.',
+    category: 'Browser alerts',
   },
   {
     id: 'communitySupport',

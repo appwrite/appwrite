@@ -2,6 +2,7 @@
 layout: changelog
 title: Edge runtimes just got more resilient
 date: 2026-03-02
+tags: functions, performance, infrastructure
 ---
 
 We've rolled out infrastructure improvements to strengthen runtime stability across regions, including NYC, after identifying DNS-related instability under load.

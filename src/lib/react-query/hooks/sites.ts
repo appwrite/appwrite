@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Sites
  *
- * Handles sites, deployments, logs, variables, frameworks, specifications, usage, and domains.
+ * Handles sites, deployments, logs, variables, frameworks, specifications, and domains.
  */
 
 import {
@@ -28,6 +28,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { Dependencies } from './dependencies'
+import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -163,6 +164,7 @@ export function buildSiteUpdateParams(
     buildSpecification: site.buildSpecification,
     runtimeSpecification: site.runtimeSpecification,
     deploymentRetention: site.deploymentRetention,
+    scopes: site.scopes,
     ...updates,
   } as unknown as SiteUpdateParams
 }
@@ -477,6 +479,8 @@ export function siteQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    structuralSharing: (oldData, newData) =>
+      keepNewerLatestDeployment(oldData, newData),
   })
 }
 

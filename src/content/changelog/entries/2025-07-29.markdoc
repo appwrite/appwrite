@@ -2,6 +2,7 @@
 layout: changelog
 title: Console and deployment improvements for smoother workflows
 date: 2025-07-29
+tags: console, storage, functions, sites
 ---
 
 We've shipped several improvements to fix broken flows and clean up the developer experience across Sites, Functions, and the Appwrite Console.

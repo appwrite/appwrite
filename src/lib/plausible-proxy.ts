@@ -21,7 +21,7 @@ export const PLAUSIBLE_PROXY_EVENT_PATH = '/r/e'
  * domain rename). Combined with the upstream URL into the browser `?v=` param so
  * CDN/browser caches do not keep serving a stale embedded domain.
  */
-export const PLAUSIBLE_SCRIPT_CACHE_VERSION = '2'
+export const PLAUSIBLE_SCRIPT_CACHE_VERSION = '3'
 
 const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
 

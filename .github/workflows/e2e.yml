@@ -10,7 +10,7 @@ on:
 jobs:
   e2e:
     name: ${{ matrix.project }}
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7i/spot=price-capacity-optimized/retry=when-interrupted/extras=otel
+    runs-on: runs-on=${{ github.run_id }}/runner=e2e
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
@@ -19,6 +19,8 @@ jobs:
           - project: website
             timeout: 15
           - project: console
+            timeout: 15
+          - project: console-mocked
             timeout: 15
           - project: console-usage
             timeout: 20

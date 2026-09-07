@@ -20,6 +20,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Add at least one non-relationship attribute to create indexes.': 'הוסיפו לפחות attribute אחד שאינו קשר (relationship) כדי ליצור אינדקסים.',
   'Add at least one non-relationship column to create indexes.': 'הוסיפו לפחות עמודה אחת שאינה קשר (relationship) כדי ליצור אינדקסים.',
   'Add at least one non-relationship column to suggest indexes.': 'הוסיפו לפחות עמודה אחת שאינה קשר (relationship) כדי לקבל הצעות אינדקסים.',
+  'A partial index may reduce the amount of data scanned.': 'אינדקס חלקי עשוי להקטין את כמות הנתונים שנסרקים.',
   'Add column': 'הוספת עמודה',
   'Add custom policy': 'הוספת מדיניות מותאמת אישית',
   'Add element': 'הוספת רכיב',
@@ -44,6 +45,9 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ערך קבוע או ביטוי SQL, לדוגמה now() או gen_random_uuid().',
   'A value or SQL expression, for example CURRENT_TIMESTAMP.':
     'ערך או ביטוי SQL, לדוגמה CURRENT_TIMESTAMP.',
+  'Document permissions grant extra access on top of collection permissions, they are not required in addition to them.': 'הרשאות מסמך מעניקות גישה נוספת מעבר להרשאות האוסף, אין צורך בשתיהן יחד.',
+  'either document permissions or collection permissions': 'הרשאות מסמך או הרשאות אוסף',
+  'either row permissions or table permissions': 'הרשאות שורה או הרשאות טבלה',
   'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
     'הזינו ערך כמו שהוא, או ביטוי SQL כגון CURRENT_TIMESTAMP.',
   'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
@@ -95,8 +99,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'backups selected': 'גיבויים נבחרו',
   'Beta': 'בטא',
   'Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.': 'בלוקים הנקראים מהדיסק בדקה. עלייה בקריאות מהדיסק לצד ירידה ביחס הפגיעות במטמון (cache hit) עשויה להעיד על מחסור בזיכרון.',
-  'both collection permissions and document permissions': 'גם להרשאות אוסף וגם להרשאות מסמך',
-  'both table permissions and row permissions': 'גם להרשאות טבלה וגם להרשאות שורה',
   'Bucket': 'באקט',
   'Buckets': 'באקטים',
   'Buffer cache effectiveness from pg_stat_database block reads and hits.': 'יעילות מטמון הבאפרים לפי קריאות בלוקים ופגיעות מטמון (hits) מתוך pg_stat_database.',
@@ -198,6 +200,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Couldn\'t refresh databases': 'לא ניתן היה לרענן את מסדי הנתונים',
   'Couldn\'t refresh dedicated databases': 'לא ניתן היה לרענן את מסדי הנתונים הייעודיים',
   'Covering index columns stored in the index but not used for lookups.': 'עמודות covering השמורות באינדקס אך אינן משמשות לחיפושים.',
+  'Optional WHERE predicate, for example deleted_at IS NULL.': 'ביטוי WHERE אופציונלי, לדוגמה deleted_at IS NULL.',
   'CPU usage': 'שימוש ב-CPU',
   'Create': 'יצירה',
   'Create a collection to store JSON documents with flexible schemas.': 'צרו אוסף לאחסון מסמכי JSON עם סכימות גמישות.',
@@ -215,6 +218,12 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'צרו עמודות תחילה',
   'Create database': 'יצירת מסד נתונים',
   'Creating database': 'יוצר מסד נתונים',
+  'Creating an index scans existing rows. Expect extended write blocking on this table until the build completes.': 'יצירת אינדקס סורקת שורות קיימות. צפו לחסימת כתיבה ממושכת על טבלה זו עד שהבנייה מסתיימת.',
+  'Creating an index scans existing rows. Even with online DDL, builds on tables of this size can run for an extended period.': 'יצירת אינדקס סורקת שורות קיימות. גם עם online DDL, בנייה על טבלאות בגודל זה יכולה להימשך זמן רב.',
+  'Creating an index scans existing rows. The build runs online but may consume significant resources and take considerable time.': 'יצירת אינדקס סורקת שורות קיימות. הבנייה רצה online אך עשויה לצרוך משאבים משמעותיים ולקחת זמן ניכר.',
+  'Creating an index scans existing rows. The build runs online but may still take noticeable time on larger tables.': 'יצירת אינדקס סורקת שורות קיימות. הבנייה רצה online אך עדיין עשויה לקחת זמן ניכר בטבלאות גדולות.',
+  'Creating an index scans existing rows. Writes to this table are blocked until the build finishes.': 'יצירת אינדקס סורקת שורות קיימות. כתיבה לטבלה זו חסומה עד שהבנייה מסתיימת.',
+  'Creating an index scans existing rows. Writes to this table remain blocked for the full duration, which can be substantial on large tables.': 'יצירת אינדקס סורקת שורות קיימות. כתיבה לטבלה זו נשארת חסומה לאורך כל הבנייה, מה שיכול להיות משמעותי בטבלאות גדולות.',
   'Allocating dedicated compute for your database.':
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
@@ -229,6 +238,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Preparing workspace': 'מכין את סביבת העבודה',
   'Preparing your database workspace.': 'מכין את סביבת העבודה של מסד הנתונים.',
   'Provisioning compute': 'מספק compute',
+  'Row permissions grant extra access on top of table permissions, they are not required in addition to them.': 'הרשאות שורה מעניקות גישה נוספת מעבר להרשאות הטבלה, אין צורך בשתיהן יחד.',
   'Setting up backups': 'מגדיר גיבויים',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
@@ -369,6 +379,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Dead tuples': 'רשומות מתות (Dead tuples)',
   'Decrease replica count': 'הקטנת מספר הרפליקות',
   'Dedicated': 'ייעודי',
+  'Dedicated database': 'מסד נתונים ייעודי',
   'Dedicated databases': 'מסדי נתונים ייעודיים',
   'Default': 'ברירת מחדל',
   'Leave empty for': 'השאירו ריק עבור',
@@ -404,6 +415,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Date and time with time zone': 'תאריך ושעה עם אזור זמן',
   'Time span': 'טווח זמן',
   'Unique identifier': 'מזהה ייחודי',
+  'Unique indexes verify every row, which adds time on large tables.': 'אינדקסים ייחודיים מאמתים כל שורה, מה שמוסיף זמן בטבלאות גדולות.',
   'JSON stored as text': 'JSON כטקסט',
   'Binary JSON': 'JSON בינארי',
   'Binary data': 'נתונים בינאריים',
@@ -611,12 +623,16 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Include header row - Column names as the first row.': 'הכללת שורת כותרת: שמות העמודות כשורה הראשונה.',
   'Increase replica count': 'הגדלת מספר הרפליקות',
   'Index': 'אינדקס',
+  'Index build may take a few minutes on this table': 'בניית אינדקס על טבלה זו עשויה לקחת מספר דקות',
+  'Index build may take considerable time on this table': 'בניית אינדקס על טבלה זו עשויה לקחת זמן משמעותי',
+  'Index build may take a long time on this table': 'בניית אינדקס על טבלה זו עשויה לקחת זמן רב',
   'Index created': 'האינדקס נוצר',
   'Index created successfully': 'האינדקס נוצר בהצלחה',
   'Index deleted': 'האינדקס נמחק',
   'Index updated successfully': 'האינדקס עודכן בהצלחה',
   'Indexes': 'אינדקסים',
   'indexes': 'אינדקסים',
+  'indexes take longer to build than B-tree.': 'לוקח יותר זמן לבנות מאשר B-tree.',
   'Ingress and egress for this database instance.': 'תעבורה נכנסת ויוצאת עבור מופע מסד נתונים זה.',
   'Ingress and egress throughput for this database instance.': 'קצב תעבורה נכנסת ויוצאת עבור מופע מסד נתונים זה.',
   'Insights': 'תובנות',
@@ -943,6 +959,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Previous': 'הקודם',
   'Previous page': 'העמוד הקודם',
   'Price': 'מחיר',
+  'PK': 'PK',
   'Primary key': 'מפתח ראשי',
   'Optional SQL expression, for example': 'ביטוי SQL אופציונלי, לדוגמה',
   'Must be valid SQL for this column type, for example':
@@ -1215,8 +1232,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Thursday': 'חמישי',
   'Tier': 'רמה',
   'Time': 'זמן',
-  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.': 'כדי לגשת למסמכים. הרשאות מסמך הן שכבה נוספת, לא חלופה להרשאות אוסף.',
-  'to access rows. Row permissions are an additional layer, not an alternative to table permissions.': 'כדי לגשת לשורות. הרשאות שורה הן שכבה נוספת, לא חלופה להרשאות טבלה.',
   'to enable automated backups.': 'כדי להפעיל גיבויים אוטומטיים.',
   'Top tables by on-disk size, including indexes and TOAST data.': 'הטבלאות המובילות לפי גודל בדיסק, כולל אינדקסים ונתוני TOAST.',
   'Total': 'סה"כ',
@@ -1273,6 +1288,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Visual': 'חזותי',
   'Visualizer': 'תרשים סכימה',
   'Wait': 'המתנה',
+  'When document security is enabled, users can access a document if they have': 'כאשר אבטחת מסמכים מופעלת, משתמשים יכולים לגשת למסמך אם יש להם',
+  'When row security is enabled, users can access a row if they have': 'כאשר אבטחת שורות מופעלת, משתמשים יכולים לגשת לשורה אם יש להם',
   'Will be stored as': 'יישמר כ-',
   'Wait event': 'אירוע המתנה',
   'Wednesday': 'רביעי',
@@ -1280,8 +1297,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Weeks': 'שבועות',
   'What is a DSN?': 'מה זה DSN?',
   'What is psql?': 'מה זה psql?',
-  'When document security is enabled, users need': 'כאשר אבטחת מסמכים מופעלת, משתמשים זקוקים',
-  'When row security is enabled, users need': 'כאשר אבטחת שורות מופעלת, משתמשים זקוקים',
   'Workload': 'עומס עבודה',
   'Write operations': 'פעולות כתיבה',
   'Write SQL before explaining a query.': 'כתבו SQL לפני הסבר שאילתה.',
@@ -1516,6 +1531,16 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Select a schema to visualize': 'בחרו סכימה להצגה',
   'Run': 'הרצה',
   'Explain': 'Explain',
+  'Analyze': 'Analyze',
+  'Analyzing query…': 'מנתח שאילתה…',
+  'Analyze failed': 'הניתוח נכשל',
+  'Explain failed': 'הסבר השאילתה נכשל',
+  'Query failed': 'השאילתה נכשלה',
+  'Explaining query…': 'מסביר שאילתה…',
+  'Write SQL before analyzing a query.': 'כתבו SQL לפני ניתוח שאילתה.',
+  'Executes the query and shows actual timings.': 'מריץ את השאילתה ומציג זמני ביצוע בפועל.',
+  'Estimated plan only. The query was not executed.': 'תוכנית משוערת בלבד. השאילתה לא הורצה.',
+  'Query was executed. Timings show actual performance.': 'השאילתה הורצה. הזמנים משקפים ביצועים בפועל.',
   'Format SQL': 'עיצוב SQL',
   'Off': 'כבוי',
   'Billed at': 'חיוב ב-',
@@ -1591,6 +1616,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Removing': 'בהסרה',
   'Restoring': 'משחזר',
   'Scaling': 'משנה קנה מידה',
+  'Failing over': 'Failover',
   'Upgrading': 'משדרג',
   'Migrating': 'מעביר',
   'Pausing': 'משהה',
@@ -1646,6 +1672,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Compute tier update started': 'עדכון רמת המחשוב התחיל',
   'Failed to update compute tier': 'עדכון רמת המחשוב נכשל',
   'Database is scaling': 'מסד הנתונים משנה קנה מידה',
+  'Database is failing over': 'מסד הנתונים ב-failover',
   'Database is provisioning': 'מסד הנתונים בהקצאה',
   'Database is restoring': 'מסד הנתונים משוחזר',
   'Database is paused': 'מסד הנתונים מושהה',
@@ -1658,6 +1685,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current status': 'סטטוס נוכחי',
   'A compute tier change is in progress. Your cluster remains available during this operation.':
     'שינוי רמת המחשוב מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
+  'A failover is in progress. Your cluster remains available during this operation.':
+    'Failover מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
   'Dedicated compute is being provisioned for this database.':
     'מוקצה מחשוב ייעודי עבור מסד נתונים זה.',
   'This database is being restored. Some operations may be unavailable until it is ready again.':
@@ -2013,6 +2042,17 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Disk IOPS': 'IOPS של דיסק',
   'Disk read and write operations per second for instance storage.':
     'פעולות קריאה וכתיבה לדיסק לשנייה עבור אחסון המופע.',
+  'Inbound and outbound data transferred by this database instance during the selected period.':
+    'נתונים נכנסים ויוצאים שהועברו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Compute resources consumed by this database instance during the selected period.':
+    'משאבי compute שנצרכו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Cold starts for this database instance during the selected period.':
+    'Cold starts עבור מופע מסד נתונים זה בטווח שנבחר.',
+  'Debug metrics': 'מדדי debug',
+  'Cold starts': 'Cold starts',
+  'No compute metrics for this date range': 'אין מדדי compute לטווח תאריכים זה',
+  'No cold start metrics for this date range':
+    'אין מדדי cold start לטווח תאריכים זה',
   'Disk read operations per second for instance storage.':
     'פעולות קריאה לדיסק לשנייה עבור אחסון המופע.',
   'Disk write operations per second for instance storage.':
@@ -2024,9 +2064,12 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No connection metrics for this date range': 'אין מדדי חיבורים לטווח תאריכים זה',
   'No CPU metrics for this date range': 'אין מדדי CPU לטווח תאריכים זה',
   'No IOPS metrics for this date range': 'אין מדדי IOPS לטווח תאריכים זה',
+  'No network metrics for this date range': 'אין מדדי רשת לטווח תאריכים זה',
   'No memory metrics for this date range': 'אין מדדי זיכרון לטווח תאריכים זה',
   'No QPS metrics for this date range': 'אין מדדי QPS לטווח תאריכים זה',
   'No storage metrics for this date range': 'אין מדדי אחסון לטווח תאריכים זה',
+  'Metrics are still being collected for this newly created database. Charts will populate within a few minutes once the instance is ready.':
+    'מדדים עדיין נאספים עבור מסד הנתונים החדש. הגרפים יתמלאו תוך מספר דקות, לאחר שהמופע יהיה מוכן.',
   'qps': 'qps',
   'Queries per second': 'שאילתות לשנייה',
   'Queries per second handled by this database instance.':
@@ -2043,8 +2086,65 @@ export const heDatabasesDictionary: Record<string, string> = {
   'utilization': 'ניצול',
   'read': 'קריאה',
   'write': 'כתיבה',
+  'inbound': 'נכנס',
+  'outbound': 'יוצא',
+  'Inbound': 'נכנס',
+  'Outbound': 'יוצא',
+  'Outbound total': 'סה"כ יוצא',
   'used': 'בשימוש',
   'Write IOPS latest': 'IOPS כתיבה אחרון',
   "We couldn't fetch usage data from the server. Check your connection and try again.":
     'לא הצלחנו לטעון נתוני שימוש מהשרת. בדקו את החיבור ונסו שוב.',
+  'Restore to a point in time': 'שחזור לנקודת זמן',
+  'Choose a moment inside the recovery window. The target database is unavailable while restoring, and everything after that moment is discarded.':
+    'בחרו רגע בתוך חלון השחזור. מסד הנתונים היעד אינו זמין בזמן השחזור, וכל מה שאחרי הרגע הזה נמחק.',
+  'Recovery window': 'חלון שחזור',
+  'Earliest': 'המוקדם ביותר',
+  'Latest': 'המאוחר ביותר',
+  'No recovery window is available yet. Continuous archiving has to capture its first segment after PITR is enabled.':
+    'עדיין אין חלון שחזור. אחרי הפעלת PITR, הארכיוון הרציף צריך ללכוד את המקטע הראשון.',
+  'Restore time': 'זמן שחזור',
+  'Use latest': 'שימוש במאוחר ביותר',
+  'Choose a time between the earliest and latest recovery points.':
+    'בחרו זמן בין נקודות השחזור המוקדמת והמאוחרת.',
+  'Overwrite this database in place. This cannot be undone.':
+    'שכתבו את מסד הנתונים הזה במקום. לא ניתן לבטל פעולה זו.',
+  'Another database': 'מסד נתונים אחר',
+  'Restore into a ready database with the same engine and version.':
+    'שחזרו למסד נתונים מוכן עם אותו מנוע ואותה גרסה.',
+  'Target database': 'מסד נתונים יעד',
+  'No other ready database with the same engine and version is available.':
+    'אין מסד נתונים מוכן אחר עם אותו מנוע ואותה גרסה.',
+  'Select a database': 'בחירת מסד נתונים',
+  'I understand that the selected database will be permanently replaced with data from this point in time.':
+    'ברור לי שמסד הנתונים שנבחר יוחלף לצמיתות בנתונים מנקודת הזמן הזו.',
+  'I understand that all current database data will be permanently replaced, and everything after this time will be discarded.':
+    'ברור לי שכל הנתונים הנוכחיים במסד הנתונים יוחלפו לצמיתות, וכל מה שאחרי הזמן הזה יימחק.',
+  'Failed to restore to this point in time': 'השחזור לנקודת הזמן הזו נכשל',
+  'Choose a restore time inside the recovery window.':
+    'בחרו זמן שחזור בתוך חלון השחזור.',
+  'Restore PITR': 'שחזור PITR',
+  'Enable PITR first to restore to a specific moment.':
+    'הפעילו PITR קודם כדי לשחזר לרגע מסוים.',
+  'Could not load the recovery window. Try again in a moment.':
+    'לא הצלחנו לטעון את חלון השחזור. נסו שוב בעוד רגע.',
+  'Loading recovery window...': 'טוען את חלון השחזור...',
+  'Target time': 'זמן יעד',
+  'Backup': 'גיבוי',
+  "You don't have permission to change database settings.":
+    'אין לכם הרשאה לשנות הגדרות של מסד הנתונים.',
+  'Start restore': 'התחלת שחזור',
+  'Database changes are recorded continuously, so you can restore to any moment in the recovery window.':
+    'שינויים במסד הנתונים נרשמים באופן רציף, כך שאפשר לשחזר לכל רגע בחלון השחזור.',
+  'Restore available from': 'שחזור זמין מ-',
+  'Latest restore available at': 'שחזור אחרון זמין ב-',
+  'Time zone': 'אזור זמן',
+  "You'll pick the date and time when you start.":
+    'את התאריך והשעה תבחרו אחרי שתתחילו.',
+  'Time of recovery': 'שעת השחזור',
+  'Recovery available': 'שחזור זמין',
+  'This time is before the earliest recovery point.':
+    'הזמן הזה מוקדם מנקודת השחזור המוקדמת ביותר.',
+  'This time is after the latest recovery point.':
+    'הזמן הזה מאוחר מנקודת השחזור המאוחרת ביותר.',
 }

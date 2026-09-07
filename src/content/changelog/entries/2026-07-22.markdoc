@@ -2,6 +2,7 @@
 layout: changelog
 title: "Pausing the creation of new dev keys"
 date: 2026-07-22
+tags: firewall, security
 ---
 
 Starting today, we are pausing the creation of new dev keys. Existing dev keys will keep working until **September 1, 2026**, when dev keys will be deprecated, as previously announced in the deprecation notice in the [dev keys documentation](/docs/advanced/security/dev-keys).

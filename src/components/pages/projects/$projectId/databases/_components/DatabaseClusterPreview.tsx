@@ -28,6 +28,7 @@ import {
   VIEWPORT_PAN_ZOOM_MAX,
 } from '@/lib/hooks/useViewportPanZoom'
 import { cn } from '@/lib/utils'
+import { isDedicatedDatabaseFailingOver } from '@/lib/databases/dedicated-database-status'
 import { useT } from '@/lib/i18n/translate'
 
 /** Mid-card cluster area; taller so node headers + live metric placeholders stay readable. */
@@ -142,7 +143,9 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
   if (normalized === 'provisioning' || normalized === 'restoring') {
     return 'provisioning'
   }
-  if (normalized === 'scaling') return 'scaling'
+  if (normalized === 'scaling' || isDedicatedDatabaseFailingOver(normalized)) {
+    return 'scaling'
+  }
   if (normalized === 'starting') return 'starting'
   if (
     normalized === 'failed' ||
@@ -165,9 +168,9 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
 }
 
 /**
- * Compute-tier scaling keeps the cluster available, so existing nodes should
- * keep live metrics and only switch the status dot to amber. Leave draft
- * add/remove and failed states alone.
+ * Compute-tier scaling and failover keep the cluster available, so existing
+ * nodes should keep live metrics and only switch the status dot to blue.
+ * Leave draft add/remove and failed states alone.
  */
 function overlayScalingLifecycle(
   status: ClusterNodeStatus,
@@ -284,11 +287,13 @@ function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
     case 'active':
       return 'bg-emerald-500 dark:bg-emerald-400'
     case 'provisioning':
-    case 'scaling':
     case 'starting':
+      return 'bg-blue-500 dark:bg-blue-400'
     case 'pending':
-    case 'adding':
       return 'bg-amber-500 dark:bg-amber-400'
+    case 'scaling':
+    case 'adding':
+      return 'bg-blue-500 dark:bg-blue-400'
     case 'removing':
       return 'bg-slate-400 dark:bg-slate-500'
     case 'failed':
@@ -365,7 +370,9 @@ function ResourcePercentValue({ value }: { value: number | null }) {
     <span
       className={cn(
         RESOURCE_PERCENT_SLOT_CLASSNAME,
-        ready ? 'text-foreground' : 'text-transparent select-none',
+        ready
+          ? 'text-foreground transition-colors duration-300 ease-out motion-reduce:transition-none'
+          : 'text-transparent select-none',
       )}
       aria-hidden={!ready}
     >
@@ -519,6 +526,10 @@ function buildCompactLayout(
   }
 }
 
+function hasResourceMetricValue(value: number | null): boolean {
+  return value != null && !Number.isNaN(value)
+}
+
 function CompactClusterNode({
   label,
   node,
@@ -545,6 +556,18 @@ function CompactClusterNode({
     status === 'pending' ||
     status === 'failed'
 
+  const hasCpu =
+    metrics.kind === 'resource' && hasResourceMetricValue(metrics.cpu)
+  const hasMemory =
+    metrics.kind === 'resource' && hasResourceMetricValue(metrics.memory)
+  const hasAnyResourceStat = hasCpu || hasMemory
+  const hasConnections =
+    metrics.kind === 'connections' &&
+    (metrics.current != null || metrics.max != null)
+
+  const footerExpanded =
+    showStatusBody || hasAnyResourceStat || hasConnections
+
   const connectionsLabel =
     metrics.kind === 'connections'
       ? `${
@@ -555,24 +578,28 @@ function CompactClusterNode({
   return (
     <div
       className={cn(
-        'absolute select-none transition-opacity',
+        'absolute select-none',
         status === 'removing' && 'opacity-45',
       )}
       style={{
         left: `${node.x}px`,
         top: `${node.y}px`,
         width: `${node.width}px`,
+        height: `${node.height}px`,
       }}
     >
       <div
         className={cn(
-          'overflow-hidden rounded-md border bg-card shadow-sm',
-          isPreviewChange
-            ? 'border-dashed border-muted-foreground/55'
-            : 'border-border',
-          status === 'adding' && 'bg-amber-500/5',
-          status === 'removing' && 'bg-muted/40',
+          'overflow-hidden rounded-md border bg-card shadow-sm transition-[max-height] duration-300 ease-out motion-reduce:transition-none',
+          status === 'adding' &&
+            'border-dashed border-blue-500/40 bg-blue-500/5',
+          status === 'removing' &&
+            'border-dashed border-muted-foreground/55 bg-muted/40',
+          !isPreviewChange && 'border-border',
         )}
+        style={{
+          maxHeight: footerExpanded ? NODE_HEIGHT : HEADER_HEIGHT,
+        }}
       >
         <div
           className={cn(
@@ -603,7 +630,10 @@ function CompactClusterNode({
           />
         </div>
         <div
-          className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
+          className={cn(
+            'flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5 transition-opacity duration-300 ease-out motion-reduce:transition-none',
+            footerExpanded ? 'opacity-100 delay-100' : 'opacity-0 delay-0',
+          )}
           style={{ minHeight: METRICS_BODY_HEIGHT }}
         >
           {showStatusBody ? (
@@ -614,10 +644,11 @@ function CompactClusterNode({
                   ? 'text-muted-foreground'
                   : status === 'adding' ||
                       status === 'provisioning' ||
-                      status === 'starting' ||
-                      status === 'pending'
-                    ? 'text-amber-700 dark:text-amber-400'
-                    : 'text-muted-foreground',
+                      status === 'starting'
+                    ? 'text-blue-700 dark:text-blue-400'
+                    : status === 'pending'
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-muted-foreground',
               )}
             >
               {statusLabel}
@@ -635,10 +666,7 @@ function CompactClusterNode({
                 <span className="text-muted-foreground">{t('CPU')}</span>
                 <ResourcePercentValue value={metrics.cpu} />
               </span>
-              <span
-                className="h-3 w-px shrink-0 bg-border"
-                aria-hidden
-              />
+              <span className="h-3 w-px shrink-0 bg-border" aria-hidden />
               <span className="inline-flex items-center gap-1 text-[10px] leading-none">
                 <span className="text-muted-foreground">{t('Memory')}</span>
                 <ResourcePercentValue value={metrics.memory} />

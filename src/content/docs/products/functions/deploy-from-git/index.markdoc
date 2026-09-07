@@ -19,6 +19,13 @@ You can only use Git deployment for Appwrite Functions connected to Git.
 [Create a new function with Git](/docs/products/functions/functions#create-function) or 
 connect your existing function to a Git repository in your function's **Settings** > **Configuration** > **Git settings** > **Connect Git**. 
 
+{% only_dark %}
+![Git repository](/images/docs/functions/dark/git-repo.avif)
+{% /only_dark %}
+{% only_light %}
+![Git repository](/images/docs/functions/git-repo.avif)
+{% /only_light %}
+
 1. Using Git, checkout the branch you configured as the production branch when creating the Appwrite Function.
 2. Create a new commit.
 3. Push your new commit.

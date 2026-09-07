@@ -3,6 +3,7 @@ layout: changelog
 title: "Variables API: manage function, site, and project variables with Server SDKs"
 date: 2026-04-30
 cover: /images/blog/announcing-variables-api/cover.avif
+tags: functions, sites, api, sdk
 ---
 
 Environment variables for functions, sites, and projects can now be created, listed, retrieved, updated, and deleted programmatically through the Appwrite Server SDKs. Two new API key scopes, `project.read` and `project.write`, control access to the project-scoped endpoints, alongside the existing `functions.*` and `sites.*` scopes for resource-scoped variables.

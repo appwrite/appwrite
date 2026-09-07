@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import {
-  getActiveProfileId,
   getActiveProfile,
+  getActiveProfileWithoutDebugOverride,
   subscribeToProfileChange,
-  type ConsoleProfileId,
+  type ConsoleProfile,
   type ConsoleProfileFeatures,
 } from '@/lib/console-profiles'
 
@@ -12,26 +12,24 @@ import {
  * Re-renders when the profile or any feature override changes (e.g. via debug menu).
  */
 export function useConsoleProfile() {
-  const [profileId, setProfileId] =
-    useState<ConsoleProfileId>(getActiveProfileId)
-  const [, setProfileVersion] = useState(0)
+  // Do not read debug localStorage during useState init — that diverges from SSR and
+  // causes hydration mismatches (e.g. footer product links when feature flags differ).
+  const [profile, setProfile] = useState<ConsoleProfile>(
+    getActiveProfileWithoutDebugOverride,
+  )
 
   useEffect(() => {
-    return subscribeToProfileChange(() => {
-      setProfileId(getActiveProfileId())
-      setProfileVersion((v) => v + 1)
-    })
+    const sync = () => setProfile(getActiveProfile())
+    sync()
+    return subscribeToProfileChange(sync)
   }, [])
 
-  const profile = getActiveProfile()
-  const features = profile.features
-
   return {
-    profileId,
+    profileId: profile.id,
     profile,
-    features,
-    isCloud: profileId === 'cloud',
-    isSelfHosted: profileId === 'self-hosted',
+    features: profile.features,
+    isCloud: profile.id === 'cloud',
+    isSelfHosted: profile.id === 'self-hosted',
   }
 }
 

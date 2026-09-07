@@ -3,6 +3,7 @@ layout: changelog
 title: "Leveling up the Appwrite Functions ecosystem"
 date: 2024-08-21
 cover: /images/changelog/2024-08-21.avif
+tags: integrations, functions
 ---
 
 We're excited to announce major improvements to Appwrite Functions, making them more versatile and powerful than ever before. 

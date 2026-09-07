@@ -26,11 +26,11 @@ The pair works because of [priority](/docs/products/firewall/priority). Appwrite
 5. Under conditions, set the attribute to **IP address**.
 6. Keep the operator set to **Equals**.
 7. Enter a single IP address (`203.0.113.10`) or a CIDR range (`198.51.100.0/24`).
-8. Set **Action** to **Bypass**.
+8. Under **Then**, choose **Bypass**.
 9. Set **Priority** to `10`.
 10. Click **Create rule**.
 
-CIDR ranges match only with the **Equals** and **Not equal** operators. Other operators compare the value as plain text. See [Matching details](/docs/products/firewall/conditions#matching-details).
+The impact preview compares IP addresses as text, so a CIDR range shows zero matches. The rule still matches every address in the range.
 
 To protect one path only, add a second condition to the same rule. For example, add **Path** **Starts with** `/v1/users`. Both conditions must match for the bypass to apply.
 
@@ -40,18 +40,11 @@ To protect one path only, add a second condition to the same rule. For example, 
 2. Enter a **Rule name** (for example `Deny all other traffic`).
 3. Keep **Resource type** set to **API**.
 4. Add the same path condition as the bypass rule, or use **Path** **Starts with** `/v1` for the whole API.
-5. Set **Action** to **Deny**.
+5. Under **Then**, choose **Deny**.
 6. Set **Priority** to `100`.
 7. Review the impact preview, then click **Create rule**.
 
-The impact preview shows how much recent traffic the deny rule would match. Tighten the path condition if the count is broader than you expect.
-
-# How the pair works {% #how-the-pair-works %}
-
-1. A request from a trusted IP address matches the bypass rule at priority `10`. Appwrite allows the request and stops rule evaluation.
-2. A request from any other IP address does not match the bypass rule. Appwrite continues to the deny rule at priority `100` and blocks the request.
-
-Keep a gap between the two priority numbers. The gap gives you space to insert more rules later without renumbering.
+The impact preview shows how much recent traffic the deny rule would match. If the count is higher than you expect, tighten the path condition.
 
 # Verify the rules {% #verify-the-rules %}
 

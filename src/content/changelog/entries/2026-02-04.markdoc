@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing CSV exports: Effortless data extraction, right from your Console"
 date: 2026-02-04
 cover: /images/blog/announcing-csv-export/cover.avif
+tags: console, databases, functions
 ---
 Appwrite now supports exporting data to CSV directly from the Console. This feature simplifies data extraction and reporting without requiring SDKs or custom scripts.
 

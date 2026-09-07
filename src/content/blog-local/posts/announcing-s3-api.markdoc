@@ -8,7 +8,6 @@ timeToRead: 7
 author: torsten-dittmann
 category: announcement
 featured: false
-draft: true
 callToAction: true
 faqs:
   - question: "What is the Appwrite S3 API?"
@@ -131,7 +130,7 @@ aws s3 cp s3://my-bucket/reports/january.pdf ./january.pdf \
 
 S3 buckets map directly to Appwrite Storage buckets, and S3 objects map to files. Object keys are file names, used directly: uploading to `reports/january.pdf` stores a file named `reports/january.pdf`, and read, copy, and delete operations address that object by the same key. Nothing has to be looked up first, so files created through the native Storage API or the Console are usable over S3 under the names they already have.
 
-Because the key is the name, a key addresses exactly one object: uploading to a key that already exists overwrites it, the way S3 does, reusing the existing file so it keeps its Appwrite file ID and permissions. Storage itself does let several files in a bucket share a name, but the S3 API cannot address those, so if your workload depends on repeating file names in one bucket, the native Storage API, which addresses files by ID, remains the right interface for it.
+Because the key is the name, a key addresses exactly one object: uploading to a key that already exists overwrites it, the way S3 does, reusing the existing file so it keeps its Appwrite file ID and permissions. Storage itself does let several files in a bucket share a name, but the S3 API only ever reaches the first of them, so if your workload depends on repeating file names in one bucket, the native Storage API, which addresses files by ID, remains the right interface for it.
 
 [Folders](/docs/products/storage/folders) work the way they do on S3 itself: they are virtual, existing as `/`-separated prefixes in object keys. List a bucket with the `/` delimiter and an optional `prefix` to browse it like a directory tree, with folders grouped under `CommonPrefixes` and files under `Contents`.
 

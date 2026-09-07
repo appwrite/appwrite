@@ -71,6 +71,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
+import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
 import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
@@ -80,6 +81,8 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicMarketplaceAppIdRouteImport } from './routes/_public/marketplace.$appId'
+import { Route as PublicImpersonateUserIdRouteImport } from './routes/_public/impersonate.$userId'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -94,6 +97,7 @@ import { Route as PublicAccountSessionsRouteImport } from './routes/_public/acco
 import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
+import { Route as PublicAccountNotificationsRouteImport } from './routes/_public/account.notifications'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
 import { Route as PublicAccountAffiliatesRouteImport } from './routes/_public/account.affiliates'
@@ -209,12 +213,12 @@ import { Route as PublicProjectsProjectIdAuthPoliciesRouteImport } from './route
 import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
 import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
+import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
 import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
 import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
-import { Route as PublicOrganizationsOrgIdSettingsApiKeysRouteImport } from './routes/_public/organizations.$orgId.settings.api-keys'
 import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
 import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
@@ -246,7 +250,6 @@ import { Route as PublicProjectsProjectIdSitesCreateFinishRouteImport } from './
 import { Route as PublicProjectsProjectIdSitesCreateDeployingRouteImport } from './routes/_public/projects.$projectId.sites.create.deploying'
 import { Route as PublicProjectsProjectIdSitesCreateDeployRouteImport } from './routes/_public/projects.$projectId.sites.create.deploy'
 import { Route as PublicProjectsProjectIdSitesSiteIdVariablesRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.variables'
-import { Route as PublicProjectsProjectIdSitesSiteIdUsageRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.usage'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings'
 import { Route as PublicProjectsProjectIdSitesSiteIdLogsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.logs'
 import { Route as PublicProjectsProjectIdSitesSiteIdDomainsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains'
@@ -726,6 +729,11 @@ const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
   path: '/partners/',
   getParentRoute: () => DocsRoute,
 } as any)
+const PublicImpersonateIndexRoute = PublicImpersonateIndexRouteImport.update({
+  id: '/impersonate/',
+  path: '/impersonate/',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -774,6 +782,16 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicMarketplaceAppIdRoute = PublicMarketplaceAppIdRouteImport.update({
+  id: '/marketplace/$appId',
+  path: '/marketplace/$appId',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicImpersonateUserIdRoute = PublicImpersonateUserIdRouteImport.update({
+  id: '/impersonate/$userId',
+  path: '/impersonate/$userId',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicGitAuthorizeContributorRoute =
   PublicGitAuthorizeContributorRouteImport.update({
     id: '/git/authorize-contributor',
@@ -849,6 +867,12 @@ const PublicAccountPaymentMethodsRoute =
   PublicAccountPaymentMethodsRouteImport.update({
     id: '/payment-methods',
     path: '/payment-methods',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountNotificationsRoute =
+  PublicAccountNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => PublicAccountRoute,
   } as any)
 const PublicAccountBillingAddressesRoute =
@@ -1518,6 +1542,12 @@ const PublicProjectsProjectIdAnalyticsWebsiteIdRoute =
     path: '/$websiteId',
     getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
   } as any)
+const PublicOrganizationsOrgIdSettingsPartnersRoute =
+  PublicOrganizationsOrgIdSettingsPartnersRouteImport.update({
+    id: '/partners',
+    path: '/partners',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
 const PublicOrganizationsOrgIdSettingsOauthAppsRoute =
   PublicOrganizationsOrgIdSettingsOauthAppsRouteImport.update({
     id: '/oauth-apps',
@@ -1546,12 +1576,6 @@ const PublicOrganizationsOrgIdSettingsBillingRoute =
   PublicOrganizationsOrgIdSettingsBillingRouteImport.update({
     id: '/billing',
     path: '/billing',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsApiKeysRoute =
-  PublicOrganizationsOrgIdSettingsApiKeysRouteImport.update({
-    id: '/api-keys',
-    path: '/api-keys',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
 const PublicOrganizationsOrgIdDomainsTransferInRoute =
@@ -1738,12 +1762,6 @@ const PublicProjectsProjectIdSitesSiteIdVariablesRoute =
   PublicProjectsProjectIdSitesSiteIdVariablesRouteImport.update({
     id: '/variables',
     path: '/variables',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdUsageRoute =
-  PublicProjectsProjectIdSitesSiteIdUsageRouteImport.update({
-    id: '/usage',
-    path: '/usage',
     getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
   } as any)
 const PublicProjectsProjectIdSitesSiteIdSettingsRoute =
@@ -3079,6 +3097,7 @@ export interface FileRoutesByFullPath {
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/notifications': typeof PublicAccountNotificationsRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
@@ -3093,6 +3112,8 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
+  '/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3102,6 +3123,7 @@ export interface FileRoutesByFullPath {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
   '/agent/': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3160,12 +3182,12 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
-  '/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
+  '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -3255,7 +3277,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
-  '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
   '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -3482,6 +3503,7 @@ export interface FileRoutesByTo {
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/notifications': typeof PublicAccountNotificationsRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
@@ -3494,6 +3516,8 @@ export interface FileRoutesByTo {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
+  '/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3501,6 +3525,7 @@ export interface FileRoutesByTo {
   '/threads': typeof MarketingThreadsIndexRoute
   '/account': typeof PublicAccountIndexRoute
   '/agent': typeof PublicAgentIndexRoute
+  '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3541,12 +3566,12 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
-  '/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
+  '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -3618,7 +3643,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
-  '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
   '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -3848,6 +3872,7 @@ export interface FileRoutesById {
   '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/_public/account/notifications': typeof PublicAccountNotificationsRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
   '/_public/account/security': typeof PublicAccountSecurityRoute
@@ -3862,6 +3887,8 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
+  '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
+  '/_public/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3871,6 +3898,7 @@ export interface FileRoutesById {
   '/_marketing/threads/': typeof MarketingThreadsIndexRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_public/agent/': typeof PublicAgentIndexRoute
+  '/_public/impersonate/': typeof PublicImpersonateIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
@@ -3929,12 +3957,12 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/_public/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
   '/_public/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
-  '/_public/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
   '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/_public/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
+  '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
   '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -4024,7 +4052,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
   '/_public/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/_public/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
-  '/_public/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
   '/_public/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/_public/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/_public/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -4257,6 +4284,7 @@ export interface FileRouteTypes {
     | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
+    | '/account/notifications'
     | '/account/payment-methods'
     | '/account/payments'
     | '/account/security'
@@ -4271,6 +4299,8 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/impersonate/$userId'
+    | '/marketplace/$appId'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4280,6 +4310,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account/'
     | '/agent/'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -4338,12 +4369,12 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/domains/buy'
     | '/organizations/$orgId/domains/transfer-in'
-    | '/organizations/$orgId/settings/api-keys'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
+    | '/organizations/$orgId/settings/partners'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -4433,7 +4464,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/logs'
     | '/projects/$projectId/sites/$siteId/settings'
-    | '/projects/$projectId/sites/$siteId/usage'
     | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
@@ -4660,6 +4690,7 @@ export interface FileRouteTypes {
     | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
+    | '/account/notifications'
     | '/account/payment-methods'
     | '/account/payments'
     | '/account/security'
@@ -4672,6 +4703,8 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
+    | '/impersonate/$userId'
+    | '/marketplace/$appId'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -4679,6 +4712,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/account'
     | '/agent'
+    | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
@@ -4719,12 +4753,12 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/domains/buy'
     | '/organizations/$orgId/domains/transfer-in'
-    | '/organizations/$orgId/settings/api-keys'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
+    | '/organizations/$orgId/settings/partners'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -4796,7 +4830,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/domains/add'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/logs'
-    | '/projects/$projectId/sites/$siteId/usage'
     | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
@@ -5025,6 +5058,7 @@ export interface FileRouteTypes {
     | '/_public/account/affiliates'
     | '/_public/account/applications'
     | '/_public/account/billing-addresses'
+    | '/_public/account/notifications'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
     | '/_public/account/security'
@@ -5039,6 +5073,8 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
+    | '/_public/impersonate/$userId'
+    | '/_public/marketplace/$appId'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -5048,6 +5084,7 @@ export interface FileRouteTypes {
     | '/_marketing/threads/'
     | '/_public/account/'
     | '/_public/agent/'
+    | '/_public/impersonate/'
     | '/docs/partners/'
     | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
@@ -5106,12 +5143,12 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/domains/$domainId'
     | '/_public/organizations/$orgId/domains/buy'
     | '/_public/organizations/$orgId/domains/transfer-in'
-    | '/_public/organizations/$orgId/settings/api-keys'
     | '/_public/organizations/$orgId/settings/billing'
     | '/_public/organizations/$orgId/settings/compliance'
     | '/_public/organizations/$orgId/settings/danger-zone'
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
+    | '/_public/organizations/$orgId/settings/partners'
     | '/_public/projects/$projectId/analytics/$websiteId'
     | '/_public/projects/$projectId/apps/add'
     | '/_public/projects/$projectId/auth/oauth2-server'
@@ -5201,7 +5238,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/domains'
     | '/_public/projects/$projectId/sites/$siteId/logs'
     | '/_public/projects/$projectId/sites/$siteId/settings'
-    | '/_public/projects/$projectId/sites/$siteId/usage'
     | '/_public/projects/$projectId/sites/$siteId/variables'
     | '/_public/projects/$projectId/sites/create/deploy'
     | '/_public/projects/$projectId/sites/create/deploying'
@@ -5828,6 +5864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsPartnersIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_public/impersonate/': {
+      id: '/_public/impersonate/'
+      path: '/impersonate'
+      fullPath: '/impersonate'
+      preLoaderRoute: typeof PublicImpersonateIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/agent/': {
       id: '/_public/agent/'
       path: '/'
@@ -5889,6 +5932,20 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/marketplace/$appId': {
+      id: '/_public/marketplace/$appId'
+      path: '/marketplace/$appId'
+      fullPath: '/marketplace/$appId'
+      preLoaderRoute: typeof PublicMarketplaceAppIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/impersonate/$userId': {
+      id: '/_public/impersonate/$userId'
+      path: '/impersonate/$userId'
+      fullPath: '/impersonate/$userId'
+      preLoaderRoute: typeof PublicImpersonateUserIdRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/git/authorize-contributor': {
@@ -5987,6 +6044,13 @@ declare module '@tanstack/react-router' {
       path: '/payment-methods'
       fullPath: '/account/payment-methods'
       preLoaderRoute: typeof PublicAccountPaymentMethodsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/notifications': {
+      id: '/_public/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof PublicAccountNotificationsRouteImport
       parentRoute: typeof PublicAccountRoute
     }
     '/_public/account/billing-addresses': {
@@ -6794,6 +6858,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
     }
+    '/_public/organizations/$orgId/settings/partners': {
+      id: '/_public/organizations/$orgId/settings/partners'
+      path: '/partners'
+      fullPath: '/organizations/$orgId/settings/partners'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
     '/_public/organizations/$orgId/settings/oauth-apps': {
       id: '/_public/organizations/$orgId/settings/oauth-apps'
       path: '/oauth-apps'
@@ -6827,13 +6898,6 @@ declare module '@tanstack/react-router' {
       path: '/billing'
       fullPath: '/organizations/$orgId/settings/billing'
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsBillingRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/api-keys': {
-      id: '/_public/organizations/$orgId/settings/api-keys'
-      path: '/api-keys'
-      fullPath: '/organizations/$orgId/settings/api-keys'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsApiKeysRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
     '/_public/organizations/$orgId/domains/transfer-in': {
@@ -7051,13 +7115,6 @@ declare module '@tanstack/react-router' {
       path: '/variables'
       fullPath: '/projects/$projectId/sites/$siteId/variables'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/usage': {
-      id: '/_public/projects/$projectId/sites/$siteId/usage'
-      path: '/usage'
-      fullPath: '/projects/$projectId/sites/$siteId/usage'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
     }
     '/_public/projects/$projectId/sites/$siteId/settings': {
@@ -8380,6 +8437,7 @@ interface PublicAccountRouteChildren {
   PublicAccountAffiliatesRoute: typeof PublicAccountAffiliatesRoute
   PublicAccountApplicationsRoute: typeof PublicAccountApplicationsRoute
   PublicAccountBillingAddressesRoute: typeof PublicAccountBillingAddressesRoute
+  PublicAccountNotificationsRoute: typeof PublicAccountNotificationsRoute
   PublicAccountPaymentMethodsRoute: typeof PublicAccountPaymentMethodsRoute
   PublicAccountPaymentsRoute: typeof PublicAccountPaymentsRoute
   PublicAccountSecurityRoute: typeof PublicAccountSecurityRoute
@@ -8391,6 +8449,7 @@ const PublicAccountRouteChildren: PublicAccountRouteChildren = {
   PublicAccountAffiliatesRoute: PublicAccountAffiliatesRoute,
   PublicAccountApplicationsRoute: PublicAccountApplicationsRoute,
   PublicAccountBillingAddressesRoute: PublicAccountBillingAddressesRoute,
+  PublicAccountNotificationsRoute: PublicAccountNotificationsRoute,
   PublicAccountPaymentMethodsRoute: PublicAccountPaymentMethodsRoute,
   PublicAccountPaymentsRoute: PublicAccountPaymentsRoute,
   PublicAccountSecurityRoute: PublicAccountSecurityRoute,
@@ -8642,18 +8701,16 @@ const PublicOrganizationsOrgIdMarketplaceRouteWithChildren =
   )
 
 interface PublicOrganizationsOrgIdSettingsRouteChildren {
-  PublicOrganizationsOrgIdSettingsApiKeysRoute: typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
   PublicOrganizationsOrgIdSettingsBillingRoute: typeof PublicOrganizationsOrgIdSettingsBillingRoute
   PublicOrganizationsOrgIdSettingsComplianceRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   PublicOrganizationsOrgIdSettingsDangerZoneRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
   PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
+  PublicOrganizationsOrgIdSettingsPartnersRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRoute
 }
 
 const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSettingsRouteChildren =
   {
-    PublicOrganizationsOrgIdSettingsApiKeysRoute:
-      PublicOrganizationsOrgIdSettingsApiKeysRoute,
     PublicOrganizationsOrgIdSettingsBillingRoute:
       PublicOrganizationsOrgIdSettingsBillingRoute,
     PublicOrganizationsOrgIdSettingsComplianceRoute:
@@ -8664,6 +8721,8 @@ const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSet
       PublicOrganizationsOrgIdSettingsMembersRoute,
     PublicOrganizationsOrgIdSettingsOauthAppsRoute:
       PublicOrganizationsOrgIdSettingsOauthAppsRoute,
+    PublicOrganizationsOrgIdSettingsPartnersRoute:
+      PublicOrganizationsOrgIdSettingsPartnersRoute,
   }
 
 const PublicOrganizationsOrgIdSettingsRouteWithChildren =
@@ -9841,7 +9900,6 @@ interface PublicProjectsProjectIdSitesSiteIdRouteChildren {
   PublicProjectsProjectIdSitesSiteIdDomainsRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
   PublicProjectsProjectIdSitesSiteIdLogsRoute: typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   PublicProjectsProjectIdSitesSiteIdSettingsRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
-  PublicProjectsProjectIdSitesSiteIdUsageRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
   PublicProjectsProjectIdSitesSiteIdVariablesRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   PublicProjectsProjectIdSitesSiteIdIndexRoute: typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
 }
@@ -9856,8 +9914,6 @@ const PublicProjectsProjectIdSitesSiteIdRouteChildren: PublicProjectsProjectIdSi
       PublicProjectsProjectIdSitesSiteIdLogsRoute,
     PublicProjectsProjectIdSitesSiteIdSettingsRoute:
       PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren,
-    PublicProjectsProjectIdSitesSiteIdUsageRoute:
-      PublicProjectsProjectIdSitesSiteIdUsageRoute,
     PublicProjectsProjectIdSitesSiteIdVariablesRoute:
       PublicProjectsProjectIdSitesSiteIdVariablesRoute,
     PublicProjectsProjectIdSitesSiteIdIndexRoute:
@@ -9992,8 +10048,11 @@ interface PublicRouteChildren {
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
+  PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
+  PublicMarketplaceAppIdRoute: typeof PublicMarketplaceAppIdRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
+  PublicImpersonateIndexRoute: typeof PublicImpersonateIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -10015,8 +10074,11 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
+  PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
+  PublicMarketplaceAppIdRoute: PublicMarketplaceAppIdRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
+  PublicImpersonateIndexRoute: PublicImpersonateIndexRoute,
 }
 
 const PublicRouteWithChildren =

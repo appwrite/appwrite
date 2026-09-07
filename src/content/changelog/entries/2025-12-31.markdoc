@@ -3,6 +3,7 @@ layout: changelog
 title: Announcing Appwrite 1.8.1 for self-hosted deployments
 date: 2025-12-31
 cover: /images/blog/appwrite-1-8-1-self-hosted-release/cover.avif
+tags: integrations, databases, functions, infrastructure
 ---
 
 After multiple updates and fixes, we have now released Appwrite 1.8.1 for self-hosting!

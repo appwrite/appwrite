@@ -3,12 +3,15 @@ import {
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { PostgresDatabasePitrCard } from '../_components/PostgresDatabaseConfigSettings'
+import { DedicatedDatabasePitrRestoreCard } from '../../_components/RestorePitr'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export function View() {
   const { projectId, databaseId, database, canWrite, isLoading } =
     usePostgresDatabaseSettingsPage()
+  const { features } = useConsoleProfile()
 
   if (isLoading) return <PostgresSettingsLoading />
   if (!database) return null
@@ -24,6 +27,29 @@ export function View() {
       },
       node: <PostgresDatabasePitrCard {...cardProps} />,
     },
+    ...(features.databasePitrRestore
+      ? [
+          {
+            id: 'pitr-restore',
+            search: {
+              title: 'Restore to a point in time',
+              keywords: [
+                'pitr',
+                'restore',
+                'recovery',
+                'point in time',
+                'timestamp',
+              ],
+            },
+            node: (
+              <DedicatedDatabasePitrRestoreCard
+                {...cardProps}
+                engine="postgresql"
+              />
+            ),
+          } satisfies SettingsCardItem,
+        ]
+      : []),
   ]
 
   return <SettingsCardsList cards={cards} />

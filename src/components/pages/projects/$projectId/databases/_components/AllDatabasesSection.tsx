@@ -14,6 +14,7 @@ import {
 import { type Models } from '@appwrite.io/console'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
+  databaseOwnerTypeForMutation,
   databaseRouteKindFromApiType,
   dedicatedDatabaseHomeLink,
   isDatabaseRouteKind,
@@ -67,9 +68,11 @@ import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
 import { DatabaseTypeBetaBadge } from './DatabaseTypeBetaBadge'
 import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
+import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import {
+  isDedicatedDatabaseDeleting,
   isDedicatedDatabaseProvisioning,
   isDedicatedDatabaseReady,
 } from '@/lib/databases/dedicated-database-status'
@@ -120,6 +123,20 @@ function isListedDatabaseTypeUnavailable(
   features: Parameters<typeof isDatabaseTypeFeatureEnabled>[1],
 ): boolean {
   return !isDatabaseTypeFeatureEnabled(db.apiType ?? db.databaseType, features)
+}
+
+function databaseListDisabledState(
+  db: Pick<DatabaseWithBackup, 'enabled' | 'apiType' | 'databaseType' | 'status'>,
+  dedicated: Models.DedicatedDatabase | undefined,
+  features: Parameters<typeof isDatabaseTypeFeatureEnabled>[1],
+) {
+  const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
+  const lifecycleStatus = dedicated?.status ?? db.status
+  const appearDisabled =
+    typeUnavailable ||
+    db.enabled === false ||
+    isDedicatedDatabaseDeleting(lifecycleStatus)
+  return { typeUnavailable, appearDisabled, lifecycleStatus }
 }
 
 /**
@@ -230,11 +247,9 @@ function AllDatabasesGridCardShell({
     product: dedicated?.api,
   })
   const showFooter = Boolean(computeLabel || connectionsLabel || isBeta)
-  const typeUnavailable = isListedDatabaseTypeUnavailable(db, features)
-  const appearDisabled = typeUnavailable || db.enabled === false
-  const provisioningDisabled = isDedicatedDatabaseProvisioning(
-    dedicated?.status ?? db.status,
-  )
+  const { typeUnavailable, appearDisabled, lifecycleStatus } =
+    databaseListDisabledState(db, dedicated, features)
+  const provisioningDisabled = isDedicatedDatabaseProvisioning(lifecycleStatus)
 
   const card = (
     <div
@@ -260,10 +275,12 @@ function AllDatabasesGridCardShell({
             {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
               <NoBackupPoliciesWarningIcon />
             ) : null}
-            <DedicatedDatabaseStatusBadge
-              status={dedicated?.status ?? db.status}
-              onlyWhenNotReady
-            />
+            {!appearDisabled ? (
+              <DedicatedDatabaseStatusBadge
+                status={lifecycleStatus}
+                onlyWhenNotReady
+              />
+            ) : null}
             {appearDisabled ? (
               <Badge
                 variant="error"
@@ -343,9 +360,10 @@ function AllDatabasesGridCardShell({
       database={{
         $id: db.$id,
         name: db.name,
-        // Prefer engine / raw API type so native DBs are not coerced to tablesdb.
-        databaseType:
-          dedicated?.engine ?? db.apiType ?? db.databaseType,
+        databaseType: databaseOwnerTypeForMutation(
+          { apiType: db.apiType, databaseType: db.databaseType },
+          dedicated,
+        ),
       }}
       showSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
@@ -605,9 +623,9 @@ export function AllDatabasesSection({
         specificationsData?.specifications,
       ),
       rawSpecifications: specificationsData?.specifications ?? null,
-      unspecifiedLabel: features.dedicatedDbsSupport ? undefined : '',
+      unspecifiedLabel: isCloudDedicatedDatabasesEnabled() ? undefined : '',
     }),
-    [features.dedicatedDbsSupport, specificationsData?.specifications],
+    [specificationsData?.specifications],
   )
 
   const listedDedicatedById = useMemo(() => {
@@ -842,12 +860,8 @@ export function AllDatabasesSection({
                 <TableBody>
                   {databases.map((db) => {
                     const dedicated = dedicatedById.get(db.$id)
-                    const typeUnavailable = isListedDatabaseTypeUnavailable(
-                      db,
-                      features,
-                    )
-                    const appearDisabled =
-                      typeUnavailable || db.enabled === false
+                    const { typeUnavailable, appearDisabled, lifecycleStatus } =
+                      databaseListDisabledState(db, dedicated, features)
                     const nameContent = (
                       <>
                         <div className="flex min-w-0 items-center gap-1.5">
@@ -914,12 +928,10 @@ export function AllDatabasesSection({
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
                           {!appearDisabled &&
-                          (dedicated?.status || db.status) &&
-                          !isDedicatedDatabaseReady(
-                            dedicated?.status || db.status,
-                          ) ? (
+                          lifecycleStatus &&
+                          !isDedicatedDatabaseReady(lifecycleStatus) ? (
                             <DedicatedDatabaseStatusBadge
-                              status={dedicated?.status || db.status}
+                              status={lifecycleStatus}
                               className="text-[11px]"
                             />
                           ) : appearDisabled ? (

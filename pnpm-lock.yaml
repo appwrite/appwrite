@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@186a477
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@186a477
       '@appwrite.io/specs':
         specifier: github:appwrite/specs
         version: https://codeload.github.com/appwrite/specs/tar.gz/2d7c26d35cccf43780c82b873f2892b478dbca94
@@ -343,8 +343,8 @@ importers:
         specifier: ^16.4.5
         version: 16.6.1
       editorconfig-checker:
-        specifier: 6.1.1
-        version: 6.1.1
+        specifier: 6.2.0
+        version: 6.2.0
       eslint-plugin-react-hooks:
         specifier: ^7.0.1
         version: 7.1.1(eslint@9.39.2(jiti@2.7.0))
@@ -380,8 +380,8 @@ packages:
   '@apm-js-collab/tracing-hooks@0.10.0':
     resolution: {integrity: sha512-2/Z3NTewJTruUkmsSnBC5bJlLNUd9keuD1OLlTEpim4FyLhm6m2Rnfv+wrFdUvFfhmH8CRdiDZBqBrn+wyaGuA==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d}
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@186a477':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@186a477}
     version: 16.0.0
     engines: {node: '>=18.0.0'}
 
@@ -3433,8 +3433,8 @@ packages:
   earcut@3.2.0:
     resolution: {integrity: sha512-qy0wTgkOKsKC0cHVd4cKFfaO5u7egzs0F2bQ/9l5Pvm0EJM4XDdUMFoCJrxmWc2Fc3sRFa8l6gds8tx+6BcN8g==}
 
-  editorconfig-checker@6.1.1:
-    resolution: {integrity: sha512-kiOb6qaWpMNt7Z/43ba0Pa1Inhr2/t9nKbvEKtCeXJ5AesztoM9AgLOOQVB4QUv/nGjgz3xkbx4pcogVRD2NWw==}
+  editorconfig-checker@6.2.0:
+    resolution: {integrity: sha512-5zrNwlxUWyOvAcrSK4mPIGNYrf1KK5pH2D3VXDB1AcDsDdBfLNPOjBL5jHgYh+JykOIuXlQHMeYvXPrZwGNmHA==}
     engines: {node: '>=20.11.0'}
     hasBin: true
 
@@ -5244,7 +5244,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@c876d8d':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@186a477':
     dependencies:
       json-bigint: 1.0.0
 
@@ -8259,7 +8259,7 @@ snapshots:
 
   earcut@3.2.0: {}
 
-  editorconfig-checker@6.1.1: {}
+  editorconfig-checker@6.2.0: {}
 
   electron-to-chromium@1.5.383: {}
 

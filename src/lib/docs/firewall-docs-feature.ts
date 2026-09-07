@@ -1,4 +1,4 @@
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export function isFirewallDocsSlug(slug: string): boolean {
   return slug === 'products/firewall' || slug.startsWith('products/firewall/')
@@ -21,5 +21,5 @@ export function isFirewallDocsHref(href: string): boolean {
 }
 
 export function isFirewallDocsEnabled(): boolean {
-  return getActiveProfileFeatures().firewall
+  return isCloudProfile()
 }

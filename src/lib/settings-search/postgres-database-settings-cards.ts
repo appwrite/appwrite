@@ -47,6 +47,11 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['pitr', 'retention', 'restore', 'recovery', 'point in time'],
   },
   {
+    sectionId: 'pitr',
+    title: 'Restore to a point in time',
+    keywords: ['pitr', 'restore', 'recovery', 'timestamp', 'point in time'],
+  },
+  {
     sectionId: 'storage',
     title: 'Storage',
     keywords: ['autoscaling', 'disk', 'threshold', 'gb'],

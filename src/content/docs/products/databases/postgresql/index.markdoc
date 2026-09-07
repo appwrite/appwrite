@@ -12,15 +12,17 @@ A native PostgreSQL database gives you the raw engine: you connect with `psql` o
 
 Appwrite manages the database container, storage, backups, and networking. You bring the application.
 
-New databases run PostgreSQL 18 by default, and you can select PostgreSQL 17 on create instead. The database listens on the standard PostgreSQL port, 5432.
+New databases run PostgreSQL 18 by default. To create a database on PostgreSQL 17 instead, pass `version` when you create it through the API. The database listens on the standard PostgreSQL port, 5432.
 
-The version is selected on create and can be upgraded later. Upgrades run online: a second instance is provisioned on the new version, data is streamed over with logical replication, and traffic cuts over once replication is caught up, with no read or write outages and no manual dump-and-restore.
+The version is selected on create and can be upgraded later. Upgrades run online: a second instance is provisioned on the new version, data is streamed over with logical replication, and traffic cuts over once replication is caught up. Reads continue throughout. At the cutover itself the old instance is fenced read-only and existing client connections are closed, so the application must reconnect.
 
 A new database starts in a `provisioning` state and becomes `ready` within a few minutes. Large specifications or high-availability configurations take longer to schedule; poll the database status or watch the Console until it reports `ready`.
 
 # Regions {% #regions %}
 
-A native database lives in the same region as the project that owns it. There is no per-database region selector. Each database gets a unique hostname in the form `db-<hash>.<region>.appwrite.center`, and data does not leave the region.
+Native databases are rolling out region by region, starting with Frankfurt (`fra`) and New York (`nyc`), and more regions are on the way.
+
+A native database lives in the same region as the project that owns it. There is no per-database region selector, so a project in a region that has not been enabled yet cannot host one. Each database gets a unique hostname in the form `db-<hash>.<region>.appwrite.center`, and data does not leave the region.
 
 # Feature overview {% #features %}
 
@@ -41,7 +43,7 @@ Scheduled backups, manual backups, restores, and point-in-time recovery.
 Spin up an ephemeral copy of your database in seconds from a storage snapshot.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/postgresql/high-availability" title="High availability" %}
-Up to five synchronous, semi-synchronous, or asynchronous replicas with automatic failover.
+Up to five replicas with asynchronous, synchronous, or quorum replication, and automatic failover.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/postgresql/scaling" title="Scaling" %}
 Resize compute online and grow storage automatically as your data grows.
@@ -59,7 +61,7 @@ Maintenance windows, online version upgrades, and pause and resume.
 
 # Specifications and pricing {% #specifications %}
 
-Each database runs against one of the following compute specifications, billed monthly:
+Each database runs against one compute specification. Prices below are monthly rates, pro-rated by the hour a database is running:
 
 | Tier            | Specification  | CPU     | Memory | Storage | Bandwidth | Connections | Price   |
 |-----------------|----------------|---------|--------|---------|-----------|-------------|---------|
@@ -71,6 +73,10 @@ Each database runs against one of the following compute specifications, billed m
 | Business Plus   | `s-4vcpu-32gb` | 4 cores | 32 GB  | 1 TB    | 5 TB      | 4,000       | $299/mo |
 | Enterprise      | `s-8vcpu-32gb` | 8 cores | 32 GB  | 2 TB    | 7.5 TB    | 5,000       | $425/mo |
 | Enterprise Plus | `s-8vcpu-64gb` | 8 cores | 64 GB  | 3 TB    | 10 TB     | 10,000      | $699/mo |
+| Scale           | `s-16vcpu-64gb` | 16 cores | 64 GB  | 4 TB   | 15 TB     | 10,000      | $999/mo |
+| Scale Plus      | `s-16vcpu-128gb` | 16 cores | 128 GB | 5 TB  | 20 TB     | 10,000      | $1,699/mo |
+| Scale Pro       | `s-32vcpu-128gb` | 32 cores | 128 GB | 6 TB  | 30 TB     | 10,000      | $2,399/mo |
+| Scale Max       | `s-32vcpu-256gb` | 32 cores | 256 GB | 8 TB  | 40 TB     | 10,000      | $4,099/mo |
 
 The Storage and Bandwidth columns are the monthly allowances included with each tier. Usage beyond them is billed as overage, and optional features are billed as add-ons on top of the tier price:
 
@@ -78,7 +84,7 @@ The Storage and Bandwidth columns are the monthly allowances included with each 
 |----------------------------|---------------------------------|
 | Storage overage            | $0.125 per GB per month        |
 | Bandwidth overage          | $0.08 per GB per month         |
-| High availability replica  | 50% of the tier price, per replica |
+| High availability replica  | 100% of the tier price, per replica |
 | Point-in-time recovery     | 20% of the tier price          |
 
 You can [resize between tiers](/docs/products/databases/postgresql/scaling) at any time with zero downtime.
@@ -89,14 +95,13 @@ The following limits apply per database:
 
 | Limit                          | Value                                                     |
 |--------------------------------|-----------------------------------------------------------|
-| Databases per project          | 10                                                        |
 | High availability replicas     | 0 - 5                                                     |
 | IP allowlist entries           | 100                                                       |
-| Backup retention               | 1 - 365 days                                              |
+| Backup retention               | 7 days on Pro, 1 - 36,500 days on Scale                   |
 | Point-in-time recovery window  | 1 - 35 days                                               |
 | Extensions installed           | 50                                                        |
 | Max simultaneous connections   | 10,000 platform cap, lower on smaller specifications      |
 
 # Billing and plan requirements {% #plans %}
 
-Native databases are available on paid plans, and a payment method must be attached to your organization. Each database is billed by the hour against its [compute specification](#specifications), with separate line items for overages and add-ons. See [pricing](/pricing) for details.
+Native databases are available on paid plans, and a payment method must be attached to your organization. Your plan also decides which specifications you can pick: the Pro plan allows the four smallest, and the Scale plan allows all twelve. Each database is billed against its [compute specification](#specifications), pro-rated by the hour, with separate line items for overages and add-ons. See [pricing](/pricing) for details.

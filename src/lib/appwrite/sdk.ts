@@ -590,10 +590,7 @@ function installProductDatabaseUpdateSpecificationSupport(
   }) as typeof service.update
 }
 
-installProductDatabaseUpdateSpecificationSupport(
-  tablesDBForProject,
-  'tablesdb',
-)
+installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
 installProductDatabaseUpdateSpecificationSupport(
   documentsDBForProject,
   'documentsdb',

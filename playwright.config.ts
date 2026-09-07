@@ -72,10 +72,19 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
       // Smoke / read-only console specs only (exclude write database suites).
       testMatch:
-        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.).*\.spec\.ts/,
+        /console\.(?!mysql\.|postgres\.|tablesdb\.|documentsdb\.|vectorsdb\.|usage\.|mocked\.).*\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,
+      },
+    },
+    {
+      // Console flows that mock the Appwrite API at the network layer. No auth
+      // setup: the specs fulfil `account.get` themselves.
+      name: 'console-mocked',
+      testMatch: /console\.mocked\..*\.spec\.ts/,
+      use: {
+        ...desktopChrome,
       },
     },
     {
@@ -95,6 +104,18 @@ const config: PlaywrightTestConfig = {
       name: 'self-hosted-usage',
       dependencies: ['setup'],
       testMatch: /self-hosted\.usage\.spec\.ts/,
+      use: {
+        ...desktopChrome,
+        storageState,
+      },
+    },
+    {
+      // Local-only, same as self-hosted-usage: needs a self-hosted backend where
+      // the test account belongs to several organizations.
+      // Run with `bun run e2e:organizations-self-hosted`.
+      name: 'self-hosted-organizations',
+      dependencies: ['setup'],
+      testMatch: /self-hosted\.organizations\.spec\.ts/,
       use: {
         ...desktopChrome,
         storageState,

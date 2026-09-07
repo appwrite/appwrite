@@ -4,7 +4,7 @@
  * Allows users to enable or disable a site without deleting it.
  */
 
-import { useState, useEffect } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -29,13 +29,9 @@ export function SiteStatusCard({
 }: SiteStatusCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [enabled, setEnabled] = useState(false)
-
-  useEffect(() => {
-    if (site) {
-      setEnabled(site.enabled !== false)
-    }
-  }, [site])
+  const [enabled, setEnabled] = useSyncStateFromServer(
+    site ? site.enabled !== false : false,
+  )
 
   const updateEnabledMutation = useMutation({
     mutationFn: async (nextEnabled: boolean) => {

@@ -1,7 +1,7 @@
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import { resolveChangelogAssetUrl } from './assets'
 import { parseChangelogFrontmatter } from './frontmatter'
-import type { ChangelogEntry, ChangelogEntryMeta } from './types'
+import type { ChangelogEntry, ChangelogEntryMeta, ChangelogTag } from './types'
 
 const PER_PAGE = 5
 
@@ -30,6 +30,14 @@ function slugFromModulePath(modulePath: string): string {
   return match?.[1] ?? ''
 }
 
+function parseTags(tagsString?: string): ChangelogTag[] {
+  if (!tagsString) return []
+  return tagsString
+    .split(',')
+    .map((tag) => tag.trim() as ChangelogTag)
+    .filter(Boolean)
+}
+
 function buildChangelogEntry(modulePath: string, raw: string): ChangelogEntry {
   const slug = slugFromModulePath(modulePath)
   const { frontmatter, body } = parseChangelogFrontmatter(raw)
@@ -41,6 +49,8 @@ function buildChangelogEntry(modulePath: string, raw: string): ChangelogEntry {
     date: frontmatter.date ?? '',
     description: frontmatter.description,
     cover: resolveChangelogAssetUrl(frontmatter.cover),
+    tags: frontmatter.tags,
+    parsedTags: parseTags(frontmatter.tags),
     content: body.trim(),
   }
 }
@@ -96,13 +106,20 @@ export function getChangelogMarkdownExport(slug: string): string | null {
   return raw ? markdocToMarkdown(raw) : null
 }
 
-export function getChangelogEntriesPage(page: number): {
+export function getChangelogEntriesPage(
+  page: number,
+  tag?: ChangelogTag | null,
+): {
   entries: ChangelogEntry[]
   nextPage: number | null
 } {
   const safePage = Math.max(1, page)
-  const entries = allChangelogEntries.slice(0, safePage * PER_PAGE)
-  const totalPages = Math.ceil(changelogCount / PER_PAGE)
+  const source =
+    tag != null
+      ? allChangelogEntries.filter((entry) => entry.parsedTags.includes(tag))
+      : allChangelogEntries
+  const entries = source.slice(0, safePage * PER_PAGE)
+  const totalPages = Math.ceil(source.length / PER_PAGE)
 
   return {
     entries,
@@ -118,5 +135,17 @@ export function toChangelogEntryMeta(entry: ChangelogEntry): ChangelogEntryMeta 
     date: entry.date,
     description: entry.description,
     cover: entry.cover,
+    tags: entry.tags,
+    parsedTags: entry.parsedTags,
   }
+}
+
+export function getUniqueChangelogTags(): ChangelogTag[] {
+  const tagsSet = new Set<ChangelogTag>()
+  for (const entry of allChangelogEntries) {
+    for (const tag of entry.parsedTags) {
+      tagsSet.add(tag)
+    }
+  }
+  return Array.from(tagsSet).sort()
 }

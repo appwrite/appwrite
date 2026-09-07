@@ -2,13 +2,12 @@
 layout: post
 title: "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects"
 description: Register an app in your organization and build dashboards, deployment tools, CLIs, and agents for other Appwrite developers, with consent-based, scoped tokens instead of pasted API keys.
-date: 2026-08-06
+date: 2026-09-04
 cover: /images/blog/announcing-apps-for-appwrite-partners/cover.avif
 timeToRead: 6
 author: atharva
 category: announcement
 featured: false
-unlisted: true
 callToAction: true
 faqs:
     - question: "What are Appwrite Apps?"
@@ -33,7 +32,7 @@ That handshake has always been the weak point. The key carries whatever scopes a
 
 Today, we are announcing **Appwrite Apps**: register an app in your organization, and it can serve every Appwrite developer. Behind it, Appwrite is now an **OAuth 2.1 and OpenID Connect provider**: your app sends any Appwrite user to a consent screen, asks for access to the projects and organizations they choose, and receives tokens that call their project APIs directly. New [documentation for building apps](/docs/partners/apps) ships with it, written for the partners and teams that build on top of Appwrite.
 
-![Your app sends the user through the Appwrite consent screen and calls their projects with the issued tokens](/images/docs/partners/apps/dark/diagram-overview.avif)
+![Your app sends the user through the Appwrite consent screen and calls their projects with the issued tokens](/images/blog/announcing-apps-for-appwrite-partners/diagram-overview.avif)
 
 # What this gives you
 

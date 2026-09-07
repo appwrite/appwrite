@@ -22,6 +22,10 @@ export interface DateTimePickerProps {
   onChange: (value: string | null) => void
   disabled?: boolean
   placeholder?: string
+  /** Inclusive lower bound (ISO string or Date). Dates before this are disabled. */
+  min?: string | Date | null
+  /** Inclusive upper bound (ISO string or Date). Dates after this are disabled. */
+  max?: string | Date | null
   /** Tailwind classes applied to the trigger button */
   className?: string
   align?: 'start' | 'center' | 'end'
@@ -41,10 +45,25 @@ export interface DateTimePickerProps {
   onFocus?: React.FocusEventHandler<HTMLButtonElement>
 }
 
-function parseISO(value: string | null | undefined): Date | null {
+function parseISO(value: string | Date | null | undefined): Date | null {
   if (!value) return null
-  const d = new Date(value)
+  const d = value instanceof Date ? value : new Date(value)
   return Number.isNaN(d.getTime()) ? null : d
+}
+
+function clampToBounds(next: Date, min: Date | null, max: Date | null): Date {
+  let time = next.getTime()
+  if (min && time < min.getTime()) time = min.getTime()
+  if (max && time > max.getTime()) time = max.getTime()
+  return new Date(time)
+}
+
+function digitsOnly(value: string, maxLength: number): string {
+  return value.replace(/\D/g, '').slice(0, maxLength)
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
 }
 
 export function DateTimePicker({
@@ -52,6 +71,8 @@ export function DateTimePicker({
   onChange,
   disabled,
   placeholder = 'Select date & time',
+  min,
+  max,
   className,
   align = 'start',
   clearable = true,
@@ -67,39 +88,83 @@ export function DateTimePicker({
   const { formatDate } = useLocalizedDateFormat()
   const [open, setOpen] = React.useState(false)
   const date = React.useMemo(() => parseISO(value), [value])
-  const [timeStr, setTimeStr] = React.useState(() =>
-    date ? format(date, 'HH:mm') : '',
+  const minDate = React.useMemo(() => parseISO(min), [min])
+  const maxDate = React.useMemo(() => parseISO(max), [max])
+  const hourRef = React.useRef<HTMLInputElement>(null)
+  const minuteRef = React.useRef<HTMLInputElement>(null)
+  const [hourStr, setHourStr] = React.useState(() =>
+    date ? format(date, 'HH') : '',
+  )
+  const [minuteStr, setMinuteStr] = React.useState(() =>
+    date ? format(date, 'mm') : '',
   )
 
   React.useEffect(() => {
-    setTimeStr(date ? format(date, 'HH:mm') : '')
+    const active = document.activeElement
+    if (active === hourRef.current || active === minuteRef.current) return
+    setHourStr(date ? format(date, 'HH') : '')
+    setMinuteStr(date ? format(date, 'mm') : '')
   }, [date])
 
   const formatted = date ? formatDate(date, "MMM d, yyyy '·' HH:mm") : ''
+  const calendarDisabled = React.useMemo(() => {
+    const matchers = []
+    if (minDate) matchers.push({ before: minDate })
+    if (maxDate) matchers.push({ after: maxDate })
+    return matchers.length > 0 ? matchers : undefined
+  }, [minDate, maxDate])
 
   function commit(next: Date) {
-    onChange(next.toISOString())
+    onChange(clampToBounds(next, minDate, maxDate).toISOString())
+  }
+
+  function mergeTime(base: Date, hourValue: string, minuteValue: string): Date {
+    const hour = Math.min(23, Math.max(0, parseInt(hourValue, 10) || 0))
+    const minute = Math.min(59, Math.max(0, parseInt(minuteValue, 10) || 0))
+    const merged = new Date(base)
+    merged.setHours(hour, minute, 0, 0)
+    return merged
   }
 
   function handleSelectDate(next: Date | undefined) {
     if (!next) return
-    const [hStr = '0', mStr = '0'] = (timeStr || '00:00').split(':')
-    const h = parseInt(hStr, 10) || 0
-    const m = parseInt(mStr, 10) || 0
-    const merged = new Date(next)
-    merged.setHours(h, m, 0, 0)
-    commit(merged)
+    commit(mergeTime(next, hourStr || '0', minuteStr || '0'))
   }
 
-  function handleTimeChange(t: string) {
-    setTimeStr(t)
+  function commitTimeFields(nextHour: string, nextMinute: string) {
     const base = date ?? new Date()
-    const [hStr = '0', mStr = '0'] = (t || '00:00').split(':')
-    const h = parseInt(hStr, 10) || 0
-    const m = parseInt(mStr, 10) || 0
-    const merged = new Date(base)
-    merged.setHours(h, m, 0, 0)
-    commit(merged)
+    commit(mergeTime(base, nextHour || '0', nextMinute || '0'))
+  }
+
+  function handleHourChange(raw: string) {
+    const next = digitsOnly(raw, 2)
+    setHourStr(next)
+    if (next.length === 2) {
+      commitTimeFields(next, minuteStr || '0')
+      minuteRef.current?.focus()
+      minuteRef.current?.select()
+    }
+  }
+
+  function handleMinuteChange(raw: string) {
+    const next = digitsOnly(raw, 2)
+    setMinuteStr(next)
+    if (next.length === 2) {
+      commitTimeFields(hourStr || '0', next)
+    }
+  }
+
+  function handleHourBlur() {
+    const normalized = hourStr === '' ? '00' : pad2(Math.min(23, parseInt(hourStr, 10) || 0))
+    setHourStr(normalized)
+    commitTimeFields(normalized, minuteStr || '00')
+  }
+
+  function handleMinuteBlur() {
+    const normalized =
+      minuteStr === '' ? '00' : pad2(Math.min(59, parseInt(minuteStr, 10) || 0))
+    setMinuteStr(normalized)
+    commitTimeFields(hourStr || '00', normalized)
   }
 
   function handleClear() {
@@ -139,6 +204,7 @@ export function DateTimePicker({
         align={align}
         sideOffset={4}
         className="w-auto overflow-hidden rounded-xl p-0 shadow-lg"
+        onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div className="p-3">
           <Calendar
@@ -146,20 +212,48 @@ export function DateTimePicker({
             selected={date ?? undefined}
             onSelect={handleSelectDate}
             defaultMonth={date ?? new Date()}
+            disabled={calendarDisabled}
           />
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 p-3">
-          <label className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t('Time')}
             </span>
-            <Input
-              type="time"
-              value={timeStr}
-              onChange={(e) => handleTimeChange(e.target.value)}
-              className="h-7 w-[110px] cursor-pointer text-[12px]"
-            />
-          </label>
+            <div className="flex items-center gap-1">
+              <Input
+                ref={hourRef}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={2}
+                value={hourStr}
+                onChange={(event) => handleHourChange(event.target.value)}
+                onBlur={handleHourBlur}
+                onPointerDown={(event) => event.stopPropagation()}
+                disabled={disabled}
+                aria-label={t('Hours')}
+                placeholder="HH"
+                className="h-7 w-11 px-1 text-center text-[12px] tabular-nums"
+              />
+              <span className="text-[13px] text-muted-foreground">:</span>
+              <Input
+                ref={minuteRef}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={2}
+                value={minuteStr}
+                onChange={(event) => handleMinuteChange(event.target.value)}
+                onBlur={handleMinuteBlur}
+                onPointerDown={(event) => event.stopPropagation()}
+                disabled={disabled}
+                aria-label={t('Minutes')}
+                placeholder="mm"
+                className="h-7 w-11 px-1 text-center text-[12px] tabular-nums"
+              />
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             {clearable && date && (
               <Button

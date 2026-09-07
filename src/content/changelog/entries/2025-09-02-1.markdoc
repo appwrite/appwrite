@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing time helper queries: Cleaner, more expressive time-based queries"
 date: 2025-09-02
 cover: /images/blog/announcing-time-helper-queries/cover.avif
+tags: databases, performance
 ---
 A new set of database queries, **time helper queries**, is now live.
 

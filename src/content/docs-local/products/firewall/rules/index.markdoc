@@ -4,7 +4,7 @@ title: Rules
 description: Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.
 ---
 
-A **Firewall rule** is a named policy that matches inbound requests and applies an [action](/docs/products/firewall/actions). Rules belong to a **project**. They are managed under **Project** > **Firewall**.
+A **Firewall rule** is a named policy that matches inbound requests and applies an [action](/docs/products/firewall/actions). Rules belong to a **project**. You manage them under **Firewall** in your project.
 
 # What a rule contains {% #what-a-rule-contains %}
 
@@ -14,22 +14,15 @@ A **Firewall rule** is a named policy that matches inbound requests and applies 
 | Description | Optional notes for your team |
 | Resource type | [API, Functions, or Sites](/docs/products/firewall/scopes) |
 | Resource ID | Required for Functions and Sites scopes |
-| Conditions | One or more [request filters](/docs/products/firewall/conditions) (required) |
+| Conditions | [Request filters](/docs/products/firewall/conditions). A rule with none matches every request in its scope |
 | Action | Deny, bypass, challenge, rate limit, or redirect (set at create time) |
 | Priority | Evaluation order ([lower first](/docs/products/firewall/priority)), `-100000` to `100000` |
-| Enabled | Whether the rule participates in evaluation |
-| Rule ID | Optional custom ID at create time |
+| Enabled | Whether the rule is evaluated. Disabled rules are kept and count toward plan limits |
+| Rule ID | Set once, when the rule is created. The Console generates one for you |
 
-Action-specific fields (rate limit quota, redirect location and status code, challenge type) are stored with the rule when those actions are selected.
+Each action has its own settings, covered in [Actions](/docs/products/firewall/actions).
 
-When at least one **enabled** rule exists, Appwrite marks the project as Firewall-enabled so evaluation runs for eligible traffic. Disabling or deleting the last enabled rule turns evaluation off for the project.
-
-# Enabled and disabled {% #enabled-and-disabled %}
-
-- **Enabled** rules are loaded and evaluated according to priority.
-- **Disabled** rules remain in the project and **count toward plan limits**, but they are not evaluated.
-
-Use disable when you want to pause a rule without deleting it (for example during an incident investigation).
+The name holds up to 128 characters, and the description holds up to 1024.
 
 # Console layout {% #console-layout %}
 
@@ -40,31 +33,56 @@ Use disable when you want to pause a rule without deleting it (for example durin
 ![Firewall rules list in the Console](/images/docs/firewall/rules-list.avif)
 {% /only_light %}
 
-The Firewall page filters rules with a resource selector above the list. The **Project** group holds the **API** scope, and each function and site in the project appears under its own **Functions** or **Sites** group. Selecting a function or site shows only the rules for that resource.
+Use the resource selector above the list to filter by API, function, or site. See [Resource scopes](/docs/products/firewall/scopes).
 
-Each row shows the rule's status toggle, name, action, priority, conditions, and last update. Use the status toggle to enable or disable a rule directly from the list, or open the row's actions menu to update or delete it. See [Resource scopes](/docs/products/firewall/scopes).
+Each row shows the rule's status toggle, name, action, priority, conditions, and last update. Use the status toggle to enable or disable a rule directly from the list, or open the row's actions menu to update or delete it.
 
-When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates (or re-enables) a catch-all [Challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode**. See [Attack mode](/docs/products/firewall/attack-mode).
+When a **site** is selected, the rules toolbar includes **Attack mode**. Turning it on creates a [challenge](/docs/products/firewall/actions#challenge) rule named **Attack mode** that matches every request, or re-enables the one that already exists. See [Attack mode](/docs/products/firewall/attack-mode).
+
+# API endpoints {% #create-a-rule-through-the-api %}
+
+Each action has its own endpoint: `/v1/waf/rules/deny`, `/bypass`, `/challenge`, `/rate-limit`, and `/redirect`.
+
+```sh
+curl -X POST https://cloud.appwrite.io/v1/waf/rules/deny \
+  -H "Content-Type: application/json" \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -d '{
+    "ruleId": "unique()",
+    "name": "Block a country",
+    "resourceType": "api",
+    "priority": 100,
+    "enabled": true,
+    "conditions": [
+      { "method": "equal", "attribute": "country", "values": ["RU"] }
+    ]
+  }'
+```
+
+Each condition takes a `method`, an `attribute`, and a list of `values`. Operators that take no value, such as `isNull`, still need `values` as an empty list. [Conditions](/docs/products/firewall/conditions#api-attribute-names) lists the attribute names.
+
+A request without `conditions` creates a rule that matches every request in its scope. An empty `conditions` array returns a `400`.
 
 # Plan limits {% #plan-limits %}
 
 Firewall rule limits are **per project** and depend on your organization plan:
 
 | Plan | Rules per project |
-|------|------------------:|
+|------|-------------------|
 | Free (Starter) | 2 |
 | Pro | 50 |
 | Scale | 50 |
 
-Creating a rule is blocked when you reach the limit until you delete a rule or [upgrade your plan](/docs/advanced/platform/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
+When you reach the limit, you cannot create a rule until you delete one or [upgrade your plan](/docs/advanced/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
 
 The Console shows current usage next to the Firewall title when a limit applies.
 
-# Access {% #access %}
+# Who can manage rules {% #access %}
 
-Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/platform/roles) enabled, members with write access can create, update, and delete rules. Read-only roles (for example analysts) can view rules but cannot change them.
+Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, the owner and developer roles hold both scopes and can create, update, and delete rules. The analyst and editor roles hold only `wafRules.read`, so they can view rules without changing them. The billing role holds neither.
 
-When organization roles are disabled, all organization members can manage rules where the feature is available.
+When organization roles are disabled, all organization members can manage rules.
 
 {% arrow_link href="/docs/products/firewall/quick-start" %}
 Quick start

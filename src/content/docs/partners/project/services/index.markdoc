@@ -20,8 +20,8 @@ Services can be toggled from the Appwrite Console, or programmatically through a
 To toggle a service manually:
 
 1. Open your project in the Appwrite Console.
-2. Open **Settings** from the bottom of the side nav.
-3. Scroll to the **Services** card.
+2. Open **Settings** at the bottom of the project sidebar.
+3. On the **Overview** tab, scroll to the **Services** card.
 4. Flip the switch next to the service you want to enable or disable. Use **Disable all** to turn off every optional service at once.
 
 # Available services {% #available-services %}

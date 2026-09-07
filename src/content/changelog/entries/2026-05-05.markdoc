@@ -3,6 +3,7 @@ layout: changelog
 title: "Configurable start command for SSR Sites"
 date: 2026-05-05
 cover: /images/changelog/2026-05-05.avif
+tags: console, functions, sites
 ---
 
 You can now set an explicit **start command** for **server-side rendered (SSR)** Sites in the Appwrite Console, alongside your existing **build settings** (install command, build command, and output directory). After a successful build, Appwrite uses this command to start the Node.js process that serves your app at runtime.

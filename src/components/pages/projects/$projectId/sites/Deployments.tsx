@@ -51,6 +51,10 @@ import {
   isDeploymentTimeout,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
@@ -109,6 +113,7 @@ import {
   useSiteDomains,
   deleteSiteDeployment,
   cancelSiteDeployment,
+  siteDeploymentQueryOptions,
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
@@ -552,17 +557,28 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !siteId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'site',
+        projectId,
+        resourceId: siteId,
+        resourceQueryKey: ['site', 'project', projectId, siteId],
+        deploymentQueryKey: siteDeploymentQueryOptions(
+          projectId,
+          siteId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'site', projectId, siteId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })

@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing the Projects API: Configure your project with Server SDKs"
 date: 2026-07-22T12:00:00
 cover: /images/blog/announcing-projects-api/cover.avif
+tags: console, auth, api, sdk
 ---
 
 Every project setting, from auth methods and OAuth providers to SMTP and labels, can now be configured programmatically through the Appwrite Server SDKs. The new **Projects API** exposes the same configuration you reach through the Console, so you can script, version, and review project setup instead of clicking through it.

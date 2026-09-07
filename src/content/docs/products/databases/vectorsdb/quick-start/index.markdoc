@@ -1292,7 +1292,8 @@ appwrite embeddings create-text-embeddings \
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[<EMBEDDING_FROM_FIRST_COMMAND>]}' '{"method":"limit","values":[3]}'
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[<EMBEDDING_FROM_FIRST_COMMAND>]}' \
+    --queries '{"method":"limit","values":[3]}'
 ```
 {% /multicode %}
 

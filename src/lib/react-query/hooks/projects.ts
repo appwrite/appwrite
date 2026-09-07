@@ -772,6 +772,7 @@ export function useProject(projectId: string | undefined) {
       status: projectData.status,
       pingCount: (projectData as { pingCount?: number }).pingCount,
       pingedAt: (projectData as { pingedAt?: string }).pingedAt,
+      billingLimits: projectData.billingLimits,
     } as Project & { status?: string }
   }, [projectData])
 

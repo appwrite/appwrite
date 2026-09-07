@@ -1,4 +1,4 @@
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export function isDomainsDocsSlug(slug: string): boolean {
   return (
@@ -30,5 +30,5 @@ export function isDomainsDocsHref(href: string): boolean {
 }
 
 export function isDomainsDocsEnabled(): boolean {
-  return getActiveProfileFeatures().domains
+  return isCloudProfile()
 }

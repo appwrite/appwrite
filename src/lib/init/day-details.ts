@@ -82,22 +82,22 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Explore PostgreSQL',
-      href: '/docs/products/databases',
+      href: '/docs/products/databases/postgresql',
       external: false,
     },
     resources: [
       {
         id: 'day2-blog',
         typeLabel: 'Blog',
-        title: 'PostgreSQL comes to Appwrite',
-        href: '/blog/post/announcing-native-postgresql-databases',
+        title: 'Appwrite now speaks Postgres',
+        href: '/blog/post/appwrite-now-speaks-postgresql',
         actionLabel: 'Read article',
       },
       {
         id: 'day2-docs',
         typeLabel: 'Docs',
         title: 'PostgreSQL documentation',
-        href: '/docs/products/databases',
+        href: '/docs/products/databases/postgresql',
         actionLabel: 'Visit docs',
       },
     ],
@@ -175,7 +175,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Try S3 for Storage',
-      href: '/docs/products/storage',
+      href: '/docs/products/storage/s3',
       external: false,
     },
     resources: [
@@ -187,10 +187,24 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         actionLabel: 'Read article',
       },
       {
+        id: 'day4-gitlab-blog',
+        typeLabel: 'Blog',
+        title: 'GitLab comes to Appwrite',
+        href: '/blog/post/announcing-gitlab-support',
+        actionLabel: 'Read article',
+      },
+      {
+        id: 'day4-bitbucket-blog',
+        typeLabel: 'Blog',
+        title: 'Bitbucket comes to Appwrite',
+        href: '/blog/post/announcing-bitbucket-support',
+        actionLabel: 'Read article',
+      },
+      {
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
-        href: '/docs/products/storage',
+        href: '/docs/products/storage/s3',
         actionLabel: 'Visit docs',
       },
     ],
@@ -307,6 +321,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'PostgreSQL deep dive',
     // Day 2 runs later than the rest of the week.
     startsAt: '2026-09-01T13:30:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[2],
   },
   {
@@ -315,7 +330,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'PostgreSQL AMA',
     startsAt: '2026-09-01T14:30:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w4p34s/native_postgresql_databases_are_here_and_were/',
   },
   {
     id: 'sched-yt-servers',
@@ -323,6 +338,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'VectorsDB, DocumentsDB & MySQL deep dive',
     startsAt: '2026-09-02T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[3],
   },
   {
@@ -331,7 +347,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'VectorsDB, DocumentsDB & MySQL AMA',
     startsAt: '2026-09-02T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w5fazf/introducing_vectorsdb_documentsdb_and_native/',
   },
   {
     id: 'sched-yt-s3',
@@ -339,6 +355,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'S3 for Appwrite Storage',
     startsAt: '2026-09-03T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[4],
   },
   {
@@ -347,7 +364,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'S3 for Storage AMA',
     startsAt: '2026-09-03T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w6c0qe/we_just_launched_s3_support_for_appwrite_storage/',
   },
   {
     id: 'sched-yt-firewall-oauth-domains',
@@ -355,6 +372,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'youtube',
     title: 'Firewall, OAuth, and Domains launch stream',
     startsAt: '2026-09-04T09:00:00-07:00',
+    isLive: true,
     href: INIT_DAY_STREAM_HREFS[5],
   },
   {
@@ -363,7 +381,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'Init week AMA',
     startsAt: '2026-09-04T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w7911m/introducing_appwrite_domains_firewall_and_oauth2/',
   },
   /**
    * The community recap lands the day after the final launch day. It exists only

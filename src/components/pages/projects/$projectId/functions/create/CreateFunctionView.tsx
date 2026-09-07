@@ -57,11 +57,12 @@ import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
-  VCS_PROVIDERS,
+  getVisibleVcsOAuthProviders,
   buildVcsOrgOptions,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
@@ -334,6 +335,8 @@ function RepositorySkeleton({
 
 export function CreateFunctionView() {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData } = useFunctionWizard()
@@ -462,7 +465,6 @@ export function CreateFunctionView() {
       })
     }
   }, [projectEndpoint, projectId, selectedInstallationId])
-  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   // The picked installation lives in component state, seeded from
   // `?installation=`, so the provider has to return to a URL that still names
@@ -627,30 +629,17 @@ export function CreateFunctionView() {
                 )}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <Button size="sm" variant="secondary" asChild>
-                  <a href={getGitHubAuthUrl}>
-                    <VcsIcon type="github" className="me-1.5 h-3.5 w-3.5" />
-                    {t('Connect GitHub')}
-                  </a>
-                </Button>
-                <Button size="sm" variant="secondary" asChild>
-                  <a href={getVcsAuthUrl('gitlab')}>
-                    <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
-                    {t('Connect GitLab')}
-                  </a>
-                </Button>
-                <Button size="sm" variant="secondary" asChild>
-                  <a href={getVcsAuthUrl('bitbucket')}>
-                    <VcsIcon type="bitbucket" className="me-1.5 h-3.5 w-3.5" />
-                    {t('Connect Bitbucket')}
-                  </a>
-                </Button>
-                <Button size="sm" variant="secondary" asChild>
-                  <a href={getVcsAuthUrl('origin')}>
-                    <VcsIcon type="origin" className="me-1.5 h-3.5 w-3.5" />
-                    {t('Connect Origin')}
-                  </a>
-                </Button>
+                {vcsOAuthProviders.map((provider) => (
+                  <Button key={provider.id} size="sm" variant="secondary" asChild>
+                    <a href={getVcsAuthUrl(provider.id)}>
+                      <VcsIcon
+                        type={provider.id}
+                        className="me-1.5 h-3.5 w-3.5"
+                      />
+                      {t(`Connect ${provider.label}`)}
+                    </a>
+                  </Button>
+                ))}
               </div>
             </div>
           ) : (
@@ -711,7 +700,7 @@ export function CreateFunctionView() {
                       </p>
                     )}
                     <div className="border-t border-border mt-1 pt-1">
-                      {Object.values(VCS_PROVIDERS).map((p) => (
+                      {vcsOAuthProviders.map((p) => (
                         <a
                           key={p.id}
                           href={getVcsAuthUrl(p.id)}

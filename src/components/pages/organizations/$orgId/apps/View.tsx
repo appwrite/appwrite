@@ -52,7 +52,7 @@ export function View() {
     try {
       const app = await createAppMutation.mutateAsync(input)
       setCreateDialogOpen(false)
-      toast.success(t('App created as draft'))
+      toast.success(t('App created'))
       if (orgId && app?.$id) {
         navigate({
           to: '/organizations/$orgId/apps/$appId',
@@ -87,7 +87,7 @@ export function View() {
           {...analyticsAttrs('create-marketplace-app')}
         >
           <Plus className="me-1.5 h-3.5 w-3.5" />
-          {t('Add app')}
+          {t('Create app')}
         </Button>
       </div>
 
@@ -102,7 +102,7 @@ export function View() {
               onClick={() => setCreateDialogOpen(true)}
               {...analyticsAttrs('create-marketplace-app')}
             >
-              {t('Add app')}
+              {t('Create app')}
             </Button>
           }
           variant="card"

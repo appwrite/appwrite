@@ -38,13 +38,14 @@ import {
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { GitBranch } from 'lucide-react'
 import {
   buildVcsOrgOptions,
   getVcsProvider,
   vcsProviderHasCapability,
-  VCS_PROVIDERS,
   VcsIcon,
+  getVisibleVcsOAuthProviders,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 
@@ -116,6 +117,8 @@ export function ConnectRepositorySection({
   className,
 }: ConnectRepositorySectionProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -317,30 +320,14 @@ export function ConnectRepositorySection({
             <GitBranch className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button variant="secondary" asChild>
-              <a href={getGitHubAuthUrl}>
-                <VcsIcon type="github" className="me-1.5 h-4 w-4" />
-                {t('Connect to GitHub')}
-              </a>
-            </Button>
-            <Button variant="secondary" asChild>
-              <a href={vcsAuthUrl('gitlab')}>
-                <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
-                {t('Connect to GitLab')}
-              </a>
-            </Button>
-            <Button variant="secondary" asChild>
-              <a href={vcsAuthUrl('bitbucket')}>
-                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
-                {t('Connect to Bitbucket')}
-              </a>
-            </Button>
-            <Button variant="secondary" asChild>
-              <a href={vcsAuthUrl('origin')}>
-                <VcsIcon type="origin" className="me-1.5 h-4 w-4" />
-                {t('Connect to Origin')}
-              </a>
-            </Button>
+            {vcsOAuthProviders.map((provider) => (
+              <Button key={provider.id} variant="secondary" asChild>
+                <a href={vcsAuthUrl(provider.id)}>
+                  <VcsIcon type={provider.id} className="me-1.5 h-4 w-4" />
+                  {t(`Connect to ${provider.label}`)}
+                </a>
+              </Button>
+            ))}
           </div>
         </div>
       </div>
@@ -517,7 +504,7 @@ export function ConnectRepositorySection({
                     </SelectItem>
                   ))}
                   <div className="border-t border-border mt-1 pt-1">
-                    {Object.values(VCS_PROVIDERS)
+                    {vcsOAuthProviders
                       .filter((p) =>
                         vcsProviderHasCapability(
                           p.id,

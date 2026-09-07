@@ -5,6 +5,7 @@ import type {
 } from './types'
 import {
   getActiveProfileFeatures,
+  isCloudProfile,
   type ConsoleProfileFeatures,
 } from '@/lib/console-profiles'
 
@@ -41,6 +42,7 @@ export const API_SERVICE_ORDER = [
   'advisor',
   'documentsDB',
   'vectorsDB',
+  'embeddings',
   'postgresql',
   'mysql',
   'mongo',
@@ -67,6 +69,7 @@ export type ConsoleOnlyDatabaseApiService =
 export const FEATURE_GATED_DATABASE_API_SERVICES = [
   'documentsDB',
   'vectorsDB',
+  'embeddings',
   ...CONSOLE_ONLY_DATABASE_API_SERVICES,
 ] as const
 
@@ -75,11 +78,7 @@ export type FeatureGatedDatabaseApiService =
 
 export type DatabaseApiServiceFeatures = Pick<
   ConsoleProfileFeatures,
-  | 'dedicatedDbsDocumentsDB'
-  | 'dedicatedDbsVectorsDB'
-  | 'nativeDbsPostgres'
-  | 'nativeDbsMySQL'
-  | 'nativeDbsMongo'
+  'nativeDbsMongo'
 >
 
 /**
@@ -100,6 +99,7 @@ export const API_EXPLORER_PRODUCT_GROUPS: ApiExplorerProductGroupDefinition[] =
         'tablesDB',
         'documentsDB',
         'vectorsDB',
+        'embeddings',
         'postgresql',
         'mysql',
         'mongo',
@@ -163,10 +163,9 @@ export function getFeatureGatedDatabaseApiServices(
   features: DatabaseApiServiceFeatures = getActiveProfileFeatures(),
 ): FeatureGatedDatabaseApiService[] {
   const services: FeatureGatedDatabaseApiService[] = []
-  if (features.dedicatedDbsDocumentsDB) services.push('documentsDB')
-  if (features.dedicatedDbsVectorsDB) services.push('vectorsDB')
-  if (features.nativeDbsPostgres) services.push('postgresql')
-  if (features.nativeDbsMySQL) services.push('mysql')
+  if (isCloudProfile()) {
+    services.push('documentsDB', 'vectorsDB', 'embeddings', 'postgresql', 'mysql')
+  }
   if (features.nativeDbsMongo) services.push('mongo')
   return services
 }
@@ -239,6 +238,7 @@ export const API_SERVICE_LABELS: Record<string, string> = {
   advisor: 'Advisor',
   documentsDB: 'DocumentsDB',
   vectorsDB: 'VectorsDB',
+  embeddings: 'Embeddings',
   postgresql: 'PostgreSQL',
   mysql: 'MySQL',
   mongo: 'MongoDB',

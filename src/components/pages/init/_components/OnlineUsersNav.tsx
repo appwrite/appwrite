@@ -193,7 +193,10 @@ function PresenceAvatar({
     <motion.span
       key={isRaffleWinner ? `winner-${user.id}` : user.id}
       className={PRESENCE_AVATAR_SHELL_CLASS}
-      animate={reduceMotion ? undefined : { scale: [1, 1.14, 1] }}
+      initial={false}
+      animate={
+        reduceMotion || !isRaffleWinner ? undefined : { scale: [1, 1.14, 1] }
+      }
       transition={PRESENCE_RING_PULSE_TRANSITION}
       aria-hidden
     >
@@ -741,10 +744,14 @@ function OnlineUsersNavContent({
   raffleWinnerId?: string | null
 }) {
   const t = useT()
+  const reduceMotion = useReducedMotion()
   const hasUsers =
     event.onlineUsers.length > 0 ||
     event.recentlyOnlineUsers.length > 0 ||
     event.hiddenOnlineCount > 0
+  const showSkeleton = showPanel && isLoading
+  const showEmpty = showPanel && !isLoading && !hasUsers
+  const showList = !showSkeleton && hasUsers
 
   const emptyMessage = isAuthenticated
     ? t('No one else online yet. You are connected.')
@@ -752,10 +759,26 @@ function OnlineUsersNavContent({
 
   return (
     <div className={cn('relative', ONLINE_USERS_LIST_MIN_HEIGHT)}>
-      {showPanel && isLoading ? (
-        <OnlineUsersListSkeletonView collapsed={collapsed} isMobile={isMobile} />
-      ) : showPanel && !hasUsers ? (
-        <p
+      <AnimatePresence initial={false}>
+        {showSkeleton ? (
+          <motion.div
+            key="skeleton"
+            className="absolute inset-0 z-10"
+            initial={false}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
+            transition={PRESENCE_LIST_TRANSITION}
+          >
+            <OnlineUsersListSkeletonView collapsed={collapsed} isMobile={isMobile} />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      {showEmpty ? (
+        <motion.p
+          key="empty"
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={PRESENCE_LIST_TRANSITION}
           className={cn(
             'px-2.5 text-[13px] text-muted-foreground',
             isMobile && 'px-0',
@@ -763,9 +786,15 @@ function OnlineUsersNavContent({
           )}
         >
           {collapsed && !isMobile ? '…' : emptyMessage}
-        </p>
-      ) : (
-        <div className={cn('space-y-6', ONLINE_USERS_LIST_CLASS)}>
+        </motion.p>
+      ) : showList ? (
+        <motion.div
+          key="list"
+          className={cn('space-y-6', ONLINE_USERS_LIST_CLASS)}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.32, ease: PRESENCE_LIST_EASE }}
+        >
           <UserCategory
             label="Online now"
             users={event.onlineUsers}
@@ -798,8 +827,8 @@ function OnlineUsersNavContent({
             collapsed={collapsed}
             isMobile={isMobile}
           />
-        </div>
-      )}
+        </motion.div>
+      ) : null}
     </div>
   )
 }

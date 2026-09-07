@@ -13,6 +13,7 @@ import { Info } from './markdoc/Info'
 import { MultiCode } from './markdoc/MultiCode'
 import { DocsImage } from './markdoc/DocsImage'
 import { IndexLookupAnimation } from './markdoc/IndexLookupAnimation'
+import { RateLimitStrategyAnimation } from './markdoc/RateLimitStrategyAnimation'
 import {
   Blockquote,
   DocsLink,
@@ -74,6 +75,7 @@ const baseMarkdocComponents = {
   ),
   PromptContent: PromptContentMarkdoc,
   IndexLookupAnimation,
+  RateLimitStrategyAnimation,
   Video: ({ src, title }: { src?: string; title?: string }) => (
     <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
       <video src={src} controls className="w-full" title={title} />

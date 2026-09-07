@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import {
   useProject,
@@ -23,6 +24,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { cacheUpdatedFunctionOrSite } from '@/lib/utils/settings-redeploy-alert'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -40,13 +42,8 @@ export function View() {
     SpecificationType.Runtimes,
   )
 
-  const [runtimeSpecification, setRuntimeSpecification] = useState('')
-
-  useEffect(() => {
-    if (func) {
-      setRuntimeSpecification(func.runtimeSpecification || '')
-    }
-  }, [func])
+  const [runtimeSpecification, setRuntimeSpecification] =
+    useSyncStateFromServer(func?.runtimeSpecification || '')
 
   const specifications = useMemo(
     () => specificationsData?.specifications || [],
@@ -64,7 +61,8 @@ export function View() {
     },
     onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
-      queryClient.setQueryData(
+      cacheUpdatedFunctionOrSite(
+        queryClient,
         ['function', 'project', projectId, functionId],
         updated,
       )
