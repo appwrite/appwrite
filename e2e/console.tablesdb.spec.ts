@@ -286,7 +286,7 @@ test.describe('console tablesdb', () => {
     })
   })
 
-  test('relationship column resolves in the grid and survives a scalar edit', async ({
+  test('relationship column resolves in the grid and survives a row save', async ({
     page,
     tablesdbSuite,
   }) => {
@@ -309,9 +309,8 @@ test.describe('console tablesdb', () => {
     await expect(relatedCell).toHaveText(/item/i)
     await expect(relatedCell).not.toHaveText(/^null$/)
 
-    // Editing an unrelated column must not send the relationship back. It used to
-    // go out as `"related": null`, which the API rejects on a to-many and treats
-    // as an unlink on a to-one.
+    // Saving must not send the relationship back: it used to go out as
+    // `"related": null`, which the API rejects on a to-many and unlinks a to-one.
     const rowId = await page
       .locator('tbody tr')
       .first()
@@ -321,9 +320,11 @@ test.describe('console tablesdb', () => {
     await page.goto(`${page.url().split('#')[0]}#row-${rowId.trim()}`)
 
     const drawer = page.getByRole('dialog').last()
-    await expect(drawer.getByText('Update row')).toBeVisible({ timeout: 30_000 })
-    const titleField = drawer.locator('textarea, input[type="text"]').first()
-    await titleField.fill(`edited-${Date.now()}`)
+    await expect(
+      drawer.getByRole('heading', { name: 'Update row' }),
+    ).toBeVisible({ timeout: 30_000 })
+    // Saving without touching anything is the reported case: the editor used to
+    // send every column, so the unrequested relationship went back as null.
     await drawer.getByRole('button', { name: /^Update$/ }).click()
 
     await expectToast(page, /Row updated successfully|Row updated/)

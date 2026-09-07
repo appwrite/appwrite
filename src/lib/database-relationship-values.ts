@@ -1,9 +1,7 @@
 /**
- * Reading and writing relationship column values.
- *
- * Appwrite returns relationships as populated rows but accepts them as row ids,
- * and the row editor carries both shapes plus its own empty-value placeholders.
- * These helpers are the single place that reconciles the three.
+ * Relationship column values. The API returns populated rows but accepts ids,
+ * and the row editor carries both shapes plus its own empty placeholders; these
+ * helpers are the single place that reconciles them.
  */
 
 export function getRelationshipKind(columnInfo?: unknown): string | undefined {
@@ -51,11 +49,8 @@ export function toRelatedRowList(value: unknown): unknown[] {
 }
 
 /**
- * A relationship value shaped for create/update.
- *
- * The API takes related row ids (or whole rows); the form also carries populated
- * rows from the API and `''` placeholders from the create defaults, so normalize
- * to ids and let an emptied to-many go out as `[]` rather than null.
+ * A relationship value shaped for create/update: ids, with an emptied to-many
+ * going out as `[]` rather than null.
  */
 export function toRelationshipPayloadValue(
   value: unknown,
@@ -70,8 +65,8 @@ export function toRelationshipPayloadValue(
 }
 
 /**
- * Label for a related row where the related table's schema is not loaded (the
- * rows grid): fall back to the first non-empty string field, then to the id.
+ * Label for a related row when the related table's schema is not loaded: the
+ * first non-empty string field, else the id.
  */
 export function relatedRowLabel(value: unknown): string {
   const id = toRelatedRowId(value)

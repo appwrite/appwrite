@@ -633,6 +633,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Indexes': 'אינדקסים',
   'indexes': 'אינדקסים',
   'indexes take longer to build than B-tree.': 'לוקח יותר זמן לבנות מאשר B-tree.',
+  'item': 'פריט',
+  'items': 'פריטים',
   'Ingress and egress for this database instance.': 'תעבורה נכנסת ויוצאת עבור מופע מסד נתונים זה.',
   'Ingress and egress throughput for this database instance.': 'קצב תעבורה נכנסת ויוצאת עבור מופע מסד נתונים זה.',
   'Insights': 'תובנות',

@@ -517,7 +517,6 @@ function defaultFormValueForColumn(
     return c.default as string | number | bigint | boolean | unknown[] | null
   }
   if (c.type === 'boolean') return false
-  // A relationship is never `''`: to-many takes a list of ids, to-one a single id.
   if (c.type === 'relationship') return isMultiRelationship(col) ? [] : null
   if (c.array) return []
   return ''
@@ -607,8 +606,8 @@ function RelationshipField({
     100,
   )
 
-  // The API returns populated related rows, not ids - keep both: ids drive the
-  // selection, and the rows themselves label entries outside the first page.
+  // Values arrive as populated rows: ids drive the selection, the rows label
+  // entries that are outside the related table's first page.
   const currentItems = Array.isArray(currentValue)
     ? currentValue
     : currentValue === null || currentValue === undefined || currentValue === ''
@@ -808,8 +807,6 @@ function RowEditDrawer({
   const [formData, setFormData] = useState<
     Record<string, string | number | bigint | boolean | unknown[] | null>
   >({})
-  // Keys the user actually edited in this drawer session. Relationship columns are
-  // only sent when they appear here - see handleSave.
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const [customRowId, setCustomRowId] = useState<string | undefined>(undefined)
   const fieldRefs = useRef<
@@ -1350,12 +1347,8 @@ function RowEditDrawer({
         (typeof currentValue === 'string' && currentValue.trim() === '') ||
         (Array.isArray(currentValue) && currentValue.length === 0)
 
-      // Relationships: on update, send only what the user actually edited. The API
-      // merges an update onto the stored row, so an omitted key keeps its related
-      // rows - while sending null either fails ("Invalid relationship value ...
-      // NULL given") or, for a to-one, silently unlinks the related row. On
-      // create there is nothing stored to preserve, so an untouched optional
-      // relationship is simply left out and a required one still has to be filled.
+      // An update is merged onto the stored row, so omitting an untouched
+      // relationship keeps it; sending null fails, or unlinks a to-one.
       if (fieldType === 'relationship') {
         const untouched = !touchedFields.has(fieldKey)
         if (untouched && (!isCreateMode || !required)) {
@@ -3108,8 +3101,7 @@ export function RowsSpreadsheet({
     ? displayedFilterQueries
     : undefined
 
-  // Read before the rows queries: they need the relationship column keys to ask
-  // the API to resolve relationships.
+  // Read before the rows queries, which need the relationship keys.
   const { columns: apiColumns, isLoading: columnsLoading } =
     useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
 
@@ -3774,8 +3766,7 @@ export function RowsSpreadsheet({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
-      // Relationship values are populated rows; posting them back would create or
-      // rewrite the related rows instead of linking to them.
+      // Posting populated rows back would rewrite them instead of linking.
       for (const key of relationshipKeys) {
         if (!Object.prototype.hasOwnProperty.call(data, key)) continue
         data[key] = toRelationshipPayloadValue(data[key], columnInfoByKey.get(key))
@@ -3916,10 +3907,7 @@ export function RowsSpreadsheet({
     return { full: stringValue, display: trimmed, isNull: false }
   }
 
-  /**
-   * Related rows come back populated, so render them the way the row editor does
-   * rather than dumping the raw JSON into the cell.
-   */
+  /** Related rows come back populated; label them instead of dumping JSON. */
   function formatRelationshipCellValue(
     value: unknown,
     columnInfo?: unknown,
@@ -3930,7 +3918,7 @@ export function RowsSpreadsheet({
       const count = labels.length
       return {
         full: labels.join(', '),
-        display: count === 1 ? t('1 item') : `${count} ${t('items')}`,
+        display: `${count} ${count === 1 ? t('item') : t('items')}`,
         isNull: false,
       }
     }

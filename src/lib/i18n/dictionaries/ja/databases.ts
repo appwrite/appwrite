@@ -632,6 +632,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Indexes': 'インデックス',
   'indexes': 'インデックス',
   'indexes take longer to build than B-tree.': 'インデックスは B-tree よりビルドに時間がかかります。',
+  'item': '件',
+  'items': '件',
   'Ingress and egress for this database instance.': 'このデータベースインスタンスの受信と送信。',
   'Ingress and egress throughput for this database instance.': 'このデータベースインスタンスの受信と送信のスループット。',
   'Insights': 'インサイト',

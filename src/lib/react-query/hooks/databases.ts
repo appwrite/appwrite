@@ -2701,10 +2701,8 @@ export function buildRowListOrderQueries(
 }
 
 /**
- * Relationship column keys for a table, sorted so the query key stays stable.
- *
- * Only `available` columns count: a relationship that is still processing (or
- * failed) cannot be resolved, and asking for it fails the whole list request.
+ * Relationship column keys, sorted so the query key stays stable. Only
+ * `available` ones: asking for a pending relationship fails the request.
  */
 export function getRelationshipColumnKeys(
   columns: unknown[] | null | undefined,
@@ -2727,13 +2725,9 @@ export function getRelationshipColumnKeys(
 }
 
 /**
- * Nested selections (`key.*`) for the given relationship keys.
- *
- * Appwrite only resolves relationships when a request carries a *dotted* select:
- * with no select at all the controller wraps the read in `skipRelationships`, and
- * with a flat select the population guard in utopia-php/database is skipped. A
- * bare relationship key is worse than useless - `validateSelections` rejects it
- * ("Cannot select attributes: <key>") and the request 400s.
+ * Nested selections (`key.*`), the only form that makes the API resolve a
+ * relationship: no select at all skips relationships, a flat select skips them
+ * too, and a bare relationship key is rejected outright.
  */
 function buildRelationshipSelections(relationshipKeys: string[]): string[] {
   return relationshipKeys.map((key) => `${key}.*`)
@@ -2748,8 +2742,7 @@ export function buildRowListSelectQuery(
   const relKeySet = new Set(relKeys)
 
   if (!listSelectAttrKeys?.length) {
-    // No saved column layout: the projection is wide anyway, so the only reason
-    // to send a select is to make relationships resolve at all.
+    // No saved layout, so the only reason to select is to resolve relationships.
     if (!relKeys.length) return undefined
     return Query.select(['*', ...buildRelationshipSelections(relKeys)])
   }
@@ -2762,7 +2755,7 @@ export function buildRowListSelectQuery(
     // Always include: used as the secondary orderBy tie-breaker.
     ROWS_LIST_ORDER_TIEBREAKER,
   ])
-  // A relationship column is not sortable server-side, and selecting it bare 400s.
+  // Selecting a relationship bare 400s, and it is not sortable anyway.
   if (sortBy && !relKeySet.has(sortBy)) fields.add(sortBy)
   const visibleRelKeys: string[] = []
   for (const k of listSelectAttrKeys) {
@@ -2770,7 +2763,6 @@ export function buildRowListSelectQuery(
     const t = k.trim()
     if (!t || t.startsWith('$') || t.length > 512) continue
     if (relKeySet.has(t)) {
-      // Requested as `t.*` below - never as a bare key.
       if (!visibleRelKeys.includes(t)) visibleRelKeys.push(t)
       continue
     }
@@ -2886,9 +2878,8 @@ export async function fetchProjectTableRow(
   const projectSdk = sdk.forProject(projectId)
   const kind = resolveProjectDatabaseType(dbKind)
 
-  // A read with no queries is wrapped in `skipRelationships` server-side, so the
-  // row would come back without its relationship values - and the row editor
-  // would then write those absent values back as null.
+  // A read with no queries skips relationships, and the row editor would then
+  // write those absent values back as null.
   const queries = relationshipKeys?.length
     ? [Query.select(['*', ...relationshipKeys.map((key) => `${key}.*`)])]
     : undefined
