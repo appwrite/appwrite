@@ -488,6 +488,10 @@ final readonly class Claim
             && $live->getId() === $queued->getId()
             && $live->getAttribute('attemptId') === $queued->getAttribute('attemptId')
             && $live->getUpdatedAt() !== null
-            && $live->getUpdatedAt() === $queued->getUpdatedAt();
+            && $live->getUpdatedAt() === $queued->getUpdatedAt()
+            && $live->getVersion() !== null
+            && $live->getVersion() === $queued->getVersion()
+            && $live->getSequence() !== ''
+            && $live->getSequence() === $queued->getSequence();
     }
 }
