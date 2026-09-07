@@ -7,7 +7,6 @@ use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
@@ -17,14 +16,8 @@ use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
-use Utopia\Logger\Adapter\AppSignal;
-use Utopia\Logger\Adapter\LogOwl;
-use Utopia\Logger\Adapter\Raygun;
-use Utopia\Logger\Adapter\Sentry;
-use Utopia\Logger\Logger;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Mongo\Client as MongoClient;
-use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
@@ -43,109 +36,6 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher-sms']);
     PublicDomain::allow(['request-catcher-webhook']);
 }
-
-$register->set('logger', function () {
-    // Register error logger
-    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
-
-    if (empty($providerConfig)) {
-        return;
-    }
-
-    try {
-        $loggingProvider = new DSN($providerConfig);
-
-        $providerName = $loggingProvider->getScheme();
-        $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
-            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
-            default => ['key' => $loggingProvider->getHost()],
-        };
-    } catch (Throwable $th) {
-        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
-        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
-        $configChunks = \explode(";", $providerConfig);
-
-        $providerConfig = match ($providerName) {
-            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
-            'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
-            default => ['key' => $providerConfig],
-        };
-    }
-
-    if (empty($providerName)) {
-        return;
-    }
-
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
-    }
-
-    try {
-        $adapter = match ($providerName) {
-            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-            'raygun' => new Raygun($providerConfig['key']),
-            'appsignal' => new AppSignal($providerConfig['key']),
-            default => null
-        };
-    } catch (Throwable $th) {
-        $adapter = null;
-    }
-
-    if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
-        return;
-    }
-
-    return new Logger($adapter);
-});
-
-$register->set('realtimeLogger', function () {
-    // Register error logger for realtime, falls back to default logging config
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '')
-        ?: System::getEnv('_APP_LOGGING_CONFIG', '');
-
-    if (empty($providerConfig)) {
-        return;
-    }
-
-    $loggingProvider = new DSN($providerConfig);
-    $providerName = $loggingProvider->getScheme();
-    $providerConfig = match ($providerName) {
-        'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
-        'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
-        default => ['key' => $loggingProvider->getHost()],
-    };
-
-    if (empty($providerName)) {
-        return;
-    }
-
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
-    }
-
-    try {
-        $adapter = match ($providerName) {
-            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-            'raygun' => new Raygun($providerConfig['key']),
-            'appsignal' => new AppSignal($providerConfig['key']),
-            default => null
-        };
-    } catch (Throwable $th) {
-        $adapter = null;
-    }
-
-    if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
-        return;
-    }
-
-    return new Logger($adapter);
-});
 
 $register->set('pools', function () {
     $group = new Group();
@@ -332,8 +222,6 @@ $register->set('pools', function () {
                 },
             };
 
-            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
-
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
             $connectionPoolSize = match ($type) {
@@ -341,7 +229,7 @@ $register->set('pools', function () {
                 default => $poolSize,
             };
 
-            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':

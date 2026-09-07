@@ -4,7 +4,7 @@ namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Utopia\Console;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\System\System;
 

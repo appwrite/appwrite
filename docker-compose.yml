@@ -75,7 +75,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
       - appwrite-geo
     environment:
       - _APP_ENV
@@ -92,7 +91,6 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_LOCALE
       - _APP_COMPRESSION_ENABLED
       - _APP_COMPRESSION_MIN_SIZE_BYTES
@@ -247,8 +245,6 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
       - _APP_CONSOLE_COUNTRIES_DENYLIST
-      - _APP_EXPERIMENT_LOGGING_PROVIDER
-      - _APP_EXPERIMENT_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
@@ -260,6 +256,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-console:
     logging:
       driver: json-file
@@ -267,7 +264,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.6.1
+    image: appwrite/new:1.1.16
     restart: unless-stopped
     networks:
       - appwrite
@@ -314,7 +311,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -351,12 +347,11 @@ services:
       - _APP_CONNECTIONS_DATABASE_VECTORSDB
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
-      - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
-      - _APP_POOL_ADAPTER=swoole
+      - _APP_EMBEDDING
 
   appwrite-worker:
     entrypoint: worker
@@ -373,7 +368,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -402,7 +396,6 @@ services:
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
       - _APP_WORKER_MAX_COROUTINES=78
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_EMAIL_CERTIFICATES
@@ -432,7 +425,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
-      - _APP_LOGGING_PROVIDER
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_CONSOLE_URL_SCHEME=root
@@ -525,6 +517,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
 
   appwrite-task-scheduler:
     entrypoint: schedule
@@ -541,7 +534,6 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -560,7 +552,6 @@ services:
       # against shared console/cache pools; floor must cover concurrent ticks.
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
@@ -622,13 +613,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_DB_ADAPTER
@@ -662,7 +651,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -681,7 +669,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -753,13 +740,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -792,6 +777,7 @@ services:
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
+      - _APP_EMBEDDING
   appwrite-worker-builds:
     profiles:
       - separate
@@ -812,13 +798,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -919,7 +903,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -988,7 +971,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_OPENSSL_KEY_V1
@@ -1043,7 +1025,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -1052,7 +1033,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -1093,7 +1073,6 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_USAGE_PASS
@@ -1105,7 +1084,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1142,7 +1120,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
@@ -1167,7 +1144,6 @@ services:
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
-      - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
     profiles:
@@ -1190,7 +1166,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=6
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_SYSTEM_EMAIL_NAME
@@ -1236,7 +1211,6 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_SYSTEM_EMAIL_NAME
@@ -1284,7 +1258,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1348,7 +1321,6 @@ services:
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -1407,7 +1379,6 @@ services:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -1457,7 +1428,6 @@ services:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -1498,12 +1468,10 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
@@ -1541,12 +1509,10 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
@@ -1583,12 +1549,10 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
       - redis
-      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1714,7 +1678,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:1.9.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.1.0
     restart: unless-stopped
     user: root
     networks:
@@ -1728,6 +1692,10 @@ services:
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
+      - S3_ENDPOINT=${_APP_STORAGE_S3_ENDPOINT:-}
+      - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}
+      - S3_ACCESS_KEY_ID=${_APP_STORAGE_S3_ACCESS_KEY:-}
+      - S3_SECRET_ACCESS_KEY=${_APP_STORAGE_S3_SECRET:-}
 
   mariadb:
     image: mariadb:10.11
@@ -1832,14 +1800,10 @@ services:
       start_period: 10s
     command:
       - postgres
-      - -c
-      - fsync=off
-      - -c
-      - synchronous_commit=off
-      - -c
-      - full_page_writes=off
   appwrite-embedding:
-    image: appwrite/embedding:0.1.0
+    image: appwrite/embedding:0.3.1
+    profiles:
+      - embedding
     environment:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding

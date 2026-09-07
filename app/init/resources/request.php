@@ -52,10 +52,8 @@ use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -72,20 +70,15 @@ use Utopia\Validator\WhiteList;
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
 
-    $context->set('log', fn () => new Log(), []);
-
-    $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -213,15 +206,9 @@ return function (Container $context): void {
     ), ['publisher']);
     // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform, Telemetry $telemetry) {
-        return fn (Database $dbForProject, Document $project): Deployments => new Deployments(
-            $jobs,
-            $dbForProject,
-            $project,
-            $platform,
-            new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())),
-        );
-    }, ['jobs', 'platform', 'telemetry']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'platform']);
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(

@@ -16,7 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 final class MigrationsTest extends TestCase
@@ -325,8 +325,6 @@ final class MigrationsTest extends TestCase
                 Authorization $authorization,
             ): void {
                 $this->project = $project;
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

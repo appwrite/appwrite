@@ -17,7 +17,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testListEventsReturnsRequestedEmptySeries(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $response = $this->call('/usage/events', [
             'metrics' => ['test.unknown.event'],
@@ -32,7 +32,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testListGaugesReturnsEveryRequestedSeries(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $response = $this->call('/usage/gauges', [
             'metrics' => ['test.unknown.gauge', 'test.second.gauge'],
@@ -51,7 +51,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testFlatEventAggregateNormalizesExplicitEndTime(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $response = $this->call('/usage/events', [
             'metrics' => ['test.unknown.event'],
@@ -64,7 +64,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testUnknownMaxGaugeDoesNotFabricateZeroSeries(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $flat = $this->call('/usage/gauges', [
             'metrics' => ['test.unknown.max.gauge'],
@@ -84,7 +84,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testInvalidFilterAttributeIsRejected(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $response = $this->call('/usage/events', [
             'metrics' => ['network.requests'],
@@ -98,7 +98,7 @@ final class UsageCustomServerTest extends Scope
 
     public function testStructuralFilterQueryIsRejected(): void
     {
-        $this->skipUnlessUsageStatsEnabled();
+        $this->waitForUsageStats();
 
         $response = $this->call('/usage/events', [
             'metrics' => ['network.requests'],
@@ -146,11 +146,25 @@ final class UsageCustomServerTest extends Scope
         $this->assertSame('general_unauthorized_scope', $response['body']['type']);
     }
 
-    private function skipUnlessUsageStatsEnabled(): void
+    private function waitForUsageStats(): void
     {
         if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
             $this->markTestSkipped('Usage stats are disabled on this stack');
         }
+
+        $project = $this->getProject();
+        $key = $this->getNewKey(['health.read']);
+
+        // HTTP health can pass while the ClickHouse usage schema is still initializing.
+        $this->assertEventually(function () use ($project, $key) {
+            $response = $this->client->call(Client::METHOD_GET, '/health/usage', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $key,
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code'], 'Usage storage must be ready before testing usage queries');
+        }, 60_000, 500);
     }
 
     /** @param array<string, mixed> $parameters */

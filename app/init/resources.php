@@ -43,12 +43,11 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
@@ -69,8 +68,6 @@ global $container;
 $container = new Container();
 
 $container->set('register', fn () => $register);
-
-$container->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
@@ -182,7 +179,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function (?Logger $logger) {
+$container->set('executionStore', function () {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',
@@ -208,9 +205,8 @@ $container->set('executionStore', function (?Logger $logger) {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
-        logger: $logger,
     );
-}, ['logger']);
+}, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
@@ -310,7 +306,13 @@ $container->set('redis', function () {
 });
 
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
+    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
+        // The callback receives the lock so long-running holders can refresh
+        // the lease and verify it is still theirs before committing work.
+        $lock = new Distributed($redis, $key, ttl: $ttl);
+
+        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
+    }
 ), ['pools']);
 
 $container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
@@ -319,7 +321,18 @@ $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Teleme
 
 function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+    $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+    $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+    $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+    $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+    $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+
+    // An explicit connection remains authoritative. Otherwise the generic S3
+    // configuration takes precedence and the legacy internal DSN is a fallback.
+    if ($connection === '' && (! \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true) || ! $hasS3Configuration)) {
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    }
 
     $device = DeviceType::Local;
     $accessKey = '';
@@ -339,20 +352,27 @@ function getDevice(string $root, string $connection = ''): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
     } else {
-        $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $device = $configuredDevice;
         $prefix = match ($device) {
-            DeviceType::S3, DeviceType::AwsS3 => 'S3',
+            DeviceType::S3, DeviceType::AwsS3 => null,
             DeviceType::DoSpaces => 'DO_SPACES',
             DeviceType::Backblaze => 'BACKBLAZE',
             DeviceType::Linode => 'LINODE',
             DeviceType::Wasabi => 'WASABI',
             DeviceType::Local => null,
         };
-        if ($prefix !== null) {
-            $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
-            $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
-            $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
-            $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        if ($device !== DeviceType::Local) {
+            if ($prefix === null || $hasS3Configuration) {
+                $accessKey = $s3AccessKey;
+                $accessSecret = $s3AccessSecret;
+                $region = $s3Region;
+                $bucket = $s3Bucket;
+            } else {
+                $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
+                $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
+                $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
+                $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+            }
         }
     }
 

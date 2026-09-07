@@ -20,7 +20,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - coredns
+      - dns
     ports:
       - 9501:80
     dns:
@@ -301,23 +301,21 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-  coredns:
-    image: coredns/coredns:1.12.4
-    container_name: appwrite-coredns
+  dns:
+    image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
+    container_name: appwrite-dns
     restart: unless-stopped
     logging:
       driver: json-file
       options:
         max-file: "5"
         max-size: 10m
-    command:
-      - -conf
-      - /mnt/resources/Corefile
+    entrypoint: ["unbound", "-d", "-c", "/mnt/resources/unbound.conf"]
     networks:
       appwrite:
         ipv4_address: 172.16.238.100
     volumes:
-      - ./tests/resources/coredns:/mnt/resources:ro
+      - ./tests/resources/dns:/mnt/resources:ro
   maildev:
     image: appwrite/mailcatcher:1.1.1
     container_name: appwrite-mailcatcher

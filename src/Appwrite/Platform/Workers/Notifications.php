@@ -16,7 +16,6 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
@@ -24,6 +23,7 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Notifications extends Action
@@ -52,11 +52,10 @@ class Notifications extends Action
             ->inject('project')
             ->inject('register')
             ->inject('dbForPlatform')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform): void
     {
         $payload = $message->getPayload();
 
@@ -85,19 +84,19 @@ class Notifications extends Action
             }
 
             if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, self::buildAlertId($messageId, $recipient))) {
-                $log->addTag('dedup', 'hit');
-                $log->addTag('channel', $channel);
+                Span::add('dedup', 'hit');
+                Span::add('channel', $channel);
                 continue;
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
             } catch (Throwable $error) {
-                $log->addTag('channel', $channel);
-                $log->addTag('error', $error->getMessage());
+                Span::add('channel', $channel);
+                Span::add('channel.error', $error->getMessage());
                 $failure ??= $error;
             }
         }
@@ -174,14 +173,13 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
-        Log $log,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
-            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $log),
+            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
     }
@@ -196,18 +194,17 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
-        Log $log,
     ): ?string {
         $address = $recipient['address'];
         $smtp = $this->resolveSmtpConfig($project, $payload);
 
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
-            $log->addTag('email_skipped', 'no_smtp');
+            Span::add('email.skipped', 'no_smtp');
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+        Span::add('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
         $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
@@ -410,7 +407,7 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
-    protected function dispatchWebhook(array $recipient, array $payload, Log $log): ?string
+    protected function dispatchWebhook(array $recipient, array $payload): ?string
     {
         $address = $recipient['address'];
         $signatureKey = $recipient['signatureKey'] ?? null;
@@ -426,7 +423,7 @@ class Notifications extends Action
         ];
 
         if ($signatureKey === null || $signatureKey === '') {
-            $log->addTag('webhook_signed', 'false');
+            Span::add('webhook.signed', 'false');
         }
 
         $message = new WebhookMessage(

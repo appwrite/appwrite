@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
-use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -28,6 +27,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 
 /**
@@ -88,7 +88,6 @@ class Jobs extends Action
             ->inject('platform')
             ->inject('plan')
             ->inject('bus')
-            ->inject('deployments')
             ->callback($this->action(...));
     }
 
@@ -111,7 +110,6 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): void {
         $event = JobsMessage::fromArray($message->getPayload());
 
@@ -120,7 +118,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $deployments): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -138,10 +136,10 @@ class Jobs extends Action
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
-                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
             // Console realtime on every callback (log stream + status).
@@ -229,7 +227,6 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): Document {
         return $deployment;
     }
@@ -262,7 +259,8 @@ class Jobs extends Action
     /**
      * Record a reported artifact: 'sourceSize' (remote-source builds) becomes
      * the deployment's sourceSize; 'manifest' (site builds) is the output file
-     * listing for adapter detection, saved as a marker that joins readiness.
+     * listing for adapter detection; and 'output' confirms remote delivery.
+     * Manifest and output callbacks save markers that join readiness.
      */
     protected function onArtifact(
         Database $dbForProject,
@@ -279,7 +277,6 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): Document {
         if (($data['artifactId'] ?? '') === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
@@ -288,7 +285,24 @@ class Jobs extends Action
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+        }
+
+        // On a remote builds device the sidecar delivers the artifact. Join its
+        // callback explicitly because complete is emitted after artifacts but
+        // the queue can deliver those callbacks out of order.
+        if (($data['artifactId'] ?? '') === 'output') {
+            if (($data['status'] ?? '') === 'failed') {
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($data['error'] ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            }
+
+            if (($data['status'] ?? '') !== 'success') {
+                return $deployment;
+            }
+
+            $cache->save('jobs-output-' . $deployment->getId(), true);
+
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
@@ -309,9 +323,9 @@ class Jobs extends Action
 
     /**
      * Failures short-circuit here — no output is needed to fail. A success
-     * needs every terminal callback: exit carries the code but fires before
-     * post-job artifacts, complete confirms delivery, and site builds also
-     * need the manifest. Each leaves a cache marker and re-attempts the join
+     * needs every terminal callback: exit carries the code, complete confirms
+     * artifact processing, remote builds need successful output delivery, and
+     * site builds also need the manifest. Each leaves a marker and retries the join
      * via ready(), so whichever lands last finalizes.
      */
     protected function onExit(
@@ -329,7 +343,6 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
@@ -337,12 +350,13 @@ class Jobs extends Action
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
 
     /**
-     * The delivery half of the success join — see onExit. Fires once post-job
-     * artifacts have run, so the output is already where Appwrite reads it.
+     * The artifact-processing half of the success join — see onExit. It is
+     * emitted after post-job artifacts run, but can be dequeued before their
+     * callbacks, so remote output delivery has its own marker.
      */
     protected function onComplete(
         Database $dbForProject,
@@ -358,11 +372,10 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus, $deployments);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
 
     /**
@@ -383,7 +396,6 @@ class Jobs extends Action
         array $platform,
         array $plan,
         Bus $bus,
-        Deployments $deployments,
     ): Document {
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
             return $deployment; // already finalized
@@ -393,6 +405,10 @@ class Jobs extends Action
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
         if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+            return $deployment;
+        }
+
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
@@ -407,10 +423,6 @@ class Jobs extends Action
                 return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
         }
-
-        // The build job wrote its artifact where the storage strategy put it;
-        // bring it to buildPath before checking for it.
-        $deployments->store($deployment);
 
         $path = (string) $deployment->getAttribute('buildPath', '');
         if ($path === '' || ! $deviceForBuilds->exists($path)) {
