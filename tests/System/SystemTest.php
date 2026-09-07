@@ -92,6 +92,18 @@ final class SystemTest extends TestCase
         }
     }
 
+    public function testGetMemory(): void
+    {
+        if (\in_array(System::getOS(), ['Linux', 'Darwin'])) {
+            $memory = System::getMemory();
+            $this->assertGreaterThanOrEqual(0, $memory);
+            $this->assertLessThanOrEqual(System::getMemoryTotal(), $memory);
+        } else {
+            $this->expectException('Exception');
+            System::getMemory();
+        }
+    }
+
     public function testGetMemoryFree(): void
     {
         if (\in_array(System::getOS(), ['Linux', 'Darwin'])) {

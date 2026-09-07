@@ -41,6 +41,14 @@ echo System::isX86(); // bool
 Utopia Framework requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
 
 ## Supported methods
+
+`System::getMemory()` returns the effective memory capacity in MiB, rounded down.
+On Linux, it reads cgroup v2 `memory.max` or cgroup v1 `memory.limit_in_bytes`
+from the standard container mounts under `/sys/fs/cgroup`, capped at host RAM.
+It falls back to `getMemoryTotal()` when a limit is missing, unreadable, or unlimited.
+On macOS, it returns host RAM. Other operating systems throw an exception.
+`getMemoryTotal()` continues to return host RAM.
+
 |         | `getCPUCores` | `getCPUUsage` | `getMemoryTotal` | `getMemoryFree` | `getDiskTotal` | `getDiskFree` | `getIOUsage` | `getNetworkUsage` |
 |---------|-------------|-------------------|----------------|---------------|--------------|-------------|------------|-----------------|
 | Windows | ✅           |                   |                |               | ✅            | ✅           |            |                 |

@@ -436,6 +436,52 @@ class System
     }
 
     /**
+     * Returns the effective memory capacity in MiB, rounded down.
+     *
+     * On Linux, reads cgroup v2 memory.max or cgroup v1 memory.limit_in_bytes
+     * at the standard container mount paths. The result is capped at the
+     * host's total RAM, including when v1 reports a large unlimited sentinel.
+     * Falls back to getMemoryTotal() when no readable, finite limit is set.
+     *
+     * @throws Exception
+     */
+    public static function getMemory(): int
+    {
+        $total = self::getMemoryTotal();
+        if (self::getOS() !== 'Linux') {
+            return $total;
+        }
+
+        $limit = self::getCgroupMemoryLimit();
+
+        return $limit === null ? $total : min($total, intdiv($limit, 1024 * 1024));
+    }
+
+    /**
+     * Reads a numeric cgroup memory limit in bytes, or null when unavailable.
+     */
+    private static function getCgroupMemoryLimit(): ?int
+    {
+        foreach (['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes'] as $file) {
+            if (! is_readable($file)) {
+                continue;
+            }
+
+            $contents = trim((string) @file_get_contents($file));
+            if ($contents === 'max' || $contents === '-1') {
+                return null;
+            }
+
+            $limit = filter_var($contents, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if ($limit !== false) {
+                return $limit;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the total amount of Free RAM available on the system as Megabytes.
      *
      *
