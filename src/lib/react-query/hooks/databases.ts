@@ -3938,6 +3938,22 @@ export async function deleteProjectTableColumn(
  * @param tableId - The table ID
  * @param indexData - The index data to create
  */
+/**
+ * Index column orders in the shape the API takes.
+ *
+ * The index form works in `'ASC'`/`'DESC'`, the API in `'asc'`/`'desc'`, so the
+ * comparison has to be case-insensitive - matching only lowercase `'asc'` made
+ * every index the console created descending. Anything unset becomes ascending:
+ * that is the form's own default, and the API rejects a null inside `orders`.
+ */
+export function toIndexOrderBy(
+  orders: Array<string | null | undefined> | undefined,
+): OrderBy[] | undefined {
+  return orders?.map((order) =>
+    String(order ?? '').toLowerCase() === 'desc' ? OrderBy.Desc : OrderBy.Asc,
+  )
+}
+
 export async function createProjectTableIndex(
   projectId: string,
   databaseId: string,
@@ -3956,12 +3972,10 @@ export async function createProjectTableIndex(
   const key = raw.key as string
   const type = raw.type
   const columns = (raw.columns as string[]) || (raw.attributes as string[]) || []
-  const orders = raw.orders as string[] | undefined
+  const orders = raw.orders as Array<string | null | undefined> | undefined
   const lengths = raw.lengths as number[] | undefined
 
-  const orderBy = orders?.map((order) =>
-    order === 'asc' ? OrderBy.Asc : OrderBy.Desc,
-  )
+  const orderBy = toIndexOrderBy(orders)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.createIndex({
