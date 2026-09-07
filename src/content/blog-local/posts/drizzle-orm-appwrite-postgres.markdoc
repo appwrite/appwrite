@@ -226,7 +226,7 @@ ALTER TABLE "books" ADD COLUMN "rating" integer;
 ```
 
 {% info title="Test migrations on a database branch" %}
-You can create an isolated copy of your Postgres database and test a migration against its existing data. Use a project API key with `databases.read` and `databases.write` scopes. These examples create a branch that expires after one hour.
+You can create an isolated copy of your Postgres database and test a migration against its existing data. Use a project API key with `databases.read` and `databases.write` scopes. This example creates a branch that expires after one hour.
 
 {% multicode %}
 ```server-nodejs
@@ -251,34 +251,9 @@ const { branches } = await postgresql.listBranches({
 })
 const branch = branches.find((item) => item.branchName === branchId)
 ```
-```server-rust
-use appwrite::client::Client;
-use appwrite::id::ID;
-use appwrite::services::postgresql::Postgresql;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new()
-        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
-        .set_project("<PROJECT_ID>")
-        .set_key("<YOUR_API_KEY>");
-
-    let postgresql = Postgresql::new(&client);
-    let branch_id = ID::unique();
-
-    postgresql
-        .create_branch("<DATABASE_ID>", Some(&branch_id), Some(3600))
-        .await?;
-
-    let result = postgresql.list_branches("<DATABASE_ID>").await?;
-    let branch = result.branches.iter().find(|item| item.branch_name == branch_id);
-
-    Ok(())
-}
-```
 {% /multicode %}
 
-Branch provisioning is asynchronous. Fetch the branch list again once provisioning finishes, then use the branch's `connectionString` in Node or `connection_string` in Rust as `DATABASE_URL`. Run `pnpm exec drizzle-kit migrate` and verify the result. Restore your original `DATABASE_URL` before continuing below. Branch changes do not merge back. See [database branches](/docs/products/databases/postgresql/branches).
+Branch provisioning is asynchronous. Fetch the branch list again once provisioning finishes, then use the branch's `connectionString` as `DATABASE_URL`. Run `pnpm exec drizzle-kit migrate` and verify the result. Restore your original `DATABASE_URL` before continuing below. Branch changes do not merge back. See [database branches](/docs/products/databases/postgresql/branches).
 
 {% /info %}
 
