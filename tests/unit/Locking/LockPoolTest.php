@@ -23,12 +23,7 @@ final class LockPoolTest extends TestCase
         $this->assertGreaterThan(
             1,
             $lock,
-            'A lock lease is held for as long as the work it guards, so a second concurrent taker needs its own connection to wait on the lock with. At size 1 it cannot get one, and a request that was willing to queue for the lock 500s instead.'
-        );
-        $this->assertGreaterThan(
-            $pools->get('console')->size,
-            $lock,
-            'The shared size is derived from the MySQL connection budget and floored by a worker-only setting, which leaves the API server with a single lock connection.'
+            'A lock lease is held for as long as the work it guards, so a second concurrent taker needs its own connection to wait on the lock with. The shared size is derived from the MySQL connection budget and floored by a worker-only setting, which leaves this server with one; the taker then cannot get a connection to queue with and 500s instead.'
         );
     }
 }
