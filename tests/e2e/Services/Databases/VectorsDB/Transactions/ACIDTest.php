@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Databases\VectorsDB\Transactions;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
@@ -16,6 +17,7 @@ final class ACIDTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
+    use ApiVectorsDB;
 
     private function generateEmbeddings(int $dimensions = 3, float $value = 0.1): array
     {
