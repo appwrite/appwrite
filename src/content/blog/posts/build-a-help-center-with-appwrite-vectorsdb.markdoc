@@ -2,7 +2,7 @@
 layout: post
 title: Build a help center with semantic search using Appwrite VectorsDB
 description: Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.
-date: 2026-08-17
+date: 2026-09-02
 cover: /images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif
 timeToRead: 11
 author: atharva
