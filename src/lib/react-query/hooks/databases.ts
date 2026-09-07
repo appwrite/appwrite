@@ -3930,6 +3930,15 @@ export async function deleteProjectTableColumn(
   })
 }
 
+/** Index column orders as the API takes them; the form works in `'ASC'`/`'DESC'`. */
+export function toIndexOrderBy(
+  orders: Array<string | null | undefined> | undefined,
+): OrderBy[] | undefined {
+  return orders?.map((order) =>
+    String(order ?? '').toLowerCase() === 'desc' ? OrderBy.Desc : OrderBy.Asc,
+  )
+}
+
 /**
  * Create an index in a table
  *
@@ -3956,12 +3965,10 @@ export async function createProjectTableIndex(
   const key = raw.key as string
   const type = raw.type
   const columns = (raw.columns as string[]) || (raw.attributes as string[]) || []
-  const orders = raw.orders as string[] | undefined
+  const orders = raw.orders as Array<string | null | undefined> | undefined
   const lengths = raw.lengths as number[] | undefined
 
-  const orderBy = orders?.map((order) =>
-    order === 'asc' ? OrderBy.Asc : OrderBy.Desc,
-  )
+  const orderBy = toIndexOrderBy(orders)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.createIndex({
