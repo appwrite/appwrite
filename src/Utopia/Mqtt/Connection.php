@@ -17,7 +17,7 @@ class Connection
     public string $projectId = '';
 
     /** Client Identifier from CONNECT; the per-device session anchor. Empty when the client sends none. */
-    public string $clientId = '';
+    private string $clientId = '';
 
     /** Clean Start (5.0) / Clean Session (3.1.1): true discards any stored session, so delivery is live-only. */
     public bool $cleanStart = true;
@@ -41,5 +41,15 @@ class Connection
         $this->packetId = ($this->packetId % 0xFFFF) + 1;
 
         return $this->packetId;
+    }
+
+    public function setClientId(string $clientId): void 
+    {
+        if(empty($clientId)) $this->clientId = 'custom_'.$this->projectId.''.$this->identity['userId'];
+        $this->clientId = $clientId;
+    }
+
+    public function getClientId() : string {
+        return $this->clientId;
     }
 }

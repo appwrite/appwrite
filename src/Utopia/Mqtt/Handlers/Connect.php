@@ -44,8 +44,7 @@ class Connect extends Action
         $offset += 1; // connect flags
         $offset += 2; // keep alive
 
-        // Session anchor: the per-device client id and whether to discard any stored session.
-        $connection->clientId = Packet::getClientId($body);
+        $connection->setClientId(Packet::getClientId($body));
         $connection->cleanStart = Packet::isCleanStart($body);
 
         // MQTT 3.1.1 carries no property block; enhanced auth and metadata are 5.0 only.
