@@ -313,6 +313,8 @@ export function DowngradeResourceValidation({
     [projects, resourceQueries],
   )
 
+  // resourceQueries is a fresh array every render; the signature above is its
+  // stable content proxy, so depending on it directly would defeat the memo.
   const resourcesByProjectId = useMemo(() => {
     const map = new Map<string, ProjectDowngradeResources>()
     projects.forEach((project, index) => {
@@ -322,6 +324,7 @@ export function DowngradeResourceValidation({
       }
     })
     return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects, resourcesLoadedSignature])
 
   useEffect(() => {
@@ -654,10 +657,13 @@ export function DowngradeResourceValidation({
     activeTypeConfig && activeProjectLimits
       ? activeProjectLimits[activeTypeConfig.id]
       : null
-  const activeItems =
-    activeResourceType && activeResources
-      ? (activeResources[activeResourceType]?.items ?? [])
-      : []
+  const activeItems = useMemo(
+    () =>
+      activeResourceType && activeResources
+        ? (activeResources[activeResourceType]?.items ?? [])
+        : [],
+    [activeResourceType, activeResources],
+  )
   const activeSelected =
     activeResourceType && activeProjectId
       ? (activeSelections[activeResourceType] ?? new Set<string>())

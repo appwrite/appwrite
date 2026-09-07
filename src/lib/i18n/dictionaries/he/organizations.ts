@@ -876,7 +876,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
-  Projects: 'פרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -1322,7 +1321,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.":
     'מעבדת נתונים אישיים בשמכם. הוא נדרש לציות ל-GDPR בעת טיפול בנתוני תושבי האיחוד האירופי.',
   project: 'פרויקט',
-  projects: 'פרויקטים',
   'projects, but the selected plan allows only':
     'פרויקטים, אך התוכנית שנבחרה מאפשרת רק',
   record: 'רשומה',

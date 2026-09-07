@@ -251,10 +251,17 @@ export function DowngradeValidation({
     ? (projectPageData?.total ?? remainingProjectsTotal)
     : remainingProjectsTotal
 
-  const memberships = (membershipsData?.memberships ??
-    []) as Models.Membership[]
+  // Stable identities: the `?? []` fallback would otherwise hand every
+  // downstream memo a new array on each render.
+  const memberships = useMemo(
+    () => (membershipsData?.memberships ?? []) as Models.Membership[],
+    [membershipsData?.memberships],
+  )
   const membershipsTotal = membershipsData?.total ?? memberships.length
-  const domains = (domainsData?.domains ?? []) as Models.Domain[]
+  const domains = useMemo(
+    () => (domainsData?.domains ?? []) as Models.Domain[],
+    [domainsData?.domains],
+  )
   const domainsTotal = domainsData?.total ?? domains.length
 
   const needsMemberSelection =

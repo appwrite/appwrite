@@ -70,6 +70,16 @@ interface PlanSelectionProps {
   variant?: 'card' | 'inline'
 }
 
+type PlanRecord = {
+  $id?: string
+  name?: string
+  order?: number
+  price?: number
+  /** The API returns `desc`; `description` is the older field name. */
+  desc?: string
+  description?: string
+}
+
 export function PlanSelection({
   plans,
   currentPlan,
@@ -83,12 +93,11 @@ export function PlanSelection({
   const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
-    plans && typeof plans === 'object' ? Object.entries(plans) : []
+    plans && typeof plans === 'object'
+      ? (Object.entries(plans) as [string, PlanRecord | undefined][])
+      : []
 
-  const planCatalog = plans as Record<
-    string,
-    { $id?: string; name?: string; order?: number; price?: number }
->
+  const planCatalog = plans as Record<string, PlanRecord>
 
   const isOrganizationOnFreePlan =
     !isCreateMode && isFreePlanRef(currentPlan as string, planCatalog)
@@ -278,24 +287,19 @@ export function PlanSelection({
             // Use plan name from API response, fallback to derived name
             const planName = resolveOrganizationPlanDisplayLabel({
               billingPlan: planTier,
-              planName:
-                (planData as { name?: string } | undefined)?.name ?? null,
-              planId: (planData as { $id?: string } | undefined)?.$id,
+              planName: planData?.name ?? null,
+              planId: planData?.$id,
             })
             const disabled = isDisabled(planTier)
             const isCurrent = isCurrentPlan(planTier)
             const price = planData?.price || 0
-            // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
             const planDescription = hasFreePlanConflict(planTier)
               ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
               : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
-              getPlanCanonicalFromRecord(
-                planTier,
-                plans as Record<string, { $id?: string; name?: string; order?: number; price?: number }>,
-              ) === 'pro'
+              getPlanCanonicalFromRecord(planTier, planCatalog) === 'pro'
 
             const handleSelect = () => {
               if (disabled) return

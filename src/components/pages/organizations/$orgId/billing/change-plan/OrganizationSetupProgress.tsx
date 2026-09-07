@@ -108,19 +108,12 @@ function buildSteps(state: OrganizationSetupProgressState): SetupStep[] {
   const steps: SetupStep[] = [
     {
       phase: 'submitting',
-      label:
-        mode === 'create'
-          ? 'Creating organization'
-          : mode === 'downgrade'
-            ? 'Preparing downgrade'
-            : 'Updating plan',
+      label: mode === 'create' ? 'Creating organization' : 'Updating plan',
       description:
         mode === 'create'
           ? organizationName
             ? `Setting up ${organizationName} and your billing profile.`
             : 'Setting up your workspace and billing profile.'
-          : mode === 'downgrade'
-            ? `Preparing your ${planLabel} plan changes.`
           : `Applying your ${planLabel} plan changes.`,
     },
   ]
