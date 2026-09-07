@@ -2,12 +2,11 @@
 layout: post
 title: "Appwrite 2.0 is now available for self-hosting"
 description: Appwrite 2.0 brings a rebuilt Console, PostgreSQL as the default database, and a combined worker topology that runs your instance on 16 containers instead of 33.
-date: 2026-09-04
+date: 2026-09-07
 cover: /images/blog-local/announcing-appwrite-2/cover.avif
 timeToRead: 6
 author: atharva
 category: product, announcement
-draft: true
 faqs:
   - question: "What do I need to run self-hosted Appwrite 2.0?"
     answer: "Any operating system that runs Docker with Compose v2. A default install runs 16 containers. See the [installation guide](/docs/advanced/self-hosting/installation) for the current minimum CPU, memory, and swap requirements."
@@ -27,21 +26,13 @@ Here is what [Appwrite 2.0](/blog/post/announcing-appwrite-2) changes for self-h
 
 # A rebuilt Console
 
-2.0 ships [Console IV](/blog/post/announcing-console-iv), the fourth generation of the Appwrite Console and a ground-up rebuild rather than a reskin. Self-hosted 1.9.6 ran `appwrite/console`, a Svelte app. 2.0 runs `appwrite/new`, built on TanStack Start.
+Appwrite 2.0 ships [Console IV](/blog/post/announcing-console-iv), the fourth generation of the Appwrite Console, rebuilt from scratch. Self-hosted 1.9.6 ran `appwrite/console`, a Svelte app. Appwrite 2.0 runs `appwrite/new`, built on TanStack Start.
 
-The part you feel is prefetching. Every route fetches its data while the router is still resolving, so a page arrives with rows already in the table instead of a spinner that turns into rows and shifts the layout under your cursor.
+Every route prefetches its data while the router is still resolving. The page opens with rows already in the table, avoiding the layout shift when rows replace a loading spinner.
 
-Two developer tools live inside it. [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI in the browser, already signed in and pointed at the project you are looking at, on `⌘` + `;`. [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) builds and sends live REST requests against that project from its OpenAPI specification.
+The Console includes two developer tools. [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI in the browser, already signed in and configured for your current project. Open it with `⌘` + `;`. [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) builds and sends live API requests against that project from its OpenAPI specification.
 
 Your projects are untouched. Console IV is a new interface over the same APIs, so your API keys and SDK code keep working.
-
-# One organization in the Console
-
-On Appwrite Cloud, organizations are where plans and billing live. A self-hosted instance has neither, so the Console drops the layer. It creates one organization the first time you sign in, puts every project under it, and hides the organization switcher and the create button. Everyone you invite is an owner of every project.
-
-If you upgrade an instance that already has several organizations, the Console opens the one saved in your account preferences, or the first one it finds.
-
-[Multi-tenancy](/docs/advanced/self-hosting/installation#organizations) did not go away. An organization is a team, and the API still takes a `teamId` when you create a project. Creating another team through the API creates another organization. The Console just shows one of them at a time, so projects under another team are reachable by their project URL.
 
 # PostgreSQL, MariaDB, or MongoDB as the underlying database
 
@@ -49,27 +40,27 @@ Appwrite 2.0 [runs on PostgreSQL](/blog/post/appwrite-2-0-postgres-by-default), 
 
 Your application code does not change based on the choice. The Appwrite APIs are the same on all three.
 
-The database is fixed for the lifetime of an instance. If you upgrade an existing instance to 2.0, it keeps the database it was installed with, so moving to PostgreSQL means a fresh install.
+The database is fixed for the lifetime of an instance. If you upgrade an existing instance to Appwrite 2.0, it keeps the database it was installed with, so moving to PostgreSQL means a fresh install.
 
 # Hyperloop B
 
-Appwrite 2.0 runs on [Hyperloop B](/blog/post/hyperloop-b), the Swoole coroutine engine in `utopia-php/http`. One process serves many concurrent requests by yielding whenever a request waits on I/O, instead of holding a whole process per request for as long as that request takes.
+Appwrite 2.0 runs on [Hyperloop B](/blog/post/hyperloop-b), the Swoole coroutine engine in `utopia-php/http`. One process serves many concurrent requests by yielding whenever a request waits on I/O. This replaces a model that holds a whole process for each request until it finishes.
 
 There is nothing to configure and no API to call. Your instance runs on it after you install or upgrade.
 
 # Worker topologies
 
-Appwrite 2.0 introduces [worker topologies](/blog/post/announcing-worker-topologies), and this is the change most self-hosters will feel first.
+Appwrite 2.0 introduces [worker topologies](/blog/post/announcing-worker-topologies).
 
 Appwrite runs background work such as mail, builds, TLS certificates, function executions, and screenshots on queues. In 1.9.6, every queue had its own container, so a single-project instance with almost no traffic still ran eighteen idle worker and scheduler processes. Each held its own PHP runtime, connection pools, and memory.
 
 The **combined** topology, which is the default, runs every queue inside one `appwrite-worker` container and every scheduler inside one `appwrite-task-scheduler` container. Each queue keeps its own pool of coroutines, so a busy queue does not block the others. The behavior of every queue is unchanged.
 
-Counting the whole stack, a default PostgreSQL install compares like this:
+For a default PostgreSQL install, the container counts for the whole stack are:
 
 | Topology | Containers |
 | --- | --- |
-| Combined (default) | 16 |
+| Combined | 16 |
 | Separate | 33 |
 
 For a hobby instance or a small team, that is sixteen fewer PHP processes holding connection pools, and one place to read worker logs:
@@ -78,7 +69,7 @@ For a hobby instance or a small team, that is sixteen fewer PHP processes holdin
 docker compose logs -f appwrite-worker
 ```
 
-The **separate** topology remains available, and it is the right choice when one queue needs more replicas than the rest, or when you want per-queue metrics and resource limits. Choose it under **Advanced settings** during installation, or pass `--topology=separate` to the installer. Switching later takes one command and does not touch your data.
+The **separate** topology remains available. Use it when one queue needs more replicas than the rest, or when you want per-queue metrics and resource limits. Choose it under **Advanced settings** during installation, or pass `--topology=separate` to the installer. Switching later takes one command and does not touch your data.
 
 # Usage metrics
 
@@ -99,9 +90,15 @@ You can also let developers sign in to the Console with GitHub, GitLab, Bitbucke
 - The avatars API can fetch a user's profile photo from Gravatar or their OAuth2 provider.
 - The separate audits worker is gone. Audit retention now runs in the deletes worker and the maintenance task.
 
+# One organization in the Console
+
+On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither, so the Console hides organization management. It creates one organization the first time you sign in, puts every project under it, and hides the organization switcher and the create button.
+
+Multi-tenancy is still supported. An organization is a team, and the API still takes a `teamId` when you create a project. Creating another team through the API creates another organization. The Console simplifies organization management on a self-hosted instance by showing one of them. Projects under another team are reachable by their project URL.
+
 # Coming to self-hosted
 
-A few of the Init products are on Cloud first and reach self-hosted in a later 2.x release. [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [S3 API](/blog/post/announcing-s3-api) for Storage, and the activity log for project events are the ones we hear about most. They are not in 2.0.0. Watch the [release notes](https://github.com/appwrite/appwrite/releases) for the version that adds each.
+A few of the Init products are on Cloud first. [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [S3 API](/blog/post/announcing-s3-api) for Storage, and the activity log for project events will be coming to self-hosted Appwrite very soon. Watch the [release notes](https://github.com/appwrite/appwrite/releases) for the version that adds each.
 
 # Install Appwrite 2.0
 
