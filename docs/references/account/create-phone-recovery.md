@@ -1,0 +1,1 @@
+Sends the user an SMS with a 6-digit OTP code for password reset. Use the OTP code along with the `userId` from the response to complete the process via the [PUT /account/recovery/phone](https://appwrite.io/docs/references/cloud/client-web/account#updatePhoneRecovery) endpoint. The OTP is valid for 15 minutes.
