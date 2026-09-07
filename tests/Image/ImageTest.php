@@ -111,6 +111,89 @@ final class ImageTest extends TestCase
         unlink($target);
     }
 
+    public function testCropFocalUsesNormalizedCoordinates(): void
+    {
+        $source = new \Imagick();
+        $source->newImage(6, 2, 'red', 'png');
+        $draw = new \ImagickDraw();
+        $draw->setFillColor('green');
+        $draw->rectangle(2, 0, 3, 1);
+        $draw->setFillColor('blue');
+        $draw->rectangle(4, 0, 5, 1);
+        $source->drawImage($draw);
+
+        $image = new Image($source->getImageBlob());
+        $image->crop(2, 2, x: 0.75, y: 0.5);
+
+        $result = new \Imagick();
+        $result->readImageBlob($image->output('png', 100) ?: '');
+        $color = $result->getImagePixelColor(1, 1)->getColor();
+
+        $this->assertGreaterThan($color['r'], $color['b']);
+        $this->assertGreaterThan($color['g'], $color['b']);
+    }
+
+    public function testCropFocalRejectsCoordinatesOutsideTheImage(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $image->crop(100, 100, x: 1.1, y: 0.5);
+    }
+
+    public function testCropFocalRejectsNonFiniteCoordinates(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $image->crop(100, 100, x: NAN, y: 0.5);
+    }
+
+    public function testCropFocalRequiresBothCoordinates(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $image->crop(100, 100, x: 0.5);
+    }
+
+    public function testCropFocalPreservesAnimatedFramesAndDelay(): void
+    {
+        $sequence = new \Imagick();
+        foreach (['blue', 'green'] as $color) {
+            $frame = new \Imagick();
+            $frame->newImage(6, 2, 'red', 'gif');
+            $draw = new \ImagickDraw();
+            $draw->setFillColor($color);
+            $draw->rectangle(4, 0, 5, 1);
+            $frame->drawImage($draw);
+            $frame->setImageDelay(30);
+            $sequence->addImage($frame);
+        }
+
+        $image = new Image($sequence->getImagesBlob());
+        $image->crop(2, 2, x: 0.75, y: 0.5);
+
+        $outputBlob = $image->output('gif', 100);
+        $this->assertNotFalse($outputBlob);
+        $this->assertNotNull($outputBlob);
+
+        $output = new \Imagick();
+        $output->readImageBlob($outputBlob);
+        $this->assertSame(2, $output->getNumberImages());
+
+        $totalDelay = 0;
+        $expectedChannels = ['b', 'g'];
+        foreach ($output->coalesceImages() as $index => $frame) {
+            $this->assertSame(2, $frame->getImageWidth());
+            $this->assertSame(2, $frame->getImageHeight());
+            $color = $frame->getImagePixelColor(1, 1)->getColor();
+            $this->assertGreaterThan(100, $color[$expectedChannels[$index]]);
+            $totalDelay += $frame->getImageDelay();
+        }
+        $this->assertSame(60, $totalDelay);
+    }
+
     public function testCropGravityNw(): void
     {
         $image = new Image(file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg') ?: '');

@@ -99,10 +99,19 @@ class Image
     /**
      * @throws \Throwable
      */
-    public function crop(int $width, int $height, string $gravity = Image::GRAVITY_CENTER): self
-    {
+    public function crop(
+        int $width,
+        int $height,
+        string $gravity = Image::GRAVITY_CENTER,
+        ?float $x = null,
+        ?float $y = null,
+    ): self {
+        $this->validateFocalPoint($x, $y);
+
+        $hasFocalPoint = $x !== null && $y !== null;
+
         // if no changes to Gravity, Width or Height, don't process image
-        if ($gravity === Image::GRAVITY_CENTER
+        if ($gravity === Image::GRAVITY_CENTER && !$hasFocalPoint
             && (
                 ($width !== 0 && $height !== 0)
                 && ($width === $this->width && $height === $this->height)
@@ -127,7 +136,7 @@ class Image
 
         $resizeWidth = $this->width;
         $resizeHeight = $this->height;
-        if ($gravity !== Image::GRAVITY_CENTER) {
+        if ($gravity !== Image::GRAVITY_CENTER || $hasFocalPoint) {
             $targetAspect = $width / $height;
             if ($targetAspect > $originalAspect) {
                 $resizeWidth = $width;
@@ -138,50 +147,21 @@ class Image
             }
         }
 
-        $x = $y = 0;
-        switch ($gravity) {
-            case self::GRAVITY_TOP_LEFT:
-                $x = 0;
-                $y = 0;
-                break;
-            case self::GRAVITY_TOP:
-                $x = ($resizeWidth / 2) - ($width / 2);
-                break;
-            case self::GRAVITY_TOP_RIGHT:
-                $x = $resizeWidth - $width;
-                break;
-            case self::GRAVITY_LEFT:
-                $y = ($resizeHeight / 2) - ($height / 2);
-                break;
-            case self::GRAVITY_RIGHT:
-                $x = $resizeWidth - $width;
-                $y = ($resizeHeight / 2) - ($height / 2);
-                break;
-            case self::GRAVITY_BOTTOM_LEFT:
-                $x = 0;
-                $y = $resizeHeight - $height;
-                break;
-            case self::GRAVITY_BOTTOM:
-                $x = ($resizeWidth / 2) - ($width / 2);
-                $y = $resizeHeight - $height;
-                break;
-            case self::GRAVITY_BOTTOM_RIGHT:
-                $x = $resizeWidth - $width;
-                $y = $resizeHeight - $height;
-                break;
-            default:
-                $x = ($resizeWidth / 2) - ($width / 2);
-                $y = ($resizeHeight / 2) - ($height / 2);
-                break;
-        }
-        $x = \intval($x);
-        $y = \intval($y);
+        [$x, $y] = $this->getCropCoordinates(
+            $width,
+            $height,
+            $resizeWidth,
+            $resizeHeight,
+            $gravity,
+            $x,
+            $y,
+        );
 
         if ($this->image->getNumberImages() > 1) {
             $this->image = $this->image->coalesceImages();
 
             foreach ($this->image as $frame) {
-                if ($gravity === self::GRAVITY_CENTER) {
+                if ($gravity === self::GRAVITY_CENTER && !$hasFocalPoint) {
                     $frame->cropThumbnailImage($width, $height);
                 } else {
                     $frame->scaleImage($resizeWidth, $resizeHeight, false);
@@ -191,7 +171,7 @@ class Image
 
                 $frame->setImagePage($width, $height, 0, 0);
             }
-        } elseif ($gravity === self::GRAVITY_CENTER) {
+        } elseif ($gravity === self::GRAVITY_CENTER && !$hasFocalPoint) {
             $this->image->cropThumbnailImage($width, $height);
         } else {
             $this->image->scaleImage($resizeWidth, $resizeHeight, false);
@@ -201,6 +181,53 @@ class Image
         $this->width = $width;
 
         return $this;
+    }
+
+    private function validateFocalPoint(?float $x, ?float $y): void
+    {
+        if ($x === null && $y === null) {
+            return;
+        }
+
+        if ($x === null || $y === null) {
+            throw new \InvalidArgumentException('Both focal point coordinates are required');
+        }
+
+        if (!is_finite($x) || !is_finite($y) || $x < 0 || $x > 1 || $y < 0 || $y > 1) {
+            throw new \InvalidArgumentException('Focal point coordinates must be finite and between 0 and 1');
+        }
+    }
+
+    /**
+     * @return array{int, int}
+     */
+    private function getCropCoordinates(
+        int $width,
+        int $height,
+        int $resizeWidth,
+        int $resizeHeight,
+        string $gravity,
+        ?float $x,
+        ?float $y,
+    ): array {
+        if ($x !== null && $y !== null) {
+            return [
+                \intval(max(0, min($resizeWidth - $width, $x * $resizeWidth - $width / 2))),
+                \intval(max(0, min($resizeHeight - $height, $y * $resizeHeight - $height / 2))),
+            ];
+        }
+
+        return match ($gravity) {
+            self::GRAVITY_TOP_LEFT => [0, 0],
+            self::GRAVITY_TOP => [\intval(($resizeWidth - $width) / 2), 0],
+            self::GRAVITY_TOP_RIGHT => [$resizeWidth - $width, 0],
+            self::GRAVITY_LEFT => [0, \intval(($resizeHeight - $height) / 2)],
+            self::GRAVITY_RIGHT => [$resizeWidth - $width, \intval(($resizeHeight - $height) / 2)],
+            self::GRAVITY_BOTTOM_LEFT => [0, $resizeHeight - $height],
+            self::GRAVITY_BOTTOM => [\intval(($resizeWidth - $width) / 2), $resizeHeight - $height],
+            self::GRAVITY_BOTTOM_RIGHT => [$resizeWidth - $width, $resizeHeight - $height],
+            default => [\intval(($resizeWidth - $width) / 2), \intval(($resizeHeight - $height) / 2)],
+        };
     }
 
     /**
