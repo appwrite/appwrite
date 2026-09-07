@@ -2,18 +2,18 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
-Utopia MQTT is a simple and lite abstraction layer for building MQTT 5.0 brokers and clients: a swappable transport plus a standard MQTT packet codec. It aims to be as simple and easy to learn and use as possible. This library is maintained by the [Appwrite team](https://appwrite.io).
+Utopia MQTT is a small abstraction layer for building MQTT brokers and clients (3.1.1 and 5.0). You get a swappable transport and a standard MQTT packet codec, nothing more. This library is maintained by the [Appwrite team](https://appwrite.io).
 
 It gives you two layers and nothing application specific on top:
 
-- **Transport** — accept connections, frame MQTT packets off the TCP stream, hand you raw bytes per connection (`Adapter`, `Server`, `Client`).
-- **Protocol codec** — decode a framed packet (`Packet`), encode control packets per version (`Packet\V3`, `Packet\V5`), and model the v5 property block as objects (`Property`, `Properties`).
+- **Transport.** Accept connections, frame MQTT packets off the TCP stream, and hand you raw bytes per connection (`Adapter`, `Server`, `Client`).
+- **Protocol codec.** Decode a framed packet (`Packet`), encode control packets per version (`Packet\V3`, `Packet\V5`), and model the v5 property block as objects (`Property`, `Properties`).
 
-Broker behaviour on top of these — subscription matching, QoS bookkeeping, authentication — lives in your application, so the networking runtime (Swoole today, others later) stays swappable.
+Broker behaviour lives in your application. Subscription matching, QoS bookkeeping, and authentication are yours to build. The networking runtime (Swoole today, others later) stays swappable.
 
 Although this library is part of the [Utopia Framework](https://github.com/utopia-php/framework) project, it is dependency free and can be used as standalone with any other PHP project or framework.
 
-## Getting Started
+## Getting started
 
 Install using composer:
 
@@ -45,7 +45,7 @@ $server->onStart(function () {
 });
 
 $server->onReceive(function (int $connection, string $data) use ($server) {
-    // $data is one framed MQTT packet — decode it with the codec.
+    // $data is one framed MQTT packet, decode it with the codec.
     $packet = Utopia\Mqtt\Packet::parse($data);
 
     if ($packet->type === Utopia\Mqtt\Packet::PINGREQ) {
@@ -64,17 +64,17 @@ $server->start();
 
 ## The abstraction
 
-- **`Adapter`** — the transport contract: `start` / `shutdown`, `send` / `close`, the `onStart` / `onWorkerStart` / `onReceive` / `onClose` lifecycle hooks, and config setters (`setPackageMaxLength`, `setWorkerNumber`). `onReceive` normalizes every runtime to `(int $connection, string $data)`.
-- **`Adapter\Swoole`** — a Swoole implementation. Uses `open_mqtt_protocol` so the runtime frames one MQTT packet per `onReceive`.
-- **`Server`** — a thin wrapper over an `Adapter` that delegates the hooks and the `send` / `close` writes, catching transport errors and routing them to callbacks registered with `error()` instead of letting them escape the event loop.
-- **`Client`** — a lite broker client over TCP/TLS (`mqtt://` / `mqtts://`) that frames packets the same way; `connect`, `send`, `receive` / `listen`, with `onOpen` / `onReceive` / `onClose` / `onError`.
-- **`Packet`** — a decoded packet (`type`, `flags`, `qos()`, `body`) plus the version-agnostic wire primitives (`parse`, `encodeLength` / `encodeString`, `pingreq` / `pingresp`).
-- **`Packet\V3`** and **`Packet\V5`** — the per-version encoders. v3.1.1 has return codes and no properties; v5 has reason codes and a property block (`connack`, `publish`, `puback`, `suback`, `unsuback`, `disconnect`, and — v5 only — `auth`).
-- **`Property`** / **`Properties`** — the MQTT 5.0 property block as objects: `new Property(Property::SESSION_EXPIRY_INTERVAL, 60)` knows its wire type, and a `Properties` collection encodes/parses the block (`(new Properties())->add(new Property(Property::USER, ['projectId' => 'p1']))`).
+- **`Adapter`** is the transport contract: `start` / `shutdown`, `send` / `close`, the `onStart` / `onWorkerStart` / `onReceive` / `onClose` lifecycle hooks, and config setters (`setPackageMaxLength`, `setWorkerNumber`). `onReceive` normalizes every runtime to `(int $connection, string $data)`.
+- **`Adapter\Swoole`** is a Swoole implementation. It uses `open_mqtt_protocol` so the runtime frames one MQTT packet per `onReceive`.
+- **`Server`** is a thin wrapper over an `Adapter`. It delegates the hooks and the `send` / `close` writes, and routes transport errors to callbacks registered with `error()` instead of letting them escape the event loop.
+- **`Client`** is a small broker client over TCP/TLS (`mqtt://` / `mqtts://`) that frames packets the same way. It gives you `connect`, `send`, `receive` / `listen`, with `onOpen` / `onReceive` / `onClose` / `onError`.
+- **`Packet`** is a decoded packet (`type`, `flags`, `qos()`, `body`) plus the version-agnostic wire primitives (`parse`, `encodeLength` / `encodeString`, `pingreq` / `pingresp`). It also reads the two CONNECT fields that sit outside the property block, `getClientId()` and `isCleanStart()`.
+- **`Packet\V3`** and **`Packet\V5`** are the per-version encoders. v3.1.1 has return codes and no properties. v5 has reason codes and a property block (`connack`, `publish`, `puback`, `suback`, `unsuback`, `disconnect`, and, v5 only, `auth`).
+- **`Property`** and **`Properties`** model the MQTT 5.0 property block as objects. `new Property(Property::SESSION_EXPIRY_INTERVAL, 60)` knows its wire type, and a `Properties` collection encodes and parses the block (`(new Properties())->add(new Property(Property::USER, ['projectId' => 'p1']))`).
 
 ## Encoding packets (v3.1.1 and v5)
 
-The version is the class you call. A client declares its protocol level in the CONNECT — level `4` is MQTT 3.1.1, level `5` is MQTT 5.0 — so read it once and reply with the matching encoder:
+The version is the class you call. A client declares its protocol level in the CONNECT. Level `4` is MQTT 3.1.1, level `5` is MQTT 5.0. Read it once and reply with the matching encoder:
 
 ```php
 use Utopia\Mqtt\Packet;
@@ -85,9 +85,9 @@ $offset = 0;
 $level = ord($packet->body[$offset]);                     // 4 = v3.1.1, 5 = v5
 ```
 
-### MQTT 3.1.1 — `Packet\V3`
+### MQTT 3.1.1 with `Packet\V3`
 
-No property block; CONNACK uses a return code and SUBACK a granted-QoS (or failure) byte.
+No property block. CONNACK uses a return code, and SUBACK a granted-QoS (or failure) byte.
 
 ```php
 use Utopia\Mqtt\Packet;
@@ -104,7 +104,7 @@ $server->send($fd, V3::suback($packetId, chr(V3::SUBSCRIBE_FAILURE))); // filter
 $server->send($fd, V3::puback($packetId));
 ```
 
-### MQTT 5.0 — `Packet\V5`
+### MQTT 5.0 with `Packet\V5`
 
 Every acknowledgement carries a reason code, and a `Properties` block can ride along.
 
@@ -137,9 +137,24 @@ $properties->get(Property::CONTENT_TYPE); // 'application/json'
 $properties->user();                      // ['event' => 'push']
 ```
 
+### Client id and clean start (both versions)
+
+The client id and the clean-start flag decide session identity, and neither is a property. Clean start is a single bit in the connect-flags byte of the variable header. The client id is the first field of the payload. Both live in 3.1.1 and 5.0 at the same place, so `Packet` reads them the same way in either version, with no property block involved:
+
+```php
+use Utopia\Mqtt\Packet;
+
+$packet = Packet::parse($data);                    // a CONNECT
+
+$clientId   = Packet::getClientId($packet->body);  // 'device-tv', or '' when the client sends none
+$cleanStart = Packet::isCleanStart($packet->body); // true discards any stored session
+```
+
+On v5, `getClientId()` steps over the property block to reach the payload. On v3 there is no block to step over. Because these are a flag and a payload field, `Properties::parse()` never returns them, so reach for `getClientId()` and `isCleanStart()` instead.
+
 ### Enhanced authentication (v5)
 
-v5 enhanced auth is carried entirely in the property block: Authentication Method, Authentication Data, and any metadata as User Properties. The server reads them off the CONNECT and answers with a CONNACK (done) or an AUTH (continue).
+v5 carries enhanced auth entirely in the property block: Authentication Method, Authentication Data, and any metadata as User Properties. The server reads them off the CONNECT and answers with a CONNACK (done) or an AUTH (continue).
 
 ```php
 use Utopia\Mqtt\Packet;
@@ -174,7 +189,7 @@ $server->send($fd, V5::auth(V5::AUTH_CONTINUE, (new Properties())
     ->add(new Property(Property::AUTHENTICATION_DATA, $challenge))));
 ```
 
-Re-authenticating mid-connection is an AUTH packet with a fresh credential and metadata — the same `Properties` on the wire, sent by either side:
+Re-authenticating mid-connection is an AUTH packet with a fresh credential and metadata, the same `Properties` on the wire, sent by either side:
 
 ```php
 $reauth = V5::auth(V5::AUTH_REAUTH, (new Properties())
@@ -191,9 +206,9 @@ $reason = ord($packet->body[0]);          // 0x19 = re-authenticate
 $properties->get(Property::AUTHENTICATION_DATA); // the fresh token
 ```
 
-(MQTT 3.1.1 has no AUTH packet and no properties, so enhanced auth is v5 only — a v3 client authenticates with the username/password fields of the CONNECT payload.)
+MQTT 3.1.1 has no AUTH packet and no properties, so enhanced auth is v5 only. A v3 client authenticates with the username/password fields of the CONNECT payload.
 
-## System Requirements
+## System requirements
 
 Utopia MQTT requires PHP 8.1 or later. We recommend using the latest PHP version whenever possible. The `Adapter\Swoole` implementation additionally requires the Swoole extension.
 
