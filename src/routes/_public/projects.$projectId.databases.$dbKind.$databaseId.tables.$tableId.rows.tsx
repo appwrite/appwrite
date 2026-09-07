@@ -7,6 +7,7 @@ import {
   tableColumnsQueryOptions,
   tableIndexesQueryOptions,
   tableRowsQueryOptions,
+  getRelationshipColumnKeys,
   tableQueryOptions,
   projectQueryOptions,
   organizationPlanQueryOptions,
@@ -168,6 +169,16 @@ export const Route = createFileRoute(
             )
           : null
 
+      // From the already-awaited tables list, so the loader and the View build the
+      // same query key (a mismatch means a second listRows on mount).
+      const relationshipKeys = getRelationshipColumnKeys(
+        (
+          tablesData.tables.find(
+            (table: unknown) => (table as { $id?: string }).$id === tableId,
+          ) as { columns?: unknown[] } | undefined
+        )?.columns,
+      )
+
       await Promise.all([
         tablesPromise,
 
@@ -185,6 +196,7 @@ export const Route = createFileRoute(
               sortBy,
               filterQueries,
               listSelectAttrKeys,
+              relationshipKeys,
             ),
           )
           .catch(() => {

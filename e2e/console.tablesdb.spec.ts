@@ -11,6 +11,7 @@ import {
   gotoProductContainerTab,
   gotoProductDatabase,
 } from './helpers/product-db'
+import { expectToast } from './helpers/ui'
 
 const KIND = 'tablesdb' as const
 
@@ -283,6 +284,53 @@ test.describe('console tablesdb', () => {
       relatedTableName: 'e2e_related',
       relationshipType: 'One to many',
     })
+  })
+
+  test('relationship column resolves in the grid and survives a scalar edit', async ({
+    page,
+    tablesdbSuite,
+  }) => {
+    test.skip(!coreTableId, 'Core table was not created')
+    const { project, database } = tablesdbSuite
+    await gotoProductContainerTab(
+      page,
+      KIND,
+      project.projectId,
+      database.databaseId,
+      coreTableId,
+      'rows',
+    )
+
+    // The API resolves relationships only for a request whose select is dotted
+    // (`related.*`). Without one the value never arrives and the cell renders the
+    // literal string "null" - the regression this asserts against.
+    const relatedCell = page.locator('td[data-column="related"]').first()
+    await expect(relatedCell).toBeVisible({ timeout: 30_000 })
+    await expect(relatedCell).toHaveText(/item/i)
+    await expect(relatedCell).not.toHaveText(/^null$/)
+
+    // Editing an unrelated column must not send the relationship back. It used to
+    // go out as `"related": null`, which the API rejects on a to-many and treats
+    // as an unlink on a to-one.
+    const rowId = await page
+      .locator('tbody tr')
+      .first()
+      .locator('td[data-column="$id"]')
+      .first()
+      .innerText()
+    await page.goto(`${page.url().split('#')[0]}#row-${rowId.trim()}`)
+
+    const drawer = page.getByRole('dialog').last()
+    await expect(drawer.getByText('Update row')).toBeVisible({ timeout: 30_000 })
+    const titleField = drawer.locator('textarea, input[type="text"]').first()
+    await titleField.fill(`edited-${Date.now()}`)
+    await drawer.getByRole('button', { name: /^Update$/ }).click()
+
+    await expectToast(page, /Row updated successfully|Row updated/)
+    await expect(
+      page.getByText(/Invalid relationship value/i),
+    ).toHaveCount(0)
+    await expect(relatedCell).toHaveText(/item/i)
   })
 
   test('core table settings and security tabs render', async ({
