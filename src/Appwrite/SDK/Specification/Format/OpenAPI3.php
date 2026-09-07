@@ -279,8 +279,6 @@ class OpenAPI3 extends Format
                 'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
-                    'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -291,10 +289,6 @@ class OpenAPI3 extends Format
                     'public' => $sdk->isPublic(),
                 ],
             ];
-
-            if ($sdk->getDescriptionFilePath() !== null) {
-                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
-            }
 
             if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
@@ -731,9 +725,9 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'url';
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';
                         break;
-                    case \Utopia\Validator\JSON::class:
-                    case \Utopia\Validator\JSON\ObjectValidator::class:
                     case \Utopia\Validator\Assoc::class:
+                        // Assoc reports TYPE_ARRAY, so only an explicit case publishes
+                        // it as an object. TYPE_OBJECT is handled by the default.
                         $node['schema']['type'] = 'object';
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
@@ -943,6 +937,13 @@ class OpenAPI3 extends Format
                         }
                         break;
                     default:
+                        if ($validator->getType() === Validator::TYPE_OBJECT) {
+                            $node['schema']['type'] = 'object';
+                            $node['schema']['default'] = empty($param['default']) ? new \stdClass() : $param['default'];
+                            $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];

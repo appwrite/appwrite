@@ -14,7 +14,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Semaphore;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
@@ -72,7 +71,6 @@ class Messaging extends Action
             ->desc('Messaging worker')
             ->inject('message')
             ->inject('project')
-            ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
@@ -83,7 +81,6 @@ class Messaging extends Action
     /**
      * @param Message $message
      * @param Document $project
-     * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
@@ -94,7 +91,6 @@ class Messaging extends Action
     public function action(
         Message $message,
         Document $project,
-        Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
@@ -116,7 +112,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -822,7 +818,7 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients): void
     {
         if ($this->adapter === null) {
             $this->adapter = $this->createInternalSMSAdapter();

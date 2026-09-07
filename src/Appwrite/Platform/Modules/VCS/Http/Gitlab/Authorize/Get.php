@@ -31,7 +31,7 @@ class Get extends Base
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
             \json_encode([
                 'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
-                'endpoint' => 'https://gitlab.com',
+                'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
             ]),
             $callback,
             $state,

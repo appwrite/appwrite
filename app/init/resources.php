@@ -48,7 +48,7 @@ use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
@@ -69,8 +69,6 @@ global $container;
 $container = new Container();
 
 $container->set('register', fn () => $register);
-
-$container->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
@@ -110,20 +108,6 @@ $container->set('telemetry', fn () => new NoTelemetry(), []);
 $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
-
-$container->set('publisherDatabases', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherFunctions', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMigrations', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMails', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherDeletes', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherMessaging', fn (Publisher $publisher) => $publisher, ['publisher']);
-
-$container->set('publisherWebhooks', fn (Publisher $publisher) => $publisher, ['publisher']);
 
 $container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
     $publisher,
@@ -196,7 +180,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function (?Logger $logger): ExecutionStore {
+$container->set('executionStore', function (): ExecutionStore {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',
@@ -222,9 +206,8 @@ $container->set('executionStore', function (?Logger $logger): ExecutionStore {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
-        logger: $logger,
     );
-}, ['logger']);
+}, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
@@ -236,10 +219,10 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
-    $publisherDatabases,
+$container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
+    $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
-), ['publisherDatabases']);
+), ['publisher']);
 
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,

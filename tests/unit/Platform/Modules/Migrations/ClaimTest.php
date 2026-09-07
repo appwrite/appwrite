@@ -26,7 +26,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../../app/init.php';
@@ -303,7 +303,7 @@ final class ClaimTest extends TestCase
     {
         $terminal = $this->createFailedMigration();
         $publisher = new class () implements Publisher {
-            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload, bool $priority = false): bool
             {
                 throw new \RuntimeException('Queue unavailable');
             }
@@ -354,7 +354,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload, bool $priority = false): bool
             {
                 $this->database->updateDocument('migrations', $this->migrationId, new Document([
                     'attemptId' => 'attempt-newer',
@@ -414,7 +414,7 @@ final class ClaimTest extends TestCase
         $claims = new Claim($this->database, $this->locks());
         $publisher = new class () implements Publisher {
             #[\Override]
-            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload, bool $priority = false): bool
             {
                 throw new \RuntimeException('Queue unavailable');
             }
@@ -470,7 +470,7 @@ final class ClaimTest extends TestCase
             }
 
             #[\Override]
-            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload, bool $priority = false): bool
             {
                 $this->database->updateDocument('migrations', $this->migrationId, new Document([
                     'attemptId' => 'attempt-newer',
@@ -583,6 +583,37 @@ final class ClaimTest extends TestCase
         $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
         $this->assertSame('pending', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    /** @return \Iterator<string, array{string, int|string|null}> */
+    public static function staleIdentities(): \Iterator
+    {
+        yield 'prior version with identical timestamp' => ['$version', 0];
+        yield 'missing version' => ['$version', null];
+        yield 'different immutable sequence' => ['$sequence', 'replacement'];
+    }
+
+    #[DataProvider('staleIdentities')]
+    public function testWorkerPersistenceRejectsMatchingTimestampWithWrongIdentity(string $attribute, int|string|null $value): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-identity',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $stale = new Document($active->getArrayCopy());
+        $stale->setAttribute($attribute, $value);
+        $stale->setAttribute('status', 'completed');
+        $stale->setAttribute('stage', 'finished');
+
+        $this->assertNull((new Claim($this->database))->persist($stale));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($active->getVersion(), $stored->getVersion());
+        $this->assertSame($active->getSequence(), $stored->getSequence());
     }
 
     public function testWorkerPersistenceLosesStorageRaceAfterGenerationRead(): void
@@ -747,7 +778,7 @@ final class ClaimTest extends TestCase
             public int $published = 0;
 
             #[\Override]
-            public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+            public function publish(Queue $queue, array $payload, bool $priority = false): bool
             {
                 $this->published++;
                 ($this->duringEnqueue ?? throw new \LogicException('Missing concurrent retry'))();

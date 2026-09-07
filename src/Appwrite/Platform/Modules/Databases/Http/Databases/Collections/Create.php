@@ -300,17 +300,24 @@ class Create extends Action
             $formatOptions = ['elements' => $attribute['elements']];
         }
 
-        if (isset($attribute['min']) || isset($attribute['max'])) {
-            $format = match ($type) {
+        // The dedicated endpoints store a range on every numeric attribute, falling
+        // back to the full width of the type, so omitting min/max here has to produce
+        // the same document rather than one with no range at all.
+        if (\in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, ColumnType::Float->value])) {
+            $isFloat = $type === ColumnType::Float->value;
+
+            $format = match($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                ColumnType::BigInteger->value, 'bigint' => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                ColumnType::BigInteger->value => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
-            $isInteger = $type === ColumnType::Integer->value || $type === ColumnType::BigInteger->value || $type === 'bigint';
+            $min = $attribute['min'] ?? ($isFloat ? -\PHP_FLOAT_MAX : \PHP_INT_MIN);
+            $max = $attribute['max'] ?? ($isFloat ? \PHP_FLOAT_MAX : \PHP_INT_MAX);
+
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($isInteger ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($isInteger ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $isFloat ? \floatval($min) : $min,
+                'max' => $isFloat ? \floatval($max) : $max,
             ];
         }
 

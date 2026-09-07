@@ -9,7 +9,6 @@ use Appwrite\Platform\Modules\Databases\Workers\Databases;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
 
@@ -86,7 +85,6 @@ final class DatabasesTest extends TestCase
             $dbForProject,
             static fn () => $dbForDatabases,
             $this->createStub(Realtime::class),
-            $this->createStub(Log::class),
         );
     }
 }

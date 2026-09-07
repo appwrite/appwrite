@@ -296,6 +296,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_GITLAB_ENDPOINT',
+                'description' => 'URL of the GitLab instance used for signing in to the Appwrite console, for self-hosted GitLab. Defaults to https://gitlab.com when unset. This is separate from _APP_VCS_GITLAB_ENDPOINT, which powers repository integration rather than console sign-in.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_BITBUCKET_APP_ID',
                 'description' => 'Bitbucket OAuth consumer key used for signing in to the Appwrite console. You can find it in your Bitbucket workspace settings under OAuth consumers. This is separate from _APP_VCS_BITBUCKET_CLIENT_ID, which powers repository integration rather than console sign-in.',
                 'introduction' => '2.0.0',
@@ -395,17 +404,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'Deprecated since 1.6.0, use `_APP_LOGGING_CONFIG` with DSN value instead. This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
-                'introduction' => '0.12.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
+                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -702,6 +702,15 @@ return [
                 'description' => 'Enables the VectorsDB API, which runs on PostgreSQL. The installer does not deploy a PostgreSQL for it, so provision one and point the _APP_DB_*_VECTORSDB variables at it before enabling this; until then the /v1/vectorsdb routes return a service disabled error. Default value is: disabled.',
                 'introduction' => '2.0.0',
                 'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMBEDDING',
+                'description' => 'Enables the embeddings API, backed by the resource-heavy appwrite-embedding container. That container sits behind the "embedding" Compose profile, so add "embedding" to COMPOSE_PROFILES to start it. Set this to "disabled" to have the /v1/embeddings routes return a service disabled error instead of reaching for the container. Default value is: enabled.',
+                'introduction' => '2.0.0',
+                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1566,6 +1575,15 @@ return [
             [
                 'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_ENDPOINT',
+                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser. Defaults to https://gitlab.com when unset.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

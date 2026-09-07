@@ -55,11 +55,9 @@ use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Query\Method;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -76,20 +74,15 @@ use Utopia\Validator\WhiteList;
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
 
-    $context->set('log', fn () => new Log(), []);
-
-    $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
-
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -676,7 +669,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -701,7 +694,7 @@ return function (Container $context): void {
         };
 
         $queueForEventsClone = new Event($publisher);
-        $queueForWebhooks = new Webhook($publisherWebhooks);
+        $queueForWebhooksClone = clone $queueForWebhooks;
         $queueForRealtime = new Realtime();
 
         $database
@@ -712,13 +705,13 @@ return function (Container $context): void {
                 $queueForEvents,
                 $queueForEventsClone,
                 $publisherForFunctions,
-                $queueForWebhooks,
+                $queueForWebhooksClone,
                 $queueForRealtime,
             ))
             ->addHook(new FunctionCache($project, $database));
 
         return $database;
-    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
+    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 

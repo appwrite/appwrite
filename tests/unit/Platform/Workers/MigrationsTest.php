@@ -32,7 +32,7 @@ use Utopia\Migration\Source;
 use Utopia\Migration\Transfer;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 
@@ -121,9 +121,9 @@ final class MigrationsTest extends TestCase
             'persist:processing:finalizing',
             'destination:success',
             'source:success',
-            'persist:failed:finished',
             'source:error',
             'destination:error',
+            'persist:failed:finished',
         ], $events);
         $this->assertNotContains('persist:completed:finished', $events);
     }
@@ -219,6 +219,74 @@ final class MigrationsTest extends TestCase
             'persist:processing:migrating',
             'persist:processing:finalizing',
         ], $events);
+    }
+
+    public function testFailureHooksRunBeforeFailedMigrationIsPersisted(): void
+    {
+        $events = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createDestinationMock();
+
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function (): void {
+                throw new \RuntimeException('Upload failed');
+            });
+        $source
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'source:error';
+            });
+        $destination
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'destination:error';
+            });
+
+        $migration = $this->createMigration();
+
+        $this->process($this->createProcessor($source, $destination, $events), $migration);
+
+        $this->assertSame(
+            ['source:error', 'destination:error', 'persist:failed:finished'],
+            \array_slice($events, -3)
+        );
+    }
+
+
+    public function testAThrowingSourceErrorHookStillLetsTheDestinationRecordTheFailure(): void
+    {
+        $events = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createDestinationMock();
+
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function (): void {
+                throw new \RuntimeException('Upload failed');
+            });
+        $source
+            ->expects($this->once())
+            ->method('error')
+            ->willThrowException(new \RuntimeException('Lock release failed'));
+        $destination
+            ->expects($this->once())
+            ->method('error')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'destination:error';
+            });
+
+        $migration = $this->createMigration();
+
+        $this->process($this->createProcessor($source, $destination, $events), $migration);
+
+        $this->assertContains('destination:error', $events);
+        $this->assertSame('persist:failed:finished', \end($events));
+        $this->assertSame('failed', $migration->getAttribute('status'));
     }
 
     public function testNullResourceTypeUsesEmptyResourceSelector(): void
@@ -378,8 +446,6 @@ final class MigrationsTest extends TestCase
                 dbForPlatform: $database,
                 getDatabasesDB: static fn (Document $document): Database => $database,
                 getProjectDB: static fn (Document $document): Database => $database,
-                logError: static function (): void {
-                },
                 queueForRealtime: new Realtime(),
                 deviceForMigrations: $device,
                 deviceForFiles: $device,
@@ -480,8 +546,6 @@ final class MigrationsTest extends TestCase
                 dbForPlatform: $database,
                 getDatabasesDB: static fn (Document $document): Database => $database,
                 getProjectDB: static fn (Document $document): Database => $database,
-                logError: static function (): void {
-                },
                 queueForRealtime: $realtime,
                 deviceForMigrations: $device,
                 deviceForFiles: $device,
@@ -665,8 +729,6 @@ final class MigrationsTest extends TestCase
                 dbForPlatform: $database,
                 getDatabasesDB: static fn (Document $document): Database => $database,
                 getProjectDB: static fn (Document $document): Database => $database,
-                logError: static function (): void {
-                },
                 queueForRealtime: $realtime,
                 deviceForMigrations: $device,
                 deviceForFiles: $device,
@@ -762,8 +824,6 @@ final class MigrationsTest extends TestCase
                 Authorization $authorization,
             ): void {
                 $this->project = $project;
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

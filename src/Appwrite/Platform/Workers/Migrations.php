@@ -47,6 +47,7 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
@@ -75,8 +76,6 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    protected ?\Closure $logError = null;
-
     public static function getName(): string
     {
         return 'migrations';
@@ -95,7 +94,6 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('getDatabasesDB')
             ->inject('getProjectDB')
-            ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
@@ -118,7 +116,6 @@ class Migrations extends Action
         Database $dbForPlatform,
         callable $getDatabasesDB,
         callable $getProjectDB,
-        callable $logError,
         Realtime $queueForRealtime,
         Device $deviceForMigrations,
         Device $deviceForFiles,
@@ -160,7 +157,6 @@ class Migrations extends Action
         $this->project = $project;
         $this->getDatabasesDB = \Closure::fromCallable($getDatabasesDB);
         $this->getProjectDB = \Closure::fromCallable($getProjectDB);
-        $this->logError = \Closure::fromCallable($logError);
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
         $this->plan = $plan;
@@ -198,7 +194,6 @@ class Migrations extends Action
         $this->getProjectDB = null;
         $this->plan = [];
         $this->sourceReport = [];
-        $this->logError = null;
     }
 
     /**
@@ -649,7 +644,7 @@ class Migrations extends Action
 
             // Mirror general.php's HTTP-error pattern: typed AppwriteException uses its
             // registry-driven isPublishable() flag; library-thrown Migration\Exception is
-            // always user-facing; anything else is unknown and surfaced to Sentry.
+            // always user-facing; anything else is unknown and recorded as a warning.
             if ($th instanceof Exception) {
                 $publish = $th->isPublishable();
             } elseif ($th instanceof MigrationException) {
@@ -659,21 +654,18 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                $extras = [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ];
+                Span::add('warning.message', $th->getMessage());
+                Span::add('warning.code', $th->getCode());
+                Span::add('migration.id', $migration->getId());
+                Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+                Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
 
-                // Include source identifiers for Appwrite sources to make Sentry events
+                // Include source identifiers for Appwrite sources to make warning spans
                 // self-debuggable. Never include the apiKey or any other secret.
                 if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                    $credentials = $migration->getAttribute('credentials', []) ?? [];
-                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
-                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
+                    Span::add('migration.source_project_id', (string) ($migration->getAttribute('credentials', [])['projectId'] ?? ''));
+                    Span::add('migration.source_endpoint', (string) ($migration->getAttribute('credentials', [])['endpoint'] ?? ''));
                 }
-
-                $this->reportError($th, $migration, $extras);
             }
         } finally {
             try {
@@ -727,9 +719,20 @@ class Migrations extends Action
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
-                    $source?->error();
-                    $destination?->error();
+                    try {
+                        $source?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Source failure hook threw: ' . $error->getMessage());
+                    }
+
+                    try {
+                        $destination?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Destination failure hook threw: ' . $error->getMessage());
+                    }
                 }
+
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             } finally {
                 $source?->cleanup();
@@ -941,9 +944,12 @@ class Migrations extends Action
 
         $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
         if (!$valid) {
-            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Invalid initiating user sequence for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Invalid initiating user sequence for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
             return new Document([]);
         }
 
@@ -952,9 +958,12 @@ class Migrations extends Action
         ]);
 
         if ($user->isEmpty()) {
-            $error = new \RuntimeException('Initiating user not found for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Initiating user not found for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Initiating user not found for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
 
         return $user;

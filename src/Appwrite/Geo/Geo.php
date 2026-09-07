@@ -11,7 +11,7 @@ use Utopia\Locale\Locale;
 class Geo
 {
     public const CACHE_SIZE = 10_000;
-    public const CACHE_VALUE_SIZE = 512;
+    public const CACHE_VALUE_SIZE = 1024;
 
     public function __construct(
         private ?Client $client,
@@ -77,7 +77,8 @@ class Geo
             'weatherCode' => $record['weatherCode'] ?? null,
             'postalCode' => $record['postalCode'] ?? null,
             'city' => $record['city']['en'] ?? null,
-            'state' => $record['subdivision']['en'] ?? $record['subdivisions'][0]['en'] ?? null,
+            'state' => $record['subdivision']['en'] ?? $record['subdivisions'][0]['en'] ?? $record['subdivisions'][0]['names']['en'] ?? null,
+            'subdivisions' => $record['subdivisions'] ?? null,
             'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
             'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
             'connectionType' => $record['connection'] ?? null,

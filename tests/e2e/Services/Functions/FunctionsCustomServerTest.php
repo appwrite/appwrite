@@ -1032,7 +1032,11 @@ final class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * Builds, executes and downloads through the configured local or S3 device.
+     * The build job writes onto the builds volume while the executor and the
+     * download endpoint read the deployment through the configured storage
+     * device. Runs in the `s3` CI group against MinIO, where the sidecar
+     * uploads the artifact as an s3:// object keyed under the bucket; on the
+     * default local device build.sh writes it straight to buildPath.
      */
     #[Group('s3')]
     public function testDeploymentBuildOutputIsServedFromTheBuildsDevice(): void

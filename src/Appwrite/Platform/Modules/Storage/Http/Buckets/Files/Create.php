@@ -289,7 +289,15 @@ class Create extends Action
                 }
             }
 
-            $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
+            // Another chunk may have finalized the upload and removed its parts
+            // before upload() counted them. Check the completed document above first.
+            if (empty($chunksUploaded)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
+            }
+
+            // A local chunk file is visible before its write finishes. Only parts
+            // recorded after upload() returns are safe to include in finalization.
+            $chunksUploaded = max($uploaded, isset($metadata['parts']) ? \count($metadata['parts']) : $chunksUploaded);
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
