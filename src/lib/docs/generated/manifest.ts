@@ -423,7 +423,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.',
     layout: 'article',
-    readingTimeMinutes: 6,
+    readingTimeMinutes: 7,
   },
   {
     slug: 'advanced/self-hosting/mcp',
@@ -551,7 +551,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.',
     layout: 'article',
-    readingTimeMinutes: 2,
+    readingTimeMinutes: 3,
   },
   {
     slug: 'apis',

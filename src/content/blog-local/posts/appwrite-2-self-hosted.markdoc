@@ -1,0 +1,149 @@
+---
+layout: post
+title: "Appwrite 2.0 is now available for self-hosting"
+description: Appwrite 2.0 brings a rebuilt Console, PostgreSQL as the default database, and a combined worker topology that runs your instance on 16 containers instead of 33.
+date: 2026-09-07
+cover: /images/blog-local/announcing-appwrite-2/cover.avif
+timeToRead: 6
+author: atharva
+category: product, announcement
+faqs:
+  - question: "What do I need to run self-hosted Appwrite 2.0?"
+    answer: "Any operating system that runs Docker with Compose v2. A default install runs 16 containers. See the [installation guide](/docs/advanced/self-hosting/installation) for the current minimum CPU, memory, and swap requirements."
+  - question: "Which database does self-hosted Appwrite 2.0 use?"
+    answer: "You choose PostgreSQL, MariaDB, or MongoDB during installation, and PostgreSQL is selected by default. The choice is permanent for that instance. Upgrading an existing instance keeps the database it was installed with."
+  - question: "What is the difference between the combined and separate worker topologies?"
+    answer: "The combined topology runs every queue in one worker container and every scheduler in one scheduler container. The separate topology runs one container per queue and one per scheduler. Both process the same queues with the same behavior, so the difference is container count and how you scale them. A default PostgreSQL install runs 16 containers on the combined topology and 33 on the separate one."
+  - question: "Can I change the worker topology after installing?"
+    answer: "Yes. Run the upgrade command with `--topology=combined` or `--topology=separate`. Appwrite rewrites your `docker-compose.yml` with the other topology's services and restarts the stack. Your data is not affected."
+  - question: "How do I upgrade an existing instance to Appwrite 2.0?"
+    answer: "Upgrade to 1.9.6 first, then to 2.0.0. Back up your data, run the installer with the `upgrade` entrypoint, then run `docker compose exec appwrite migrate` from your `appwrite` directory."
+---
+
+Appwrite 2.0 is available for self-hosting today. The server runs on a coroutine engine, the Console has been rebuilt, PostgreSQL is the default database, and a default instance now runs on roughly half the containers it used to.
+
+Here is what [Appwrite 2.0](/blog/post/announcing-appwrite-2) changes for self-hosting, and how to install or upgrade.
+
+# A rebuilt Console
+
+Appwrite 2.0 ships [Console IV](/blog/post/announcing-console-iv), the fourth generation of the Appwrite Console, rebuilt from scratch. Self-hosted 1.9.6 ran `appwrite/console`, a Svelte app. Appwrite 2.0 runs `appwrite/new`, built on TanStack Start.
+
+Every route prefetches its data while the router is still resolving. The page opens with rows already in the table, avoiding the layout shift when rows replace a loading spinner.
+
+The Console includes two developer tools. [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI in the browser, already signed in and configured for your current project. Open it with `⌘` + `;`. [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) builds and sends live API requests against that project from its OpenAPI specification.
+
+Your projects are untouched. Console IV is a new interface over the same APIs, so your API keys and SDK code keep working.
+
+# PostgreSQL, MariaDB, or MongoDB as the underlying database
+
+Appwrite 2.0 [runs on PostgreSQL](/blog/post/appwrite-2-0-postgres-by-default), and new installations use it by default. MariaDB and MongoDB remain supported, and you pick one in the first step of the installer.
+
+Your application code does not change based on the choice. The Appwrite APIs are the same on all three.
+
+The database is fixed for the lifetime of an instance. If you upgrade an existing instance to Appwrite 2.0, it keeps the database it was installed with, so moving to PostgreSQL means a fresh install.
+
+# Hyperloop B
+
+Appwrite 2.0 runs on [Hyperloop B](/blog/post/hyperloop-b), the Swoole coroutine engine in `utopia-php/http`. One process serves many concurrent requests by yielding whenever a request waits on I/O. This replaces a model that holds a whole process for each request until it finishes.
+
+There is nothing to configure and no API to call. Your instance runs on it after you install or upgrade.
+
+# Worker topologies
+
+Appwrite 2.0 introduces [worker topologies](/blog/post/announcing-worker-topologies).
+
+Appwrite runs background work such as mail, builds, TLS certificates, function executions, and screenshots on queues. In 1.9.6, every queue had its own container, so a single-project instance with almost no traffic still ran eighteen idle worker and scheduler processes. Each held its own PHP runtime, connection pools, and memory.
+
+The **combined** topology, which is the default, runs every queue inside one `appwrite-worker` container and every scheduler inside one `appwrite-task-scheduler` container. Each queue keeps its own pool of coroutines, so a busy queue does not block the others. The behavior of every queue is unchanged.
+
+For a default PostgreSQL install, the container counts for the whole stack are:
+
+| Topology | Containers |
+| --- | --- |
+| Combined | 16 |
+| Separate | 33 |
+
+For a hobby instance or a small team, that is sixteen fewer PHP processes holding connection pools, and one place to read worker logs:
+
+```bash
+docker compose logs -f appwrite-worker
+```
+
+The **separate** topology remains available. Use it when one queue needs more replicas than the rest, or when you want per-queue metrics and resource limits. Choose it under **Advanced settings** during installation, or pass `--topology=separate` to the installer. Switching later takes one command and does not touch your data.
+
+# Usage metrics
+
+Self-hosted instances now record usage per project resource. The numbers go to a bundled `clickhouse` container rather than your project database, so reading them does not compete with your application's queries.
+
+# More Git providers
+
+Functions and Sites now deploy from GitHub, [GitLab](/blog/post/announcing-gitlab-support), [Bitbucket](/blog/post/announcing-bitbucket-support), and Gitea. 1.9.6 supported GitHub only.
+
+You can also let developers sign in to the Console with GitHub, GitLab, Bitbucket, or Google by setting the matching `_APP_CONSOLE_*` variables.
+
+# Also in this release
+
+- Functions and Sites build through a new `orchestrator` container.
+- The Console has a notifications inbox, served by a new notifications queue.
+- A realtime event tail streams live project events into the Console.
+- A new `appwrite-geo` container resolves IP addresses for locale and session data.
+- The avatars API can fetch a user's profile photo from Gravatar or their OAuth2 provider.
+- The separate audits worker is gone. Audit retention now runs in the deletes worker and the maintenance task.
+
+# One organization in the Console
+
+On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither, so the Console simplifies organization management. It creates one organization the first time you sign in, puts every project you create from the Console under it, and does not offer a way to create more. While your account belongs to that one organization, the Console hides the organization switcher.
+
+Multi-tenancy is still supported. An organization is a team, and the API still takes a `teamId` when you create a project. Creating another team through the API creates another organization. Once your account belongs to more than one, because you created teams through the API or upgraded an instance that already had several organizations, the Console shows the organization switcher, lists every organization in the project selector, and lets you transfer projects between them.
+
+# Coming to self-hosted
+
+A few of the Init products are on Cloud first. [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [S3 API](/blog/post/announcing-s3-api) for Storage, and the activity log for project events will be coming to self-hosted Appwrite very soon. Watch the [release notes](https://github.com/appwrite/appwrite/releases) for the version that adds each.
+
+# Install Appwrite 2.0
+
+Run the installer. Then open `http://localhost:20080` and follow the wizard.
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.0.0
+```
+
+If you would rather write the Compose files yourself, the [installation guide](/docs/advanced/self-hosting/installation) has a generator that produces `docker-compose.yml` and `.env` for your database and topology.
+
+# Upgrade an existing instance
+
+Back up your data first. Upgrade to 1.9.6 before you upgrade to 2.0.0.
+
+From the directory that contains your `appwrite` directory:
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:2.0.0
+```
+
+Then run the migration from inside the `appwrite` directory:
+
+```bash
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+The upgrade keeps your database and your worker topology. To change topology while you upgrade, add `--topology=combined` or `--topology=separate` to the upgrade command.
+
+# Resources
+
+- [Installation guide](/docs/advanced/self-hosting/installation)
+- [Worker topologies](/docs/advanced/self-hosting/configuration/topologies)
+- [Database configuration](/docs/advanced/self-hosting/configuration/databases)
+- [Updates and migrations](/docs/advanced/self-hosting/production/updates)
+- [Self-hosting docs](/docs/advanced/self-hosting)
+- [Discord community](https://appwrite.io/discord)

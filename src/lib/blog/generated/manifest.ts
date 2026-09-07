@@ -3,6 +3,46 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-worker-topologies",
+    "href": "/blog/post/announcing-worker-topologies",
+    "title": "Introducing worker topologies for self-hosted Appwrite",
+    "description": "Self-hosted Appwrite now runs all background workers in a single container by default. Learn how the combined topology works and when to scale out with separate workers.",
+    "date": "2026-09-07",
+    "lastUpdated": "2026-09-07",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "announcement",
+    "featured": false,
+    "cover": "/images/blog/announcing-worker-topologies/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-2-0-postgres-by-default",
+    "href": "/blog/post/appwrite-2-0-postgres-by-default",
+    "title": "Introducing Postgres to self-hosted Appwrite",
+    "description": "Appwrite 2.0 runs new self-hosted instances on Postgres by default. Choose Postgres, MariaDB, or MongoDB in the setup wizard when you install.",
+    "date": "2026-09-07",
+    "lastUpdated": "2026-09-07",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "product, announcement",
+    "cover": "/images/blog-local/appwrite-2-0-postgres-by-default/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-2-self-hosted",
+    "href": "/blog/post/appwrite-2-self-hosted",
+    "title": "Appwrite 2.0 is now available for self-hosting",
+    "description": "Appwrite 2.0 brings a rebuilt Console, PostgreSQL as the default database, and a combined worker topology that runs your instance on 16 containers instead of 33.",
+    "date": "2026-09-07",
+    "lastUpdated": "2026-09-07",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "product, announcement",
+    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-apps-for-appwrite-partners",
     "href": "/blog/post/announcing-apps-for-appwrite-partners",
     "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",
@@ -56,35 +96,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "cover": "/images/blog/announcing-oauth2-server/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-worker-topologies",
-    "href": "/blog/post/announcing-worker-topologies",
-    "title": "Introducing worker topologies for self-hosted Appwrite",
-    "description": "Self-hosted Appwrite now runs all background workers in a single container by default. Learn how the combined topology works and when to scale out with separate workers.",
-    "date": "2026-09-04",
-    "lastUpdated": "2026-09-04",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "announcement",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog/announcing-worker-topologies/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-2-0-postgres-by-default",
-    "href": "/blog/post/appwrite-2-0-postgres-by-default",
-    "title": "Introducing Postgres to self-hosted Appwrite",
-    "description": "Appwrite 2.0 runs new self-hosted instances on Postgres by default. Choose Postgres, MariaDB, or MongoDB in the setup wizard when you install.",
-    "date": "2026-09-04",
-    "lastUpdated": "2026-09-04",
-    "timeToRead": 4,
-    "author": "atharva",
-    "category": "product, announcement",
-    "draft": true,
-    "cover": "/images/blog-local/appwrite-2-0-postgres-by-default/cover.avif",
     "hasCover": true
   },
   {

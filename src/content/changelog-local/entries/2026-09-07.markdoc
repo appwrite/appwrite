@@ -1,0 +1,30 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.0 for self-hosted deployments
+date: 2026-09-07
+cover: /images/blog-local/announcing-appwrite-2/cover.avif
+tags: infrastructure, databases, console, performance
+---
+
+Appwrite 2.0 is now available for self-hosting.
+
+This release includes:
+
+- [Console IV](/blog/post/announcing-console-iv), the rebuilt Appwrite Console, with Appwrite Terminal and Appwrite Explorer built in
+- [PostgreSQL as the default database](/blog/post/appwrite-2-0-postgres-by-default), with MariaDB and MongoDB still available in the installer
+- [Hyperloop B](/blog/post/hyperloop-b), the coroutine engine that serves many requests from one process
+- [Worker topologies](/blog/post/announcing-worker-topologies). The default combined topology runs a PostgreSQL instance on 16 containers instead of 33
+- Usage metrics recorded in a bundled ClickHouse container
+- Git deployments from GitLab, Bitbucket, and Gitea alongside GitHub
+
+Head over to our [migration guide](/docs/advanced/self-hosting/production/updates) to upgrade your instance. To change topology during the upgrade, pass `--topology=combined` or `--topology=separate` to the upgrade command.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.0.0) on GitHub.
+
+{% arrow_link href="/blog/post/appwrite-2-self-hosted" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.0
+{% /arrow_link %}
