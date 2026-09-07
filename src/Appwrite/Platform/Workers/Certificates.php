@@ -301,10 +301,11 @@ class Certificates extends Action
         // Get associated certificate for the rule
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
 
-        if ($rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED) {
-            // Only automatic retries arrive in the failed state, so they alone are
-            // capped. A retry asked for from the Console resets the rule to
-            // generating first and is always attempted.
+        // Only automatic retries reach the worker in the failed state; a retry asked
+        // for from the Console resets the rule to generating first.
+        $isAutomaticRetry = $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED;
+
+        if ($isAutomaticRetry) {
             if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
                 Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as it ran out of attempts.');
                 return;
@@ -354,14 +355,22 @@ class Certificates extends Action
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
+                $attempts = 0; // The certificate exists, so the counter starts over
             } else {
                 // Delayed generation: third-party handles certificate issuance asynchronously
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
+
+                // A delayed issuer accepting the request is not yet a success: the
+                // certificate can still fail once the third party resolves it. Only
+                // a first attempt clears the counter — counting automatic retries is
+                // what lets them stop, and resetting here would leave the attempt
+                // limit unreachable and the retry loop unbounded.
+                $attempts = $isAutomaticRetry ? $certificate->getAttribute('attempts', 0) + 1 : 0;
             }
 
             $certificate->setAttributes([
-                'attempts' => 0, // Reset attempts count
+                'attempts' => $attempts,
                 'issueDate' => DateTime::now(), // Store current time as issue date
                 'renewDate' => $renewDate,
             ]);
