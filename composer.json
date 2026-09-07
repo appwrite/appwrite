@@ -12,7 +12,10 @@
     "minimum-stability": "stable",
     "scripts": {
         "test": "phpunit --configuration phpunit.xml --testsuite unit",
-        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
+        "test:e2e": [
+            "@php tests/credentials.php",
+            "phpunit --configuration phpunit.xml --testsuite e2e"
+        ]
     },
     "autoload": {
         "psr-4": {

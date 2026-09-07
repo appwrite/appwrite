@@ -650,14 +650,13 @@ class GitHub extends Git
             throw new Exception('Failed to read the GitHub App private key');
         }
 
-        $appIdentifier = $appId;
-
         $iat = time();
         $exp = $iat + self::GITHUB_APP_JWT_EXPIRY;
         $payload = [
             'iat' => $iat,
             'exp' => $exp,
-            'iss' => $appIdentifier,
+            // GitHub 401s a numeric App ID encoded as a JSON string.
+            'iss' => \is_string($appId) && ctype_digit($appId) ? (int) $appId : $appId,
         ];
 
         // generate access token

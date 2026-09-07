@@ -155,6 +155,35 @@ final class GitHubTest extends Base
         );
         $this->assertSame(1, $verified);
         $claims = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
-        $this->assertSame('5678', $claims['iss']);
+        $this->assertSame(5678, $claims['iss']);
+    }
+
+    public function testInitializeVariablesKeepsClientIdIssuerAsString(): void
+    {
+        $keyPair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $this->assertNotFalse($keyPair);
+        openssl_pkey_export($keyPair, $pem);
+
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var array<string, mixed> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured = ['headers' => $headers];
+
+                return [
+                    'body' => ['token' => 'installation-token'],
+                    'headers' => ['status-code' => 201],
+                ];
+            }
+        };
+
+        $adapter->initializeVariables('1234', $pem, 'Iv1.0123456789abcdef');
+
+        $jwt = substr((string) $adapter->captured['headers']['Authorization'], \strlen('Bearer '));
+        $payload = explode('.', $jwt)[1];
+        $claims = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+        $this->assertSame('Iv1.0123456789abcdef', $claims['iss']);
     }
 }

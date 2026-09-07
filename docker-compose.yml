@@ -217,20 +217,53 @@ services:
       - |
         rm -f $$TOKEN_FILE
 
-        # Trade the root password for an OAuth token, then mint a PAT with it
-        OAUTH_TOKEN=$$(curl -s -X POST http://gitlab:80/oauth/token \
-          --data-urlencode "grant_type=password" \
-          --data-urlencode "username=root" \
-          --data-urlencode "password=$$GITLAB_ROOT_PASSWORD" \
-          --data-urlencode "scope=api" \
-          | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+        json_field() {
+          printf '%s' "$$1" | grep -oE "\"$$2\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | cut -d'"' -f4
+        }
+
+        OAUTH_TOKEN=
+        i=1
+        while [ "$$i" -le 30 ]; do
+          RESPONSE=$$(curl -sS --connect-timeout 5 --max-time 15 -w '\n%{http_code}' \
+            -X POST http://gitlab:80/oauth/token \
+            --data-urlencode "grant_type=password" \
+            --data-urlencode "username=root" \
+            --data-urlencode "password=$$GITLAB_ROOT_PASSWORD" \
+            --data-urlencode "scope=api" || true)
+          HTTP=$$(printf '%s\n' "$$RESPONSE" | tail -n 1)
+          BODY=$$(printf '%s\n' "$$RESPONSE" | sed '$$d')
+          OAUTH_TOKEN=$$(json_field "$$BODY" access_token)
+          if [ -n "$$OAUTH_TOKEN" ]; then
+            break
+          fi
+          ERROR=$$(json_field "$$BODY" error)
+          [ -n "$$ERROR" ] || ERROR=none
+          echo "OAuth token attempt $$i/30 http=$$HTTP error=$$ERROR"
+          i=$$((i + 1))
+          sleep 2
+        done
         if [ -z "$$OAUTH_TOKEN" ]; then echo "Failed to get OAuth token"; exit 1; fi
 
-        TOKEN=$$(curl -s -X POST http://gitlab:80/api/v4/users/1/personal_access_tokens \
-          -H "Authorization: Bearer $$OAUTH_TOKEN" \
-          -H "Content-Type: application/json" \
-          -d '{"name":"bootstrap","scopes":["api","read_user","read_repository","write_repository"]}' \
-          | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+        TOKEN=
+        i=1
+        while [ "$$i" -le 15 ]; do
+          RESPONSE=$$(curl -sS --connect-timeout 5 --max-time 15 -w '\n%{http_code}' \
+            -X POST http://gitlab:80/api/v4/users/1/personal_access_tokens \
+            -H "Authorization: Bearer $$OAUTH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"bootstrap","scopes":["api","read_user","read_repository","write_repository"]}' || true)
+          HTTP=$$(printf '%s\n' "$$RESPONSE" | tail -n 1)
+          BODY=$$(printf '%s\n' "$$RESPONSE" | sed '$$d')
+          TOKEN=$$(json_field "$$BODY" token)
+          if [ -n "$$TOKEN" ]; then
+            break
+          fi
+          ERROR=$$(json_field "$$BODY" error)
+          [ -n "$$ERROR" ] || ERROR=none
+          echo "PAT attempt $$i/15 http=$$HTTP error=$$ERROR"
+          i=$$((i + 1))
+          sleep 2
+        done
         if [ -z "$$TOKEN" ]; then echo "Failed to get token"; exit 1; fi
 
         curl -s -X PUT "http://gitlab:80/api/v4/application/settings" \
