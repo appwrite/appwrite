@@ -43,6 +43,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "drizzle-orm-appwrite-postgres",
+    "href": "/blog/post/drizzle-orm-appwrite-postgres",
+    "title": "Use Drizzle ORM with Appwrite Postgres",
+    "description": "Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.",
+    "date": "2026-09-07",
+    "lastUpdated": "2026-09-07",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-apps-for-appwrite-partners",
     "href": "/blog/post/announcing-apps-for-appwrite-partners",
     "title": "Announcing Appwrite Apps: Create apps that build on your users' Appwrite projects",

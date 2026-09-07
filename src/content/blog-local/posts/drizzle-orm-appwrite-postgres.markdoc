@@ -1,0 +1,342 @@
+---
+layout: post
+title: Use Drizzle ORM with Appwrite Postgres
+description: Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.
+date: 2026-09-07
+cover: /images/blog/drizzle-orm-appwrite-postgres/cover.avif
+timeToRead: 8
+author: atharva
+category: tutorial
+featured: false
+draft: true
+---
+
+ORMs are a popular way to work with databases through application code. Appwrite Postgres fits into that workflow with a standard PostgreSQL connection string. With Drizzle ORM, you can write typed queries in TypeScript and manage schema migrations through Drizzle Kit.
+
+This guide provisions a database and adds a `books` table. A second migration adds a column while preserving the existing records.
+
+# Provision Postgres {% #create-database %}
+
+![Create database screen with PostgreSQL under Native databases](/images/blog/drizzle-orm-appwrite-postgres/engine-selection.avif)
+
+In your project at [appwrite.io](https://appwrite.io), open **Databases → Create database**. Under **Native databases**, select **PostgreSQL**.
+
+## Name the database {% #name-database %}
+
+![Database name set to Bookshelf with an automatically generated ID](/images/blog/drizzle-orm-appwrite-postgres/database-name.avif)
+
+Enter `Bookshelf` as the name and leave **Database ID** auto-generated. Select the **Starter** tier for this example.
+
+## Review the configuration {% #database-specifications %}
+
+![PostgreSQL specifications and database summary before creation](/images/blog/drizzle-orm-appwrite-postgres/database-specifications.avif)
+
+Keep **Replica count** at `0`, **Enable PITR** off, and **Daily** backups selected. Review the price in **Database summary**, then click **Create database**. See the [PostgreSQL quick start](https://appwrite.io/docs/products/databases/postgresql/quick-start) for provisioning options.
+
+## Open the database {% #database-workspace %}
+
+![PostgreSQL database workspace with SQL editor and Credentials in the sidebar](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
+
+After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in the sidebar contains the connection details.
+
+# Connect Drizzle {% #connection-string %}
+
+![Database connection details with the password hidden](/images/blog/drizzle-orm-appwrite-postgres/database-credentials.avif)
+
+Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged. The [Drizzle integration documentation](https://appwrite.io/docs/products/databases/postgresql/integrations/drizzle) covers direct and pooled connections.
+
+In a TypeScript project using ES modules, install the dependencies:
+
+```sh
+pnpm add drizzle-orm@0.45.2 pg@8.23.0 dotenv@17.4.2
+pnpm add -D drizzle-kit@0.31.10 tsx@4.23.13 typescript@7.0.2 @types/node@22.20.1 @types/pg@8.23.1
+```
+
+Set the connection string in `.env` and exclude that file from Git:
+
+```env
+DATABASE_URL="<YOUR_DIRECT_POSTGRESQL_CONNECTION_STRING>"
+```
+
+Create `src/db.ts`:
+
+```ts
+import 'dotenv/config'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import pg from 'pg'
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('Set DATABASE_URL in .env')
+}
+
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+})
+
+export const db = drizzle({ client: pool })
+```
+
+# Create the table with Drizzle Kit {% #first-migration %}
+
+Define `src/schema.ts`:
+
+```ts
+import { boolean, pgTable, text } from 'drizzle-orm/pg-core'
+
+export const books = pgTable('books', {
+  isbn: text('isbn').primaryKey(),
+  title: text('title').notNull(),
+  author: text('author').notNull(),
+  read: boolean('read').notNull().default(false),
+})
+```
+
+Configure Drizzle Kit in `drizzle.config.ts`:
+
+```ts
+import 'dotenv/config'
+import { defineConfig } from 'drizzle-kit'
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('Set DATABASE_URL in .env')
+}
+
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/schema.ts',
+  out: './drizzle',
+  dbCredentials: { url: process.env.DATABASE_URL },
+})
+```
+
+Generate the SQL migration:
+
+```sh
+pnpm exec drizzle-kit generate --name=create_books
+```
+
+Review `drizzle/0000_create_books.sql`, then apply it:
+
+```sh
+pnpm exec drizzle-kit migrate
+```
+
+[`generate`](https://orm.drizzle.team/docs/drizzle-kit-generate) writes SQL from schema changes. [`migrate`](https://orm.drizzle.team/docs/drizzle-kit-migrate) applies pending migrations and records them in Postgres. Commit the `drizzle` directory, including its metadata.
+
+In Appwrite, select **Data**, choose the `public` schema, and refresh the table list. The `books` table should now exist.
+
+# Insert and query books {% #query-data %}
+
+Create `src/seed.ts`:
+
+```ts
+import { db, pool } from './db.js'
+import { books } from './schema.js'
+
+try {
+  const inserted = await db
+    .insert(books)
+    .values([
+      {
+        isbn: '9780441478125',
+        title: 'The Left Hand of Darkness',
+        author: 'Ursula K. Le Guin',
+      },
+      { isbn: '9780807083697', title: 'Kindred', author: 'Octavia E. Butler' },
+      {
+        isbn: '9780061054884',
+        title: 'The Dispossessed',
+        author: 'Ursula K. Le Guin',
+      },
+    ])
+    .onConflictDoNothing({ target: books.isbn })
+    .returning({ title: books.title })
+
+  console.log(`Inserted ${inserted.length} books.`)
+} finally {
+  await pool.end()
+}
+```
+
+Run the seed:
+
+```sh
+pnpm exec tsx src/seed.ts
+```
+
+The first run inserts three books. `onConflictDoNothing` makes subsequent runs skip existing ISBNs.
+
+Create `src/unread.ts`:
+
+```ts
+import { asc, eq } from 'drizzle-orm'
+import { db, pool } from './db.js'
+import { books } from './schema.js'
+
+try {
+  const unread = await db
+    .select({ title: books.title, author: books.author })
+    .from(books)
+    .where(eq(books.read, false))
+    .orderBy(asc(books.title))
+
+  console.table(unread)
+} finally {
+  await pool.end()
+}
+```
+
+Run the query:
+
+```sh
+pnpm exec tsx src/unread.ts
+```
+
+It returns _Kindred_, _The Dispossessed_, and _The Left Hand of Darkness_, ordered by title. Drizzle infers the result's `title` and `author` types from the schema.
+
+# Add a column through a migration {% #second-migration %}
+
+![Books table columns after the second migration, including the nullable integer rating column](/images/blog/drizzle-orm-appwrite-postgres/books-columns.avif)
+
+
+Replace `src/schema.ts` with this version to add a nullable rating:
+
+```ts
+import { boolean, integer, pgTable, text } from 'drizzle-orm/pg-core'
+
+export const books = pgTable('books', {
+  isbn: text('isbn').primaryKey(),
+  title: text('title').notNull(),
+  author: text('author').notNull(),
+  read: boolean('read').notNull().default(false),
+  rating: integer('rating'),
+})
+```
+
+Generate the next migration:
+
+```sh
+pnpm exec drizzle-kit generate --name=add_rating
+```
+
+The generated `drizzle/0001_add_rating.sql` contains:
+
+```sql
+ALTER TABLE "books" ADD COLUMN "rating" integer;
+```
+
+{% info title="Test migrations on a database branch" %}
+You can create an isolated copy of your Postgres database and test a migration against its existing data. Use a project API key with `databases.read` and `databases.write` scopes. These examples create a branch that expires after one hour.
+
+{% multicode %}
+```server-nodejs
+import { Client, ID, Postgresql } from 'node-appwrite'
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>')
+
+const postgresql = new Postgresql(client)
+const branchId = ID.unique()
+
+await postgresql.createBranch({
+  databaseId: '<DATABASE_ID>',
+  branchId,
+  ttl: 3600,
+})
+
+const { branches } = await postgresql.listBranches({
+  databaseId: '<DATABASE_ID>',
+})
+const branch = branches.find((item) => item.branchName === branchId)
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::id::ID;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+    let branch_id = ID::unique();
+
+    postgresql
+        .create_branch("<DATABASE_ID>", Some(&branch_id), Some(3600))
+        .await?;
+
+    let result = postgresql.list_branches("<DATABASE_ID>").await?;
+    let branch = result.branches.iter().find(|item| item.branch_name == branch_id);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+Branch provisioning is asynchronous. Fetch the branch list again once provisioning finishes, then use the branch's `connectionString` in Node or `connection_string` in Rust as `DATABASE_URL`. Run `pnpm exec drizzle-kit migrate` and verify the result. Restore your original `DATABASE_URL` before continuing below. Branch changes do not merge back. See [database branches](/docs/products/databases/postgresql/branches).
+
+{% /info %}
+
+Apply it and rerun the query:
+
+```sh
+pnpm exec drizzle-kit migrate
+pnpm exec tsx src/unread.ts
+```
+
+The same three books remain. In Appwrite, refresh **Columns** to see `rating`; the existing rows have `null` in that column.
+
+# Update and query the new column {% #update-record %}
+
+![Books table in Appwrite showing the rating column added by a Drizzle migration](/images/blog/drizzle-orm-appwrite-postgres/books-rows.avif)
+
+Create `src/rate.ts` to mark _Kindred_ as read, assign a rating, and query rated books:
+
+```ts
+import { desc, eq, isNotNull } from 'drizzle-orm'
+import { db, pool } from './db.js'
+import { books } from './schema.js'
+
+try {
+  const updated = await db
+    .update(books)
+    .set({ read: true, rating: 5 })
+    .where(eq(books.isbn, '9780807083697'))
+    .returning({ title: books.title, rating: books.rating })
+
+  console.log('Updated:', updated)
+
+  const rated = await db
+    .select({ title: books.title, rating: books.rating })
+    .from(books)
+    .where(isNotNull(books.rating))
+    .orderBy(desc(books.rating))
+
+  console.table(rated)
+} finally {
+  await pool.end()
+}
+```
+
+Run it, then check the unread list:
+
+```sh
+pnpm exec tsx src/rate.ts
+pnpm exec tsx src/unread.ts
+```
+
+The rated query returns _Kindred_ with a rating of `5`. The unread query returns the two Ursula K. Le Guin books. Refresh **Rows** in Appwrite to inspect the saved values.
+
+For an application, reuse the connection pool across requests and close it at shutdown. The `pool.end()` calls here let the standalone scripts exit. Appwrite also provides the pooled endpoint on port `6432` for runtime connections; see [connection options](https://appwrite.io/docs/products/databases/postgresql/connections).
+
+# Resources
+
+- [PostgreSQL quick start](/docs/products/databases/postgresql/quick-start)
+- [Drizzle integration guide](/docs/products/databases/postgresql/integrations/drizzle)
+- [PostgreSQL connection options](/docs/products/databases/postgresql/connections)
+- [Discord community](https://appwrite.io/discord)
