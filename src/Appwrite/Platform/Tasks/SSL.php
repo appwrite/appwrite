@@ -97,9 +97,36 @@ class SSL extends Action
 
             Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
         } else {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-            ]));
+            $rule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule): ?Document {
+                $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+                if ($current->isEmpty()
+                    || $current->getSequence() !== $rule->getSequence()
+                    || $current->getAttribute('domain') !== $rule->getAttribute('domain')) {
+                    return null;
+                }
+
+                $certificateId = $current->getAttribute('certificateId', '');
+                $certificate = empty($certificateId) ? new Document() : $dbForPlatform->getDocument('certificates', $certificateId, forUpdate: true);
+                $updated = $certificate->getAttribute('updated');
+                if (!empty($updated) && new \DateTime($updated) > new \DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds')) {
+                    return null;
+                }
+
+                if (!$certificate->isEmpty()) {
+                    // An explicit operator retry starts a fresh attempt budget,
+                    // but cannot interrupt a worker's active generation lease.
+                    $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
+                        'attempts' => 0,
+                        'updated' => null,
+                    ]));
+                }
+                return $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
+                    'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+                ]));
+            });
+            if ($rule === null) {
+                return;
+            }
 
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
@@ -107,9 +134,13 @@ class SSL extends Action
         }
 
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
-            project: $console,
+            project: new Document([
+                '$id' => $rule->getAttribute('projectId'),
+                '$sequence' => $rule->getAttribute('projectInternalId'),
+            ]),
             domain: new Document([
-                'domain' => $domain->get(),
+                'domain' => $rule->getAttribute('domain'),
+                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]),
             skipRenewCheck: $skipCheck,
         ));

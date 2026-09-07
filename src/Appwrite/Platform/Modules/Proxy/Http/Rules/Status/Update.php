@@ -97,27 +97,48 @@ class Update extends Action
 
         try {
             $this->verifyRule($rule, $log);
-            // Reset logs and status for the rule
-            $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'logs' => '',
-                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-            ])));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-
-            $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs for the associated certificate.
-            if (!empty($certificateId)) {
-                $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
-                    'logs' => '',
-                ])));
-            }
         } catch (Exception $err) {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
             throw $err;
         }
+
+        // DNS can take time. Re-check ownership and status under a lock so two
+        // requests cannot reset an attempt budget while a worker is issuing.
+        [$rule, $certificate, $queued] = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $project): array {
+            $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+            if ($current->isEmpty()
+                || $current->getAttribute('projectInternalId') !== $project->getSequence()
+                || $current->getAttribute('domain') !== $rule->getAttribute('domain')) {
+                throw new Exception(Exception::RULE_NOT_FOUND);
+            }
+            if (\in_array($current->getAttribute('status'), [RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATING], true)) {
+                return [$current, new Document(), false];
+            }
+
+            $certificateId = $current->getAttribute('certificateId', '');
+            $certificate = empty($certificateId) ? new Document() : $dbForPlatform->getDocument('certificates', $certificateId, forUpdate: true);
+            if (!$certificate->isEmpty()) {
+                // A requested retry starts a fresh budget only after DNS passes.
+                $certificate = $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
+                    'logs' => '',
+                    'attempts' => 0,
+                    'updated' => null,
+                ]));
+            }
+            $current = $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
+                'logs' => '',
+                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+            ]));
+            return [$current, $certificate, true];
+        }));
+        if (!$queued) {
+            $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+            return;
+        }
+        $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
         // Issue a TLS certificate when DNS verification is successful
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
@@ -128,7 +149,7 @@ class Update extends Action
             ]),
         ));
 
-        if (!empty($certificate)) {
+        if (!$certificate->isEmpty()) {
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 
