@@ -291,8 +291,7 @@ class Certificates extends Action
                 Query::limit(1),
             ]);
 
-        // Rule not found (or) not in the expected state. A rule whose last attempt
-        // failed is included: refusing it here made every retry a silent no-op.
+        // Rule not found (or) not in the expected state. Failed rules are included so retries run
         if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATION_FAILED])) {
             Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
             return;
@@ -301,8 +300,7 @@ class Certificates extends Action
         // Get associated certificate for the rule
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
 
-        // Only automatic retries reach the worker in the failed state; a retry asked
-        // for from the Console resets the rule to generating first.
+        // Only automatic retries arrive failed; a Console retry resets the rule first
         $isAutomaticRetry = $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED;
 
         if ($isAutomaticRetry) {
@@ -311,9 +309,7 @@ class Certificates extends Action
                 return;
             }
 
-            // Back to generating for the duration of the attempt. Delayed issuers
-            // leave the status untouched on success, and this is the state both the
-            // Console and the status sync read as "in progress".
+            // Back to generating: the state the Console and status sync read as in progress
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
         }
 
@@ -355,17 +351,14 @@ class Certificates extends Action
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
-                $attempts = 0; // The certificate exists, so the counter starts over
+                $attempts = 0; // Reset attempts count
             } else {
                 // Delayed generation: third-party handles certificate issuance asynchronously
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
 
-                // A delayed issuer accepting the request is not yet a success: the
-                // certificate can still fail once the third party resolves it. Only
-                // a first attempt clears the counter — counting automatic retries is
-                // what lets them stop, and resetting here would leave the attempt
-                // limit unreachable and the retry loop unbounded.
+                // Not issued yet, so only a first attempt resets. Counting retries is
+                // what makes the attempt limit reachable and stops the loop.
                 $attempts = $isAutomaticRetry ? $certificate->getAttribute('attempts', 0) + 1 : 0;
             }
 

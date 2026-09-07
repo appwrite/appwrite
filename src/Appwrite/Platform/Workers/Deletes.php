@@ -1845,10 +1845,8 @@ class Deletes extends Action
     {
         $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
-        // Route the cleanup to the same provider that issued the certificate.
-        // Without the domain type the proxy falls back to the custom-domain
-        // providers, which skip domains owned by the Appwrite Network service,
-        // so site and redirect domains kept their remote certificate forever.
+        // Route cleanup to the provider that issued it; without the type the proxy
+        // falls back to custom-domain providers, which skip Network-owned domains
         $domain = $document->getAttribute('domain');
         $domainType = $document->getAttribute('deploymentResourceType', $document->getAttribute('type'));
         $certificates->deleteCertificate($domain, $domainType);
