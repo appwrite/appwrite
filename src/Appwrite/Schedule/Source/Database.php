@@ -72,6 +72,9 @@ abstract class Database implements Source, Changes
 
         $project = $this->project((string) $schedule['projectId']);
         if ($project->isEmpty()) {
+            // Remove before reporting so the next snapshot cannot rediscover the orphan.
+            $this->dbForPlatform->deleteDocument('schedules', $document->getId());
+
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
@@ -166,7 +169,12 @@ abstract class Database implements Source, Changes
             APP_PROJECTS_SUBQUERIES
         );
 
-        return $this->projects[$projectId] = $project;
+        // A miss must not poison later schedules if the project becomes visible.
+        if (!$project->isEmpty()) {
+            $this->projects[$projectId] = $project;
+        }
+
+        return $project;
     }
 
     private function deleteOrphan(string $scheduleId): void

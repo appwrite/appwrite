@@ -437,13 +437,15 @@ class Deletes extends Action
             [
                 Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
-                Query::equal('active', [false]),
                 Query::orderDesc('resourceUpdatedAt'),
                 Query::orderDesc('$sequence'),
             ],
             $dbForPlatform,
             function (Document $document) use ($dbForPlatform, $getProjectDB) {
-                $project = $dbForPlatform->getDocument('projects', $document->getAttribute('projectId'));
+                $project = $dbForPlatform->skipFilters(
+                    fn () => $dbForPlatform->getDocument('projects', $document->getAttribute('projectId')),
+                    APP_PROJECTS_SUBQUERIES
+                );
 
                 if ($project->isEmpty()) {
                     $dbForPlatform->deleteDocument('schedules', $document->getId());
@@ -451,12 +453,22 @@ class Deletes extends Action
                     return;
                 }
 
+                // Active schedules for live projects belong to their scheduler.
+                if ($document->getAttribute('active')) {
+                    return;
+                }
+
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
                     'execution' => 'executions',
                     'message' => 'messages',
-                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
+                    // Cloud and extensions own cleanup for their resource types.
+                    default => null,
                 };
+
+                if ($collectionId === null) {
+                    return;
+                }
 
                 try {
                     $resource = $getProjectDB($project)->getDocument(
@@ -823,6 +835,12 @@ class Deletes extends Action
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
 
+        // Stop schedules before any project storage work. Let failures reach the
+        // queue so cleanup is retried; deleteByGroup deliberately swallows them.
+        $dbForPlatform->deleteDocuments('schedules', [
+            Query::equal('projectId', [$projectId]),
+        ]);
+
         $executionStore?->deleteProject($projectId);
 
         try {
@@ -903,16 +921,6 @@ class Deletes extends Action
             ], $dbForPlatform);
         } catch (Throwable $th) {
             Console::error('Failed to delete VCS comments: ' . $th->getMessage());
-        }
-
-        // Delete Schedules
-        try {
-            $this->deleteByGroup('schedules', [
-                Query::equal('projectId', [$projectId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-        } catch (Throwable $th) {
-            Console::error('Failed to delete schedules: ' . $th->getMessage());
         }
 
         // Delete Notifications
