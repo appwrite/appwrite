@@ -49,6 +49,7 @@ import type {
 } from './change-plan/DowngradeValidation'
 import { DowngradeImpactSummary } from './change-plan/DowngradeImpactSummary'
 import { ConfirmPlanChange } from './change-plan/ConfirmPlanChange'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
 import {
@@ -60,6 +61,7 @@ import {
   fetchAllDowngradeDomains,
   fetchAllDowngradeMemberships,
   fetchAllDowngradeProjects,
+  findCurrentUserMembership,
 } from '@/lib/billing/fetch-downgrade-org-resources'
 import {
   deleteDowngradeDomains,
@@ -168,6 +170,7 @@ async function runDowngradeDeletionStep(
   organizationId: string,
   pending: PendingDowngradeDeletions,
   step: DowngradeDeletionStep,
+  account: Models.User | undefined,
 ) {
   if (step.id === 'projects') {
     const ids = new Set(pending.projectIds)
@@ -181,10 +184,14 @@ async function runDowngradeDeletionStep(
   if (step.id === 'members') {
     const ids = new Set(pending.membershipIds)
     const memberships = await fetchAllDowngradeMemberships(organizationId)
+    // The selection UI can only lock the acting user's row when it is on the
+    // loaded page, so refuse it again here against the full list.
+    const self = findCurrentUserMembership(memberships, account)
     await deleteDowngradeMemberships(
       organizationId,
-      memberships.filter((item) => ids.has(item.$id)).map((item) => item.$id),
-      memberships.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
+      memberships
+        .filter((item) => ids.has(item.$id) && item.$id !== self?.$id)
+        .map((item) => item.$id),
     )
     return
   }
@@ -193,9 +200,7 @@ async function runDowngradeDeletionStep(
     const ids = new Set(pending.domainIds)
     const domains = await fetchAllDowngradeDomains(organizationId)
     await deleteDowngradeDomains(
-      organizationId,
       domains.filter((item) => ids.has(item.$id)).map((item) => item.$id),
-      domains.filter((item) => !ids.has(item.$id)).map((item) => item.$id),
     )
     return
   }
@@ -214,6 +219,7 @@ async function runDowngradeDeletions(
   organizationId: string,
   pending: PendingDowngradeDeletions,
   steps: DowngradeDeletionStep[],
+  account: Models.User | undefined,
   onStepStatus: (id: string, status: 'running' | 'done') => void,
 ) {
   // Resources before the organization-level deletes: a resource delete queued
@@ -227,13 +233,15 @@ async function runDowngradeDeletions(
 
   for (const step of ordered) {
     onStepStatus(step.id, 'running')
-    await runDowngradeDeletionStep(organizationId, pending, step)
+    await runDowngradeDeletionStep(organizationId, pending, step, account)
     onStepStatus(step.id, 'done')
   }
 }
 
 export function ChangePlanWizardFullscreen() {
   const t = useT()
+  const { account } = useAuth()
+  const accountModel = account as Models.User | undefined
   const navigate = useNavigate()
   const search = useSearch({ from: '/_public/upgrade' })
   const orgId = search.orgId
@@ -1074,7 +1082,10 @@ export function ChangePlanWizardFullscreen() {
         )
       }
 
-      if (needsDowngradeValidation && updateEstimation.isFetching) {
+      if (
+        needsDowngradeValidation &&
+        (updateEstimation.isFetching || estimationInputsDebouncing)
+      ) {
         return t('Checking whether the plan can be changed...')
       }
 
@@ -1115,6 +1126,7 @@ export function ChangePlanWizardFullscreen() {
     hasPlanChangeBlockers,
     downgradeBlockReason,
     updateEstimation.isFetching,
+    estimationInputsDebouncing,
     showFreePlanConflict,
     freePlanDeleteConfirmed,
     t,
@@ -1296,6 +1308,7 @@ export function ChangePlanWizardFullscreen() {
           orgId,
           pendingDeletions,
           deletionSteps,
+          accountModel,
           (stepId, status) => {
             setSetupProgress((prev) =>
               prev

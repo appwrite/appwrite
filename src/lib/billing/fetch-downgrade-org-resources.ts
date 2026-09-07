@@ -61,3 +61,21 @@ export async function fetchAllDowngradeDomains(organizationId: string) {
 
   return all
 }
+
+/**
+ * The acting user's own membership. Matched on id first, then email, because
+ * the console does not always have the membership's userId to hand.
+ */
+export function findCurrentUserMembership(
+  memberships: Models.Membership[],
+  account: Models.User | undefined,
+) {
+  if (!account) return undefined
+
+  return memberships.find(
+    (membership) =>
+      membership.userId === account.$id ||
+      (!!account.email &&
+        membership.userEmail?.toLowerCase() === account.email.toLowerCase()),
+  )
+}

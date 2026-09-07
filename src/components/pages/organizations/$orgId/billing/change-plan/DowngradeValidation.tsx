@@ -5,6 +5,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { getDowngradePlanLimits } from '@/lib/billing/downgrade-plan-limits'
 import { fetchAllDowngradeProjects } from '@/lib/billing/fetch-downgrade-org-resources'
+import { findCurrentUserMembership } from '@/lib/billing/fetch-downgrade-org-resources'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { fetchOrganizationProjects } from '@/lib/react-query/hooks/organizations'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
@@ -45,20 +46,6 @@ export type DowngradeValidationHandle = {
 export type { DowngradeResourceValidationHandle }
 
 type OrgDeleteKind = 'projects' | 'members' | 'domains'
-
-function findCurrentUserMembership(
-  memberships: Models.Membership[],
-  account: Models.User | undefined,
-) {
-  if (!account) return undefined
-
-  return memberships.find(
-    (membership) =>
-      membership.userId === account.$id ||
-      (!!account.email &&
-        membership.userEmail?.toLowerCase() === account.email.toLowerCase()),
-  )
-}
 
 function withinLimit(total: number, limit: number | null) {
   return limit === null || total <= limit
