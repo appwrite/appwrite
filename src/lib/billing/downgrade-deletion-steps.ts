@@ -32,9 +32,9 @@ export function buildDowngradeDeletionSteps(
   if (!pending) return []
 
   const steps: DowngradeDeletionStep[] = [
-    { id: 'projects', label: 'Projects', count: pending.projectIds.length },
-    { id: 'members', label: 'Members', count: pending.membershipIds.length },
-    { id: 'domains', label: 'Domains', count: pending.domainIds.length },
+    { id: 'projects', label: 'Projects', count: pending.projects.length },
+    { id: 'members', label: 'Members', count: pending.memberships.length },
+    { id: 'domains', label: 'Domains', count: pending.domains.length },
     ...DOWNGRADE_RESOURCE_TYPES.map(({ id, label }) => ({
       id,
       label,

@@ -11,9 +11,10 @@ function pending(
   overrides: Partial<PendingDowngradeDeletions> = {},
 ): PendingDowngradeDeletions {
   return {
-    projectIds: [],
-    membershipIds: [],
-    domainIds: [],
+    projects: [],
+    memberships: [],
+    domains: [],
+    projectResources: [],
     resources: {},
     ...overrides,
   }
@@ -28,9 +29,12 @@ describe('buildDowngradeDeletionSteps', () => {
   test('orders projects, members and domains before resource types', () => {
     const steps = buildDowngradeDeletionSteps(
       pending({
-        projectIds: ['p-1'],
-        membershipIds: ['m-1', 'm-2'],
-        domainIds: ['d-1'],
+        projects: [{ id: 'p-1', name: 'Project one' }],
+        memberships: [
+          { id: 'm-1', name: 'Ada' },
+          { id: 'm-2', name: 'Grace' },
+        ],
+        domains: [{ id: 'd-1', name: 'example.com' }],
         resources: {
           'p-2': {
             buckets: ['b-1'],
@@ -59,7 +63,7 @@ describe('buildDowngradeDeletionSteps', () => {
   test('omits steps with a zero count', () => {
     const steps = buildDowngradeDeletionSteps(
       pending({
-        membershipIds: ['m-1'],
+        memberships: [{ id: 'm-1', name: 'Ada' }],
         resources: { 'p-1': { functions: [], sites: ['s-1'] } },
       }),
     )

@@ -20,7 +20,10 @@ import {
   type DowngradeResourceImpactPayload,
   type DowngradeResourceValidationHandle,
 } from './DowngradeResourceValidation'
-import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
+import type {
+  DowngradeResourceImpact,
+  DowngradeResourceType,
+} from '@/lib/billing/downgrade-plan-limits'
 import type { ResourcesToDelete } from '@/lib/billing/delete-downgrade-resources'
 import {
   getNonCompliantProjectIds,
@@ -31,10 +34,24 @@ import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-
 
 const DOWNGRADE_SELECTION_PAGE_SIZE = 5
 
+export type DowngradeDeletionItem = { id: string; name: string }
+
+export type DowngradeProjectResourceDeletions = {
+  projectId: string
+  projectName: string
+  types: {
+    type: DowngradeResourceType
+    label: string
+    items: DowngradeDeletionItem[]
+  }[]
+}
+
 export type PendingDowngradeDeletions = {
-  projectIds: string[]
-  membershipIds: string[]
-  domainIds: string[]
+  projects: DowngradeDeletionItem[]
+  memberships: DowngradeDeletionItem[]
+  domains: DowngradeDeletionItem[]
+  projectResources: DowngradeProjectResourceDeletions[]
+  /** Execution payload, unchanged in shape. */
   resources: ResourcesToDelete
 }
 
@@ -64,6 +81,13 @@ function useSeenItemLabels(items: { id: string; label: string }[]) {
 
 function labelsForIds(ids: Set<string>, lookup: Map<string, string>) {
   return Array.from(ids, (id) => ({ id, label: lookup.get(id) ?? id }))
+}
+
+function namedItemsForIds(
+  ids: Set<string>,
+  lookup: Map<string, string>,
+): DowngradeDeletionItem[] {
+  return Array.from(ids, (id) => ({ id, name: lookup.get(id) ?? id }))
 }
 
 interface DowngradeValidationProps {
@@ -529,6 +553,7 @@ export function DowngradeValidation({
   const confirmedProjectIdsRef = useRef(confirmedProjectIds)
   const confirmedMemberIdsRef = useRef(confirmedMemberIds)
   const confirmedDomainIdsRef = useRef(confirmedDomainIds)
+  const projectLabelByIdRef = useRef(new Map<string, string>())
 
   useEffect(() => {
     onRefRef.current = onRef
@@ -539,26 +564,6 @@ export function DowngradeValidation({
   confirmedProjectIdsRef.current = confirmedProjectIds
   confirmedMemberIdsRef.current = confirmedMemberIds
   confirmedDomainIdsRef.current = confirmedDomainIds
-
-  useEffect(() => {
-    onRefRef.current({
-      isValid: () => {
-        const resourceValid =
-          !resourceValidationAppliesRef.current || resourceValidRef.current
-        return orgWithinLimitsRef.current && resourceValid
-      },
-      getPendingDeletions: () => ({
-        projectIds: Array.from(confirmedProjectIdsRef.current),
-        membershipIds: Array.from(confirmedMemberIdsRef.current),
-        domainIds: Array.from(confirmedDomainIdsRef.current),
-        resources: resourceRef.current?.getPendingResourceDeletions() ?? {},
-      }),
-    })
-
-    return () => {
-      onRefRef.current(null)
-    }
-  }, [])
 
   const memberItems = useMemo(
     () =>
@@ -587,8 +592,45 @@ export function DowngradeValidation({
     }
     return map
   }, [remainingProjects])
+  projectLabelByIdRef.current = projectLabelById
   const memberLabels = useSeenItemLabels(memberItems)
   const domainLabels = useSeenItemLabels(domainItems)
+
+  useEffect(() => {
+    onRefRef.current({
+      isValid: () => {
+        const resourceValid =
+          !resourceValidationAppliesRef.current || resourceValidRef.current
+        return orgWithinLimitsRef.current && resourceValid
+      },
+      getPendingDeletions: () => {
+        const resourceDeletions =
+          resourceRef.current?.getPendingResourceDeletions()
+
+        return {
+          projects: namedItemsForIds(
+            confirmedProjectIdsRef.current,
+            projectLabelByIdRef.current,
+          ),
+          memberships: namedItemsForIds(
+            confirmedMemberIdsRef.current,
+            memberLabels.current,
+          ),
+          domains: namedItemsForIds(
+            confirmedDomainIdsRef.current,
+            domainLabels.current,
+          ),
+          projectResources: resourceDeletions?.projectResources ?? [],
+          resources: resourceDeletions?.resources ?? {},
+        }
+      },
+    })
+
+    return () => {
+      onRefRef.current(null)
+    }
+    // Both are stable refs, so the handle is still registered exactly once.
+  }, [memberLabels, domainLabels])
 
   const hasOrgLevelSelections =
     needsProjectSelection || needsMemberSelection || needsDomainSelection

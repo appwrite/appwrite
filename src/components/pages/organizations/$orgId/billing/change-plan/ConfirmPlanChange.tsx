@@ -8,7 +8,46 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import type { DowngradeDeletionStep } from '@/lib/billing/downgrade-deletion-steps'
+import type {
+  DowngradeDeletionItem,
+  PendingDowngradeDeletions,
+} from './DowngradeValidation'
+
+function DeletionGroup({
+  title,
+  items,
+}: {
+  title: string
+  items: DowngradeDeletionItem[]
+}) {
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[13px] font-medium text-foreground">{title}</p>
+        <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">
+          {items.length}
+        </span>
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((item) => (
+          <li key={item.id} className="min-w-0">
+            <p
+              className="truncate text-[13px] leading-normal text-foreground"
+              title={item.name}
+            >
+              {item.name}
+            </p>
+            <p className="break-all font-mono text-[12px] leading-normal text-muted-foreground">
+              {item.id}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 /**
  * The one destructive confirmation in the downgrade flow. Only opened when
@@ -19,7 +58,7 @@ export function ConfirmPlanChange({
   open,
   onOpenChange,
   planLabel,
-  steps,
+  deletions,
   deletedOrganizationName,
   confirming,
   onConfirm,
@@ -27,12 +66,20 @@ export function ConfirmPlanChange({
   open: boolean
   onOpenChange: (open: boolean) => void
   planLabel?: string
-  steps: DowngradeDeletionStep[]
+  deletions?: PendingDowngradeDeletions | null
   deletedOrganizationName?: string
   confirming: boolean
   onConfirm: () => void
 }) {
   const t = useT()
+
+  const hasManifest =
+    !!deletions &&
+    (deletions.projects.length > 0 ||
+      deletions.memberships.length > 0 ||
+      deletions.domains.length > 0 ||
+      deletions.projectResources.length > 0)
+  const showBody = !!deletedOrganizationName || hasManifest
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -57,41 +104,72 @@ export function ConfirmPlanChange({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          {deletedOrganizationName ? (
-            <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
-              {deletedOrganizationName} {t('and all its resources')}
-            </p>
-          ) : null}
-          {steps.length > 0 ? (
-            <ul
-              className={cn(
-                'space-y-1.5',
-                deletedOrganizationName && 'mt-2 border-t border-border pt-2',
-              )}
-            >
-              {steps.map((step) => (
-                <li
-                  key={step.id}
-                  className="flex items-start justify-between gap-3 text-[13px] leading-normal"
-                >
-                  <span className="text-foreground">{t(step.label)}</span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">
-                    {step.count}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {planLabel ? (
-            <p className="mt-4 text-[13px] leading-normal text-muted-foreground">
-              {t('Your organization will move to the {plan} plan.').replace(
-                '{plan}',
-                planLabel,
-              )}
-            </p>
-          ) : null}
-        </div>
+        {showBody ? (
+          // Only the manifest scrolls, so the confirm button never moves.
+          <div className="max-h-[50vh] overflow-y-auto px-6 py-4">
+            {deletedOrganizationName ? (
+              <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
+                {deletedOrganizationName} {t('and all its resources')}
+              </p>
+            ) : null}
+            {hasManifest && deletions ? (
+              <div
+                className={cn(
+                  'space-y-4',
+                  deletedOrganizationName && 'mt-4 border-t border-border pt-4',
+                )}
+              >
+                <DeletionGroup
+                  title={t('Projects')}
+                  items={deletions.projects}
+                />
+                <DeletionGroup
+                  title={t('Members')}
+                  items={deletions.memberships}
+                />
+                <DeletionGroup title={t('Domains')} items={deletions.domains} />
+                {deletions.projectResources.map((project) => (
+                  <div
+                    key={project.projectId}
+                    className="space-y-3 rounded-lg border border-border bg-card/50 p-3"
+                  >
+                    <div className="min-w-0">
+                      <p
+                        className="truncate text-[13px] font-medium leading-normal text-foreground"
+                        title={project.projectName}
+                      >
+                        {project.projectName}
+                      </p>
+                      <p className="break-all font-mono text-[12px] leading-normal text-muted-foreground">
+                        {project.projectId}
+                      </p>
+                    </div>
+                    {project.types.map((group) => (
+                      <DeletionGroup
+                        key={group.type}
+                        title={t(group.label)}
+                        items={group.items}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {planLabel ? (
+          <p
+            className={cn(
+              'px-6 pb-4 text-[13px] leading-normal text-muted-foreground',
+              !showBody && 'pt-4',
+            )}
+          >
+            {t('Your organization will move to the {plan} plan.').replace(
+              '{plan}',
+              planLabel,
+            )}
+          </p>
+        ) : null}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"

@@ -50,6 +50,7 @@ import {
   type PlanChangeLimits,
 } from '@/lib/billing/plan-change-compliance'
 import type { ProjectResourceImpact } from './DowngradeImpactSummary'
+import type { DowngradeProjectResourceDeletions } from './DowngradeValidation'
 
 const EMPTY_PROJECTS: Models.Project[] = []
 
@@ -185,9 +186,15 @@ function PaginatedListSlots({
   )
 }
 
+export type PendingResourceDeletions = {
+  resources: ResourcesToDelete
+  /** The same selection, named, for the confirmation manifest. */
+  projectResources: DowngradeProjectResourceDeletions[]
+}
+
 export type DowngradeResourceValidationHandle = {
   isValid: () => boolean
-  getPendingResourceDeletions: () => ResourcesToDelete
+  getPendingResourceDeletions: () => PendingResourceDeletions
 }
 
 type ProjectResourceSelections = Partial<
@@ -519,6 +526,7 @@ export function DowngradeResourceValidation({
   const isValidRef = useRef(isValid)
   const confirmedSelectionsRef = useRef(confirmedSelections)
   const resourcesByProjectIdRef = useRef(resourcesByProjectId)
+  const projectsRef = useRef(projects)
 
   useEffect(() => {
     onRefRef.current = onRef
@@ -531,12 +539,14 @@ export function DowngradeResourceValidation({
   isValidRef.current = isValid
   confirmedSelectionsRef.current = confirmedSelections
   resourcesByProjectIdRef.current = resourcesByProjectId
+  projectsRef.current = projects
 
   useEffect(() => {
     onRefRef.current({
       isValid: () => isValidRef.current,
       getPendingResourceDeletions: () => {
         const payload: ResourcesToDelete = {}
+        const projectResources: DowngradeProjectResourceDeletions[] = []
 
         for (const [projectId, selections] of Object.entries(
           confirmedSelectionsRef.current,
@@ -544,10 +554,28 @@ export function DowngradeResourceValidation({
           const resources = resourcesByProjectIdRef.current.get(projectId)
           if (!resources) continue
           const entry = buildResourcesToDelete(resources, selections)
-          if (Object.keys(entry).length > 0) payload[projectId] = entry
+          if (Object.keys(entry).length === 0) continue
+          payload[projectId] = entry
+
+          const project = projectsRef.current.find(
+            (item) => item.$id === projectId,
+          )
+          projectResources.push({
+            projectId,
+            projectName: project?.name
+              ? formatProjectNameForDisplay(project.name)
+              : projectId,
+            types: DOWNGRADE_RESOURCE_TYPES.map(({ id, label }) => ({
+              type: id,
+              label,
+              items: resources[id].items
+                .filter((item) => selections[id]?.has(item.$id))
+                .map((item) => ({ id: item.$id, name: item.name })),
+            })).filter(({ items }) => items.length > 0),
+          })
         }
 
-        return payload
+        return { resources: payload, projectResources }
       },
     })
 

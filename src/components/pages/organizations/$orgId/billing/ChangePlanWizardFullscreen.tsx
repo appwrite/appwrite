@@ -173,7 +173,7 @@ async function runDowngradeDeletionStep(
   account: Models.User | undefined,
 ) {
   if (step.id === 'projects') {
-    const ids = new Set(pending.projectIds)
+    const ids = new Set(pending.projects.map((item) => item.id))
     const allProjects = await fetchAllDowngradeProjects(organizationId)
     for (const project of allProjects.filter((item) => ids.has(item.$id))) {
       await deleteProject(project.$id, project.region)
@@ -182,7 +182,7 @@ async function runDowngradeDeletionStep(
   }
 
   if (step.id === 'members') {
-    const ids = new Set(pending.membershipIds)
+    const ids = new Set(pending.memberships.map((item) => item.id))
     const memberships = await fetchAllDowngradeMemberships(organizationId)
     // The selection UI can only lock the acting user's row when it is on the
     // loaded page, so refuse it again here against the full list.
@@ -197,7 +197,7 @@ async function runDowngradeDeletionStep(
   }
 
   if (step.id === 'domains') {
-    const ids = new Set(pending.domainIds)
+    const ids = new Set(pending.domains.map((item) => item.id))
     const domains = await fetchAllDowngradeDomains(organizationId)
     await deleteDowngradeDomains(
       domains.filter((item) => ids.has(item.$id)).map((item) => item.$id),
@@ -493,9 +493,8 @@ export function ChangePlanWizardFullscreen() {
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [confirmPlanChangeOpen, setConfirmPlanChangeOpen] = useState(false)
-  const [confirmDeletionSteps, setConfirmDeletionSteps] = useState<
-    DowngradeDeletionStep[]
-  >([])
+  const [confirmDeletions, setConfirmDeletions] =
+    useState<PendingDowngradeDeletions | null>(null)
   const [setupProgress, setSetupProgress] =
     useState<OrganizationSetupProgressState | null>(null)
   const downgradeValidationRef = useRef<DowngradeValidationHandle | null>(null)
@@ -1578,17 +1577,16 @@ export function ChangePlanWizardFullscreen() {
     if (isUpgrade) {
       handleUpgrade()
     } else if (isDowngrade) {
-      const steps = buildDowngradeDeletionSteps(
-        needsDowngradeValidation
-          ? downgradeValidationRef.current?.getPendingDeletions()
-          : undefined,
-      )
+      const pendingDeletions = needsDowngradeValidation
+        ? downgradeValidationRef.current?.getPendingDeletions()
+        : undefined
+      const steps = buildDowngradeDeletionSteps(pendingDeletions)
       // Only the destructive path needs a last confirmation.
       if (steps.length === 0 && !orgToDelete) {
         handleDowngrade()
         return
       }
-      setConfirmDeletionSteps(steps)
+      setConfirmDeletions(pendingDeletions ?? null)
       setConfirmPlanChangeOpen(true)
     }
   }
@@ -1987,7 +1985,7 @@ export function ChangePlanWizardFullscreen() {
             ? getBillingPlanDisplayLabel(selectedPlan)
             : undefined
         }
-        steps={confirmDeletionSteps}
+        deletions={confirmDeletions}
         deletedOrganizationName={orgToDelete?.name}
         confirming={isSubmitting}
         onConfirm={() => {
