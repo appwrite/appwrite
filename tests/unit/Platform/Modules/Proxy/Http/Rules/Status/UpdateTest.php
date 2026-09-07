@@ -92,6 +92,15 @@ final class UpdateTest extends TestCase
                 ($this->verify ?? static fn () => null)();
             }
         };
-        $action->action('rule', $this->createStub(Response::class), new Certificate($this->publisher, new Queue('certificates')), new Event($this->publisher), new Document(['$id' => 'project', '$sequence' => $project]), $this->database, new Authorization(), (new Bus())->setResolver(static fn () => null));
+        $action->action(
+            'rule',
+            $this->createStub(Response::class),
+            new Certificate($this->publisher, new Queue('certificates')),
+            new Event($this->publisher),
+            new Document(['$id' => 'project', '$sequence' => $project]),
+            $this->database,
+            new Authorization(),
+            (new Bus())->setResolver(static fn () => null),
+        );
     }
 }

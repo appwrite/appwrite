@@ -57,8 +57,7 @@ final class IntervalTest extends TestCase
         $this->seed('crashed', 2, ['status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => '2020-01-01T00:00:00.000+00:00']);
         $this->seed('missing', 0, ['certificateId' => 'missing-certificate']);
         $this->runTask();
-        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
-        $this->assertSame(['crashed.example.com', 'missing.example.com'], $domains);
+        $this->assertSame(['crashed.example.com', 'missing.example.com'], $this->queuedDomains());
     }
 
     public function testRecentExpiredWorkDoesNotWaitUntilTheNextDay(): void
@@ -67,8 +66,13 @@ final class IntervalTest extends TestCase
         $this->seed('failed', 1, ['$updatedAt' => $expired]);
         $this->seed('expired', 2, ['$updatedAt' => $expired, 'status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => $expired]);
         $this->runTask();
-        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
-        $this->assertSame(['failed.example.com', 'expired.example.com'], $domains);
+        $this->assertSame(['failed.example.com', 'expired.example.com'], $this->queuedDomains());
+    }
+
+    /** @return array<int, string> */
+    private function queuedDomains(): array
+    {
+        return array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
     }
 
     private function seed(string $id, int $attempts, array $rule = [], array $certificate = []): void
