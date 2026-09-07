@@ -125,6 +125,7 @@ import type {
   ConsoleProfileId,
 } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
+import { DebugMenuConsoleBannersPanel } from '@/components/global/providers/DebugMenuConsoleBannersPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
@@ -235,6 +236,7 @@ interface MenuItem {
     | 'profileComparison'
     | 'communityShareExamples'
     | 'prefsDebug'
+    | 'consoleBanners'
     | 'initDayMock'
     | 'initTicketMock'
     | 'seedResources'
@@ -765,6 +767,7 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'profileComparison' ||
     item.submenuVariant === 'communityShareExamples' ||
     item.submenuVariant === 'prefsDebug' ||
+    item.submenuVariant === 'consoleBanners' ||
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
@@ -2055,6 +2058,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'prefsDebug',
           },
           {
+            label: 'Banners',
+            description: 'Preview console promo banners and reset dismissals.',
+            icon: <Megaphone className="h-3 w-3" />,
+            submenuVariant: 'consoleBanners',
+          },
+          {
             label: 'Env',
             description: 'Check if env vars are set (values never shown).',
             icon: <Variable className="h-3 w-3" />,
@@ -2914,6 +2923,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'communityShareExamples' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
+              currentSubmenu?.submenuVariant === 'consoleBanners' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
@@ -3043,6 +3053,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 />
               ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
                 <DebugMenuPrefsPanel />
+              ) : currentSubmenu.submenuVariant === 'consoleBanners' ? (
+                <DebugMenuConsoleBannersPanel />
               ) : currentSubmenu.submenuVariant === 'seedResources' ? (
                 <DebugMenuSeedResourcesPanel />
               ) : currentSubmenu.submenuVariant === 'initDayMock' ? (

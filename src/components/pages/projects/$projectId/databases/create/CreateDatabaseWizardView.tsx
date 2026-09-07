@@ -229,7 +229,11 @@ function specificationsSourceForWizardType(
   return dedicatedDatabaseSourceFromDatabaseType(wizardBackend(dbType))
 }
 
-export function CreateDatabaseWizardView() {
+export function CreateDatabaseWizardView({
+  initialDbType = null,
+}: {
+  initialDbType?: DatabaseTypeOption | null
+} = {}) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -730,6 +734,36 @@ export function CreateDatabaseWizardView() {
       option: option.id,
     })
   }
+
+  const initialDbTypeAppliedRef = useRef(false)
+  useEffect(() => {
+    if (initialDbTypeAppliedRef.current || !initialDbType || dbType) return
+    const option = dbTypeOptions.find((item) => item.id === initialDbType)
+    if (!option || option.comingSoon || option.requiresUpgrade) return
+    initialDbTypeAppliedRef.current = true
+    setDbType(option.id)
+    if (isAutoFilledNewDatabaseName(name)) {
+      setName(getNewDatabaseNameForType(option.id))
+    }
+    if (option.id === 'TablesDB') {
+      setSpecId(SERVERLESS_DATABASE_SPEC_ID)
+    } else {
+      setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
+    }
+    track('Wizard Option Selected', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      step: 'database_type',
+      option: option.id,
+    })
+  }, [
+    initialDbType,
+    dbType,
+    dbTypeOptions,
+    name,
+    apiSpecOptions,
+    track,
+  ])
 
   const handleSpecSelect = (value: string | null) => {
     setSpecId(value)

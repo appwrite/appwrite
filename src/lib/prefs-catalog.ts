@@ -43,6 +43,7 @@ import {
   USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
   USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
+  USER_PREFS_KEY_DISMISSED_BANNERS,
   USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
@@ -120,6 +121,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
     description: 'Dismissed coming-soon feature IDs (comma-separated).',
+    category: 'Account',
+  },
+  {
+    id: 'dismissedBanners',
+    scope: 'account',
+    key: USER_PREFS_KEY_DISMISSED_BANNERS,
+    description: 'Dismissed console banner IDs (comma-separated).',
     category: 'Account',
   },
   // Layout / chrome

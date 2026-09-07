@@ -137,6 +137,8 @@ import {
   readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
   sanitizeAccountPrefsForWrite,
+  mergeDismissedBannerPrefs,
+  clearDismissedBannerPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -1477,6 +1479,61 @@ export function useToggleFeatureNotification() {
       }
 
       return await updateAccountPrefs(updatedPrefs, 'feature-notifications')
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
+ * Persist dismissal of a console banner in `console.dismissedBanners`.
+ */
+export function useDismissConsoleBanner() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (bannerId: string) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeDismissedBannerPrefs(account.prefs, bannerId)
+
+      return await updateAccountPrefs(updatedPrefs, 'dismiss-console-banner')
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
+ * Remove a banner id from `console.dismissedBanners` (undo dismiss).
+ */
+export function useClearConsoleBannerDismissal() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (bannerId: string) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = clearDismissedBannerPrefs(account.prefs, bannerId)
+
+      return await updateAccountPrefs(
+        updatedPrefs,
+        'clear-console-banner-dismissal',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {

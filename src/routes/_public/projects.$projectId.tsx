@@ -41,6 +41,7 @@ import {
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
   ensureProjectRegion,
@@ -771,11 +772,14 @@ function ProjectLayout() {
               onMenuClick: () => setSidebarOpen(true),
             }}
             headerBanner={
-              <OrganizationFailedInvoiceHeaderBanner
-                organizationId={teamIdForBilling}
-                show={showFailedInvoiceBanner}
-                orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
-              />
+              <>
+                <PostgresPromoBanner />
+                <OrganizationFailedInvoiceHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showFailedInvoiceBanner}
+                  orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
+                />
+              </>
             }
             fixedLayout={isFixedLayoutView}
           >

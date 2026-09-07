@@ -197,6 +197,7 @@ export const ANALYTICS_ACTIONS = {
   'create-project': 'Create Project Clicked',
   'create-organization': 'Create Organization Clicked',
   'create-database': 'Create Database Clicked',
+  'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
