@@ -1266,15 +1266,17 @@ export function ChangePlanWizardFullscreen() {
   )
 
   // Handle downgrade
-  const handleDowngrade = async () => {
+  // Takes the snapshot the user confirmed rather than re-reading the handle:
+  // the resource queries stay live behind the dialog, so a refetch between
+  // confirming and running would delete a different set than was reviewed.
+  const handleDowngrade = async (
+    pendingDeletions?: PendingDowngradeDeletions,
+  ) => {
     if (!orgId || !selectedPlan) return
 
     const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showOrganizationDeletionStep = !!orgToDelete
     const showPlanUpdateStep = orgToDelete?.$id !== orgId
-    const pendingDeletions = needsDowngradeValidation
-      ? downgradeValidationRef.current?.getPendingDeletions()
-      : undefined
     const deletionSteps = buildDowngradeDeletionSteps(pendingDeletions)
     const hasStagedDeletions = deletionSteps.length > 0
 
@@ -1583,7 +1585,7 @@ export function ChangePlanWizardFullscreen() {
       const steps = buildDowngradeDeletionSteps(pendingDeletions)
       // Only the destructive path needs a last confirmation.
       if (steps.length === 0 && !orgToDelete) {
-        handleDowngrade()
+        handleDowngrade(pendingDeletions)
         return
       }
       setConfirmDeletions(pendingDeletions ?? null)
@@ -1990,7 +1992,7 @@ export function ChangePlanWizardFullscreen() {
         confirming={isSubmitting}
         onConfirm={() => {
           setConfirmPlanChangeOpen(false)
-          handleDowngrade()
+          handleDowngrade(confirmDeletions ?? undefined)
         }}
       />
 
