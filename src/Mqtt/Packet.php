@@ -68,6 +68,37 @@ class Packet
         return ($this->flags >> 1) & 0x03;
     }
 
+    /**
+     * Clean Start (5.0) / Clean Session (3.1.1) of a CONNECT: bit 1 of the
+     * connect-flags byte. Same position in both protocol versions.
+     */
+    public static function isCleanStart(string $body): bool
+    {
+        [, $offset] = self::readString($body, 0); // protocol name
+
+        return (ord($body[$offset + 1]) & 0x02) === 0x02; // past protocol level
+    }
+
+    /**
+     * Client Identifier of a CONNECT: the first payload field. Present in both
+     * versions; on 5.0 it sits after the property block, so that block is skipped.
+     */
+    public static function getClientId(string $body): string
+    {
+        [, $offset] = self::readString($body, 0); // protocol name
+        $level = ord($body[$offset]);
+        $offset += 4; // protocol level + connect flags + keep alive
+
+        if ($level >= 5) {
+            [$length, $lenBytes] = self::decodeLength($body, $offset); // property block
+            $offset += $lenBytes + $length;
+        }
+
+        [$clientId] = self::readString($body, $offset);
+
+        return $clientId;
+    }
+
     public static function pingreq(): string
     {
         return chr(self::PINGREQ << 4) . self::encodeLength(0);

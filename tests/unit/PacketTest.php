@@ -8,6 +8,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
+use Utopia\Mqtt\Packet\V5;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 
 final class PacketTest extends TestCase
 {
@@ -68,5 +71,34 @@ final class PacketTest extends TestCase
     {
         $this->assertSame("\xC0\x00", Packet::pingreq());
         $this->assertSame("\xD0\x00", Packet::pingresp());
+    }
+
+    public function testCleanStartReadsTheFlagBitInBothVersions(): void
+    {
+        $properties = (new Properties())->add(new Property(Property::USER, ['projectId' => 'p1']));
+
+        $this->assertTrue(Packet::isCleanStart(Packet::parse(V5::connect('c', 60, true, $properties))->body));
+        $this->assertFalse(Packet::isCleanStart(Packet::parse(V5::connect('c', 60, false, $properties))->body));
+        $this->assertTrue(Packet::isCleanStart(Packet::parse(V3::connect('c', 60, true))->body));
+        $this->assertFalse(Packet::isCleanStart(Packet::parse(V3::connect('c', 60, false))->body));
+    }
+
+    public function testClientIdIsReadPastTheV5PropertyBlock(): void
+    {
+        $properties = (new Properties())
+            ->add(new Property(Property::AUTHENTICATION_METHOD, 'appwrite-jwt'))
+            ->add(new Property(Property::USER, ['projectId' => 'p1']));
+
+        $this->assertSame('device-tv', Packet::getClientId(Packet::parse(V5::connect('device-tv', 60, false, $properties))->body));
+    }
+
+    public function testClientIdIsReadDirectlyOnV3(): void
+    {
+        $this->assertSame('device-tv', Packet::getClientId(Packet::parse(V3::connect('device-tv', 60, true))->body));
+    }
+
+    public function testEmptyClientIdReadsAsEmptyString(): void
+    {
+        $this->assertSame('', Packet::getClientId(Packet::parse(V5::connect('', 60, true))->body));
     }
 }
