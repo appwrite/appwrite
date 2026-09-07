@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
@@ -143,21 +142,13 @@ final class EventTest extends TestCase
         $this->assertContains('databases.chaptersDB.tables.*.rows.*.create', $event);
 
 
-        try {
-            $event = Event::generateEvents('tables.[tableId].rows.[rowId].create', [
-                'tableId' => 'chapters'
-            ]);
-            $this->fail();
-        } catch (\Throwable $th) {
-            $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');
-        }
+        $event = Event::generateEvents('tables.[tableId].rows.[rowId].create', [
+            'tableId' => 'chapters'
+        ]);
+        $this->assertEmpty($event, 'Expected empty array when rowId param is missing');
 
-        try {
-            $event = Event::generateEvents('tables.[tableId].rows.[rowId].create');
-            $this->fail();
-        } catch (\Throwable $th) {
-            $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');
-        }
+        $event = Event::generateEvents('tables.[tableId].rows.[rowId].create');
+        $this->assertEmpty($event, 'Expected empty array when all params are missing');
     }
 
     public function testGenerateMirrorEvents(): void
