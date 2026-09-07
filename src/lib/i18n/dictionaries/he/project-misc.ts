@@ -2705,6 +2705,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'הפעלת Premium Geo DB',
   'Upgrade plan': 'שדרוג תוכנית',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'חזקו אבטחה עם כללי Firewall מדויקים ושפרו Observability בסשנים, פעילות וניתוח שימוש.',
+  'How this affects your app': 'איך זה משפיע על האפליקציה',
+  'Stronger firewall rules': 'כללי Firewall חזקים יותר',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    'חסמו או אפשרו תעבורה לפי עיר, מדינה/אזור, ISP, ASN וסוג חיבור לבקרת גישה מדויקת.',
+  'Richer session and request context': 'הקשר עשיר יותר לסשן ולבקשות',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'צרפו נתוני מיקום מפורטים לסשני Auth, לוגי פעילות ומסלולי ביקורת בכל בקשה.',
+  'Deeper usage insights': 'תובנות שימוש מעמיקות יותר',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    'פרקו תעבורת API לפי עיר, ISP ומאפייני רשת כדי לזהות ניצול לרעה ודפוסים אזוריים.',
+  'Geolocation attributes': 'מאפייני מיקום',
+  'Included on every plan': 'כלול בכל תוכנית',
+  'Added with Premium Geo DB': 'נוסף עם Premium Geo DB',
+  'Location details': 'פרטי מיקום',
+  'Network details': 'פרטי רשת',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'העשירו סשנים, פעילות ושימוש עם נתוני מיקום מפורטים מכל בקשה.',
   'Not enabled': 'לא מופעל',

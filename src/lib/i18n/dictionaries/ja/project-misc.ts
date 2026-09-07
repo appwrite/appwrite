@@ -2682,6 +2682,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'Premium Geo DB を有効にする',
   'Upgrade plan': 'プランのアップグレード',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'Firewall ルールを精密化してセキュリティを強化し、セッション、アクティビティ、使用状況分析のオブザーバビリティを向上させます。',
+  'How this affects your app': 'アプリへの影響',
+  'Stronger firewall rules': 'より強力な Firewall ルール',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    '都市、州、ISP、ASN、接続タイプでトラフィックをブロックまたは許可し、きめ細かなアクセス制御を実現します。',
+  'Richer session and request context': 'より詳細なセッションとリクエストのコンテキスト',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'すべてのリクエストで Auth セッション、アクティビティログ、監査証跡に詳細な位置情報を付与します。',
+  'Deeper usage insights': 'より深い使用状況の分析',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    '都市、ISP、ネットワーク属性別に API トラフィックを分析し、不正利用や地域パターンを把握します。',
+  'Geolocation attributes': '位置情報の属性',
+  'Included on every plan': 'すべてのプランに含まれる',
+  'Added with Premium Geo DB': 'Premium Geo DB で追加',
+  'Location details': '位置情報の詳細',
+  'Network details': 'ネットワークの詳細',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'セッション、アクティビティ、使用状況を、リクエストごとの詳細な位置情報で補強します。',
   'Not enabled': '未有効',
