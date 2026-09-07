@@ -307,7 +307,13 @@ $container->set('redis', function () {
 });
 
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
+    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
+        // The callback receives the lock so long-running holders can refresh
+        // the lease and verify it is still theirs before committing work.
+        $lock = new Distributed($redis, $key, ttl: $ttl);
+
+        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
+    }
 ), ['pools']);
 
 $container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);

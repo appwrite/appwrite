@@ -414,23 +414,15 @@ class Specs extends Action
 
     public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
     {
-        $sdkPlatforms = [];
-        foreach ($routeSecurity as $value) {
-            switch ($value) {
-                case AuthType::SESSION:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_CLIENT;
-                    break;
-                case AuthType::JWT:
-                case AuthType::KEY:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_SERVER;
-                    break;
-                case AuthType::ADMIN:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_CONSOLE;
-                    break;
+        $platforms = [];
+        foreach ($routeSecurity as $auth) {
+            $platform = $auth instanceof AuthType ? $auth->getPlatform() : null;
+            if ($platform !== null) {
+                $platforms[] = $platform;
             }
         }
 
-        return $sdkPlatforms;
+        return $platforms;
     }
 
     public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
@@ -480,6 +472,18 @@ class Specs extends Action
             throw new Exception('Failed to create specs directory: ' . $specsDir);
         }
 
+        // Resolve full auth arrays through the active task (including subclass platforms).
+        foreach ($appRoutes as $method) {
+            foreach ($method as $route) {
+                $sdks = $route->getLabel('sdk', []);
+                foreach (\is_array($sdks) ? $sdks : [$sdks] as $sdk) {
+                    if ($sdk instanceof Method) {
+                        $sdk->setPlatforms($this->getSDKPlatformsForRouteSecurity($sdk->getAuth()));
+                    }
+                }
+            }
+        }
+
         foreach ($platforms as $platform) {
             $routes = [];
             $models = [];
@@ -488,6 +492,10 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
+                    if (!$route->getLabel('docs', true) || (bool) $route->getLabel('mock', false) !== $mocks) {
+                        continue;
+                    }
+
                     $sdks = $route->getLabel('sdk', false);
 
                     if (empty($sdks)) {
@@ -499,37 +507,11 @@ class Specs extends Action
                     }
 
                     foreach ($sdks as $sdk) {
-                        /** @var Method $sdk */
-                        $hide = $sdk->isHidden();
-
-                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        if (!\in_array($platform, $sdk->getPlatforms(), true)) {
                             continue;
                         }
 
-                        $routeSecurity = $sdk->getAuth();
-                        $sdkPlatforms = $this->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-                        if (!$route->getLabel('docs', true)) {
-                            continue;
-                        }
-
-                        if ($route->getLabel('mock', false) && !$mocks) {
-                            continue;
-                        }
-
-                        if (!$route->getLabel('mock', false) && $mocks) {
-                            continue;
-                        }
-
-                        if (empty($sdk->getNamespace())) {
-                            continue;
-                        }
-
-                        if (!\in_array($platform, $sdkPlatforms)) {
-                            continue;
-                        }
-
-                        $routes[] = $route;
+                        $routes[\spl_object_id($route)] = $route;
                         $routeNamespaces[$sdk->getNamespace()] = true;
                     }
                 }
@@ -604,7 +586,7 @@ class Specs extends Action
                 $models,
                 $keys[$platform],
                 $authCounts[$platform] ?? 0,
-                $platform
+                $platform,
             ];
 
             foreach (['open-api3'] as $format) {
