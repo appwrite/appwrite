@@ -81,14 +81,14 @@ class Interval extends Action
         return [
             [
                 'name' => 'domainVerification',
-                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
             ],
             [
                 'name' => 'certificateGeneration',
-                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
                     $this->generateCertificate($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalCertificateGeneration * 1000,
@@ -153,7 +153,10 @@ class Interval extends Action
         $leasedUntil = DatabaseDateTime::format(new DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'));
         $region = System::getEnv('_APP_REGION', 'default');
         $cursor = null;
-        $scanned = $processed = $skipped = $failed = 0;
+        $scanned = 0;
+        $processed = 0;
+        $skipped = 0;
+        $failed = 0;
 
         do {
             $queries = [

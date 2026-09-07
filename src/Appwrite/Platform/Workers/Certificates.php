@@ -19,6 +19,7 @@ use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -253,6 +254,7 @@ class Certificates extends Action
             ? $dbForPlatform->getDocument('rules', md5($domain->get()))
             : $dbForPlatform->findOne('rules', [Query::equal('domain', [$domain->get()]), Query::limit(1)]);
         if ($rule->isEmpty()) {
+            Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is missing.');
             return;
         }
 
@@ -314,15 +316,15 @@ class Certificates extends Action
                 $this->validateDomain($rule, $domain, $validationDomain);
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
                     $status = $certificates->isInstantGeneration($domain->get(), $domainType)
-                        ? \Utopia\Cdn\Certificates\Status::ISSUED
+                        ? Status::ISSUED
                         : $certificates->getCertificateStatus($domain->get(), $domainType);
-                    if ($status === \Utopia\Cdn\Certificates\Status::ISSUED) {
+                    if ($status === Status::ISSUED) {
                         $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                         $certificate->setAttribute('attempts', 0);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                         return;
                     }
-                    if (\in_array($status, [\Utopia\Cdn\Certificates\Status::PENDING, \Utopia\Cdn\Certificates\Status::PROCESSING, \Utopia\Cdn\Certificates\Status::RENEWING], true)) {
+                    if (\in_array($status, [Status::PENDING, Status::PROCESSING, Status::RENEWING], true)) {
                         $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
                         return;

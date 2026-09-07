@@ -1847,7 +1847,7 @@ class Deletes extends Action
         $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
         // Route cleanup to the provider that issued it; without the type the proxy
-        // falls back to custom-domain providers, which skip Network-owned domains
+        // falls back to custom-domain providers, which skip Network-owned domains.
         $domain = $document->getAttribute('domain');
         $domainType = $document->getAttribute('deploymentResourceType', $document->getAttribute('type'));
         $certificates->deleteCertificate($domain, $domainType);
