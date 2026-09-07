@@ -1,17 +1,6 @@
-/**
- * Relationship values on the rows grid and row editor.
- *
- * Two server rules drive every case here, and neither is visible from the client
- * types. Appwrite resolves a relationship only when the request carries a
- * *dotted* select (`orders.*`): with no select at all the read is wrapped in
- * `skipRelationships`, and a select naming the bare key is rejected outright
- * ("Cannot select attributes: orders"). And an update is merged onto the stored
- * row, so an omitted key keeps its related rows while an explicit null either
- * fails or, on a to-one, unlinks the related row.
- *
- * These tests pin the query shape and the value normalization that follow from
- * those rules.
- */
+// Two server rules drive these cases, neither visible from the client types: a
+// relationship resolves only for a dotted select (`orders.*`), and an update is
+// merged onto the stored row, so an omitted key keeps its related rows.
 
 import { describe, expect, test } from 'bun:test'
 import {
