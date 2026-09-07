@@ -76,10 +76,10 @@ The setup wizard walks you through four steps to configure your Appwrite instanc
 Configure your Appwrite instance's basic settings.
 
 {% only_dark %}
-![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup.avif)
+![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup-app.avif)
 {% /only_dark %}
 {% only_light %}
-![Setup your app](/images/docs/advanced/self-hosting/installation/wizard-setup.avif)
+![Setup your app](/images/docs/advanced/self-hosting/installation/wizard-setup-app.avif)
 {% /only_light %}
 
 - **Hostname** - The domain or IP address where your Appwrite instance will be accessible.

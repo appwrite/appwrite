@@ -79,7 +79,7 @@ Once the command is running, open your browser and go to `http://localhost:20080
 
 The first screen asks you to configure the basics of your Appwrite instance.
 
-![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup.avif)
+![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup-app.avif)
 
 - **Hostname:** Enter the domain or IP address where your Appwrite instance will be accessible. If you're just testing locally, `localhost` works fine.
 - **Database:** This is the important part. Select **MongoDB**. It's already selected by default, but make sure it's the one highlighted.
