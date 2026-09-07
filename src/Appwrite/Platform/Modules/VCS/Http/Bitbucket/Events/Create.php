@@ -21,9 +21,9 @@ class Create extends Base
         return 'Bitbucket';
     }
 
-    protected function getCommitEmail(): string
+    protected function getCommitEmails(): array
     {
-        return APP_VCS_BITBUCKET_EMAIL;
+        return [APP_VCS_BITBUCKET_EMAIL];
     }
 
     protected function getPushEvents(): array

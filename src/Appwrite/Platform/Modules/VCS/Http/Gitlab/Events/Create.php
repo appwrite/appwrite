@@ -21,9 +21,9 @@ class Create extends Base
         return 'GitLab';
     }
 
-    protected function getCommitEmail(): string
+    protected function getCommitEmails(): array
     {
-        return APP_VCS_GITLAB_EMAIL;
+        return [APP_VCS_GITLAB_EMAIL];
     }
 
     protected function getPushEvents(): array

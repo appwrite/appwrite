@@ -21,9 +21,9 @@ class Create extends Base
         return 'Gitea';
     }
 
-    protected function getCommitEmail(): string
+    protected function getCommitEmails(): array
     {
-        return APP_VCS_GITEA_EMAIL;
+        return [APP_VCS_GITEA_EMAIL];
     }
 
     protected function getPushEvents(): array
