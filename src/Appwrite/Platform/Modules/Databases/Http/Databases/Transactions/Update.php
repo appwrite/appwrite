@@ -369,21 +369,30 @@ class Update extends Action
 
                 // using a dbCache so only one time database is set with databaseInternalId
                 if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$databaseInternalId])
-                    ]));
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->skipFilters(
+                        fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]),
+                        APP_DATABASES_SUBQUERIES
+                    ));
                     $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
                 }
 
                 $dbForDatabases = $dbCache[$databaseInternalId];
 
-                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                    Query::equal('$sequence', [$databaseInternalId])
-                ]));
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
 
-                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
-                    Query::equal('$sequence', [$collectionInternalId])
-                ]));
+                $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                        Query::equal('$sequence', [$collectionInternalId])
+                    ]),
+                    APP_COLLECTIONS_SUBQUERIES
+                ));
 
                 $groupId = $this->getGroupId();
                 $resourceId = $this->getResourceId();

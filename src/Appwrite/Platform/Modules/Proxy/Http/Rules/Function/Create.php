@@ -11,12 +11,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -75,8 +75,8 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -92,9 +92,14 @@ class Create extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         array $platform,
-        Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
+
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
 
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -137,14 +142,14 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
         }
 
-        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
 
         $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
             || $certificateIssuer->isAutoIssueEnabled($rule);

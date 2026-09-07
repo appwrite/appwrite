@@ -9,14 +9,14 @@ use Utopia\Database\Query;
 trait OAuth2Base
 {
     /**
-     * Reset only providers this compact smoke suite mutates. Most provider
-     * matrix and response-shape coverage now lives in unit tests.
+     * Reset only providers this suite mutates.
      */
     #[Before(priority: -1)]
     protected function resetProjectOAuth2(): void
     {
         $providers = [
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
+            'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'enabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],

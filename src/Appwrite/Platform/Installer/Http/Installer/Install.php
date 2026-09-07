@@ -39,9 +39,11 @@ class Install extends Action
             ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
+            ->param('accountName', '', new Text(128, 0), 'Account name', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
             ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([
                 Server::STEP_CONFIG_FILES,
@@ -69,9 +71,11 @@ class Install extends Action
         string $emailCertificates,
         string $opensslKey,
         string $assistantOpenAIKey,
+        string $accountName,
         string $accountEmail,
         string $accountPassword,
         string $database,
+        string $topology,
         string $installId,
         ?string $retryStep,
         bool $migrate,
@@ -115,23 +119,28 @@ class Install extends Action
         $account = [];
         if (!$config->isUpgrade()) {
             $accountEmail = trim($accountEmail);
-            if ($accountEmail === '' || !$state->isValidEmailAddress($accountEmail)) {
-                $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address', Server::STEP_ACCOUNT_SETUP);
-                return;
+            $accountName = trim($accountName);
+
+            // Both blank means no account is wanted: the installer skips creating one and
+            // it can be made from the console afterwards. Either one filled is an attempt
+            // to create one, so the pair still has to be valid.
+            if ($accountEmail !== '' || $accountPassword !== '') {
+                if ($accountEmail === '' || !$state->isValidEmailAddress($accountEmail)) {
+                    $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address', Server::STEP_ACCOUNT_SETUP);
+                    return;
+                }
+
+                if (!$state->isValidPassword($accountPassword)) {
+                    $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Password must be at least 8 characters', Server::STEP_ACCOUNT_SETUP);
+                    return;
+                }
+
+                $account = [
+                    'name' => $accountName !== '' ? $accountName : $this->deriveNameFromEmail($accountEmail),
+                    'email' => $accountEmail,
+                    'password' => $accountPassword,
+                ];
             }
-
-            if (!$state->isValidPassword($accountPassword)) {
-                $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Password must be at least 8 characters', Server::STEP_ACCOUNT_SETUP);
-                return;
-            }
-
-            $accountName = $this->deriveNameFromEmail($accountEmail);
-
-            $account = [
-                'name' => $accountName,
-                'email' => $accountEmail,
-                'password' => $accountPassword,
-            ];
         }
 
         $lockedDatabase = $config->getLockedDatabase();
@@ -214,6 +223,7 @@ class Install extends Action
         try {
             $state->ensureBootstrapped();
             $installer = new \Appwrite\Platform\Tasks\Install();
+            $installer->setTopology($topology);
 
             if ($wantsStream) {
                 $this->writeSseEvent($swooleResponse, 'install-id', ['installId' => $installId]);

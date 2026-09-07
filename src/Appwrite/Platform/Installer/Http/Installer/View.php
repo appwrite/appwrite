@@ -44,6 +44,7 @@ class View extends Action
         $defaultHttpsPort = $config->getDefaultHttpsPort();
         $isUpgrade = $config->isUpgrade();
         $lockedDatabase = $config->getLockedDatabase();
+        $topology = $config->getTopology();
         $enabledDatabases = $config->getEnabledDatabases();
         $isLocalInstall = $config->isLocal();
 

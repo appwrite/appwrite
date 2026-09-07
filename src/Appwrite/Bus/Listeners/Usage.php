@@ -65,6 +65,7 @@ class Usage extends Listener
 
         $context = (new Context())
             ->setResource(rtrim($resourceType, 's'))
+            ->setResourceId((string) $resource->getId())
             ->setResourceInternalId((string) $resourceInternalId)
             ->addMetric(METRIC_EXECUTIONS, 1)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)

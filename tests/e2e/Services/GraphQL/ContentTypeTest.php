@@ -51,6 +51,26 @@ final class ContentTypeTest extends Scope
         $this->assertEquals(197, $response['total']);
     }
 
+    public function testJSONObjectVariables()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = '{ localeGet { ip country continent currency } }';
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => new \stdClass(),
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['data']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+        $this->assertArrayHasKey('localeGet', $response['body']['data']);
+        $this->assertIsArray($response['body']['data']['localeGet']);
+    }
+
     public function testArrayBatchedJSONContentType()
     {
         $projectId = $this->getProject()['$id'];

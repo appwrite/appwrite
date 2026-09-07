@@ -4282,6 +4282,7 @@ final class RealtimeCustomClientTest extends Scope
             $expectedEvents = count($creates);
 
             // Per-client receipts
+            /** @var array<int, list<mixed>> $receivedEvents */
             $receivedEvents = array_fill(0, $clientCount, []);
 
             // Launch receiver coroutines (one per client)

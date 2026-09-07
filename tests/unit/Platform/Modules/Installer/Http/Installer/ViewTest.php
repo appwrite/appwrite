@@ -69,11 +69,24 @@ final class ViewTest extends TestCase
         $this->assertMatchesRegularExpression('/name="database" value="postgresql"[^>]*disabled/', $html);
     }
 
+    public function testUpgradeWithDetectedSeparateTopologyPreselectsSeparate(): void
+    {
+        $html = $this->render([
+            'isUpgrade' => true,
+            'topology' => 'separate',
+        ]);
+
+        $this->assertStringContainsString('data-topology="separate"', $html);
+        $this->assertMatchesRegularExpression('/name="topology" value="separate"[^>]*checked/', $html);
+        $this->assertDoesNotMatchRegularExpression('/name="topology" value="combined"[^>]*checked/', $html);
+    }
+
     private function render(array $values = []): string
     {
         $step = 1;
         $isUpgrade = false;
         $lockedDatabase = null;
+        $topology = 'combined';
         $vars = [];
         $enabledDatabases = ['postgresql', 'mariadb', 'mongodb'];
         $csrfToken = 'test-token';

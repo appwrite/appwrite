@@ -34,7 +34,7 @@ class Update extends DocumentUpdate
             ->desc('Update document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')

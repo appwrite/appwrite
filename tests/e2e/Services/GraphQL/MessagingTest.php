@@ -98,7 +98,9 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
@@ -198,7 +200,9 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     'project_id' => 'test-project',
                     'private_key_id' => 'test-project-id',
-                    'private_key' => "test-private-key",
+                    'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                    'token_uri' => 'https://oauth2.googleapis.com/token',
+                    'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
@@ -744,7 +748,9 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
         ];

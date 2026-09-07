@@ -33,7 +33,7 @@ class XList extends CollectionXList
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections')
             ->desc('List collections')
             ->groups(['api', 'database'])
-            ->label('scope', 'collections.read')
+            ->label('scope', 'vectorsdb.collections.read')
             ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

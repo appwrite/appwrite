@@ -26,6 +26,7 @@ class Platform
     public const SCHEME_WINDOWS = 'appwrite-windows';
     public const SCHEME_LINUX = 'appwrite-linux';
     public const SCHEME_TAURI = 'tauri';
+    public const SCHEME_CAPACITOR = 'capacitor';
 
     public const string LOOPBACK_HOSTNAME = 'localhost';
 
@@ -70,6 +71,7 @@ class Platform
         self::SCHEME_SAFARI_EXTENSION => 'Web (Safari Extension)',
         self::SCHEME_EDGE_EXTENSION => 'Web (Edge Extension)',
         self::SCHEME_TAURI => 'Web (Tauri)',
+        self::SCHEME_CAPACITOR => 'Web (Capacitor)',
     ];
 
     /**

@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -44,6 +46,7 @@ trait Deployment
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -162,7 +165,9 @@ trait Deployment
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
-                $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+                $authorizeUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                    ? $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}"
+                    : $protocol . '://' . $hostname . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -392,12 +397,14 @@ trait Deployment
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
                 $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromUrl(
+                    ->createFromVcs(
                         $resource,
                         $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $vcs,
+                        $providerRepositoryOwner,
+                        $providerRepositoryName,
+                        $providerCommitHash,
                         $resource->getAttribute('providerRootDirectory', ''),
-                        $vcs->getRepositoryPresignedUrlHeaders(),
                     ));
 
                 if ($resource->getCollection() === 'sites') {
@@ -408,7 +415,7 @@ trait Deployment
                     $domain = ID::unique() . "." . $sitesDomain;
                     $ruleId = md5($domain);
                     $previewRuleId = $ruleId;
-                    $authorization->skip(
+                    $rule = $authorization->skip(
                         fn () => $dbForPlatform->createDocument('rules', new Document([
                             '$id' => $ruleId,
                             'projectId' => $project->getId(),
@@ -429,6 +436,7 @@ trait Deployment
                             'region' => $project->getAttribute('region')
                         ]))
                     );
+                    $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                     // VCS branch preview
                     if (!empty($providerBranch)) {
@@ -440,7 +448,7 @@ trait Deployment
                         ]);
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -461,6 +469,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
@@ -471,7 +480,7 @@ trait Deployment
                         $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -492,6 +501,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
@@ -557,7 +567,9 @@ trait Deployment
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                    $providerTargetUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                        ? $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId"
+                        : $protocol . '://' . $hostname . "/projects/$projectId/$resourceCollection/$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
