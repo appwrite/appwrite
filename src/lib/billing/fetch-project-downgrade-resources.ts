@@ -80,7 +80,7 @@ async function safeGroup<T>(
   try {
     return map(await load())
   } catch {
-    return { items: [], total: 0 }
+    return { items: [], total: 0, failed: true }
   }
 }
 

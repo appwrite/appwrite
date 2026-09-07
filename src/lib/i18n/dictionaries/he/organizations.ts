@@ -1472,4 +1472,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Delete and change plan': 'מחיקה ושינוי תוכנית',
   'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
     'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
+  'Could not load': 'לא ניתן לטעון',
+  'for this project.': 'עבור הפרויקט הזה.',
+  'Some project resources could not be loaded. Reload and try again.':
+    'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
 }

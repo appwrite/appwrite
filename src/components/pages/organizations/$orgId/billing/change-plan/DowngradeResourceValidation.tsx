@@ -416,15 +416,32 @@ export function DowngradeResourceValidation({
     resourcesLoading,
   ])
 
-  const isValid = remainingWithinLimits && !resourcesLoading
+  // A failed list call reports 0, which would otherwise pass as compliant and
+  // let the user submit against usage nobody has actually seen.
+  const hasLoadFailures = useMemo(
+    () =>
+      projects.some((project) => {
+        const resources = resourcesByProjectId.get(project.$id)
+        return (
+          !!resources &&
+          DOWNGRADE_RESOURCE_TYPES.some(({ id }) => resources[id].failed)
+        )
+      }),
+    [projects, resourcesByProjectId],
+  )
+
+  const isValid = remainingWithinLimits && !resourcesLoading && !hasLoadFailures
 
   const blockReason = useMemo(() => {
     if (resourcesLoading) return 'Loading project resources...'
+    if (hasLoadFailures) {
+      return 'Some project resources could not be loaded. Reload and try again.'
+    }
     if (!remainingWithinLimits) {
       return 'Finish deleting project resources that exceed the selected plan.'
     }
     return null
-  }, [resourcesLoading, remainingWithinLimits])
+  }, [resourcesLoading, remainingWithinLimits, hasLoadFailures])
 
   const projectResourceImpacts = useMemo<ProjectResourceImpact[]>(() => {
     return projects.map((project) => {
@@ -1007,6 +1024,15 @@ export function DowngradeResourceValidation({
                 ) : !activeProject || !activeResources ? (
                   <p className={columnEmptyPlaceholderClassName}>
                     {t('Select a project to view resources.')}
+                  </p>
+                ) : activeResourceType &&
+                  activeResources[activeResourceType]?.failed ? (
+                  <p className={columnEmptyPlaceholderClassName}>
+                    {t('Could not load')}{' '}
+                    {activeTypeConfig
+                      ? t(activeTypeConfig.label).toLowerCase()
+                      : ''}{' '}
+                    {t('for this project.')}
                   </p>
                 ) : activeItems.length === 0 ? (
                   <p className={columnEmptyPlaceholderClassName}>

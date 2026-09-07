@@ -22,6 +22,8 @@ export type DowngradeResourceItem = {
 export type DowngradeResourceGroup = {
   items: DowngradeResourceItem[]
   total: number
+  /** The list call failed; 0 here means unknown, never "none". */
+  failed?: boolean
 }
 
 export type ProjectDowngradeResources = Record<

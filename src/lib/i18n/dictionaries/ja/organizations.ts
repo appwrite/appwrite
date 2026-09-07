@@ -1250,4 +1250,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Delete and change plan': '削除してプランを変更',
   'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
     'まず削除するプロジェクトを確定してください。残したプロジェクトは、その後で選択したプランと照合されます。',
+  'Could not load': '読み込めませんでした:',
+  'for this project.': '(このプロジェクト)',
+  'Some project resources could not be loaded. Reload and try again.':
+    '一部のプロジェクトリソースを読み込めませんでした。再読み込みしてやり直してください。',
 }
