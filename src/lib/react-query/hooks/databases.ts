@@ -850,6 +850,8 @@ export async function fetchProjectDatabases(
   return {
     databases: slice,
     total,
+    // Every product API rejected: 0 here means unknown, not "no databases".
+    failed: settled.every((result) => result.status === 'rejected'),
   }
 }
 

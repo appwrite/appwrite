@@ -111,6 +111,9 @@ export async function fetchProjectDowngradeResources(
       () =>
         fetchAllPages(async (page, limit) => {
           const value = await fetchProjectDatabases(projectId, page, limit)
+          // It resolves even when every product API rejected, so the failure
+          // has to be carried rather than read as an empty project.
+          if (value.failed) throw new Error('databases list failed')
           return { items: value.databases ?? [], total: value.total ?? 0 }
         }),
       (value) => mapDatabaseItems(value.items, value.total),

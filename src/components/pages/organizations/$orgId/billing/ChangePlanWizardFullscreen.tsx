@@ -1328,7 +1328,12 @@ export function ChangePlanWizardFullscreen() {
 
       if (needsDowngradeValidation) {
         const estimationResult = await updateEstimation.refetch()
-        if (estimationResult.data?.limits?.canChangePlan === false) {
+        // Fail closed: the query does not retry, so an errored refetch leaves
+        // the previous cached value behind and `=== false` would not fire.
+        if (
+          estimationResult.isError ||
+          estimationResult.data?.limits?.canChangePlan !== true
+        ) {
           setSetupProgress(null)
           toast.error(
             t(

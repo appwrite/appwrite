@@ -11,6 +11,7 @@ export async function fetchAllDowngradeProjects(organizationId: string) {
   let total = 0
 
   do {
+    const before = all.length
     const data = await fetchOrganizationProjects(
       organizationId,
       page,
@@ -18,6 +19,8 @@ export async function fetchAllDowngradeProjects(organizationId: string) {
     )
     all.push(...(data.projects ?? []))
     total = data.total ?? all.length
+    // A total the pages never reach would loop forever.
+    if (before === all.length) break
     page += 1
   } while (all.length < total)
 
@@ -30,6 +33,7 @@ export async function fetchAllDowngradeMemberships(organizationId: string) {
   let total = 0
 
   do {
+    const before = all.length
     const data = await fetchOrganizationMemberships(
       organizationId,
       page,
@@ -37,6 +41,8 @@ export async function fetchAllDowngradeMemberships(organizationId: string) {
     )
     all.push(...((data.memberships ?? []) as Models.Membership[]))
     total = data.total ?? all.length
+    // A total the pages never reach would loop forever.
+    if (before === all.length) break
     page += 1
   } while (all.length < total)
 
@@ -49,6 +55,7 @@ export async function fetchAllDowngradeDomains(organizationId: string) {
   let total = 0
 
   do {
+    const before = all.length
     const data = await fetchOrganizationDomains(
       organizationId,
       page,
@@ -56,6 +63,8 @@ export async function fetchAllDowngradeDomains(organizationId: string) {
     )
     all.push(...((data.domains ?? []) as Models.Domain[]))
     total = data.total ?? all.length
+    // A total the pages never reach would loop forever.
+    if (before === all.length) break
     page += 1
   } while (all.length < total)
 
