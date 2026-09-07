@@ -17,7 +17,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
@@ -64,7 +63,6 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('log')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -77,7 +75,6 @@ class Update extends Action
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
-        Log $log,
         Authorization $authorization,
         Bus $bus,
     ) {
@@ -96,7 +93,7 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
             // Reset logs and status for the rule
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',

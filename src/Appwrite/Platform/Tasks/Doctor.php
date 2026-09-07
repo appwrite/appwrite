@@ -13,7 +13,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -130,7 +129,7 @@ class Doctor extends Action
 
             $providerName = $loggingProvider->getScheme();
 
-            if (empty($providerName) || !Logger::hasProvider($providerName)) {
+            if ($providerName !== 'sentry') {
                 Console::log('🔴 Logging adapter is disabled');
             } else {
                 Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');

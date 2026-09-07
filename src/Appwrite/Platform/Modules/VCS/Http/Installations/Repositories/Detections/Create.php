@@ -98,6 +98,7 @@ class Create extends Action
             ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -109,11 +110,16 @@ class Create extends Action
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

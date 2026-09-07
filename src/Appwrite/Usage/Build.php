@@ -39,11 +39,11 @@ final class Build
             $mbSeconds = 0;
         }
 
-        // Per-resource breakdown now travels as resource dimensions on the
-        // Context (resolved to resourceType + resourceId in the usage pipeline)
+        // Per-resource breakdown travels as resource dimensions on the Context
         // instead of per-{resourceInternalId} metric-name templates.
         $usage
             ->setResource(rtrim($resourceType, 's'))
+            ->setResourceId($resource->getId())
             ->setResourceInternalId((string) $resource->getSequence());
 
         switch ($deployment->getAttribute('status')) {

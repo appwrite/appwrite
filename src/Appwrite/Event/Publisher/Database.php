@@ -5,7 +5,7 @@ namespace Appwrite\Event\Publisher;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Database extends Base

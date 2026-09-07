@@ -22,9 +22,25 @@ abstract class Format
     protected array $models;
 
     protected array $services;
+
+    /**
+     * Security schemes per SDK platform, in `Specs::getPlatforms()` order.
+     *
+     * @var array<string, array<string, array<string, mixed>>>
+     */
     protected array $keys;
-    protected int $authCount;
-    protected string $platform;
+
+    /**
+     * Number of example credentials per SDK platform.
+     *
+     * @var array<string, int>
+     */
+    protected array $authCounts;
+
+    /**
+     * Platform the document is filtered to, or null for the canonical document.
+     */
+    protected ?string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -41,15 +57,40 @@ abstract class Format
         'license.url' => '',
     ];
 
-    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
+    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, array $authCounts, ?string $platform)
     {
         $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;
-        $this->authCount = $authCount;
+        $this->authCounts = $authCounts;
         $this->platform = $platform;
+    }
+
+    /**
+     * Security schemes of this document, each carrying the platforms whose SDK
+     * offers it: the platform's own schemes, or for the canonical document the
+     * union in platform order where the first definition wins.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getSecuritySchemes(): array
+    {
+        $schemes = [];
+
+        foreach ($this->keys as $platform => $platformSchemes) {
+            if ($this->platform !== null && $platform !== $this->platform) {
+                continue;
+            }
+
+            foreach ($platformSchemes as $name => $scheme) {
+                $schemes[$name] ??= $scheme;
+                $schemes[$name]['x-appwrite']['platforms'][] = $platform;
+            }
+        }
+
+        return $schemes;
     }
 
     /**

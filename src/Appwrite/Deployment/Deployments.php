@@ -13,6 +13,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
@@ -22,6 +23,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
+use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
@@ -32,14 +36,19 @@ use Utopia\VCS\Adapter\Git;
  *
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
- * sources are fine. The build output and package-manager cache, by default,
- * go on a mounted volume: the builds storage volume is attached to the build
- * worker at its Appwrite path, so build.sh writes its artifact + the cache
- * squashfs straight onto the volume Appwrite already reads. That keeps the
- * multi-hundred-MB output off the (capped) HTTP upload path and out of the
- * Appwrite process. Deployments that need a different strategy (e.g. S3
- * upload/download artifacts instead of a shared volume) override storage()
- * — everything else about the payload stays the same.
+ * sources are fine. The build output and package-manager cache go wherever
+ * the builds device is (see storage()). On the local device the builds
+ * storage volume is attached to the build worker at its Appwrite path, so
+ * build.sh writes its artifact + the cache squashfs straight onto the volume
+ * Appwrite already reads. On a remote device (S3 and friends) no volume spans
+ * Appwrite and the build workers, so the sidecar moves them over s3://
+ * upload/download artifacts instead. The orchestrator supports the generic
+ * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
+ * _APP_CONNECTIONS_STORAGE are retained by Appwrite only for backward
+ * compatibility. Either way the multi-hundred-MB output stays off the
+ * (capped) HTTP upload path and out of the Appwrite process.
+ * Deployments that need yet another strategy override storage() — everything
+ * else about the payload stays the same.
  *
  * Covers function and site deployments whose source is a tarball: manual
  * upload, duplicate/rebuild, VCS commits, and templates (public GitHub tarball
@@ -426,9 +435,10 @@ readonly class Deployments
         // Two terminal callbacks: exit carries the code (fires before
         // post-job artifacts), complete confirms artifact delivery — the
         // worker joins them, so readiness holds on any storage strategy.
-        // Artifact callbacks carry the source-size stat and the site manifest.
+        // Artifact callbacks carry the source-size stat, the site manifest
+        // and the outcome of a remote device's output upload.
         $events = [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete];
-        if ($source !== null || $isSite) {
+        if ($source !== null || $isSite || $output['artifacts'] !== []) {
             $events[] = CallbackEvent::Artifact;
         }
 
@@ -467,8 +477,8 @@ readonly class Deployments
     }
 
     /**
-     * The build output directory on the builds volume. The produced artifact's
-     * complete path is discovered and persisted after the job finishes.
+     * The build output directory on the builds volume, where build.sh writes
+     * under the volume strategy (see storage()).
      */
     public static function outputDirectory(string $projectId, string $deploymentId): string
     {
@@ -476,11 +486,15 @@ readonly class Deployments
     }
 
     /**
-     * The build output path on the builds volume, declared at submission.
+     * The build artifact's path on the builds device, declared at submission
+     * and read back through deviceForBuilds by the jobs worker, executions,
+     * downloads and deletes. On the local device it is outputDirectory() +
+     * the artifact, i.e. where build.sh writes; a path-style S3 device keys
+     * it under its bucket.
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {
-        return static::outputDirectory($projectId, $deploymentId) . '/' . static::artifact();
+        return static::device($projectId)->getPath("{$deploymentId}/" . static::artifact());
     }
 
     /**
@@ -509,24 +523,35 @@ readonly class Deployments
         return \substr(\hash('sha256', "{$projectId}:{$resourceId}:{$image}"), 0, 48);
     }
 
+    /**
+     * The package-manager cache's path on the builds device (see buildPath()).
+     */
     public static function cachePath(string $projectId, string $cacheKey): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/cache/{$cacheKey}.sqfs";
+        return static::device($projectId)->getPath("cache/{$cacheKey}.sqfs");
     }
 
     /**
-     * Where build.sh's output artifact and package-manager cache
-     * (a squashfs) land, and what the job needs to get them there. The
-     * default mounts the shared builds volume at outputDirectory()/cachePath();
-     * build.sh only cares that OPEN_RUNTIMES_BUILD_OUTPUT_DIR/_CACHE_ARTIFACT
-     * point somewhere on its local filesystem, volume-backed or not — so a
-     * strategy without a shared volume (e.g. S3) instead points them at a
-     * local tmp path and moves things in/out via 'artifacts':
-     *   - cache pull, before the build: a plain DownloadArtifact (no
-     *     `depends`, so it runs before the command) into the local cache path.
-     *   - cache push and output upload, after the build: an UploadArtifact
-     *     with `depends: 'job'` — 'job' is the orchestrator's sentinel id for
-     *     "after the build command finishes", not an id of another artifact.
+     * The builds device for a project, as everything else reads it
+     * (deviceForBuilds).
+     */
+    protected static function device(string $projectId): Device
+    {
+        return getDevice(APP_STORAGE_BUILDS . "/app-{$projectId}");
+    }
+
+    /**
+     * Where build.sh's output artifact and package-manager cache land, and
+     * what the job needs to get them there. On the local device the shared
+     * builds volume is mounted and build.sh writes straight to
+     * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
+     * writes into the job workspace and the sidecar moves output and cache
+     * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
+     * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
+     * accepts the generic _APP_STORAGE_S3_* configuration, not deprecated
+     * provider-specific variables or _APP_CONNECTIONS_STORAGE. 'job' in
+     * `depends` is the orchestrator's sentinel for "after the build command
+     * finishes".
      *
      * @return array{volumes: array<Volume>, artifacts: array<mixed>, environment: array<string, string>}
      */
@@ -536,20 +561,73 @@ readonly class Deployments
         $deploymentId = $deployment->getId();
         $runtime = self::runtime($resource, self::version($resource));
         $cacheKey = static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? '');
+        $cachePath = static::cachePath($projectId, $cacheKey);
+        $device = static::device($projectId);
 
-        return [
-            // Docker volume / K8s PVC named by _APP_BUILDS_VOLUME, attached
-            // to the worker at its Appwrite path so build.sh writes output +
-            // cache straight onto it.
-            'volumes' => [
-                new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+        return match ($device->getType()) {
+            DeviceType::Local => [
+                'volumes' => [
+                    new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+                ],
+                'artifacts' => [],
+                'environment' => [
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
+                    'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => $cachePath,
+                ],
             ],
-            'artifacts' => [],
-            'environment' => [
-                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
-                'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => static::cachePath($projectId, $cacheKey),
+            default => [
+                'volumes' => [],
+                'artifacts' => [
+                    ...($device->exists($cachePath) ? [new DownloadArtifact(id: 'cachePull', in: static::objectUrl($device, $cachePath), out: "cache/{$cacheKey}.sqfs")] : []),
+                    new UploadArtifact(id: 'output', in: 'output/' . static::artifact(), out: static::objectUrl($device, static::buildPath($projectId, $deploymentId)), depends: 'job'),
+                    new UploadArtifact(id: 'cache', in: "cache/{$cacheKey}.sqfs", out: static::objectUrl($device, $cachePath), depends: 'job'),
+                ],
+                'environment' => [
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => '/mnt/code/output',
+                    'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => "/mnt/code/cache/{$cacheKey}.sqfs",
+                ],
             ],
-        ];
+        };
+    }
+
+    /**
+     * Map a builds device path to the s3://bucket/key artifact URL the sidecar
+     * uploads to, resolving the bucket from the same configuration getDevice()
+     * reads so artifact writes and device reads land on the same object. An
+     * S3 device with an explicit endpoint (S3-compatible stores such as MinIO)
+     * is path-style and already keys objects under its bucket, so the path is
+     * the URL as is; a virtual-host device passes paths verbatim, so the
+     * bucket is prepended.
+     */
+    protected static function objectUrl(Device $device, string $path): string
+    {
+        $type = $device->getType();
+        $configuredDevice = DeviceType::tryFrom(\strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+        $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+        $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+        $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $usesS3Configuration = $hasS3Configuration && ($connection === '' || \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true));
+
+        if ($usesS3Configuration && \in_array($type, [DeviceType::S3, DeviceType::AwsS3], true) && System::getEnv('_APP_STORAGE_S3_ENDPOINT', '') !== '') {
+            $bucket = '';
+        } elseif (! $usesS3Configuration && $connection !== '') {
+            $bucket = \trim((new DSN($connection))->getPath() ?? '', '/');
+        } elseif ($usesS3Configuration) {
+            $bucket = $s3Bucket;
+        } else {
+            $prefix = match ($type) {
+                DeviceType::DoSpaces => 'DO_SPACES',
+                DeviceType::Backblaze => 'BACKBLAZE',
+                DeviceType::Linode => 'LINODE',
+                DeviceType::Wasabi => 'WASABI',
+                DeviceType::S3, DeviceType::AwsS3, DeviceType::Local => null,
+            };
+            $bucket = $prefix === null ? '' : System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        }
+
+        return 's3://' . \ltrim(($bucket !== '' ? "/{$bucket}" : '') . $path, '/');
     }
 
     protected static function version(Document $resource): string

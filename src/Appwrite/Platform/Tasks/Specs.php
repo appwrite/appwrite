@@ -414,23 +414,15 @@ class Specs extends Action
 
     public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
     {
-        $sdkPlatforms = [];
-        foreach ($routeSecurity as $value) {
-            switch ($value) {
-                case AuthType::SESSION:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_CLIENT;
-                    break;
-                case AuthType::JWT:
-                case AuthType::KEY:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_SERVER;
-                    break;
-                case AuthType::ADMIN:
-                    $sdkPlatforms[] = APP_SDK_PLATFORM_CONSOLE;
-                    break;
+        $platforms = [];
+        foreach ($routeSecurity as $auth) {
+            $platform = $auth instanceof AuthType ? $auth->getPlatform() : null;
+            if ($platform !== null) {
+                $platforms[] = $platform;
             }
         }
 
-        return $sdkPlatforms;
+        return $platforms;
     }
 
     public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
@@ -466,10 +458,16 @@ class Specs extends Action
         $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
         $specsContainer->set('plan', fn () => []);
 
-        $platforms = static::getPlatforms();
+        $platforms = \array_values(static::getPlatforms());
         $authCounts = $this->getAuthCounts();
-        $keys = $this->getKeys();
+        $platformKeys = $this->getKeys();
+        $keys = [];
 
+        foreach ($platforms as $platform) {
+            $keys[$platform] = $platformKeys[$platform] ?? [];
+        }
+
+        /** @var array<string, string|null> $generatedFiles Spec file path to its platform, null for the canonical document. */
         $generatedFiles = [];
         $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
         $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', 'team@appwrite.io');
@@ -479,7 +477,20 @@ class Specs extends Action
             throw new Exception('Failed to create specs directory: ' . $specsDir);
         }
 
-        foreach ($platforms as $platform) {
+        // Resolve full auth arrays through the active task (including subclass platforms).
+        foreach ($appRoutes as $method) {
+            foreach ($method as $route) {
+                $sdks = $route->getLabel('sdk', []);
+                foreach (\is_array($sdks) ? $sdks : [$sdks] as $sdk) {
+                    if ($sdk instanceof Method) {
+                        $sdk->setPlatforms($this->getSDKPlatformsForRouteSecurity($sdk->getAuth()));
+                    }
+                }
+            }
+        }
+
+        // One document per platform, then the canonical document (null) covering every platform.
+        foreach ([...$platforms, null] as $platform) {
             $routes = [];
             $models = [];
             $services = [];
@@ -487,6 +498,10 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
+                    if (!$route->getLabel('docs', true) || (bool) $route->getLabel('mock', false) !== $mocks) {
+                        continue;
+                    }
+
                     $sdks = $route->getLabel('sdk', false);
 
                     if (empty($sdks)) {
@@ -498,37 +513,13 @@ class Specs extends Action
                     }
 
                     foreach ($sdks as $sdk) {
-                        /** @var Method $sdk */
-                        $hide = $sdk->isHidden();
+                        $sdkPlatforms = $sdk->getPlatforms();
 
-                        if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        if ($platform === null ? $sdkPlatforms === [] : !\in_array($platform, $sdkPlatforms, true)) {
                             continue;
                         }
 
-                        $routeSecurity = $sdk->getAuth();
-                        $sdkPlatforms = $this->getSDKPlatformsForRouteSecurity($routeSecurity);
-
-                        if (!$route->getLabel('docs', true)) {
-                            continue;
-                        }
-
-                        if ($route->getLabel('mock', false) && !$mocks) {
-                            continue;
-                        }
-
-                        if (!$route->getLabel('mock', false) && $mocks) {
-                            continue;
-                        }
-
-                        if (empty($sdk->getNamespace())) {
-                            continue;
-                        }
-
-                        if (!\in_array($platform, $sdkPlatforms)) {
-                            continue;
-                        }
-
-                        $routes[] = $route;
+                        $routes[\spl_object_id($route)] = $route;
                         $routeNamespaces[$sdk->getNamespace()] = true;
                     }
                 }
@@ -559,8 +550,9 @@ class Specs extends Action
                     continue;
                 }
 
-                // Check if current platform is included in service's platforms
-                if (!\in_array($platform, $service['platforms'] ?? [])) {
+                $servicePlatforms = $service['platforms'] ?? [];
+
+                if ($platform === null ? \array_intersect($servicePlatforms, $platforms) === [] : !\in_array($platform, $servicePlatforms)) {
                     continue;
                 }
 
@@ -591,7 +583,7 @@ class Specs extends Action
             $models = $response->getModels();
 
             foreach ($models as $key => $value) {
-                if ($platform !== APP_SDK_PLATFORM_CONSOLE && !$value->isPublic()) {
+                if ($platform !== null && $platform !== APP_SDK_PLATFORM_CONSOLE && !$value->isPublic()) {
                     unset($models[$key]);
                 }
             }
@@ -601,9 +593,9 @@ class Specs extends Action
                 $services,
                 $routes,
                 $models,
-                $keys[$platform],
-                $authCounts[$platform] ?? 0,
-                $platform
+                $keys,
+                $authCounts,
+                $platform,
             ];
 
             foreach (['open-api3'] as $format) {
@@ -627,15 +619,16 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
+                $suffix = $platform === null ? '' : '-' . $platform;
                 $path = $mocks
-                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
-                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
+                    ? $specsDir . '/' . $format . '-mocks' . $suffix . '.json'
+                    : $specsDir . '/' . $format . '-' . $version . $suffix . '.json';
 
                 try {
                     $parsedSpecs = $specs->parse();
                 } catch (\RuntimeException $e) {
                     // A throw is reported and carried on from, so stop here
-                    Console::error("Spec generation failed for {$platform} ({$format}): " . $e->getMessage());
+                    Console::error('Spec generation failed for ' . ($platform ?? 'canonical') . " ({$format}): " . $e->getMessage());
                     Console::exit(1);
                     return;
                 }
@@ -652,7 +645,7 @@ class Specs extends Action
                     throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
                 }
 
-                $generatedFiles[] = realpath($path);
+                $generatedFiles[realpath($path)] = $platform;
                 Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
 
                 unset($encodedSpecs, $specs, $formatInstance);
@@ -686,16 +679,12 @@ class Specs extends Action
                 git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true
             ');
 
-            // Copy generated spec files into specs/{version}/ subdirectory
+            // Copy the canonical document and the PR platforms' documents into specs/{version}/
             $prPlatforms = static::getPlatformsForPR();
-            $prFiles = \array_filter(
+            $prFiles = \array_keys(\array_filter(
                 $generatedFiles,
-                fn (string $file) => \in_array(
-                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
-                    $prPlatforms,
-                    true
-                )
-            );
+                fn (?string $platform) => $platform === null || \in_array($platform, $prPlatforms, true)
+            ));
 
             $specsSubDir = $mocks ? 'mocks' : $version;
             \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));

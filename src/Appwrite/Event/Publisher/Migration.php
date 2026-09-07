@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Migration as MigrationMessage;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Migration extends Base
