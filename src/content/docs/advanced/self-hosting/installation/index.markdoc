@@ -161,11 +161,11 @@ On non-Linux hosts, the server might take a few minutes to start after installat
 
 ## Organizations {% #organizations %}
 
-A self-hosted Console works with one organization. Appwrite creates it the first time you sign in to the Console, and every project you create from the Console belongs to it. The Console does not show an organization switcher or a way to create more.
+A self-hosted Console starts with one organization. Appwrite creates it the first time you sign in to the Console, and every project you create from the Console belongs to it. The Console does not offer a way to create more, and it hides the organization switcher while your account belongs to only one.
 
 Members you invite to the organization get owner access to every project on the instance. There are no organization roles on a self-hosted instance.
 
-Multi-tenancy is still supported through the API. An organization is a team, and creating a project through the API or the CLI takes its `teamId` as before. The Console only lists the projects of the organization it opened, so open a project under another team by its project URL.
+Multi-tenancy is still supported through the API. An organization is a team, and creating a project through the API or the CLI takes its `teamId` as before. When your account belongs to more than one organization, for example after upgrading an instance that already had several organizations, the Console shows the organization switcher, lists every organization in the project selector, and lets you transfer projects between them.
 
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
