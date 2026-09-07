@@ -1450,6 +1450,7 @@ export function ConsoleHeader({
                     <PhotoAvatar
                       userId={accountId}
                       name={displayName}
+                      isCurrentUser
                       size="sm"
                       className="shrink-0"
                     />
