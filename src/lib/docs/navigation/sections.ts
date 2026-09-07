@@ -1395,12 +1395,12 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/mysql/integrations/drivers',
           },
           {
-            label: 'Prisma',
-            href: '/docs/products/databases/mysql/integrations/prisma',
-          },
-          {
             label: 'Drizzle',
             href: '/docs/products/databases/mysql/integrations/drizzle',
+          },
+          {
+            label: 'Prisma',
+            href: '/docs/products/databases/mysql/integrations/prisma',
           },
           {
             label: 'Auth.js',
@@ -1573,12 +1573,12 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/postgresql/integrations/drivers',
           },
           {
-            label: 'Prisma',
-            href: '/docs/products/databases/postgresql/integrations/prisma',
-          },
-          {
             label: 'Drizzle',
             href: '/docs/products/databases/postgresql/integrations/drizzle',
+          },
+          {
+            label: 'Prisma',
+            href: '/docs/products/databases/postgresql/integrations/prisma',
           },
           {
             label: 'Auth.js',
