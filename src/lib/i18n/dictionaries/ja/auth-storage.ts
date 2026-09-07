@@ -605,6 +605,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
+  'Connect with S3': 'S3 と接続',
   'Connect with this project': 'このプロジェクトへの接続',
   'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
     '他のプロダクトからユーザーをこのプロジェクトへ接続させたい場合は、ここに OAuth2 クライアントを登録します。組織アプリの用途は異なります。ユーザーが Appwrite アカウントをあなたのアプリケーションに接続できるようにしたい場合は、組織側で作成します。',
