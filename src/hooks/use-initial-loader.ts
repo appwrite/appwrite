@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
 import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
-import { useRouter, useLocation, useMatches } from '@tanstack/react-router'
+import { useRouterState, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import {
   isHttpForbiddenError,
@@ -11,6 +11,8 @@ import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import {
   INITIAL_LOADER_SHELL_GATE,
   getProjectIdFromPathname,
+  hasInitialLoaderCompleted,
+  markInitialLoaderCompleted,
   projectRouteRequiresProjectSelectorGate,
   resetInitialLoaderShellGate,
   setInitialLoaderShellGate,
@@ -99,8 +101,7 @@ function useProjectQueryShellGateBypass(pathname: string): boolean {
 }
 
 export function useInitialLoader() {
-  // Router + location need to be resolved before computing initial loader state
-  const router = useRouter()
+  const routerStatus = useRouterState({ select: (s) => s.status })
   const location = useLocation()
   const matches = useMatches()
   const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
@@ -113,9 +114,13 @@ export function useInitialLoader() {
   const shellGatesReady =
     shellGatesReadyFromSelector || projectShellGateBypass
 
-  // Track all active queries and mutations (including Appwrite calls)
+  // Only queries that have not produced data yet. Cached refetches and intent
+  // preloads of already-warmed keys must not re-arm the branded overlay.
   const isFetching = useIsFetching({
-    predicate: (query) => query.options.meta?.skipInitialLoader !== true,
+    predicate: (query) =>
+      query.options.meta?.skipInitialLoader !== true &&
+      query.state.data === undefined &&
+      query.state.status !== 'error',
   })
   const isMutating = useIsMutating()
 
@@ -164,179 +169,158 @@ export function useInitialLoader() {
     [location.pathname, skipStaticLoader],
   )
 
+  const alreadyCompleted = hasInitialLoaderCompleted()
+
   // Initialize loading state synchronously so the loader is visible on first paint
-  const [isLoading, setIsLoading] = useState(() => shouldShowLoader)
+  const [isLoading, setIsLoading] = useState(
+    () => shouldShowLoader && !alreadyCompleted,
+  )
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const maxTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(
-    shouldShowLoader ? Date.now() : null,
+    shouldShowLoader && !alreadyCompleted ? Date.now() : null,
   )
-  const wasLoadingRef = useRef(shouldShowLoader)
-  const hasCompletedInitialLoadRef = useRef(false)
-
-  // Use refs to track previous values and prevent unnecessary re-renders
-  const prevIsFetchingRef = useRef(isFetching)
-  const prevIsMutatingRef = useRef(isMutating)
-  const prevRouterStatusRef = useRef(router.state.status)
-  const prevPathnameRef = useRef(location.pathname)
-  const prevForbidden403Ref = useRef(isConsoleAccount403)
-  const prevShellGatesReadyRef = useRef(shellGatesReady)
+  const wasLoadingRef = useRef(shouldShowLoader && !alreadyCompleted)
+  const hasCompletedInitialLoadRef = useRef(alreadyCompleted)
   const prevPathnameForShellGateRef = useRef(location.pathname)
 
-  // Reset the project-selector gate when entering a project route (not on first paint).
+  const completeInitialLoad = () => {
+    hasCompletedInitialLoadRef.current = true
+    markInitialLoaderCompleted()
+  }
+
+  const clearHideTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }
+
+  const clearMaxTimeout = () => {
+    if (maxTimeoutRef.current) {
+      clearTimeout(maxTimeoutRef.current)
+      maxTimeoutRef.current = null
+    }
+  }
+
+  // Reset the project-selector gate when entering a different project (or a
+  // project route from outside). In-project navigations must not flip the gate
+  // or the branded overlay reappears on every few clicks.
   useEffect(() => {
-    if (prevPathnameForShellGateRef.current === location.pathname) return
+    const prevPathname = prevPathnameForShellGateRef.current
+    if (prevPathname === location.pathname) return
     prevPathnameForShellGateRef.current = location.pathname
 
-    if (projectRouteRequiresProjectSelectorGate(location.pathname)) {
-      setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, false)
+    if (!projectRouteRequiresProjectSelectorGate(location.pathname)) {
+      resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
       return
     }
-    resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
+
+    const prevProjectId = getProjectIdFromPathname(prevPathname)
+    const nextProjectId = getProjectIdFromPathname(location.pathname)
+    if (prevProjectId && prevProjectId === nextProjectId) {
+      return
+    }
+
+    setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, false)
   }, [location.pathname])
+
+  useEffect(() => {
+    return () => {
+      clearHideTimeout()
+      clearMaxTimeout()
+    }
+    // Unmount only. Clearing these on every dep change cancelled the hide timer
+    // and left the overlay up until the next idle window.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     // After the first console paint, skip the loader for in-console navigations
     // (including agent ↔ org, since agent lives under the console shell).
-    if (hasCompletedInitialLoadRef.current) {
+    if (hasCompletedInitialLoadRef.current || hasInitialLoaderCompleted()) {
+      if (wasLoadingRef.current) {
+        setIsLoading(false)
+        wasLoadingRef.current = false
+        startTimeRef.current = null
+      }
       return
     }
 
-    // Early return if we're on a route that shouldn't show loader
-    // This prevents unnecessary processing on root/auth routes
     if (!shouldShowLoader) {
-      // Don't show loader on public/auth routes
-      // Auth pages mark complete immediately; "/" is handled by shouldShowLoader so we don't land here for "/"
       if (skipStaticLoader) {
-        hasCompletedInitialLoadRef.current = true
+        completeInitialLoad()
       } else if (
-        router.state.status === 'idle' &&
+        routerStatus === 'idle' &&
         isFetching === 0 &&
         isMutating === 0
       ) {
-        // For other public routes, mark complete when idle
-        hasCompletedInitialLoadRef.current = true
+        completeInitialLoad()
       }
       if (wasLoadingRef.current) {
         setIsLoading(false)
         wasLoadingRef.current = false
         startTimeRef.current = null
       }
-      // Update refs but don't process further - early return prevents re-renders
-      prevIsFetchingRef.current = isFetching
-      prevIsMutatingRef.current = isMutating
-      prevRouterStatusRef.current = router.state.status
-      prevPathnameRef.current = location.pathname
       return
     }
 
-    // From here on, we only process if shouldShowLoader is true
-    // This means we're on a route that should show the loader
-
-    // Only process if something actually changed
-    const routerStatusChanged =
-      prevRouterStatusRef.current !== router.state.status
-    const pathnameChanged = prevPathnameRef.current !== location.pathname
-    const fetchingChanged = prevIsFetchingRef.current !== isFetching
-    const mutatingChanged = prevIsMutatingRef.current !== isMutating
-    const forbidden403Changed =
-      prevForbidden403Ref.current !== isConsoleAccount403
-    const shellGatesReadyChanged =
-      prevShellGatesReadyRef.current !== shellGatesReady
-
-    // If nothing relevant changed, skip processing
-    if (
-      !routerStatusChanged &&
-      !pathnameChanged &&
-      !fetchingChanged &&
-      !mutatingChanged &&
-      !forbidden403Changed &&
-      !shellGatesReadyChanged
-    ) {
-      return
-    }
-
-    // Update refs
-    prevIsFetchingRef.current = isFetching
-    prevIsMutatingRef.current = isMutating
-    prevRouterStatusRef.current = router.state.status
-    prevPathnameRef.current = location.pathname
-    prevForbidden403Ref.current = isConsoleAccount403
-    prevShellGatesReadyRef.current = shellGatesReady
-
-    // Clear any existing timeouts
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
-    if (maxTimeoutRef.current) {
-      clearTimeout(maxTimeoutRef.current)
-      maxTimeoutRef.current = null
-    }
-
-    // Check if there are active requests (route loaders use ensureQueryData, so they show up here)
     const currentHasActiveRequests = isFetching > 0 || isMutating > 0
-
-    // Show loader when router or React Query indicates loading.
-    const isRouterLoading = router.state.status !== 'idle'
+    const isRouterLoading = routerStatus !== 'idle'
     const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
-    // Hide loader when React Query is idle (don't wait for router).
-    // On "/" we normally wait for redirect; exception: console account 403 (blocked) stays on "/".
     const shouldHideLoader =
       (location.pathname !== '/' || isConsoleAccount403) &&
       !currentHasActiveRequests &&
       shellGatesReady &&
       wasLoadingRef.current
 
-    if (shouldShowLoadingState && !wasLoadingRef.current) {
-      // Started loading
-      setIsLoading(true)
-      startTimeRef.current = Date.now()
-      wasLoadingRef.current = true
-
-      // Safety net: Hide loader after 20 seconds maximum to prevent infinite hanging
+    const startMaxTimeout = () => {
+      if (maxTimeoutRef.current) return
       maxTimeoutRef.current = setTimeout(() => {
         console.warn('Initial loader timeout - hiding loader after 20 seconds')
         setIsLoading(false)
         startTimeRef.current = null
         wasLoadingRef.current = false
-        hasCompletedInitialLoadRef.current = true
+        completeInitialLoad()
         maxTimeoutRef.current = null
       }, 20000)
-    } else if (shouldHideLoader) {
-      // React Query idle - hide loader (even if router still pending)
-      const minLoadTime = 800 // Minimum display time to prevent flashing
-      const elapsedTime = startTimeRef.current
-        ? Date.now() - startTimeRef.current
-        : 0
-      const remainingTime = Math.max(0, minLoadTime - elapsedTime)
-
-      timeoutRef.current = setTimeout(() => {
-        setIsLoading(false)
-        startTimeRef.current = null
-        wasLoadingRef.current = false
-        hasCompletedInitialLoadRef.current = true // Mark initial load as complete
-        // Clear max timeout if it exists
-        if (maxTimeoutRef.current) {
-          clearTimeout(maxTimeoutRef.current)
-          maxTimeoutRef.current = null
-        }
-      }, remainingTime)
     }
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      if (maxTimeoutRef.current) {
-        clearTimeout(maxTimeoutRef.current)
-      }
+    if (shouldShowLoadingState && !wasLoadingRef.current) {
+      clearHideTimeout()
+      setIsLoading(true)
+      startTimeRef.current = Date.now()
+      wasLoadingRef.current = true
+      startMaxTimeout()
+    } else if (wasLoadingRef.current) {
+      startMaxTimeout()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (shouldHideLoader) {
+      if (!timeoutRef.current) {
+        const minLoadTime = 800
+        const elapsedTime = startTimeRef.current
+          ? Date.now() - startTimeRef.current
+          : 0
+        const remainingTime = Math.max(0, minLoadTime - elapsedTime)
+
+        timeoutRef.current = setTimeout(() => {
+          timeoutRef.current = null
+          setIsLoading(false)
+          startTimeRef.current = null
+          wasLoadingRef.current = false
+          completeInitialLoad()
+          clearMaxTimeout()
+        }, remainingTime)
+      }
+    } else if (currentHasActiveRequests) {
+      clearHideTimeout()
+    }
   }, [
     shouldShowLoader,
-    router.state.status,
+    skipStaticLoader,
+    routerStatus,
     location.pathname,
     isFetching,
     isMutating,

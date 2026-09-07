@@ -369,9 +369,8 @@ export function InitPrizesSection({ event }: InitPrizesSectionProps) {
               >
                 <InitGrandPrizeRevealBack
                   grandPrize={raffle.grandPrize}
-                  participants={raffle.participants}
-                  loadingParticipants={raffle.loadingParticipants}
-                  onReloadParticipants={raffle.reloadParticipants}
+                  entries={raffle.grandPrizeEntries}
+                  onEntriesChange={raffle.setGrandPrizeEntries}
                   onClose={raffle.close}
                 />
               </div>

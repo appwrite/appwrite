@@ -5,6 +5,7 @@ import type {
 } from './types'
 import {
   getActiveProfileFeatures,
+  isCloudProfile,
   type ConsoleProfileFeatures,
 } from '@/lib/console-profiles'
 
@@ -77,11 +78,7 @@ export type FeatureGatedDatabaseApiService =
 
 export type DatabaseApiServiceFeatures = Pick<
   ConsoleProfileFeatures,
-  | 'dedicatedDbsDocumentsDB'
-  | 'dedicatedDbsVectorsDB'
-  | 'nativeDbsPostgres'
-  | 'nativeDbsMySQL'
-  | 'nativeDbsMongo'
+  'nativeDbsMongo'
 >
 
 /**
@@ -166,12 +163,9 @@ export function getFeatureGatedDatabaseApiServices(
   features: DatabaseApiServiceFeatures = getActiveProfileFeatures(),
 ): FeatureGatedDatabaseApiService[] {
   const services: FeatureGatedDatabaseApiService[] = []
-  if (features.dedicatedDbsDocumentsDB) services.push('documentsDB')
-  if (features.dedicatedDbsVectorsDB) {
-    services.push('vectorsDB', 'embeddings')
+  if (isCloudProfile()) {
+    services.push('documentsDB', 'vectorsDB', 'embeddings', 'postgresql', 'mysql')
   }
-  if (features.nativeDbsPostgres) services.push('postgresql')
-  if (features.nativeDbsMySQL) services.push('mysql')
   if (features.nativeDbsMongo) services.push('mongo')
   return services
 }

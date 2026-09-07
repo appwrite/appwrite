@@ -6,10 +6,24 @@
 
 import type { ConsoleAccess } from '@/lib/console-roles'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 /** Minimal features needed for most checks; pass full features from useConsoleProfile() where available. */
 export type AccessCheckFeatures = Pick<ConsoleProfileFeatures, 'orgRoles'> &
   Partial<ConsoleProfileFeatures>
+
+/**
+ * Organization switcher and transfer targets. Multi-tenant profiles always
+ * expose them. Single-tenant profiles only block creating a second
+ * organization; an account that already belongs to several (a self-hosted
+ * 1.x instance upgraded to 2.0) must still be able to reach every one of them.
+ */
+export function canSwitchOrganizations(
+  features: Pick<ConsoleProfileFeatures, 'multiTenancy'>,
+  organizationCount: number,
+): boolean {
+  return features.multiTenancy || organizationCount > 1
+}
 
 function whenOrgRoles(
   _access: ConsoleAccess,
@@ -18,8 +32,6 @@ function whenOrgRoles(
 ): boolean {
   return !features.orgRoles || hasAccess
 }
-
-// ─── Project: settings, connect, get started ───────────────────────────────────
 
 export function canShowProjectSettings(
   access: ConsoleAccess,
@@ -67,8 +79,6 @@ export function canPinProjects(
 ): boolean {
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
-
-// ─── Project: create permissions ──────────────────────────────────────────────
 
 export function canCreateProject(
   access: ConsoleAccess,
@@ -181,8 +191,6 @@ export function canWriteRules(
   return whenOrgRoles(access, features, access.canWriteRules)
 }
 
-// ─── Project: service security/settings tabs ────────────────────────────────
-
 export function canShowDatabaseSecuritySettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -233,7 +241,9 @@ export function canShowProjectOAuth2Server(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!features.oauth2Server && canShowAuthSecuritySettings(access, features)
+  return (
+    isCloudProfile() && canShowAuthSecuritySettings(access, features)
+  )
 }
 
 export function canShowTopicSettingsTab(
@@ -242,8 +252,6 @@ export function canShowTopicSettingsTab(
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteTopics)
 }
-
-// ─── Project: sidebar nav item visibility ───────────────────────────────────
 
 export function canSeeProjectNavItem(
   access: ConsoleAccess,
@@ -302,8 +310,6 @@ export function canSeeProjects(
   return whenOrgRoles(access, features, access.canSeeProjects)
 }
 
-// ─── Org: tabs and settings ──────────────────────────────────────────────────
-
 export function canShowOrgDomainsTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -311,22 +317,20 @@ export function canShowOrgDomainsTab(
   return canAccessOrgDomains(access, features)
 }
 
-/** Buy domain and transfer-in (registrar commerce). Gated by the domains profile flag. */
+/** Buy domain and transfer-in (registrar commerce). */
 export function canBuyOrTransferOrgDomain(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(features.domains && canAccessOrgDomains(access, features))
+  return canAccessOrgDomains(access, features)
 }
 
-/** Organization marketplace tab (cloud profile + feature flag; browse integrations). */
+/** Organization marketplace tab (cloud profile; browse integrations). */
 export function canShowOrgMarketplaceTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return !!(
-    features.marketplace && canSeeProjects(access, features)
-  )
+  return isCloudProfile() && canSeeProjects(access, features)
 }
 
 export function canShowOrgSettingsTab(access: ConsoleAccess): boolean {
@@ -356,12 +360,12 @@ export function canAccessOrgSettingsOAuthOrApiKeys(
   return access.isOwner || access.isDeveloper
 }
 
-/** Organization settings → OAuth apps (console profile + owners/developers). */
+/** Organization settings → OAuth apps (cloud profile + owners/developers). */
 export function canShowOrgOAuthAppsSettings(
   access: ConsoleAccess,
-  features: AccessCheckFeatures,
+  _features: AccessCheckFeatures,
 ): boolean {
-  return !!features.oauthApps && canAccessOrgSettingsOAuthOrApiKeys(access)
+  return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
 /** Organization settings → Org API keys (console profile + owners/developers). */
@@ -380,11 +384,16 @@ export function canCreateOrgApiKey(
   return canShowOrgApiKeysSettings(access, features)
 }
 
-/** Organization Domains (route access): owners and developers when orgRoles enabled. */
+/**
+ * Organization Domains (route access). The `/v1/domains` API is cloud-only, so
+ * the whole surface is hidden on self-hosted; with org roles enabled it is
+ * further limited to owners and developers.
+ */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
+  if (!isCloudProfile()) return false
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
@@ -409,8 +418,6 @@ export function canInviteOrgMember(
   return whenOrgRoles(access, features, access.isOwner)
 }
 
-// ─── Messaging: write per tab ───────────────────────────────────────────────
-
 export function canWriteMessages(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -432,8 +439,6 @@ export function canWriteProviders(
   return whenOrgRoles(access, features, access.canWriteProviders)
 }
 
-// ─── Org settings: first allowed sub-tab (menu order) ─────────────────────────
-
 /** Returns the first org settings sub-path the current role can access (menu order). */
 export function getFirstAllowedOrgSettingsPath(
   access: ConsoleAccess,
@@ -447,8 +452,7 @@ export function getFirstAllowedOrgSettingsPath(
     return `${basePath}/compliance`
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
-  if (canShowOrgApiKeysSettings(access, features))
-    return `${basePath}/partners`
+  if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
   return basePath
 }
 

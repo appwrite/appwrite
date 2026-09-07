@@ -2,6 +2,7 @@
 layout: changelog
 title: "Free plan function limit reduced to 2"
 date: 2026-01-08
+tags: databases, storage, functions, messaging
 ---
 
 Starting today, the Free plan now allows a maximum of two functions per project, reduced from the previous limit of five.

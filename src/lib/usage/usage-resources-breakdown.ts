@@ -3,6 +3,7 @@ import type {
   UsageEventBreakdownDimension,
 } from '@/lib/usage/usage-events-common'
 import {
+  isDedicatedDatabaseUsageResourceType,
   isUsageProjectResourceType,
   parseTableUsageResourceType,
 } from '@/lib/usage/usage-resource-filters'
@@ -80,7 +81,10 @@ export function partitionUsageBreakdownResourceIds(
       continue
     }
 
-    if (resourceType === 'database' || resourceType === 'dedicatedDatabases') {
+    if (
+      resourceType === 'database' ||
+      isDedicatedDatabaseUsageResourceType(resourceType)
+    ) {
       databaseIds.add(resourceId)
       continue
     }

@@ -132,13 +132,17 @@ export function GitRepositoryCard({
     }
   }, [installationsData, selectedInstallationId])
 
-  // Update form state when site changes
+  // Keep form in sync when saved repo fields change (not on every site refetch)
   useEffect(() => {
-    if (site) {
-      setSelectedBranch(site.providerBranch || '')
-      setSelectedDir(site.providerRootDirectory || '')
-    }
-  }, [site])
+    if (!site) return
+    setSelectedBranch(site.providerBranch || '')
+    setSelectedDir(site.providerRootDirectory || '')
+  }, [
+    site?.providerBranch,
+    site?.providerRootDirectory,
+    site?.installationId,
+    site?.providerRepositoryId,
+  ])
 
   // Update site mutation
   const updateSiteMutation = useMutation({

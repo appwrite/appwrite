@@ -56,7 +56,7 @@ import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
 import {
   getRedeploySourceDeploymentId,
-  resourceIsBuilding,
+  shouldShowBuildingInsteadOfSettingsAlert,
 } from '@/lib/utils/deployment-status'
 import {
   applySettingsRedeploySuccess,
@@ -327,8 +327,11 @@ function FunctionLayoutContent() {
 
   const isBuilding = useMemo(
     () =>
-      settingsRedeployPending ||
-      resourceIsBuilding(func, activeDeployment),
+      shouldShowBuildingInsteadOfSettingsAlert(
+        func,
+        activeDeployment,
+        settingsRedeployPending,
+      ),
     [settingsRedeployPending, func, activeDeployment],
   )
 

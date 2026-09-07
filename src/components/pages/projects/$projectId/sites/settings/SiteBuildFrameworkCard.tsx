@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -170,10 +171,16 @@ export function SiteBuildFrameworkCard({
     [frameworksData],
   )
 
-  const [framework, setFramework] = useState('')
-  const [adapter, setAdapter] = useState('')
-  const [outputDirectory, setOutputDirectory] = useState('')
-  const [fallbackFile, setFallbackFile] = useState('')
+  const [framework, setFramework] = useSyncStateFromServer(
+    site?.framework || '',
+  )
+  const [adapter, setAdapter] = useSyncStateFromServer(site?.adapter || '')
+  const [outputDirectory, setOutputDirectory] = useSyncStateFromServer(
+    site?.outputDirectory ?? '',
+  )
+  const [fallbackFile, setFallbackFile] = useSyncStateFromServer(
+    site?.fallbackFile || '',
+  )
 
   const currentFramework = useMemo(
     () => frameworks.find((f) => f.key === framework),
@@ -184,15 +191,6 @@ export function SiteBuildFrameworkCard({
     () => getFrameworkAdapterDefaults(currentFramework, adapter),
     [currentFramework, adapter],
   )
-
-  useEffect(() => {
-    if (site) {
-      setFramework(site.framework || '')
-      setAdapter(site.adapter || '')
-      setOutputDirectory(site.outputDirectory ?? '')
-      setFallbackFile(site.fallbackFile || '')
-    }
-  }, [site])
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

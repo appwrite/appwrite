@@ -2,13 +2,12 @@
 layout: post
 title: "Turn your app into an MCP server with the Appwrite OAuth2 server"
 description: Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.
-date: 2026-08-19
+date: 2026-09-04
 cover: /images/blog-local/turn-your-app-into-an-mcp-server/cover.avif
 timeToRead: 14
 author: atharva
 category: tutorial
 featured: false
-draft: true
 faqs:
   - question: "What is a remote MCP server?"
     answer: "A remote MCP server is a web service that AI tools such as Claude Code, Claude.ai, and Cursor call over HTTP to use your product: listing data, creating records, or running actions on a user's behalf. It follows the Model Context Protocol, an open standard for connecting AI tools to applications."

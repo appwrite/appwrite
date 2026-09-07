@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -25,13 +26,9 @@ export function SiteScopesCard({
   const queryClient = useQueryClient()
   // Null until the site loads, so an empty editor is never mistaken for
   // "no scopes selected" and saved over the real list.
-  const [scopes, setScopes] = useState<string[] | null>(null)
-
-  useEffect(() => {
-    if (site) {
-      setScopes(site.scopes ?? [])
-    }
-  }, [site])
+  const [scopes, setScopes] = useSyncStateFromServer<string[] | null>(
+    site ? (site.scopes ?? []) : null,
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

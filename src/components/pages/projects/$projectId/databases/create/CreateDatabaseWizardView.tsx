@@ -76,6 +76,7 @@ import { cn } from '@/lib/utils'
 import {
   DATABASE_HOME_TO,
   databaseRouteKindFromApiType,
+  isCloudDedicatedDatabasesEnabled,
 } from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -273,42 +274,32 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
+  const dedicatedCloudEnabled = isCloudDedicatedDatabasesEnabled()
   const dedicatedTypeSpecSources = useMemo(() => {
     const items: { id: DatabaseTypeOption; source: DedicatedDatabaseSource }[] =
       []
-    if (features.dedicatedDbsDocumentsDB) {
+    if (dedicatedCloudEnabled) {
       items.push({
         id: 'DocumentsDB',
         source: dedicatedDatabaseSourceFromDatabaseType(
           DatabaseType.Documentsdb,
         ),
       })
-    }
-    if (features.dedicatedDbsVectorsDB) {
       items.push({
         id: 'VectorsDB',
         source: dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Vectorsdb),
       })
-    }
-    if (features.nativeDbsPostgres) {
       items.push({
         id: 'Postgres',
         source: dedicatedDatabaseSourceFromEngine('postgresql'),
       })
-    }
-    if (features.nativeDbsMySQL) {
       items.push({
         id: 'MySQL',
         source: dedicatedDatabaseSourceFromEngine('mysql'),
       })
     }
     return items
-  }, [
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
-  ])
+  }, [dedicatedCloudEnabled])
   const dedicatedTypeSpecQueries = useQueries({
     queries: dedicatedTypeSpecSources.map(({ source }) => ({
       ...databaseSpecificationsQueryOptions(pid, source),
@@ -389,24 +380,21 @@ export function CreateDatabaseWizardView() {
 
     return DB_TYPE_OPTIONS.map((opt) => {
       if (opt.id === 'Postgres') {
-        return resolveDedicatedType(opt, features.nativeDbsPostgres)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'MySQL') {
-        return resolveDedicatedType(opt, features.nativeDbsMySQL)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'DocumentsDB') {
-        return resolveDedicatedType(opt, features.dedicatedDbsDocumentsDB)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       if (opt.id === 'VectorsDB') {
-        return resolveDedicatedType(opt, features.dedicatedDbsVectorsDB)
+        return resolveDedicatedType(opt, dedicatedCloudEnabled)
       }
       return { ...opt, comingSoon: opt.comingSoon }
     })
   }, [
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
+    dedicatedCloudEnabled,
     regionSupportsDedicatedCompute,
     planSupportsDedicatedCompute,
     dedicatedTypesWithoutCompute,

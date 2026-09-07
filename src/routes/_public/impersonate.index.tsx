@@ -8,11 +8,13 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 const impersonateSearchSchema = z.object({
   email: z.string().trim().min(1).optional(),
+  redirect: z.string().min(1).optional(),
 })
 
 /**
- * `/impersonate?email=<address>`: same confirm flow as `/impersonate/$userId`,
- * for support links that only know the requester's email.
+ * `/impersonate?email=<address>&redirect=<path>`: same confirm flow as
+ * `/impersonate/$userId`, for support links that only know the requester's
+ * email. Optional `redirect` is the console page to open after confirm.
  */
 export const Route = createFileRoute('/_public/impersonate/')({
   validateSearch: impersonateSearchSchema,
@@ -40,7 +42,7 @@ export const Route = createFileRoute('/_public/impersonate/')({
 })
 
 function ImpersonateByEmailPage() {
-  const { email } = Route.useSearch()
+  const { email, redirect } = Route.useSearch()
   const loaderData = Route.useLoaderData()
 
   return (
@@ -48,6 +50,7 @@ function ImpersonateByEmailPage() {
       <View
         key={`impersonate-email-${email ?? ''}`}
         email={email}
+        redirect={redirect}
         initialData={loaderData ? { target: loaderData.target } : undefined}
       />
     </RequireAuth>

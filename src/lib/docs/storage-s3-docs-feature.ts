@@ -1,4 +1,4 @@
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export function isStorageS3DocsSlug(slug: string): boolean {
   return slug === 'products/storage/s3' || slug.startsWith('products/storage/s3/')
@@ -21,5 +21,5 @@ export function isStorageS3DocsHref(href: string): boolean {
 }
 
 export function isStorageS3DocsEnabled(): boolean {
-  return getActiveProfileFeatures().storageS3
+  return isCloudProfile()
 }

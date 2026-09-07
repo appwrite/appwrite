@@ -28,6 +28,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { Dependencies } from './dependencies'
+import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -478,6 +479,8 @@ export function siteQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    structuralSharing: (oldData, newData) =>
+      keepNewerLatestDeployment(oldData, newData),
   })
 }
 

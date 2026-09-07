@@ -379,6 +379,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Dead tuples': 'רשומות מתות (Dead tuples)',
   'Decrease replica count': 'הקטנת מספר הרפליקות',
   'Dedicated': 'ייעודי',
+  'Dedicated database': 'מסד נתונים ייעודי',
   'Dedicated databases': 'מסדי נתונים ייעודיים',
   'Default': 'ברירת מחדל',
   'Leave empty for': 'השאירו ריק עבור',
@@ -1615,6 +1616,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Removing': 'בהסרה',
   'Restoring': 'משחזר',
   'Scaling': 'משנה קנה מידה',
+  'Failing over': 'Failover',
   'Upgrading': 'משדרג',
   'Migrating': 'מעביר',
   'Pausing': 'משהה',
@@ -1670,6 +1672,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Compute tier update started': 'עדכון רמת המחשוב התחיל',
   'Failed to update compute tier': 'עדכון רמת המחשוב נכשל',
   'Database is scaling': 'מסד הנתונים משנה קנה מידה',
+  'Database is failing over': 'מסד הנתונים ב-failover',
   'Database is provisioning': 'מסד הנתונים בהקצאה',
   'Database is restoring': 'מסד הנתונים משוחזר',
   'Database is paused': 'מסד הנתונים מושהה',
@@ -1682,6 +1685,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current status': 'סטטוס נוכחי',
   'A compute tier change is in progress. Your cluster remains available during this operation.':
     'שינוי רמת המחשוב מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
+  'A failover is in progress. Your cluster remains available during this operation.':
+    'Failover מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
   'Dedicated compute is being provisioned for this database.':
     'מוקצה מחשוב ייעודי עבור מסד נתונים זה.',
   'This database is being restored. Some operations may be unavailable until it is ready again.':
@@ -2039,6 +2044,15 @@ export const heDatabasesDictionary: Record<string, string> = {
     'פעולות קריאה וכתיבה לדיסק לשנייה עבור אחסון המופע.',
   'Inbound and outbound data transferred by this database instance during the selected period.':
     'נתונים נכנסים ויוצאים שהועברו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Compute resources consumed by this database instance during the selected period.':
+    'משאבי compute שנצרכו על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'Cold starts for this database instance during the selected period.':
+    'Cold starts עבור מופע מסד נתונים זה בטווח שנבחר.',
+  'Debug metrics': 'מדדי debug',
+  'Cold starts': 'Cold starts',
+  'No compute metrics for this date range': 'אין מדדי compute לטווח תאריכים זה',
+  'No cold start metrics for this date range':
+    'אין מדדי cold start לטווח תאריכים זה',
   'Disk read operations per second for instance storage.':
     'פעולות קריאה לדיסק לשנייה עבור אחסון המופע.',
   'Disk write operations per second for instance storage.':

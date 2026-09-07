@@ -222,6 +222,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Execution ID': 'מזהה הרצה',
   Exit: 'יציאה',
   'Exit impersonation': 'יציאה מהתחזות',
+  Share: 'שיתוף',
+  'Copy impersonation link': 'העתקת קישור התחזות',
   'Expanded image': 'תמונה מוגדלת',
 
   // Errors and failures
@@ -844,6 +846,11 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Table filters: column titles from filter configs
   'Resource type': 'סוג משאב',
+  'Resource ID': 'מזהה משאב',
+  'Resource path': 'נתיב משאב',
+  'Resource parent': 'משאב אב',
+  'Actor email': 'אימייל מבצע',
+  'Event ID': 'מזהה אירוע',
   'Event path': 'נתיב אירוע',
   Signature: 'חתימה',
   'Deployment status': 'סטטוס פריסה',
@@ -853,6 +860,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   // Table filters: enum value labels from filter configs
   'User / key': 'משתמש / מפתח',
   'User (client API)': 'משתמש (Client API)',
+  Hidden: 'מוסתר',
+  'App installation': 'התקנת אפליקציה',
+  Subscriber: 'מנוי',
+  Report: 'דיווח',
   Verifying: 'באימות',
   Relationship: 'קשר',
   Point: 'נקודה',
@@ -1250,4 +1261,6 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המסוף יפעל עם ההרשאות של המשתמש הזה עד שתצאו ממצב ההתחזות. הפעולות יישארו משויכות לחשבון האופרטור שלכם.',
   'Operator access': 'גישת אופרטור',
   'Operator account': 'חשבון אופרטור',
+  'After you confirm, the Console will open this page.':
+    'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
 }

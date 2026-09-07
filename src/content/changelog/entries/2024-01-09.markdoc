@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite is now GDPR compliant
 date: 2024-01-09
 cover: /images/changelog/2024-01-09.avif
+tags: security
 ---
 
 At Appwrite, we take your data seriously. Therefore, we are excited to announce that Appwrite is now GDPR Compliant.

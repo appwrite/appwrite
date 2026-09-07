@@ -3,6 +3,7 @@ layout: changelog
 title: "Advanced filtering across the Console"
 date: 2026-02-17
 cover: /images/changelog/2026-02-17.avif
+tags: console, functions, sites
 ---
 
 Debugging and monitoring just got easier. The Appwrite Console now supports advanced filtering for function executions, site logs, and deployments.

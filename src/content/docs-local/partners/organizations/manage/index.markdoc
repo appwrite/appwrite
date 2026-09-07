@@ -1,53 +1,62 @@
 ---
 layout: article
 title: Manage organizations
-description: Create and update Appwrite organizations from your partner platform using the Console Organization API.
+description: Read, rename, and delete the organization behind a Partners key with the Appwrite Organization API.
 ---
 
-Use the Organization API to provision and configure organizations as part of your onboarding flow.
+A Partners key acts on the organization it was created in. The read, update, and delete operations take no organization parameter, because the key already names the organization.
 
-# Create an organization {% #create-an-organization %}
+Creating an organization is a Console action and a Partners key cannot do it. Create the organization in the Console first, then create a key inside it.
 
-{% multicode %}
-```server-nodejs
-import { Client, Organizations } from 'node-appwrite';
-
-const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('console')
-    .setKey(process.env.APPWRITE_ORG_API_KEY);
-
-const organizations = new Organizations(client);
-
-const org = await organizations.create({
-    organizationId: 'unique()',
-    name: 'Acme Platform Customer',
-    billingEmail: 'billing@example.com',
-});
-```
-{% /multicode %}
-
-Store the returned organization ID in your platform database and associate it with the customer record.
-
-# Update organization settings {% #update-organization-settings %}
-
-Update name, billing email, and preferences when customers change settings in your product:
+# Read the organization {% #read-the-organization %}
 
 {% multicode %}
 ```server-nodejs
-await organizations.update({
-    organizationId: orgId,
-    name: 'Updated name',
-});
+const org = await organization.get();
+
+console.log(org.$id, org.name);
+```
+```server-rust
+let org = organization.get().await?;
+
+println!("{} {}", org.id, org.name);
 ```
 {% /multicode %}
 
-# Map organizations to customers {% #map-organizations-to-customers %}
+# Rename the organization {% #rename-the-organization %}
 
-Maintain a stable mapping between your customer ID and Appwrite `organizationId`. Use this mapping for all Console API calls and audit logs.
+The update operation takes the name and nothing else. Billing details stay in the Console.
+
+{% multicode %}
+```server-nodejs
+await organization.update({
+    name: 'Acme Platform',
+});
+```
+```server-rust
+organization.update("Acme Platform").await?;
+```
+{% /multicode %}
+
+# Delete the organization {% #delete-the-organization %}
+
+Deleting an organization also deletes every project inside it. Back up customer data before you call this operation.
+
+{% multicode %}
+```server-nodejs
+await organization.delete();
+```
+```server-rust
+organization.delete().await?;
+```
+{% /multicode %}
+
+# Store the organization ID {% #store-the-organization-id %}
+
+Store the Appwrite organization ID next to your platform's own identifier for it. Your audit logs need the mapping to tie an Appwrite change back to a customer.
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/projects/create" %}
-Create projects
+{% arrow_link href="/docs/partners/project" %}
+Project
 {% /arrow_link %}

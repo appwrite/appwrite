@@ -90,6 +90,7 @@ import {
   OFFCANVAS_START_CLOSED,
   SIDEBAR_EDGE_TOGGLE_OVERFLOW,
 } from '@/lib/layout/offcanvas-classes'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsAttrs,
@@ -492,11 +493,11 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!features.domains && isDomainsDocsPathname(pathname)) {
+    if (!isCloudProfile() && isDomainsDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!features.firewall && isFirewallDocsPathname(pathname)) {
+    if (!isCloudProfile() && isFirewallDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
     }
@@ -504,7 +505,7 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!features.storageS3 && isStorageS3DocsPathname(pathname)) {
+    if (!isCloudProfile() && isStorageS3DocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
     }
@@ -513,14 +514,7 @@ export function DocsGlobalSidebar({
     }
   }, [
     features.agent,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.domains,
-    features.firewall,
-    features.nativeDbsMySQL,
-    features.nativeDbsPostgres,
     features.partnersDocs,
-    features.storageS3,
     hasMounted,
     navigate,
     pathname,

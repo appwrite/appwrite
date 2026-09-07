@@ -381,7 +381,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'reddit',
     title: 'Init week AMA',
     startsAt: '2026-09-04T10:00:00-07:00',
-    href: 'https://reddit.com/r/appwrite',
+    href: 'https://www.reddit.com/r/appwrite/comments/1w7911m/introducing_appwrite_domains_firewall_and_oauth2/',
   },
   /**
    * The community recap lands the day after the final launch day. It exists only

@@ -47,10 +47,12 @@ import {
   canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
+  isLatestBuildAfterResourceUpdate,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
 import {
   applySettingsRedeploySuccess,
+  cacheUpdatedFunctionOrSite,
   clearSettingsRedeployPending,
 } from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
@@ -474,10 +476,15 @@ export function View() {
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Runtime limits updated successfully'))
+      cacheUpdatedFunctionOrSite(
+        queryClient,
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+        queryKey: ['functions', 'project', projectId],
       })
       setRuntimeLimitsDialogOpen(false)
     },
@@ -818,7 +825,9 @@ export function View() {
     <div ref={scrollContainerRef} className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
         <div className="space-y-6">
-          {isBuilding && (
+          {isBuilding &&
+            (func?.live !== false ||
+              isLatestBuildAfterResourceUpdate(func, activeDeployment)) && (
             <div className="border-b border-border bg-blue-500/5">
               <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
                 <Alert

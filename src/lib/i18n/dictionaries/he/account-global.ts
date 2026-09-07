@@ -493,6 +493,41 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אפשרו התראות דפדפן כדי לדעת על סיום בנייה גם כשהלשונית הזו ברקע.',
   'Not now': 'לא עכשיו',
   Enable: 'הפעלה',
+  'Browser alerts': 'התראות דפדפן',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'קבלו התראות שולחן עבודה מה-Console כשהלשונית הזו ברקע או שאפליקציה אחרת בפוקוס.',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'תקבלו התראות שולחן עבודה מה-Console בזמן שהלשונית הזו ברקע.',
+  'Browser alerts are turned off in the Console.':
+    'התראות הדפדפן כבויות ב-Console.',
+  'Console alerts': 'התראות Console',
+  'Included alerts': 'התראות כלולות',
+  'Build completion': 'סיום בנייה',
+  'Site and function builds that finish while you are away.':
+    'בניות אתרים ופונקציות שמסתיימות בזמן שאתם לא ליד המסך.',
+  'Browser alerts test': 'בדיקת התראות דפדפן',
+  'If you can read this, browser alerts are working correctly.':
+    'אם אתם קוראים את זה, התראות הדפדפן עובדות כראוי.',
+  'Send test notification': 'שליחת התראת בדיקה',
+  'Test notification sent': 'התראת הבדיקה נשלחה',
+  'Could not send a test notification. Check browser permissions.':
+    'לא ניתן היה לשלוח התראת בדיקה. בדקו את הרשאות הדפדפן.',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'אפשרו התראות עבור האתר הזה בהגדרות הדפדפן, ואז חזרו לכאן.',
+  'Browser permission': 'הרשאת דפדפן',
+  'Console preference': 'העדפת Console',
+  'Waiting for browser permission': 'ממתין להרשאת דפדפן',
+  'Not supported': 'לא נתמך',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'פתחו את הגדרות הדפדפן, מצאו הרשאות התראות עבור האתר הזה, אפשרו התראות, ואז רעננו את העמוד.',
+  'This browser does not support desktop notifications.':
+    'הדפדפן הזה לא תומך בהתראות שולחן עבודה.',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ההתראות חסומות על ידי הדפדפן. אפשרו אותן בהגדרות הדפדפן עבור האתר הזה.',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    'הפעילו התראות ואשרו התראות כשהדפדפן מבקש מכם.',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'אם לא הופיע באנר, בדקו את מרכז ההתראות של המערכת או את הגדרות "נא לא להפריע".',
 
   // Build notification titles/bodies (dynamic combinations)
   'Site build ready': 'בניית האתר מוכנה',

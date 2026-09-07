@@ -546,7 +546,10 @@ function UserSelectionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Select Users')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -723,7 +726,10 @@ function TeamSelectionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Select Teams')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -937,7 +943,10 @@ function MemberSelectionModal({
         onOpenChange(next)
       }}
     >
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Select Memberships')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -1171,7 +1180,10 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Add Label')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -1260,7 +1272,10 @@ function CustomRoleInputModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Add by role string')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

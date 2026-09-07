@@ -84,20 +84,20 @@ type ProductNavigationCopy = {
 }
 
 function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
 
   return useMemo(
     () =>
       MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
         ...category,
         productIds: category.productIds.filter((id) => {
-          if (id === 'firewall') return features.firewall
-          if (id === 'domains') return features.domains
+          if (id === 'firewall') return isCloud
+          if (id === 'domains') return isCloud
           if (id === 'agent') return features.agent
           return true
         }),
       })).filter((category) => category.productIds.length > 0),
-    [features.agent, features.domains, features.firewall],
+    [features.agent, isCloud],
   )
 }
 

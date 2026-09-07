@@ -10,6 +10,12 @@ A redirect rule sends matching visitors to another location. Use it to put a dep
 
 This guide uses two rules on one site. A **bypass** rule keeps the maintenance page itself reachable. A **redirect** rule sends every other path to the maintenance page. Without the bypass rule, requests to the maintenance page would match the redirect rule and loop.
 
+{% info title="Keep the maintenance page self-contained" %}
+The redirect rule also catches the CSS, JavaScript, fonts, and images your maintenance page loads, so the page renders unstyled.
+
+Serve a maintenance page with inline styles and no external assets, or add a bypass rule for each asset path at a lower priority number than the redirect.
+{% /info %}
+
 # Create the bypass rule {% #create-the-bypass-rule %}
 
 1. Open **Firewall** in your project.
@@ -17,7 +23,7 @@ This guide uses two rules on one site. A **bypass** rule keeps the maintenance p
 3. Enter a **Rule name** (for example `Allow maintenance page`).
 4. Set **Resource type** to **Sites** and select your site.
 5. Under conditions, set **Path** **Equals** `/maintenance`.
-6. Set **Action** to **Bypass**.
+6. Under **Then**, choose **Bypass**.
 7. Set **Priority** to `10`.
 8. Click **Create rule**.
 
@@ -34,26 +40,26 @@ This guide uses two rules on one site. A **bypass** rule keeps the maintenance p
 2. Enter a **Rule name** (for example `Redirect to maintenance page`).
 3. Set **Resource type** to **Sites** and select the same site.
 4. Under conditions, set **Path** **Starts with** `/`.
-5. Set **Action** to **Redirect**.
+5. Under **Then**, choose **Redirect**.
 6. Set **Redirect location** to `/maintenance`.
 7. Keep **Status code** at `302`.
 8. Set **Priority** to `100`.
 9. Click **Create rule**.
 
-Use `302` for a temporary redirect so browsers and search engines do not cache the maintenance location. Codes from `300` to `399` are accepted. See [Redirect](/docs/products/firewall/actions#redirect).
+Use `302` so browsers and search engines do not cache the redirect.
+
+# Verify the rules {% #verify-the-rules %}
+
+1. Open any path of the site in a browser. Confirm the browser lands on `/maintenance`.
+2. Open `/maintenance` directly. Confirm that the page loads without a redirect and renders with its styles.
+3. Open **Firewall** and confirm the **Redirected** series rises in the traffic overview.
 
 # End the maintenance {% #end-the-maintenance %}
 
 1. Open **Firewall** and select the site in the resource selector.
 2. Turn off the status toggle of the redirect rule.
 
-The site serves normal traffic again. Keep the disabled rule for the next maintenance window, or delete it. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
-
-# Verify the rules {% #verify-the-rules %}
-
-1. Open any path of the site in a browser. Confirm the browser lands on `/maintenance`.
-2. Open `/maintenance` directly. Confirm the page loads without a redirect.
-3. Open **Firewall** and confirm the **Redirected** series rises in the traffic overview.
+The site serves normal traffic again. Keep the disabled rule for the next maintenance window, or delete it.
 
 {% arrow_link href="/docs/products/firewall/scopes" %}
 Resource scopes

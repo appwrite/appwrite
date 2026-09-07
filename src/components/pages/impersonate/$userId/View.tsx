@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card'
 import {
   ACCOUNT_PATH_AFTER_IMPERSONATION,
   resolveConsoleImpersonationOperator,
+  resolveConsoleImpersonationRedirect,
 } from '@/lib/console-impersonation'
 import { beginConsoleImpersonation } from '@/lib/console-impersonation-start'
 import { useT } from '@/lib/i18n/translate'
@@ -29,15 +30,17 @@ type ViewProps = {
   userId?: string
   /** Requester email (`/impersonate?email=`), resolved to a console user. */
   email?: string
+  /** Console path to open after confirm (`/impersonate?redirect=`). */
+  redirect?: string
   initialData?: ImpersonateInitialData
 }
 
 /**
- * Confirmation screen for the `/impersonate/$userId` deep link (e.g. from HelpScout
- * triage notes). Operators see who they are about to impersonate and confirm before
- * the Console switches identity; everyone else is sent back to `/account`.
+ * Confirmation screen for `/impersonate` deep links (header Share, HelpScout
+ * notes). Operators see who they are about to impersonate and confirm before
+ * the Console switches identity, then open the shared page when `redirect` is set.
  */
-export function View({ userId, email, initialData }: ViewProps) {
+export function View({ userId, email, redirect, initialData }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
   const { account: rawAccount } = useAuth()
@@ -78,10 +81,13 @@ export function View({ userId, email, initialData }: ViewProps) {
   const alreadyActive = !!account && !!targetId && account.$id === targetId
   const isOwnOperatorAccount =
     !!operator && !!targetId && operator.$id === targetId
+  const afterPath = resolveConsoleImpersonationRedirect(redirect)
+  const continueExistingSession = alreadyActive && !!redirect?.trim()
+  const showRedirectHint = !!redirect?.trim()
 
   const blockingMessage = !operator
     ? t('Operator context was lost. Stop impersonating, then start again.')
-    : alreadyActive
+    : alreadyActive && !continueExistingSession
       ? t('That user is already the active Console session.')
       : isOwnOperatorAccount
         ? t('You cannot impersonate your own operator account.')
@@ -96,7 +102,11 @@ export function View({ userId, email, initialData }: ViewProps) {
     setStartError(null)
     setIsStarting(true)
     try {
-      beginConsoleImpersonation(target.$id, operator)
+      if (continueExistingSession) {
+        window.location.replace(afterPath)
+        return
+      }
+      beginConsoleImpersonation(target.$id, operator, { redirect: afterPath })
     } catch (error) {
       console.error(error)
       setIsStarting(false)
@@ -115,7 +125,10 @@ export function View({ userId, email, initialData }: ViewProps) {
   const targetLabel = target?.name || target?.email || email || userId || ''
 
   return (
-    <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10">
+    <main
+      id="main-content"
+      className="relative flex h-[100dvh] max-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background p-6 md:p-10"
+    >
       <div className="w-full max-w-md">
         <Card className="overflow-hidden p-6 md:p-8">
           <div className="space-y-6">
@@ -162,6 +175,20 @@ export function View({ userId, email, initialData }: ViewProps) {
               </div>
             </div>
 
+            {showRedirectHint ? (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-start">
+                <p className="text-[12px] text-muted-foreground">
+                  {t('After you confirm, the Console will open this page.')}
+                </p>
+                <p
+                  className="mt-1 break-all font-mono text-[12px] font-medium text-foreground"
+                  dir="ltr"
+                >
+                  {afterPath}
+                </p>
+              </div>
+            ) : null}
+
             {operatorLabel ? (
               <p className="text-center text-[12px] text-muted-foreground">
                 {t('Operator account')}{' '}
@@ -200,6 +227,6 @@ export function View({ userId, email, initialData }: ViewProps) {
           </div>
         </Card>
       </div>
-    </div>
+    </main>
   )
 }

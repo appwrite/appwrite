@@ -82,6 +82,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override cookie consent banner',
   },
   {
+    key: 'VITE_CONSOLE_BROWSER_ALERTS',
+    group: 'Runtime',
+    description: 'Override Account browser alerts and build notifications',
+  },
+  {
     key: 'VITE_CONSOLE_BLOG_DRAFTS',
     group: 'Runtime',
     description: 'Override draft blog post visibility',
@@ -235,6 +240,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
+    VITE_CONSOLE_BROWSER_ALERTS: isNonEmpty(config.browserAlerts),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),

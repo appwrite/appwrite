@@ -264,6 +264,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Contact emails': 'אימיילים ליצירת קשר',
   'Contact for price': 'צרו קשר לקבלת מחיר',
   'Contact sales': 'צרו קשר עם צוות המכירות',
+  'Continue in the old console': 'המשך בקונסול הישן',
   'Copied to clipboard': 'הועתק ללוח',
   'Client ID': 'מזהה לקוח',
   'Last used': 'שימוש אחרון',
@@ -387,6 +388,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Domains: 'דומיינים',
   Done: 'סיום',
   'Downgrade impact': 'השפעת השנמוך',
+  'Downgrade to Free': 'שנמוך ל-Free',
+  'Downgrade to Free is temporarily unavailable here. Continue in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע. המשיכו בקונסול הישן.',
   Downgraded: 'שונמך',
   'Downgrading to Free Plan': 'שנמוך לתוכנית Free',
   'Downgrading your plan': 'משנמך את התוכנית שלכם',
@@ -1058,6 +1062,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Tax ID': 'מספר זיהוי מס',
   'Tax ID (Optional)': 'מספר זיהוי מס (אופציונלי)',
   'Tax ID updated': 'מספר זיהוי המס עודכן',
+  'Temporarily available in the old console': 'זמין זמנית בקונסול הישן',
   'Team ID is required': 'מזהה צוות הוא שדה חובה',
   'Terms of service': 'תנאי שירות',
   'The address will remain on your account; only the link to this organization will be removed.':
@@ -1078,6 +1083,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע בזמן שאנחנו משפרים את החוויה. אפשר להשלים את השינוי בקונסול הישן.',
   'This invoice is missing authentication details.':
     'בחשבונית זו חסרים פרטי אימות.',
   'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.':
@@ -1231,6 +1238,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור פרויקטים.',
   "You don't have permission to invite members.":
     'אין לכם הרשאה להזמין חברים.',
+  "You don't have permission to manage members.":
+    'אין לכם הרשאה לנהל חברים.',
   'You have': 'יש לכם',
   'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',

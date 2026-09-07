@@ -49,6 +49,7 @@ export function InitPresenceUserAvatar({
     <PhotoAvatar
       userId={photoUserId}
       name={displayName}
+      isCurrentUser={isSelf}
       size={size}
       className={className}
     />

@@ -3,6 +3,7 @@ layout: changelog
 title: "Buy domains and host DNS inside your Appwrite organization"
 date: 2026-09-04
 cover: /images/blog-local/announcing-appwrite-domains/cover.avif
+tags: domains, functions, sites, security
 ---
 
 [Appwrite Domains](/docs/products/domains) is now available on Appwrite Cloud. Open **Organization** > **Domains** to register a name across more than 160 TLDs, [transfer an existing registration in](/docs/products/domains/transfer), or [add a domain you keep registered elsewhere](/docs/products/domains/external) by pointing its nameservers at `ns1.appwrite.zone` and `ns2.appwrite.zone`.

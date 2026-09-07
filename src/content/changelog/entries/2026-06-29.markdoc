@@ -2,6 +2,7 @@
 layout: changelog
 title: 'Paused free projects are deleted after 90 days'
 date: 2026-06-29
+tags: console
 ---
 
 Starting today, free projects that stay paused for 90 days will be deleted, including all of their resources. Affected projects receive email alerts before anything is deleted.

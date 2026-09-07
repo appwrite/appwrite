@@ -3,6 +3,7 @@ layout: changelog
 title: "Push notifications: new delivery options and controls"
 date: 2025-01-22
 cover: /images/changelog/2025-01-22.avif
+tags: messaging, performance
 ---
 
 We've introduced new additions to Appwrite Messaging that give you greater control over how you send and handle push notifications in your apps.

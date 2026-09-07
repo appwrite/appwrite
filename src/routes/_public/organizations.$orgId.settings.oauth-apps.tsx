@@ -1,13 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { fetchOrganizations, organizationAppsQueryOptions } from '@/lib/react-query/hooks'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/oauth-apps',
 )({
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().oauthApps) {
+    if (!isCloudProfile()) {
       throw redirect({
         to: '/organizations/$orgId/settings',
         params: { orgId: params.orgId },

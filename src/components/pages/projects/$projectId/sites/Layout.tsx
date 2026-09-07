@@ -59,7 +59,7 @@ import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
 import {
   getRedeploySourceDeploymentId,
-  resourceIsBuilding,
+  shouldShowBuildingInsteadOfSettingsAlert,
 } from '@/lib/utils/deployment-status'
 import {
   applySettingsRedeploySuccess,
@@ -182,7 +182,11 @@ function SiteLayoutContent() {
 
   const isBuilding = useMemo(
     () =>
-      settingsRedeployPending || resourceIsBuilding(site, activeDeployment),
+      shouldShowBuildingInsteadOfSettingsAlert(
+        site,
+        activeDeployment,
+        settingsRedeployPending,
+      ),
     [settingsRedeployPending, site, activeDeployment],
   )
 

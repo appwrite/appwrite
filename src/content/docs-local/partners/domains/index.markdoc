@@ -4,6 +4,10 @@ title: Domains API
 description: Manage organization domains and DNS from your partner platform using the Console Domains API.
 ---
 
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. The Domains endpoints still declare session-only auth in the API spec, so no server SDK ships a Domains service. The `domains.read` and `domains.write` scopes exist on Partners keys, so relink this page once the endpoints declare key auth and the SDKs generate the service.
+{% /info %}
+
 The Domains API lets partner platforms register, transfer, and manage organization domains programmatically. Use it when your product offers custom hostnames or domain management to customers.
 
 # Console SDK access {% #console-sdk-access %}

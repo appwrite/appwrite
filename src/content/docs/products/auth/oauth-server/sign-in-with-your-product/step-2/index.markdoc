@@ -20,7 +20,7 @@ In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **E
 
 Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is `http://localhost:4000/oauth/consent`. This is where the OAuth2 server sends users to sign in and approve.
 
-Leave the scopes at their defaults. `openid`, `profile`, and `email` are always included, which is all Vantage needs. See [Scopes](/docs/products/auth/oauth-server/scopes) to add your own later.
+Leave the scopes at their defaults. `openid`, `profile`, `email`, and `phone` are always included, and Vantage only needs the first three. See [Scopes](/docs/products/auth/oauth-server/scopes) to add your own later.
 
 # Register the client {% #register-client %}
 

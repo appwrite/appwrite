@@ -2,6 +2,7 @@
 layout: changelog
 title: "Expanded event support for users.create"
 date: 2024-11-14
+tags: auth
 ---
 
 The `users.create` event now triggers for OAuth, CreateTeamMemberships, and other user creation methods.

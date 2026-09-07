@@ -32,6 +32,22 @@ export function headerAlertOutlineButtonClass(variant: HeaderAlertVariant) {
   )
 }
 
+/** Ghost CTA: same size as the outline chip, no border. */
+const VARIANT_GHOST_ACTION: Record<HeaderAlertVariant, string> = {
+  warning:
+    'bg-transparent text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300',
+  danger:
+    'bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
+  info: 'bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
+}
+
+export function headerAlertGhostButtonClass(variant: HeaderAlertVariant) {
+  return cn(
+    'inline-flex h-8 w-fit cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors',
+    VARIANT_GHOST_ACTION[variant],
+  )
+}
+
 /** Text-style secondary CTA beside an outline header-alert button. */
 const VARIANT_TEXT_ACTION: Record<HeaderAlertVariant, string> = {
   warning:

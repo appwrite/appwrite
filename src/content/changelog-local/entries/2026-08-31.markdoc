@@ -3,6 +3,7 @@ layout: changelog
 title: "Console IV brings appwrite.io and the Console into one app"
 date: 2026-08-31
 cover: /images/blog-local/announcing-console-iv/cover.avif
+tags: console
 ---
 
 **Console IV** is the fourth generation of the Appwrite Console, rebuilt on TanStack Start with React, Tailwind CSS, and ShadCN UI. It replaces the two codebases behind appwrite.io and the old Console, so the marketing pages, documentation, blog, changelog, and every project route now run in one application.

@@ -3,6 +3,11 @@ import { Ghost } from 'lucide-react'
 
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAvatarEmailHash } from '@/lib/avatar-email-hash'
+import { getConsoleAccountFromSingleton } from '@/lib/console-account-get'
+import {
+  resolveScreenshotModeUserPhotoSrc,
+  subscribeScreenshotMode,
+} from '@/lib/screenshot-mode'
 import { cn } from '@/lib/utils'
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
@@ -25,6 +30,8 @@ interface PhotoAvatarProps {
    * the account ID is not available yet; prefer `userId` when you have it.
    */
   useCurrentUser?: boolean
+  /** When true, screenshot mode replaces this avatar with the demo user photo. */
+  isCurrentUser?: boolean
   /** Used only for initials fallback when the photo is unavailable. */
   name?: string
   size?: AvatarSize
@@ -113,16 +120,32 @@ export function InitialsAvatar({
 export function PhotoAvatar({
   userId,
   useCurrentUser = false,
+  isCurrentUser = false,
   name,
   size = 'md',
   className,
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
   const trimmedUserId = userId?.trim() || ''
   const pixels = sizePixels[size]
 
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
+
   const src = useMemo(() => {
+    const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
+      userId: trimmedUserId,
+      useCurrentUser,
+      isCurrentUser,
+      currentUserId: getConsoleAccountFromSingleton()?.$id,
+    })
+    if (screenshotSrc) return screenshotSrc
+
     if (trimmedUserId) {
       return sdk.forConsole.avatars.getPhoto({
         width: pixels,
@@ -139,7 +162,7 @@ export function PhotoAvatar({
     }
 
     return null
-  }, [pixels, trimmedUserId, useCurrentUser])
+  }, [pixels, trimmedUserId, useCurrentUser, isCurrentUser, screenshotModeEpoch])
 
   const [activeSrc, setActiveSrc] = useState(src)
   const imageRef = useRef<HTMLImageElement | null>(null)

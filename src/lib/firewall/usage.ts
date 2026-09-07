@@ -5,7 +5,10 @@ import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { FirewallCreatableAction } from '@/lib/firewall/actions'
 import { getFirewallActionMetric } from '@/lib/firewall/action-metrics'
 import { FIREWALL_CHALLENGE_SOLVE_TIME_METRIC } from '@/lib/usage/firewall-events'
-import { fetchUsageMetricsChartSeriesByMetric } from '@/lib/usage/usage-events-common'
+import {
+  fetchUsageMetricsChartSeriesByMetric,
+  type UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
 import {
   FIREWALL_CONDITION_OPERATORS,
   isConditionDraftComplete,
@@ -31,18 +34,38 @@ import type {
 } from '@/lib/firewall/types'
 import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
 
-/** Firewall resourceType → usage.listEvents resourceType. `api` has no usage resourceType. */
-const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string | null> = {
-  api: null,
+/** Firewall resourceType → usage.listEvents resourceType. API traffic is tagged `project`. */
+const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string> = {
+  api: 'project',
   functions: 'function',
   sites: 'site',
+}
+
+/** Usage.listEvents resource scope for a firewall resource selection. */
+export function resolveFirewallUsageResourceScope(
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+): { resourceId?: string; usageResourceType: string } {
+  const id = resourceId?.trim()
+  if (resourceType === 'api' || !id) {
+    return { usageResourceType: USAGE_RESOURCE_TYPE.api }
+  }
+  return {
+    resourceId: id,
+    usageResourceType: USAGE_RESOURCE_TYPE[resourceType],
+  }
 }
 
 /**
  * Map a draft condition attribute to a usage.listEvents filter attribute.
  * `userAgent` is approximated with `clientName` (usage has no userAgent field).
- * Attributes usage cannot filter on (continent / state / headers / query)
- * return null and are skipped in affected-traffic estimation.
+ * Network attributes map 1:1 (usage events carry the same field names); geo
+ * `continent`/`state` map to `continentCode`/`region`. Only attributes the usage
+ * backend actually accepts are mapped here — the request/extended-geo attributes
+ * (protocol, accept, acceptLanguage, queryKeys, timeZone, postalCode, latitude,
+ * longitude, weatherCode) aren't wired into usage yet, so they (and headers /
+ * query) return null and are skipped in affected-traffic estimation, making the
+ * estimate an upper bound.
  */
 function toUsageAttribute(attribute: string): string | null {
   switch (attribute) {
@@ -51,6 +74,12 @@ function toUsageAttribute(attribute: string): string | null {
     case 'method':
     case 'country':
     case 'city':
+    case 'isp':
+    case 'autonomousSystemNumber':
+    case 'autonomousSystemOrganization':
+    case 'connectionType':
+    case 'connectionUsageType':
+    case 'connectionOrganization':
       return attribute
     case 'host':
       return 'hostname'
@@ -59,6 +88,10 @@ function toUsageAttribute(attribute: string): string | null {
     case 'browser':
     case 'userAgent':
       return 'clientName'
+    case 'continent':
+      return 'continentCode'
+    case 'state':
+      return 'region'
     default:
       return null
   }
@@ -78,6 +111,12 @@ function toFirewallConditionAttribute(
     case 'method':
     case 'country':
     case 'city':
+    case 'isp':
+    case 'autonomousSystemNumber':
+    case 'autonomousSystemOrganization':
+    case 'connectionType':
+    case 'connectionUsageType':
+    case 'connectionOrganization':
       return attribute
     case 'hostname':
       return 'host'
@@ -85,6 +124,46 @@ function toFirewallConditionAttribute(
       return 'os'
     case 'clientName':
       return 'browser'
+    case 'continentCode':
+      return 'continent'
+    case 'region':
+      return 'state'
+    default:
+      return null
+  }
+}
+
+/**
+ * Map a firewall condition attribute to the usage breakdown dimension that can
+ * chart its distribution, or null when there is none. Only attributes that are
+ * real listEvents breakdown dimensions qualify — dynamic keys (headers / query),
+ * request/extended-geo attributes not wired into usage, and the filter-only geo
+ * codes (continent → continentCode, state → region, which are not breakdown
+ * dimensions) return null, so callers can skip rendering a graph for them.
+ */
+export function firewallConditionBreakdownDimension(
+  attribute: FirewallConditionAttribute,
+): UsageEventBreakdownDimension | null {
+  switch (attribute) {
+    case 'ip':
+    case 'path':
+    case 'method':
+    case 'country':
+    case 'city':
+    case 'isp':
+    case 'autonomousSystemNumber':
+    case 'autonomousSystemOrganization':
+    case 'connectionType':
+    case 'connectionUsageType':
+    case 'connectionOrganization':
+      return attribute
+    case 'host':
+      return 'hostname'
+    case 'os':
+      return 'osName'
+    case 'browser':
+    case 'userAgent':
+      return 'clientName'
     default:
       return null
   }
@@ -257,14 +336,10 @@ export function buildFirewallResourceUsageQueries(
   resourceType: FirewallResourceType,
   resourceId?: string,
 ): string[] {
-  const queries: string[] = []
-  const usageResourceType = USAGE_RESOURCE_TYPE[resourceType]
-  if (usageResourceType) {
-    queries.push(Query.equal('resourceType', usageResourceType))
-  }
-  const id = resourceId?.trim()
-  if (id && resourceType !== 'api') {
-    queries.push(Query.equal('resourceId', id))
+  const scope = resolveFirewallUsageResourceScope(resourceType, resourceId)
+  const queries = [Query.equal('resourceType', scope.usageResourceType)]
+  if (scope.resourceId) {
+    queries.push(Query.equal('resourceId', scope.resourceId))
   }
   return queries
 }

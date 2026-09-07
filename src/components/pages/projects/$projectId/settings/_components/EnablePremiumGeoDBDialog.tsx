@@ -10,6 +10,7 @@ import {
   isPaymentAuthentication,
   resolveStripeProviderMethodId,
 } from '@/lib/billing/addons'
+import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
 import {
   projectAddonPriceQueryOptions,
   projectAddonsQueryOptions,
@@ -55,6 +56,7 @@ export function EnablePremiumGeoDBDialog({
   const [error, setError] = useState<string | null>(null)
 
   const refreshAddonQueries = async () => {
+    const organizationId = organization?.$id
     await Promise.all([
       queryClient.refetchQueries({
         queryKey: projectAddonsQueryOptions(projectId).queryKey,
@@ -66,9 +68,9 @@ export function EnablePremiumGeoDBDialog({
         ).queryKey,
       }),
       queryClient.refetchQueries({ queryKey: ['project', projectId] }),
-      queryClient.refetchQueries({
-        queryKey: ['billing-aggregation', 'organization'],
-      }),
+      ...(organizationId
+        ? [refetchOrganizationBillingQueries(queryClient, organizationId)]
+        : []),
     ])
   }
 

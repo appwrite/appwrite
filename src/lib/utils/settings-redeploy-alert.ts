@@ -8,6 +8,8 @@ import {
 import type { Models } from '@appwrite.io/console'
 import {
   isDeploymentInProgress,
+  isLatestBuildAfterResourceUpdate,
+  keepNewerLatestDeployment,
   patchResourceAfterRedeploy,
 } from '@/lib/utils/deployment-status'
 
@@ -24,6 +26,47 @@ export function settingsRedeployPendingQueryKey(
     projectId,
     resourceId,
   ] as const
+}
+
+type SpecSettingsResource = {
+  live?: boolean
+  runtimeSpecification?: string
+  buildSpecification?: string
+}
+
+/**
+ * Spec updates do not set `live=false` on the API (it only cold-starts the
+ * current runtime). Without this, the settings redeploy alert never appears.
+ */
+export function withRedeployAlertIfSpecsChanged<T extends SpecSettingsResource>(
+  previous: T | null | undefined,
+  updated: T,
+): T {
+  if (!previous) return updated
+
+  const specsChanged =
+    (previous.runtimeSpecification || '') !==
+      (updated.runtimeSpecification || '') ||
+    (previous.buildSpecification || '') !== (updated.buildSpecification || '')
+
+  if (!specsChanged) return updated
+
+  return { ...updated, live: false }
+}
+
+export function cacheUpdatedFunctionOrSite<T extends SpecSettingsResource>(
+  queryClient: QueryClient,
+  queryKey: QueryKey,
+  updated: T,
+) {
+  const previous = queryClient.getQueryData<T>(queryKey)
+  queryClient.setQueryData(
+    queryKey,
+    keepNewerLatestDeployment(
+      previous,
+      withRedeployAlertIfSpecsChanged(previous, updated),
+    ),
+  )
 }
 
 export function markSettingsRedeployPending(
@@ -101,7 +144,12 @@ export function useSettingsRedeployPending(
   resourceType: SettingsRedeployResourceType,
   projectId: string | null | undefined,
   resourceId: string | null | undefined,
-  resource?: { live?: boolean; latestDeploymentStatus?: string } | null,
+  resource?: {
+    live?: boolean
+    $updatedAt?: string
+    latestDeploymentCreatedAt?: string
+    latestDeploymentStatus?: string
+  } | null,
 ) {
   const queryClient = useQueryClient()
   const enabled = !!projectId && !!resourceId
@@ -147,7 +195,23 @@ export function useSettingsRedeployPending(
       return
     }
 
-    if (resource.latestDeploymentStatus === 'failed') {
+    if (
+      !resource.live &&
+      !isLatestBuildAfterResourceUpdate(resource)
+    ) {
+      clearSettingsRedeployPending(
+        queryClient,
+        resourceType,
+        projectId!,
+        resourceId!,
+      )
+      return
+    }
+
+    if (
+      resource.latestDeploymentStatus === 'failed' &&
+      isLatestBuildAfterResourceUpdate(resource)
+    ) {
       clearSettingsRedeployPending(
         queryClient,
         resourceType,

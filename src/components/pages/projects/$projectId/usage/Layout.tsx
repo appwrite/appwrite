@@ -399,7 +399,7 @@ function UsageLayoutContent({
     plan,
   )
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const { features, isSelfHosted } = useConsoleProfile()
+  const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const filterAvailability = useMemo(
     () => ({ allowCity: !isSelfHosted }),
     [isSelfHosted],
@@ -454,7 +454,7 @@ function UsageLayoutContent({
   const { access } = useOrganizationScopes(project?.teamId)
   const canWriteFirewallRules = canWriteRules(access, features)
   const canApplyFiltersAsFirewallRule =
-    features.firewall &&
+    isCloud &&
     showUsageFilters &&
     canApplyUsageFiltersAsFirewallRule(usageFilterMap)
 

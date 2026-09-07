@@ -137,6 +137,7 @@ import { ColumnDrawer, ColumnFormData, type ColumnType } from './Column'
 import { IndexDrawer, IndexFormData } from './Index'
 import { RowContextMenu } from '../_components/RowContextMenu'
 import {
+  areColumnWidthRecordsEqual,
   clampSplitFirstPaneWidthPx,
   fitSplitFirstPaneWidthOnContainerResize,
 } from '@/lib/resizable-layout'
@@ -3713,10 +3714,14 @@ export function RowsSpreadsheet({
       next[k] = clampRowGridColumnWidthPx(n)
     }
     return next
-  }, [databaseId, tableId, account])
+  }, [databaseId, tableId, account?.prefs])
 
   useLayoutEffect(() => {
-    setRowColumnWidths(rowColumnWidthsFromPrefs)
+    setRowColumnWidths((prev) =>
+      areColumnWidthRecordsEqual(prev, rowColumnWidthsFromPrefs)
+        ? prev
+        : rowColumnWidthsFromPrefs,
+    )
   }, [databaseId, tableId, rowColumnWidthsFromPrefs])
 
   const persistRowColumnWidths = useCallback(

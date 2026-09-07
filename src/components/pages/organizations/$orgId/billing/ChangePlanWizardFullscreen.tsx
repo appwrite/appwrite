@@ -78,6 +78,7 @@ import {
   getBillingPlanDisplayLabel,
   getPlanCanonicalFromRecord,
   isFreePlanRef,
+  isPaidToFreeDowngradeBlocked,
   resolveBillingPlanRecord,
 } from '@/lib/utils/plan-filter'
 import type { Models } from '@appwrite.io/console'
@@ -561,7 +562,16 @@ export function ChangePlanWizardFullscreen() {
     const isValidPlan = (plan: string) => plan in billingPlans
 
     const planParam = search?.plan as string | undefined
-    if (planParam && isValidPlan(planParam)) {
+    if (
+      planParam &&
+      isValidPlan(planParam) &&
+      !isPaidToFreeDowngradeBlocked(
+        organization?.billingPlan ?? currentPlanEnum,
+        planParam,
+        billingPlans,
+        { isCreateMode },
+      )
+    ) {
       setSelectedPlan(planParam as BillingPlanTierType)
       setPlanInitialized(true)
       return
@@ -580,6 +590,31 @@ export function ChangePlanWizardFullscreen() {
     orgId,
     organization,
     billingPlans,
+    currentPlanEnum,
+  ])
+
+  useEffect(() => {
+    if (
+      !selectedPlan ||
+      !isPaidToFreeDowngradeBlocked(
+        currentPlanEnum,
+        selectedPlan,
+        billingPlans,
+        { isCreateMode },
+      )
+    ) {
+      return
+    }
+
+    if (defaultPlan && defaultPlan !== selectedPlan) {
+      setSelectedPlan(defaultPlan as BillingPlanTierType)
+    }
+  }, [
+    selectedPlan,
+    currentPlanEnum,
+    billingPlans,
+    isCreateMode,
+    defaultPlan,
   ])
 
   // Apply coupon from URL with full details (including expiration)
@@ -990,6 +1025,19 @@ export function ChangePlanWizardFullscreen() {
       return t('Select a different plan to continue.')
     }
 
+    if (
+      isPaidToFreeDowngradeBlocked(
+        currentPlanEnum,
+        selectedPlan,
+        billingPlans,
+        { isCreateMode },
+      )
+    ) {
+      return t(
+        'Downgrade to Free is temporarily unavailable here. Continue in the old console.',
+      )
+    }
+
     // Issues the console cannot resolve on the user's behalf (unsupported
     // addons, resource types with no selection UI, projects the server could
     // not evaluate). The server fails closed on these, so we do too.
@@ -1041,6 +1089,7 @@ export function ChangePlanWizardFullscreen() {
     isSubmitting,
     hasPlanChangeBlockers,
     downgradeBlockReason,
+    billingPlans,
     t,
   ])
 
@@ -1160,6 +1209,16 @@ export function ChangePlanWizardFullscreen() {
   // Handle downgrade
   const handleDowngrade = async () => {
     if (!orgId || !selectedPlan) return
+    if (
+      isPaidToFreeDowngradeBlocked(
+        currentPlanEnum,
+        selectedPlan,
+        billingPlans,
+        { isCreateMode },
+      )
+    ) {
+      return
+    }
 
     const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const selectedProjects =
@@ -1666,6 +1725,7 @@ export function ChangePlanWizardFullscreen() {
                 hasFreeOrgs={hasFreeOrgs}
                 isCreateMode={isCreateMode}
                 variant="inline"
+                organizationId={orgId}
               />
             ) : (
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

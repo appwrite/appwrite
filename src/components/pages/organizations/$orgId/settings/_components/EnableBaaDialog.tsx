@@ -10,6 +10,7 @@ import {
   isPaymentAuthentication,
   resolveStripeProviderMethodId,
 } from '@/lib/billing/addons'
+import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
 import {
   organizationAddonPriceQueryOptions,
   organizationAddonsQueryOptions,
@@ -64,10 +65,7 @@ export function EnableBaaDialog({
           ADDON_KEY_BAA,
         ).queryKey,
       }),
-      queryClient.refetchQueries({ queryKey: ['organization', organizationId] }),
-      queryClient.refetchQueries({
-        queryKey: ['billing-aggregation', 'organization'],
-      }),
+      refetchOrganizationBillingQueries(queryClient, organizationId),
     ])
   }
 

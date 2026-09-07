@@ -53,7 +53,10 @@ import {
   formatPostgresUptime,
 } from '@/lib/postgres-metrics'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
+  DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION,
+  DEDICATED_DATABASE_COMPUTE_DESCRIPTION,
   DEDICATED_DATABASE_CONNECTIONS_DESCRIPTION,
   DEDICATED_DATABASE_CPU_DESCRIPTION,
   DEDICATED_DATABASE_IOPS_DESCRIPTION,
@@ -64,13 +67,13 @@ import {
   getDedicatedDatabaseGaugeHeadline,
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
-  resolveDedicatedDatabaseUsageInternalId,
   sumUsageChartPoints,
   usageChartPointsToMonitorSeries,
 } from '@/lib/usage/dedicated-databases-usage'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { DatabaseMonitorHeaderActions } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorNodeSelect } from '../_components/DatabaseMonitorNodeSelect'
+import { DedicatedDatabaseDebugMetricsSection } from '../_components/DedicatedDatabaseDebugMetricsSection'
 import { PostgresMetricChart } from './_components/PostgresMetricChart'
 import { PostgresMetricRankedList } from './_components/PostgresMetricRankedList'
 import { PostgresMetricKpiCard } from './_components/PostgresMetricKpiCard'
@@ -227,12 +230,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
   }, [databaseId, resetMonitorFilters])
 
   const { database } = usePostgresDatabase(projectId, databaseId)
+  const { isDebugModeOpen } = useDebugMode()
   const replicaCount = database?.replicas ?? 0
   const metricsOrdinal = replicaCount > 0 ? selectedOrdinal : undefined
-  const usageInternalId = resolveDedicatedDatabaseUsageInternalId(
-    databaseId,
-    database,
-  )
   const databaseCreatedAt = resolveDatabaseCreatedAt(database)
   const monitorChartEmptyMessage = useCallback(
     (defaultMessage: string) =>
@@ -291,7 +291,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
     true,
     resolvedInterval,
     metricsOrdinal,
-    usageInternalId,
+    { includeDebugMetrics: isDebugModeOpen },
   )
 
   const storageLimitGb = useMemo(() => {
@@ -484,6 +484,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const networkOutboundPoints = dedicatedMetrics.networkOutbound.isError
     ? []
     : (dedicatedMetrics.networkOutbound.data?.chartPoints ?? [])
+  const networkComputePoints = dedicatedMetrics.networkCompute.isError
+    ? []
+    : (dedicatedMetrics.networkCompute.data?.chartPoints ?? [])
+  const coldStartsPoints = dedicatedMetrics.coldStarts.isError
+    ? []
+    : (dedicatedMetrics.coldStarts.data?.chartPoints ?? [])
   const storageUsedBytes =
     dedicatedStoragePoints.length > 0
       ? getDedicatedDatabaseGaugeHeadline(dedicatedStoragePoints)
@@ -527,6 +533,14 @@ export function View({ projectId, databaseId }: MonitorProps) {
     () => usageChartPointsToMonitorSeries(dedicatedConnectionsPoints),
     [dedicatedConnectionsPoints],
   )
+  const networkComputeSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(networkComputePoints),
+    [networkComputePoints],
+  )
+  const coldStartsSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(coldStartsPoints),
+    [coldStartsPoints],
+  )
 
   const cpuPercent = getDedicatedDatabaseGaugeHeadline(cpuPoints)
   const memoryPercent = getDedicatedDatabaseGaugeHeadline(memoryPoints)
@@ -535,6 +549,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const iopsWriteLatest = getDedicatedDatabaseRateHeadline(iopsWritePoints)
   const networkInboundTotal = sumUsageChartPoints(networkInboundPoints)
   const networkOutboundTotal = sumUsageChartPoints(networkOutboundPoints)
+  const networkComputeTotal = sumUsageChartPoints(networkComputePoints)
+  const coldStartsTotal = sumUsageChartPoints(coldStartsPoints)
 
   const cpuChartLoading = shouldShowUsageChartSkeleton(
     dedicatedMetrics.cpu.isError,
@@ -574,6 +590,16 @@ export function View({ projectId, databaseId }: MonitorProps) {
       dedicatedMetrics.networkOutbound.isLoading,
     dedicatedMetrics.networkInbound.isPlaceholderData ||
       dedicatedMetrics.networkOutbound.isPlaceholderData,
+  )
+  const networkComputeChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.networkCompute.isError,
+    dedicatedMetrics.networkCompute.isLoading,
+    dedicatedMetrics.networkCompute.isPlaceholderData,
+  )
+  const coldStartsChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.coldStarts.isError,
+    dedicatedMetrics.coldStarts.isLoading,
+    dedicatedMetrics.coldStarts.isPlaceholderData,
   )
 
   const refetchDedicatedMetrics = dedicatedMetrics.refetchAll
@@ -1089,6 +1115,48 @@ export function View({ projectId, databaseId }: MonitorProps) {
                   />
                 </div>
               </section>
+
+              <DedicatedDatabaseDebugMetricsSection>
+                <PostgresMetricChart
+                  id="network-compute"
+                  title={t('Compute')}
+                  description={t(DEDICATED_DATABASE_COMPUTE_DESCRIPTION)}
+                  unit=""
+                  data={networkComputeSeries}
+                  formatY={(value) => formatCompactBytes(value)}
+                  usageValue={
+                    networkComputePoints.length > 0 ? networkComputeTotal : null
+                  }
+                  usageUnitLabel="total"
+                  isLoading={networkComputeChartLoading}
+                  chartInterval={resolvedInterval}
+                  onDateRangeChange={setDateRange}
+                  emptyMessage={monitorChartEmptyMessage(
+                    'No compute metrics for this date range',
+                  )}
+                  className="border-purple-500/20"
+                />
+
+                <PostgresMetricChart
+                  id="cold-starts"
+                  title={t('Cold starts')}
+                  description={t(DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION)}
+                  unit="starts"
+                  data={coldStartsSeries}
+                  formatY={(value) => Math.round(value).toLocaleString()}
+                  usageValue={
+                    coldStartsPoints.length > 0 ? coldStartsTotal : null
+                  }
+                  usageUnitLabel="total"
+                  isLoading={coldStartsChartLoading}
+                  chartInterval={resolvedInterval}
+                  onDateRangeChange={setDateRange}
+                  emptyMessage={monitorChartEmptyMessage(
+                    'No cold start metrics for this date range',
+                  )}
+                  className="border-purple-500/20"
+                />
+              </DedicatedDatabaseDebugMetricsSection>
 
             </div>
           </div>

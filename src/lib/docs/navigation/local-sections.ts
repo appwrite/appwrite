@@ -169,28 +169,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
-    prefix: 'partners/org-api-keys',
-    parent: {
-      href: '/docs/partners',
-      label: 'Org API keys',
-    },
-    navigation: [
-      {
-        label: 'Getting started',
-        items: [
-          {
-            label: 'Overview',
-            href: '/docs/partners/org-api-keys',
-          },
-          {
-            label: 'Scopes',
-            href: '/docs/partners/org-api-keys/scopes',
-          },
-        ],
-      },
-    ],
-  },
-  {
     prefix: 'partners/organizations',
     parent: {
       href: '/docs/partners',
@@ -211,32 +189,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Members and roles',
             href: '/docs/partners/organizations/members',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    prefix: 'partners/projects',
-    parent: {
-      href: '/docs/partners',
-      label: 'Project',
-    },
-    navigation: [
-      {
-        label: 'Partners API',
-        items: [
-          {
-            label: 'Overview',
-            href: '/docs/partners/projects',
-          },
-          {
-            label: 'Create projects',
-            href: '/docs/partners/projects/create',
-          },
-          {
-            label: 'Manage resources',
-            href: '/docs/partners/projects/resources',
           },
         ],
       },
@@ -608,6 +560,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Priority',
             href: '/docs/products/firewall/priority',
           },
+          {
+            label: 'Traffic overview',
+            href: '/docs/products/firewall/monitor',
+          },
         ],
       },
       {
@@ -632,10 +588,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Redirect for maintenance',
             href: '/docs/products/firewall/site-maintenance',
-          },
-          {
-            label: 'Monitor traffic',
-            href: '/docs/products/firewall/monitor',
           },
           {
             label: 'Attack mode',

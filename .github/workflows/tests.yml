@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7i/spot=price-capacity-optimized/retry=when-interrupted/extras=otel
+    runs-on: runs-on=${{ github.run_id }}/runner=checks
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

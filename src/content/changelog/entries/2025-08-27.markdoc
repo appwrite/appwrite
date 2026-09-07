@@ -2,6 +2,7 @@
 layout: changelog
 title: Email verification for Cloud accounts
 date: 2025-08-28
+tags: security, infrastructure
 ---
 
 Appwrite Cloud will soon require email verification to enhance account authenticity. When we first launched the beta, we focused on streamlining onboarding by skipping this step, but as the platform grows, we’re committed to strengthening security and trust for all users.

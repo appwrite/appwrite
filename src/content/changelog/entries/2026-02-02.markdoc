@@ -2,6 +2,7 @@
 layout: changelog
 title: "GraphQL schema is now public"
 date: 2026-02-02
+tags: api
 ---
 
 You can now run introspection queries on Appwrite's GraphQL API. With introspection enabled, you get:

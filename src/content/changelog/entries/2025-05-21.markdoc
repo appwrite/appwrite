@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Dev Keys: faster local development without rate limits"
 date: 2025-05-21
 cover: /images/changelog/2025-05-21.avif
+tags: firewall, performance
 ---
 
 Introducing **Dev Keys.**

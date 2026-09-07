@@ -6,6 +6,14 @@
  * console at the host root with plural resource collections and bare IDs.
  */
 
+export const LEGACY_CONSOLE_ORIGIN = 'https://cloud.appwrite.io'
+
+export function getLegacyConsoleOrganizationBillingUrl(
+  organizationId: string,
+): string {
+  return `${LEGACY_CONSOLE_ORIGIN}/console/organization-${organizationId}/billing`
+}
+
 const TYPED_RESOURCE_PREFIXES = [
   'site',
   'function',

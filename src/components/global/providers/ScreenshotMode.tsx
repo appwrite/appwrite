@@ -18,11 +18,13 @@ import {
 
 interface ScreenshotModeContextValue {
   isScreenshotModeActive: boolean
+  setScreenshotModeActive: (open: boolean) => void
   closeScreenshotMode: () => void
 }
 
 const ScreenshotModeContext = createContext<ScreenshotModeContextValue>({
   isScreenshotModeActive: false,
+  setScreenshotModeActive: () => {},
   closeScreenshotMode: () => {},
 })
 
@@ -32,110 +34,6 @@ export function useScreenshotMode() {
 
 interface ScreenshotModeProviderProps {
   children: ReactNode
-}
-
-/**
- * Hide the mode chip during captures. Browsers expose no real OS screenshot
- * event, so we treat any loss of focus/visibility as capture-time (covers
- * menubar tools, CleanShot, system UI, tab switch) and keep keyboard shortcuts
- * only as a fast path for captures that leave the page focused (e.g. Cmd+Shift+3).
- */
-function useScreenshotCaptureHidden(enabled: boolean): boolean {
-  const [hidden, setHidden] = useState(false)
-  const hideUntilRef = useRef(0)
-  const releaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (!enabled) {
-      setHidden(false)
-      if (releaseTimerRef.current) {
-        clearTimeout(releaseTimerRef.current)
-        releaseTimerRef.current = null
-      }
-      return
-    }
-
-    const isPageActive = () =>
-      typeof document !== 'undefined' &&
-      !document.hidden &&
-      document.hasFocus()
-
-    const syncFromPageActivity = () => {
-      // While the page is inactive, keep the chip hidden for the whole period
-      // (no timer). Timed hides from keyboard are only for focused captures.
-      if (!isPageActive()) {
-        if (releaseTimerRef.current) {
-          clearTimeout(releaseTimerRef.current)
-          releaseTimerRef.current = null
-        }
-        setHidden(true)
-        return
-      }
-      if (Date.now() < hideUntilRef.current) {
-        setHidden(true)
-        return
-      }
-      setHidden(false)
-    }
-
-    const hideForFocusedCapture = (holdMs: number) => {
-      hideUntilRef.current = Date.now() + holdMs
-      setHidden(true)
-      if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current)
-      releaseTimerRef.current = setTimeout(() => {
-        syncFromPageActivity()
-      }, holdMs)
-    }
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Fast path only: some OS captures never blur the page (e.g. Cmd+Shift+3).
-      if (e.code === 'PrintScreen') {
-        hideForFocusedCapture(1600)
-        return
-      }
-      if (e.metaKey && e.shiftKey && !e.ctrlKey && !e.altKey) {
-        const confirmedDigit =
-          e.code === 'Digit3' || e.code === 'Digit4' || e.code === 'Digit5'
-        // Digit is often swallowed by the OS; hide as soon as Cmd+Shift is held.
-        hideForFocusedCapture(confirmedDigit ? 1600 : 900)
-      }
-    }
-
-    window.addEventListener('blur', syncFromPageActivity)
-    window.addEventListener('focus', syncFromPageActivity)
-    document.addEventListener('visibilitychange', syncFromPageActivity)
-    // Keyboard remains a supplement, not the primary signal.
-    window.addEventListener('keydown', onKeyDown, true)
-    syncFromPageActivity()
-
-    return () => {
-      window.removeEventListener('blur', syncFromPageActivity)
-      window.removeEventListener('focus', syncFromPageActivity)
-      document.removeEventListener('visibilitychange', syncFromPageActivity)
-      window.removeEventListener('keydown', onKeyDown, true)
-      if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current)
-    }
-  }, [enabled])
-
-  return hidden
-}
-
-function ScreenshotModeIndicator({ active }: { active: boolean }) {
-  const hiddenForCapture = useScreenshotCaptureHidden(active)
-  if (!active || hiddenForCapture) return null
-
-  return (
-    <div
-      data-screenshot-mode-indicator
-      className="pointer-events-none fixed bottom-5 left-1/2 z-[9998] -translate-x-1/2 print:hidden"
-      aria-live="polite"
-    >
-      <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-[13px] font-semibold text-emerald-700 shadow-md backdrop-blur-sm dark:bg-emerald-500/20 dark:text-emerald-300">
-        <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)]" aria-hidden />
-        Screenshot mode
-      </div>
-    </div>
-  )
 }
 
 function invalidateScreenshotModeQueries(
@@ -157,6 +55,10 @@ export function ScreenshotModeProvider({ children }: ScreenshotModeProviderProps
 
   const closeScreenshotMode = useCallback(() => {
     setIsScreenshotModeActive(false)
+  }, [])
+
+  const setScreenshotModeActive = useCallback((open: boolean) => {
+    setIsScreenshotModeActive(open)
   }, [])
 
   // Persist + notify subscribers + refresh charts after React finishes the state update.
@@ -212,10 +114,13 @@ export function ScreenshotModeProvider({ children }: ScreenshotModeProviderProps
 
   return (
     <ScreenshotModeContext.Provider
-      value={{ isScreenshotModeActive, closeScreenshotMode }}
+      value={{
+        isScreenshotModeActive,
+        setScreenshotModeActive,
+        closeScreenshotMode,
+      }}
     >
       {children}
-      <ScreenshotModeIndicator active={isScreenshotModeActive} />
     </ScreenshotModeContext.Provider>
   )
 }

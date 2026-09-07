@@ -3,6 +3,7 @@ layout: changelog
 title: "Dart 3.12 lands on Functions and Flutter 3.44 on Sites"
 date: 2026-05-26
 cover: /images/blog/announcing-dart-flutter-runtimes/cover.avif
+tags: functions, sites
 ---
 
 We just added support for two **runtimes**:

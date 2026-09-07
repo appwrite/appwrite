@@ -15,6 +15,7 @@ import {
   isPaymentAuthentication,
   resolveStripeProviderMethodId,
 } from '@/lib/billing/addons'
+import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
 import {
   projectAddonsQueryOptions,
   useBillingPlans,
@@ -28,39 +29,166 @@ import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
-import { Check, Minus } from 'lucide-react'
+import { Activity, BarChart3, Check, Plus, Shield } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { EnablePremiumGeoDBDialog } from './EnablePremiumGeoDBDialog'
 import { DisablePremiumGeoDBDialog } from './DisablePremiumGeoDBDialog'
 
 /** Standard vs premium fields from cloud geoRecord / Cloud Session model. */
-const GEO_DATA_FIELDS = [
-  { label: 'Country', standard: true },
-  { label: 'Continent', standard: true },
-  { label: 'EU membership', standard: true },
-  { label: 'Currency', standard: true },
-  { label: 'City', standard: false },
-  { label: 'State / region', standard: false },
-  { label: 'Postal code', standard: false },
-  { label: 'Timezone', standard: false },
-  { label: 'Coordinates', standard: false },
-  { label: 'ISP', standard: false },
-  { label: 'ASN', standard: false },
-  { label: 'Connection type', standard: false },
-  { label: 'Connection usage', standard: false },
-  { label: 'Organization', standard: false },
+const STANDARD_GEO_FIELDS = [
+  'Country',
+  'Continent',
+  'EU membership',
+  'Currency',
 ] as const
+
+const PREMIUM_GEO_BENEFITS = [
+  {
+    icon: Shield,
+    title: 'Stronger firewall rules',
+    description:
+      'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.',
+  },
+  {
+    icon: Activity,
+    title: 'Richer session and request context',
+    description:
+      'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Deeper usage insights',
+    description:
+      'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.',
+  },
+] as const
+
+function PremiumGeoBenefitList() {
+  const t = useT()
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+        {t('How this affects your app')}
+      </p>
+      <div className="rounded-lg border border-border bg-background">
+        {PREMIUM_GEO_BENEFITS.map(({ icon: Icon, title, description }, index) => (
+          <div key={title}>
+            <div className="flex items-start gap-3 px-4 py-3">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-foreground">
+                  {t(title)}
+                </p>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {t(description)}
+                </p>
+              </div>
+            </div>
+            {index < PREMIUM_GEO_BENEFITS.length - 1 ? (
+              <div className="border-t border-border" />
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const PREMIUM_GEO_FIELD_GROUPS = [
+  {
+    title: 'Location details',
+    fields: [
+      'City',
+      'State / region',
+      'Postal code',
+      'Timezone',
+      'Coordinates',
+    ],
+  },
+  {
+    title: 'Network details',
+    fields: [
+      'ISP',
+      'ASN',
+      'Connection type',
+      'Connection usage',
+      'Organization',
+    ],
+  },
+] as const
+
+function GeoFieldList({
+  fields,
+  icon: Icon,
+}: {
+  fields: readonly string[]
+  icon: typeof Check
+}) {
+  const t = useT()
+
+  return (
+    <ul className="grid gap-1.5 sm:grid-cols-2">
+      {fields.map((field) => (
+        <li
+          key={field}
+          className="flex min-w-0 items-center gap-2 text-[12px] text-muted-foreground"
+        >
+          <Icon className="h-3.5 w-3.5 shrink-0 text-foreground" />
+          <span className="truncate">{t(field)}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function PremiumGeoDataComparison() {
+  const t = useT()
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+        {t('Geolocation attributes')}
+      </p>
+      <div className="rounded-lg border border-border bg-background overflow-hidden">
+        <div className="px-4 py-3">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Included on every plan')}
+          </p>
+          <div className="mt-2">
+            <GeoFieldList fields={STANDARD_GEO_FIELDS} icon={Check} />
+          </div>
+        </div>
+
+        <div className="border-t border-border bg-muted/30 px-4 py-3">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Added with Premium Geo DB')}
+          </p>
+          <div className="mt-3 space-y-3">
+            {PREMIUM_GEO_FIELD_GROUPS.map(({ title, fields }, index) => (
+              <div key={title}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t(title)}
+                </p>
+                <div className="mt-1.5">
+                  <GeoFieldList fields={fields} icon={Plus} />
+                </div>
+                {index < PREMIUM_GEO_FIELD_GROUPS.length - 1 ? (
+                  <div className="mt-3 border-t border-border/60" />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 type PremiumGeoDBCardProps = {
   projectId: string
@@ -115,6 +243,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
           queryKey: projectAddonsQueryOptions(projectId).queryKey,
         }),
         queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+        ...(orgId
+          ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+          : []),
       ])
       toast.success(t('Premium Geo DB addon has been enabled'))
     } catch (error) {
@@ -125,6 +256,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
             queryKey: projectAddonsQueryOptions(projectId).queryKey,
           }),
           queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+          ...(orgId
+            ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+            : []),
         ])
         toast.success(t('Premium Geo DB addon has been enabled'))
         return
@@ -228,6 +362,9 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
           queryKey: projectAddonsQueryOptions(projectId).queryKey,
         }),
         queryClient.refetchQueries({ queryKey: ['project', projectId] }),
+        ...(orgId
+          ? [refetchOrganizationBillingQueries(queryClient, orgId)]
+          : []),
       ])
       toast.success(t('Premium Geo DB addon has been re-enabled'))
     } catch (error) {
@@ -379,59 +516,23 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
 
         <div className="border-t border-border" />
 
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground max-w-2xl">
-            {t(
-              'Enrich sessions, activity, and usage with detailed geolocation from every request.',
-            )}
-          </p>
+        <div className="px-6 py-4 @container">
+          <div className="flex gap-6 @[600px]:flex-row flex-col">
+            <div className="@[600px]:w-64 shrink-0">
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.',
+                )}
+              </p>
+            </div>
+
+            <div className="flex-1 min-w-0 space-y-4">
+              <PremiumGeoBenefitList />
+
+              <PremiumGeoDataComparison />
+            </div>
+          </div>
         </div>
-
-        <div className="border-t border-border" />
-
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                {t('Attribute')}
-              </TableHead>
-              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[120px]">
-                {t('Included')}
-              </TableHead>
-              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[140px]">
-                {t('Premium Geo DB')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {GEO_DATA_FIELDS.map((field) => (
-              <TableRow key={field.label} className="border-border">
-                <TableCell className="px-6 py-2.5 text-[13px] text-foreground">
-                  {t(field.label)}
-                </TableCell>
-                <TableCell className="px-6 py-2.5 text-center">
-                  {field.standard ? (
-                    <Check
-                      className="mx-auto h-4 w-4 text-foreground"
-                      aria-label={t('Included')}
-                    />
-                  ) : (
-                    <Minus
-                      className="mx-auto h-4 w-4 text-muted-foreground/50"
-                      aria-label={t('Not included')}
-                    />
-                  )}
-                </TableCell>
-                <TableCell className="px-6 py-2.5 text-center">
-                  <Check
-                    className="mx-auto h-4 w-4 text-foreground"
-                    aria-label={t('Included')}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
 
         {statusCopy ? (
           <>

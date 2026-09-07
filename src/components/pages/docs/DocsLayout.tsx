@@ -6,6 +6,7 @@ import type { DocsTocItem } from '@/lib/docs/types'
 import { DocsArticleHeader } from './DocsArticleHeader'
 import { DocsFeedback } from './DocsFeedback'
 import { DocsSectionSubnavMobile } from './DocsSectionSubnav'
+import { DocsStepNav } from './DocsStepNav'
 import { DocsToc } from './DocsToc'
 
 type DocsLayoutProps = {
@@ -17,6 +18,8 @@ type DocsLayoutProps = {
   headerActions?: ReactNode
   /** When true, hides the TOC column and lets content use the full docs container width. */
   wideContent?: boolean
+  /** When true, renders previous/next chapter links under the article (tutorials). */
+  showStepNav?: boolean
   children: ReactNode
 }
 
@@ -28,6 +31,7 @@ export function DocsLayout({
   toc = [],
   headerActions,
   wideContent = false,
+  showStepNav = false,
   children,
 }: DocsLayoutProps) {
   const { parent, navigation: sectionNav } = getDocsSectionNav(slug)
@@ -65,6 +69,7 @@ export function DocsLayout({
               />
               <div className="min-w-0 overflow-x-clip">
                 {children}
+                {showStepNav ? <DocsStepNav slug={slug} /> : null}
                 {!wideContent ? <DocsFeedback /> : null}
               </div>
             </article>

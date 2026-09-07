@@ -43,6 +43,8 @@ import {
   Link2,
   Network,
   GitBranch,
+  Camera,
+  Info,
 } from 'lucide-react'
 import {
   Popover,
@@ -56,6 +58,7 @@ import {
 } from '@/components/ui/tooltip'
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
+import { useScreenshotMode } from './ScreenshotMode'
 import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { Input } from '@/components/ui/input'
 import { useTheme } from 'next-themes'
@@ -222,6 +225,8 @@ interface MenuItem {
   defaultValue?: boolean
   onResetToDefault?: () => void
   description?: string
+  /** Extended copy for the info tooltip when the inline description is shortened. */
+  descriptionTooltip?: string
   submenu?: MenuItem[]
   /** Optional note shown at the top of this item's submenu list. */
   submenuNote?: string
@@ -254,6 +259,83 @@ interface MenuSection {
   items: MenuItem[]
 }
 
+const DEBUG_MENU_DESCRIPTION_MAX_LENGTH = 44
+
+/** Above the debug menu popover shell (`z-[10060]`). */
+const DEBUG_MENU_TOOLTIP_Z_CLASS = 'z-[10070]'
+
+const DEBUG_MENU_ITEM_DESCRIPTION_CLASS =
+  'min-w-0 flex-1 truncate text-[11px] font-normal text-[var(--network-globe-edge)]/80'
+
+function normalizeDebugMenuDescription(
+  description: string,
+  descriptionTooltip?: string,
+): { description: string; descriptionTooltip?: string } {
+  const inline = description.replace(/\s+/g, ' ').trim()
+  const tooltip = descriptionTooltip?.replace(/\s+/g, ' ').trim()
+
+  if (tooltip) {
+    return { description: inline, descriptionTooltip: tooltip }
+  }
+
+  if (inline.length <= DEBUG_MENU_DESCRIPTION_MAX_LENGTH) {
+    return { description: inline }
+  }
+
+  return {
+    description: `${inline.slice(0, DEBUG_MENU_DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`,
+    descriptionTooltip: inline,
+  }
+}
+
+function DebugMenuItemDescription({
+  description,
+  descriptionTooltip,
+}: {
+  description?: string
+  descriptionTooltip?: string
+}) {
+  if (!description) return null
+
+  const normalized = normalizeDebugMenuDescription(
+    description,
+    descriptionTooltip,
+  )
+
+  return (
+    <div className="mt-0.5 flex min-w-0 items-center gap-1">
+      <span className={DEBUG_MENU_ITEM_DESCRIPTION_CLASS}>
+        {normalized.description}
+      </span>
+      {normalized.descriptionTooltip ? (
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              tabIndex={-1}
+              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[var(--network-globe-edge)]/70 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+              aria-label="More info"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Info className="h-3 w-3" aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            sideOffset={6}
+            className={cn(
+              'max-w-xs whitespace-pre-line text-[12px] leading-relaxed',
+              DEBUG_MENU_TOOLTIP_Z_CLASS,
+            )}
+          >
+            {normalized.descriptionTooltip}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+    </div>
+  )
+}
+
 function formatFeatureFlagDefaultLabel(defaultValue: boolean): string {
   return defaultValue ? 'Default: On' : 'Default: Off'
 }
@@ -274,6 +356,7 @@ function matchesMenuItemSearch(item: MenuItem, query: string): boolean {
   const q = trimmed.toLowerCase()
   if (item.label.toLowerCase().includes(q)) return true
   if (item.description?.toLowerCase().includes(q)) return true
+  if (item.descriptionTooltip?.toLowerCase().includes(q)) return true
   if (item.category?.toLowerCase().includes(q)) return true
   if (item.submenu?.some((child) => matchesMenuItemSearch(child, query))) {
     return true
@@ -385,11 +468,10 @@ function DebugMenuSwitchRow({
             </span>
           )}
         </div>
-        {item.description && (
-          <div className="mt-0.5 whitespace-pre-line text-[11px] text-[var(--network-globe-edge)]/80">
-            {item.description}
-          </div>
-        )}
+        <DebugMenuItemDescription
+          description={item.description}
+          descriptionTooltip={item.descriptionTooltip}
+        />
       </div>
       <div className="flex flex-shrink-0 items-center gap-1.5">
         {showReset && (
@@ -496,14 +578,10 @@ function renderDebugSubmenuItemRow(
       )}
       <span className="min-w-0 flex-1">
         <span className="block font-medium">{item.label}</span>
-        {item.description && (
-          <span
-            className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
-            title={item.description}
-          >
-            {item.description}
-          </span>
-        )}
+        <DebugMenuItemDescription
+          description={item.description}
+          descriptionTooltip={item.descriptionTooltip}
+        />
       </span>
       {item.badge !== undefined && (
         <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
@@ -907,6 +985,7 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
+  const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
@@ -1424,6 +1503,23 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     ]
 
     return [
+      {
+        title: 'Capture',
+        icon: <Camera className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Screenshot mode',
+            description: isScreenshotModeActive ? 'On · Demo identity' : 'Off',
+            descriptionTooltip: isScreenshotModeActive
+              ? "Walter O'Brien, walter@appwrite.io. Masks name, email, avatar, and org names. Toggle with smile or this switch."
+              : 'Masks account name, email, avatar, and org names for captures. Toggle with smile or this switch.',
+            icon: <Camera className="h-3 w-3" />,
+            variant: 'switch',
+            switchValue: isScreenshotModeActive,
+            switchOnChange: setScreenshotModeActive,
+          },
+        ],
+      },
       {
         title: 'Appearance',
         icon: <Palette className="h-3.5 w-3.5" />,
@@ -2004,46 +2100,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               createProfileFeatureFlagItem(
-                'Dedicated DBs support (global)',
-                'Use fullscreen create wizard and show spec upgrade for supported DB types.',
-                'dedicatedDbsSupport',
-                profileId,
-                features.dedicatedDbsSupport,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Dedicated DBs: Documents DB',
-                'Dedicated DBs support for Documents DB.',
-                'dedicatedDbsDocumentsDB',
-                profileId,
-                features.dedicatedDbsDocumentsDB,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Dedicated DBs: Vectors DB',
-                'Dedicated DBs support for Vectors DB.',
-                'dedicatedDbsVectorsDB',
-                profileId,
-                features.dedicatedDbsVectorsDB,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Native DBs: PostgreSQL',
-                'Enable dedicated PostgreSQL databases in the create wizard.',
-                'nativeDbsPostgres',
-                profileId,
-                features.nativeDbsPostgres,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Native DBs: MySQL',
-                'Enable dedicated MySQL databases in the create wizard.',
-                'nativeDbsMySQL',
-                profileId,
-                features.nativeDbsMySQL,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2084,51 +2140,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Firewall',
-                'Show the project Firewall section, routes, rules, analytics, and logs.',
-                'firewall',
-                profileId,
-                features.firewall,
-                { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
-                'Storage S3',
-                'Show the Connect S3 tab, storage sidebar S3 card, and S3 API docs.',
-                'storageS3',
-                profileId,
-                features.storageS3,
-                { category: 'Storage' },
-              ),
-              createProfileFeatureFlagItem(
-                'Project OAuth2 server',
-                profileId === 'cloud'
-                  ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'
-                  : 'Cloud profile only. Switch to Cloud profile to preview.',
-                'oauth2Server',
-                profileId,
-                profileId === 'cloud' ? features.oauth2Server : false,
-                {
-                  disabled: profileId !== 'cloud',
-                  category: 'Auth & security',
-                },
-              ),
-              createProfileFeatureFlagItem(
-                'Domain buy/transfer',
-                'Buy domain and transfer-in in the console, plus Domains marketing/docs. Org Domains tab (add domain, DNS) stays available when off.',
-                'domains',
-                profileId,
-                features.domains,
-                { category: 'Organization' },
-              ),
-              createProfileFeatureFlagItem(
-                'Organization OAuth apps',
-                'Org settings OAuth apps tab and /settings/oauth-apps route.',
-                'oauthApps',
-                profileId,
-                features.oauthApps,
-                { category: 'Organization' },
-              ),
-              createProfileFeatureFlagItem(
                 'Partners keys',
                 'Org settings Partners tab and /settings/partners route.',
                 'orgApiKeys',
@@ -2167,19 +2178,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 profileId,
                 features.notifications,
                 { category: 'UI & tools' },
-              ),
-              createProfileFeatureFlagItem(
-                'Organization marketplace',
-                profileId === 'cloud'
-                  ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
-                  : 'Cloud profile only. Switch to Cloud profile to preview.',
-                'marketplace',
-                profileId,
-                profileId === 'cloud' ? features.marketplace : false,
-                {
-                  disabled: profileId !== 'cloud',
-                  category: 'Organization',
-                },
               ),
               createDebugFeatureFlagItem(
                 'Pre-launch',
@@ -2523,27 +2521,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     faviconStatus,
     profileId,
-    features.dedicatedDbsSupport,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.userVerification,
     features.extraVcsOAuth,
     features.cookieBanner,
     features.blogDrafts,
-    features.oauthApps,
-    features.oauth2Server,
     features.orgApiKeys,
-    features.domains,
-    features.marketplace,
     features.partnersDocs,
     features.agent,
     features.notifications,
-    features.firewall,
-    features.storageS3,
     features.init,
     endpointPreset,
     endpointCustomUrl,
@@ -2557,6 +2544,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     envProfileId,
     initLowPowerDecision,
     overrides,
+    isScreenshotModeActive,
+    setScreenshotModeActive,
     banners.length,
     actions,
     navigate,
@@ -3213,14 +3202,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               <span className="block font-medium">
                                 {item.label}
                               </span>
-                              {item.description ? (
-                                <span
-                                  className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
-                                  title={item.description}
-                                >
-                                  {item.description}
-                                </span>
-                              ) : null}
+                              <DebugMenuItemDescription
+                                description={item.description}
+                                descriptionTooltip={item.descriptionTooltip}
+                              />
                             </span>
                             {item.badge !== undefined && (
                               <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">

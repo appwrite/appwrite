@@ -2,6 +2,7 @@
 layout: changelog
 title: "New filter, sort, and pagination flags in the Appwrite CLI"
 date: 2026-04-28
+tags: cli, integrations
 ---
 
 The Appwrite CLI **19.1.0** adds dedicated flags for filtering, sorting, and pagination on `list-*` commands, so you no longer need to hand-write Appwrite query JSON for `--queries` on common one-offs.

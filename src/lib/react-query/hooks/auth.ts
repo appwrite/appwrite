@@ -1348,10 +1348,14 @@ function getAccountPrefsCallerStack(): string[] {
  * React Query with `{ prefs }` only - that crashed account UI after impersonation.
  *
  * @param reason - Short label for debug logs (which feature/hook requested the write).
+ * @param options.force - Send `updatePrefs` even when sanitized prefs match the
+ *   in-memory singleton. Needed after optimistic cache patches (the singleton
+ *   already looks like the write, so the unchanged check would skip the API).
  */
 export async function updateAccountPrefs(
   prefs: Record<string, unknown>,
   reason = 'unknown',
+  options?: { force?: boolean },
 ): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
     return undefined
@@ -1366,8 +1370,9 @@ export async function updateAccountPrefs(
     Object.keys(diff.changed).length > 0 ||
     diff.removed.length > 0
   const caller = getAccountPrefsCallerStack()
+  const force = options?.force === true
 
-  if (!hasDiff) {
+  if (!hasDiff && !force) {
     console.log('[account prefs] skip (unchanged)', {
       reason,
       keyCount: Object.keys(sanitized).length,
@@ -1380,6 +1385,7 @@ export async function updateAccountPrefs(
 
   console.log('[account prefs] update', diff, {
     reason,
+    force,
     keyCount: Object.keys(sanitized).length,
     caller,
   })

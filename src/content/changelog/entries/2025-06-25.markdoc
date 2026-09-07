@@ -3,6 +3,7 @@ layout: changelog
 title: "Introducing Type generation: Automate your type definitions with Appwrite"
 date: 2025-06-25
 cover: /images/changelog/2025-06-25.avif
+tags: databases
 ---
 
 Manually creating and maintaining complex type definitions can be tedious, error-prone, and time-consuming.

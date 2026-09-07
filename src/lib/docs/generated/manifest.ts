@@ -593,7 +593,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "partners",
     "title": "Partners",
-    "description": "Integrate Appwrite into your platform. Provision organizations, projects, and domains with OAuth connect, organization API keys, and Console SDK APIs.",
+    "description": "Integrate Appwrite into your platform. Provision organizations and projects for your customers with OAuth connect and Partners keys.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -656,7 +656,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "partners/architecture",
     "title": "Architecture",
-    "description": "Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.",
+    "description": "Understand how partner platforms connect to Appwrite with OAuth connect, Partners keys, and project API keys.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -672,21 +672,21 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Marketplaces",
     "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "partners/guides/multi-tenancy",
     "title": "Multi-tenancy",
-    "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
+    "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, Partners keys, and optional OAuth connect.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "partners/guides/provisioning",
     "title": "Provisioning",
     "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "partners/oauth-connect",
@@ -707,33 +707,26 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "OAuth connect setup",
     "description": "Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "partners/org-api-keys",
-    "title": "Org API keys",
-    "description": "Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.",
+    "title": "Partners keys",
+    "description": "Authenticate Appwrite Console APIs from your backend with a Partners key, and provision organizations and projects for your customers.",
     "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "partners/org-api-keys/scopes",
-    "title": "Org API key scopes",
-    "description": "Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 3
   },
   {
     "slug": "partners/organizations",
     "title": "Organization API",
     "description": "Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "partners/organizations/manage",
     "title": "Manage organizations",
-    "description": "Create and update Appwrite organizations from your partner platform using the Console Organization API.",
+    "description": "Read, rename, and delete the organization behind a Partners key with the Appwrite Organization API.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -773,6 +766,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "partners/project/create",
+    "title": "Create a project",
+    "description": "Create an Appwrite project for a customer with the Organization API and a Partners key.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "partners/project/email-templates",
     "title": "Email templates",
     "description": "Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.",
@@ -798,7 +798,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Labels",
     "description": "Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "partners/project/mock-phones",
@@ -857,37 +857,16 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "partners/projects",
-    "title": "Project API",
-    "description": "Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "partners/projects/create",
-    "title": "Create projects",
-    "description": "Provision Appwrite projects for customers using the Console Project API and organization API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "partners/projects/resources",
-    "title": "Manage resources",
-    "description": "Manage Appwrite project resources from your partner platform using the project SDK and project API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
     "slug": "partners/proxy",
-    "title": "Proxy",
-    "description": "Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.",
+    "title": "Proxy API",
+    "description": "Point custom domains at a customer's Appwrite project API, functions, and sites with the Proxy API, then verify them over DNS.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 4
   },
   {
     "slug": "partners/quick-start",
     "title": "Quick start",
-    "description": "Choose an Appwrite partner integration model and take your first steps with OAuth connect or organization API keys.",
+    "description": "Choose an Appwrite partner integration model and make your first Console API call with OAuth connect or a Partners key.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -1267,21 +1246,21 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "OAuth2 server",
     "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/oauth-server/authorization",
     "title": "Authorization",
     "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/auth/oauth-server/clients",
     "title": "Clients",
     "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/auth/oauth-server/custom-scopes/step-1",
@@ -1314,7 +1293,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Validate access tokens",
     "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
     "layout": "tutorial",
-    "readingTimeMinutes": 2,
+    "readingTimeMinutes": 3,
     "step": 4
   },
   {
@@ -1367,7 +1346,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Scopes",
     "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/oauth-server/sign-in-with-your-product/step-1",
@@ -1432,7 +1411,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Tokens",
     "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/auth/oauth2",
@@ -1698,7 +1677,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite DocumentsDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/databases/documentsdb/quick-start",
@@ -1796,7 +1775,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Connection pooling",
     "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/mysql/connections",
@@ -1859,7 +1838,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "EF Core",
     "description": "Use Entity Framework Core with an Appwrite native MySQL database. Configure the MySQL provider, run migrations against the direct MySQL host, and rely on the provider's connection pool from an ASP.NET server.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/mysql/integrations/fastapi",
@@ -1873,7 +1852,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "GORM",
     "description": "Use GORM with an Appwrite native MySQL database in Go. Build the MySQL DSN, open a connection, size the database/sql pool, and run migrations with AutoMigrate or golang-migrate.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/mysql/integrations/grafana",
@@ -1929,7 +1908,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/mysql/maintenance",
@@ -1950,7 +1929,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Network security",
     "description": "TLS by default, IP allowlists, and idle timeouts for your MySQL database.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/mysql/quick-start",
@@ -1971,19 +1950,19 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "PostgreSQL",
     "description": "Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/databases/postgresql/backups",
     "title": "Backups",
     "description": "Scheduled backups, manual backups, restores, and point-in-time recovery for your PostgreSQL database.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/branches",
     "title": "Branches",
-    "description": "Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
+    "description": "Create a short-lived, isolated copy of your PostgreSQL database from a storage snapshot. Use branches for previews, migrations, and testing.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
@@ -2055,14 +2034,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Extensions",
     "description": "Install and manage PostgreSQL extensions like PostGIS, pgvector, and pg_trgm on your database, at no extra cost.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/postgresql/high-availability",
     "title": "High availability",
     "description": "Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your PostgreSQL database.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/integrations/auth-js",
@@ -2188,7 +2167,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Maintenance",
     "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your PostgreSQL database.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/postgresql/monitoring",
@@ -2202,7 +2181,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Network security",
     "description": "TLS by default, IP allowlists, and idle timeouts for your PostgreSQL database.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/postgresql/quick-start",
@@ -2216,7 +2195,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Scaling",
     "description": "Resize the compute specification of your PostgreSQL database with zero downtime and grow storage automatically as your data grows.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/databases/tablesdb",
@@ -2685,21 +2664,21 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Actions",
     "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/firewall/allowlist-ips",
     "title": "Allowlist trusted IP addresses",
     "description": "Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/attack-mode",
     "title": "Attack mode",
     "description": "Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/block-countries",
@@ -2720,12 +2699,12 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Conditions",
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/firewall/monitor",
-    "title": "Monitor traffic",
-    "description": "Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.",
+    "title": "Traffic overview",
+    "description": "The metrics Appwrite Firewall reports for project traffic, and what the rule impact preview can estimate.",
     "layout": "article",
     "readingTimeMinutes": 3
   },

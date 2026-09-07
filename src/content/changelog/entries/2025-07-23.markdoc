@@ -2,6 +2,7 @@
 layout: changelog
 title: "Pricing update to Appwrite's Free plan"
 date: 2025-07-23
+tags: databases, storage, functions, messaging
 ---
 
 Starting September 1st, 2025, the Free plan will be limited to two projects per organization.

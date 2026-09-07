@@ -428,7 +428,9 @@ test.describe('project usage contract (mocked)', () => {
       waitUntil: 'domcontentloaded',
     })
 
-    await expect(page.getByRole('heading', { name: 'Usage' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Usage', exact: true, level: 1 }),
+    ).toBeVisible()
     const overflow = await page.evaluate(
       () =>
         document.documentElement.scrollWidth >

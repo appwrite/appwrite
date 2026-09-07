@@ -16,7 +16,7 @@ Integrators never visit the Appwrite Console. You are expected to build a develo
 ![OAuth2 clients list in the Appwrite Console](/images/docs/oauth-server/oauth2-server-apps-list.avif)
 {% /only_light %}
 
-Server SDKs matter in exactly two places: [introspecting](/docs/products/auth/oauth-server/tokens#introspect) a public client's tokens, which needs an API key because there is no client secret, and administrative operations like [curating labels](#labels).
+Two operations need a project API key instead of a client secret. [Introspecting](/docs/products/auth/oauth-server/tokens#introspect) a public client's tokens needs one because a public client has no secret to authenticate with, and the introspection endpoint has no SDK method, so call it over HTTP. [Curating labels](#labels) is an administrative operation that the Server SDKs expose.
 
 # Confidential and public clients {% #client-types %}
 
@@ -45,7 +45,7 @@ The type a client uses changes what it can do:
 | --- | --- | --- |
 | Client secret | Issued, sent on token requests | None issued |
 | PKCE | Optional (configurable per project) | Always required |
-| Token introspection | With its client secret | With a project API key holding the `oauth2.read` scope |
+| Token introspection | With its client secret | With a project API key holding the `oauth2.introspect` scope |
 | Default access token lifetime | 8 hours | 1 hour |
 | Default refresh token lifetime | 365 days | 30 days |
 
@@ -53,7 +53,7 @@ Choose confidential whenever the app has a backend. It is the safer default: the
 
 # Register a client {% #register %}
 
-Create a client with the `create` method. It needs only a name and a redirect URI; everything else can be filled in later with `update`. Registering a confidential client also calls for a [secret](#secrets) before it can exchange tokens.
+Create a client with the `create` method. It needs an app ID, a name, and a redirect URI. Everything else can be filled in later with `update`. Registering a confidential client also calls for a [secret](#secrets) before it can exchange tokens.
 
 {% multicode %}
 ```client-web
@@ -184,7 +184,7 @@ const app = await apps.create({
 
 An app is owned by the user who created it. For team-oriented platforms, pass `teamId` on creation to make it team-owned instead: every team member can see it, while members with the `owner` or `developer` role manage it.
 
-You can also create clients from the Console's **Apps** tab, which offers the same fields.
+You can also create clients from the Console's **Apps** tab. It covers the same fields except `teamId`, so team ownership has to be set through the API.
 
 {% only_dark %}
 ![Create an OAuth2 client dialog](/images/docs/oauth-server/dark/oauth2-server-create-app.avif)
@@ -434,7 +434,7 @@ Client client = Client()
 
 Apps apps = Apps(client);
 
-AppList portal = await apps.list(
+AppsList portal = await apps.list(
     queries: [
         Query.equal('userId', '<SIGNED_IN_USER_ID>'),
         Query.limit(25),
@@ -523,6 +523,8 @@ const portal = await apps.list({
 # Get a client {% #get %}
 
 Read a single client with `get`. This backs the app detail page in a developer portal, and a [consent screen](/docs/products/auth/oauth-server/authorization#consent) uses it to show the requesting app's name and logo.
+
+Callers who cannot update the client get a trimmed response: `secrets`, `redirectUris`, and `deviceFlow` are removed. A consent screen reading another developer's app sees the branding it needs and nothing more. The same trimming applies to `list`.
 
 {% multicode %}
 ```client-web
@@ -618,7 +620,7 @@ const app = await apps.get({
 
 # Update a client {% #update %}
 
-Change a client's redirect URIs, branding, or type with the `update` method.
+Change a client's redirect URIs, branding, or type with the `update` method. It replaces the whole client rather than patching it, so any optional field you leave out is reset to its default. Send the values you want to keep alongside the ones you are changing. `name` is required on every call.
 
 {% multicode %}
 ```client-web
@@ -814,7 +816,7 @@ const app = await apps.update({
 ```
 {% /multicode %}
 
-The `type` parameter accepts `confidential` (the default) or `public`. Set `deviceFlow` to `true` to let the client use the [device authorization flow](/docs/products/auth/oauth-server/device-flow). The branding fields (`logoUri`, `tagline`, `privacyPolicyUrl`, `termsUrl`) can appear on the consent screen, and they fill out the app's listing on your marketplace.
+The `type` parameter accepts `confidential` (the default) or `public`. Switching an existing client to `public` fails while it still holds client secrets, so delete every secret first. Set `deviceFlow` to `true` to let the client use the [device authorization flow](/docs/products/auth/oauth-server/device-flow). The branding fields (`logoUri`, `tagline`, `privacyPolicyUrl`, `termsUrl`) can appear on the consent screen, and they fill out the app's listing on your marketplace.
 
 # Transfer to a team {% #transfer %}
 
@@ -920,7 +922,9 @@ const app = await apps.updateTeam({
 
 # Curate with labels {% #labels %}
 
-Labels are trust markers like `official`, `partner`, or `verified`. They are read-only for clients: only a [Server SDK](/docs/sdks#server) using a project API key with the `apps.write` scope can set them, so app owners cannot mark themselves as trusted. That is what makes them safe to filter a marketplace by.
+Labels are trust markers like `official`, `partner`, or `verified`. They are read-only for clients. Only a [Server SDK](/docs/sdks#server) using a project API key with the `apps.write` scope can set them, so app owners cannot mark themselves as trusted. That is what makes them safe to filter a marketplace by.
+
+The `official` label is special and final. Once a client carries it, every write to that client is refused, including another call to `updateLabels`, so the label cannot be removed through the API. Apply it only to clients you publish yourself.
 
 {% multicode %}
 ```server-nodejs
@@ -1097,33 +1101,34 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/apps"
-    "github.com/appwrite/sdk-for-go/client"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/v6/appwrite"
 )
 
 func main() {
-    c := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
-        client.WithProject("<YOUR_PROJECT_ID>"),
-        client.WithKey("<YOUR_API_KEY>"),
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<YOUR_PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
     )
 
-    service := apps.New(c)
+    apps := appwrite.NewApps(client)
 
-    app, err := service.UpdateLabels(
+    app, err := apps.UpdateLabels(
         "<APP_ID>",
         []string{"official"},
     )
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
 
     fmt.Println(app)
 }
 ```
 ```server-rust
-use appwrite::client::Client;
-use appwrite::services::apps::Apps;
+use appwrite::Client;
+use appwrite::services::Apps;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -1137,7 +1142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = apps
         .update_labels(
             "<APP_ID>",
-            vec!["official".into()],
+            vec!["official"],
         )
         .await?;
 
@@ -1148,7 +1153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 {% /multicode %}
 
-Labels replace the previous set on every call. Up to 100 labels are allowed, each up to 36 alphanumeric characters.
+Labels replace the previous set on every call. Up to 1000 labels are allowed, each up to 36 alphanumeric characters.
 
 # Revoke all tokens {% #revoke-tokens %}
 

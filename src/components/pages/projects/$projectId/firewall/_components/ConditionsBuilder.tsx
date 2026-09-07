@@ -5,55 +5,19 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { Plus, Trash2, Route } from 'lucide-react'
 import {
-  Activity,
-  AppWindow,
-  Building,
-  Building2,
-  Cable,
-  Check,
-  Clock,
-  Cloud,
-  Compass,
-  Cookie,
-  Fingerprint,
-  Globe,
-  Globe2,
-  Hash,
-  KeyRound,
-  Languages,
-  LocateFixed,
-  Mailbox,
-  MapPin,
-  Monitor,
-  Network,
-  Plus,
-  Route,
-  SearchCode,
-  Send,
-  Server,
-  Tags,
-  Trash2,
-  UserRound,
-  Wifi,
-  type LucideIcon,
-} from 'lucide-react'
-import {
-  FIREWALL_CONDITION_ATTRIBUTE_GROUPS,
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
   getOperatorsForAttribute,
   isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
-  isPremiumAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -79,38 +43,10 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { ReactNode } from 'react'
-
-const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
-  ip: Fingerprint,
-  host: Server,
-  path: Route,
-  method: Send,
-  protocol: Network,
-  headers: Tags,
-  query: SearchCode,
-  queryKeys: KeyRound,
-  accept: Check,
-  acceptLanguage: Languages,
-  cookie: Cookie,
-  country: Globe2,
-  continent: Globe,
-  city: Building2,
-  state: MapPin,
-  postalCode: Mailbox,
-  latitude: LocateFixed,
-  longitude: Compass,
-  timeZone: Clock,
-  weatherCode: Cloud,
-  isp: Wifi,
-  autonomousSystemNumber: Hash,
-  autonomousSystemOrganization: Building,
-  connectionType: Cable,
-  connectionUsageType: Activity,
-  connectionOrganization: Building,
-  os: Monitor,
-  browser: AppWindow,
-  userAgent: UserRound,
-}
+import {
+  ATTRIBUTE_ICONS,
+  ConditionAttributeSelect,
+} from './ConditionAttributeSelect'
 
 /** Examples only. Never use bare `/` - it looks like a real value when the field is empty. */
 const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
@@ -553,55 +489,14 @@ export function ConditionsBuilder({
                   <div className="flex items-start gap-2">
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex min-w-0 items-center gap-2">
-                        <Select
+                        <ConditionAttributeSelect
                           value={condition.attribute}
                           disabled={disabled}
-                          onValueChange={(value) =>
-                            setAttribute(
-                              index,
-                              value as FirewallConditionAttribute,
-                            )
+                          premiumGeoEnabled={premiumGeoEnabled}
+                          onValueChange={(attribute) =>
+                            setAttribute(index, attribute)
                           }
-                        >
-                          <SelectTrigger className="h-9 min-w-0 flex-1">
-                            <span className="flex min-w-0 items-center gap-2">
-                              <AttributeIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              <SelectValue />
-                            </span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {FIREWALL_CONDITION_ATTRIBUTE_GROUPS.map(
-                              (group) => (
-                                <SelectGroup key={group.label}>
-                                  <SelectLabel>{t(group.label)}</SelectLabel>
-                                  {group.attributes.map((attr) => {
-                                    const premiumLocked =
-                                      isPremiumAttribute(attr.value) &&
-                                      !premiumGeoEnabled
-                                    return (
-                                      <SelectItem
-                                        key={attr.value}
-                                        value={attr.value}
-                                        disabled={premiumLocked}
-                                      >
-                                        <span className="flex items-center gap-2">
-                                          {t(attr.label)}
-                                          {isPremiumAttribute(attr.value) ? (
-                                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                              {premiumLocked
-                                                ? t('Premium Geo DB required')
-                                                : t('Premium')}
-                                            </span>
-                                          ) : null}
-                                        </span>
-                                      </SelectItem>
-                                    )
-                                  })}
-                                </SelectGroup>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
+                        />
 
                         <Select
                           value={condition.operator}

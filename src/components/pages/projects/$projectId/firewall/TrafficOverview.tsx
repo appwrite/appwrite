@@ -60,6 +60,7 @@ import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
+import type { FirewallResourceSelection } from '@/lib/firewall/conditions'
 
 interface MetricSubStat {
   /** Short unit/label shown inline after the value. */
@@ -197,7 +198,11 @@ function changeTrend(change: number): 'up' | 'down' | undefined {
   return undefined
 }
 
-export function TrafficOverview() {
+type TrafficOverviewProps = {
+  resourceSelection: FirewallResourceSelection
+}
+
+export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
   const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
@@ -263,6 +268,8 @@ export function TrafficOverview() {
     dateRange,
     resolvedChartInterval,
     usageLogRetentionHours,
+    resourceSelection.resourceType,
+    resourceSelection.resourceId,
     dateRangePresetId,
   )
   const [isRefreshing, setIsRefreshing] = useState(false)

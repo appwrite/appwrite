@@ -33,7 +33,7 @@ On the dashboard, your tasks render live, so the read scope is doing its job. No
 
 # Grant the write {% #grant %}
 
-Sign out of Vantage and sign in again. This time leave every permission on and authorize. The previous grant did not cover `tasks.write`, so the consent screen asks again.
+Vantage has no sign-out route, so clear its `vantage_session` cookie or open a private window, then sign in again. This time leave every permission on and authorize. The previous grant did not cover `tasks.write`, and a request for a scope the user has not approved always returns to the consent screen.
 
 ![Vantage dashboard with tasks.write granted and the new task in the list](/images/docs/oauth-server/scopes-guide/vantage-write-granted.avif)
 

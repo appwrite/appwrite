@@ -3323,7 +3323,7 @@ export function mergeApiExplorerExpandedProductGroupIntoPrefs(
 export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 
 // ---------------------------------------------------------------------------
-// Build completion browser notifications (account prefs)
+// Browser alerts (account prefs) — master toggle for desktop notifications
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */

@@ -14,11 +14,13 @@
  *   we observed transition through their in-progress phase are eligible to
  *   trigger a success/failure favicon - this avoids stray red flashes from
  *   unrelated terminal events for other resources in the project.
- * - Sends a desktop Notification when a build completes (only when the page
- *   does not have focus - i.e. the user is on another tab or in another app -
- *   so we don't spam users who can already see the UI). Permission is
- *   requested via an in-app toast button so the request happens inside a real
- *   user gesture, which most browsers require.
+ * - Sends a desktop Notification when a tracked build completes. Notifications
+ *   are suppressed only while this tab is actively focused so we do not spam
+ *   users who can already see the UI update. Any site or function deployment
+ *   in the project is tracked once it enters an in-progress state, so you
+ *   still get alerted after switching tabs or navigating to another section.
+ *   Permission is requested via an in-app toast button so the request happens
+ *   inside a real user gesture, which most browsers require.
  *
  * It hooks into the same realtime channel the rest of the app already uses, so it
  * doesn't open additional WebSockets.
@@ -38,6 +40,17 @@ import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
 import { isDeploymentTimeout } from '@/lib/utils/deployment-status'
+import { resolveDeploymentResourceId } from '@/lib/realtime/deployment-events'
+import {
+  restoreBuildTracking,
+  saveBuildTrackingBeforeReload,
+} from '@/lib/browser-alerts/session-tracking'
+import {
+  isPageInBackground,
+  notificationsSupported,
+  requestNotificationPermission,
+  showBrowserAlert,
+} from '@/lib/browser-alerts/browser-notifications'
 import { useT } from '@/lib/i18n/translate'
 import { useBuildNotificationsOptedOut } from '@/lib/react-query/hooks'
 
@@ -65,9 +78,9 @@ const TERMINAL_FAVICON_RESET_MS = 10_000
  *  - `type, resourceId: string` → on a specific site/function detail page
  *
  * Notifications still fire globally for builds we already started tracking -
- * the whole point is to alert you when you're elsewhere - but we only *start*
- * tracking a build (and only swap the favicon) when its resource matches the
- * page you're currently working on.
+ * the whole point is to alert you when you're elsewhere. Favicon swaps stay
+ * scoped to the resource the user is currently viewing so unrelated builds do
+ * not change the tab icon.
  */
 type DeploymentResource = 'site' | 'function'
 
@@ -133,6 +146,25 @@ function isTerminalStatus(status: string): boolean {
   )
 }
 
+function countRelevantActiveBuilds(
+  builds: Map<string, ActiveBuild>,
+  ctx: RelevanceContext,
+): number {
+  let count = 0
+  builds.forEach((build) => {
+    if (isDeploymentTimeout(build.status, build.createdAt)) return
+    if (
+      isUpdateRelevant(ctx, {
+        resourceType: build.resourceType,
+        resourceId: build.resourceId,
+      })
+    ) {
+      count++
+    }
+  })
+  return count
+}
+
 /** Match base favicon: theme variants in dev/local, flat logo colors in prod. */
 function buildInProgressFavicon(): FaviconVariant {
   return usesThemeAwareFaviconHost() ? 'theme-blue' : 'blue'
@@ -191,10 +223,6 @@ function formatActiveBuildsDetail(
 
 let permissionPromptShown = false
 
-function notificationsSupported(): boolean {
-  return typeof window !== 'undefined' && typeof Notification !== 'undefined'
-}
-
 /**
  * Show an in-app prompt asking the user to enable browser notifications. We
  * surface this only when we've actually seen a build kick off, so the request
@@ -206,55 +234,41 @@ function handleEnableClick(
   toastId: string | number,
   rememberOptedOut: () => void,
   translate: (text: string) => string,
+  snapshotBeforeReload?: () => void,
 ): void {
-  try {
-    const result = Notification.requestPermission()
-    const handle = (perm: NotificationPermission) => {
-      toast.dismiss(toastId)
-      if (perm === 'granted') {
-        // Some browsers (notably Chrome on macOS) require a page reload after
-        // a fresh permission grant before the page can actually construct
-        // Notifications. Reload automatically so the user doesn't have to do
-        // it themselves - we briefly flash a toast so the reload isn't a
-        // total surprise.
-        toast.success(translate('Notifications enabled'), {
-          description: translate('Reloading to apply…'),
-          duration: 1500,
-        })
-        window.setTimeout(() => {
-          try {
-            window.location.reload()
-          } catch {
-            // Ignore - if reload is blocked, notifications will still start
-            // working on the next manual navigation.
-          }
-        }, 800)
-      } else if (perm === 'denied') {
-        rememberOptedOut()
-        toast.message(translate('Notifications blocked'), {
-          description: translate(
-            'You can re-enable them anytime from your browser settings.',
-          ),
-        })
-      }
+  void (async () => {
+    const perm = await requestNotificationPermission()
+    toast.dismiss(toastId)
+    if (perm === 'granted') {
+      snapshotBeforeReload?.()
+      toast.success(translate('Notifications enabled'), {
+        description: translate('Reloading to apply…'),
+        duration: 1500,
+      })
+      window.setTimeout(() => {
+        try {
+          window.location.reload()
+        } catch {
+          // Ignore - if reload is blocked, notifications will still start
+          // working on the next manual navigation.
+        }
+      }, 800)
+    } else if (perm === 'denied') {
+      rememberOptedOut()
+      toast.message(translate('Notifications blocked'), {
+        description: translate(
+          'You can re-enable them anytime from your browser settings.',
+        ),
+      })
     }
-    if (
-      result &&
-      typeof (result as Promise<NotificationPermission>).then === 'function'
-    ) {
-      void (result as Promise<NotificationPermission>).then(handle)
-    } else if (typeof result === 'string') {
-      handle(result as NotificationPermission)
-    }
-  } catch {
-    // Ignore - some browsers throw if the call comes too late after the click.
-  }
+  })()
 }
 
 function maybeShowEnableToast(
   rememberOptedOut: () => void,
   optedOut: boolean,
   translate: (text: string) => string,
+  snapshotBeforeReload?: () => void,
 ): void {
   if (permissionPromptShown) return
   if (!notificationsSupported()) return
@@ -294,7 +308,12 @@ function maybeShowEnableToast(
           <button
             type="button"
             onClick={() =>
-              handleEnableClick(toastId, rememberOptedOut, translate)
+              handleEnableClick(
+                toastId,
+                rememberOptedOut,
+                translate,
+                snapshotBeforeReload,
+              )
             }
             className="h-8 rounded-md bg-primary px-3 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
@@ -347,6 +366,8 @@ export function BuildNotificationsProvider({
    * the same final status.
    */
   const notifiedTerminalRef = useRef<Set<string>>(new Set())
+  /** True after the user leaves this tab/window while a project build may be running. */
+  const userWasAwayRef = useRef(false)
   const resetTimerRef = useRef<number | null>(null)
   const originalFaviconRef = useRef<FaviconVariant | null>(null)
   const lastDesiredFaviconRef = useRef<FaviconVariant | null>(null)
@@ -381,6 +402,14 @@ export function BuildNotificationsProvider({
         projectName: cached?.name?.trim() || undefined,
         organizationId: cached?.teamId?.trim() || undefined,
       }
+    }
+
+    function snapshotBeforeReload(): void {
+      saveBuildTrackingBeforeReload(
+        projectIdRef.current,
+        activeBuildsRef.current.values(),
+        trackedRef.current,
+      )
     }
 
     function captureOriginalFavicon(): void {
@@ -467,59 +496,116 @@ export function BuildNotificationsProvider({
       return name && name.trim().length > 0 ? name : resourceId
     }
 
+    function markUserAway(): void {
+      userWasAwayRef.current = true
+    }
+
+    function syncDeploymentsFromCache(): void {
+      queryClientRef.current.getQueryCache().getAll().forEach((query) => {
+        inspectDeploymentQuery(query)
+      })
+    }
+
+    function refetchTrackedDeployments(): void {
+      const qc = queryClientRef.current
+      const pid = projectIdRef.current
+      activeBuildsRef.current.forEach((build) => {
+        const listKey =
+          build.resourceType === 'site'
+            ? ['deployments', 'site', pid, build.resourceId]
+            : ['deployments', 'function', pid, build.resourceId]
+        const detailKey =
+          build.resourceType === 'site'
+            ? ['deployment', 'site', pid, build.resourceId, build.deploymentId]
+            : [
+                'deployment',
+                'function',
+                pid,
+                build.resourceId,
+                build.deploymentId,
+              ]
+        void qc.refetchQueries({ queryKey: listKey, exact: false })
+        void qc.refetchQueries({ queryKey: detailKey, exact: false })
+      })
+    }
+
+    function processCachedDeployment(
+      dep: Record<string, unknown>,
+      resourceType: DeploymentResource,
+      resourceId: string,
+    ): void {
+      const deploymentId = dep.$id as string | undefined
+      const status = dep.status as string | undefined
+      if (!deploymentId || !status) return
+
+      handleStatusChange({
+        deploymentId,
+        resourceId,
+        resourceType,
+        status,
+        createdAt: dep.$createdAt as string | undefined,
+      })
+    }
+
+    function inspectDeploymentQuery(query: {
+      queryKey: readonly unknown[]
+      state: { data: unknown }
+    }): void {
+      const key = query.queryKey
+      if (!Array.isArray(key) || key.length < 4) return
+
+      const [a, b, projId] = key as unknown[]
+      if (projId !== projectIdRef.current) return
+      if (b !== 'site' && b !== 'function') return
+      const resourceType = b as DeploymentResource
+
+      const data = query.state.data as
+        | Record<string, unknown>
+        | { deployments?: Array<Record<string, unknown>> }
+        | undefined
+      if (!data) return
+
+      if (a === 'deployment') {
+        const resourceId = key[3]
+        if (typeof resourceId !== 'string') return
+        processCachedDeployment(data as Record<string, unknown>, resourceType, resourceId)
+        return
+      }
+
+      if (a === 'deployments') {
+        const resourceId = key[3]
+        if (typeof resourceId !== 'string') return
+        const deployments = (data as { deployments?: Array<Record<string, unknown>> })
+          .deployments
+        if (!Array.isArray(deployments)) return
+        for (const dep of deployments) {
+          if (!dep || typeof dep !== 'object') continue
+          processCachedDeployment(dep, resourceType, resourceId)
+        }
+      }
+    }
+
+    function shouldDeliverBuildAlert(): boolean {
+      return isPageInBackground() || userWasAwayRef.current
+    }
+
     function notify(title: string, body: string, tag: string): void {
-      if (!notificationsSupported()) return
-      // Skip only when the user is actively looking at this page. We use
-      // `document.hasFocus()` instead of `visibilityState` because the latter
-      // is only `hidden` when another tab is in front - it stays `visible`
-      // when the user switches to a completely different app (Slack, IDE,
-      // etc.), which is exactly when we *do* want a notification.
-      const inForeground =
-        typeof document.hasFocus === 'function'
-          ? document.hasFocus() && document.visibilityState === 'visible'
-          : document.visibilityState === 'visible'
-      if (inForeground) return
+      if (optedOutRef.current) return
       if (Notification.permission !== 'granted') {
-        // Permission was never granted - nudge the user to enable it (this
-        // becomes a no-op after the first nudge). Only surface the prompt on
-        // build-relevant pages so users in unrelated sections aren't pinged.
         if (relevanceCtxRef.current.type !== null) {
           maybeShowEnableToast(
             () => rememberOptedOutRef.current(),
             optedOutRef.current,
             tRef.current,
+            snapshotBeforeReload,
           )
         }
         return
       }
-      try {
-        const notification = new Notification(title, {
-          body,
-          icon: '/logo.svg',
-          tag,
-          // Keep on screen until the user acknowledges it; build results are
-          // worth more than the default ~4 second auto-dismiss.
-          requireInteraction: true,
-          // Make sure the OS re-alerts even if a previous notification with
-          // the same tag is still showing.
-          renotify: true,
-        } as NotificationOptions)
-        // Bring the tab to the foreground if the user clicks the notification.
-        notification.onclick = () => {
-          try {
-            window.focus()
-            notification.close()
-          } catch {
-            // Ignore focus failures (popup blocker, cross-origin, etc.)
-          }
-        }
-      } catch (err) {
-        // Some browsers throw when constructing a Notification fails (e.g.
-        // Safari without a Service Worker, or when the OS-level permission
-        // was revoked between checks). Surface it so we can see why nothing
-        // showed up.
-        console.warn('[BuildNotifications] failed to show notification', err)
-      }
+      showBrowserAlert(title, body, {
+        tag: `${tag}-${Date.now()}`,
+        force: true,
+      })
     }
 
     function handleStatusChange(update: {
@@ -561,36 +647,31 @@ export function BuildNotificationsProvider({
 
       if (isInProgressStatus(update.status)) {
         const isNew = !builds.has(update.deploymentId)
-        // Strict relevance gate: a brand new build only counts if it belongs
-        // to the resource the user is currently looking at. This prevents the
-        // favicon from going blue for builds the user can't see on screen
-        // (e.g. Site B's build while they're on Site A, or any function build
-        // while they're on the Sites overview). Builds we already started
-        // tracking continue through to completion, so navigating away mid-
-        // build doesn't make us lose interest.
-        if (isNew && !isUpdateRelevant(relevanceCtxRef.current, update)) {
-          return
-        }
-        // Re-arm dedupe if the same deployment ID restarts (rare, but harmless).
+        // Track every site/function deployment in this project so background
+        // notifications still fire after the user switches tabs or navigates
+        // away from Sites/Functions. Favicon updates stay scoped below.
         notifiedTerminalRef.current.delete(update.deploymentId)
         builds.set(update.deploymentId, {
           ...update,
           createdAt: createdAtForTimeout ?? update.createdAt,
         })
         tracked.add(update.deploymentId)
-        clearResetTimer()
-        applyDesiredFavicon(
-          buildInProgressFavicon(),
-          `${builds.size} ${update.resourceType} build(s) in progress`,
-        )
-        // First time we see this build start, nudge the user to enable browser
-        // notifications so they hear about completion. Already gated by the
-        // relevance check above, so we know we're on the right page.
+
+        const isRelevant = isUpdateRelevant(relevanceCtxRef.current, update)
+        if (isRelevant) {
+          clearResetTimer()
+          applyDesiredFavicon(
+            buildInProgressFavicon(),
+            `${countRelevantActiveBuilds(builds, relevanceCtxRef.current)} ${update.resourceType} build(s) in progress on this route`,
+          )
+        }
+
         if (isNew) {
           maybeShowEnableToast(
             () => rememberOptedOutRef.current(),
             optedOutRef.current,
             tRef.current,
+            snapshotBeforeReload,
           )
         }
         return
@@ -605,9 +686,6 @@ export function BuildNotificationsProvider({
       // build succeeded.
       const wasTracked = tracked.has(update.deploymentId)
       if (!wasTracked) {
-        // Clean up bookkeeping in case it was added via cache seeding without
-        // a real in-progress event, and bail out without touching the favicon
-        // or firing a notification.
         builds.delete(update.deploymentId)
         return
       }
@@ -644,13 +722,32 @@ export function BuildNotificationsProvider({
             : timedOut
               ? 'timed out'
               : 'canceled'
-      notify(
-        tRef.current(`${label} build ${notifyResultWord}`),
-        `${name} ${tRef.current(`build ${verb}.`)}`,
-        `appwrite-build-${update.deploymentId}`,
+      if (shouldDeliverBuildAlert()) {
+        notify(
+          tRef.current(`${label} build ${notifyResultWord}`),
+          `${name} ${tRef.current(`build ${verb}.`)}`,
+          `appwrite-build-${update.deploymentId}`,
+        )
+      }
+
+      if (activeBuildsRef.current.size === 0) {
+        userWasAwayRef.current = false
+      }
+
+      const completingBuildWasRelevant = isUpdateRelevant(
+        relevanceCtxRef.current,
+        update,
+      )
+      const relevantRemaining = countRelevantActiveBuilds(
+        builds,
+        relevanceCtxRef.current,
       )
 
-      if (builds.size === 0) {
+      if (!completingBuildWasRelevant) {
+        return
+      }
+
+      if (relevantRemaining === 0) {
         if (canceled) {
           // Canceling is a user action, not an error - just go back to normal.
           applyDesiredFavicon(
@@ -667,10 +764,10 @@ export function BuildNotificationsProvider({
           scheduleFaviconReset()
         }
       } else {
-        // Other builds still running - keep the in-progress favicon.
+        // Other relevant builds still running - keep the in-progress favicon.
         applyDesiredFavicon(
           buildInProgressFavicon(),
-          `${builds.size} build(s) still in progress after another finished`,
+          `${relevantRemaining} relevant build(s) still in progress after another finished`,
         )
       }
     }
@@ -698,15 +795,18 @@ export function BuildNotificationsProvider({
       const status = payload.status as string | undefined
       if (!deploymentId || !status) return
 
-      const resourceId =
-        (payload.resourceId as string | undefined) ?? ''
-      if (!resourceId) return
-
       const resourceTypeRaw =
         (payload.resourceType as string | undefined) ??
         (isSite ? 'site' : 'function')
       const resourceType: DeploymentResource =
         resourceTypeRaw === 'function' ? 'function' : 'site'
+
+      const resourceId = resolveDeploymentResourceId(
+        events,
+        resourceType,
+        payload,
+      )
+      if (!resourceId) return
 
       const createdAt = payload.$createdAt as string | undefined
 
@@ -755,22 +855,14 @@ export function BuildNotificationsProvider({
           const status = (dep as { status?: string }).status
           if (!status || !isInProgressStatus(status)) continue
           const depId = (dep as { $id?: string }).$id
-          const resId = (dep as { resourceId?: string }).resourceId
+          const resourceIdFromKey =
+            typeof key[3] === 'string' ? (key[3] as string) : undefined
+          const resId =
+            (dep as { resourceId?: string }).resourceId ?? resourceIdFromKey
           const createdAt = (dep as { $createdAt?: string }).$createdAt
           if (!depId || !resId) continue
           if (isDeploymentTimeout(status, createdAt)) continue
           if (activeBuildsRef.current.has(depId)) continue
-          // Same relevance gate as live events - only seed builds the user is
-          // currently looking at, otherwise reloading mid-build on (e.g.) the
-          // Databases page would still flip the favicon blue.
-          if (
-            !isUpdateRelevant(relevanceCtxRef.current, {
-              resourceType,
-              resourceId: resId,
-            })
-          ) {
-            continue
-          }
           activeBuildsRef.current.set(depId, {
             deploymentId: depId,
             resourceId: resId,
@@ -778,23 +870,42 @@ export function BuildNotificationsProvider({
             status,
             createdAt,
           })
-          // Mark as tracked so the eventual terminal event is allowed to
-          // change the favicon and fire a notification.
+          // Mark as tracked so the eventual terminal event can fire a
+          // notification even if the user navigated away from Sites/Functions.
           trackedRef.current.add(depId)
         }
       })
 
-      if (activeBuildsRef.current.size > 0) {
+      if (
+        countRelevantActiveBuilds(
+          activeBuildsRef.current,
+          relevanceCtxRef.current,
+        ) > 0
+      ) {
         clearResetTimer()
         applyDesiredFavicon(
           buildInProgressFavicon(),
-          `${activeBuildsRef.current.size} build(s) in progress (seeded from cache)`,
+          `${countRelevantActiveBuilds(activeBuildsRef.current, relevanceCtxRef.current)} relevant build(s) in progress (seeded from cache)`,
         )
       }
     }
 
     function onVisibilityChange(): void {
-      if (document.visibilityState !== 'visible') return
+      if (document.visibilityState === 'hidden') {
+        markUserAway()
+        return
+      }
+
+      // Tab woke up: browsers often defer realtime/timer work while hidden, so
+      // re-read the cache and refetch tracked deployments to catch completions
+      // we missed while the tab was in the background.
+      syncDeploymentsFromCache()
+      if (activeBuildsRef.current.size > 0 || trackedRef.current.size > 0) {
+        refetchTrackedDeployments()
+      } else {
+        userWasAwayRef.current = false
+      }
+
       // User is looking at us again - drop any "completed" indicator immediately
       // so the favicon doesn't keep nagging once they've seen the result.
       if (activeBuildsRef.current.size === 0 && originalFaviconRef.current) {
@@ -805,7 +916,39 @@ export function BuildNotificationsProvider({
       }
     }
 
+    function onWindowBlur(): void {
+      markUserAway()
+    }
+
     document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('blur', onWindowBlur)
+
+    const unsubscribeCache = queryClientRef.current
+      .getQueryCache()
+      .subscribe((event) => {
+        if (event.type !== 'updated') return
+        inspectDeploymentQuery(event.query)
+      })
+
+    const restoredBuilds = restoreBuildTracking(projectIdRef.current)
+    if (restoredBuilds) {
+      for (const build of restoredBuilds) {
+        activeBuildsRef.current.set(build.deploymentId, build)
+        trackedRef.current.add(build.deploymentId)
+      }
+      if (
+        countRelevantActiveBuilds(
+          activeBuildsRef.current,
+          relevanceCtxRef.current,
+        ) > 0
+      ) {
+        clearResetTimer()
+        applyDesiredFavicon(
+          buildInProgressFavicon(),
+          `${countRelevantActiveBuilds(activeBuildsRef.current, relevanceCtxRef.current)} relevant build(s) in progress (restored after permission reload)`,
+        )
+      }
+    }
 
     seedFromCache()
 
@@ -835,6 +978,8 @@ export function BuildNotificationsProvider({
     return () => {
       cancelled = true
       document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('blur', onWindowBlur)
+      unsubscribeCache()
       clearResetTimer()
       // If we tweaked the favicon, make sure we leave it as the user found it.
       if (originalFaviconRef.current) {

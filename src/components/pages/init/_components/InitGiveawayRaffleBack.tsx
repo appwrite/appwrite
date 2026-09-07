@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { Loader2, RefreshCw, Sparkles, Trophy, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   computeRaffleWheelRotation,
   INIT_GIVEAWAY_RAFFLE_SPIN_MS,
@@ -44,8 +44,17 @@ export function InitGiveawayRaffleBack({
   const [rotation, setRotation] = useState(0)
   const [isSpinning, setIsSpinning] = useState(false)
   const [winner, setWinner] = useState<LaunchEventOnlineUser | null>(null)
+  const spinTimeoutRef = useRef<number | null>(null)
   const raffleContext = useInitGiveawayRaffleContext()
   const { setTransientActivity } = useInitPresenceActivity()
+
+  // Closing the card mid-spin must not publish a winner into the shared context later.
+  useEffect(
+    () => () => {
+      if (spinTimeoutRef.current != null) window.clearTimeout(spinTimeoutRef.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!isSpinning) {
@@ -56,6 +65,15 @@ export function InitGiveawayRaffleBack({
     setTransientActivity(buildInitSpinningGiveawayRaffleActivity())
     return () => setTransientActivity(null)
   }, [isSpinning, setTransientActivity])
+
+  const wheelSegments = useMemo(
+    () =>
+      participants.map((participant) => ({
+        id: participant.id,
+        label: formatInitPresenceDisplayName(participant.name),
+      })),
+    [participants],
+  )
 
   const canRaffle = participants.length > 0 && !isSpinning && !loadingParticipants
   const canReload = !isSpinning && !loadingParticipants
@@ -72,10 +90,11 @@ export function InitGiveawayRaffleBack({
     setIsSpinning(true)
     setRotation(nextRotation)
 
-    window.setTimeout(() => {
+    spinTimeoutRef.current = window.setTimeout(() => {
+      spinTimeoutRef.current = null
       setWinner(nextWinner)
       setIsSpinning(false)
-      raffleContext?.celebrateRaffleWinner(nextWinner)
+      raffleContext?.celebrateRaffleWinner(nextWinner.id)
     }, INIT_GIVEAWAY_RAFFLE_SPIN_MS)
   }, [canRaffle, participants, raffleContext, rotation])
 
@@ -120,7 +139,7 @@ export function InitGiveawayRaffleBack({
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />
             </div>
           ) : (
-            <InitGiveawayRaffleWheel participants={participants} rotation={rotation} />
+            <InitGiveawayRaffleWheel segments={wheelSegments} rotation={rotation} />
           )}
 
           <div className="flex flex-col items-center gap-2">

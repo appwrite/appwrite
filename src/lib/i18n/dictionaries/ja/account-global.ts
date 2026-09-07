@@ -330,6 +330,41 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Notifications blocked': '通知がブロックされています',
   'Get notified when builds finish': 'ビルド完了時に通知を受け取る',
   'Not now': '後で',
+  'Browser alerts': 'ブラウザ通知',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'このタブがバックグラウンドにあるとき、または別のアプリがフォーカスされているときに、コンソールからデスクトップ通知を受け取ります。',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'このタブがバックグラウンドの間、コンソールからデスクトップ通知を受け取ります。',
+  'Browser alerts are turned off in the Console.':
+    'コンソールでブラウザ通知がオフになっています。',
+  'Console alerts': 'コンソール通知',
+  'Included alerts': '含まれる通知',
+  'Build completion': 'ビルド完了',
+  'Site and function builds that finish while you are away.':
+    '離席中に完了したサイトまたは Functions のビルド。',
+  'Browser alerts test': 'ブラウザ通知のテスト',
+  'If you can read this, browser alerts are working correctly.':
+    'このメッセージが表示されれば、ブラウザ通知は正常に動作しています。',
+  'Send test notification': 'テスト通知を送信',
+  'Test notification sent': 'テスト通知を送信しました',
+  'Could not send a test notification. Check browser permissions.':
+    'テスト通知を送信できませんでした。ブラウザの権限を確認してください。',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'ブラウザ設定でこのサイトの通知を許可してから、ここに戻ってください。',
+  'Browser permission': 'ブラウザの権限',
+  'Console preference': 'コンソールの設定',
+  'Waiting for browser permission': 'ブラウザの権限待ち',
+  'Not supported': '非対応',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'ブラウザ設定を開き、このサイトの通知権限を見つけて許可し、このページを更新してください。',
+  'This browser does not support desktop notifications.':
+    'このブラウザはデスクトップ通知に対応していません。',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ブラウザによって通知がブロックされています。このサイトのブラウザ設定で通知を許可してください。',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    '通知をオンにし、ブラウザから求められたら通知を許可してください。',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'バナーが表示されない場合は、システムの通知センターまたはおやすみモードの設定を確認してください。',
   // Build notification titles/bodies (dynamic combinations)
   'Site build ready': 'サイトのビルドが完了しました',
   'Site build failed': 'サイトのビルドに失敗しました',

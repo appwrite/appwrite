@@ -25,8 +25,9 @@ export const Route = createFileRoute('/_marketing/changelog/')({
       },
     ],
   }),
-  loader: async ({ context }) => {
-    return getChangelogEntriesPage(1)
+  loader: async () => {
+    const { entries, nextPage } = getChangelogEntriesPage(1)
+    return { entries, nextPage }
   },
   component: ChangelogPage,
 })

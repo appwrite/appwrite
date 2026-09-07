@@ -18,7 +18,7 @@ Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (O
 
 The OAuth2 server has four components.
 
-1. **The authorization server.** Enabling the server on your project exposes the full set of endpoints: discovery, JWKS, authorize, approve and reject, token, userinfo, introspect, logout, and revoke. For more advanced integrations, device authorization, pushed authorization, and dynamic client registration are also available.
+1. **The authorization server.** Enabling the server on your project exposes the full set of endpoints: JWKS, authorize, approve and reject, token, userinfo, introspect, logout, and revoke. The discovery documents are served whether or not the server is enabled. For more advanced integrations, device authorization, pushed authorization, and dynamic client registration are also available.
 2. **Clients.** Each third-party app registers as a [client](/docs/products/auth/oauth-server/clients), either confidential (it has a backend that can hold a secret) or public (a browser or mobile app that cannot). A client declares the redirect URIs it can return to and the post-logout redirect URIs it can end sessions at, chooses whether the device flow is available (off by default), and carries what your consent screen shows for it: a name, logo, tagline, and description, along with marketplace details like tags, images, and contact and privacy information.
 3. **The consent screen.** You host a consent screen at an authorization URL you configure. When a user authorizes a client, Appwrite redirects the user to your screen, your screen confirms the grant, and Appwrite issues an authorization code the client exchanges for tokens.
 4. **Your APIs.** The resource servers that clients call with the issued access tokens. They verify each token against your project's public keys and check the granted [scopes](/docs/products/auth/oauth-server/scopes) before serving a request.
@@ -41,7 +41,7 @@ The server follows the OAuth 2.1 security practices: the password and implicit a
 | [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) | Dynamic client registration, useful for MCP server support. |
 | [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636) | PKCE with `S256` hashing. Required for public clients, and a project setting can require it for confidential clients too. |
 | [RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662) | Token introspection, for building APIs that validate access tokens. |
-| [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) | OAuth for native apps: loopback redirects match on any port, and public clients can register private-use scheme redirect URIs. |
+| [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) | OAuth for native apps. Loopback redirects match on any port for public clients, and any client can register private-use scheme redirect URIs. |
 | [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) | Authorization server metadata, published as the OpenID Connect discovery document. |
 | [RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628) | Device authorization grant, to sign in on input-constrained devices like TVs and remote servers. |
 | [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) | Resource indicators, so a token can be restricted to one of several APIs behind the same provider. |

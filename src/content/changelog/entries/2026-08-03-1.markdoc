@@ -2,6 +2,7 @@
 layout: changelog
 title: "Pricing update: storage costs for builds and deployments will be enforced"
 date: 2026-08-03
+tags: storage, functions, sites, infrastructure
 ---
 
 Starting **September 1st, 2026**, we will begin enforcing storage costs for build artifacts and deployments on [Appwrite Cloud](https://cloud.appwrite.io).

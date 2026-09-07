@@ -1,3 +1,14 @@
+/** Survives RootDocument remounts so in-console navigations never re-show the branded overlay. */
+let initialLoadCompleted = false
+
+export function hasInitialLoaderCompleted(): boolean {
+  return initialLoadCompleted
+}
+
+export function markInitialLoaderCompleted(): void {
+  initialLoadCompleted = true
+}
+
 /** Gate keys the fullscreen loader may wait on before hiding. */
 export const INITIAL_LOADER_SHELL_GATE = {
   projectSelector: 'project-selector',

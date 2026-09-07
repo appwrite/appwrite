@@ -13,7 +13,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "product, announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-domains/cover.avif",
     "hasCover": true
   },
@@ -25,10 +24,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-04",
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
-    "author": "atharva",
+    "author": "arnab-chatterjee",
     "category": "product, announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
     "hasCover": true
   },
@@ -43,7 +41,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "matej-baco",
     "category": "announcement",
     "featured": false,
-    "draft": true,
     "cover": "/images/blog/announcing-oauth2-server/cover.avif",
     "hasCover": true
   },
@@ -91,6 +88,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "build-a-memory-mcp-server",
+    "href": "/blog/post/build-a-memory-mcp-server",
+    "title": "Build a memory MCP server on Appwrite",
+    "description": "Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 14,
+    "author": "atharva",
+    "category": "tutorial",
+    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-rate-limit-strategies",
     "href": "/blog/post/firewall-rate-limit-strategies",
     "title": "Fixed window, sliding window, or token bucket? Choosing a rate limit strategy in Appwrite Firewall",
@@ -100,7 +110,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 9,
     "author": "atharva",
     "category": "security, best-practices",
-    "draft": true,
     "cover": "/images/blog-local/firewall-rate-limit-strategies/cover.avif",
     "hasCover": true
   },
@@ -112,11 +121,24 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-09-04",
     "lastUpdated": "2026-09-04",
     "timeToRead": 6,
+    "author": "matej-baco",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "turn-your-app-into-an-mcp-server",
+    "href": "/blog/post/turn-your-app-into-an-mcp-server",
+    "title": "Turn your app into an MCP server with the Appwrite OAuth2 server",
+    "description": "Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.",
+    "date": "2026-09-04",
+    "lastUpdated": "2026-09-04",
+    "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": true,
-    "cover": "/images/blog/sign-in-with-appwrite-guide/cover.avif",
+    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
     "hasCover": true
   },
   {
@@ -342,34 +364,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement",
     "featured": false,
     "cover": "/images/blog/announcing-bun-1-4-runtime/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "build-a-memory-mcp-server",
-    "href": "/blog/post/build-a-memory-mcp-server",
-    "title": "Build a memory MCP server on Appwrite",
-    "description": "Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.",
-    "date": "2026-08-19",
-    "lastUpdated": "2026-08-19",
-    "timeToRead": 14,
-    "author": "atharva",
-    "category": "tutorial",
-    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "turn-your-app-into-an-mcp-server",
-    "href": "/blog/post/turn-your-app-into-an-mcp-server",
-    "title": "Turn your app into an MCP server with the Appwrite OAuth2 server",
-    "description": "Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.",
-    "date": "2026-08-19",
-    "lastUpdated": "2026-08-19",
-    "timeToRead": 14,
-    "author": "atharva",
-    "category": "tutorial",
-    "featured": false,
-    "draft": true,
-    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
     "hasCover": true
   },
   {

@@ -6,9 +6,11 @@ difficulty: intermediate
 readtime: 5
 ---
 
-A challenge rule verifies matching clients before their requests continue. Clients that pass the challenge continue to your application. Clients that fail do not. Use challenge instead of deny when automated traffic and normal users share the same paths.
+A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Browsers solve it and pass, usually without the visitor noticing. Scripts do not.
 
-The interactive challenge page is served for **site** and **function** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a `403` challenge-required error, because API clients cannot solve an interactive challenge. Scope challenge rules to a site or function when you expect browser traffic. See [Challenge](/docs/products/firewall/actions#challenge).
+Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users.
+
+This guide puts a challenge in front of the sign-up page of a site.
 
 # Create the challenge rule {% #create-the-challenge-rule %}
 
@@ -21,33 +23,32 @@ The interactive challenge page is served for **site** and **function** traffic w
 
 1. Open **Firewall** in your project.
 2. Click **Create rule**.
-3. Enter a **Rule name** (for example `Challenge automated clients`).
-4. Select the **Resource type** for the traffic you expect. Pick **Sites** and select your site for browser traffic.
-5. Under conditions, set **User agent** **Contains** `curl`.
-6. Set **Action** to **Challenge**.
+3. Enter a **Rule name**, for example `Challenge sign-up`.
+4. Set **Resource type** to **Sites** and select your site.
+5. Under conditions, set **Path** **Starts with** `/signup`.
+6. Under **Then**, choose **Challenge**.
 7. Keep **Difficulty** at `3`.
 8. Keep **TTL (seconds)** at `1800`.
 9. Click **Create rule**.
 
-**Difficulty** sets the client-side proof-of-work cost, from `1` (easiest) to `5` (hardest). **TTL** sets how long a visitor stays cleared after a passed challenge.
+Scope challenge rules to a **Site** or a **Function**. An **API** rule rejects matching requests instead of challenging them, because an API client has no browser to solve the puzzle with. See [Challenge](/docs/products/firewall/actions#challenge).
 
-# Cover more client patterns {% #cover-more-client-patterns %}
+# Choose the paths to cover {% #choose-the-paths %}
 
-Conditions on one rule must all match. To challenge several user agent patterns, create one rule for each pattern. Common patterns include:
+Every condition on a rule must match, so one rule covers one path prefix. Create one rule per path prefix.
 
-- **User agent** **Contains** `python-requests`
-- **User agent** **Contains** `Go-http-client`
-- **User agent** **Is empty**, for clients that send no user agent
+Do not build a challenge rule on **User agent** contains `curl`. Appwrite denies known bots before a challenge is issued, so the rule produces denials and **Challenged** stays at zero. See [Known bots are denied](/docs/products/firewall/actions#known-bots-are-denied).
 
-Give the rules the same action and the same priority range so they behave as one policy.
+Cover the page a visitor loads, not the path the form posts to. Appwrite serves the challenge page only for browser navigation, so a rule on a `POST` target returns `403` rather than a challenge. A visitor who is cleared on the page carries that clearance through the form submission.
 
 # Verify the rule {% #verify-the-rule %}
 
-1. Send a request with a matching user agent to the protected resource.
-2. Confirm the client receives a challenge instead of the normal response.
-3. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
+1. Open the protected path in a browser.
+2. Confirm the challenge page appears before the page loads.
+3. Reload the page. The challenge does not appear again, because you are now cleared.
+4. Open **Firewall** and confirm the **Challenged** series rises in the traffic overview. The **Challenged** tile also reports solved challenges and the average solve time.
 
-Raise the difficulty if automated traffic keeps passing. Lower it if normal users report slow page loads on first visit.
+If automated traffic keeps getting through, raise the difficulty. If first page loads feel slow, lower it.
 
 {% arrow_link href="/docs/products/firewall/scopes" %}
 Resource scopes

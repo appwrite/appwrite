@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Transactions API: Reliable multi-record writes across tables"
 date: 2025-10-09
 cover: /images/blog/announcing-transactions-api/cover.avif
+tags: api
 ---
 
 Handling multi-step workflows across tables often means dealing with partial writes and manual rollback logic.  

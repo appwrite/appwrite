@@ -3,6 +3,7 @@ layout: changelog
 title: Announcing the Appwrite OSS Program
 date: 2023-12-28
 cover: /images/changelog/oss-progam.avif
+tags: infrastructure
 ---
 
 Appwrite's newest initiative to support open-source projects and their maintainers.

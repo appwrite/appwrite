@@ -3,6 +3,7 @@ layout: changelog
 title: "New Cloud regions announced: Singapore and Toronto"
 date: 2025-10-29
 cover: /images/changelog/2025-10-29.avif
+tags: performance, infrastructure
 ---
 
 We’ve expanded the Appwrite Cloud to two brand-new regions!

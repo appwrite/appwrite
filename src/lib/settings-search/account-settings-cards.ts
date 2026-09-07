@@ -22,6 +22,20 @@ export const ACCOUNT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['delete', 'remove', 'destroy', 'danger'],
   },
   {
+    sectionId: 'notifications',
+    title: 'Browser alerts',
+    keywords: [
+      'alert',
+      'browser',
+      'notification',
+      'desktop',
+      'build',
+      'deployment',
+      'sites',
+      'functions',
+    ],
+  },
+  {
     sectionId: 'security',
     title: 'Update password',
     keywords: ['password', 'change', 'reset', 'recovery'],

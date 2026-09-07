@@ -851,7 +851,10 @@ export function ProjectOAuth2AppDrawer({
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden">
+        <DialogContent
+          className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('OAuth secret created')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -928,7 +931,10 @@ export function ProjectOAuth2AppDrawer({
           if (!next) setDeleteSecretId(null)
         }}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete OAuth secret')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -957,7 +963,10 @@ export function ProjectOAuth2AppDrawer({
       </Dialog>
 
       <Dialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Revoke all tokens')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

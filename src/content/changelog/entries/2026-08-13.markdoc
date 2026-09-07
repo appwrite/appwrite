@@ -3,6 +3,7 @@ layout: changelog
 title: "Up to 4x faster dependency installs with the build cache"
 date: 2026-08-13
 cover: /images/blog/inside-appwrites-new-build-cache/cover.avif
+tags: performance
 ---
 
 Appwrite now caches your dependencies between builds. The package manager's store is saved after each successful build and restored before the next one, so installs reuse what was already downloaded instead of fetching every package from the registry again.

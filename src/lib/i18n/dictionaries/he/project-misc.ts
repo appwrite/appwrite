@@ -674,6 +674,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not copy link': 'לא ניתן היה להעתיק את הקישור',
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
+  'Actor email': 'אימייל מבצע',
   'Actor type': 'סוג מבצע',
   'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',
@@ -1742,6 +1743,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מדינת המקור.',
   'Request volume grouped by caller city.':
     'נפח בקשות מקובץ לפי עיר המקור.',
+  'Request volume grouped by caller internet service provider.':
+    'נפח בקשות מקובץ לפי ספק האינטרנט של המקור.',
+  'Request volume grouped by caller autonomous system number.':
+    'נפח בקשות מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Request volume grouped by caller autonomous system organization.':
+    'נפח בקשות מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Request volume grouped by caller connection type.':
+    'נפח בקשות מקובץ לפי סוג החיבור של המקור.',
+  'Request volume grouped by caller connection usage type.':
+    'נפח בקשות מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Request volume grouped by caller connection organization.':
+    'נפח בקשות מקובץ לפי ארגון החיבור של המקור.',
   'Request volume grouped by caller hostname.':
     'נפח בקשות מקובץ לפי שם המארח של המקור.',
   'Request volume grouped by caller IP address.':
@@ -1765,6 +1778,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
   'Bandwidth grouped by caller city.': 'רוחב פס מקובץ לפי עיר המקור.',
+  'Bandwidth grouped by caller internet service provider.':
+    'רוחב פס מקובץ לפי ספק האינטרנט של המקור.',
+  'Bandwidth grouped by caller autonomous system number.':
+    'רוחב פס מקובץ לפי מספר מערכת אוטונומית של המקור.',
+  'Bandwidth grouped by caller autonomous system organization.':
+    'רוחב פס מקובץ לפי ארגון המערכת האוטונומית של המקור.',
+  'Bandwidth grouped by caller connection type.':
+    'רוחב פס מקובץ לפי סוג החיבור של המקור.',
+  'Bandwidth grouped by caller connection usage type.':
+    'רוחב פס מקובץ לפי סוג השימוש בחיבור של המקור.',
+  'Bandwidth grouped by caller connection organization.':
+    'רוחב פס מקובץ לפי ארגון החיבור של המקור.',
   'Bandwidth grouped by caller hostname.':
     'רוחב פס מקובץ לפי שם המארח של המקור.',
   'Bandwidth grouped by caller IP address.':
@@ -1781,6 +1806,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'גרסת SDK',
   'Caller city': 'עיר מקור',
+  'AS number': 'מספר AS',
+  'AS organization': 'ארגון AS',
+  'Connection usage type': 'סוג שימוש בחיבור',
+  'Connection organization': 'ארגון חיבור',
+  ISPs: 'ספקי ISP',
+  'AS numbers': 'מספרי AS',
+  'AS organizations': 'ארגוני AS',
+  'Connection types': 'סוגי חיבור',
+  'Connection usage types': 'סוגי שימוש בחיבור',
+  'Connection organizations': 'ארגוני חיבור',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
   'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',
@@ -2670,6 +2705,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'הפעלת Premium Geo DB',
   'Upgrade plan': 'שדרוג תוכנית',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'חזקו אבטחה עם כללי Firewall מדויקים ושפרו Observability בסשנים, פעילות וניתוח שימוש.',
+  'How this affects your app': 'איך זה משפיע על האפליקציה',
+  'Stronger firewall rules': 'כללי Firewall חזקים יותר',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    'חסמו או אפשרו תעבורה לפי עיר, מדינה/אזור, ISP, ASN וסוג חיבור לבקרת גישה מדויקת.',
+  'Richer session and request context': 'הקשר עשיר יותר לסשן ולבקשות',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'צרפו נתוני מיקום מפורטים לסשני Auth, לוגי פעילות ומסלולי ביקורת בכל בקשה.',
+  'Deeper usage insights': 'תובנות שימוש מעמיקות יותר',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    'פרקו תעבורת API לפי עיר, ISP ומאפייני רשת כדי לזהות ניצול לרעה ודפוסים אזוריים.',
+  'Geolocation attributes': 'מאפייני מיקום',
+  'Included on every plan': 'כלול בכל תוכנית',
+  'Added with Premium Geo DB': 'נוסף עם Premium Geo DB',
+  'Location details': 'פרטי מיקום',
+  'Network details': 'פרטי רשת',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'העשירו סשנים, פעילות ושימוש עם נתוני מיקום מפורטים מכל בקשה.',
   'Not enabled': 'לא מופעל',

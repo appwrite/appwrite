@@ -1476,7 +1476,7 @@ function TemplateCard({
   const cardClassName = cn(
     RESOURCE_CARD_PADDED_CLASSNAME,
     RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-    'flex w-full min-h-[160px] min-w-0 flex-col text-start',
+    'flex w-full min-h-[160px] min-w-0 flex-col pb-0 text-start',
     RESOURCE_CARD_SHELL_CLASSNAME,
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
   )

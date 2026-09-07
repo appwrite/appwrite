@@ -3,6 +3,7 @@ layout: changelog
 title: "Bun and Deno are now build runtimes for Sites"
 date: 2026-05-19
 cover: /images/blog/announcing-bun-deno-runtimes/cover.avif
+tags: functions, sites
 ---
 
 Appwrite Sites now supports **Bun** (1.0, 1.1, 1.2, 1.3) and **Deno** (1.40, 1.46, 2.0, 2.5, 2.6) as build runtimes for every Node-based framework.

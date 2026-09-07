@@ -2,9 +2,11 @@
  * React Query hooks for Firewall (WAF service)
  */
 
+import { useMemo } from 'react'
 import {
   useMutation,
   useQuery,
+  useQueries,
   useQueryClient,
   queryOptions,
   keepPreviousData,
@@ -12,7 +14,7 @@ import {
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
@@ -31,19 +33,37 @@ import {
 import {
   fetchFirewallRuleImpact,
   buildFirewallUsageConditionSnapshots,
+  buildFirewallResourceUsageQueries,
   draftsFromUsageConditionSnapshots,
+  firewallConditionBreakdownDimension,
   type FirewallRuleImpactData,
   type FirewallUsageConditionSnapshot,
 } from '@/lib/firewall/usage'
 import type {
+  FirewallConditionAttribute,
   FirewallConditionDraft,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import {
+  requestsBreakdownQueryOptions,
+  PREMIUM_GEO_REQUEST_DIMENSIONS,
+} from './usage-events'
+import {
+  REQUESTS_BREAKDOWN_SECTIONS,
+  type RequestsBreakdownSection,
+} from '@/lib/usage/requests-breakdowns'
+import type {
+  UsageBreakdownItem,
+  UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import type { DateRange } from 'react-day-picker'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import { fetchProjectFunctionsByIds } from './functions'
-import { fetchProjectSitesByIds } from './sites'
+import {
+  fetchProjectFunctionsByIds,
+  functionsQueryOptions,
+} from './functions'
+import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -767,4 +787,158 @@ export function useFirewallRuleImpact(
     isFetching,
     error,
   }
+}
+
+export type FirewallConditionBreakdownEntry = {
+  attribute: FirewallConditionAttribute
+  section: RequestsBreakdownSection
+  items: UsageBreakdownItem[]
+  isLoading: boolean
+  isError: boolean
+  error: unknown
+}
+
+/**
+ * One usage breakdown per distinct condition attribute that maps to a usage
+ * dimension, scoped to the rule's resource. Mirrors the usage requests cards so
+ * the rule builder can show what values exist for a selected attribute. Skips
+ * attributes with no usage dimension (headers / query keys, continent, state,
+ * and the request/extended-geo attributes) - those simply render no graph.
+ *
+ * `allowPremiumGeo` should be false on self-hosted, where the CE backend does
+ * not enumerate the premium geo dimensions - the same gate the usage requests
+ * cards apply - so a city/network condition doesn't send an unsupported request.
+ */
+export function useFirewallConditionBreakdowns(
+  projectId: string | null | undefined,
+  conditions: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
+  resourceId: string | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  allowPremiumGeo = true,
+  logRetentionHours?: number,
+): FirewallConditionBreakdownEntry[] {
+  const entries = useMemo(() => {
+    // Non-API scopes must target a specific resource; without a resourceId the
+    // breakdown would aggregate every function/site in the project and present a
+    // project-wide distribution as evidence for an incomplete rule target.
+    if (resourceType !== 'api' && !resourceId?.trim()) return []
+
+    const seen = new Set<UsageEventBreakdownDimension>()
+    const result: {
+      attribute: FirewallConditionAttribute
+      dimension: UsageEventBreakdownDimension
+      section: RequestsBreakdownSection
+    }[] = []
+    for (const condition of conditions) {
+      const dimension = firewallConditionBreakdownDimension(condition.attribute)
+      if (!dimension || seen.has(dimension)) continue
+      // Self-hosted backends reject premium geo dimensions; skip them so the
+      // card doesn't render an error instead of following the premium gate.
+      if (!allowPremiumGeo && PREMIUM_GEO_REQUEST_DIMENSIONS.has(dimension)) {
+        continue
+      }
+      const section = REQUESTS_BREAKDOWN_SECTIONS.find(
+        (candidate) => candidate.dimension === dimension,
+      )
+      if (!section) continue
+      seen.add(dimension)
+      result.push({ attribute: condition.attribute, dimension, section })
+    }
+    return result
+  }, [conditions, resourceType, resourceId, allowPremiumGeo])
+
+  const filterQueries = useMemo(
+    () => buildFirewallResourceUsageQueries(resourceType, resourceId),
+    [resourceType, resourceId],
+  )
+
+  const queries = useQueries({
+    queries: entries.map((entry) => ({
+      ...requestsBreakdownQueryOptions(
+        projectId,
+        dateRange,
+        entry.dimension,
+        filterQueries,
+        logRetentionHours,
+      ),
+      // The base options keep previous data per-project as placeholder, which
+      // would show a different resource's breakdown while switching
+      // functions/sites. Drop the placeholder so a resource switch shows a
+      // loading state instead of stale cross-resource data.
+      placeholderData: undefined,
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      entries.map((entry, index) => {
+        const query = queries[index]
+        return {
+          attribute: entry.attribute,
+          section: entry.section,
+          items: query.data ?? [],
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          error: query.error,
+        }
+      }),
+    [entries, queries],
+  )
+}
+
+/** Page size for the firewall resource scope picker (API / sites / functions). */
+export const FIREWALL_RESOURCE_PICKER_LIMIT = 25
+
+/**
+ * Isolated query keys for the firewall resource picker so project realtime
+ * invalidations on `['functions'|'sites', 'project', …]` do not refetch the
+ * open dropdown on every deployment or execution event.
+ */
+export function firewallResourcePickerFunctionsQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = functionsQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'functions',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+export function firewallResourcePickerSitesQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = sitesQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'sites',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
 }

@@ -2,6 +2,7 @@
 layout: changelog
 title: Update to budget limits in Appwrite Cloud
 date: 2025-03-19
+tags: infrastructure
 ---
 
 We've updated how budget limits work in Appwrite Cloud to provide more control over organization scaling.

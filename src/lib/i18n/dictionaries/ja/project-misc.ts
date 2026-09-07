@@ -406,6 +406,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このアクティビティへのリンクをコピーしました',
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
+  'Actor email': 'アクターのメール',
   'Actor type': 'アクタータイプ',
   'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',
@@ -1235,6 +1236,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化されたリクエスト量。',
   'Request volume grouped by caller city.':
     '呼び出し元の都市別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化されたリクエスト量。',
   'Request volume grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化されたリクエスト量。',
   'Request volume grouped by caller IP address.':
@@ -1265,6 +1278,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化された帯域幅。',
   'Bandwidth grouped by caller city.':
     '呼び出し元の都市別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化された帯域幅。',
   'Bandwidth grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化された帯域幅。',
   'Bandwidth grouped by caller IP address.':
@@ -1286,6 +1311,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'SDK バージョン',
   'Caller city': '呼び出し元の都市',
+  'AS number': 'AS 番号',
+  'AS organization': 'AS 組織',
+  'Connection usage type': '接続用途タイプ',
+  'Connection organization': '接続組織',
+  ISPs: 'ISP',
+  'AS numbers': 'AS 番号',
+  'AS organizations': 'AS 組織',
+  'Connection types': '接続タイプ',
+  'Connection usage types': '接続用途タイプ',
+  'Connection organizations': '接続組織',
   'API paths': 'API パス',
   'Operations grouped by database.': 'データベース別にグループ化された操作。',
   'Operations grouped by resource.': 'リソース別にグループ化された操作。',
@@ -2647,6 +2682,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'Premium Geo DB を有効にする',
   'Upgrade plan': 'プランのアップグレード',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'Firewall ルールを精密化してセキュリティを強化し、セッション、アクティビティ、使用状況分析のオブザーバビリティを向上させます。',
+  'How this affects your app': 'アプリへの影響',
+  'Stronger firewall rules': 'より強力な Firewall ルール',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    '都市、州、ISP、ASN、接続タイプでトラフィックをブロックまたは許可し、きめ細かなアクセス制御を実現します。',
+  'Richer session and request context': 'より詳細なセッションとリクエストのコンテキスト',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'すべてのリクエストで Auth セッション、アクティビティログ、監査証跡に詳細な位置情報を付与します。',
+  'Deeper usage insights': 'より深い使用状況の分析',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    '都市、ISP、ネットワーク属性別に API トラフィックを分析し、不正利用や地域パターンを把握します。',
+  'Geolocation attributes': '位置情報の属性',
+  'Included on every plan': 'すべてのプランに含まれる',
+  'Added with Premium Geo DB': 'Premium Geo DB で追加',
+  'Location details': '位置情報の詳細',
+  'Network details': 'ネットワークの詳細',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'セッション、アクティビティ、使用状況を、リクエストごとの詳細な位置情報で補強します。',
   'Not enabled': '未有効',

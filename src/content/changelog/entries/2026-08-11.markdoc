@@ -3,6 +3,7 @@ layout: changelog
 title: "The Appwrite CLI is now written in Go"
 date: 2026-08-11
 cover: /images/blog/rewriting-the-appwrite-cli-in-go/cover.avif
+tags: cli
 ---
 
 The Appwrite CLI is now a **single native binary** written in Go. Commands start in about **10 ms** instead of 200 ms, `npm install -g appwrite-cli` pulls **two packages instead of 330**, and a `push` holds its memory near **28 MB** rather than 283 MB.

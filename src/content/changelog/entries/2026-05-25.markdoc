@@ -3,6 +3,7 @@ layout: changelog
 title: "Track who is online with the new Presences API"
 date: 2026-05-25
 cover: /images/blog/announcing-presences-api/cover.avif
+tags: realtime, api
 ---
 
 Appwrite now ships a first-class **Presences API** for short-lived user statuses like online, away, editing, or typing. Each presence is a small record attached to a user, with a `status` string, optional `metadata`, an `expiresAt` timestamp (up to 30 days), and the same [permissions](/docs/advanced/platform/permissions) model as the rest of the platform.

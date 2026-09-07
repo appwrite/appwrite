@@ -17,10 +17,12 @@ import {
 } from '@/lib/usage/usage-log-retention'
 import { cn } from '@/lib/utils'
 import {
+  useFirewallConditionBreakdowns,
   useFirewallRuleImpact,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
+import { UsageBreakdownCard } from '../../usage/_components/UsageMetricCard'
 import type {
   FirewallConditionDraft,
   FirewallResourceType,
@@ -37,6 +39,7 @@ import {
 import { getFirewallActionMetric } from '@/lib/firewall/action-metrics'
 import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
 import { FirewallImpactChart } from './FirewallImpactChart'
 import { FirewallActionActivityChart } from './FirewallActionActivityChart'
@@ -76,6 +79,7 @@ export function RuleImpactPreview({
 }: RuleImpactPreviewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
+  const { isSelfHosted } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const [debouncedConditions, setDebouncedConditions] = useState(conditions)
@@ -149,6 +153,22 @@ export function RuleImpactPreview({
     chartInterval,
     usageLogRetentionHours,
     action,
+  )
+
+  // Per-attribute breakdowns for the selected conditions, scoped to the rule's
+  // resource. Independent of the overall estimate (which a header/query
+  // condition can make unavailable), so a country/ISP/etc. condition still shows
+  // its distribution. Premium geo attributes surface the upgrade curtain via the
+  // shared breakdown card, matching the usage pages.
+  const conditionBreakdowns = useFirewallConditionBreakdowns(
+    projectId,
+    debouncedConditions,
+    resourceType,
+    resourceId,
+    selectedDateRange,
+    true,
+    !isSelfHosted,
+    usageLogRetentionHours,
   )
 
   // Disabled queries keep previous data; never show stale numbers as a preview.
@@ -358,6 +378,31 @@ export function RuleImpactPreview({
           </div>
         ) : null}
       </div>
+
+      {conditionBreakdowns.map((entry) => (
+        <div
+          key={entry.section.dimension}
+          className="h-[320px] overflow-hidden rounded-xl border border-border bg-card/50"
+        >
+          <UsageBreakdownCard
+            embedded
+            title={entry.section.title}
+            description={entry.section.description}
+            dimension={entry.section.dimension}
+            items={entry.items}
+            labelVariant={entry.section.labelVariant}
+            countryLookups={null}
+            isLoading={entry.isLoading}
+            isError={entry.isError}
+            error={entry.error}
+            errorTitle={t('Breakdown unavailable')}
+            errorMessage={t(
+              'Could not load this breakdown for the selected period.',
+            )}
+            formatValue={(value) => value.toLocaleString()}
+          />
+        </div>
+      ))}
 
       <div className="rounded-xl border border-border bg-card/50 px-4 py-3">
         <p className="text-[12px] text-muted-foreground">

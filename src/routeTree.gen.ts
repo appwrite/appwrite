@@ -97,6 +97,7 @@ import { Route as PublicAccountSessionsRouteImport } from './routes/_public/acco
 import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
+import { Route as PublicAccountNotificationsRouteImport } from './routes/_public/account.notifications'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
 import { Route as PublicAccountAffiliatesRouteImport } from './routes/_public/account.affiliates'
@@ -866,6 +867,12 @@ const PublicAccountPaymentMethodsRoute =
   PublicAccountPaymentMethodsRouteImport.update({
     id: '/payment-methods',
     path: '/payment-methods',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountNotificationsRoute =
+  PublicAccountNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => PublicAccountRoute,
   } as any)
 const PublicAccountBillingAddressesRoute =
@@ -3090,6 +3097,7 @@ export interface FileRoutesByFullPath {
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/notifications': typeof PublicAccountNotificationsRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
@@ -3495,6 +3503,7 @@ export interface FileRoutesByTo {
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/account/notifications': typeof PublicAccountNotificationsRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
@@ -3863,6 +3872,7 @@ export interface FileRoutesById {
   '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
+  '/_public/account/notifications': typeof PublicAccountNotificationsRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
   '/_public/account/security': typeof PublicAccountSecurityRoute
@@ -4274,6 +4284,7 @@ export interface FileRouteTypes {
     | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
+    | '/account/notifications'
     | '/account/payment-methods'
     | '/account/payments'
     | '/account/security'
@@ -4679,6 +4690,7 @@ export interface FileRouteTypes {
     | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
+    | '/account/notifications'
     | '/account/payment-methods'
     | '/account/payments'
     | '/account/security'
@@ -5046,6 +5058,7 @@ export interface FileRouteTypes {
     | '/_public/account/affiliates'
     | '/_public/account/applications'
     | '/_public/account/billing-addresses'
+    | '/_public/account/notifications'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
     | '/_public/account/security'
@@ -6031,6 +6044,13 @@ declare module '@tanstack/react-router' {
       path: '/payment-methods'
       fullPath: '/account/payment-methods'
       preLoaderRoute: typeof PublicAccountPaymentMethodsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/notifications': {
+      id: '/_public/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof PublicAccountNotificationsRouteImport
       parentRoute: typeof PublicAccountRoute
     }
     '/_public/account/billing-addresses': {
@@ -8417,6 +8437,7 @@ interface PublicAccountRouteChildren {
   PublicAccountAffiliatesRoute: typeof PublicAccountAffiliatesRoute
   PublicAccountApplicationsRoute: typeof PublicAccountApplicationsRoute
   PublicAccountBillingAddressesRoute: typeof PublicAccountBillingAddressesRoute
+  PublicAccountNotificationsRoute: typeof PublicAccountNotificationsRoute
   PublicAccountPaymentMethodsRoute: typeof PublicAccountPaymentMethodsRoute
   PublicAccountPaymentsRoute: typeof PublicAccountPaymentsRoute
   PublicAccountSecurityRoute: typeof PublicAccountSecurityRoute
@@ -8428,6 +8449,7 @@ const PublicAccountRouteChildren: PublicAccountRouteChildren = {
   PublicAccountAffiliatesRoute: PublicAccountAffiliatesRoute,
   PublicAccountApplicationsRoute: PublicAccountApplicationsRoute,
   PublicAccountBillingAddressesRoute: PublicAccountBillingAddressesRoute,
+  PublicAccountNotificationsRoute: PublicAccountNotificationsRoute,
   PublicAccountPaymentMethodsRoute: PublicAccountPaymentMethodsRoute,
   PublicAccountPaymentsRoute: PublicAccountPaymentsRoute,
   PublicAccountSecurityRoute: PublicAccountSecurityRoute,

@@ -80,7 +80,7 @@ import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { canSwitchOrganizations } from '@/lib/console-access-checks'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -203,7 +203,6 @@ export function ProjectSettingsOverview({
   const t = useT()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
-  const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
   useScrollToCard()
   const queryClient = useQueryClient()
@@ -566,7 +565,7 @@ export function ProjectSettingsOverview({
   // Mutation to transfer project
   const transferProjectMutation = useMutation({
     mutationFn: async (teamId: string) => {
-      if (!getActiveProfileFeatures().multiTenancy) {
+      if (!supportsMultiTenancy) {
         throw new Error(
           'This console profile does not support transferring between organizations',
         )
@@ -741,6 +740,10 @@ export function ProjectSettingsOverview({
         label: org.name,
       }))
   }, [allOrganizations, project])
+  const supportsMultiTenancy = canSwitchOrganizations(
+    features,
+    allOrganizations.length,
+  )
 
   // Build a VCS provider authorization URL (github, gitlab, ...)
   const getVcsAuthUrl = (

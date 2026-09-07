@@ -3,6 +3,7 @@ layout: changelog
 title: "Introducing the Appwrite MCP server for docs"
 date: 2025-09-09
 cover: /images/changelog/2025-09-09.avif
+tags: mcp
 ---
 
 While the Appwrite docs are constantly getting updated and improved, LLMs often struggle to provide accurate and up-to-date information due to missing context.

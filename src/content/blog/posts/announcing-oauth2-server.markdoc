@@ -9,7 +9,6 @@ author: matej-baco
 category: announcement
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is the Appwrite OAuth2 server?"
     answer: "The OAuth2 server lets your Appwrite project act as an OAuth 2.1 and OpenID Connect provider. Third-party apps register as clients, send your users through an authorization flow you control, and receive tokens they can use to sign users in or call your APIs with scoped access."

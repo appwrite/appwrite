@@ -21,21 +21,33 @@ Redirect URIs must match exactly what your backend uses to receive the authoriza
 4. Your server exchanges the code for tokens using the token endpoint and your client secret
 5. Store refresh tokens securely and use access tokens for Console API calls
 
-# Initialize Console SDK with user tokens {% #initialize-console-sdk-with-user-tokens %}
+# Call the API with a user token {% #call-the-api-with-a-user-token %}
 
-After token exchange, set the access token on the Console client for delegated API calls:
+After the token exchange, set the access token as a bearer token. Pass the organization the user selected, the same way a Partners key does.
 
 {% multicode %}
 ```server-nodejs
-import { Client, Organizations } from 'node-appwrite';
+import { Client, Organization } from 'node-appwrite';
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('console')
-    .setJWT(userAccessToken);
+    .setOrganization('<ORGANIZATION_ID>')
+    .setBearer(userAccessToken);
 
-const organizations = new Organizations(client);
-const orgs = await organizations.list();
+const organization = new Organization(client);
+const org = await organization.get();
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::Organization;
+
+let client = Client::new()
+    .set_endpoint("https://cloud.appwrite.io/v1")
+    .set_organization("<ORGANIZATION_ID>")
+    .set_bearer(user_access_token);
+
+let organization = Organization::new(&client);
+let org = organization.get().await?;
 ```
 {% /multicode %}
 

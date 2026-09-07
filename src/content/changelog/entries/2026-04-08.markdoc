@@ -3,6 +3,7 @@ layout: changelog
 title: "Separate build and runtime compute specs for Sites and Functions"
 date: 2026-04-08
 cover: /images/changelog/2026-04-08.avif
+tags: functions, sites, performance
 ---
 
 You can now choose **independent compute specifications** for the **build** and **runtime** phases of [Sites](/docs/products/sites) and [Functions](/docs/products/functions). Each spec sets CPU and memory for that phase, so you can tune both performance and spend: right-size compute for heavy builds or busy runtimes without paying for peak capacity in the phase that does not need it.

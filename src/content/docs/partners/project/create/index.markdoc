@@ -1,0 +1,278 @@
+---
+layout: article
+title: Create a project
+description: Create an Appwrite project for a customer with the Organization API and a Partners key.
+---
+
+Projects belong to an organization, so the Organization service creates them. A platform that gives every customer their own project calls this once per customer, then configures the new project with the pages in the rest of this section.
+
+{% info title="Partners key required" %}
+Creating a project needs a [Partners key](/docs/partners/org-api-keys) with the `projects.write` scope, not a project API key. A project API key is scoped to one project and cannot create another. Pass the organization ID with the key and send no project ID.
+{% /info %}
+
+# Create a project {% #create-a-project %}
+
+Pass a project ID, a display name, and the region the project's data lives in. Store the returned ID against your own customer record.
+
+{% multicode %}
+```server-nodejs
+import { Client, Organization, ID, Region } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey('<YOUR_PARTNERS_KEY>');
+
+const organization = new Organization(client);
+
+const result = await organization.createProject({
+    projectId: ID.unique(),
+    name: 'Customer workspace',
+    region: Region.Fra
+});
+```
+```server-deno
+import { Client, Organization, ID, Region } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey('<YOUR_PARTNERS_KEY>');
+
+const organization = new Organization(client);
+
+const result = await organization.createProject({
+    projectId: ID.unique(),
+    name: 'Customer workspace',
+    region: Region.Fra
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\Organization;
+use Appwrite\Enums\Region;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setOrganization('<ORGANIZATION_ID>')
+    ->setKey('<YOUR_PARTNERS_KEY>');
+
+$organization = new Organization($client);
+
+$result = $organization->createProject(
+    projectId: ID::unique(),
+    name: 'Customer workspace',
+    region: Region::FRA()
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.id import ID
+from appwrite.services.organization import Organization
+from appwrite.enums import Region
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_organization('<ORGANIZATION_ID>')
+client.set_key('<YOUR_PARTNERS_KEY>')
+
+organization = Organization(client)
+
+result = organization.create_project(
+    project_id = ID.unique(),
+    name = 'Customer workspace',
+    region = Region.FRA
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_organization('<ORGANIZATION_ID>')
+    .set_key('<YOUR_PARTNERS_KEY>')
+
+organization = Organization.new(client)
+
+response = organization.create_project(
+    project_id: ID.unique(),
+    name: 'Customer workspace',
+    region: Region::FRA
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetOrganization("<ORGANIZATION_ID>")
+    .SetKey("<YOUR_PARTNERS_KEY>");
+
+Organization organization = new Organization(client);
+
+Project result = await organization.CreateProject(
+    projectId: ID.Unique(),
+    name: "Customer workspace",
+    region: Region.Fra
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey('<YOUR_PARTNERS_KEY>');
+
+Organization organization = Organization(client);
+
+Project result = await organization.createProject(
+    projectId: ID.unique(),
+    name: 'Customer workspace',
+    region: enums.Region.fra,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.Organization
+import io.appwrite.enums.Region
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setOrganization("<ORGANIZATION_ID>")
+    .setKey("<YOUR_PARTNERS_KEY>")
+
+val organization = Organization(client)
+
+val response = organization.createProject(
+    projectId = ID.unique(),
+    name = "Customer workspace",
+    region = Region.FRA
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Organization;
+import io.appwrite.enums.Region;
+
+Client client = new Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setOrganization("<ORGANIZATION_ID>")
+    .setKey("<YOUR_PARTNERS_KEY>");
+
+Organization organization = new Organization(client);
+
+organization.createProject(
+    ID.unique(), // projectId
+    "Customer workspace", // name
+    Region.FRA, // region
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setOrganization("<ORGANIZATION_ID>")
+    .setKey("<YOUR_PARTNERS_KEY>")
+
+let organization = Organization(client)
+
+let project = try await organization.createProject(
+    projectId: ID.unique(),
+    name: "Customer workspace",
+    region: .fra
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/id"
+    "github.com/appwrite/sdk-for-go/organization"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithOrganization("<ORGANIZATION_ID>"),
+        appwrite.WithKey("<YOUR_PARTNERS_KEY>"),
+    )
+
+    service := appwrite.NewOrganization(client)
+    result, err := service.CreateProject(
+        id.Unique(),
+        "Customer workspace",
+        organization.WithCreateProjectRegion("fra"),
+    )
+
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(result)
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::enums::Region;
+use appwrite::id::ID;
+use appwrite::services::Organization;
+
+let client = Client::new()
+    .set_endpoint("https://cloud.appwrite.io/v1")
+    .set_organization("<ORGANIZATION_ID>")
+    .set_key("<YOUR_PARTNERS_KEY>");
+
+let organization = Organization::new(&client);
+
+let result = organization
+    .create_project(ID::unique(), "Customer workspace", Some(Region::Fra))
+    .await?;
+```
+{% /multicode %}
+
+# Regions {% #regions %}
+
+The `region` fixes where the project's data lives and which regional endpoint its SDK calls use. It cannot be changed after creation, so pick it from the customer's own requirements. See [Regions](/docs/products/network/regions) for the full list.
+
+# Retries {% #retries %}
+
+`ID.unique()` returns a new ID on every call, so a retried create makes a second project. To keep provisioning safe to retry, derive the project ID from your own customer ID and pass that instead, or record the returned ID before the provisioning step returns.
+
+# Next steps {% #next-steps %}
+
+Once the project exists, switch to a project API key to configure it. Create that key in the Console, then work through the configuration pages:
+
+{% cards %}
+{% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
+Create and manage the keys your backend uses inside the project.
+{% /cards_item %}
+{% cards_item href="/docs/partners/project/provisioning" title="Provisioning" %}
+Apply a standard baseline to a new customer's project from a script.
+{% /cards_item %}
+{% /cards %}

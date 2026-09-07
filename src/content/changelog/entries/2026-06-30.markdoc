@@ -3,6 +3,7 @@ layout: changelog
 title: Announcing Appwrite 1.9.5 for self-hosted deployments
 date: 2026-06-30
 cover: /images/blog/appwrite-1-9-5-self-hosted-release/cover.avif
+tags: integrations, databases, functions, infrastructure
 ---
 
 After multiple updates and fixes, Appwrite 1.9.5 is now available for self-hosting.

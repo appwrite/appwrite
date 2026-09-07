@@ -3,6 +3,7 @@ layout: changelog
 title: "Deploy Appwrite Sites and Functions from GitLab"
 date: 2026-09-03
 cover: /images/blog-local/announcing-gitlab-support/cover.avif
+tags: integrations, functions, sites
 ---
 
 **GitLab** is now a Git provider for Appwrite Sites and Functions. Connect a GitLab account from **Project settings** > **Git configuration**, or from the empty state in the Site and Function creation wizards, and deploy straight from your GitLab repositories.

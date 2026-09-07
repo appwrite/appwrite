@@ -110,6 +110,18 @@ const config: PlaywrightTestConfig = {
       },
     },
     {
+      // Local-only, same as self-hosted-usage: needs a self-hosted backend where
+      // the test account belongs to several organizations.
+      // Run with `bun run e2e:organizations-self-hosted`.
+      name: 'self-hosted-organizations',
+      dependencies: ['setup'],
+      testMatch: /self-hosted\.organizations\.spec\.ts/,
+      use: {
+        ...desktopChrome,
+        storageState,
+      },
+    },
+    {
       name: 'console-usage-live',
       dependencies: ['setup'],
       testMatch: /console\.usage\.live\.spec\.ts/,

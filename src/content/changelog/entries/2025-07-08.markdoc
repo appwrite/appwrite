@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Database Upsert: Simplify your database interactions"
 date: 2025-07-08
 cover: /images/changelog/2025-07-08.avif
+tags: databases
 ---
 
 We're excited to introduce Database Upsert in Appwrite.

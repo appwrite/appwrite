@@ -2,6 +2,7 @@
 layout: changelog
 title: 'API keys and JWTs can no longer mint further credentials'
 date: 2026-08-17
+tags: auth, api, security
 ---
 
 Appwrite Cloud now blocks an API key from creating another API key, and blocks a JWT from minting another JWT. Existing keys and JWTs keep working. The change stops leaked credentials from growing a hidden set of replacements.
