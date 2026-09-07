@@ -42,6 +42,7 @@ const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels 
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_CERTIFICATE_ATTEMPTS = 5; // Attempts before automatic certificate issuance and renewal give up
+const APP_CERTIFICATE_GENERATION_LEASE = 900; // Seconds before an interrupted issuance can be retried
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 

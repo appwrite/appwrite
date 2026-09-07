@@ -1838,6 +1838,12 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
+        // A queued deletion can outlive its rule. Do not remove the certificate
+        // or invalidate routing for a domain that has since been recreated.
+        if (!$dbForPlatform->findOne('rules', [Query::equal('domain', [$document->getAttribute('domain')])])->isEmpty()) {
+            return;
+        }
+
         $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
         // Route cleanup to the provider that issued it; without the type the proxy

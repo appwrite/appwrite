@@ -119,7 +119,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $certificateMessage->project);
                 break;
 
             default:
@@ -244,183 +244,173 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $validationDomain = null,
+        ?Document $project = null,
     ): void {
-        /**
-         * 1. Read arguments and validate domain
-         * 2. Get main domain
-         * 3. Validate CNAME DNS if parameter is not main domain (meaning it's custom domain)
-         * 4. Validate renew date with certificate file, unless requested to skip by parameter
-         * 5. Issue a certificate using certbot CLI
-         * 6. Update 'log' attribute on certificate document with Certbot message
-         * 7. Create storage folder for certificate, if not ready already
-         * 8. Move certificates from Certbot location to our Storage
-         * 9. Create/Update our Storage with new Traefik config with new certificate paths
-         * 11. Read certificate file and update 'renewDate' on certificate document
-         * 12. Update 'issueDate' and 'attempts' on certificate
-         *
-         * If at any point unexpected error occurs, program stops without applying changes to document, and error is thrown into worker
-         *
-         * If code stops with expected error:
-         * 1. 'log' attribute on document is updated with error message
-         * 2. 'attempts' amount is increased
-         * 3. Console log is shown
-         * 4. Email is sent to security email
-         *
-         * Unless unexpected error occurs, at the end, we:
-         * 1. Update 'updated' attribute on document
-         * 2. Save document to database
-         * 3. Update all domains documents with current certificate ID
-         *
-         * Note: Renewals are checked and scheduled from maintenance worker
-         */
-
-        // Get rule document for domain
-        // TODO: (@Meldiron) Remove after 1.7.x migration
+        // Resolve the current rule, then lock and re-check it before claiming
+        // issuance. A queued message must not act on a recreated domain owner.
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
             ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-            : $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain->get()]),
-                Query::limit(1),
-            ]);
-
-        // Rule not found (or) not in the expected state. Failed rules are included so retries run
-        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATION_FAILED])) {
-            Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
+            : $dbForPlatform->findOne('rules', [Query::equal('domain', [$domain->get()]), Query::limit(1)]);
+        if ($rule->isEmpty()) {
             return;
         }
 
-        // Get associated certificate for the rule
-        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
-
-        // Only automatic retries arrive failed; a Console retry resets the rule first
-        $isAutomaticRetry = $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED;
-
-        if ($isAutomaticRetry) {
-            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
-                Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as it ran out of attempts.');
-                return;
-            }
-
-            // Back to generating: the state the Console and status sync read as in progress
-            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
-        }
-
-        // If we don't have certificate for the rule yet, let's create one.
-        if ($certificate->isEmpty()) {
-            $certificate = new Document();
-            $certificate->setAttribute('domain', $domain->get());
-        }
-
+        // Compare lease tokens in the ISO format returned by database reads.
+        $lease = DateTime::formatTz(DateTime::now());
         $date = \date('H:i:s');
         $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
+        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $project, $domain, $lease, $logs): ?array {
+            $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+            if ($current->isEmpty()
+                || $current->getSequence() !== $rule->getSequence()
+                || $current->getAttribute('domain') !== $domain->get()
+                || $project === null
+                || $current->getAttribute('projectId') !== $project->getId()
+                || ($current->getAttribute('projectId') !== 'console' && (string) $current->getAttribute('projectInternalId') !== (string) $project->getSequence())
+                || !\in_array($current->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATION_FAILED], true)) {
+                return null;
+            }
+
+            $certificateId = $current->getAttribute('certificateId', '');
+            $certificate = empty($certificateId) ? new Document() : $dbForPlatform->getDocument('certificates', $certificateId, forUpdate: true);
+            $previous = $certificate->getAttribute('updated');
+            if ((!empty($previous) && new \DateTime($previous) > new \DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'))
+                || $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                return null;
+            }
+
+            // `updated` stopped recording completion in February 2026. It now
+            // holds an in-flight lease, cleared on completion and expiring after
+            // a worker crash. Old completion timestamps are already expired.
+            $updates = new Document(['updated' => $lease, 'logs' => $logs]);
+            if ($certificate->isEmpty()) {
+                $updates->setAttributes(['$id' => ID::unique(), 'domain' => $domain->get(), 'attempts' => 0]);
+                $certificate = $dbForPlatform->createDocument('certificates', $updates);
+            } else {
+                $certificate = $dbForPlatform->updateDocument('certificates', $certificate->getId(), $updates);
+            }
+            $current = $dbForPlatform->updateDocument('rules', $current->getId(), new Document([
+                'certificateId' => $certificate->getId(),
+                'status' => $current->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED
+                    ? RULE_STATUS_CERTIFICATE_GENERATING : $current->getAttribute('status'),
+                'logs' => $logs,
+            ]));
+
+            return [$current, $certificate];
+        });
+        if ($claimed === null) {
+            return;
+        }
+        [$rule, $certificate] = $claimed;
+        $claimedStatus = $rule->getAttribute('status');
+        // The persisted rule is authoritative; stale queue payloads cannot
+        // route issuance to a different provider after a domain changes type.
+        $domainType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type'));
+        $error = null;
 
         try {
-            $certificate->setAttribute('logs', $logs);
-
-            // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
-            $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
-            // Ensure certificate is associated with the rule
-            $rule->setAttribute('certificateId', $certificate->getId());
-
-            // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $this->validateDomain($rule, $domain, $validationDomain);
-
-                // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    Console::info("Skipping, renew isn't required");
-                    return;
+                    $status = $certificates->isInstantGeneration($domain->get(), $domainType)
+                        ? \Utopia\Cdn\Certificates\Status::ISSUED
+                        : $certificates->getCertificateStatus($domain->get(), $domainType);
+                    if ($status === \Utopia\Cdn\Certificates\Status::ISSUED) {
+                        $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                        $certificate->setAttribute('attempts', 0);
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                        return;
+                    }
+                    if (\in_array($status, [\Utopia\Cdn\Certificates\Status::PENDING, \Utopia\Cdn\Certificates\Status::PROCESSING, \Utopia\Cdn\Certificates\Status::RENEWING], true)) {
+                        $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
+                        return;
+                    }
+                    // UNKNOWN is not evidence of a usable certificate. Let the
+                    // issuance path repair a missing provider subscription.
                 }
             }
 
-            // Prepare unique cert name. Using this helps prevent mismatch in configuration when renewing certificates.
-            $certName = ID::unique();
-            $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
-
+            // Count each real issuance once, before calling the provider. A
+            // delayed failure is reconciled later without spending another try.
+            $started = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $certificate, $lease, $claimedStatus): ?Document {
+                $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+                if ($current->isEmpty()
+                    || $current->getSequence() !== $rule->getSequence()
+                    || $current->getAttribute('certificateId') !== $certificate->getId()
+                    || $current->getAttribute('projectId') !== $rule->getAttribute('projectId')
+                    || $current->getAttribute('domain') !== $rule->getAttribute('domain')
+                    || $current->getAttribute('status') !== $claimedStatus) {
+                    return null;
+                }
+                $latest = $dbForPlatform->getDocument('certificates', $certificate->getId(), forUpdate: true);
+                if ($latest->isEmpty() || $latest->getSequence() !== $certificate->getSequence() || $latest->getAttribute('updated') !== $lease) {
+                    return null;
+                }
+                return $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
+                    'attempts' => $latest->getAttribute('attempts', 0) + 1,
+                    'issueDate' => DateTime::now(),
+                ]));
+            });
+            if ($started === null) {
+                return;
+            }
+            $certificate = $started;
+            $renewDate = $certificates->issueCertificate(ID::unique(), $domain->get(), $domainType);
+            $certificate->setAttribute('renewDate', $renewDate);
             $date = \date('H:i:s');
-            // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                $certificate->setAttribute('attempts', 0);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
-                $certificate->setAttribute('logs', $logs);
-                $attempts = 0; // Reset attempts count
             } else {
-                // Delayed generation: third-party handles certificate issuance asynchronously
+                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
-                $certificate->setAttribute('logs', $logs);
-
-                // Not issued yet, so only a first attempt resets. Counting retries is
-                // what makes the attempt limit reachable and stops the loop.
-                $attempts = $isAutomaticRetry ? $certificate->getAttribute('attempts', 0) + 1 : 0;
             }
-
-            $certificate->setAttributes([
-                'attempts' => $attempts,
-                'issueDate' => DateTime::now(), // Store current time as issue date
-                'renewDate' => $renewDate,
-            ]);
         } catch (Throwable $e) {
             $date = \date('H:i:s');
             $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
-
-            $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
-
-            // Update attributes on certificate document
-            $certificate->setAttributes([
-                'attempts' => $attempts,
-                'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
-            ]);
-
-            // Mark rule as 'unverified'
+            $logs .= \mb_strcut($e->getMessage(), 0, 500000);
+            $certificate->setAttribute('renewDate', DateTime::now());
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
-
-            // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan);
-
+            $error = $e;
             throw $e;
         } finally {
-            // Update certificate document with logs
-            $certificate->setAttribute('logs', $logs);
-            $this->upsertCertificate($rule, $certificate, $dbForPlatform);
-
-            // Update rule and emit events
-            $rule->setAttribute('certificateId', $certificate->getId());
-            $rule->setAttribute('logs', $logs);
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+            $saved = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $certificate, $lease, $logs, $claimedStatus): ?Document {
+                $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+                if ($current->isEmpty()
+                    || $current->getSequence() !== $rule->getSequence()
+                    || $current->getAttribute('certificateId') !== $certificate->getId()
+                    || $current->getAttribute('projectId') !== $rule->getAttribute('projectId')
+                    || $current->getAttribute('domain') !== $rule->getAttribute('domain')
+                    || $current->getAttribute('status') !== $claimedStatus) {
+                    return null;
+                }
+                $latest = $dbForPlatform->getDocument('certificates', $certificate->getId(), forUpdate: true);
+                if ($latest->isEmpty() || $latest->getSequence() !== $certificate->getSequence() || $latest->getAttribute('updated') !== $lease) {
+                    return null;
+                }
+                $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
+                    'updated' => null,
+                    'attempts' => $certificate->getAttribute('attempts', 0),
+                    'issueDate' => $certificate->getAttribute('issueDate'),
+                    'renewDate' => $certificate->getAttribute('renewDate'),
+                    'logs' => $logs,
+                ]));
+                return $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'status' => $rule->getAttribute('status'),
+                    'certificateId' => $certificate->getId(),
+                    'logs' => $logs,
+                ]));
+            });
+            if ($saved !== null && !$saved->isEmpty()) {
+                $this->sendEvents($saved, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+                if ($error !== null) {
+                    $this->notifyError($domain->get(), $error->getMessage(), $certificate->getAttribute('attempts', 0), $publisherForMails, $plan);
+                }
+            }
         }
-    }
-
-    /**
-     * Save certificate data to database.
-     *
-     * @param Document $rule Rule associated with the domain
-     * @param Document $certificate Certificate document that we need to save
-     * @param Database $dbForPlatform Database connection for console
-     * @return Document
-     * @throws \Utopia\Database\Exception
-     * @throws Authorization
-     * @throws Conflict
-     * @throws Structure
-     */
-    private function upsertCertificate(
-        Document $rule,
-        Document $certificate,
-        Database $dbForPlatform,
-    ): Document {
-        // Decide whether update (or) insert is needed
-        $existingCertificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
-
-        if ($existingCertificate->isEmpty()) {
-            $certificate->removeAttribute('$sequence');
-            $certificate = $dbForPlatform->createDocument('certificates', $certificate);
-        } else {
-            $certificate = new Document(\array_merge($existingCertificate->getArrayCopy(), $certificate->getArrayCopy()));
-            $certificate = $dbForPlatform->updateDocument('certificates', $certificate->getId(), $certificate);
-        }
-
-        return $certificate;
     }
 
     /**
@@ -453,6 +443,18 @@ class Certificates extends Action
             'certificateId' => $rule->getAttribute('certificateId'),
             'logs' => $rule->getAttribute('logs'),
         ]));
+        $this->sendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+    }
+
+    protected function sendEvents(
+        Document $rule,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
+        Bus $bus,
+    ): void {
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
         $projectId = $rule->getAttribute('projectId');
