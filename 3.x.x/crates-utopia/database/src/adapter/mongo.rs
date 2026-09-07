@@ -95,7 +95,10 @@ impl Adapter for Mongo {
         _indexes: &[Document],
     ) -> Result<bool> {
         self.db()
-            .create_collection(format!("{}_{}", self.state.namespace, filter_key(name)), None)
+            .create_collection(
+                format!("{}_{}", self.state.namespace, filter_key(name)),
+                None,
+            )
             .map_err(|e| DatabaseError::database(e.to_string()))?;
         Ok(true)
     }

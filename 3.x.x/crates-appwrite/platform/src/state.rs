@@ -261,8 +261,34 @@ impl AppwriteState {
                 "read",
             )
             .unwrap_or_default();
+        let platforms = db
+            .find(
+                "platforms",
+                &[
+                    Query::equal(
+                        "projectInternalId",
+                        vec![AttrValue::from(sequence.as_str())],
+                    ),
+                    Query::limit(1000),
+                ],
+                "read",
+            )
+            .unwrap_or_default();
         let mut project_json = document_to_json(&project);
         project_json["keys"] = Value::Array(keys.iter().map(document_to_json).collect());
+        project_json["platforms"] = Value::Array(
+            platforms
+                .iter()
+                .map(|platform| {
+                    let mut json = document_to_json(platform);
+                    if let Some(type_) = json.get("type").and_then(Value::as_str) {
+                        json["type"] =
+                            Value::String(appwrite_network::map_deprecated_type(type_).to_string());
+                    }
+                    json
+                })
+                .collect(),
+        );
         Some(project_json)
     }
 

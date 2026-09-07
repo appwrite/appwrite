@@ -386,7 +386,9 @@ impl SqlClient {
             last_insert_id: "0".into(),
             #[cfg(feature = "mysql")]
             mysql: None,
-            postgres: Some(std::sync::Arc::new(std::sync::Mutex::new(PostgresGuard::new(client)))),
+            postgres: Some(std::sync::Arc::new(std::sync::Mutex::new(
+                PostgresGuard::new(client),
+            ))),
             #[cfg(feature = "sqlite")]
             sqlite: None,
         })

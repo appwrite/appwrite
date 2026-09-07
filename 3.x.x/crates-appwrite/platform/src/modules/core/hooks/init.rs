@@ -20,7 +20,7 @@ use utopia_platform::{Action, ActionType};
 
 use crate::state::AppwriteState;
 
-use super::{console, send_error};
+use super::{console, project_id_from_request, send_error};
 
 #[must_use]
 pub fn action() -> Action {
@@ -84,19 +84,6 @@ pub fn action() -> Action {
 
             Ok(())
         })
-}
-
-/// PHP: `$request->getHeader('x-appwrite-project', $request->getParam('project', ''))`.
-fn project_id_from_request(ctx: &utopia_http::ActionContext) -> String {
-    let header = ctx.request().header_line("x-appwrite-project");
-    if !header.is_empty() {
-        return header;
-    }
-    ctx.request()
-        .param_ref("project")
-        .and_then(Value::as_str)
-        .unwrap_or_default()
-        .to_string()
 }
 
 /// The matched route's `scope` label, PHP `$route->getLabel('scope', '')`.

@@ -1,7 +1,8 @@
 //! Shared `api` group lifecycle hooks. Rust port of
 //! `app/controllers/shared/api.php`'s `Http::init()`/`Http::shutdown()`
 //! (scoped to the pieces the Users API needs -- see [`hooks::init`] for the
-//! documented simplifications).
+//! documented simplifications) plus CORS/OPTIONS from
+//! `app/controllers/general.php`.
 
 pub mod hooks;
 
@@ -16,7 +17,9 @@ use utopia_platform::{Module, Service};
 #[must_use]
 pub fn module() -> Module {
     let service = Service::http()
+        .add_action("corsInit", hooks::cors::init())
         .add_action("apiInit", hooks::init::action())
+        .add_action("corsOptions", hooks::cors::options())
         .add_action("apiError", hooks::error::action())
         .add_action("apiShutdown", hooks::shutdown::action());
     Module::new().add_service("core", service)

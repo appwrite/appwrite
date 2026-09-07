@@ -134,6 +134,11 @@ impl Response {
         self
     }
 
+    pub fn remove_header(&self, key: &str) -> &Self {
+        self.inner.lock().headers.remove(key);
+        self
+    }
+
     pub fn header_line(&self, key: &str) -> String {
         self.inner.lock().headers.get_line(key, "")
     }

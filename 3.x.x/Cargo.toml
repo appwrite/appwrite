@@ -59,6 +59,7 @@ members = [
     "crates-appwrite/event",
     "crates-appwrite/response",
     "crates-appwrite/database",
+    "crates-appwrite/network",
     "crates-appwrite/platform",
     "apps/server",
 ]
@@ -84,6 +85,7 @@ appwrite-auth = { path = "crates-appwrite/auth", version = "0.1.0" }
 appwrite-event = { path = "crates-appwrite/event", version = "0.1.0" }
 appwrite-response = { path = "crates-appwrite/response", version = "0.1.0" }
 appwrite-database = { path = "crates-appwrite/database", version = "0.1.0" }
+appwrite-network = { path = "crates-appwrite/network", version = "0.1.0" }
 appwrite-platform = { path = "crates-appwrite/platform", version = "0.1.0" }
 utopia-abuse = { path = "crates-utopia/abuse", version = "0.1.0" }
 utopia-di = { path = "crates-utopia/di", version = "0.1.0" }

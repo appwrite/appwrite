@@ -40,6 +40,7 @@ appwrite-auth = { workspace = true }
 appwrite-event = { workspace = true }
 appwrite-response = { workspace = true }
 appwrite-database = { workspace = true }
+appwrite-network = { workspace = true }
 chrono = { workspace = true }
 jsonwebtoken = { workspace = true }
 rand = { workspace = true }

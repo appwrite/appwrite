@@ -9,7 +9,17 @@ use std::collections::HashMap;
 use serde_json::{json, Value};
 use utopia_http::{Request, Response};
 
-use users_support::{body_json, boot, boot_with_scopes, create_user, create_user_id, map, run};
+use users_support::{
+    body_json, boot, boot_with_scopes, create_user, create_user_id, map, request, run,
+};
+
+fn platform_origin() -> String {
+    let host = appwrite_network::platform_hostnames()
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| "localhost".into());
+    format!("http://{host}")
+}
 
 #[tokio::test]
 async fn create_and_get_user_round_trip() {
@@ -645,4 +655,94 @@ async fn delete_mfa_authenticator_without_totp_is_not_found() {
     )
     .await;
     assert_eq!(res.status_code(), 404, "{}", res.body_string());
+}
+
+#[tokio::test]
+async fn options_preflight_echoes_origin_and_returns_no_content() {
+    let h = boot().await;
+    let mut req = Request::new("OPTIONS", "/v1/users");
+    req.set_header("origin", "https://evil.com");
+    req.set_header("access-control-request-method", "POST");
+    req.set_header(
+        "access-control-request-headers",
+        "content-type,x-appwrite-project,x-appwrite-key",
+    );
+    let res = Response::new();
+    h.http.run(req, res.clone()).await.unwrap();
+
+    assert_eq!(res.status_code(), 204, "{}", res.body_string());
+    assert_eq!(
+        res.header_line("access-control-allow-origin"),
+        "https://evil.com"
+    );
+    assert_eq!(res.header_line("access-control-allow-credentials"), "true");
+    assert!(res
+        .header_line("access-control-allow-methods")
+        .contains("POST"));
+    assert!(res
+        .header_line("access-control-allow-headers")
+        .contains("X-Appwrite-Project"));
+    assert_eq!(res.header_line("server"), "Appwrite");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_echoes_allowed_origin() {
+    let h = boot().await;
+    let origin = platform_origin();
+    let mut req = request("GET", "/v1/users", HashMap::new());
+    req.set_header("origin", &origin);
+    let res = Response::new();
+    h.http.run(req, res.clone()).await.unwrap();
+
+    assert_eq!(res.status_code(), 200, "{}", res.body_string());
+    assert_eq!(res.header_line("access-control-allow-origin"), origin);
+    assert_eq!(res.header_line("access-control-allow-credentials"), "true");
+    assert_eq!(res.header_line("x-content-type-options"), "nosniff");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_echoes_loopback_alias_when_localhost_is_allowed() {
+    if !appwrite_network::platform_hostnames()
+        .iter()
+        .any(|h| h == "localhost")
+    {
+        return;
+    }
+    let h = boot().await;
+    let mut req = request("GET", "/v1/users", HashMap::new());
+    req.set_header("origin", "http://127.0.0.1:5173");
+    let res = Response::new();
+    h.http.run(req, res.clone()).await.unwrap();
+
+    assert_eq!(res.status_code(), 200, "{}", res.body_string());
+    assert_eq!(
+        res.header_line("access-control-allow-origin"),
+        "http://127.0.0.1:5173"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_omits_allow_origin_for_unknown_host() {
+    let h = boot().await;
+    let mut req = request("GET", "/v1/users", HashMap::new());
+    req.set_header("origin", "https://evil.com");
+    let res = Response::new();
+    h.http.run(req, res.clone()).await.unwrap();
+
+    assert_eq!(res.status_code(), 200, "{}", res.body_string());
+    assert!(res.header_line("access-control-allow-origin").is_empty());
+    assert_eq!(res.header_line("access-control-allow-credentials"), "true");
+}
+
+#[tokio::test]
+async fn error_response_includes_cors_headers() {
+    let h = boot().await;
+    let origin = platform_origin();
+    let mut req = Request::new("GET", "/v1/users");
+    req.set_header("origin", &origin);
+    let res = Response::new();
+    h.http.run(req, res.clone()).await.unwrap();
+
+    assert_eq!(res.status_code(), 404, "{}", res.body_string());
+    assert_eq!(res.header_line("access-control-allow-origin"), origin);
 }

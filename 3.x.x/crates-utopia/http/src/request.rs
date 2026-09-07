@@ -146,6 +146,28 @@ impl Request {
             .to_string()
     }
 
+    /// PHP `Request::getOrigin()`.
+    pub fn origin(&self) -> String {
+        self.header_line("origin")
+    }
+
+    /// PHP `Request::getReferer()`.
+    pub fn referer(&self) -> String {
+        self.header_line("referer")
+    }
+
+    /// PHP `Request::getHostname()`: host of `X-Forwarded-Host` or `Host`,
+    /// without port, lowercased.
+    pub fn hostname(&self) -> String {
+        let forwarded = self.header_line("x-forwarded-host");
+        let host = if forwarded.is_empty() {
+            self.header_line("host")
+        } else {
+            forwarded.split(',').next().unwrap_or("").trim().to_string()
+        };
+        authority_host(&host)
+    }
+
     pub fn ip(&self) -> String {
         for h in &self.trusted_ip_headers {
             let v = self.header_line(h);
@@ -236,6 +258,25 @@ impl Request {
             }
         }
     }
+}
+
+/// Host of an HTTP `Host` / `X-Forwarded-Host` authority (`example.com:443`,
+/// `[::1]:3000`), matching PHP `parse_url(..., PHP_URL_HOST)`.
+fn authority_host(authority: &str) -> String {
+    let authority = authority.trim();
+    if authority.is_empty() {
+        return String::new();
+    }
+    if let Some(rest) = authority.strip_prefix('[') {
+        if let Some(end) = rest.find(']') {
+            return format!("[{}]", rest[..end].to_ascii_lowercase());
+        }
+    }
+    let host = match authority.rsplit_once(':') {
+        Some((h, port)) if !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()) => h,
+        _ => authority,
+    };
+    host.to_ascii_lowercase()
 }
 
 fn parse_urlencoded_map(input: &str) -> HashMap<String, Value> {
@@ -402,5 +443,25 @@ mod payload_parse_tests {
         let mut req = Request::new("GET", "/v1/users?search=caf%C3%A9");
         req.parse_query_from_uri();
         assert_eq!(req.param_ref("search"), Some(&json!("café")));
+    }
+
+    #[test]
+    fn origin_referer_and_hostname() {
+        let mut req = Request::new("GET", "/v1/users");
+        req.set_header("origin", "http://localhost:3000");
+        req.set_header("referer", "http://localhost:3000/console");
+        req.set_header("host", "localhost:80");
+        assert_eq!(req.origin(), "http://localhost:3000");
+        assert_eq!(req.referer(), "http://localhost:3000/console");
+        assert_eq!(req.hostname(), "localhost");
+
+        let mut req = Request::new("GET", "/v1/users");
+        req.set_header("x-forwarded-host", "api.example.com:443");
+        req.set_header("host", "ignored:80");
+        assert_eq!(req.hostname(), "api.example.com");
+
+        let mut req = Request::new("GET", "/v1/users");
+        req.set_header("host", "[::1]:3000");
+        assert_eq!(req.hostname(), "[::1]");
     }
 }

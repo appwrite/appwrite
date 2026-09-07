@@ -173,6 +173,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "appwrite-network"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "utopia-system",
+]
+
+[[package]]
 name = "appwrite-platform"
 version = "0.1.0"
 dependencies = [
@@ -182,6 +190,7 @@ dependencies = [
  "appwrite-exception",
  "appwrite-hooks",
  "appwrite-locale",
+ "appwrite-network",
  "appwrite-response",
  "chrono",
  "jsonwebtoken",
