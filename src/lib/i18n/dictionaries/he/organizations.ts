@@ -1470,4 +1470,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Your organization will move to the {plan} plan.':
     'הארגון שלכם יעבור לתוכנית {plan}.',
   'Delete and change plan': 'מחיקה ושינוי תוכנית',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
 }

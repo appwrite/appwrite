@@ -1248,4 +1248,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Your organization will move to the {plan} plan.':
     '組織は {plan} プランに移行します。',
   'Delete and change plan': '削除してプランを変更',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'まず削除するプロジェクトを確定してください。残したプロジェクトは、その後で選択したプランと照合されます。',
 }

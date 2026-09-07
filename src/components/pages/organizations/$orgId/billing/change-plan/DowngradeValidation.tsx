@@ -26,7 +26,6 @@ import type {
 } from '@/lib/billing/downgrade-plan-limits'
 import type { ResourcesToDelete } from '@/lib/billing/delete-downgrade-resources'
 import {
-  getNonCompliantProjectIds,
   getOrganizationLimits,
   type PlanChangeLimits,
 } from '@/lib/billing/plan-change-compliance'
@@ -359,14 +358,24 @@ export function DowngradeValidation({
   const projectSelectionSettled =
     !needsProjectSelection || confirmedProjectIds.size > 0
   const projectsToInspect = useMemo(() => {
-    if (!planChangeLimits) return keptProjects
-    const flagged = new Set(getNonCompliantProjectIds(planChangeLimits))
-    return keptProjects.filter((project) => flagged.has(project.$id))
+    const compliance = planChangeLimits?.projectCompliance
+    if (!compliance?.length) return keptProjects
+    // Only skip a project the server evaluated and cleared. One it did not
+    // report on cannot be assumed to fit the plan, or its overage would be
+    // silently unresolvable.
+    const compliant = new Set(
+      compliance
+        .filter((project) => project.isCompliant)
+        .map((project) => project.$id),
+    )
+    return keptProjects.filter((project) => !compliant.has(project.$id))
   }, [planChangeLimits, keptProjects])
   const resourceValidationApplies =
     projectSelectionSettled &&
     !planChangeLimitsLoading &&
     projectsToInspect.length > 0
+  const projectResourceStepPending =
+    !projectSelectionSettled && keptProjects.length > 0
   const membersAfterDeletes = membershipsTotal - confirmedMemberIds.size
   const domainsAfterDeletes = domainsTotal - confirmedDomainIds.size
 
@@ -796,6 +805,19 @@ export function DowngradeValidation({
             onValidityChange={handleResourceValidityChange}
             onImpactChange={handleResourceImpactChange}
           />
+        </div>
+      ) : projectResourceStepPending ? (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Project resources')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.',
+              )}
+            </p>
+          </div>
         </div>
       ) : null}
 
