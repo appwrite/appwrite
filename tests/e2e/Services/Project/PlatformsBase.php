@@ -98,6 +98,66 @@ trait PlatformsBase
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
+    public function testCreateWebPlatformRejectsWhitespaceOnlyValues(): void
+    {
+        $response = $this->createWebPlatform(
+            ID::unique(),
+            ' ',
+            'whitespace-name.example.com',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createWebPlatform(
+            ID::unique(),
+            'Whitespace Hostname',
+            ' ',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateAndroidPlatformRejectsWhitespaceOnlyValues(): void
+    {
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            ' ',
+            'com.example.whitespace',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            'Whitespace Application Id',
+            ' ',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateWebPlatformRejectsWhitespaceOnlyValues(): void
+    {
+        $platform = $this->createWebPlatform(
+            ID::unique(),
+            'Update Whitespace Web',
+            'update-whitespace.example.com',
+        );
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        $response = $this->updateWebPlatform(
+            $platform['body']['$id'],
+            ' ',
+            'update-whitespace.example.com',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->updateWebPlatform(
+            $platform['body']['$id'],
+            'Update Whitespace Web',
+            ' ',
+        );
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
     public function testCreateWebPlatformDuplicateId(): void
     {
         $platformId = ID::unique();

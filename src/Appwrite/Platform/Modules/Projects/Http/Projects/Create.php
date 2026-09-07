@@ -24,7 +24,6 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -35,11 +34,6 @@ class Create extends Action
     public static function getName()
     {
         return 'createProject';
-    }
-
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
     }
 
     public function __construct()

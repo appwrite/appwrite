@@ -76,53 +76,57 @@ class Create extends Action
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
         try {
-            $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
-                '$id' => $teamId,
-                '$permissions' => [
-                    Permission::read(Role::team($teamId)),
-                    Permission::update(Role::team($teamId, 'owner')),
-                    Permission::delete(Role::team($teamId, 'owner')),
-                ],
-                'labels' => [],
-                'name' => $name,
-                'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-                'prefs' => new \stdClass(),
-                'search' => implode(' ', [$teamId, $name]),
-            ])));
+            // The seeded total only holds if the owner membership lands with the team
+            $team = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser) {
+                $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
+                    '$id' => $teamId,
+                    '$permissions' => [
+                        Permission::read(Role::team($teamId)),
+                        Permission::update(Role::team($teamId, 'owner')),
+                        Permission::delete(Role::team($teamId, 'owner')),
+                    ],
+                    'labels' => [],
+                    'name' => $name,
+                    'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+                    'prefs' => new \stdClass(),
+                    'search' => implode(' ', [$teamId, $name]),
+                ])));
+
+                if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+                    if (!\in_array('owner', $roles)) {
+                        $roles[] = 'owner';
+                    }
+
+                    $membershipId = ID::unique();
+                    $dbForProject->createDocument('memberships', new Document([
+                        '$id' => $membershipId,
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::read(Role::team($team->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::update(Role::team($team->getId(), 'owner')),
+                            Permission::delete(Role::user($user->getId())),
+                            Permission::delete(Role::team($team->getId(), 'owner')),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'teamId' => $team->getId(),
+                        'teamInternalId' => $team->getSequence(),
+                        'roles' => $roles,
+                        'invited' => DateTime::now(),
+                        'joined' => DateTime::now(),
+                        'confirm' => true,
+                        'secret' => '',
+                        'search' => implode(' ', [$membershipId, $user->getId()])
+                    ]));
+
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                }
+
+                return $team;
+            });
         } catch (Duplicate $th) {
             throw new Exception(Exception::TEAM_ALREADY_EXISTS);
-        }
-
-        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
-            if (!\in_array('owner', $roles)) {
-                $roles[] = 'owner';
-            }
-
-            $membershipId = ID::unique();
-            $membership = new Document([
-                '$id' => $membershipId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::read(Role::team($team->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::update(Role::team($team->getId(), 'owner')),
-                    Permission::delete(Role::user($user->getId())),
-                    Permission::delete(Role::team($team->getId(), 'owner')),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'teamId' => $team->getId(),
-                'teamInternalId' => $team->getSequence(),
-                'roles' => $roles,
-                'invited' => DateTime::now(),
-                'joined' => DateTime::now(),
-                'confirm' => true,
-                'secret' => '',
-                'search' => implode(' ', [$membershipId, $user->getId()])
-            ]);
-
-            $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $queueForEvents->setParam('teamId', $team->getId());

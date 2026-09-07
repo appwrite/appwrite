@@ -31,12 +31,31 @@ final class FactoryTest extends TestCase
 
         foreach ($registry as $key => $entry) {
             $this->assertTrue(\is_subclass_of($entry['adapter'], Git::class), "Adapter for '{$key}' must extend Git");
-            $this->assertIsCallable($entry['oauth2'], "OAuth2 builder for '{$key}' must be callable");
+            // A provider with an OAuth2 user flow registers a builder; an
+            // app-only provider (Origin) deliberately registers none.
+            if (isset($entry['oauth2'])) {
+                $this->assertIsCallable($entry['oauth2'], "OAuth2 builder for '{$key}' must be callable");
+            }
             $this->assertNotEmpty($entry['variables'], "Variables missing for '{$key}'");
             foreach ($entry['variables'] as $name => $variable) {
                 $this->assertStringStartsWith('_APP_VCS_', $variable['envVariable'] ?? '', "Env variable for '{$name}' missing or invalid for '{$key}'");
             }
         }
+    }
+
+    public function testOriginRegistersNoOAuth2(): void
+    {
+        // Origin has no OAuth2 user flow: installs are approved on Cursor and
+        // confirmed by a signed receipt the adapter verifies itself, so the
+        // registry deliberately carries no builder and oauth2FromProvider()
+        // fails loudly instead of handing out a half-configured client.
+        $registry = Config::getParam('vcs', []);
+        $this->assertArrayHasKey('origin', $registry);
+        $this->assertArrayNotHasKey('oauth2', $registry['origin']);
+
+        $factory = new Factory($this->cache(), $registry);
+        $this->expectException(Exception::class);
+        $factory->oauth2FromProvider('origin');
     }
 
     public function testOauth2FromProviderUnknownThrows(): void

@@ -4,13 +4,16 @@ namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
@@ -20,7 +23,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
+use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Owns a deployment's lifecycle: upload bookkeeping, creating it and
@@ -29,14 +36,19 @@ use Utopia\System\System;
  *
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
- * sources are fine. The build output and package-manager cache, by default,
- * go on a mounted volume: the builds storage volume is attached to the build
- * worker at its Appwrite path, so build.sh writes its artifact + the cache
- * squashfs straight onto the volume Appwrite already reads. That keeps the
- * multi-hundred-MB output off the (capped) HTTP upload path and out of the
- * Appwrite process. Deployments that need a different strategy (e.g. S3
- * upload/download artifacts instead of a shared volume) override storage()
- * — everything else about the payload stays the same.
+ * sources are fine. The build output and package-manager cache go wherever
+ * the builds device is (see storage()). On the local device the builds
+ * storage volume is attached to the build worker at its Appwrite path, so
+ * build.sh writes its artifact + the cache squashfs straight onto the volume
+ * Appwrite already reads. On a remote device (S3 and friends) no volume spans
+ * Appwrite and the build workers, so the sidecar moves them over s3://
+ * upload/download artifacts instead. The orchestrator supports the generic
+ * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
+ * _APP_CONNECTIONS_STORAGE are retained by Appwrite only for backward
+ * compatibility. Either way the multi-hundred-MB output stays off the
+ * (capped) HTTP upload path and out of the Appwrite process.
+ * Deployments that need yet another strategy override storage() — everything
+ * else about the payload stays the same.
  *
  * Covers function and site deployments whose source is a tarball: manual
  * upload, duplicate/rebuild, VCS commits, and templates (public GitHub tarball
@@ -133,6 +145,41 @@ readonly class Deployments
         return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
     }
 
+    /**
+     * Same as createFromUpload(), but builds from a repository on a VCS
+     * provider: a presigned archive URL when the provider hands those out, or
+     * a git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin).
+     *
+     * @param string $ref Branch, tag, or commit the deployment builds from
+     */
+    public function createFromVcs(
+        Document $resource,
+        Document $deployment,
+        Git $vcs,
+        string $owner,
+        string $repository,
+        string $ref,
+        string $rootDirectory = '',
+    ): Document {
+        if ($vcs->supportsRepositoryArchives()) {
+            return $this->createFromUrl(
+                $resource,
+                $deployment,
+                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $rootDirectory,
+                $vcs->getRepositoryPresignedUrlHeaders(),
+            );
+        }
+
+        return $this->submit($resource, $deployment, [
+            'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
+            'ref' => $ref,
+            'subdir' => $rootDirectory,
+            'headers' => $vcs->getRepositoryCloneHeaders(),
+        ]);
+    }
+
     private function submit(Document $resource, Document $deployment, ?array $source): Document
     {
         // The caller may have been holding this deployment for a while (the
@@ -176,11 +223,18 @@ readonly class Deployments
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
+            // A refused variable key is the owner's to fix, so the build log
+            // carries the actual reason; anything else stays a generic
+            // internal error.
+            $buildLogs = $error instanceof Exception && $error->getType() === Exception::VARIABLE_INVALID_KEY
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
             // Guarded like the transition above: a cancel that landed while the
             // job was being submitted must not be reported as a failure.
             $this->dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'failed',
-                'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                'buildLogs' => $buildLogs,
                 'buildEndedAt' => DateTime::now(),
             ]), [
                 Query::equal('$id', [$deployment->getId()]),
@@ -317,15 +371,25 @@ readonly class Deployments
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
 
-        // Source artifacts, both ending in /mnt/code/source:
-        //  - remote tarball ($source): templates (public codeload URL) and VCS
-        //    (a short-lived presigned URL). Git-forge archives wrap the tree in
-        //    a "{repo}-{ref}/" root the caller can't predict, so strip drops it
-        //    and subdir then extracts just the rootDirectory from the unwrapped
-        //    tree. Uploaded tarballs (the else branch) are flat — no strip.
+        // Source artifacts, all ending in /mnt/code/source:
+        //  - remote tarball ($source with url): templates (public codeload URL)
+        //    and VCS (a short-lived presigned URL). Git-forge archives wrap the
+        //    tree in a "{repo}-{ref}/" root the caller can't predict, so strip
+        //    drops it and subdir then extracts just the rootDirectory from the
+        //    unwrapped tree. Uploaded tarballs (the else branch) are flat — no
+        //    strip.
+        //  - git clone ($source with clone): a provider without archive
+        //    downloads; the sidecar clones over Git HTTPS and checks the tree
+        //    out directly, so there is no archive to unarchive — or to stat,
+        //    which is why this path reports no sourceSize.
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
-        if ($source !== null) {
+        if (isset($source['clone'])) {
+            $subdir = \trim($source['subdir'] ?? '', '/');
+            $sourceArtifacts = [
+                new CloneArtifact(id: 'source', in: $source['clone'], out: 'source', ref: $source['ref'] ?? '', subdir: $subdir, headers: $source['headers'] ?? []),
+            ];
+        } elseif ($source !== null) {
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
@@ -371,9 +435,10 @@ readonly class Deployments
         // Two terminal callbacks: exit carries the code (fires before
         // post-job artifacts), complete confirms artifact delivery — the
         // worker joins them, so readiness holds on any storage strategy.
-        // Artifact callbacks carry the source-size stat and the site manifest.
+        // Artifact callbacks carry the source-size stat, the site manifest
+        // and the outcome of a remote device's output upload.
         $events = [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete];
-        if ($source !== null || $isSite) {
+        if ($source !== null || $isSite || $output['artifacts'] !== []) {
             $events[] = CallbackEvent::Artifact;
         }
 
@@ -412,8 +477,8 @@ readonly class Deployments
     }
 
     /**
-     * The build output directory on the builds volume. The produced artifact's
-     * complete path is discovered and persisted after the job finishes.
+     * The build output directory on the builds volume, where build.sh writes
+     * under the volume strategy (see storage()).
      */
     public static function outputDirectory(string $projectId, string $deploymentId): string
     {
@@ -421,11 +486,15 @@ readonly class Deployments
     }
 
     /**
-     * The build output path on the builds volume, declared at submission.
+     * The build artifact's path on the builds device, declared at submission
+     * and read back through deviceForBuilds by the jobs worker, executions,
+     * downloads and deletes. On the local device it is outputDirectory() +
+     * the artifact, i.e. where build.sh writes; a path-style S3 device keys
+     * it under its bucket.
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {
-        return static::outputDirectory($projectId, $deploymentId) . '/' . static::artifact();
+        return static::device($projectId)->getPath("{$deploymentId}/" . static::artifact());
     }
 
     /**
@@ -454,24 +523,35 @@ readonly class Deployments
         return \substr(\hash('sha256', "{$projectId}:{$resourceId}:{$image}"), 0, 48);
     }
 
+    /**
+     * The package-manager cache's path on the builds device (see buildPath()).
+     */
     public static function cachePath(string $projectId, string $cacheKey): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/cache/{$cacheKey}.sqfs";
+        return static::device($projectId)->getPath("cache/{$cacheKey}.sqfs");
     }
 
     /**
-     * Where build.sh's output artifact and package-manager cache
-     * (a squashfs) land, and what the job needs to get them there. The
-     * default mounts the shared builds volume at outputDirectory()/cachePath();
-     * build.sh only cares that OPEN_RUNTIMES_BUILD_OUTPUT_DIR/_CACHE_ARTIFACT
-     * point somewhere on its local filesystem, volume-backed or not — so a
-     * strategy without a shared volume (e.g. S3) instead points them at a
-     * local tmp path and moves things in/out via 'artifacts':
-     *   - cache pull, before the build: a plain DownloadArtifact (no
-     *     `depends`, so it runs before the command) into the local cache path.
-     *   - cache push and output upload, after the build: an UploadArtifact
-     *     with `depends: 'job'` — 'job' is the orchestrator's sentinel id for
-     *     "after the build command finishes", not an id of another artifact.
+     * The builds device for a project, as everything else reads it
+     * (deviceForBuilds).
+     */
+    protected static function device(string $projectId): Device
+    {
+        return getDevice(APP_STORAGE_BUILDS . "/app-{$projectId}");
+    }
+
+    /**
+     * Where build.sh's output artifact and package-manager cache land, and
+     * what the job needs to get them there. On the local device the shared
+     * builds volume is mounted and build.sh writes straight to
+     * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
+     * writes into the job workspace and the sidecar moves output and cache
+     * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
+     * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
+     * accepts the generic _APP_STORAGE_S3_* configuration, not deprecated
+     * provider-specific variables or _APP_CONNECTIONS_STORAGE. 'job' in
+     * `depends` is the orchestrator's sentinel for "after the build command
+     * finishes".
      *
      * @return array{volumes: array<Volume>, artifacts: array<mixed>, environment: array<string, string>}
      */
@@ -481,25 +561,90 @@ readonly class Deployments
         $deploymentId = $deployment->getId();
         $runtime = self::runtime($resource, self::version($resource));
         $cacheKey = static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? '');
+        $cachePath = static::cachePath($projectId, $cacheKey);
+        $device = static::device($projectId);
 
-        return [
-            // Docker volume / K8s PVC named by _APP_BUILDS_VOLUME, attached
-            // to the worker at its Appwrite path so build.sh writes output +
-            // cache straight onto it.
-            'volumes' => [
-                new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+        return match ($device->getType()) {
+            DeviceType::Local => [
+                'volumes' => [
+                    new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+                ],
+                'artifacts' => [],
+                'environment' => [
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
+                    'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => $cachePath,
+                ],
             ],
-            'artifacts' => [],
-            'environment' => [
-                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
-                'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => static::cachePath($projectId, $cacheKey),
+            default => [
+                'volumes' => [],
+                'artifacts' => [
+                    ...($device->exists($cachePath) ? [new DownloadArtifact(id: 'cachePull', in: static::objectUrl($device, $cachePath), out: "cache/{$cacheKey}.sqfs")] : []),
+                    new UploadArtifact(id: 'output', in: 'output/' . static::artifact(), out: static::objectUrl($device, static::buildPath($projectId, $deploymentId)), depends: 'job'),
+                    new UploadArtifact(id: 'cache', in: "cache/{$cacheKey}.sqfs", out: static::objectUrl($device, $cachePath), depends: 'job'),
+                ],
+                'environment' => [
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => '/mnt/code/output',
+                    'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => "/mnt/code/cache/{$cacheKey}.sqfs",
+                ],
             ],
-        ];
+        };
+    }
+
+    /**
+     * Map a builds device path to the s3://bucket/key artifact URL the sidecar
+     * uploads to, resolving the bucket from the same configuration getDevice()
+     * reads so artifact writes and device reads land on the same object. An
+     * S3 device with an explicit endpoint (S3-compatible stores such as MinIO)
+     * is path-style and already keys objects under its bucket, so the path is
+     * the URL as is; a virtual-host device passes paths verbatim, so the
+     * bucket is prepended.
+     */
+    protected static function objectUrl(Device $device, string $path): string
+    {
+        $type = $device->getType();
+        $configuredDevice = DeviceType::tryFrom(\strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+        $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+        $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+        $hasS3Configuration = $s3AccessKey !== '' && $s3AccessSecret !== '' && $s3Bucket !== '';
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $usesS3Configuration = $hasS3Configuration && ($connection === '' || \in_array($configuredDevice, [DeviceType::S3, DeviceType::AwsS3], true));
+
+        if ($usesS3Configuration && \in_array($type, [DeviceType::S3, DeviceType::AwsS3], true) && System::getEnv('_APP_STORAGE_S3_ENDPOINT', '') !== '') {
+            $bucket = '';
+        } elseif (! $usesS3Configuration && $connection !== '') {
+            $bucket = \trim((new DSN($connection))->getPath() ?? '', '/');
+        } elseif ($usesS3Configuration) {
+            $bucket = $s3Bucket;
+        } else {
+            $prefix = match ($type) {
+                DeviceType::DoSpaces => 'DO_SPACES',
+                DeviceType::Backblaze => 'BACKBLAZE',
+                DeviceType::Linode => 'LINODE',
+                DeviceType::Wasabi => 'WASABI',
+                DeviceType::S3, DeviceType::AwsS3, DeviceType::Local => null,
+            };
+            $bucket = $prefix === null ? '' : System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
+        }
+
+        return 's3://' . \ltrim(($bucket !== '' ? "/{$bucket}" : '') . $path, '/');
     }
 
     protected static function version(Document $resource): string
     {
         return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
+    }
+
+    /**
+     * Scopes encoded into the resource's auto-generated ephemeral API keys
+     *
+     * @return array<string>
+     */
+    public static function scopes(Document $resource): array
+    {
+        $granted = Config::getParam('computeScopes', [])[$resource->getCollection()] ?? [];
+
+        return \array_values(\array_unique(\array_merge($resource->getAttribute('scopes', []), $granted)));
     }
 
     protected static function runtime(Document $resource, string $version): array
@@ -532,9 +677,22 @@ readonly class Deployments
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        // Keys that predate the VariableKey endpoint guard can hold bytes the
+        // orchestrator refuses in an env var name (a stray tab, UTF-16 text),
+        // which would reject the whole build job after submission. Refuse only
+        // what the cluster would refuse, before the job leaves this process.
+        foreach (\array_keys($vars) as $key) {
+            if (!VariableKey::isEnvVarName((string) $key)) {
+                throw new Exception(
+                    Exception::VARIABLE_INVALID_KEY,
+                    'Variable key ' . \json_encode((string) $key) . ' is not a valid environment variable name. Update or delete this variable, then retry the deployment.'
+                );
+            }
+        }
+
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => $resource->getAttribute('scopes', []),
+            'scopes' => static::scopes($resource),
         ]);
 
         $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';

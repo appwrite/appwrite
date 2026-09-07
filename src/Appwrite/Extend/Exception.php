@@ -59,6 +59,7 @@ class Exception extends \Exception
     public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
+    public const string GENERAL_USAGE_NOT_READY = 'general_usage_not_ready';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
     public const string GENERAL_INVALID_EMAIL = 'general_invalid_email';
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
@@ -99,7 +100,6 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_VERIFIED = 'user_email_not_verified';
     public const string USER_MISSING_ID = 'user_missing_id';
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
-    public const string USER_INVALID_CHALLENGE = 'user_invalid_challenge';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
@@ -116,6 +116,7 @@ class Exception extends \Exception
     public const string USER_TARGET_ALREADY_EXISTS = 'user_target_already_exists';
     public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
     public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
+    public const string USER_JWT_CREATION_DENIED = 'user_jwt_creation_denied';
     public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
@@ -189,6 +190,7 @@ class Exception extends \Exception
 
     /** Deployments */
     public const string DEPLOYMENT_NOT_FOUND = 'deployment_not_found';
+    public const string DEPLOYMENT_INVALID_FILE_SIZE = 'deployment_invalid_file_size';
 
     /** Builds */
     public const string BUILD_NOT_FOUND = 'build_not_found';
@@ -232,6 +234,7 @@ class Exception extends \Exception
     public const string DOCUMENT_MISSING_DATA = 'document_missing_data';
     public const string DOCUMENT_MISSING_PAYLOAD = 'document_missing_payload';
     public const string DOCUMENT_ALREADY_EXISTS = 'document_already_exists';
+    public const string DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION = 'document_unique_constraint_violation';
     public const string DOCUMENT_UPDATE_CONFLICT = 'document_update_conflict';
     public const string DOCUMENT_DELETE_RESTRICTED = 'document_delete_restricted';
 
@@ -241,6 +244,7 @@ class Exception extends \Exception
     public const string ROW_MISSING_DATA = 'row_missing_data';
     public const string ROW_MISSING_PAYLOAD = 'row_missing_payload';
     public const string ROW_ALREADY_EXISTS = 'row_already_exists';
+    public const string ROW_UNIQUE_CONSTRAINT_VIOLATION = 'row_unique_constraint_violation';
     public const string ROW_UPDATE_CONFLICT = 'row_update_conflict';
     public const string ROW_DELETE_RESTRICTED = 'row_delete_restricted';
 
@@ -335,6 +339,7 @@ class Exception extends \Exception
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
+    public const string KEY_CREATION_DENIED = 'key_creation_denied';
 
     /** Dev Keys */
     public const string DEV_KEY_GONE = 'dev_key_gone';
@@ -343,6 +348,7 @@ class Exception extends \Exception
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
     public const string VARIABLE_ALREADY_EXISTS = 'variable_already_exists';
     public const string VARIABLE_CANNOT_UNSET_SECRET = 'variable_cannot_unset_secret';
+    public const string VARIABLE_INVALID_KEY = 'variable_invalid_key';
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
@@ -352,6 +358,7 @@ class Exception extends \Exception
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
+    public const string GRAPHQL_METHOD_UNSUPPORTED = 'graphql_method_unsupported';
 
     /** Migrations */
     public const string MIGRATION_NOT_FOUND = 'migration_not_found';

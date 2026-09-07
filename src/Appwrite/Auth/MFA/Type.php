@@ -22,21 +22,11 @@ abstract class Type
         return $this;
     }
 
-    public function getLabel(): ?string
-    {
-        return $this->instance->getLabel();
-    }
-
     public function setIssuer(string $issuer): self
     {
         $this->instance->setIssuer($issuer);
 
         return $this;
-    }
-
-    public function getIssuer(): ?string
-    {
-        return $this->instance->getIssuer();
     }
 
     public function getSecret(): string

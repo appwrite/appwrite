@@ -6,7 +6,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
-use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -15,7 +14,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Semaphore;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
@@ -73,7 +71,6 @@ class Messaging extends Action
             ->desc('Messaging worker')
             ->inject('message')
             ->inject('project')
-            ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
@@ -84,7 +81,6 @@ class Messaging extends Action
     /**
      * @param Message $message
      * @param Document $project
-     * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
@@ -95,14 +91,11 @@ class Messaging extends Action
     public function action(
         Message $message,
         Document $project,
-        Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry
     ): void {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-
         $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 
@@ -119,7 +112,7 @@ class Messaging extends Action
                 $message = new Document($payload['message'] ?? []);
                 $recipients = $payload['recipients'] ?? [];
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                $this->sendInternalSMSMessage($message, $project, $recipients);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $messageId = $payload['messageId'];
@@ -365,7 +358,9 @@ class Messaging extends Action
      *
      * Peak memory is O(MESSAGE_RECIPIENTS_PAGE_SIZE), never O(topic size): topics are walked through the
      * subscribers collection with cursor pagination rather than reading the topic's `targets` attribute, which
-     * triggers the subQueryTopicTargets filter and loads up to APP_LIMIT_SUBSCRIBERS_SUBQUERY rows at once.
+     * is capped at APP_LIMIT_SUBSCRIBERS_SUBQUERY and would silently drop the rest of the recipients.
+     * Decode filters run regardless of Query::select, so the topic lookup below skips that filter explicitly
+     * rather than relying on selecting only $sequence.
      *
      * @param array<string> $topicIds
      * @param array<string> $userIds
@@ -382,11 +377,14 @@ class Messaging extends Action
         Document $default
     ): \Generator {
         if (\count($topicIds) > 0) {
-            $topics = $dbForProject->find('topics', [
-                Query::select(['$sequence']),
-                Query::equal('$id', $topicIds),
-                Query::limit(\count($topicIds)),
-            ]);
+            $topics = $dbForProject->skipFilters(
+                fn () => $dbForProject->find('topics', [
+                    Query::select(['$sequence']),
+                    Query::equal('$id', $topicIds),
+                    Query::limit(\count($topicIds)),
+                ]),
+                APP_TOPICS_SUBQUERIES
+            );
 
             foreach ($topics as $topic) {
                 $cursor = null;
@@ -820,7 +818,7 @@ class Messaging extends Action
         return $data;
     }
 
-    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients): void
     {
         if ($this->adapter === null) {
             $this->adapter = $this->createInternalSMSAdapter();

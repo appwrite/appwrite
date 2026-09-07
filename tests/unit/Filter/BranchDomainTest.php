@@ -24,15 +24,6 @@ final class BranchDomainTest extends TestCase
         $this->assertStringStartsWith('branch-feature-test-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
 
-        // Branch domain consistency
-        $domain2 = $filter->apply([
-            'branch' => 'feature/test',
-            'resourceId' => 'site123',
-            'projectId' => 'proj456',
-            'sitesDomain' => 'appwrite.network'
-        ]);
-        $this->assertEquals($domain, $domain);
-
         // Different resources should produce different domains
         $domain2 = $filter->apply([
             'branch' => 'feature/test',

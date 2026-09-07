@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\Transactions;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Helpers\ID;
@@ -490,6 +491,84 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCommitInvalidRelationship(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'TransactionRelationshipTestDB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collections = [];
+        foreach (['parents', 'children'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                'permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $collection['headers']['status-code']);
+            $collections[$name] = $collection['body']['$id'];
+        }
+
+        $relationship = $this->client->call(
+            Client::METHOD_POST,
+            $this->getSchemaUrl($databaseId, $collections['parents']) . '/relationship',
+            $headers,
+            [
+                $this->getRelatedIdParam() => $collections['children'],
+                'type' => 'oneToOne',
+                'twoWay' => false,
+                'key' => 'child',
+            ]
+        );
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collections['parents']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $operation = $this->client->call(
+            Client::METHOD_POST,
+            $this->getTransactionUrl($transactionId) . '/operations',
+            $headers,
+            [
+                'operations' => [[
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collections['parents'],
+                    'action' => 'create',
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['child' => 123],
+                ]],
+            ]
+        );
+        $this->assertEquals(201, $operation['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertEquals(400, $commit['headers']['status-code']);
+        $this->assertEquals(Exception::RELATIONSHIP_VALUE_INVALID, $commit['body']['type']);
+
+        $failed = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertEquals(200, $failed['headers']['status-code']);
+        $this->assertEquals('failed', $failed['body']['status']);
     }
 
     /**
@@ -1706,6 +1785,26 @@ trait TransactionsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Created via normal route', $response['body']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => 'doc_unknown_txn',
+            'data' => [
+                'name' => 'Unknown transaction',
+                'counter' => 1,
+                'category' => 'test'
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
@@ -2188,6 +2287,27 @@ trait TransactionsBase
             $this->assertEquals("Bulk created {$i}", $response['body']['name']);
             $this->assertEquals('bulk_created', $response['body']['category']);
         }
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordResource() => [
+                [
+                    '$id' => 'bulk_unknown_txn',
+                    'name' => 'Unknown transaction',
+                    'category' => 'bulk_unknown'
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
@@ -2587,6 +2707,128 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(0, $response['body']['total']);
+    }
+
+    /**
+     * Reject bulkUpdate/bulkDelete with decoded query arrays.
+     */
+    public function testCreateBulkOperationsWithArrayQueries(): void
+    {
+        // Test for FAILURE
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkArrayQueriesTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        foreach (['keep_1', 'keep_2', 'drop_1', 'drop_2'] as $id) {
+            $category = \str_starts_with($id, 'keep') ? 'keep' : 'drop';
+            $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                $this->getRecordIdParam() => $id,
+                'data' => [
+                    'name' => $id,
+                    'category' => $category,
+                ]
+            ]);
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'bulkUpdate',
+                    'data' => [
+                        'queries' => [Query::equal('category', ['keep'])->toArray()],
+                        'data' => ['name' => 'updated'],
+                    ],
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'bulkDelete',
+                    'data' => [
+                        'queries' => [Query::equal('category', ['drop'])->toArray()],
+                    ],
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
     }
 
     /**

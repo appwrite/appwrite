@@ -116,8 +116,13 @@ return [
     ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
-        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
-        'code' => 501,
+        'description' => 'Usage stats are disabled. You can enable them by setting the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 403,
+    ],
+    Exception::GENERAL_USAGE_NOT_READY => [
+        'name' => Exception::GENERAL_USAGE_NOT_READY,
+        'description' => 'Usage storage is not ready. Please retry after the usage schema has been initialized.',
+        'code' => 503,
     ],
     Exception::GENERAL_NOT_IMPLEMENTED => [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
@@ -395,6 +400,11 @@ return [
     Exception::USER_JWT_AND_COOKIE_SET => [
         'name' => Exception::USER_JWT_AND_COOKIE_SET,
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -724,6 +734,11 @@ return [
         'description' => 'Deployment with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::DEPLOYMENT_INVALID_FILE_SIZE => [
+        'name' => Exception::DEPLOYMENT_INVALID_FILE_SIZE,
+        'description' => 'The deployment file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
+        'code' => 400,
+    ],
 
     /** Executions */
     Exception::EXECUTION_NOT_FOUND => [
@@ -839,6 +854,11 @@ return [
         'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Document violates a unique attribute constraint. Try again with different value(s).',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -874,6 +894,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Row violates a unique column constraint. Try again with different value(s).',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -1216,6 +1241,11 @@ return [
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
+    ],
     Exception::DEV_KEY_GONE => [
         'name' => Exception::DEV_KEY_GONE,
         'description' => 'Dev key creation is no longer available.',
@@ -1251,6 +1281,11 @@ return [
         'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
         'code' => 400,
     ],
+    Exception::VARIABLE_INVALID_KEY => [
+        'name' => Exception::VARIABLE_INVALID_KEY,
+        'description' => 'Variable key is not a valid environment variable name. Update or delete the variable, then retry the deployment.',
+        'code' => 400,
+    ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
         'description' => 'Param "query" is not optional.',
@@ -1260,6 +1295,11 @@ return [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',
         'code' => 400,
+    ],
+    Exception::GRAPHQL_METHOD_UNSUPPORTED => [
+        'name' => Exception::GRAPHQL_METHOD_UNSUPPORTED,
+        'description' => 'GET requests only support GraphQL query operations.',
+        'code' => 405,
     ],
 
     /** Migrations */

@@ -858,6 +858,19 @@ trait UsersBase
         $this->assertNotEmpty($response['body']['phone']);
     }
 
+    public function testListIdentitiesInvalidSearch(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/identities', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'identity',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+    }
+
     public function testListUsers(): void
     {
         $data = $this->setupUser();
@@ -2208,7 +2221,37 @@ trait UsersBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['$id']);
 
-        // Create JWT 2 for latest session using 'recent' param
+        // Create JWT 2 for latest session using the 'recent()' keyword. The
+        // legacy bare 'recent' is rewritten by the V27 request filter, covered
+        // by tests/unit/Utopia/Request/Filters/V27Test.php.
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'sessionId' => 'recent()'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt2 = $response['body']['jwt'];
+
+        // Older clients still send the bare 'recent'; the V27 request filter
+        // rewrites it to 'recent()' for any pre-2.0.0 response format.
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.5',
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'sessionId' => 'recent'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+
+        // Without the legacy header the bare word is an ordinary session ID,
+        // so no session matches and the JWT carries none.
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2219,7 +2262,6 @@ trait UsersBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['jwt']);
-        $jwt2 = $response['body']['jwt'];
 
         // Ensure JWT 2 works
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([

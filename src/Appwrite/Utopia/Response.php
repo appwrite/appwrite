@@ -29,7 +29,6 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
     public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
     public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
@@ -40,6 +39,10 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
+    public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
+    public const MODEL_USAGE_METRIC = 'usageMetric';
+    public const MODEL_USAGE_EVENT_LIST = 'usageEventList';
+    public const MODEL_USAGE_GAUGE_LIST = 'usageGaugeList';
 
     // Database
     public const MODEL_DATABASE = 'database';
@@ -132,7 +135,6 @@ class Response extends SwooleResponse
     // MFA
     public const MODEL_MFA_TYPE = 'mfaType';
     public const MODEL_MFA_FACTORS = 'mfaFactors';
-    public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
     public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
@@ -191,7 +193,6 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
-    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
@@ -225,7 +226,6 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
-    public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
     public const MODEL_SPECIFICATION = 'specification';
     public const MODEL_SPECIFICATION_LIST = 'specificationList';
@@ -288,7 +288,6 @@ class Response extends SwooleResponse
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
-    public const MODEL_VCS = 'vcs';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
     public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
     public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
@@ -301,6 +300,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_BOX = 'oAuth2Box';
     public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
+    public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
@@ -332,6 +333,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -357,13 +359,6 @@ class Response extends SwooleResponse
     public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
     public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
     public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
-
-    // Deprecated
-    public const MODEL_PERMISSIONS = 'permissions';
-    public const MODEL_RULE = 'rule';
-    public const MODEL_TASK = 'task';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
@@ -562,6 +557,10 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as $index => $item) {
+                    if (\is_array($item) && !\is_array($rule['type']) && self::hasModel($rule['type'])) {
+                        $item = new Document($item);
+                    }
+
                     if ($item instanceof Document) {
                         $ruleType = null;
 
@@ -750,16 +749,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
-    }
-
-    /**
      * Check if a filter has been set
      *
      * @return bool
@@ -804,10 +793,5 @@ class Response extends SwooleResponse
     public function setImpersonatorUser(Document $impersonatorUser): void
     {
         $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
-    }
-
-    public function getImpersonatorUser(): ?Document
-    {
-        return $this->impersonatorUser;
     }
 }

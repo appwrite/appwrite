@@ -2,6 +2,10 @@
     const getBodyDataset = () => document.body?.dataset ?? {};
     const isUpgradeMode = () => getBodyDataset().upgrade === 'true';
     const getLockedDatabase = () => getBodyDataset().lockedDatabase || '';
+    const getTopology = () => {
+        const topology = getBodyDataset().topology || 'combined';
+        return topology === 'separate' ? 'separate' : 'combined';
+    };
     const getEnabledDatabases = () => {
         const raw = getBodyDataset().enabledDatabases;
         if (!raw) return ['postgresql', 'mariadb', 'mongodb'];
@@ -108,6 +112,7 @@
         getBodyDataset,
         isUpgradeMode,
         getLockedDatabase,
+        getTopology,
         getEnabledDatabases,
         STEP_IDS,
         STATUS,

@@ -99,8 +99,11 @@ trait KeysBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.0',
+            // Key creation is denied for key-authorized requests, so always use a console session
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
         ];
-        $headers = array_merge($headers, $this->getHeaders());
 
         $key = $this->client->call(Client::METHOD_POST, '/project/keys', $headers, [
             'keyId' => ID::unique(),
@@ -237,6 +240,40 @@ trait KeysBase
 
         // Cleanup
         $this->deleteKey($customId);
+    }
+
+    public function testCreateKeyRequiresSession(): void
+    {
+        // A request authorized with a standard API key cannot create a key
+        $response = $this->client->call(Client::METHOD_POST, '/project/keys', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'keyId' => ID::unique(),
+            'name' => 'Key Made By Key',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(403, $response['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $response['body']['type']);
+
+        // A request authorized with an ephemeral key cannot create a key either
+        $ephemeral = $this->createEphemeralKey(['keys.read', 'keys.write'], 900);
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/project/keys', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $ephemeral['body']['secret'],
+        ], [
+            'keyId' => ID::unique(),
+            'name' => 'Key Made By Ephemeral Key',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(403, $response['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $response['body']['type']);
     }
 
     // =========================================================================
@@ -890,7 +927,12 @@ trait KeysBase
         ];
 
         if ($authenticated) {
-            $headers = array_merge($headers, $this->getHeaders());
+            // Key creation is denied for key-authorized requests, so always use a console session
+            $headers = array_merge($headers, [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-mode' => 'admin',
+            ]);
         }
 
         return $this->client->call(Client::METHOD_POST, '/project/keys', $headers, $params);

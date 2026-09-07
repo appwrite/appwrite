@@ -210,14 +210,16 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getLog(string $siteId, $logId): mixed
+    protected function listLogs(string $siteId, array $queries = []): mixed
     {
-        $log = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => $queries
+        ]);
 
-        return $log;
+        return $logs;
     }
 
     protected function listSites(mixed $params = []): mixed
@@ -240,30 +242,33 @@ trait SitesBase
         return $deployments;
     }
 
-    protected function listLogs(string $siteId, array $queries = []): mixed
-    {
-        $logs = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => $queries
-        ]);
-
-        return $logs;
-    }
-
     protected function packageSite(string $site): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Unique archive per process: paratest --functional packs the same
+        // fixture from many methods at once. Sharing $folderPath/code.tar.gz
+        // lets one tar truncate the file another CURLFile is still reading
+        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute(
+            'tar --exclude code.tar.gz --exclude node_modules -czf ' . \escapeshellarg($tarPath) . ' -C ' . \escapeshellarg($folderPath) . ' .',
+            '',
+            $this->stdout,
+            $this->stderr
+        );
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed
@@ -284,27 +289,6 @@ trait SitesBase
         ], $this->getHeaders()), []);
 
         return $deployment;
-    }
-
-    protected function setupDuplicateDeployment(string $siteId, string $deploymentId): string
-    {
-        $deployment = $this->createDuplicateDeployment($siteId, $deploymentId);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $deployment = $this->getDeployment($siteId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 60000, 500);
-
-        return $deploymentId;
     }
 
     protected function createDuplicateDeployment(string $siteId, string $deploymentId): mixed
@@ -337,35 +321,6 @@ trait SitesBase
         ]);
 
         return $template;
-    }
-
-    protected function helperGetLatestCommit(string $owner, string $repository): ?string
-    {
-        $maxRetries = 3;
-        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
-            if ($attempt > 0) {
-                sleep(2);
-            }
-
-            $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'User-Agent: Appwrite',
-                'Accept: application/vnd.github.v3+json'
-            ]);
-
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-            if ($httpCode === 200) {
-                $commitData = json_decode($response, true);
-                if (isset($commitData['sha'])) {
-                    return $commitData['sha'];
-                }
-            }
-        }
-
-        return null;
     }
 
     protected function deleteSite(string $siteId): mixed

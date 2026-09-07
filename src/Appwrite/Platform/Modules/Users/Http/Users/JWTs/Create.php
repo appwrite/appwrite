@@ -8,6 +8,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\KeywordId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -47,7 +48,7 @@ class Create extends Action
                 ]
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('sessionId', 'recent', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true, ['dbForProject'])
+            ->param('sessionId', 'recent()', fn (Database $dbForProject) => new KeywordId('recent()', $dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent()\' to use the most recent session, which is also the default.', true, ['dbForProject'], example: 'recent()')
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -65,7 +66,7 @@ class Create extends Action
         $sessions = $user->getAttribute('sessions', []);
         $session = new Document();
 
-        if ($sessionId === 'recent') {
+        if ($sessionId === 'recent()') {
             // Get most recent
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {

@@ -90,7 +90,8 @@
 
     const updateDatabaseSelection = (radio, root) => {
         if (!radio || !root) return;
-        const allOptions = root.querySelectorAll('.selector-card');
+        const group = radio.closest('.selector-group') || root;
+        const allOptions = group.querySelectorAll('.selector-card');
         allOptions.forEach((option) => option.classList.remove('selected'));
         const selectedOption = radio.closest('.selector-card');
         if (selectedOption) {
@@ -240,13 +241,23 @@
             if (key === 'database') {
                 value = toDatabaseLabel(formState?.database);
             }
-            if (key === 'emailCertificates' && !value) {
-                value = formState?.accountEmail;
-            }
             if (value) {
                 node.textContent = value;
             }
         });
+
+        // Nothing entered and no account email to borrow: shown as a tag, the way the
+        // other absent settings on this panel are, rather than an empty row.
+        const emailNode = root.querySelector('[data-review-value="emailCertificates"]');
+        if (emailNode) {
+            const email = (formState?.emailCertificates || formState?.accountEmail || '').trim();
+            emailNode.textContent = email || 'Empty';
+            emailNode.classList.toggle('badge', !email);
+            emailNode.classList.toggle('badge-neutral', !email);
+            emailNode.classList.toggle('typography-text-xs-400', !email);
+            emailNode.classList.toggle('typography-text-m-500', Boolean(email));
+            emailNode.classList.toggle('text-neutral-primary', Boolean(email));
+        }
 
         const badge = root.querySelector('[data-review-badge]');
         if (badge) {
@@ -254,6 +265,14 @@
             badge.textContent = hasKey ? 'Generated' : 'Missing';
             badge.classList.remove('badge-success', 'badge-warning');
             badge.classList.add(hasKey ? 'badge-success' : 'badge-warning');
+        }
+
+        const httpsBadge = root.querySelector('[data-review-https-badge]');
+        if (httpsBadge) {
+            const forceHttps = formState?.forceHttps === true;
+            httpsBadge.textContent = forceHttps ? 'HTTPS' : 'HTTP';
+            httpsBadge.classList.remove('badge-success', 'badge-neutral');
+            httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
         }
 
         const assistantBadge = root.querySelector('[data-review-assistant-badge]');

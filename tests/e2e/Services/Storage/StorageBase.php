@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
@@ -489,6 +490,67 @@ trait StorageBase
         $this->assertEquals(200, $webpView['headers']['status-code']);
         $this->assertEquals('image/webp', $webpView['headers']['content-type']);
         $this->assertNotEmpty($webpView['body']);
+    }
+
+    public function testFileViewContentType(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'View Content Types',
+            'compression' => 'gzip',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $cases = [
+            // SVG is executable in a browser, so it is served as a download
+            // (attachment) and never rendered as a top-level document.
+            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml', 'disposition' => 'attachment'],
+            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png', 'disposition' => 'inline'],
+            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf', 'disposition' => 'inline'],
+            // HTML is not in the storage-mimes allowlist on purpose: rendering
+            // user uploads as HTML on the API origin would allow stored XSS.
+            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+        ];
+
+        foreach ($cases as $case) {
+            $source = realpath(__DIR__ . '/../../../resources/' . $case['source']);
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile($source, $case['mimeType'], $case['source']),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+
+            $this->assertEquals(201, $file['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['mimeType'], $file['body']['mimeType'], $case['source']);
+
+            $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $view['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['contentType'], $view['headers']['content-type'], $case['source']);
+            $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy'], $case['source']);
+            $this->assertEquals('nosniff', $view['headers']['x-content-type-options'], $case['source']);
+            $this->assertStringStartsWith($case['disposition'] . ';', $view['headers']['content-disposition'], $case['source']);
+            $this->assertEquals(\file_get_contents($source), $view['body'], $case['source']);
+        }
     }
 
     public function testCreateBucketFileWithFolder(): void
@@ -1035,6 +1097,51 @@ trait StorageBase
         $this->assertEquals(400, $preview['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED, $preview['body']['type']);
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
+    }
+
+    public function testFileViewSvgIsNotExecutable(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'SVG View Safety',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // A hostile SVG carrying <script>, onload, onclick, and a javascript: href.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'script.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        /**
+         * Test for SUCCESS - the browser is never allowed to execute the SVG:
+         * it is served as a download, not rendered as a top-level document.
+         */
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $this->assertStringStartsWith('attachment;', $view['headers']['content-disposition']);
+        $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy']);
+        $this->assertEquals('nosniff', $view['headers']['x-content-type-options']);
     }
 
     public function testFilePreviewCache(): void
@@ -1723,8 +1830,18 @@ trait StorageBase
         ]);
     }
 
-    public function testCreateBucketFileParallelChunksLargeFile(): void
+    public static function parallelChunksProvider(): array
     {
+        return [
+            'distinct chunks' => [false],
+            'duplicate chunks' => [true],
+        ];
+    }
+
+    #[DataProvider('parallelChunksProvider')]
+    public function testCreateBucketFileParallelChunksLargeFile(bool $duplicate): void
+    {
+        // Test for SUCCESS
         $totalSize = 20 * 1024 * 1024;
         $chunkSize = 5 * 1024 * 1024;
         $chunksTotal = (int) ceil($totalSize / $chunkSize);
@@ -1761,8 +1878,9 @@ trait StorageBase
             $this->assertNotFalse($handle, 'Could not create test file');
 
             $remaining = $totalSize;
-            $block = str_repeat(hash('sha256', $fileId, binary: true), 1024);
             while ($remaining > 0) {
+                // Distinct blocks expose reordered or duplicated chunks in the hash check.
+                $block = str_repeat(hash('sha256', $fileId . ':' . $remaining, binary: true), 1024);
                 $bytes = substr($block, 0, min(strlen($block), $remaining));
                 fwrite($handle, $bytes);
                 $remaining -= strlen($bytes);
@@ -1793,6 +1911,10 @@ trait StorageBase
                 ];
             }
             fclose($sourceHandle);
+
+            if ($duplicate) {
+                $requests = array_merge($requests, $requests);
+            }
 
             $responses = [];
             $endpoint = parse_url($this->client->getEndpoint());
@@ -1852,6 +1974,7 @@ trait StorageBase
 
             ksort($responses);
 
+            $this->assertCount(count($requests), $responses);
             foreach ($responses as $response) {
                 $this->assertSame('', $response['error']);
                 $this->assertContains($response['statusCode'], [200, 201], (string) $response['body']);
@@ -1866,6 +1989,21 @@ trait StorageBase
             $this->assertEquals(200, $uploadedFile['headers']['status-code']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksTotal']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksUploaded']);
+
+            // A late retry must return the completed file without writing or finalizing again.
+            $retry = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge(
+                $requests[0]['headers'],
+                ['content-type' => 'multipart/form-data']
+            ), [
+                'fileId' => $fileId,
+                'file' => new CURLFile($requests[0]['chunkPath'], 'application/octet-stream', 'large-parallel-upload.bin'),
+                'permissions' => [Permission::read(Role::any()), Permission::delete(Role::any())],
+            ]);
+
+            $this->assertEquals(200, $retry['headers']['status-code']);
+            $this->assertEquals($fileId, $retry['body']['$id']);
+            $this->assertEquals($chunksTotal, $retry['body']['chunksUploaded']);
+            $this->assertEquals($uploadedFile['body']['signature'], $retry['body']['signature']);
 
             $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
                 'content-type' => 'application/json',

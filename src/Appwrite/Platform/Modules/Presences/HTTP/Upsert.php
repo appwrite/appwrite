@@ -119,7 +119,7 @@ class Upsert extends PlatformAction
         ?string $status,
         ?array $permissions,
         ?string $expiresAt,
-        array $metadata,
+        array|\stdClass $metadata,
         Response $response,
         Request $request,
         Database $dbForProject,
@@ -158,16 +158,17 @@ class Upsert extends PlatformAction
         }
         $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
 
+        $presenceState = new PresenceState();
+
         $presenceData = [
             'userInternalId' => $userInternalId,
             'userId' => $resolvedUserId,
             'status' => $status,
             'source' => $isGraphQL ? 'graphql' : 'rest',
             'expiresAt' => $expiresAt ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
-            'metadata' => $metadata,
+            'metadata' => $presenceState->normalizeMetadata($metadata),
         ];
 
-        $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
         $ownerOverride = $permissions === null && ($isAPIKey || $isPrivilegedUser)
             ? $resolvedUserId

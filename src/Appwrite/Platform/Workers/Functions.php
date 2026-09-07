@@ -18,12 +18,12 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -31,6 +31,9 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
+    /** @var callable(string, int, callable): mixed */
+    private $locks;
+
     public static function getName(): string
     {
         return 'functions';
@@ -47,14 +50,15 @@ class Functions extends Action
             ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
-            ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -62,15 +66,18 @@ class Functions extends Action
         Document $project,
         Message $message,
         Database $dbForProject,
+        Database $dbForPlatform,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
-        Log $log,
         Executor $executor,
-        callable $getIsResourceBlocked
+        callable $getIsResourceBlocked,
+        callable $locks
     ): void {
+        $this->locks = $locks;
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -89,6 +96,16 @@ class Functions extends Action
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
 
+        // Recorded on consume, not on publish: the schedulers hand over a due
+        // second one occurrence at a time, so a write there delays the rest.
+        // Best-effort billing metadata, so a failure here must not fail the
+        // execution the message is asking for.
+        try {
+            $this->updateProjectAccess($project, $dbForPlatform);
+        } catch (\Throwable $th) {
+            Console::warning('Failed to record project access: ' . $th->getMessage());
+        }
+
         $events = $functionMessage->events;
         $data = $functionMessage->body;
         $eventData = $functionMessage->payload;
@@ -101,6 +118,19 @@ class Functions extends Action
         $headers = $functionMessage->headers;
         $path = $functionMessage->path ?: '/';
         $jwt = $functionMessage->jwt;
+
+        $execution = $functionMessage->execution ?? new Document();
+        $scheduleId = $execution->getAttribute('scheduleId', '');
+        if ($type === 'schedule' && !empty($scheduleId)) {
+            $this->enqueueScheduledExecution(
+                dbForPlatform: $dbForPlatform,
+                project: $project,
+                execution: $execution,
+                functionId: $functionId,
+                enqueue: fn (FunctionMessage $message) => $publisherForFunctions->enqueue($message),
+            );
+            return;
+        }
 
         if ($user->isEmpty() && !empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
@@ -122,9 +152,9 @@ class Functions extends Action
             $function = $dbForProject->getDocument('functions', $functionId);
         }
 
-        $log->addTag('functionId', $function->getId());
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('function.id', $function->getId());
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
             Span::add('function.id', $function->getId());
@@ -166,7 +196,6 @@ class Functions extends Action
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
-                        log: $log,
                         dbForProject: $dbForProject,
                         queueForWebhooks: $queueForWebhooks,
                         publisherForFunctions: $publisherForFunctions,
@@ -210,7 +239,6 @@ class Functions extends Action
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -235,8 +263,17 @@ class Functions extends Action
                 break;
             case 'schedule':
                 $execution = new Document($payload['execution'] ?? []);
+
+                // The scheduler dispatches a snapshot without variables; a
+                // fresh read pulls them along with any other changes made
+                // since the snapshot was taken.
+                $function = $dbForProject->getDocument('functions', $function->getId());
+                if ($function->isEmpty()) {
+                    Console::log('Function not found, skipping scheduled execution.');
+                    break;
+                }
+
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -259,6 +296,101 @@ class Functions extends Action
                     executionId: $execution->getId()
                 );
                 break;
+        }
+    }
+
+    protected function enqueueScheduledExecution(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
+    {
+        $scheduleId = $execution->getAttribute('scheduleId', '');
+        $schedule = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
+            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
+
+            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+                return new Document();
+            }
+
+            $claimed = $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ]));
+
+            return $claimed->isEmpty() ? new Document() : $schedule;
+        });
+
+        if ($schedule->isEmpty()) {
+            return false;
+        }
+
+        $data = $schedule->getAttribute('data', []);
+        $functionId = $data['functionId'] ?? $functionId;
+
+        if (empty($functionId)) {
+            Console::error("Missing functionId for scheduled execution {$execution->getId()}, skipping");
+            $dbForPlatform->deleteDocument('schedules', $scheduleId);
+            return false;
+        }
+
+        $published = false;
+        try {
+            $enqueue(new FunctionMessage(
+                project: $project,
+                userId: $data['userId'] ?? '',
+                functionId: $functionId,
+                execution: new Document(['$id' => $execution->getId()]),
+                type: 'schedule',
+                body: $data['body'] ?? '',
+                path: $data['path'] ?? '/',
+                headers: $data['headers'] ?? [],
+                method: $data['method'] ?? 'POST',
+            ));
+            $published = true;
+
+            if (!$dbForPlatform->deleteDocument('schedules', $scheduleId)) {
+                throw new \RuntimeException('Failed to remove claimed execution schedule');
+            }
+
+            return true;
+        } catch (\Throwable $error) {
+            // A failed publish releases the claim for a later retry. Once the
+            // publish succeeds, keep the schedule inactive even if cleanup
+            // fails so another worker cannot publish it again.
+            if (!$published) {
+                $dbForPlatform->updateDocument('schedules', $scheduleId, new Document([
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'active' => true,
+                ]));
+            }
+            throw $error;
+        }
+    }
+
+    protected function updateProjectAccess(Document $project, Database $dbForPlatform): void
+    {
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', 0);
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $now = DateTime::now();
+
+                // Concurrent messages each carry their own project snapshot, so
+                // every one of them reads the same stale accessedAt and would
+                // write it. The lock keeps that to one write, as the request
+                // path does; contention throws and the caller treats it as done.
+                ($this->locks)(
+                    'lock:platform:projects:'.$project->getId().':accessedAt',
+                    APP_PROJECT_ACCESS,
+                    function () use ($dbForPlatform, $project, $now): void {
+                        // updateDocument never uses cache, so skip the subqueries.
+                        $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                                'accessedAt' => $now
+                            ])),
+                            APP_PROJECTS_SUBQUERIES
+                        );
+                    }
+                );
+
+                $project->setAttribute('accessedAt', $now);
+            }
         }
     }
 
@@ -336,7 +468,6 @@ class Functions extends Action
     }
 
     /**
-     * @param Log $log
      * @param Database $dbForProject
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
@@ -357,7 +488,6 @@ class Functions extends Action
      * @return void
      */
     private function execute(
-        Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -388,7 +518,7 @@ class Functions extends Action
         Span::add('deployment.id', $deploymentId);
         Span::add('execution.trigger', $trigger);
 
-        $log->addTag('deploymentId', $deploymentId);
+        Span::add('deployment.id', $deploymentId);
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -428,7 +558,7 @@ class Functions extends Action
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('scopes', [])
+            'scopes' => Deployments::scopes($function)
         ]);
 
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
@@ -547,7 +677,7 @@ class Functions extends Action
             $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),

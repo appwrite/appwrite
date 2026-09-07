@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -57,6 +58,7 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
@@ -72,6 +74,7 @@ class Update extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
         array $platform
@@ -133,7 +136,7 @@ class Update extends Action
             ...array_filter(array_column($prFiles, 'previous_filename'))
         ];
 
-        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
 
         $response->noContent();
     }

@@ -368,10 +368,13 @@
             httpPort: normalizedHttpPort,
             httpsPort: normalizedHttpsPort,
             database: formState?.database || 'postgresql',
+            topology: formState?.topology || 'combined',
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
+            forceHttps: formState?.forceHttps === true,
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
+            accountName: (formState?.accountName || '').trim(),
             accountEmail: normalizedAccountEmail,
             accountPassword: normalizedAccountPassword,
             migrate: formState?.migrate ?? false

@@ -44,10 +44,12 @@ class View extends Action
         $defaultHttpsPort = $config->getDefaultHttpsPort();
         $isUpgrade = $config->isUpgrade();
         $lockedDatabase = $config->getLockedDatabase();
+        $topology = $config->getTopology();
         $enabledDatabases = $config->getEnabledDatabases();
         $isLocalInstall = $config->isLocal();
 
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
+        $defaultForceHttps = ($vars['_APP_OPTIONS_FORCE_HTTPS']['default'] ?? 'disabled') === 'enabled';
         if ($isLocalInstall && empty($defaultEmailCertificates)) {
             $defaultEmailCertificates = 'walterobrien@example.com';
         }

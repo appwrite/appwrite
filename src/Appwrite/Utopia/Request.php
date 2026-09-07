@@ -124,17 +124,6 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
-        $this->filteredParams = null;
-    }
-
-    /**
      * Check if a filter has been set
      *
      * @return bool

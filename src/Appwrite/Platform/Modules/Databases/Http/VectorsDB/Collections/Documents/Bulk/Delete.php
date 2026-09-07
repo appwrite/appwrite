@@ -32,7 +32,7 @@ class Delete extends DocumentsDelete
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Delete documents')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')

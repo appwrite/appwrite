@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 use Appwrite\Platform\Modules\VCS\Http\Events\Base;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -63,6 +64,7 @@ class Create extends Base
         InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -72,7 +74,7 @@ class Create extends Base
             return;
         }
 
-        parent::handleEvent($event, $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
+        parent::handleEvent($event, $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
     }
 
     /**

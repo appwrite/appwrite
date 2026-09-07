@@ -66,6 +66,9 @@ class Get extends Action
                             Response::MODEL_OAUTH2_NOTION,
                             Response::MODEL_OAUTH2_SALESFORCE,
                             Response::MODEL_OAUTH2_YAHOO,
+                            Response::MODEL_OAUTH2_HUGGINGFACE,
+                            Response::MODEL_OAUTH2_RESEND,
+                            Response::MODEL_OAUTH2_CLOUDFLARE,
                             Response::MODEL_OAUTH2_LINKEDIN,
                             Response::MODEL_OAUTH2_DISQUS,
                             Response::MODEL_OAUTH2_AMAZON,
@@ -87,7 +90,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified']))
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));

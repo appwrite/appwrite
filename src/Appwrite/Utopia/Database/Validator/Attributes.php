@@ -8,6 +8,8 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
 use Utopia\Validator;
+use Utopia\Validator\FloatValidator;
+use Utopia\Validator\Integer;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -202,6 +204,21 @@ class Attributes extends Validator
                 if (!in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
+                }
+
+                // The dedicated endpoints bound these with Integer(false, 64) / FloatValidator.
+                // Without the same check a JSON number past PHP_INT_MAX decodes to a float and is
+                // stored verbatim, so an int64 bound round-tripped through a client that cannot
+                // hold it lands in formatOptions as 9.223372036854776e+18.
+                $boundValidator = $type === Database::VAR_FLOAT
+                    ? new FloatValidator()
+                    : new Integer(false, 64);
+
+                foreach (['min', 'max'] as $bound) {
+                    if (isset($attribute[$bound]) && !$boundValidator->isValid($attribute[$bound])) {
+                        $this->message = "Attribute '" . $attribute['key'] . "': " . $bound . ' is invalid. ' . $boundValidator->getDescription();
+                        return false;
+                    }
                 }
 
                 // If both are set, validate ordering

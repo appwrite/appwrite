@@ -42,6 +42,15 @@ final class FunctionsScheduleTest extends Scope
             'activate' => true
         ]);
 
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->listExecutions($functionId);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            $triggers = \array_column($executions['body']['executions'], 'trigger');
+            $this->assertContains('schedule', $triggers);
+        }, 180000, 5000);
+
         $this->cleanupFunction($functionId);
     }
 
@@ -56,7 +65,7 @@ final class FunctionsScheduleTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'timeout' => 10,
+            'timeout' => 30,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
@@ -99,6 +108,18 @@ final class FunctionsScheduleTest extends Scope
         $this->assertCount(1, $execution['body']['requestHeaders']);
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
+
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $execution = $this->getExecution($functionId, $executionId);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertStringContainsString('body-is-custom-body', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('custom-header-is-custom-value', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('method-is-patch', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('path-is-/custom-path', (string) $execution['body']['logs']);
+            $this->assertStringContainsString('error-log-works', (string) $execution['body']['errors']);
+        }, 240000, 1000);
 
         /* Test for FAILURE */
         // Schedule synchronous execution

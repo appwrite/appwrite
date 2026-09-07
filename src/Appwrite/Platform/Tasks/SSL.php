@@ -2,7 +2,10 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Publisher\Certificate;
+use Utopia\Bus\Bus;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -30,10 +33,11 @@ class SSL extends Action
             ->inject('console')
             ->inject('dbForPlatform')
             ->inject('publisherForCertificates')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates): void
+    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, Bus $bus): void
     {
         $domain = new Domain(!empty($domain) ? $domain : '');
         if (!$domain->isKnown() || $domain->isTest()) {
@@ -89,11 +93,15 @@ class SSL extends Action
                 'region' => $console->getAttribute('region')
             ]));
 
+            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
+
             Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
         } else {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'status' => RULE_STATUS_CERTIFICATE_GENERATING,
             ]));
+
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             Console::info('Updated existing rule ' . $rule->getId() . ' for domain: ' . $domain->get());
         }

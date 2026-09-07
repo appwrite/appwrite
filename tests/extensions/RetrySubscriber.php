@@ -84,12 +84,4 @@ class RetrySubscriber implements FailedSubscriber
             return 0;
         }
     }
-
-    /**
-     * Reset retry counts between test runs (useful for testing)
-     */
-    public static function reset(): void
-    {
-        self::$retryCounts = [];
-    }
 }

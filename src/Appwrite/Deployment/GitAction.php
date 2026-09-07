@@ -86,7 +86,7 @@ final class GitAction
             ]);
             $previewUrl = $isSite && !$rule->isEmpty() ? "{$protocol}://" . $rule->getAttribute('domain', '') : '';
 
-            $comment = new Comment($platform);
+            $comment = new Comment($platform, $vcs->supportsCommentImages());
             $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
             $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
             $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());

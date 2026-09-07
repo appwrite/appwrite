@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
@@ -44,6 +45,7 @@ class Install extends Action
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
+    protected string $topology = 'combined';
 
     public static function getName(): string
     {
@@ -61,6 +63,7 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
+            ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
             ->callback($this->action(...));
     }
 
@@ -71,7 +74,8 @@ class Install extends Action
         string $image,
         string $interactive,
         bool $noStart,
-        string $database
+        string $database,
+        string $topology
     ): void {
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
@@ -113,6 +117,12 @@ class Install extends Action
             Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
+            if (!$this->hasExplicitTopologyParam()) {
+                $detected = $this->detectTopologyFromCompose($compose);
+                if ($detected !== null) {
+                    $topology = $detected;
+                }
+            }
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite->getImageVersion();
             try {
@@ -209,6 +219,8 @@ class Install extends Action
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
+
+        $this->setTopology($topology);
 
         // If interactive and web mode enabled, start web server
         // Skip the web installer when explicit CLI params are provided
@@ -341,7 +353,7 @@ class Install extends Action
             $enabledDatabases[] = $lockedDatabase;
         }
 
-        $this->setInstallerConfig([
+        $config = [
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
@@ -350,10 +362,20 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'topology' => $this->topology,
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
-        ]);
+        ];
+
+        // Restarting the installer rewrites this config, which would drop the version an
+        // interrupted upgrade started from -- the one record left once the compose file and
+        // .env read as the version being installed.
+        if (isset($installerConfig['upgradeFrom'])) {
+            $config['upgradeFrom'] = $installerConfig['upgradeFrom'];
+        }
+
+        $this->setInstallerConfig($config);
 
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
@@ -490,6 +512,7 @@ class Install extends Action
             return;
         }
 
+        $this->installerConfig = $config;
         putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
         $path = InstallerServer::INSTALLER_CONFIG_FILE;
         if (@file_put_contents($path, $json) === false) {
@@ -543,6 +566,51 @@ class Install extends Action
             $version = 'local';
         }
 
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $tag = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+
+                    // Compose files before 2.0 interpolate the tag, so the service reads
+                    // back "${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}" and
+                    // the part after the first colon is an expression, not a version.
+                    // Anything that does not start with a digit is left to .env below,
+                    // which holds the value that expression resolves to.
+                    if (\preg_match('/^\d/', $tag) === 1) {
+                        $installedVersion = $tag;
+                    }
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+
+            // An attempt that was interrupted after rewriting those files leaves both
+            // reading as the version being installed, which would look like an upgrade with
+            // nothing to cross. Remember the version first, so a resumed attempt still knows
+            // where it started; the infrastructure changes below forget it once applied.
+            $installerConfig = $this->readInstallerConfig();
+
+            if ($installedVersion === '' || $installedVersion === $version) {
+                $installedVersion = (string) ($installerConfig['upgradeFrom'] ?? '');
+            } elseif (($installerConfig['upgradeFrom'] ?? null) !== $installedVersion) {
+                $this->setInstallerConfig(\array_merge($installerConfig, ['upgradeFrom' => $installedVersion]));
+            }
+        }
+
         if (!$isLocalInstall && $this->hostPath === '') {
             $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
@@ -574,6 +642,7 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'enableAssistant' => $enableAssistant,
+            'topology' => $this->topology,
         ]);
 
         $templateForEnv->setParam('vars', $input);
@@ -634,11 +703,45 @@ class Install extends Action
                 $this->copyMongoFilesIfNeeded();
             }
 
+            // Changes to what the containers run on, rather than to what is inside the
+            // database. The new compose file and .env are written by now, and a volume or a
+            // mount can only be moved while nothing is attached to it -- so this has to
+            // happen before anything starts, including a start the operator does by hand
+            // after --no-start. Not bounded by the step being resumed from: a version is
+            // only still here because the changes for it have not all landed yet, whichever
+            // step the attempt that left it got to.
+            if ($isUpgrade && $installedVersion !== '') {
+                $applied = true;
+
+                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                    try {
+                        $applied = $migration->setContext($input, $this->path)->execute() && $applied;
+                    } catch (\Throwable $error) {
+                        // The containers still start: what could not be changed is reported
+                        // rather than taking the upgrade down with it.
+                        $applied = false;
+                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                    }
+                }
+
+                // Forgotten only once everything landed, so anything that failed is tried
+                // again next time; from here a later upgrade reads its starting version off
+                // the compose file rather than replaying this one.
+                if ($applied) {
+                    $installerConfig = $this->readInstallerConfig();
+                    unset($installerConfig['upgradeFrom']);
+                    $this->setInstallerConfig($installerConfig);
+                }
+            }
+
             if (!$noStart) {
                 $shouldStartContainers = $startIndex <= 2;
                 if ($shouldStartContainers) {
                     $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+
                     $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                     if (!$isUpgrade) {
@@ -1534,6 +1637,37 @@ class Install extends Action
             if ($host !== null && in_array($host, $dbServices, true)) {
                 return $host;
             }
+        }
+
+        return null;
+    }
+
+    public function setTopology(string $topology): void
+    {
+        $this->topology = \in_array($topology, ['combined', 'separate'], true)
+            ? $topology
+            : 'combined';
+    }
+
+    private function hasExplicitTopologyParam(): bool
+    {
+        foreach ($_SERVER['argv'] ?? [] as $arg) {
+            if (\str_starts_with((string) $arg, '--topology')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function detectTopologyFromCompose(Compose $compose): ?string
+    {
+        $names = array_keys($compose->getServices());
+        if (\in_array('appwrite-worker', $names, true)) {
+            return 'combined';
+        }
+        if (\in_array('appwrite-worker-functions', $names, true)) {
+            return 'separate';
         }
 
         return null;

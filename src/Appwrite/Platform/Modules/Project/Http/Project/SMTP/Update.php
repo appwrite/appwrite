@@ -9,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
-use PHPMailer\PHPMailer\PHPMailer;
 use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,6 +16,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\SMTP\Auth\Login;
+use Utopia\SMTP\Auth\Plain;
+use Utopia\SMTP\Client;
+use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Transport\Native;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
@@ -61,7 +66,7 @@ class Update extends Action
                 ],
             ))
             ->param('host', null, new Nullable(new Hostname()), 'SMTP server hostname (domain)', optional: true)
-            ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true)
+            ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true, example: '587')
             ->param('username', null, new Nullable(new Text(256, 0)), 'SMTP server username. Pass an empty string to clear a previously set value.', optional: true)
             ->param('password', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'SMTP server password. Pass an empty string to clear a previously set value. This property is stored securely and cannot be read in future (write-only).', optional: true)
             ->param('senderEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
@@ -124,33 +129,33 @@ class Update extends Action
         // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
         // explicitly keeping/turning SMTP off.
         if ((\is_null($enabled) || $enabled === true) && !empty($smtp['senderEmail'] ?? '')) {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
+            // AutoTLS is off, so no encryption is asked for unless the
+            // configuration says which.
+            $encryption = match ($smtp['secure'] ?? '') {
+                'ssl' => Encryption::Implicit,
+                'tls' => Encryption::StartTls,
+                default => Encryption::None,
+            };
 
-            $mail->Host = $smtp['host'] ?? '';
-            $mail->Port = $smtp['port'] ?? '';
-            $mail->SMTPSecure = $smtp['secure'] ?? '';
-            $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
+            $credentials = empty($smtp['username'] ?? '')
+                ? []
+                : [
+                    new Plain($smtp['username'], $smtp['password'] ?? ''),
+                    new Login($smtp['username'], $smtp['password'] ?? ''),
+                ];
 
-            if (!empty($smtp['username'] ?? '')) {
-                $mail->SMTPAuth = true;
-                $mail->Username = $smtp['username'];
-                $mail->Password = $smtp['password'] ?? '';
-            }
-
-            if (!empty($smtp['replyToEmail'] ?? '')) {
-                $mail->addReplyTo($smtp['replyToEmail'], $smtp['replyToName'] ?? '');
-            }
-
-            $mail->SMTPAutoTLS = false;
-            $mail->Timeout = 5;
+            $client = new Client(
+                new Native($smtp['host'] ?? '', (int) ($smtp['port'] ?? 0)),
+                \gethostname() ?: 'localhost',
+                $credentials,
+                $encryption,
+                new Timeouts(connect: 5.0, read: 5.0, write: 5.0),
+            );
 
             try {
-                $valid = $mail->SmtpConnect();
-
-                if (!$valid) {
-                    throw new \Exception('Connection is not valid.');
-                }
+                // Nothing is dialled until a session is needed, so asking what
+                // the server offers is what greets, upgrades and authenticates.
+                $client->capabilities();
 
                 // Auto-enable if configuration is valid
                 // Dont do this if specifically request to mark disabled
@@ -161,6 +166,8 @@ class Update extends Action
                 if (($smtp['enabled'] ?? null) === true) {
                     throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
                 }
+            } finally {
+                $client->close();
             }
         }
 

@@ -55,9 +55,22 @@ final class TablesDBColumnsTest extends Scope
                 ['key' => 'address', 'type' => 'ip'],
                 ['key' => 'status', 'type' => 'enum', 'elements' => ['on', 'off'], 'default' => 'on'],
             ],
+            'indexes' => [
+                ['key' => 'slug_unique', 'type' => 'unique', 'attributes' => ['slug']],
+            ],
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(9, $table['body']['columns']);
+        $columnKeys = array_column($table['body']['columns'], 'key');
+        sort($columnKeys);
+        $this->assertEquals(
+            ['address', 'archive', 'email', 'modulePath', 'slug', 'status', 'summary', 'title', 'website'],
+            $columnKeys,
+        );
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals('slug_unique', $table['body']['indexes'][0]['key']);
+        $this->assertEquals('available', $table['body']['indexes'][0]['status']);
         $tableId = $table['body']['$id'];
 
         $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns', $headers);

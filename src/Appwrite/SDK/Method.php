@@ -12,6 +12,9 @@ class Method
 
     public static array $errors = [];
 
+    /** @var list<string>|null Null derives membership from auth; an explicit empty list stays empty. */
+    protected ?array $platforms = null;
+
     /**
      * Initialise a new SDK method
      *
@@ -202,6 +205,33 @@ class Method
         return $this->hide;
     }
 
+    /**
+     * @param list<string> $platforms Auth membership resolved by the active specs producer.
+     */
+    public function setPlatforms(array $platforms): self
+    {
+        $this->platforms = $platforms;
+        return $this;
+    }
+
+    /**
+     * @return list<string> Eligible platforms, independent of the currently selected spec platform.
+     */
+    public function getPlatforms(): array
+    {
+        $hide = $this->isHidden();
+        if ($hide === true || empty($this->getNamespace())) {
+            return [];
+        }
+
+        $platforms = $this->platforms ?? \array_filter(\array_map(
+            fn ($auth) => $auth instanceof AuthType ? $auth->getPlatform() : null,
+            $this->getAuth()
+        ));
+
+        return \array_values(\array_unique(\array_diff($platforms, \is_array($hide) ? $hide : [])));
+    }
+
     public function isPackaging(): bool
     {
         return $this->packaging;
@@ -236,95 +266,15 @@ class Method
         return $this;
     }
 
-    public function setMethodName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    public function setDesc(string $desc): self
-    {
-        $this->desc = $desc;
-        return $this;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    public function setAuth(array $auth): self
-    {
-        $this->validateAuthTypes($auth);
-        $this->auth = $auth;
-        return $this;
-    }
-
-    /**
-     * @param array<SDKResponse> $responses
-     */
-    public function setResponses(array $responses): self
-    {
-        foreach ($responses as $response) {
-            $this->validateResponseModel($response->getModel());
-            $this->validateNoContent($response);
-        }
-        $this->responses = $responses;
-        return $this;
-    }
-
-    public function setContentType(ContentType $contentType): self
-    {
-        $this->contentType = $contentType;
-        return $this;
-    }
-
     public function setType(?MethodType $type): self
     {
         $this->type = $type;
         return $this;
     }
 
-    public function setDeprecated(bool|Deprecated $deprecated): self
-    {
-        $this->deprecated = $deprecated;
-        return $this;
-    }
-
-    public function setHide(bool|Deprecated $hide): self
-    {
-        $this->hide = $hide;
-        return $this;
-    }
-
-    public function setPackaging(bool $packaging): self
-    {
-        $this->packaging = $packaging;
-        return $this;
-    }
-
-    public function setRequestType(ContentType $requestType): self
-    {
-        $this->requestType = $requestType;
-        return $this;
-    }
-
-    public function setParameters(array $parameters): self
-    {
-        $this->parameters = $parameters;
-        return $this;
-    }
-
     public function isPublic(): bool
     {
         return $this->public;
-    }
-
-    public function setPublic(bool $public): self
-    {
-        $this->public = $public;
-        return $this;
     }
 
     public static function getErrors(): array

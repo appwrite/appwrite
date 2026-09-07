@@ -159,21 +159,6 @@ abstract class Format
     /**
      * Set Services.
      *
-     * Set services value
-     *
-     * @param array $services
-     *
-     * @return self
-     */
-    public function setServices(array $services): self
-    {
-        $this->services = $services;
-        return $this;
-    }
-
-    /**
-     * Set Services.
-     *
      * Get services value
      *
      */
@@ -437,7 +422,6 @@ abstract class Format
         return \array_filter([
             'propertyName' => $primaryKey,
             'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
-            'x-propertyNames' => $allKeys,
             'x-mapping' => $compoundMapping,
         ]);
     }
@@ -448,7 +432,7 @@ abstract class Format
             return \in_array($default, $schema['enum'], true);
         }
 
-        if (isset($schema['items']['enum'])) {
+        if (\is_array($schema['items'] ?? null) && isset($schema['items']['enum'])) {
             return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
         }
 
