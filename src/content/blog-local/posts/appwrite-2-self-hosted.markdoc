@@ -35,6 +35,14 @@ Two developer tools live inside it. [Appwrite Terminal](/blog/post/announcing-co
 
 Your projects are untouched. Console IV is a new interface over the same APIs, so your API keys and SDK code keep working.
 
+# One organization in the Console
+
+On Appwrite Cloud, organizations are where plans and billing live. A self-hosted instance has neither, so the Console drops the layer. It creates one organization the first time you sign in, puts every project under it, and hides the organization switcher and the create button. Everyone you invite is an owner of every project.
+
+If you upgrade an instance that already has several organizations, the Console opens the one saved in your account preferences, or the first one it finds.
+
+[Multi-tenancy](/docs/advanced/self-hosting/installation#organizations) did not go away. An organization is a team, and the API still takes a `teamId` when you create a project. Creating another team through the API creates another organization. The Console just shows one of them at a time, so projects under another team are reachable by their project URL.
+
 # PostgreSQL, MariaDB, or MongoDB as the underlying database
 
 Appwrite 2.0 [runs on PostgreSQL](/blog/post/appwrite-2-0-postgres-by-default), and new installations use it by default. MariaDB and MongoDB remain supported, and you pick one in the first step of the installer.
@@ -90,6 +98,10 @@ You can also let developers sign in to the Console with GitHub, GitLab, Bitbucke
 - A new `appwrite-geo` container resolves IP addresses for locale and session data.
 - The avatars API can fetch a user's profile photo from Gravatar or their OAuth2 provider.
 - The separate audits worker is gone. Audit retention now runs in the deletes worker and the maintenance task.
+
+# Coming to self-hosted
+
+A few of the Init products are on Cloud first and reach self-hosted in a later 2.x release. [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [S3 API](/blog/post/announcing-s3-api) for Storage, and the activity log for project events are the ones we hear about most. They are not in 2.0.0. Watch the [release notes](https://github.com/appwrite/appwrite/releases) for the version that adds each.
 
 # Install Appwrite 2.0
 

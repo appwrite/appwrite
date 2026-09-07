@@ -9,6 +9,7 @@ import { execSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { load as loadYaml } from 'js-yaml'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -27,13 +28,17 @@ const OUTPUT_FILE = join(OUTPUT_DIR, 'composeData.ts')
 
 // Mirrors TOPOLOGY_SERVICE_GROUPS in src/Appwrite/Docker/Compose/Generator.php,
 // which names the combined services and selects the separate ones by Compose
-// profile. The separate list is read off the profiles below for the same reason,
+// profile. The separate list is read off the parsed profiles for the same reason,
 // so a service added to the profile upstream cannot drift out of this list.
 const COMBINED_TOPOLOGY_SERVICES = [
   'appwrite-worker',
   'appwrite-task-scheduler',
 ]
 const SEPARATE_TOPOLOGY_PROFILE = 'separate'
+// Every Compose profile the appwrite compose file is allowed to use. Any other
+// profile aborts generation, because the docs generator would not know which
+// topology or database option it belongs to.
+const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
 const ASSISTANT_SERVICE = 'appwrite-assistant'
 
@@ -108,22 +113,68 @@ async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(join(APPWRITE_REPO, relativePath), 'utf-8')
 }
 
-/** Profile names listed under a service's `profiles:` key. */
-function readProfiles(block: string): string[] {
-  const lines = block.split('\n')
-  const profiles: string[] = []
-  let reading = false
-  for (const line of lines) {
-    if (/^    profiles:\s*$/.test(line)) {
-      reading = true
-      continue
-    }
-    if (!reading) continue
-    const match = line.match(/^      - (.+)$/)
-    if (match === null) break
-    profiles.push(match[1].trim())
+type ServiceDefinition = Record<string, unknown>
+
+/** Compose profiles of a parsed service definition. */
+function profilesOf(service: ServiceDefinition): string[] {
+  const profiles = service.profiles
+  return Array.isArray(profiles) ? profiles.map(String) : []
+}
+
+/** Name of the service a parsed service definition extends, if any. */
+function extendsOf(service: ServiceDefinition): string | null {
+  const ext = service.extends
+  if (typeof ext === 'string') return ext
+  if (ext && typeof ext === 'object' && 'service' in ext) {
+    return String((ext as { service: unknown }).service)
   }
-  return profiles
+  return null
+}
+
+/**
+ * Inlines a service that `extends` one of the combined containers, the way the
+ * PHP generator does with array_replace_recursive() before it drops the base
+ * service from a separate-topology compose. The text of the base block is kept
+ * and each top-level key the child sets replaces the same key in the base.
+ *
+ * Only scalar overrides are supported. A child that overrides a mapping would
+ * need a deep merge, and the generator aborts rather than guess.
+ */
+function resolveExtends(
+  child: Block,
+  childDef: ServiceDefinition,
+  base: Block,
+  baseDef: ServiceDefinition,
+): string {
+  const childKeys = splitBlocks(
+    child.block.split('\n').slice(1).join('\n'),
+    '    ',
+    true,
+  ).filter((k) => k.name !== 'extends' && k.name !== 'profiles')
+  const baseKeys = splitBlocks(
+    base.block.split('\n').slice(1).join('\n'),
+    '    ',
+    true,
+  )
+  for (const key of childKeys) {
+    const childValue = childDef[key.name]
+    const baseValue = baseDef[key.name]
+    if (
+      (childValue !== null && typeof childValue === 'object') ||
+      (baseValue !== null && typeof baseValue === 'object')
+    ) {
+      throw new Error(
+        `Service "${child.name}" overrides "${key.name}" of "${base.name}" with a non-scalar value; add a deep merge before regenerating`,
+      )
+    }
+  }
+  const merged = baseKeys.map(
+    (k) => childKeys.find((c) => c.name === k.name) ?? k,
+  )
+  for (const key of childKeys) {
+    if (!baseKeys.some((k) => k.name === key.name)) merged.push(key)
+  }
+  return [`  ${child.name}:`, ...merged.map((k) => k.block)].join('\n')
 }
 
 function stripProfiles(block: string): string {
@@ -200,26 +251,89 @@ async function main() {
       `appwrite/appwrite:${version}`,
     )
 
+  // The text blocks below preserve the upstream file's comments and formatting
+  // for the generated output. Structure (profiles, extends) is read from the
+  // parsed document so a formatting change upstream cannot misclassify a service.
+  const parsed = loadYaml(compose) as { services?: Record<string, unknown> }
+  const definitions = new Map<string, ServiceDefinition>(
+    Object.entries(parsed.services ?? {}).map(([name, def]) => [
+      name,
+      (def ?? {}) as ServiceDefinition,
+    ]),
+  )
+
   const rawServices = splitBlocks(servicesSection, '  ')
+  const rawByName = new Map(rawServices.map((s) => [s.name, s]))
+  if (rawServices.length !== definitions.size) {
+    throw new Error(
+      `Text split found ${rawServices.length} services but the YAML parser found ${definitions.size}`,
+    )
+  }
+  for (const s of rawServices) {
+    if (!definitions.has(s.name)) {
+      throw new Error(
+        `Service "${s.name}" split from text is not in the parsed YAML`,
+      )
+    }
+  }
+
+  const definitionOf = (name: string): ServiceDefinition => {
+    const def = definitions.get(name)
+    if (def === undefined)
+      throw new Error(`Service "${name}" not found in docker-compose.yml`)
+    return def
+  }
+
+  for (const [name, def] of definitions) {
+    for (const profile of profilesOf(def)) {
+      if (!KNOWN_PROFILES.includes(profile)) {
+        throw new Error(
+          `Service "${name}" uses unknown Compose profile "${profile}"`,
+        )
+      }
+    }
+  }
+
   const separateServices = rawServices
-    .filter((s) => readProfiles(s.block).includes(SEPARATE_TOPOLOGY_PROFILE))
+    .filter((s) =>
+      profilesOf(definitionOf(s.name)).includes(SEPARATE_TOPOLOGY_PROFILE),
+    )
     .map((s) => s.name)
   const TOPOLOGY_SERVICES: Record<string, string[]> = {
     combined: COMBINED_TOPOLOGY_SERVICES,
     separate: separateServices,
   }
 
-  const services = rawServices.map((s) => ({
-    name: s.name,
-    block: pinImage(stripOmittedServiceEnv(stripProfiles(s.block))),
-  }))
-  const volumes = splitBlocks(volumesSection, '  ', true)
-
   if (separateServices.length === 0) {
     throw new Error(
       `No service carries the "${SEPARATE_TOPOLOGY_PROFILE}" Compose profile`,
     )
   }
+
+  const services = rawServices.map((s) => {
+    const def = definitionOf(s.name)
+    const base = extendsOf(def)
+    let block = s.block
+    if (base !== null) {
+      // A separate-topology compose drops the combined containers, so a child
+      // that extends one of them must carry the full definition itself.
+      if (!COMBINED_TOPOLOGY_SERVICES.includes(base)) {
+        throw new Error(
+          `Service "${s.name}" extends "${base}", which is not a combined topology service`,
+        )
+      }
+      const baseBlock = rawByName.get(base)
+      if (baseBlock === undefined) {
+        throw new Error(`Service "${s.name}" extends missing service "${base}"`)
+      }
+      block = resolveExtends(s, def, baseBlock, definitionOf(base))
+    }
+    return {
+      name: s.name,
+      block: pinImage(stripOmittedServiceEnv(stripProfiles(block))),
+    }
+  })
+  const volumes = splitBlocks(volumesSection, '  ', true)
 
   const knownNames = new Set(services.map((s) => s.name))
   const expected = [

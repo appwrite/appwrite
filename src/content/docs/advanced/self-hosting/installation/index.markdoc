@@ -159,6 +159,14 @@ After installation completes:
 On non-Linux hosts, the server might take a few minutes to start after installation completes. This is normal behavior.
 {% /info %}
 
+## Organizations {% #organizations %}
+
+A self-hosted Console works with one organization. Appwrite creates it the first time you sign in to the Console, and every project you create from the Console belongs to it. The Console does not show an organization switcher or a way to create more.
+
+Members you invite to the organization get owner access to every project on the instance. There are no organization roles on a self-hosted instance.
+
+Multi-tenancy is still supported through the API. An organization is a team, and creating a project through the API or the CLI takes its `teamId` as before. The Console only lists the projects of the organization it opened, so open a project under another team by its project URL.
+
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
 The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Every SDK sends an `X-Appwrite-Response-Format` header that names the Appwrite version whose response shapes it expects, and each row lists the SDK versions that send that row's version. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.0.0.
