@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Telemetry\Adapter;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
+use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
 use OpenTelemetry\SDK\Common\Export\TransportInterface;
 use OpenTelemetry\SDK\Common\Future\CancellationInterface;
 use OpenTelemetry\SDK\Common\Future\CompletedFuture;
@@ -14,6 +15,64 @@ use Utopia\Telemetry\Adapter\OpenTelemetry;
 
 final class OpenTelemetryTest extends TestCase
 {
+    public function testEmptyObservationsDoNotDiscardRequestMetrics(): void
+    {
+        $payloads = [];
+        $telemetry = new OpenTelemetry(
+            'http://localhost:4318/v1/metrics',
+            'edge',
+            'edge-databases',
+            'instance',
+            $this->transport($payloads),
+        );
+        $counter = $telemetry->createCounter('edge.database.http.request');
+        $observations = [];
+        $telemetry->createObservableGauge('edge.database.backup.schedule.missed')
+            ->observe(function (callable $observe) use (&$observations): void {
+                foreach ($observations as $value) {
+                    $observe($value);
+                }
+            });
+
+        // The gauge starts empty, reports a real zero, becomes empty, then reports again.
+        foreach ([[], [0], [], [2]] as $index => $values) {
+            $observations = $values;
+            $counter->add(1);
+            $this->assertTrue($telemetry->collect());
+            $request = new ExportMetricsServiceRequest();
+            $request->mergeFromString($payloads[$index]);
+            $metrics = [];
+            foreach ($request->getResourceMetrics() as $resource) {
+                foreach ($resource->getScopeMetrics() as $scope) {
+                    foreach ($scope->getMetrics() as $metric) {
+                        $metrics[$metric->getName()] = $metric;
+                    }
+                }
+            }
+            $this->assertCount($values === [] ? 1 : 2, $metrics);
+            $this->assertSame($index + 1, (int) $metrics['edge.database.http.request']->getSum()->getDataPoints()[0]->getAsInt());
+            if ($values !== []) {
+                $this->assertSame($values[0], (int) $metrics['edge.database.backup.schedule.missed']->getGauge()->getDataPoints()[0]->getAsInt());
+            }
+        }
+    }
+
+    public function testEmptyCollectionDoesNotSendAnOtlpRequest(): void
+    {
+        $payloads = [];
+        $telemetry = new OpenTelemetry(
+            'http://localhost:4318/v1/metrics',
+            'edge',
+            'edge-databases',
+            'instance',
+            $this->transport($payloads),
+        );
+        $telemetry->createObservableGauge('empty')->observe(static function (callable $observe): void {});
+
+        $this->assertTrue($telemetry->collect());
+        $this->assertSame([], $payloads);
+    }
+
     /**
      * An instrument that has never recorded must not reach the wire at all: an exported metric with
      * zero data points makes Prometheus 3.13+ reject the entire OTLP batch, not just that metric.

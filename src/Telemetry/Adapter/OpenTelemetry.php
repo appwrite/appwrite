@@ -24,6 +24,7 @@ use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use Utopia\Telemetry\Adapter;
+use Utopia\Telemetry\Adapter\OpenTelemetry\MetricExporter as NonEmptyMetricExporter;
 use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\Gauge;
 use Utopia\Telemetry\Histogram;
@@ -105,7 +106,7 @@ class OpenTelemetry implements Adapter
     protected function createExporter(TransportInterface $transport): MetricExporterInterface
     {
         /** @phpstan-ignore argument.type */
-        return new MetricExporter($transport, Temporality::CUMULATIVE);
+        return new NonEmptyMetricExporter(new MetricExporter($transport, Temporality::CUMULATIVE));
     }
 
     /**
