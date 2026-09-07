@@ -43,32 +43,6 @@
         {
             "type": "package",
             "package": {
-                "name": "utopia-php/platform",
-                "version": "1.0.999",
-                "source": {
-                    "url": "https://github.com/utopia-php/monorepo.git",
-                    "type": "git",
-                    "reference": "cursor/multi-job-queue-platform-f0c8"
-                },
-                "autoload": {
-                    "psr-4": {
-                        "Utopia\\Platform\\": "packages/platform/src/Platform"
-                    }
-                },
-                "require": {
-                    "php": ">=8.5",
-                    "ext-json": "*",
-                    "ext-redis": "*",
-                    "utopia-php/cli": "^0.24",
-                    "utopia-php/http": "^2.0@RC",
-                    "utopia-php/queue": "0.23.* || 0.24.* || ^1.0.0",
-                    "utopia-php/servers": "^0.4"
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
                 "name": "utopia-php/messaging",
                 "version": "2.1.999",
                 "source": {
