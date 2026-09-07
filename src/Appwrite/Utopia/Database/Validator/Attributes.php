@@ -211,7 +211,7 @@ class Attributes extends Validator
                 // Without the same check a JSON number past PHP_INT_MAX decodes to a float and is
                 // stored verbatim, so an int64 bound round-tripped through a client that cannot
                 // hold it lands in formatOptions as 9.223372036854776e+18.
-                $boundValidator = $type === Database::VAR_FLOAT
+                $boundValidator = \in_array($type, [ColumnType::Float->value, ColumnType::Double->value], true)
                     ? new FloatValidator()
                     : new Integer(false, 64);
 

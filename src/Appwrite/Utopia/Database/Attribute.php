@@ -26,6 +26,7 @@ class Attribute
         // Bytes, the widths createBigIntColumn and createFloatColumn hardcode.
         // Every adapter maps these two types without consulting the size.
         ColumnType::BigInteger->value => 8,
+        'bigint' => 8,
         ColumnType::Float->value => 0,
     ];
 
@@ -101,7 +102,7 @@ class Attribute
             $size = self::FORMAT_SIZES[$format] ?? $size;
         }
 
-        if ($type === Database::VAR_INTEGER) {
+        if ($type === ColumnType::Integer->value) {
             // Same width createIntegerColumn picks. That endpoint takes no size at
             // all, so a size sent inline is ignored rather than left to promise a
             // range the column cannot hold: the 4 byte column only holds a range

@@ -102,14 +102,12 @@ final class MailsTest extends TestCase
                 $message,
                 new Document(['$id' => 'project-x']),
                 $registry,
-                new Log(),
                 new None(),
             );
             $worker->action(
                 $message,
                 new Document(['$id' => 'project-x']),
                 $registry,
-                new Log(),
                 new None(),
             );
         } finally {

@@ -28,7 +28,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -166,7 +165,6 @@ final class DeletesTest extends TestCase
                 executor: $this->createStub(Executor::class),
                 executionRetention: $now,
                 executionsRetentionCount: 0,
-                log: $this->createStub(Log::class),
                 publisherForDeletes: new DeletePublisher($publisher, $queue),
                 publisherForUsage: new UsagePublisher($publisher, $queue),
                 bus: $this->createStub(Bus::class),

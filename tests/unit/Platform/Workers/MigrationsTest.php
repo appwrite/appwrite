@@ -180,9 +180,9 @@ final class MigrationsTest extends TestCase
             'persist:processing:finalizing',
             'destination:success',
             'source:success',
-            'persist:failed:finished',
             'source:error',
             'destination:error',
+            'persist:failed:finished',
         ], $events);
         $this->assertNotContains('persist:completed:finished', $events);
     }

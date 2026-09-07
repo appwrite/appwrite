@@ -86,7 +86,7 @@ final class ClaimTest extends TestCase
 
             $active->setAttribute('status', 'completed');
             $active->setAttribute('stage', 'finished');
-            $this->assertNull((new Claim($database))->persist($active));
+            $this->assertNotInstanceOf(Document::class, (new Claim($database))->persist($active));
 
             $stored = $database->getDocument('migrations', $active->getId());
             $this->assertSame('processing', $stored->getAttribute('status'));

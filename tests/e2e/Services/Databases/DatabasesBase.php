@@ -23,6 +23,7 @@ use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
 
@@ -1595,13 +1596,13 @@ trait DatabasesBase
                 Permission::read(Role::any()),
             ],
             $schemaResource => [
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER],
-                ['key' => 'total', 'type' => Database::VAR_BIGINT],
-                ['key' => 'ratio', 'type' => Database::VAR_FLOAT],
-                ['key' => 'bounded', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value],
+                ['key' => 'total', 'type' => ColumnType::BigInteger->value],
+                ['key' => 'ratio', 'type' => ColumnType::Float->value],
+                ['key' => 'bounded', 'type' => ColumnType::Integer->value, 'min' => 0, 'max' => 100],
                 // The numeric endpoints take no size, so this one cannot narrow the
                 // column below the int64 range the definition still declares
-                ['key' => 'sized', 'type' => Database::VAR_INTEGER, 'size' => 4],
+                ['key' => 'sized', 'type' => ColumnType::Integer->value, 'size' => 4],
             ],
         ]);
 
@@ -1693,7 +1694,7 @@ trait DatabasesBase
             $schemaResource => [
                 // What a client that cannot hold an int64 sends back after reading
                 // the default bounds off an existing column
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
             ],
         ]);
 
@@ -1709,7 +1710,7 @@ trait DatabasesBase
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'String Bounds',
             $schemaResource => [
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => '9223372036854776000'],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => '9223372036854776000'],
             ],
         ]);
 

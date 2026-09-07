@@ -709,13 +709,6 @@ class Migrations extends Action
                     $destinationErrors,
                 ));
 
-                try {
-                    $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-                } catch (Superseded $error) {
-                    Console::warning($error->getMessage());
-                    return;
-                }
-
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
@@ -732,7 +725,12 @@ class Migrations extends Action
                     }
                 }
 
-                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                try {
+                    $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                } catch (Superseded $error) {
+                    Console::warning($error->getMessage());
+                    return;
+                }
 
             } finally {
                 $source?->cleanup();
@@ -1004,24 +1002,13 @@ class Migrations extends Action
      */
     protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
     {
-        if ($this->logError === null) {
-            return;
-        }
-
-        try {
-            ($this->logError)(
-                $error,
-                'appwrite-worker',
-                'appwrite-queue-' . self::getName(),
-                [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source', ''),
-                    'destination' => $migration->getAttribute('destination', ''),
-                    ...$extras,
-                ]
-            );
-        } catch (\Throwable $loggingError) {
-            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+        Span::add('warning.message', $error->getMessage());
+        Span::add('warning.code', $error->getCode());
+        Span::add('migration.id', $migration->getId());
+        Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+        Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
+        foreach ($extras as $key => $value) {
+            Span::add((string) $key, $value);
         }
     }
 
