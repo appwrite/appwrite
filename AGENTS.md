@@ -279,14 +279,6 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
 
-## Tests
-
-**E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
-
-**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters). Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
-
-Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
-
 ## SDK specs
 
 Two independent ways to keep an endpoint out of a generated SDK (both lifted when `_APP_SDK_PREVIEW=enabled`):
