@@ -108,6 +108,35 @@ final class VCSGiteaConsoleClientTest extends Scope
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+
+        $knownIds = $this->listDeploymentIdsHelper($functionId);
+
+        $this->writeFunctionHelper($workdir, 'gitea-v3');
+        $this->gitHelper('git add index.js && git commit -m "Update function [skip ci]"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        // The next push synchronises; a fixed interval would pass either way.
+        $this->writeFunctionHelper($workdir, 'gitea-v4');
+        $this->gitHelper('git add index.js && git commit -m "Update function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        \exec('cd ' . \escapeshellarg($workdir) . ' && git rev-parse HEAD~1 2>&1', $revision, $exitCode);
+        $this->assertSame(0, $exitCode, 'Could not resolve the skipped commit: ' . \implode("\n", $revision));
+        $skippedCommit = \trim($revision[0] ?? '');
+
+        $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v4'), 30000, 1000);
+
+        $this->assertCount(\count($knownIds) + 1, $this->listDeploymentIdsHelper($functionId));
+
+        $statuses = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/commits/' . $skippedCommit . '/statuses');
+        $this->assertEquals(200, $statuses['headers']['status-code']);
+
+        $reasons = \array_column($statuses['body'], 'description');
+        $this->assertNotEmpty(
+            \array_filter($reasons, fn ($reason) => \str_contains((string) $reason, 'Skipped')),
+            'The skipped commit carries no status saying so: ' . \json_encode($reasons)
+        );
     }
 
     /**
