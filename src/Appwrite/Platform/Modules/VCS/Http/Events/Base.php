@@ -128,17 +128,16 @@ abstract class Base extends Action
     }
 
     /**
-     * Runs before the delivery is verified, so a multi-region install can
-     * forward it on unchanged.
+     * Runs before the delivery is verified. Appwrite Cloud overrides this to
+     * fan the raw delivery out to its other regions. Deliberately untyped:
+     * that override declares no return type, and adding one here would make
+     * it incompatible.
      */
     protected function preprocessEvent(Request $request)
     {
         return;
     }
 
-    /**
-     * Whether a delivery is refused when no webhook secret is configured.
-     */
     protected function requiresWebhookSecret(): bool
     {
         return true;
@@ -239,7 +238,7 @@ abstract class Base extends Action
         Span::add("vcs.{$key}.event.repo.name", $providerRepositoryName);
         Span::add("vcs.{$key}.event.branch", $providerBranch);
 
-        // Deploy only pushes we did not commit ourselves, and never a deleted branch.
+        // Our own commits would otherwise deploy themselves in a loop.
         if ($providerCommitAuthorEmail === $this->getCommitEmail() || $providerBranchDeleted) {
             return;
         }
@@ -277,7 +276,7 @@ abstract class Base extends Action
         $external = $parsedPayload['external'] ?? true;
 
         if ($action === 'closed') {
-            // Allowed external contributions cleanup
+            // Only external pull requests were ever recorded as authorized.
             if ($external) {
                 (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, $key, $providerRepositoryId, $providerPullRequestId);
             }
