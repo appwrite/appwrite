@@ -351,29 +351,16 @@ export function DowngradeValidation({
     [remainingProjects, confirmedProjectIds],
   )
 
-  // Inspecting a project costs nine list calls, so only the projects the
-  // estimation already flagged are inspected, and only once the user has
-  // settled which survive. Submit stays blocked by the project overage for
-  // exactly as long as that is pending.
+  // Deferred until the user has settled which projects survive, so the nine
+  // list calls per project are not spent on projects about to be deleted.
+  // Deliberately not narrowed by the estimation's per-project compliance flag:
+  // a project it does not report on would be skipped, and its overage would
+  // then be impossible to resolve because the step never appears.
   const projectSelectionSettled =
     !needsProjectSelection || confirmedProjectIds.size > 0
-  const projectsToInspect = useMemo(() => {
-    const compliance = planChangeLimits?.projectCompliance
-    if (!compliance?.length) return keptProjects
-    // Only skip a project the server evaluated and cleared. One it did not
-    // report on cannot be assumed to fit the plan, or its overage would be
-    // silently unresolvable.
-    const compliant = new Set(
-      compliance
-        .filter((project) => project.isCompliant)
-        .map((project) => project.$id),
-    )
-    return keptProjects.filter((project) => !compliant.has(project.$id))
-  }, [planChangeLimits, keptProjects])
+  const projectsToInspect = keptProjects
   const resourceValidationApplies =
-    projectSelectionSettled &&
-    !planChangeLimitsLoading &&
-    projectsToInspect.length > 0
+    projectSelectionSettled && projectsToInspect.length > 0
   const projectResourceStepPending =
     !projectSelectionSettled && keptProjects.length > 0
   const membersAfterDeletes = membershipsTotal - confirmedMemberIds.size
