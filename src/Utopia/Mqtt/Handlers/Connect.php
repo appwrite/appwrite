@@ -44,7 +44,6 @@ class Connect extends Action
         $offset += 1; // connect flags
         $offset += 2; // keep alive
 
-        $connection->setClientId(Packet::getClientId($body));
         $connection->cleanStart = Packet::isCleanStart($body);
 
         // MQTT 3.1.1 carries no property block; enhanced auth and metadata are 5.0 only.
@@ -77,6 +76,9 @@ class Connect extends Action
             $connection->identity = $identity;
             Span::add('user.id', $identity['userId'] ?? '');
         }
+
+        // needed to be done after the clientId after the identity resolution only
+        $connection->setClientId(Packet::getClientId($body));
 
         $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
         $mqtt->metrics->connectionsActive->add(1);

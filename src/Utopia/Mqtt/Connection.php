@@ -2,6 +2,8 @@
 
 namespace Utopia\Mqtt;
 
+use Exception;
+
 /**
  * Per-connection state, keyed by the transport's file descriptor. Handlers mutate
  * it across the packet lifecycle: CONNECT records the protocol level, client id,
@@ -16,7 +18,7 @@ class Connection
     /** Project id from the CONNECT User Property. */
     public string $projectId = '';
 
-    /** Client Identifier from CONNECT; the per-device session anchor. Empty when the client sends none. */
+    /** The per-device session anchor: the client-supplied CONNECT id, or a derived fallback (see resolveClientId). */
     private string $clientId = '';
 
     /** Clean Start (5.0) / Clean Session (3.1.1): true discards any stored session, so delivery is live-only. */
@@ -43,13 +45,19 @@ class Connection
         return $this->packetId;
     }
 
-    public function setClientId(string $clientId): void 
+    public function setClientId(string $clientId): void
     {
-        if(empty($clientId)) $this->clientId = 'custom_'.$this->projectId.''.$this->identity['userId'];
-        $this->clientId = $clientId;
+        if (empty($this->identity)) {
+            // TODO: has a better way here
+            throw new Exception("Account identity needs to be resolved first");
+        }
+        $this->clientId = $clientId !== ''
+            ? $clientId
+            : 'custom_' . $this->projectId . '_' . ($this->identity['userId'] ?? '');
     }
 
-    public function getClientId() : string {
+    public function getClientId(): string
+    {
         return $this->clientId;
     }
 }
