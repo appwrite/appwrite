@@ -74,7 +74,7 @@ export const db = drizzle({ client: pool })
 
 # Create the table with Drizzle Kit {% #first-migration %}
 
-In Drizzle, you can define your database schema in TypeScript. Each table definition describes its columns, data types, defaults, and constraints. Drizzle uses these definitions to type-check queries, and Drizzle Kit uses them to generate SQL migrations.
+With Drizzle, you can define tables and columns in TypeScript. Drizzle Kit turns that code into SQL migrations.
 
 Define the `books` table in `src/schema.ts`:
 
