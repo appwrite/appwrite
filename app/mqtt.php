@@ -22,6 +22,7 @@ use Utopia\Mqtt\Handlers\Auth as AuthHandler;
 use Utopia\Mqtt\Handlers\Connect as ConnectHandler;
 use Utopia\Mqtt\Handlers\Disconnect as DisconnectHandler;
 use Utopia\Mqtt\Handlers\Ping as PingHandler;
+use Utopia\Mqtt\Handlers\Puback as PubackHandler;
 use Utopia\Mqtt\Handlers\Publish as PublishHandler;
 use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
@@ -165,6 +166,54 @@ if (!function_exists('getProjectDB')) {
     }
 }
 
+if (!function_exists('getCache')) {
+    function getCache(): Cache
+    {
+        $ctx = Coroutine::getContext();
+
+        if (isset($ctx['cache'])) {
+            return $ctx['cache'];
+        }
+
+        global $register;
+
+        $pools = $register->get('pools'); /** @var Group $pools */
+
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = new CachePool($pools->get($value));
+        }
+
+        return $ctx['cache'] = new Cache(new Sharding($adapters));
+    }
+}
+
+if (!function_exists('getRedis')) {
+    function getRedis(): \Redis
+    {
+        $ctx = Coroutine::getContext();
+
+        if (isset($ctx['redis'])) {
+            return $ctx['redis'];
+        }
+
+        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+        $port = System::getEnv('_APP_REDIS_PORT', 6379);
+        $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+        $redis = new \Redis();
+        @$redis->pconnect($host, (int)$port);
+        if ($pass) {
+            $redis->auth($pass);
+        }
+        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+        return $ctx['redis'] = $redis;
+    }
+}
+
 /**
  * Authenticate a CONNECT: resolve the project and verify the session in a child
  * container, using the same domain logic as HTTP/realtime. Returns the identity
@@ -247,6 +296,7 @@ $dispatcher = (new Dispatcher())
     ->addHandler(new SubscribeHandler())
     ->addHandler(new UnsubscribeHandler())
     ->addHandler(new PublishHandler())
+    ->addHandler(new PubackHandler())
     ->addHandler(new AuthHandler())
     ->addHandler(new PingHandler())
     ->addHandler(new DisconnectHandler());
@@ -273,6 +323,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     $projectId = (string) ($event['project'] ?? '');
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
+                    $sequence = (int) ($event['payload']['sequence'] ?? 0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
                     $subscribers = $mqtt->getSubscribers($projectId, $topic);
@@ -294,6 +345,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                             ? V5::publish($topic, $message, $effectiveQos, $packetId)
                             : V3::publish($topic, $message, $effectiveQos, $packetId));
                         $mqtt->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
+
+                        // Hold QoS 1 deliveries until the subscriber's PUBACK matches them back.
+                        if ($effectiveQos === 1) {
+                            $subscriber->track($packetId, $topic, $sequence);
+                        }
                     }
                 });
             } catch (\Throwable $error) {
@@ -313,6 +369,7 @@ $server->onReceive(function (int $fd, string $data) use (
     $dispatcher,
     $authenticate,
     $authorize,
+    $container
 ): void {
     $packet = Packet::parse($data);
     $connection = $mqtt->open($fd);
@@ -332,7 +389,7 @@ $server->onReceive(function (int $fd, string $data) use (
         }
     };
 
-    $packetContainer = new Container();
+    $packetContainer = new Container($container);
     $packetContainer->set('mqtt', fn () => $mqtt);
     $packetContainer->set('connection', fn () => $connection);
     $packetContainer->set('packet', fn () => $packet);

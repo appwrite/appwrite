@@ -21,6 +21,7 @@ class Metrics
     public Counter $messagesPublished;
     public Counter $messagesDelivered;
     public Counter $messagesDropped;
+    public Counter $messagesAcked;
 
     public function __construct(Telemetry $telemetry)
     {
@@ -30,5 +31,6 @@ class Metrics
         $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
         $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
         $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
+        $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
     }
 }
