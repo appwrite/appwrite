@@ -6,6 +6,8 @@ import {
   BLOG_BODY_TEXT_SIZE_CLASS,
   type MarkdocProseVariant,
 } from '@/lib/blog/prose-typography'
+import { MARKDOC_INLINE_LUCIDE_ICON_CLASS, resolveMarkdocIconByName } from '@/lib/docs/markdoc-icons'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 const docsNoteContentClassName = cn(
@@ -33,22 +35,40 @@ const blogNoteContentClassName = cn(
 export function Info({
   title,
   children,
+  icon,
   compact = false,
   proseVariant = 'docs',
 }: {
   title: string
   children?: ReactNode
+  icon?: string
   compact?: boolean
   proseVariant?: MarkdocProseVariant
 }) {
   const isBlog = proseVariant === 'blog'
+  const customIcon = resolveMarkdocIconByName(icon)
+  const hasImageIcon = customIcon?.type === 'image'
 
   return (
     <Alert
       variant="default"
-      className="not-prose my-6 gap-y-2 border-border bg-muted/30 [&>svg]:text-muted-foreground"
+      className={cn(
+        'not-prose my-6 gap-y-2 border-border bg-muted/30 [&>svg]:text-muted-foreground',
+        hasImageIcon &&
+          'has-[>img]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>img]:gap-x-3 [&>img]:size-4 [&>img]:translate-y-0.5 [&>img]:object-contain',
+      )}
     >
-      <InfoIcon className="h-4 w-4" />
+      {customIcon?.type === 'lucide' ? (
+        <customIcon.Icon className={cn(MARKDOC_INLINE_LUCIDE_ICON_CLASS, 'text-muted-foreground')} />
+      ) : hasImageIcon ? (
+        <img
+          src={customIcon.src}
+          alt=""
+          className={cn('size-4', PUBLIC_ICON_MUTED_CLASSES)}
+        />
+      ) : (
+        <InfoIcon className="h-4 w-4" />
+      )}
       <AlertTitle
         className={cn(
           'line-clamp-none min-h-0 font-medium leading-[1.45] text-foreground',

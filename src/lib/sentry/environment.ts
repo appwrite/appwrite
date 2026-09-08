@@ -1,3 +1,17 @@
+import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
+
+/**
+ * True when the app runs on localhost or Vite dev. Sentry must not report in this mode.
+ */
+export function isLocalDevelopmentRuntime(
+  hostname: string = typeof window !== 'undefined'
+    ? window.location.hostname
+    : '',
+): boolean {
+  if (import.meta.env.DEV) return true
+  return isLocalDevelopmentHost(hostname)
+}
+
 /**
  * Resolve the Sentry `environment` tag from where the app is actually running.
  *
@@ -9,18 +23,11 @@ export function getSentryEnvironment(
     ? window.location.hostname
     : '',
 ): string {
-  const host = hostname.trim().toLowerCase()
-
-  if (
-    import.meta.env.DEV ||
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '[::1]' ||
-    host === '::1' ||
-    host.endsWith('.local')
-  ) {
+  if (isLocalDevelopmentRuntime(hostname)) {
     return 'development'
   }
+
+  const host = hostname.trim().toLowerCase()
 
   if (
     host === 'new.appwrite.io' ||

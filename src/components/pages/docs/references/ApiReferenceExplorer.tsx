@@ -15,6 +15,7 @@ import type {
   ReferenceVersion,
 } from '@/lib/docs/references/constants'
 import type { ApiReferenceServiceData } from '@/lib/docs/references/types'
+import { ApiReferenceUiPrefsGate } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { cn } from '@/lib/utils'
 import { ApiReferenceMethodsPanel } from './ApiReferenceMethodsPanel'
 import { ApiReferenceMethodsMobileNav } from './ApiReferenceMethodsMobileNav'
@@ -138,64 +139,66 @@ export function ApiReferenceExplorer({
   }
 
   return (
-    <div
-      className={cn(
-        REFERENCE_EXPLORER_CONTAINER,
-        'flex h-full min-h-0 flex-1 flex-col',
-      )}
-    >
+    <ApiReferenceUiPrefsGate>
       <div
         className={cn(
-          'flex shrink-0 items-center gap-2 border-b border-border px-3 py-2',
-          REFERENCE_EXPLORER_MOBILE_ONLY_CLASS,
+          REFERENCE_EXPLORER_CONTAINER,
+          'flex h-full min-h-0 flex-1 flex-col',
         )}
       >
-        <ApiReferenceSectionSubnavMobile parent={sectionParent} />
-        <ApiReferenceMethodsMobileNav
-          serviceId={data.id}
-          serviceLabel={data.label}
-          methods={data.methods}
-          selectedMethodId={selectedMethodId}
-          onSelectMethod={selectMethod}
-        />
-      </div>
+        <div
+          className={cn(
+            'flex shrink-0 items-center gap-2 border-b border-border px-3 py-2',
+            REFERENCE_EXPLORER_MOBILE_ONLY_CLASS,
+          )}
+        >
+          <ApiReferenceSectionSubnavMobile parent={sectionParent} />
+          <ApiReferenceMethodsMobileNav
+            serviceId={data.id}
+            serviceLabel={data.label}
+            methods={data.methods}
+            selectedMethodId={selectedMethodId}
+            onSelectMethod={selectMethod}
+          />
+        </div>
 
-      <div
-        className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_MOBILE_ONLY_CLASS)}
-      >
-        <ApiReferenceMethodPanel
-          method={selectedMethod}
-          serviceId={data.id}
-          version={version}
-          platform={platform}
-        />
-      </div>
+        <div
+          className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_MOBILE_ONLY_CLASS)}
+        >
+          <ApiReferenceMethodPanel
+            method={selectedMethod}
+            serviceId={data.id}
+            version={version}
+            platform={platform}
+          />
+        </div>
 
-      <div className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_DESKTOP_ONLY_CLASS)}>
-        <ReferenceColumnsResizableLayout
-          layout={columnsLayout}
-          persistLayout={persistColumnsLayout}
-          handleClassName={REFERENCE_RESIZE_HANDLE_CLASS}
-          className="h-full min-h-0 overflow-hidden"
-          methods={
-            <ApiReferenceMethodsPanel
-              serviceId={data.id}
-              serviceLabel={data.label}
-              methods={data.methods}
-              selectedMethodId={selectedMethodId}
-              onSelectMethod={selectMethod}
-            />
-          }
-          request={
-            <ApiReferenceMethodPanel
-              method={selectedMethod}
-              serviceId={data.id}
-              version={version}
-              platform={platform}
-            />
-          }
-        />
+        <div className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_DESKTOP_ONLY_CLASS)}>
+          <ReferenceColumnsResizableLayout
+            layout={columnsLayout}
+            persistLayout={persistColumnsLayout}
+            handleClassName={REFERENCE_RESIZE_HANDLE_CLASS}
+            className="h-full min-h-0 overflow-hidden"
+            methods={
+              <ApiReferenceMethodsPanel
+                serviceId={data.id}
+                serviceLabel={data.label}
+                methods={data.methods}
+                selectedMethodId={selectedMethodId}
+                onSelectMethod={selectMethod}
+              />
+            }
+            request={
+              <ApiReferenceMethodPanel
+                method={selectedMethod}
+                serviceId={data.id}
+                version={version}
+                platform={platform}
+              />
+            }
+          />
+        </div>
       </div>
-    </div>
+    </ApiReferenceUiPrefsGate>
   )
 }

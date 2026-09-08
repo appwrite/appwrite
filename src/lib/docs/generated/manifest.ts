@@ -1796,7 +1796,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     slug: 'products/databases',
     title: 'Databases',
     description:
-      'Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.',
+      'Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.',
     layout: 'article',
     readingTimeMinutes: 2,
   },
@@ -2210,9 +2210,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     slug: 'products/databases/postgresql',
-    title: 'PostgreSQL',
+    title: 'Managed PostgreSQL',
     description:
-      'Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.',
+      'Host a managed PostgreSQL database on Appwrite. Connect with psql, Prisma, or Drizzle, install pgvector, and get backups, replicas, pooling, and PITR.',
     layout: 'article',
     readingTimeMinutes: 5,
   },
@@ -2484,7 +2484,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     slug: 'products/databases/postgresql/quick-start',
     title: 'Quick start',
     description:
-      'Create your first native PostgreSQL database in the Appwrite Console, run your first queries in the SQL editor, and connect with psql.',
+      'Create a managed PostgreSQL database in the Appwrite Console, run SQL in the editor, and connect with psql, Prisma, or Drizzle over TLS.',
     layout: 'article',
     readingTimeMinutes: 2,
   },

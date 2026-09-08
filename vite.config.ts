@@ -99,6 +99,7 @@ function getTanstackStartCloudOptions() {
     prerender: {
       enabled: true,
       crawlLinks: false,
+      filter: ({ path }: { path: string }) => isInitPrerenderPath(path),
       concurrency: 1,
       failOnError: true,
     },
@@ -121,17 +122,21 @@ export default defineConfig(async () => {
     : []
 
   return {
+    base: process.env.CDN_ORIGIN
+      ? `${process.env.CDN_ORIGIN.replace(/\/$/, '')}/`
+      : '/',
     plugins: [
       // this is the plugin that enables path aliases
       viteTsConfigPaths({
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(
-        isSitesBuild
+      tanstackStart({
+        router: { basepath: '/' },
+        ...(isSitesBuild
           ? getTanstackStartSitesOptions()
-          : getTanstackStartCloudOptions(),
-      ),
+          : getTanstackStartCloudOptions()),
+      }),
       devtoolsJson(),
       viteReact(),
       docsContentHmrPlugin(),

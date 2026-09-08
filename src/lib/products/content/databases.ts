@@ -2,21 +2,31 @@ import type { ProductPageContent } from '@/lib/products/types'
 
 export const databasesProductContent: ProductPageContent = {
   id: 'databases',
+  metaTitle: 'Managed PostgreSQL hosting and app databases',
   metaDescription:
-    'Store and query data with TablesDB, DocumentsDB, VectorsDB, PostgreSQL, and MySQL. Choose serverless or dedicated, with replication, backups, and PITR.',
+    'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.',
   hero: {
-    title: 'Databases for every data model',
+    title: 'Managed PostgreSQL and databases for every model',
     description:
-      'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.',
+      'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.',
   },
   faq: [
+    {
+      question: 'Does Appwrite offer managed PostgreSQL?',
+      answer:
+        'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.',
+      links: [
+        { label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' },
+        { label: 'PostgreSQL quick start', href: '/docs/products/databases/postgresql/quick-start' },
+      ],
+    },
     {
       question: 'What database engines does Appwrite offer?',
       answer:
         'Appwrite Databases include five engines in two categories. Appwrite DBs are TablesDB for relational-style tables and columns, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. Native DBs are managed PostgreSQL and MySQL for teams that need full SQL compatibility, extensions, and portable schemas.',
       links: [
         { label: 'Databases overview', href: '/docs/products/databases' },
-        { label: 'Quick start', href: '/docs/products/databases/quick-start' },
+        { label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' },
       ],
     },
     {
@@ -24,8 +34,8 @@ export const databasesProductContent: ProductPageContent = {
       answer:
         'Choose TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, Console workflows, and Auth-aware permissions out of the box. Choose PostgreSQL or MySQL when you need advanced SQL, existing ORM tooling, extensions such as pgvector, or to run schemas you already operate elsewhere.',
       links: [
+        { label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' },
         { label: 'Tables', href: '/docs/products/databases/tables' },
-        { label: 'Queries', href: '/docs/products/databases/queries' },
       ],
     },
     {

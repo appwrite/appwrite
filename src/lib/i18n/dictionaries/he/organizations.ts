@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heOrganizationsDictionary: Record<string, string> = {
+  'A valid transfer price is required to continue.':
+    'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
+  "We couldn't load a transfer price. Try again to continue.":
+    'לא הצלחנו לטעון מחיר להעברת הדומיין. נסו שוב כדי להמשיך.',
+  'Transfer pricing is unavailable for this domain. Try another domain or contact support.':
+    'מחיר ההעברה אינו זמין עבור הדומיין הזה. נסו דומיין אחר או פנו לתמיכה.',
+
   '(optional)': '(אופציונלי)',
   ', all billable services will be paused until the next billing cycle or until you increase your limit.':
     ', כל השירותים בתשלום יושהו עד מחזור החיוב הבא או עד שתגדילו את המגבלה.',

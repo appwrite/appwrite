@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useWebGLAvailable } from '@/hooks/use-webgl-available'
 import {
   Color,
   PerspectiveCamera,
@@ -133,9 +134,13 @@ function WebGLRendererConfig({ maxPixelRatio = 1.5 }: { maxPixelRatio?: number }
   const { gl, size } = useThree()
 
   useEffect(() => {
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
-    gl.setSize(size.width, size.height)
-    gl.setClearColor(0x000000, 0)
+    try {
+      gl.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
+      gl.setSize(size.width, size.height)
+      gl.setClearColor(0x000000, 0)
+    } catch {
+      /* WebGL context can be missing on low-end or blocked GPUs */
+    }
   }, [gl, maxPixelRatio, size.height, size.width])
 
   return null
@@ -433,43 +438,60 @@ export function World({
   maxPixelRatio = 1.5,
   onReady,
 }: WorldProps) {
+  const eventSourceRef = useRef<HTMLDivElement>(null)
+  const webglAvailable = useWebGLAvailable()
+  const skippedReadyRef = useRef(false)
+
+  useEffect(() => {
+    if (webglAvailable !== false || skippedReadyRef.current) return
+    skippedReadyRef.current = true
+    onReady?.()
+  }, [onReady, webglAvailable])
+
+  if (webglAvailable !== true) {
+    return null
+  }
+
   return (
-    <Canvas
-      className="h-full w-full"
-      dpr={[1, maxPixelRatio]}
-      frameloop={active ? 'always' : 'never'}
-      gl={{
-        alpha: true,
-        antialias: true,
-        powerPreference: 'high-performance',
-      }}
-      camera={{
-        fov: 50,
-        position: [0, 0, CAMERA_Z],
-        near: 180,
-        far: 1800,
-      }}
-    >
-      <WebGLRendererConfig maxPixelRatio={maxPixelRatio} />
-      <CameraSync />
-      <FirstFrameNotifier onReady={onReady} />
-      <GlobeRenderControl active={active} />
-      <GlobeLights
-        key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
-        globeConfig={globeConfig}
-      />
-      <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
-      <OrbitControls
-        enablePan={false}
-        enableZoom={false}
-        minDistance={CAMERA_Z}
-        maxDistance={CAMERA_Z}
-        autoRotateSpeed={globeConfig.autoRotateSpeed ?? 1}
-        autoRotate={active && (globeConfig.autoRotate ?? true)}
-        minPolarAngle={Math.PI / 3.5}
-        maxPolarAngle={Math.PI - Math.PI / 3}
-      />
-    </Canvas>
+    <div ref={eventSourceRef} className="h-full w-full">
+      <Canvas
+        className="h-full w-full"
+        eventSource={eventSourceRef}
+        dpr={[1, maxPixelRatio]}
+        frameloop={active ? 'always' : 'never'}
+        gl={{
+          alpha: true,
+          antialias: true,
+          powerPreference: 'high-performance',
+        }}
+        camera={{
+          fov: 50,
+          position: [0, 0, CAMERA_Z],
+          near: 180,
+          far: 1800,
+        }}
+      >
+        <WebGLRendererConfig maxPixelRatio={maxPixelRatio} />
+        <CameraSync />
+        <FirstFrameNotifier onReady={onReady} />
+        <GlobeRenderControl active={active} />
+        <GlobeLights
+          key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
+          globeConfig={globeConfig}
+        />
+        <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          minDistance={CAMERA_Z}
+          maxDistance={CAMERA_Z}
+          autoRotateSpeed={globeConfig.autoRotateSpeed ?? 1}
+          autoRotate={active && (globeConfig.autoRotate ?? true)}
+          minPolarAngle={Math.PI / 3.5}
+          maxPolarAngle={Math.PI - Math.PI / 3}
+        />
+      </Canvas>
+    </div>
   )
 }
 

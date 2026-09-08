@@ -1,7 +1,11 @@
+import { useLocation } from '@tanstack/react-router'
 import type { DocsPageData } from '@/lib/docs/types'
 import { getDocsPage } from '@/lib/docs/content'
 import { DOCS_CONTENT_HMR_EVENT } from '@/lib/docs/docs-content-hmr-runtime'
-import { pageHasDocsPrompt, resolveDocsPagePrompt } from '@/lib/docs/route-prompts'
+import {
+  pageHasDocsPrompt,
+  resolveDocsPagePrompt,
+} from '@/lib/docs/route-prompts'
 import { useEffect, useRef, useState } from 'react'
 import { DocsLayout } from './DocsLayout'
 import { DocsMarkdown } from './DocsMarkdown'
@@ -40,6 +44,7 @@ function isSameDocsPage(a: DocsPageData, b: DocsPageData): boolean {
 
 export function View({ page: initialPage }: ViewProps) {
   const [page, setPage] = useState(initialPage)
+  const { pathname, hash } = useLocation()
   const pageRef = useRef(page)
   pageRef.current = page
 
@@ -47,6 +52,36 @@ export function View({ page: initialPage }: ViewProps) {
     if (isSameDocsPage(pageRef.current, initialPage)) return
     setPage(initialPage)
   }, [initialPage])
+
+  useEffect(() => {
+    // The loader can finish before View swaps its local page. Only scroll once
+    // the destination article (and its headings) is actually in the DOM.
+    if (pathname.replace(/\/+$/, '') !== `/docs/${page.meta.slug}` || !hash)
+      return
+
+    const main = document.getElementById('main-content')
+    if (!main) return
+
+    let id = hash.replace(/^#/, '')
+    try {
+      id = decodeURIComponent(id)
+    } catch {
+      // A malformed escape can still be a literal heading ID.
+    }
+    const target = document.getElementById(id)
+    if (!target || !main.contains(target)) return
+
+    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0
+    main.scrollTo({
+      top:
+        main.scrollTop +
+        target.getBoundingClientRect().top -
+        main.getBoundingClientRect().top -
+        main.clientTop -
+        margin,
+      behavior: 'instant',
+    })
+  }, [pathname, hash, page.meta.slug])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return

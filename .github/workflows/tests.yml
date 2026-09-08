@@ -14,6 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check deployment scripts
+        run: |
+          bash -n .github/scripts/extract-assets.sh
+          sh -n .github/scripts/publish-assets.sh
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:

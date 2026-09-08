@@ -33,17 +33,21 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 export function ErrorComponent({
-  error,
+  error: caughtError,
   info,
   reset,
   preview = false,
 }: {
-  error: Error
+  error: unknown
   info?: { componentStack: string }
   reset: () => void
   /** When true, used for debug preview: skips Sentry and parent postMessage. */
   preview?: boolean
 }) {
+  const error = useMemo(
+    () => caughtError instanceof Error ? caughtError : new Error(String(caughtError)),
+    [caughtError],
+  )
   const t = useT()
   const [reloading, setReloading] = useState(false)
   const randomErrorId = useRef<string>(

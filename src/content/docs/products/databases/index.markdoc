@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Databases
-description: Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.
+description: Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.
 ---
 
 Appwrite Databases provide performant and scalable storage for your application, business, and user data. Choose the database that fits your use case, from managed APIs with permissions and realtime to dedicated native engines you connect to directly.
@@ -37,8 +37,8 @@ If you leave `specification` out when creating a database, it lands on the share
 Native database engines provisioned for your project with direct connection access and no abstraction layer. Available on dedicated infrastructure.
 
 {% cards %}
-{% cards_item href="/docs/products/databases/postgresql" title="PostgreSQL" %}
-A dedicated, native PostgreSQL database you connect to directly.
+{% cards_item href="/docs/products/databases/postgresql" title="Managed PostgreSQL" %}
+Hosted PostgreSQL with direct connections, backups, pgvector, and full SQL.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql" title="MySQL" %}
 A dedicated, native MySQL database you connect to directly.

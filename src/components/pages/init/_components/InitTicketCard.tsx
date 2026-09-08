@@ -29,6 +29,7 @@ import {
 } from '@/lib/init/ticket-layout'
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
 import {
+  isIOSDevice,
   prefersInitTicketDeviceTilt,
   requiresInitTicketDeviceOrientationPermission,
   useInitTicketDeviceTilt,
@@ -634,9 +635,10 @@ export const InitTicketCard = forwardRef<
 
   useEffect(() => {
     if (!deviceTiltEnabled) return
-    if (!requiresInitTicketDeviceOrientationPermission()) {
-      void startDeviceTilt()
-    }
+    // iOS (and browsers with requestPermission) require a user gesture; never
+    // auto-start orientation access from an effect.
+    if (isIOSDevice() || requiresInitTicketDeviceOrientationPermission()) return
+    void startDeviceTilt({ skipPermission: true })
   }, [deviceTiltEnabled, startDeviceTilt])
 
   const computeTiltAtClientCoords = useCallback(
@@ -728,6 +730,7 @@ export const InitTicketCard = forwardRef<
     const isPointerOverScene = (clientX: number, clientY: number) => {
       const scene = sceneRef.current
       if (!scene) return false
+      if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return false
 
       const target = document.elementFromPoint(clientX, clientY)
       if (target && (target === scene || scene.contains(target))) return true
@@ -843,7 +846,14 @@ export const InitTicketCard = forwardRef<
 
       if (event.pointerType === 'touch') {
         touchActiveRef.current = true
-        event.currentTarget.setPointerCapture(event.pointerId)
+        const captureTarget = event.currentTarget
+        if (captureTarget && typeof captureTarget.setPointerCapture === 'function') {
+          try {
+            captureTarget.setPointerCapture(event.pointerId)
+          } catch {
+            /* pointer already released */
+          }
+        }
         if (!deviceTiltEnabled) {
           updateTiltFromPointer(event)
         }

@@ -310,6 +310,26 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Create a database, choose your engine and compute model, and query your first data in minutes.':
     'データベースを作成し、エンジンとコンピュートモデルを選んで、数分で最初のデータをクエリできます。',
   'Databases docs': 'データベースのドキュメント',
+  'Does Appwrite offer managed PostgreSQL?': 'Appwrite はマネージド PostgreSQL を提供していますか?',
+  'Managed PostgreSQL and databases for every model':
+    'マネージド PostgreSQL とあらゆるモデル向けのデータベース',
+  'Managed PostgreSQL and MySQL': 'マネージド PostgreSQL と MySQL',
+  'Managed PostgreSQL hosting and app databases':
+    'マネージド PostgreSQL ホスティングとアプリ向けデータベース',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'フル SQL、pgvector、Prisma や Drizzle などの既存ツール向けの移植可能なスキーマを備えたマネージド PostgreSQL ホスティング。',
+  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
+    'pgvector 対応のマネージド PostgreSQL ホスティングに加え、TablesDB、DocumentsDB、VectorsDB。専用コンピュート、バックアップ、レプリカ、PITR。',
+  'PostgreSQL docs': 'PostgreSQL のドキュメント',
+  'PostgreSQL quick start': 'PostgreSQL のクイックスタート',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    '標準の SQL クライアントで接続する専用マネージド PostgreSQL および MySQL エンジン。',
+  'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.':
+    '標準クライアントとコンソール内 SQL エディタで使えるホスト型 PostgreSQL と MySQL。pgvector、PostGIS、移植可能なスキーマ、既存の ORM をそのまま使えます。',
+  'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
+    'テーブル、ドキュメント、ベクトルと並べてマネージド PostgreSQL を実行します。Prisma または psql で接続し、pgvector をインストールし、バックアップ、レプリカ、PITR 付きの専用コンピュートをスケールできます。',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
+    'はい。ネイティブ PostgreSQL データベースは、プロジェクトのリージョンにプロビジョニングされる専用のマネージド PostgreSQL インスタンスです。psql、Prisma、Drizzle、または任意の PostgreSQL ドライバーで TLS 経由で接続します。Appwrite がコンピュート、バックアップ、レプリカ、コネクションプーラー、ポイントインタイムリカバリを用意します。既定は PostgreSQL 18 で、17 もサポートされます。',
   'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
   'Do Appwrite DBs integrate with Auth permissions?': 'Appwrite DBs は認証の権限と連携しますか?',
   'Embeddings and similarity search for semantic retrieval and AI features.':

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/tanstackstart-react'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { isLocalDevelopmentRuntime } from '@/lib/sentry/environment'
 import { initSentryClient } from '@/lib/sentry/init-client'
 import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
@@ -10,6 +11,7 @@ export { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 const reportedErrors = new WeakSet<object>()
 
 export function isSentryReportingEnabled(): boolean {
+  if (isLocalDevelopmentRuntime()) return false
   return !!getRuntimeConfig().sentryDsn && canTrackAnalytics()
 }
 
@@ -175,7 +177,7 @@ export function captureExceptionWithContext(
  * Prefer this over waiting for the error UI to mount - the UI can fail to render.
  */
 export function reportRouterCaughtError(
-  error: Error,
+  error: unknown,
   errorInfo?: { componentStack?: string | null },
   options?: { source?: string; pathname?: string; href?: string },
 ): string | undefined {

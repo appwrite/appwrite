@@ -1399,6 +1399,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Native databases': 'מסדי נתונים native',
   'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.':
     'מנועי PostgreSQL ו-MySQL ייעודיים לצוותים שצריכים תאימות SQL ישירה.',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    'מנועי PostgreSQL ו-MySQL מנוהלים ייעודיים שמתחברים אליהם עם לקוחות SQL סטנדרטיים.',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'אירוח PostgreSQL מנוהל עם SQL מלא, pgvector וסכמות ניידות ל-Prisma, Drizzle ולכלים קיימים.',
   'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.':
     'מנוע PostgreSQL ייעודי לצוותים שצריכים תאימות SQL ישירה.',
   'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.':

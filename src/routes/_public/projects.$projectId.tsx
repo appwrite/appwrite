@@ -173,10 +173,10 @@ function ProjectRouteErrorComponent({
   error,
   reset,
 }: {
-  error: Error
+  error: unknown
   reset: () => void
 }) {
-  return <ProjectAccessErrorView error={error} reset={reset} />
+  return <ProjectAccessErrorView error={error instanceof Error ? error : new Error(String(error))} reset={reset} />
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({

@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Quick start
-description: Create your first native PostgreSQL database in the Appwrite Console, run your first queries in the SQL editor, and connect with psql.
+description: Create a managed PostgreSQL database in the Appwrite Console, run SQL in the editor, and connect with psql, Prisma, or Drizzle over TLS.
 ---
 
 You can create a PostgreSQL database and run your first query in a few minutes.

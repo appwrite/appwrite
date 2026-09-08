@@ -147,6 +147,7 @@ export const jaCatalog: EnCatalog = {
           ...enCatalog.app.footer.expanded.products,
           auth: '認証',
           databases: 'データベース',
+          postgresql: 'PostgreSQL',
           storage: 'ストレージ',
           functions: 'Functions',
           messaging: 'メッセージング',
@@ -193,6 +194,7 @@ export const jaCatalog: EnCatalog = {
           vsSupabase: 'Appwrite vs. Supabase', // pragma: allowlist secret
           vsFirebase: 'Appwrite vs. Firebase', // pragma: allowlist secret
           vsNeon: 'Appwrite vs. Neon', // pragma: allowlist secret
+          postgresqlHosting: 'PostgreSQL ホスティング',
           vsVercel: 'Appwrite vs. Vercel', // pragma: allowlist secret
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
@@ -269,11 +271,6 @@ export const jaCatalog: EnCatalog = {
       noRecentPages: '最近のページはありません',
       searchPlaceholder: '検索...',
     },
-    consoleBanner: {
-      ...enCatalog.app.consoleBanner,
-      messagePrefix: 'アイデアを動くプロダクトに。Vibe coding powered by',
-      dismiss: 'バナーを閉じる',
-    },
     debugMenu: enCatalog.app.debugMenu,
   },
   website: {
@@ -346,7 +343,7 @@ export const jaCatalog: EnCatalog = {
         authDescription:
           'メール、SMS、OAuth、匿名セッション、Magic URL でユーザーを安全に認証します。',
         databasesDescription:
-          'Appwrite データベース、またはネイティブ PostgreSQL と MySQL でモデル化、クエリ、スケールし、ユースケースとチームのニーズに合わせられます。', // pragma: allowlist secret
+          'Appwrite データベース、またはマネージド PostgreSQL と MySQL でモデル化、クエリ、スケールし、ユースケースとチームのニーズに合わせられます。', // pragma: allowlist secret
         storageDescription:
           '圧縮、暗号化、画像変換、アクセス制御でファイルを保存します。',
         functionsDescription:
@@ -400,7 +397,7 @@ export const jaCatalog: EnCatalog = {
         items: {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'メール、OAuth、SMS、MFA、チーム、セッション。',
-          databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
+          databasesTagline: 'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',

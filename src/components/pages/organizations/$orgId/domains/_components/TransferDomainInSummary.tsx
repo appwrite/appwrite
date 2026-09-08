@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { DomainTransferPriceQuote } from '@/lib/react-query/hooks/domains'
@@ -21,6 +22,7 @@ type TransferDomainInSummaryProps = {
   isPriceLoading: boolean
   priceError: boolean
   quote: DomainTransferPriceQuote | undefined
+  onRetry: () => void
 }
 
 /**
@@ -31,10 +33,16 @@ export function TransferDomainInSummary({
   isPriceLoading,
   priceError,
   quote,
+  onRetry,
 }: TransferDomainInSummaryProps) {
   const t = useT()
   const hasDomain = quotedDomain.length > 0
-  const hasTransferPrice = quote?.price != null && quote.price > 0
+  const hasTransferPrice =
+    !isPriceLoading &&
+    !priceError &&
+    quote?.price != null &&
+    Number.isFinite(quote.price) &&
+    quote.price > 0
   const periodYears = quote?.periodYears ?? 1
   const periodLabel =
     periodYears === 1 ? t('1 year') : `${periodYears} ${t('years')}`
@@ -84,11 +92,19 @@ export function TransferDomainInSummary({
               <Skeleton className="h-10 w-full rounded-md bg-muted/50" />
             </div>
           ) : priceError ? (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {t(
-                "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.",
-              )}
-            </p>
+            <div role="status" className="space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">
+                {t("We couldn't load a transfer price. Try again to continue.")}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+              >
+                {t('Try again')}
+              </Button>
+            </div>
           ) : hasTransferPrice ? (
             <>
               <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
@@ -121,16 +137,22 @@ export function TransferDomainInSummary({
                 </div>
               ) : null}
             </>
-          ) : quote?.premium ? (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {t(
-                'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.',
-              )}
-            </p>
           ) : (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {t('Pricing is confirmed when you submit payment.')}
-            </p>
+            <div role="status" className="space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">
+                {t(
+                  'Transfer pricing is unavailable for this domain. Try another domain or contact support.',
+                )}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+              >
+                {t('Try again')}
+              </Button>
+            </div>
           )}
         </div>
 

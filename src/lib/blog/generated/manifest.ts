@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "drizzle-orm-appwrite-postgres",
+    "href": "/blog/post/drizzle-orm-appwrite-postgres",
+    "title": "Use Drizzle ORM with Appwrite Postgres",
+    "description": "Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "prisma-orm-appwrite-postgres",
     "href": "/blog/post/prisma-orm-appwrite-postgres",
     "title": "Use Prisma ORM with Appwrite Postgres",
@@ -304,6 +318,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "jake-barnby",
     "category": "announcement",
     "featured": true,
+    "metaTitle": "Managed PostgreSQL hosting with pgvector in Appwrite",
     "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },

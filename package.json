@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run generate:routes && bun run generate:github-stars && bun run generate:specs && bun run generate:cover-manifest && bun run generate:blog-manifest && vite build && bun run generate:specs --copy && bun run generate:sitemap && bun run generate:docs-exports",
-    "build:node": "bun run generate:routes && bun run generate:github-stars && bun run generate:specs && bun run generate:cover-manifest && bun run generate:blog-manifest && rm -rf dist && FOR_SITES=true vite build && bun run generate:specs --copy && bun run generate:sitemap && bun run generate:docs-exports",
+    "build": "bun run generate:routes && bun run generate:github-stars && bun run generate:specs && bun run generate:cover-manifest && bun run generate:blog-manifest && vite build && bun run scripts/check-prerender-styles.ts && bun run generate:specs --copy && bun run generate:sitemap && bun run generate:docs-exports",
+    "build:node": "bun run generate:routes && bun run generate:github-stars && bun run generate:specs && bun run generate:cover-manifest && bun run generate:blog-manifest && rm -rf dist && FOR_SITES=true vite build && bun run scripts/check-prerender-styles.ts && bun run generate:specs --copy && bun run generate:sitemap && bun run generate:docs-exports",
     "check": "tsc --noEmit",
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
     "dev": "tsr generate && vite dev --port 3000",
@@ -56,7 +56,7 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@0d593a8",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -104,8 +104,8 @@
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.90.2",
-    "@tanstack/react-router": "1.132.31",
-    "@tanstack/react-start": "1.132.32",
+    "@tanstack/react-router": "1.170.33",
+    "@tanstack/react-start": "1.168.50",
     "@vercel/og": "^0.11.1",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-search": "^0.15.0",
@@ -172,7 +172,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@tanstack/router-cli": "^1.132.21",
+    "@tanstack/router-cli": "1.167.34",
     "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
