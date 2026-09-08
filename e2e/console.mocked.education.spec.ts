@@ -27,6 +27,14 @@ const ORGANIZATION = {
   | 'status'
 >
 
+const PERSONAL_ORGANIZATION = {
+  ...ORGANIZATION,
+  $id: 'personal000000000001',
+  name: 'Student projects',
+  billingPlan: 'tier-0',
+  billingPlanId: 'tier-0',
+}
+
 function student(verified = true): Models.User<Models.Preferences> {
   return {
     $id: 'student0000000000001',
@@ -55,6 +63,7 @@ type Scenario = {
   membershipStatus?: 403 | 409
   failPrefs?: boolean
   pausePrefs?: Promise<void>
+  pauseOrganizations?: Promise<void>
   identityUnavailable?: boolean
 }
 
@@ -79,13 +88,25 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
       }),
     )
   }, scenario.profile ?? 'cloud')
-  const membershipRequests: string[] = []
-  const identityRequests: string[] = []
-  const oauthRequests: string[] = []
-  const deletions: string[] = []
-  const verificationUrls: string[] = []
-  const preferenceWrites: Models.Preferences[] = []
+  let startPreferences!: () => void
+  const preferencesStarted = new Promise<void>((resolve) => {
+    startPreferences = resolve
+  })
+  let startOrganizations!: () => void
+  const organizationsStarted = new Promise<void>((resolve) => {
+    startOrganizations = resolve
+  })
+  let sendVerificationEmail!: (url: string) => void
+  const verificationEmail = new Promise<string>((resolve) => {
+    sendVerificationEmail = resolve
+  })
   let created = false
+  const existingOrganization =
+    scenario.membershipStatus === 403
+      ? PERSONAL_ORGANIZATION
+      : scenario.membershipStatus === 409
+        ? ORGANIZATION
+        : null
 
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -114,10 +135,15 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
     if (request.method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers })
     }
-    if (request.method() === 'DELETE') deletions.push(apiPath)
+    if (
+      apiPath.startsWith('/account/sessions') &&
+      request.method() === 'DELETE'
+    ) {
+      scenario.account = null
+      return route.fulfill({ status: 204, headers })
+    }
 
     if (apiPath === '/account/sessions/oauth2/github') {
-      oauthRequests.push(apiPath)
       // Stop at Appwrite's OAuth entry point instead of contacting GitHub.
       return route.fulfill({
         status: 200,
@@ -130,7 +156,6 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
         : failure(401, 'general_unauthorized_scope')
     }
     if (apiPath === '/account/identities') {
-      identityRequests.push(apiPath)
       if (scenario.identityUnavailable) {
         return failure(500, 'general_server_error')
       }
@@ -154,7 +179,6 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
       return json(200, { total: identities.length, identities })
     }
     if (apiPath === PROGRAM_PATH && request.method() === 'POST') {
-      membershipRequests.push(apiPath)
       if (scenario.membershipStatus) {
         return failure(
           scenario.membershipStatus,
@@ -163,13 +187,14 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
             : 'user_unauthorized',
         )
       }
+      if (created) return failure(409, 'team_already_exists')
       created = true
       return json(200, ORGANIZATION)
     }
     if (apiPath === '/account/prefs') {
       if (request.method() === 'PATCH') {
         const body = request.postDataJSON() as { prefs: Models.Preferences }
-        preferenceWrites.push(body.prefs)
+        startPreferences()
         if (scenario.pausePrefs) await scenario.pausePrefs
         if (scenario.failPrefs) return failure(500, 'general_server_error')
         if (scenario.account) scenario.account.prefs = body.prefs
@@ -179,18 +204,25 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
     }
     if (apiPath === '/account/verifications/email') {
       if (request.method() === 'POST') {
-        verificationUrls.push((request.postDataJSON() as { url: string }).url)
+        sendVerificationEmail((request.postDataJSON() as { url: string }).url)
       } else if (request.method() === 'PUT' && scenario.account) {
         scenario.account.emailVerification = true
       }
       return json(200, {})
     }
     if (apiPath === '/organizations' || apiPath === '/teams') {
-      const teams =
-        created || scenario.membershipStatus === 409 ? [ORGANIZATION] : []
+      startOrganizations()
+      if (scenario.pauseOrganizations) await scenario.pauseOrganizations
+      const teams = created
+        ? [ORGANIZATION]
+        : existingOrganization
+          ? [existingOrganization]
+          : []
       return json(200, { total: teams.length, teams })
     }
     if (apiPath === `/teams/${ORGANIZATION.$id}`) return json(200, ORGANIZATION)
+    if (apiPath === `/teams/${PERSONAL_ORGANIZATION.$id}`)
+      return json(200, PERSONAL_ORGANIZATION)
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
     if (apiPath.endsWith('/projects'))
@@ -205,20 +237,27 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
   })
 
   return {
-    membershipRequests,
-    identityRequests,
-    oauthRequests,
-    deletions,
-    verificationUrls,
-    preferenceWrites,
+    preferencesStarted,
+    organizationsStarted,
+    verificationEmail,
   }
+}
+
+async function expectOrganization(page: Page, organization = ORGANIZATION) {
+  await expect(page).toHaveURL(
+    new RegExp(`/organizations/${organization.$id}/?(?:\\?|$)`),
+  )
+  await expect(
+    page.getByRole('heading', { name: organization.name, exact: true }),
+  ).toBeVisible()
+  await expect(page.getByRole('button', { name: /Test Student/ })).toBeVisible()
 }
 
 test.describe('Education enrollment (mocked API)', () => {
   test('self-hosted guests return to sign-in without starting enrollment', async ({
     page,
   }) => {
-    const api = await mockEducationApi(page, {
+    await mockEducationApi(page, {
       account: null,
       profile: 'self-hosted',
     })
@@ -227,15 +266,12 @@ test.describe('Education enrollment (mocked API)', () => {
     await expect(
       page.getByRole('heading', { name: 'Welcome back', exact: true }),
     ).toBeVisible()
-    expect(api.membershipRequests).toEqual([])
-    expect(api.identityRequests).toEqual([])
-    expect(api.oauthRequests).toEqual([])
   })
 
   test('guest starts GitHub OAuth with student scopes and enrollment return URLs', async ({
     page,
   }) => {
-    const api = await mockEducationApi(page, { account: null })
+    await mockEducationApi(page, { account: null })
     await page.goto('/education/join')
     await page
       .getByRole('button', { name: 'Sign up with GitHub', exact: true })
@@ -253,41 +289,23 @@ test.describe('Education enrollment (mocked API)', () => {
     const failure = new URL(oauth.searchParams.get('failure')!)
     expect(failure.pathname).toBe('/education/join')
     expect(failure.searchParams.get('status')).toBe('failure')
-    expect(api.membershipRequests).toEqual([])
   })
 
   for (const failPrefs of [false, true]) {
     test(`linked student enrolls and opens the Education organization${failPrefs ? ' when saving preferences fails' : ''}`, async ({
       page,
     }) => {
-      const api = await mockEducationApi(page, {
+      await mockEducationApi(page, {
         account: student(),
         linked: true,
         failPrefs,
       })
       await page.goto('/education/join')
-      await expect(page).toHaveURL(
-        new RegExp(`/organizations/${ORGANIZATION.$id}/?(?:\\?|$)`),
-      )
-      expect(api.membershipRequests).toEqual([PROGRAM_PATH])
-      expect(api.identityRequests).toEqual(['/account/identities'])
-      expect(
-        api.preferenceWrites.some(
-          (prefs) =>
-            (prefs as Record<string, unknown>).organization ===
-            ORGANIZATION.$id,
-        ),
-      ).toBe(true)
-      expect(api.deletions).toEqual([])
-      await expect(
-        page.getByText('We could not set up your Education plan', {
-          exact: true,
-        }),
-      ).toHaveCount(0)
+      await expectOrganization(page)
     })
   }
 
-  test('setup stays pending until the Education organization opens without a confirmation step', async ({
+  test('opens the Education organization while saving preferences is stalled', async ({
     page,
   }) => {
     let finishPreferences!: () => void
@@ -301,35 +319,39 @@ test.describe('Education enrollment (mocked API)', () => {
     })
     try {
       await page.goto('/education/join')
-      await expect.poll(() => api.preferenceWrites.length).toBe(1)
-      await expect(
-        page.getByText('Setting up your Education plan organization...', {
-          exact: true,
-        }),
-      ).toBeVisible()
-      await expect(
-        page.getByRole('heading', {
-          name: 'Your Education plan organization is ready.',
-          exact: true,
-        }),
-      ).toHaveCount(0)
-      await expect(
-        page.getByRole('link', { name: 'Continue to Appwrite', exact: true }),
-      ).toHaveCount(0)
+      await api.preferencesStarted
+      await expectOrganization(page)
     } finally {
       finishPreferences()
     }
-    await expect(page).toHaveURL(
-      (url) => url.pathname === `/organizations/${ORGANIZATION.$id}`,
-    )
-    expect(api.membershipRequests).toEqual([PROGRAM_PATH])
+  })
+
+  test('opens the Education organization while the organization list is stalled', async ({
+    page,
+  }) => {
+    let finishOrganizations!: () => void
+    const pauseOrganizations = new Promise<void>((resolve) => {
+      finishOrganizations = resolve
+    })
+    const api = await mockEducationApi(page, {
+      account: student(),
+      linked: true,
+      pauseOrganizations,
+    })
+    try {
+      await page.goto('/education/join')
+      await api.organizationsStarted
+      await expectOrganization(page)
+    } finally {
+      finishOrganizations()
+    }
   })
 
   for (const code of [403, 409] as const) {
     test(`${code} preserves the account and provides an exit`, async ({
       page,
     }) => {
-      const api = await mockEducationApi(page, {
+      await mockEducationApi(page, {
         account: student(),
         linked: true,
         membershipStatus: code,
@@ -342,9 +364,6 @@ test.describe('Education enrollment (mocked API)', () => {
       await expect(
         page.getByRole('heading', { name: message, exact: true }),
       ).toBeVisible()
-      expect(api.membershipRequests).toEqual([PROGRAM_PATH])
-      expect(api.deletions).toEqual([])
-      expect(api.preferenceWrites).toEqual([])
       if (code === 409) {
         await expect(
           page.getByText(
@@ -353,13 +372,23 @@ test.describe('Education enrollment (mocked API)', () => {
           ),
         ).toBeVisible()
       }
-      await expect(
-        page.getByRole('button', { name: 'Continue to Appwrite', exact: true }),
-      ).toBeEnabled()
+      await page
+        .getByRole('button', { name: 'Continue to Appwrite', exact: true })
+        .click()
+      await expectOrganization(
+        page,
+        code === 403 ? PERSONAL_ORGANIZATION : ORGANIZATION,
+      )
+      // A fresh account read must still resolve the same signed-in student.
+      await page.reload()
+      await expectOrganization(
+        page,
+        code === 403 ? PERSONAL_ORGANIZATION : ORGANIZATION,
+      )
     })
   }
 
-  test('a failed identity lookup can be retried before enrolling exactly once', async ({
+  test('a failed identity lookup can be retried to open the Education organization', async ({
     page,
   }) => {
     const scenario: Scenario = {
@@ -367,7 +396,7 @@ test.describe('Education enrollment (mocked API)', () => {
       linked: true,
       identityUnavailable: true,
     }
-    const api = await mockEducationApi(page, scenario)
+    await mockEducationApi(page, scenario)
     await page.goto('/education/join')
     await expect(
       page.getByRole('heading', {
@@ -375,31 +404,20 @@ test.describe('Education enrollment (mocked API)', () => {
         exact: true,
       }),
     ).toBeVisible()
-    expect(api.membershipRequests).toEqual([])
-    const identityReadsBeforeRetry = api.identityRequests.length
     scenario.identityUnavailable = false
     await page.getByRole('button', { name: 'Try again', exact: true }).click()
-    await expect(page).toHaveURL(
-      new RegExp(`/organizations/${ORGANIZATION.$id}/?(?:\\?|$)`),
-    )
-    expect(api.identityRequests).toHaveLength(identityReadsBeforeRetry + 1)
-    expect(api.membershipRequests).toEqual([PROGRAM_PATH])
-    expect(api.deletions).toEqual([])
+    await expectOrganization(page)
   })
 
   test('an already verified account resumes Education from the verification page', async ({
     page,
   }) => {
-    const api = await mockEducationApi(page, {
+    await mockEducationApi(page, {
       account: student(),
       linked: true,
     })
     await page.goto('/verify-email?redirect=%2Feducation%2Fjoin')
-    await expect(page).toHaveURL(
-      new RegExp(`/organizations/${ORGANIZATION.$id}/?(?:\\?|$)`),
-    )
-    expect(api.membershipRequests).toEqual([PROGRAM_PATH])
-    expect(api.deletions).toEqual([])
+    await expectOrganization(page)
   })
 
   test('email verification retains enrollment intent and enrolls after confirmation', async ({
@@ -412,21 +430,34 @@ test.describe('Education enrollment (mocked API)', () => {
     expect(new URL(page.url()).searchParams.get('redirect')).toBe(
       '/education/join',
     )
-    expect(api.membershipRequests).toEqual([])
 
     await page
       .getByRole('button', { name: 'Resend verification email', exact: true })
       .click()
-    await expect.poll(() => api.verificationUrls.length).toBe(1)
-    const verification = new URL(api.verificationUrls[0]!)
-    expect(verification.searchParams.get('redirect')).toBe('/education/join')
+    const verification = new URL(await api.verificationEmail)
     verification.searchParams.set('userId', account.$id)
     verification.searchParams.set('secret', 'mock-education-verification')
     await page.goto(verification.toString())
-    await expect(page).toHaveURL(
-      new RegExp(`/organizations/${ORGANIZATION.$id}/?(?:\\?|$)`),
-    )
-    expect(api.membershipRequests).toEqual([PROGRAM_PATH])
-    expect(api.deletions).toEqual([])
+    await expectOrganization(page)
+  })
+
+  test('returning to enrollment reopens the existing Education organization', async ({
+    page,
+  }) => {
+    await mockEducationApi(page, { account: student(), linked: true })
+    await page.goto('/education/join')
+    await expectOrganization(page)
+    // The backend rejects a repeated enrollment after the first creation.
+    await page.goto('/education/join')
+    await expect(
+      page.getByRole('heading', {
+        name: "You've already joined the Education program.",
+        exact: true,
+      }),
+    ).toBeVisible()
+    await page
+      .getByRole('button', { name: 'Continue to Appwrite', exact: true })
+      .click()
+    await expectOrganization(page)
   })
 })

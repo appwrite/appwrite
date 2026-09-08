@@ -21,7 +21,10 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks/auth'
-import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import {
+  organizationQueryOptions,
+  organizationsQueryOptions,
+} from '@/lib/react-query/hooks/organizations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 
@@ -67,19 +70,53 @@ export function View() {
       setIsOpeningOrganization(true)
       track('Resource Created', { resource: 'education-membership' })
       addToStudentMailingList(account)
-      await Promise.allSettled([
-        rememberEducationOrganization(queryClient, account, organization.$id),
-        queryClient.refetchQueries({
-          queryKey: organizationsQueryOptions().queryKey,
-          type: 'all',
-        }),
-      ])
+      // Seed the returned organization, as in the organization creation wizard,
+      // so the destination loader does not wait for a redundant list refresh.
+      const organizationOptions: ReturnType<typeof organizationQueryOptions> = {
+        ...organizationQueryOptions(organization.$id),
+        initialData: organization,
+      }
+      const listOptions = organizationsQueryOptions()
+      const previous = queryClient.getQueryData(listOptions.queryKey)
+      const teams = previous?.teams ?? []
+      const updatedList = teams.some((team) => team.$id === organization.$id)
+        ? previous!
+        : {
+            ...previous,
+            teams: [...teams, organization],
+            total: (previous?.total ?? teams.length) + 1,
+          }
+      // Initialize cold entries with their normal retention settings; bare
+      // setQueryData would inherit the global gcTime: 0 before routes mount.
+      void queryClient.ensureQueryData(organizationOptions).catch(() => {})
+      void queryClient
+        .ensureQueryData({
+          ...listOptions,
+          initialData: updatedList,
+        })
+        .catch(() => {})
+      queryClient.setQueryData(organizationOptions.queryKey, organization)
+      queryClient.setQueryData(listOptions.queryKey, updatedList)
+      // Saving the default organization is best effort and cannot delay access.
+      void rememberEducationOrganization(
+        queryClient,
+        account,
+        organization.$id,
+      ).catch(() => {})
       try {
         await navigate({
           to: '/organizations/$orgId',
           params: { orgId: organization.$id },
           replace: true,
         })
+        // Refresh the full list after arrival, preserving other organizations
+        // when enrollment started with an empty cache.
+        void queryClient
+          .refetchQueries({
+            queryKey: organizationsQueryOptions().queryKey,
+            type: 'all',
+          })
+          .catch(() => {})
       } catch {
         // The organization exists. Retry navigation without repeating enrollment.
         window.location.replace(
