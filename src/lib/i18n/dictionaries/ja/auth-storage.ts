@@ -33,6 +33,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'アプリを有効にしました',
   'App updated': 'アプリを更新しました',
   'Activity': 'アクティビティ',
+  'Auto crops around the main subject when both width and height are set.':
+    '幅と高さの両方を指定すると、Auto は主要な被写体を中心にクロップします。',
   'Back to apps': 'アプリ一覧に戻る',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     '無効なアプリは新しい認可フローを開始できません。既存のトークンは取り消されるまで有効です。',

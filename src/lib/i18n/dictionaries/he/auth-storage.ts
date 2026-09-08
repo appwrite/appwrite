@@ -35,6 +35,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'האפליקציה הופעלה',
   'App updated': 'האפליקציה עודכנה',
   'Activity': 'פעילות',
+  'Auto crops around the main subject when both width and height are set.':
+    'חיתוך Auto ממקד את הפריים בנושא הראשי כשמוגדרים גם רוחב וגם גובה.',
   'Back to apps': 'חזרה לאפליקציות',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     'אפליקציות מושבתות לא יכולות להתחיל תהליכי הרשאה חדשים. טוקנים קיימים נשארים בתוקף עד לשלילתם.',

@@ -64,9 +64,15 @@ export function buildAdminStorageInspectorPreviewUrl(
   return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
 }
 
-export const PREVIEW_GRAVITY_VALUES = Object.values(
-  ImageGravity,
-) as ImageGravity[]
+/** Content-aware crop (`gravity=auto`). Not yet on `ImageGravity` in the console SDK. */
+export const IMAGE_GRAVITY_AUTO = 'auto' as const
+
+export type TransformImageGravity = ImageGravity | typeof IMAGE_GRAVITY_AUTO
+
+export const PREVIEW_GRAVITY_VALUES: TransformImageGravity[] = [
+  ...(Object.values(ImageGravity) as ImageGravity[]),
+  IMAGE_GRAVITY_AUTO,
+]
 
 /** 3×3 spatial layout for crop gravity (top → bottom, left → right). */
 export const TRANSFORM_IMAGE_GRAVITY_GRID_ROWS: readonly [
@@ -84,7 +90,7 @@ export type ImageTransformState = {
   width: number | null
   /** null = omit height (aspect from width / original) */
   height: number | null
-  gravity: ImageGravity
+  gravity: TransformImageGravity
   quality: number
   borderWidth: number
   /** Hex without leading # */
@@ -113,7 +119,9 @@ const transformJsonSchema = z
   .object({
     width: widthNullable.optional(),
     height: heightNullable.optional(),
-    gravity: z.nativeEnum(ImageGravity).optional(),
+    gravity: z
+      .union([z.nativeEnum(ImageGravity), z.literal(IMAGE_GRAVITY_AUTO)])
+      .optional(),
     quality: z.number().min(0).max(100).optional(),
     borderWidth: z.number().min(0).max(100).optional(),
     borderColor: z.string().max(12).optional(),
@@ -125,9 +133,10 @@ const transformJsonSchema = z
   })
 
 /** Maps Appwrite image gravity to CSS `object-position` for object-cover previews */
-export function gravityToObjectPosition(g: ImageGravity): string {
+export function gravityToObjectPosition(g: TransformImageGravity): string {
   const key = g as unknown as string
   const map: Record<string, string> = {
+    auto: '50% 50%',
     center: '50% 50%',
     'top-left': '0% 0%',
     top: '50% 0%',
@@ -480,7 +489,7 @@ export function buildGetFilePreviewArgs(
     args.height = Math.min(4000, Math.max(1, Math.round(s.height)))
   }
   if (s.gravity !== ImageGravity.Center) {
-    args.gravity = s.gravity
+    args.gravity = s.gravity as ImageGravity
   }
   if (s.quality > 0 && s.quality < 100) {
     args.quality = Math.round(s.quality)
