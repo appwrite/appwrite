@@ -1,4 +1,4 @@
-import type { ViteHotContext } from 'vite/types/hot'
+import type { ViteHotContext } from 'vite/types/hot.d.ts'
 
 /**
  * Module-level docs HMR bridge.
