@@ -164,8 +164,40 @@ class OpenAPI3 extends Format
         return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
+    /**
+     * The schemes an SDK example configures before calling a method: the first
+     * `authCount` accepted schemes offered on the platform, plus the path-bound
+     * schemes of a location method. Flat for a platform document; keyed by
+     * platform for the canonical document.
+     *
+     * @param array<string, list<string>> $securities
+     * @param list<string> $locationKeys
+     * @param list<string> $platforms
+     * @return array<string, mixed>
+     */
+    private function getExampleAuth(array $securities, array $locationKeys, array $platforms): array
+    {
+        $auth = [];
+
+        foreach ($this->platform === null ? $platforms : [$this->platform] as $platform) {
+            $offered = \array_intersect_key($securities, $this->keys[$platform] ?? []);
+            $slice = \array_slice($offered, 0, $this->authCounts[$platform] ?? 0);
+
+            foreach ($locationKeys as $key) {
+                if (isset($this->keys[$platform][$key])) {
+                    $slice[$key] = [];
+                }
+            }
+
+            $auth[$platform] = $slice;
+        }
+
+        return $this->platform === null ? $auth : ($auth[$this->platform] ?? []);
+    }
+
     public function parse(): array
     {
+        $schemes = $this->getSecuritySchemes();
         /**
          * Specifications (v3.0.0):
          * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
@@ -207,7 +239,7 @@ class OpenAPI3 extends Format
             'tags' => $this->services,
             'components' => [
                 'schemas' => [],
-                'securitySchemes' => $this->keys,
+                'securitySchemes' => $schemes,
             ],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
@@ -249,7 +281,7 @@ class OpenAPI3 extends Format
                 $sdkPlatforms = \array_merge($sdkPlatforms, $method->getPlatforms());
             }
             $sdkPlatforms = \array_values(\array_unique($sdkPlatforms));
-            if (!\in_array($this->platform, $sdkPlatforms, true)) {
+            if ($this->platform === null ? $sdkPlatforms === [] : !\in_array($this->platform, $sdkPlatforms, true)) {
                 continue;
             }
 
@@ -308,13 +340,13 @@ class OpenAPI3 extends Format
 
                     $methodSdkPlatforms = $methodObj->getPlatforms();
 
-                    if (!\in_array($this->platform, $methodSdkPlatforms, true)) {
+                    if ($this->platform === null ? $methodSdkPlatforms === [] : !\in_array($this->platform, $methodSdkPlatforms, true)) {
                         continue;
                     }
 
                     $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
-                        if (\array_key_exists($security->value, $this->keys)) {
+                        if (\array_key_exists($security->value, $schemes)) {
                             $methodSecurities[$security->value] = [];
                         }
                     }
@@ -324,7 +356,7 @@ class OpenAPI3 extends Format
                         'namespace' => $methodObj->getNamespace(),
                         'platforms' => $methodSdkPlatforms,
                         'desc' => $methodObj->getDesc(),
-                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
+                        'auth' => $this->getExampleAuth($methodSecurities, [], $methodSdkPlatforms),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
@@ -532,20 +564,18 @@ class OpenAPI3 extends Format
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
-                    if (array_key_exists($security->value, $this->keys)) {
+                    if (\array_key_exists($security->value, $schemes)) {
                         $securities[$security->value] = [];
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                $locationKeys = $sdk->getType() === MethodType::LOCATION
+                    ? \array_values(\array_filter($sdk->getLocationAuth(), fn (string $key) => \array_key_exists($key, $schemes)))
+                    : [];
+                $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
 
-                if ($sdk->getType() === MethodType::LOCATION) {
-                    foreach ($sdk->getLocationAuth() as $key) {
-                        if (\array_key_exists($key, $this->keys)) {
-                            $securities[$key] = [];
-                            $temp['x-appwrite']['auth'][$key] = [];
-                        }
-                    }
+                foreach ($locationKeys as $key) {
+                    $securities[$key] = [];
                 }
 
                 $temp['security'][] = $securities;

@@ -661,6 +661,9 @@ class Jobs extends Action
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
 
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $branches = $branch === '' ? [''] : ['', $branch];
+
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
@@ -673,7 +676,7 @@ class Jobs extends Action
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
         ]);
     }
 

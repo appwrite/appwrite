@@ -124,7 +124,7 @@ final class FormatTest extends TestCase
     {
         parent::setUp();
 
-        $this->format = new TestFormat(new Container(), [], [], [], [], 0, 'console');
+        $this->format = new TestFormat(new Container(), [], [], [], [], ['console' => 0], 'console');
     }
 
     public function testProjectRequestParameterOverrides(): void
@@ -182,7 +182,7 @@ final class FormatTest extends TestCase
                 new ArrayList(new Text(255), 10),
             ]), 'Metric names.', false, enum: new Enum(name: 'TestMetric'));
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $this->assertSame([
             'type' => 'string',
@@ -220,7 +220,7 @@ final class FormatTest extends TestCase
                 map: ['basic' => 'Basic', 'advanced' => 'Advanced'],
             ));
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
         $kind = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['kind'];
 
         $this->assertSame('TestKind', $kind['title']);
@@ -256,7 +256,7 @@ final class FormatTest extends TestCase
             [$route],
             [],
             [],
-            0,
+            ['console' => 0],
             'console',
         );
 
@@ -282,7 +282,7 @@ final class FormatTest extends TestCase
                 responses: [new SDKResponse(code: Response::STATUS_CODE_OK, model: Response::MODEL_HEALTH_STATUS)],
             ));
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [new HealthStatus()], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new HealthStatus()], [], ['console' => 0], 'console'))->parse();
         $status = $spec['components']['schemas']['healthStatus']['properties']['status'];
 
         $this->assertSame('HealthCheckStatus', $status['title']);
@@ -312,7 +312,7 @@ final class FormatTest extends TestCase
             ))
             ->param('userId', '', new CustomId(), 'User ID.');
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $userId = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId'];
 
@@ -344,7 +344,7 @@ final class FormatTest extends TestCase
             ->param('enabled', false, new BooleanValidator(true), 'Enabled.', example: 'true')
             ->param('text', '', new Text(64), 'Text.', example: '["one","two"]');
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         $this->assertEquals((object) ['enabled' => true], $properties['metadata']['example']);
@@ -376,7 +376,7 @@ final class FormatTest extends TestCase
             ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
             ->param('values', [], new ArrayList(new MixedValidator()), 'Values.', optional: true);
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         $this->assertSame(['type' => 'number', 'format' => 'double'], $properties['percents']['items']);
@@ -408,7 +408,7 @@ final class FormatTest extends TestCase
             ->param('name', '', new Text(128), 'Original description.')
             ->param('engine', 'mysql', new Text(16), 'Engine.', true);
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
@@ -440,7 +440,7 @@ final class FormatTest extends TestCase
             ->param('name', 'default-name', new Text(128), 'Original description.', true)
             ->param('engine', 'mysql', new Text(16), 'Engine.', true);
 
-        $format = new class (new Container(), [], [], [], [], 0, 'console') extends OpenAPI3 {
+        $format = new class (new Container(), [], [], [], [], ['console' => 0], 'console') extends OpenAPI3 {
             /**
              * @return array<string, array<string, mixed>>
              */
@@ -477,7 +477,7 @@ final class FormatTest extends TestCase
             ->param('testId', '', new Text(256), 'Test ID.')
             ->param('transactionId', null, new Nullable(new Text(256)), 'Transaction ID.', true);
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $this->assertArrayNotHasKey('requestBody', $openApi['paths']['/tests/{testId}']['delete']);
         $this->assertCount(2, $openApi['paths']['/tests/{testId}']['delete']['parameters']);
@@ -510,7 +510,7 @@ final class FormatTest extends TestCase
             ->param('testId', '', new Text(256), 'Test ID.')
             ->param('name', null, new Nullable(new Text(256)), 'Test name.', true);
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $get = $openApi['paths']['/tests/{testId}']['get'];
         $post = $openApi['paths']['/tests/{testId}']['post'];
@@ -552,7 +552,7 @@ final class FormatTest extends TestCase
             new ErrorModel(),
         ];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
 
         $openApiPrefs = $openApi['components']['schemas']['team']['properties']['prefs'];
 
@@ -624,7 +624,7 @@ final class FormatTest extends TestCase
                 ],
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [$parent, $child], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [$parent, $child], [], ['console' => 0], 'console'))->parse();
         $property = $openApi['components']['schemas']['parentWithoutExample']['properties']['child'];
 
         $this->assertSame('object', $property['type']);
@@ -652,7 +652,7 @@ final class FormatTest extends TestCase
                 ],
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new ErrorDev()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new ErrorDev()], [], ['console' => 0], 'console'))->parse();
         $trace = $openApi['components']['schemas']['errorDev']['properties']['trace'];
 
         $this->assertSame('array', $trace['type']);
@@ -679,7 +679,7 @@ final class FormatTest extends TestCase
             ->param('sessionId', 'current', new Text(256), 'Session ID.', true)
             ->param('filter', '', new Text(256), 'Optional query filter.', true);
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
 
         $parameters = [];
         foreach ($openApi['paths']['/tests/{sessionId}']['get']['parameters'] as $parameter) {
@@ -727,7 +727,7 @@ final class FormatTest extends TestCase
             new ErrorModel(),
         ];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
 
         $properties = $openApi['components']['schemas']['usageProject']['properties'];
 
@@ -765,7 +765,7 @@ final class FormatTest extends TestCase
                 ],
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Migration()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Migration()], [], ['console' => 0], 'console'))->parse();
         $resourceData = $openApi['components']['schemas']['migration']['properties']['resourceData'];
 
         $this->assertSame('array', $resourceData['type']);
@@ -844,7 +844,7 @@ final class FormatTest extends TestCase
             new AlgoMd5(),
         ];
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
 
         $openApiHashOptions = $openApi['components']['schemas']['user']['properties']['hashOptions'];
 
@@ -890,7 +890,7 @@ final class FormatTest extends TestCase
                 ],
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$requestRoute, $modelRoute], [new AttributeLine()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$requestRoute, $modelRoute], [new AttributeLine()], [], ['console' => 0], 'console'))->parse();
 
         $openApiRequestDefault = $openApi['paths']['/tests/spatial']['post']['requestBody']['content']['application/json']['schema']['properties']['default'];
         $openApiModelDefault = $openApi['components']['schemas']['attributeLine']['properties']['default'];
@@ -929,7 +929,7 @@ final class FormatTest extends TestCase
             ->param('nullablePassword', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'Nullable password.', true)
             ->param('name', '', new Text(256), 'Name.');
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Webhook()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Webhook()], [], ['console' => 0], 'console'))->parse();
 
         $openApiProperties = $openApi['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
@@ -970,7 +970,7 @@ final class FormatTest extends TestCase
             ))
             ->param('testId', '', new Text(256), 'Test ID.');
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
 
         $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
 
@@ -1007,7 +1007,7 @@ final class FormatTest extends TestCase
                 contentType: $contentType,
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
 
         $openApiMethod = $openApi['paths']['/tests/file']['get'];
 
@@ -1042,7 +1042,7 @@ final class FormatTest extends TestCase
                 ],
             ));
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $openApiQuery = $openApi['paths']['/tests/graphql']['post']['requestBody']['content']['application/json']['schema']['properties']['query'];
 
@@ -1104,7 +1104,7 @@ final class FormatTest extends TestCase
                 ));
         }
 
-        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], ['console' => 0], 'console'))->parse();
 
         $openApiOptions = $openApi['components']['schemas']['provider']['properties']['options'];
 
@@ -1147,7 +1147,7 @@ final class FormatTest extends TestCase
             ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
             ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
 
-        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
 
         $parameters = $openApi['paths']['/tests/queries']['get']['parameters'];
         $schemas = \array_column($parameters, 'schema', 'name');
@@ -1178,7 +1178,7 @@ final class FormatTest extends TestCase
             ->param('min', 0, new Range(0, 100), 'Minimum.', example: '0')
             ->param('label', '', new Text(64), 'Label.', example: '0');
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         // "0" is falsy, so a truthiness check silently discards it and falls back
@@ -1208,7 +1208,7 @@ final class FormatTest extends TestCase
             ->param('domain', '', new Domain(), 'Domain name.')
             ->param('background', '', new HexColor(), 'Background colour.');
 
-        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
         $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
         // Without a case of their own these validators fell through to the
@@ -1242,7 +1242,7 @@ final class FormatTest extends TestCase
             ],
         );
 
-        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse());
 
         $this->assertContains('transactionId', $methods['createDocument']);
         $this->assertContains('transactionId', $methods['createDocuments']);
@@ -1268,10 +1268,118 @@ final class FormatTest extends TestCase
             ],
         );
 
-        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse());
+        $methods = $this->sdkMethods((new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse());
 
         $this->assertNotContains('transactionId', $methods['createDocument']);
         $this->assertNotContains('transactionId', $methods['createDocuments']);
+    }
+
+    public function testCanonicalDocumentKeysExampleAuthByPlatform(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/account'))
+            ->desc('Get account')
+            ->label('scope', 'account')
+            ->label('sdk', new Method(
+                namespace: 'account',
+                group: null,
+                name: 'get',
+                description: 'Get account.',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::ADMIN],
+                responses: [],
+            ));
+
+        $keys = $this->platformKeys();
+        $authCounts = ['client' => 1, 'server' => 2, 'console' => 1];
+
+        $canonical = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, null))->parse();
+        $server = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, 'server'))->parse();
+
+        $operation = $canonical['paths']['/account']['get'];
+        $this->assertSame(['client', 'server', 'console'], $operation['x-appwrite']['platforms']);
+        $this->assertSame([
+            'client' => ['Project' => []],
+            'server' => ['Project' => [], 'Session' => []],
+            'console' => ['Project' => []],
+        ], $operation['x-appwrite']['auth']);
+        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $operation['security'][0]);
+
+        $this->assertSame(['Project' => [], 'Session' => []], $server['paths']['/account']['get']['x-appwrite']['auth']);
+        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $server['paths']['/account']['get']['security'][0]);
+
+        $this->assertSame(['Project', 'Session', 'Key'], \array_keys($canonical['components']['securitySchemes']));
+        $this->assertSame(['client', 'server', 'console'], $canonical['components']['securitySchemes']['Project']['x-appwrite']['platforms']);
+        $this->assertSame(['server'], $canonical['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
+        $this->assertSame(['Project', 'Key', 'Session'], \array_keys($server['components']['securitySchemes']));
+        $this->assertSame(['server'], $server['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
+    }
+
+    public function testCanonicalDocumentListsEveryAliasVariant(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('PATCH', '/v1/presences/:presenceId'))
+            ->desc('Update presence')
+            ->label('scope', 'presence')
+            ->label('sdk', [
+                new Method(
+                    namespace: 'presences',
+                    group: null,
+                    name: 'update',
+                    description: 'Update presence.',
+                    auth: [AuthType::SESSION],
+                    responses: [],
+                    parameters: [new Parameter('presenceId', optional: false)],
+                ),
+                new Method(
+                    namespace: 'presences',
+                    group: null,
+                    name: 'update',
+                    description: 'Update presence for a user.',
+                    auth: [AuthType::KEY],
+                    responses: [],
+                    parameters: [new Parameter('presenceId', optional: false), new Parameter('userId', optional: false)],
+                ),
+            ])
+            ->param('presenceId', '', new Text(256), 'Presence ID.')
+            ->param('userId', '', new Text(256), 'User ID.', true);
+
+        $keys = $this->platformKeys();
+        $authCounts = ['client' => 1, 'server' => 2, 'console' => 1];
+
+        $canonical = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, null))->parse()['paths']['/presences/{presenceId}']['patch'];
+        $client = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, 'client'))->parse()['paths']['/presences/{presenceId}']['patch'];
+
+        $this->assertSame(['client', 'server'], $canonical['x-appwrite']['platforms']);
+        $this->assertCount(2, $canonical['x-appwrite']['methods']);
+        $this->assertSame(['client'], $canonical['x-appwrite']['methods'][0]['platforms']);
+        $this->assertSame(['client' => ['Project' => []]], $canonical['x-appwrite']['methods'][0]['auth']);
+        $this->assertSame(['presenceId'], $canonical['x-appwrite']['methods'][0]['required']);
+        $this->assertSame(['server'], $canonical['x-appwrite']['methods'][1]['platforms']);
+        $this->assertSame(['server' => ['Project' => [], 'Key' => []]], $canonical['x-appwrite']['methods'][1]['auth']);
+        $this->assertSame(['presenceId', 'userId'], $canonical['x-appwrite']['methods'][1]['required']);
+
+        $this->assertCount(1, $client['x-appwrite']['methods']);
+        $this->assertSame(['Project' => []], $client['x-appwrite']['methods'][0]['auth']);
+    }
+
+    /**
+     * @return array<string, array<string, array<string, mixed>>>
+     */
+    private function platformKeys(): array
+    {
+        $project = ['type' => 'apiKey', 'name' => 'X-Appwrite-Project', 'in' => 'header'];
+        $session = ['type' => 'apiKey', 'name' => 'X-Appwrite-Session', 'in' => 'header'];
+        $key = ['type' => 'apiKey', 'name' => 'X-Appwrite-Key', 'in' => 'header'];
+
+        return [
+            'client' => ['Project' => $project, 'Session' => $session],
+            'server' => ['Project' => $project, 'Key' => $key, 'Session' => $session],
+            'console' => ['Project' => $project],
+        ];
     }
 
     /**

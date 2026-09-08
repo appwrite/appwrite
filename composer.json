@@ -100,7 +100,7 @@
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
-        "utopia-php/system": "0.10.*",
+        "utopia-php/system": "^0.10 || ^0.11",
         "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
