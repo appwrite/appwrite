@@ -12,6 +12,7 @@ import {
 } from '@/lib/assets/brand-data'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const assetCardClassName =
@@ -361,9 +362,9 @@ export function View() {
                 {t(
                   "Should you require further assistance or have specific needs beyond what's presented on this page, please don't hesitate to",
                 )}{' '}
-                <MarketingSiteLink className="link-neutral" href="/enterprise">
+                <ContactSalesLink className="link-neutral">
                   {t('contact us')}
-                </MarketingSiteLink>
+                </ContactSalesLink>
                 .
               </p>
             </section>

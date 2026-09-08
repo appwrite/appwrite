@@ -1,4 +1,4 @@
-import { CONTACT_ENTERPRISE_URL } from './constants'
+import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
 import { DATABASE_COMPUTE_CREDITS_NOTE } from '@/lib/database-create-pricing'
 import type { PricingPlan } from './types'
 
@@ -75,7 +75,7 @@ export const pricingPlans: readonly PricingPlan[] = [
     ],
     cta: 'Contact us',
     ctaVariant: 'outline',
-    href: CONTACT_ENTERPRISE_URL,
+    href: SALES_FORM_ROUTE,
     internal: true,
   },
 ]

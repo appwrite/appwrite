@@ -1,5 +1,6 @@
 import { isStaleChunkLoadError } from '@/lib/stale-chunk-error'
 import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
+import { isWebGLContextError } from '@/lib/webgl'
 
 function getErrorCode(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined
@@ -12,5 +13,6 @@ export function shouldSkipSentryError(error: unknown): boolean {
   if (getErrorCode(error) === 401) return true
   if (isStaleChunkLoadError(error)) return true
   if (isIndexedDBMutationError(error)) return true
+  if (isWebGLContextError(error)) return true
   return false
 }

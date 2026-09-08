@@ -13,7 +13,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "customer-stories",
     "featured": false,
-    "cover": "/images/blog/customer-story-lorari/cover.avif",
+    "cover": "/images/blog/customer-story-lorari/cover.avif","hasCover": true
+  },
+  {
+    "slug": "drizzle-orm-appwrite-postgres",
+    "href": "/blog/post/drizzle-orm-appwrite-postgres",
+    "title": "Use Drizzle ORM with Appwrite Postgres",
+    "description": "Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "prisma-orm-appwrite-postgres",
+    "href": "/blog/post/prisma-orm-appwrite-postgres",
+    "title": "Use Prisma ORM with Appwrite Postgres",
+    "description": "Model your data with Prisma ORM, generate a typed client, and test schema migrations against Appwrite Postgres.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/prisma-orm-appwrite-postgres/cover.avif",
     "hasCover": true
   },
   {

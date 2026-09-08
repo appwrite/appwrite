@@ -42,6 +42,7 @@ FROM base AS final
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV APPWRITE_SPECS_ROOT=/app/dist/specs
 
 # librsvg (Sharp SVG export) resolves fonts via fontconfig on Linux, not SVG @font-face.
 RUN apt-get update \

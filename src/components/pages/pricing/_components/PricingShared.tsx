@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
 import { pricingPlans } from '@/lib/pricing/plans'
 import type { ComparisonCell, ComparisonLinkCell, PlanId, PricingPlan } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
@@ -263,7 +263,7 @@ export function ComparisonRowLabel({
 }
 
 export function getPlanCtaHref(planId: PlanId) {
-  if (planId === 'enterprise') return CONTACT_ENTERPRISE_URL
+  if (planId === 'enterprise') return SALES_FORM_ROUTE
   return '/sign-up'
 }
 

@@ -4,15 +4,13 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { useT } from '@/lib/i18n/translate'
 import { useParams } from '@tanstack/react-router'
 import { BaaSettingsCard } from './_components/BaaSettingsCard'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 export function ComplianceTab() {
@@ -128,15 +126,8 @@ export function ComplianceTab() {
             </div>
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => {
-                window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
-              }}
-            >
-              {t('Contact sales')}
+            <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
+              <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
             </Button>
           </div>
         </div>

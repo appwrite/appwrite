@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { useT } from '@/lib/i18n/translate'
 
 export type FaqItem = {
@@ -32,9 +31,9 @@ export const pricingFaqItems: readonly FaqItem[] = [
           <T>credit and debit card payments</T>
         </DocsRouteLink>
         . <T>We are actively working on adding support for more methods. Please</T>{' '}
-        <MarketingSiteLink className={linkClassName} href={CONTACT_ENTERPRISE_URL}>
+        <ContactSalesLink className={linkClassName}>
           <T>contact us</T>
-        </MarketingSiteLink>{' '}
+        </ContactSalesLink>{' '}
         <T>in case this is an issue for you.</T>
       </>
     ),

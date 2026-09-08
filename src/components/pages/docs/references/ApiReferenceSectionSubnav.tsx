@@ -39,7 +39,7 @@ import {
   ApiReferenceUiPrefsGate,
   useApiReferenceUiPrefs,
 } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
-import { loadReferenceNavServiceCountsFn } from '@/server/functions/api-reference'
+import { fetchReferenceNavServiceCounts } from '@/lib/docs/references/reference-api'
 import type { DocsNavParent } from '@/lib/docs/types'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -62,14 +62,11 @@ import { ApiReferenceOpenApiSpecDownloadFooter } from './ApiReferenceOpenApiSpec
 
 const DOCS_MENU_ICON_STROKE = 1.25
 
-async function fetchReferenceNavServiceCounts(
+async function fetchReferenceNavServiceCountsMap(
   version: ReferenceVersion,
   mode: ApiExplorerProjectPlatform,
 ): Promise<Map<ReferenceService, number>> {
-  const entries = await loadReferenceNavServiceCountsFn({
-    data: { version, mode },
-  })
-  return new Map(entries)
+  return fetchReferenceNavServiceCounts(version, mode)
 }
 
 function SectionParentLink({
@@ -179,7 +176,7 @@ function ApiReferenceSectionSubnavShell({
 
   const { data: serviceCounts, isLoading } = useQuery({
     queryKey: ['api-reference-nav-services', version, platformMode],
-    queryFn: () => fetchReferenceNavServiceCounts(version, platformMode),
+    queryFn: () => fetchReferenceNavServiceCountsMap(version, platformMode),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -208,7 +205,7 @@ function ApiReferenceSectionSubnavShell({
 
     if (!parsedPath?.service) return
 
-    const nextCounts = await fetchReferenceNavServiceCounts(version, nextMode)
+    const nextCounts = await fetchReferenceNavServiceCountsMap(version, nextMode)
     const nextGroups = buildReferenceNavProductGroups(
       version,
       nextPlatform,

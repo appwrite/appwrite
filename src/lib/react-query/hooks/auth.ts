@@ -1240,6 +1240,7 @@ export function accountIdentitiesQueryOptions() {
     queryKey: ['identities', 'account'],
     queryFn: fetchAccountIdentities,
     staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
