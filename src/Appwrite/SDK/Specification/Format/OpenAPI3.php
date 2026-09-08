@@ -560,11 +560,17 @@ class OpenAPI3 extends Format
                     : [];
                 $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
 
-                foreach ($locationKeys as $key) {
-                    $securities[$key] = [];
-                }
-
                 $temp['security'][] = $securities;
+                // Location credentials supplement the base authentication. The
+                // first location key (project binding) is already required;
+                // impersonation can be supplied without making it mandatory.
+                $withLocationAuth = $securities;
+                foreach ($locationKeys as $key) {
+                    $withLocationAuth[$key] = [];
+                }
+                if ($withLocationAuth !== $securities) {
+                    $temp['security'][] = $withLocationAuth;
+                }
             }
 
             $parameterNodes = [];
