@@ -2024,7 +2024,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     slug: 'products/databases',
     title: 'Databases',
     description:
-      'Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.',
+      'Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.',
     excerpt:
       'Appwrite Databases provide performant and scalable storage for your application, business, and user data. Choose the database that fits your use case, from managed APIs with permissions and realtime to dedicated native engines you connect to directly. Databases store data. If you need to store files like images, PDFs, or videos, use Appwrite Storage. Appwrite databases Managed databases with an Appwrite API on top, including permissions, indexes, queries, and realtime. Available on shared and dedicated infrastructure. Structured, relational data with…',
     breadcrumbs: ['Databases', 'Getting started', 'Overview'],
@@ -2490,11 +2490,11 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     slug: 'products/databases/postgresql',
-    title: 'PostgreSQL',
+    title: 'Managed PostgreSQL',
     description:
-      'Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.',
+      'Host a managed PostgreSQL database on Appwrite. Connect with psql, Prisma, or Drizzle, install pgvector, and get backups, replicas, pooling, and PITR.',
     excerpt:
-      "Appwrite native PostgreSQL databases give you a managed PostgreSQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. A native PostgreSQL database gives you the raw engine: you connect with or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between.…",
+      "Appwrite managed PostgreSQL is a hosted PostgreSQL database provisioned for your project. You pick the compute specification, and Appwrite runs the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. A native PostgreSQL database gives you the raw engine: you connect with or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between.…",
     breadcrumbs: ['PostgreSQL', 'Getting started', 'Overview'],
   },
   {
@@ -2798,7 +2798,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     slug: 'products/databases/postgresql/quick-start',
     title: 'Quick start',
     description:
-      'Create your first native PostgreSQL database in the Appwrite Console, run your first queries in the SQL editor, and connect with psql.',
+      'Create a managed PostgreSQL database in the Appwrite Console, run SQL in the editor, and connect with psql, Prisma, or Drizzle over TLS.',
     excerpt:
       'You can create a PostgreSQL database and run your first query in a few minutes. Create a database Native databases are rolling out region by region, starting with Frankfurt () and New York (), and more regions are on the way. A database takes the region of the project that owns it and there is no per-database region selector, so create your project in a supported region before you start. 1. In your project, go to **Databases**. 2. Click **Create…',
     breadcrumbs: ['PostgreSQL', 'Getting started', 'Quick start'],

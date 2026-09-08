@@ -86,8 +86,8 @@ export async function runTerminalCommand(
   command: string,
 ): Promise<void> {
   const textarea = terminalTextarea(page)
-  // This is xterm's invisible IME input, not a pointer target. A forced click
-  // can hit terminal content underneath it instead of focusing the input.
+  // xterm positions this hidden input at the cursor; focus it directly rather
+  // than force-clicking through terminal output or overlapping controls.
   await textarea.focus()
   await expect(textarea).toBeFocused()
   // Insert the command as one input event, then submit it separately.

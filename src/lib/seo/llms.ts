@@ -171,7 +171,14 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
       {
         title: 'Databases',
         url: `${origin}/products/databases`,
-        description: 'Scalable and robust databases.',
+        description:
+          'Managed PostgreSQL hosting plus TablesDB, DocumentsDB, VectorsDB, and MySQL.',
+      },
+      {
+        title: 'Managed PostgreSQL',
+        url: `${origin}/docs/products/databases/postgresql`,
+        description:
+          'Hosted PostgreSQL with pgvector, Prisma, backups, replicas, and PITR.',
       },
       {
         title: 'Storage',
