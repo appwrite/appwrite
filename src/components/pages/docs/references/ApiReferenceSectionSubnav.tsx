@@ -35,7 +35,10 @@ import {
   type ReferenceNavProductGroup,
 } from '@/lib/docs/references/reference-nav'
 import { getApiReferencePlatformForMode } from '@/lib/docs/references/api-reference-ui-prefs'
-import { useApiReferenceUiPrefs } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
+import {
+  ApiReferenceUiPrefsGate,
+  useApiReferenceUiPrefs,
+} from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { loadReferenceNavServiceCountsFn } from '@/server/functions/api-reference'
 import type { DocsNavParent } from '@/lib/docs/types'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -458,7 +461,9 @@ export function ApiReferenceSectionSubnavPanel({
           <SectionParentLink parent={parent} />
         </div>
       ) : null}
-      <ApiReferenceSectionSubnavShell parent={null} />
+      <ApiReferenceUiPrefsGate>
+        <ApiReferenceSectionSubnavShell parent={null} />
+      </ApiReferenceUiPrefsGate>
     </aside>
   )
 }
@@ -488,11 +493,13 @@ export function ApiReferenceSectionSubnavMobile({
             {parent?.label ?? 'API references'}
           </SheetTitle>
         </SheetHeader>
-        <ApiReferenceSectionSubnavShell
-          parent={parent}
-          onNavigate={() => setSheetOpen(false)}
-          className="min-h-0 flex-1"
-        />
+        <ApiReferenceUiPrefsGate>
+          <ApiReferenceSectionSubnavShell
+            parent={parent}
+            onNavigate={() => setSheetOpen(false)}
+            className="min-h-0 flex-1"
+          />
+        </ApiReferenceUiPrefsGate>
       </SheetContent>
     </Sheet>
   )

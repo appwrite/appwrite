@@ -241,11 +241,6 @@ export const enCatalog = {
       noRecentPages: 'No recent pages',
       searchPlaceholder: 'Search...',
     },
-    consoleBanner: {
-      imagineAlt: 'Imagine',
-      messagePrefix: 'Turn your ideas into functional products. Vibe coding powered by',
-      dismiss: 'Dismiss banner',
-    },
     debugMenu: {
       language: {
         label: 'Language',
