@@ -411,7 +411,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
       if (isMeta && !event.shiftKey) {
         if (isEditableTarget(target)) return
 
-        const key = event.key.toLowerCase()
+        const key = event.key?.toLowerCase()
         if (key === 'c') {
           if (copySelection()) {
             event.preventDefault()

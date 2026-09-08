@@ -812,7 +812,7 @@ export function TransformImageWizard({
         return
       }
       const mod = e.metaKey || e.ctrlKey
-      if (!mod || e.key.toLowerCase() !== 'z') return
+      if (!mod || e.key?.toLowerCase() !== 'z') return
       e.preventDefault()
       if (e.shiftKey) redo()
       else undo()
