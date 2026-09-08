@@ -45,6 +45,7 @@ function DomainSearchField({
   inputId,
   searchValue,
   onSearchValueChange,
+  onSubmitSearch,
   limitMessage,
   footer,
   className,
@@ -52,6 +53,7 @@ function DomainSearchField({
   inputId: string
   searchValue: string
   onSearchValueChange: (value: string) => void
+  onSubmitSearch: () => void
   limitMessage?: ReactNode
   footer?: ReactNode
   className?: string
@@ -70,6 +72,12 @@ function DomainSearchField({
           id={inputId}
           value={searchValue}
           onChange={(e) => onSearchValueChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              onSubmitSearch()
+            }
+          }}
           placeholder={t('e.g. mycompany or mycompany.com')}
           className={DOMAIN_SEARCH_FIELD_CLASS}
           autoFocus
@@ -102,6 +110,7 @@ export function DomainSearchResults({
   const {
     searchValue,
     setSearchValue,
+    submitSearch,
     suggestions,
     error,
     hasContent,
@@ -114,6 +123,7 @@ export function DomainSearchResults({
       inputId={inputId}
       searchValue={searchValue}
       onSearchValueChange={setSearchValue}
+      onSubmitSearch={submitSearch}
       limitMessage={limitMessage}
       footer={!hasContent ? footer : undefined}
       className={isFocus ? 'max-w-none' : undefined}
@@ -132,7 +142,10 @@ export function DomainSearchResults({
         className={cn(
           'transition-[min-height,padding] duration-300 ease-out',
           hasContent
-            ? cn('min-h-0', isFocus && 'mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6')
+            ? cn(
+                'min-h-0',
+                isFocus && 'mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6',
+              )
             : isFocus
               ? 'flex flex-1 flex-col items-center justify-center px-4 pb-10 pt-6 sm:px-6 sm:pt-8'
               : compactEmptyState
