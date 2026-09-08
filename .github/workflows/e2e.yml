@@ -12,28 +12,33 @@ jobs:
     name: ${{ matrix.project }}
     runs-on: runs-on=${{ github.run_id }}/runner=e2e
     timeout-minutes: ${{ matrix.timeout }}
+    # Live suites share one account. Keep its session valid until teardown has
+    # deleted this run's projects; another PR must not sign in over it.
+    concurrency:
+      group: e2e-${{ matrix.project }}-${{ matrix.project == 'console-live' && 'shared-account' || github.run_id }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
         include:
           - project: website
-            timeout: 15
-          - project: console
+            args: --project=website
             timeout: 15
           - project: console-mocked
+            args: --project=console-mocked
             timeout: 15
-          - project: console-usage
-            timeout: 20
-          - project: console-mysql
-            timeout: 40
-          - project: console-postgres
-            timeout: 40
-          - project: console-tablesdb
-            timeout: 25
-          - project: console-documentsdb
-            timeout: 40
-          - project: console-vectorsdb
-            timeout: 40
+          # One invocation runs the shared setup dependency once, not once per
+          # suite. Keep each database project's workers: 1 and retry policy.
+          - project: console-live
+            args: >-
+              --project=console
+              --project=console-usage
+              --project=console-mysql
+              --project=console-postgres
+              --project=console-tablesdb
+              --project=console-documentsdb
+              --project=console-vectorsdb
+            timeout: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +76,7 @@ jobs:
           E2E_TEST_SESSION_SECRET: ${{ secrets.E2E_TEST_SESSION_SECRET }}
           E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
           E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
-        run: bun run e2e -- --project=${{ matrix.project }}
+        run: bun run e2e -- ${{ matrix.args }}
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() && !cancelled() }}
