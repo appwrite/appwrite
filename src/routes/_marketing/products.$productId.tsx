@@ -27,6 +27,9 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
 
     const content = getProductContent(params.productId)
     const product = PRODUCT_REGISTRY[params.productId]
+    const pageName = content.metaTitle
+      ? translate(content.metaTitle)
+      : product.name
     const metaDescription = translate(content.metaDescription)
     const ogImageSubtitle =
       content.metaDescription.trim() !== product.name.trim()
@@ -35,11 +38,31 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
 
     return {
       meta: getMarketingPageMetaTags({
-        pageName: product.name,
+        pageName,
         description: metaDescription,
         ogImageEyebrow: 'Products',
+        ogImageTitle: pageName,
         ogImageSubtitle,
       }),
+      scripts: content.faq.length
+        ? [
+            {
+              type: 'application/ld+json',
+              children: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: content.faq.map((faq) => ({
+                  '@type': 'Question',
+                  name: translate(faq.question),
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: translate(faq.answer),
+                  },
+                })),
+              }),
+            },
+          ]
+        : [],
     }
   },
   loader: async ({ params, context }) => {

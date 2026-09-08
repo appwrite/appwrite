@@ -54,11 +54,11 @@ export const databasesProductFeatures: ProductFeatureContent[] = [
   },
   {
     id: 'sql',
-    title: 'Native SQL for PostgreSQL and MySQL',
+    title: 'Managed PostgreSQL and MySQL',
     description:
-      'Connect with standard SQL clients and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.',
-    docsHref: '/docs/products/databases',
-    docsLabel: 'Databases docs',
+      'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.',
+    docsHref: '/docs/products/databases/postgresql',
+    docsLabel: 'PostgreSQL docs',
   },
   {
     id: 'tooling',

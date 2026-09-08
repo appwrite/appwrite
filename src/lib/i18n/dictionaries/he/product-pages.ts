@@ -404,7 +404,26 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Create a database, choose your engine and compute model, and query your first data in minutes.':
     'צרו מסד נתונים, בחרו מנוע ומודל Compute, ושאלו את הנתונים הראשונים שלכם תוך דקות.',
   'Databases docs': 'תיעוד מסדי נתונים',
-  'Databases for every data model': 'מסדי נתונים לכל מודל נתונים',
+  'Does Appwrite offer managed PostgreSQL?': 'האם Appwrite מציעה PostgreSQL מנוהל?',
+  'Managed PostgreSQL and databases for every model':
+    'PostgreSQL מנוהל ומסדי נתונים לכל מודל',
+  'Managed PostgreSQL and MySQL': 'PostgreSQL ו-MySQL מנוהלים',
+  'Managed PostgreSQL hosting and app databases':
+    'אירוח PostgreSQL מנוהל ומסדי נתוני אפליקציה',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'אירוח PostgreSQL מנוהל עם SQL מלא, pgvector וסכמות ניידות ל-Prisma, Drizzle ולכלים קיימים.',
+  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
+    'אירוח PostgreSQL מנוהל עם pgvector, לצד TablesDB, DocumentsDB ו-VectorsDB. Compute ייעודי, גיבויים, replicas ו-PITR.',
+  'PostgreSQL docs': 'תיעוד PostgreSQL',
+  'PostgreSQL quick start': 'Quick start ל-PostgreSQL',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    'מנועי PostgreSQL ו-MySQL מנוהלים ייעודיים שמתחברים אליהם עם לקוחות SQL סטנדרטיים.',
+  'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.':
+    'PostgreSQL ו-MySQL מתארחים עם לקוחות סטנדרטיים ועורך SQL בקונסולה. השתמשו ב-pgvector, PostGIS, סכמות ניידות וב-ORMs שכבר רצים אצלכם.',
+  'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
+    'הריצו PostgreSQL מנוהל לצד טבלאות, מסמכים ווקטורים. התחברו עם Prisma או psql, התקינו pgvector, והגדילו Compute ייעודי עם גיבויים, replicas ו-PITR.',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
+    'כן. מסדי PostgreSQL מקוריים הם מופעי PostgreSQL מנוהלים ייעודיים באזור הפרויקט שלכם. מתחברים עם psql, Prisma, Drizzle או כל דרייבר PostgreSQL מעל TLS. Appwrite מקצה Compute, גיבויים, replicas, מאגר חיבורים ו-point-in-time recovery. PostgreSQL 18 הוא ברירת המחדל, וגם 17 נתמך.',
   'Do Appwrite DBs integrate with Auth permissions?': 'האם Appwrite DBs משתלבים עם הרשאות אימות?',
   'Embeddings and similarity search for semantic retrieval and AI features.':
     'Embeddings וחיפוש דמיון לשליפה סמנטית וליכולות AI.',
@@ -432,6 +451,7 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Link related tables without custom joins.': 'קשרו טבלאות קשורות בלי joins מותאמים.',
   'Native DBs': 'Native DBs',
   'Native SQL for PostgreSQL and MySQL': 'SQL מקורי ל-PostgreSQL ו-MySQL',
+  'Managed PostgreSQL': 'PostgreSQL מנוהל',
   'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
     'במסדי נתונים ייעודיים אפשר להוסיף read replicas כדי להרחיב תעבורת שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. הגדירו מצב סנכרון ו-failover מהגדרות Replication בקונסולה למנועים נתמכים.',
   'Permissions wired to Auth': 'הרשאות שמחוברות לאימות',

@@ -290,6 +290,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "jake-barnby",
     "category": "announcement",
     "featured": true,
+    "metaTitle": "Managed PostgreSQL hosting with pgvector in Appwrite",
     "cover": "/images/blog/appwrite-now-speaks-postgresql/cover.avif",
     "hasCover": true
   },

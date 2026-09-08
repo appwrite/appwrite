@@ -154,6 +154,15 @@ function getExpandedFooterGroups(
     links: [
       productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
       productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
+      {
+        ...docsFooterLink(
+          footerCopy.expanded.products.postgresql,
+          '/docs/products/databases/postgresql',
+          marketing,
+        ),
+        analyticsAction: getMarketingProductAnalyticsAction('databases'),
+        isNew: isProductNavItemNew('databases'),
+      },
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
@@ -286,6 +295,11 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
+      docsFooterLink(
+        footerCopy.expanded.compare.postgresqlHosting,
+        '/docs/products/databases/postgresql',
+        marketing,
+      ),
       blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret

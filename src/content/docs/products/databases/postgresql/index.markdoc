@@ -1,10 +1,10 @@
 ---
 layout: article
-title: PostgreSQL
-description: Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.
+title: Managed PostgreSQL
+description: Host a managed PostgreSQL database on Appwrite. Connect with psql, Prisma, or Drizzle, install pgvector, and get backups, replicas, pooling, and PITR.
 ---
 
-Appwrite native PostgreSQL databases give you a managed PostgreSQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS.
+Appwrite managed PostgreSQL is a hosted PostgreSQL database provisioned for your project. You pick the compute specification, and Appwrite runs the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS.
 
 A native PostgreSQL database gives you the raw engine: you connect with `psql` or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between. If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, use [TablesDB](/docs/products/databases/tablesdb) for relational data, [DocumentsDB](/docs/products/databases/documentsdb) for schemaless documents, or [VectorsDB](/docs/products/databases/vectorsdb) for embeddings instead.
 

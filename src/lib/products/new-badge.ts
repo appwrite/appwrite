@@ -17,6 +17,7 @@ export const PRODUCT_LAUNCH_DATES: Partial<Record<ProductNavItemId, string>> = {
 
 const DOCS_PRODUCT_NEW_HREFS: Partial<Record<string, ProductNavItemId>> = {
   '/docs/products/databases': 'databases',
+  '/docs/products/databases/postgresql': 'databases',
   '/docs/products/domains': 'domains',
   '/docs/products/firewall': 'firewall',
   '/docs/products/agent': 'agent',
