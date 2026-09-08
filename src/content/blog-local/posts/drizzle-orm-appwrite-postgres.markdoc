@@ -38,7 +38,7 @@ After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in 
 Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged.
 
 {% info title="Why use the direct connection?" %}
-Port `6432` routes connections through Appwrite's pooler, which defaults to transaction mode. It returns a database connection to the pool after each transaction, so later transactions can use a different session. Migration steps that rely on session settings or session-level locks need a consistent connection. Port `5432` provides that direct connection, which is why Appwrite recommends it for migrations. See [connection pooling](/docs/products/databases/postgresql/connection-pooling) for the differences between pool modes.
+Port `6432` routes connections through Appwrite's pooler, which defaults to transaction mode. It returns a database connection to the pool after each transaction, so later transactions can use a different session. Migration steps that rely on session settings or session-level locks need a consistent connection. Port `5432` provides that direct connection, which is why we recommend it for migrations. See [connection pooling](/docs/products/databases/postgresql/connection-pooling) for the differences between pool modes.
 {% /info %}
 
 In a TypeScript project using ES modules, install the dependencies:
