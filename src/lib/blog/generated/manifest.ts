@@ -53,7 +53,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "draft": true,
+    "draft": false,
     "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
     "hasCover": true
   },
