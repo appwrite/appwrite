@@ -69,7 +69,10 @@ export function View({ page: initialPage }: ViewProps) {
       // A malformed escape can still be a literal heading ID.
     }
     const target = document.getElementById(id)
-    if (!target || !main.contains(target)) return
+    if (!target || !main.contains(target)) {
+      main.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
 
     const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0
     main.scrollTo({

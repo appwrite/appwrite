@@ -38,7 +38,9 @@ test.beforeEach(async ({ context, baseURL }) => {
 test('Docs View scrolls the installation cross-link after destination content mounts', async ({
   page,
 }, testInfo) => {
-  await page.goto(`${installationPath}#initialization`)
+  await page.goto(`${installationPath}#initialization`, {
+    waitUntil: 'networkidle',
+  })
   await expectHeadingInDocsViewport(page, 'initialization')
   const rejectCookies = page.getByRole('button', {
     name: 'Reject non-essential',
@@ -61,7 +63,9 @@ test('Docs View scrolls the installation cross-link after destination content mo
 test('Docs View honors a direct encoded hash on initial load', async ({
   page,
 }, testInfo) => {
-  await page.goto(`${tablesPath}#column-types-and-%66ormats`)
+  await page.goto(`${tablesPath}#column-types-and-%66ormats`, {
+    waitUntil: 'networkidle',
+  })
   await expectHeadingInDocsViewport(page, targetId)
   await page.screenshot({ path: testInfo.outputPath('direct-hash.png') })
 })
@@ -69,7 +73,7 @@ test('Docs View honors a direct encoded hash on initial load', async ({
 test('Docs View retains same-page anchors and back navigation', async ({
   page,
 }) => {
-  await page.goto(`${tablesPath}#${targetId}`)
+  await page.goto(`${tablesPath}#${targetId}`, { waitUntil: 'networkidle' })
   await expectHeadingInDocsViewport(page, targetId)
   await page
     .getByRole('navigation', { name: 'Table of contents' })
@@ -85,7 +89,7 @@ test('Docs View retains same-page anchors and back navigation', async ({
 test('DocsPageShell still resets hashless cross-page navigation to the top', async ({
   page,
 }) => {
-  await page.goto(`${tablesPath}#${targetId}`)
+  await page.goto(`${tablesPath}#${targetId}`, { waitUntil: 'networkidle' })
   await expectHeadingInDocsViewport(page, targetId)
   await page.locator(`a[href="${installationPath}"]`).first().click()
   await expect(page).toHaveURL(new RegExp(`${installationPath}$`))
@@ -97,4 +101,40 @@ test('DocsPageShell still resets hashless cross-page navigation to the top', asy
       page.locator('#main-content').evaluate((main) => main.scrollTop),
     )
     .toBe(0)
+})
+
+test('Docs View resets an unresolved cross-page hash in the existing SPA container', async ({
+  page,
+}) => {
+  await page.goto(`${installationPath}#initialization`, {
+    waitUntil: 'networkidle',
+  })
+  await page.waitForFunction(() => Boolean(window.__TSR_ROUTER__))
+  await expectHeadingInDocsViewport(page, 'initialization')
+  const main = await page.locator('#main-content').elementHandle()
+  // Exercise the real router with a stale, malformed fragment without adding
+  // a deliberately broken link to the shipped documentation.
+  await page.evaluate(
+    (to) =>
+      window.__TSR_ROUTER__!.navigate({
+        to,
+        hash: 'removed-section-%',
+      }),
+    tablesPath,
+  )
+  await expect(page).toHaveURL(new RegExp(`${tablesPath}#removed-section-%$`))
+  await expect(
+    page.getByRole('heading', { name: 'Tables_', exact: true }),
+  ).toBeInViewport()
+  await expect
+    .poll(() =>
+      page.locator('#main-content').evaluate((element) => element.scrollTop),
+    )
+    .toBe(0)
+  expect(
+    await main!.evaluate(
+      (element) => element === document.getElementById('main-content'),
+    ),
+  ).toBe(true)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 })
