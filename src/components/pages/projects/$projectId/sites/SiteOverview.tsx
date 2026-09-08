@@ -47,6 +47,7 @@ import {
 
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { Query } from '@appwrite.io/console'
@@ -190,7 +191,7 @@ export function SiteOverviewView() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -209,7 +210,7 @@ export function SiteOverviewView() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {

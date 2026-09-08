@@ -728,6 +728,7 @@ export const InitTicketCard = forwardRef<
     const isPointerOverScene = (clientX: number, clientY: number) => {
       const scene = sceneRef.current
       if (!scene) return false
+      if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return false
 
       const target = document.elementFromPoint(clientX, clientY)
       if (target && (target === scene || scene.contains(target))) return true
@@ -843,7 +844,14 @@ export const InitTicketCard = forwardRef<
 
       if (event.pointerType === 'touch') {
         touchActiveRef.current = true
-        event.currentTarget.setPointerCapture(event.pointerId)
+        const captureTarget = event.currentTarget
+        if (captureTarget && typeof captureTarget.setPointerCapture === 'function') {
+          try {
+            captureTarget.setPointerCapture(event.pointerId)
+          } catch {
+            /* pointer already released */
+          }
+        }
         if (!deviceTiltEnabled) {
           updateTiltFromPointer(event)
         }

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ImageFormat, ImageGravity } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { toResourceUrl, withAdminMode } from '@/lib/appwrite/admin-resource-url'
 
 /** Matches storage inspector: column × DPR, capped (~720–1600). Frozen per mount in the panel. */
 export function getStorageInspectorPreviewBaseWidthPx(): number {
@@ -61,7 +62,7 @@ export function buildAdminStorageInspectorPreviewUrl(
     width,
     output: options.preferAvif ? ImageFormat.Avif : undefined,
   })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /** Content-aware crop (`gravity=auto`). Not yet on `ImageGravity` in the console SDK. */
@@ -533,7 +534,7 @@ export function buildAdminDesignCanvasPreviewUrl(
 ): string {
   const args = buildGetFilePreviewArgsForDesignCanvas(bucketId, fileId, s)
   const raw = sdk.forProject(projectId).storage.getFilePreview(args as never)
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /** Project preview URL for sharing / client apps (no `mode=admin`). */
@@ -544,7 +545,9 @@ export function buildFilePreviewUrl(
   s: ImageTransformState,
 ): string {
   const args = buildGetFilePreviewArgs(bucketId, fileId, s)
-  return sdk.forProject(projectId).storage.getFilePreview(args as never)
+  return toResourceUrl(
+    sdk.forProject(projectId).storage.getFilePreview(args as never),
+  )
 }
 
 export function buildAdminPreviewUrl(
@@ -554,7 +557,7 @@ export function buildAdminPreviewUrl(
   s: ImageTransformState,
 ): string {
   const raw = buildFilePreviewUrl(projectId, bucketId, fileId, s)
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /** Raw file view (no transform params). Same auth as preview; stable while editing transforms. */
@@ -566,7 +569,7 @@ export function buildAdminFileViewUrl(
   const raw = sdk
     .forProject(projectId)
     .storage.getFileView({ bucketId, fileId })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 /**
@@ -581,7 +584,7 @@ export function buildAdminUntransformedPreviewUrl(
   const raw = sdk
     .forProject(projectId)
     .storage.getFilePreview({ bucketId, fileId })
-  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+  return withAdminMode(raw)
 }
 
 export const OUTPUT_FORMAT_LABELS: { value: ImageFormat; label: string }[] = [

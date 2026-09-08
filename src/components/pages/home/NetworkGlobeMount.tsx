@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
 import { useT } from '@/lib/i18n/translate'
+import { importNamedDefault } from '@/lib/stale-chunk-error'
 import { cn } from '@/lib/utils'
 import {
   NETWORK_SEGMENT_CSS_VARS,
@@ -11,9 +12,10 @@ import {
 import type { NetworkSegment } from '@/lib/home/network-locations'
 
 const LazyNetworkGlobe = lazy(() =>
-  import('./NetworkGlobe.client').then((module) => ({
-    default: module.NetworkGlobe,
-  })),
+  importNamedDefault(
+    () => import('./NetworkGlobe.client'),
+    'NetworkGlobe',
+  ),
 )
 
 const GLOBE_FRAME_CLASSNAME =

@@ -4,11 +4,10 @@ import { FullscreenLoader } from '@/components/ui/loader'
 import { getInitPageMetaTags } from '@/lib/init/init-seo'
 import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
+import { importNamedDefault } from '@/lib/stale-chunk-error'
 
 const InitView = lazy(() =>
-  import('@/components/pages/init/View').then((module) => ({
-    default: module.View,
-  })),
+  importNamedDefault(() => import('@/components/pages/init/View'), 'View'),
 )
 
 export const Route = createFileRoute('/_public/init')({

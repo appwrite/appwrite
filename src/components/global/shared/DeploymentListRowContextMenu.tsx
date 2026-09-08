@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -159,7 +160,7 @@ export function DeploymentListRowContextMenu({
               deploymentId: deployment.$id,
               type: DeploymentDownloadType.Source,
             })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -183,7 +184,7 @@ export function DeploymentListRowContextMenu({
               deploymentId: deployment.$id,
               type: DeploymentDownloadType.Output,
             })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
