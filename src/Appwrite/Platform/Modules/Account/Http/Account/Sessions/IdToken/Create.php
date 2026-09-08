@@ -12,7 +12,7 @@ use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Geo\Geo;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -40,6 +40,7 @@ use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -82,7 +83,7 @@ class Create extends Action
 
                 If there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the verified email received from the provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.
 
-                This flow does not return provider refresh tokens. If your app needs long-lived access to provider APIs, use the browser-based OAuth2 flow instead.
+                This flow does not return provider refresh tokens. You may pass an access token the provider handed your client, along with its lifetime, to store it on the session - but Appwrite cannot renew it once it expires. If your app needs long-lived access to provider APIs, use the browser-based OAuth2 flow instead.
 
                 A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
                 EOT,
@@ -102,6 +103,7 @@ class Create extends Action
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token contains a nonce claim.', true)
             ->param('accessToken', '', new Text(4096, 0), 'Provider access token to store alongside the session for calling provider APIs. Never used for authentication.', true)
+            ->param('accessTokenExpiry', 0, new Range(0, 31536000), 'Seconds until the provider access token expires, as reported by the provider. Stored so clients can tell when the stored token goes stale.', true)
             ->param('name', '', new Text(128, 0), 'User name. Only used when creating a new user and the ID token has no name claim, such as on the first Sign in with Apple authorization.', true)
             ->inject('request')
             ->inject('response')
@@ -109,7 +111,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('locale')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
@@ -128,6 +130,7 @@ class Create extends Action
         string $idToken,
         string $nonce,
         string $accessToken,
+        int $accessTokenExpiry,
         string $name,
         Request $request,
         Response $response,
@@ -135,7 +138,7 @@ class Create extends Action
         Database $dbForProject,
         Document $project,
         Locale $locale,
-        GeoRecord $geoRecord,
+        Geo $geo,
         Event $queueForEvents,
         Store $store,
         ProofsToken $proofForToken,
@@ -186,6 +189,10 @@ class Create extends Action
         // Apple never puts the name inside the ID token; it is delivered to the
         // client once, on the first authorization, and forwarded via the param
         $name = (\is_string($claims['name'] ?? null) && $claims['name'] !== '') ? $claims['name'] : $name;
+
+        // Google exposes the avatar as a `picture` claim, so unlike the browser
+        // flow there is no getUserPhoto() call to make. Apple never returns one.
+        $photo = \is_string($claims['picture'] ?? null) ? $claims['picture'] : '';
 
         // Check if this identity is connected to a different user
         $sessionUpgrade = false;
@@ -249,7 +256,14 @@ class Create extends Action
             $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
         }
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $dbForProject, $authorization, $newUser, $newTarget);
+        // Mirrors the browser OAuth2 flow, which turns the provider's `expires_in`
+        // into an absolute timestamp. Unknown expiry stays null rather than
+        // claiming the token is already stale.
+        $accessTokenExpiresAt = ($accessToken !== '' && $accessTokenExpiry > 0)
+            ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
+            : null;
+
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -263,6 +277,7 @@ class Create extends Action
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $geoRecord = $geo->get($request->getIP());
 
         $session = new Document(array_merge(
             [
@@ -272,6 +287,11 @@ class Create extends Action
                 'provider' => $provider,
                 'providerUid' => $sub,
                 'providerAccessToken' => $accessToken,
+                // Native sign-in never yields a refresh token: the provider hands the
+                // client an ID token and, at most, a short-lived access token. Stored
+                // explicitly so the session shape matches the browser OAuth2 flow.
+                'providerRefreshToken' => null,
+                'providerAccessTokenExpiry' => $accessTokenExpiresAt,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -554,10 +574,10 @@ class Create extends Action
 
     /**
      * Create the (provider, sub) identity for the user, or refresh its stored
-     * access token. Guards against attaching an email already bound to
-     * another user's identity.
+     * access token and photo. Guards against attaching an email already bound
+     * to another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -592,6 +612,9 @@ class Create extends Action
                     'providerUid' => $sub,
                     'providerEmail' => $providerEmail,
                     'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => null,
+                    'providerAccessTokenExpiry' => $accessTokenExpiresAt,
+                    'photo' => $photo ?: null,
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
@@ -606,10 +629,25 @@ class Create extends Action
                 }
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
-        } elseif (!empty($accessToken)) {
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $accessToken,
-            ]));
+            return;
+        }
+
+        $changes = [];
+
+        // Native sign-in often carries no access token at all, so only overwrite
+        // the stored credentials when the client actually supplied one.
+        if (!empty($accessToken)) {
+            $changes['providerAccessToken'] = $accessToken;
+            $changes['providerAccessTokenExpiry'] = $accessTokenExpiresAt;
+        }
+
+        // Refresh the photo URL on every login so expired CDN links self-heal.
+        if ($photo !== '') {
+            $changes['photo'] = $photo;
+        }
+
+        if (!empty($changes)) {
+            $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
         }
     }
 

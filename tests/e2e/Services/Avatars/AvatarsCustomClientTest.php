@@ -61,6 +61,67 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertOAuth2Photo($response['body']);
     }
 
+    public function testGetPhotoIdToken(): void
+    {
+        /**
+         * Test for SUCCESS — OAuth2 identity photo from a native ID token sign-in
+         *
+         * The native flow takes the avatar straight off the token's `picture`
+         * claim rather than calling getUserPhoto(), so assert it lands on the
+         * identity and wins the avatar chain exactly like the browser flow.
+         */
+        $this->enableMockProvider();
+
+        $projectId = $this->getProject()['$id'];
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'idtoken-photo-' . \uniqid('', true),
+                'email' => 'idtoken.photo.' . \uniqid('', true) . '@localhost.test',
+                'email_verified' => true,
+                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ]),
+            'header' => '',
+        ]);
+
+        $this->assertEquals(200, $token['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'provider' => 'mock',
+            'idToken' => $token['body']['token'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], [
+            'width' => 128,
+            'height' => 128,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertOAuth2Photo($response['body']);
+    }
+
     public function testGetPhotoOverridesIdentityPhoto(): void
     {
         /**
@@ -246,19 +307,7 @@ final class AvatarsCustomClientTest extends Scope
      */
     private function createOAuth2Session(): string
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], [
-            'provider' => 'mock',
-            'appId' => '1',
-            'secret' => '123456',
-            'enabled' => true,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->enableMockProvider();
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', [
             'origin' => 'http://localhost',
@@ -285,6 +334,26 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertNotEmpty($session);
 
         return $session;
+    }
+
+    /**
+     * Enable the mock OAuth2 provider on the project under test.
+     */
+    private function enableMockProvider(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     /**

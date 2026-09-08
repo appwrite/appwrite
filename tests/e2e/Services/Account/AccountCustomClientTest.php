@@ -5356,6 +5356,78 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($userId, $response['body']['userId']);
     }
 
+    public function testCreateIdTokenSessionProviderCredentials(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sub = 'idtoken-' . \uniqid('', true) . \bin2hex(\random_bytes(4));
+        $email = 'idtoken.credentials.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $accessToken = 'mock-access-token-' . \bin2hex(\random_bytes(4));
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+            'accessToken' => $accessToken,
+            'accessTokenExpiry' => 3600,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($accessToken, $response['body']['providerAccessToken']);
+        $this->assertNotEmpty($response['body']['providerAccessTokenExpiry']);
+        // Native sign-in can never yield a refresh token
+        $this->assertEmpty($response['body']['providerRefreshToken']);
+
+        $sessionId = $response['body']['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ];
+
+        // Extending the session must not attempt a provider token exchange
+        $extended = $this->client->call(Client::METHOD_PATCH, '/account/sessions/' . $sessionId, $headers);
+
+        $this->assertEquals(200, $extended['headers']['status-code']);
+        $this->assertEquals($accessToken, $extended['body']['providerAccessToken']);
+        $this->assertEmpty($extended['body']['providerRefreshToken']);
+
+        // The identity carries the same credentials as the session
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $headers);
+
+        $this->assertEquals(200, $identities['headers']['status-code']);
+        $this->assertEquals(1, $identities['body']['total']);
+        $this->assertEquals($accessToken, $identities['body']['identities'][0]['providerAccessToken']);
+        $this->assertNotEmpty($identities['body']['identities'][0]['providerAccessTokenExpiry']);
+        $this->assertEmpty($identities['body']['identities'][0]['providerRefreshToken']);
+
+        // Omitting the access token leaves no stale expiry behind
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['providerAccessToken']);
+        $this->assertEmpty($response['body']['providerAccessTokenExpiry']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+            'accessToken' => $accessToken,
+            'accessTokenExpiry' => -1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
     public function testCreateIdTokenSessionInvalidToken(): void
     {
         $this->updateMockProvider(true);
