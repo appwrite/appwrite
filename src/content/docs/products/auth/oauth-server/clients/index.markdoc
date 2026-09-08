@@ -1351,6 +1351,10 @@ await apps.delete({
 
 Clients can also register themselves over plain HTTP, without an Appwrite SDK or a signed-in user, through the registration endpoint ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). This is what makes your OAuth2 server compatible with MCP servers and other software that provisions its own client on first contact. Registration is rate-limited per IP.
 
+{% info title="Dynamically registered apps" %}
+Apps created through this endpoint receive the reserved `oauth-dcr` label. Appwrite manages this label, so you cannot add or remove it. You can use it to exclude dynamically registered apps from your marketplace when calling `apps.list()`.
+{% /info %}
+
 {% multicode %}
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/register' \
