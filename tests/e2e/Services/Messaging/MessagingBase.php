@@ -2332,8 +2332,7 @@ trait MessagingBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        // Bound to this provider explicitly: an unbound target falls back to whichever email provider the
-        // project enabled first, which is not necessarily the one this test created.
+        // Without providerId the target binds to whichever email provider the project enabled first.
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

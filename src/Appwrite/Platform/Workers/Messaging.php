@@ -123,9 +123,8 @@ class Messaging extends Action
                 $messageId = $payload['messageId'];
                 $message = $dbForProject->getDocument('messages', $messageId);
 
-                // Attachments are materialised under here, decrypted, and the finally below reclaims them. The
-                // directory is unique to this job so a redelivery can never clear one a live job is still
-                // reading, and a bucket ID may not start with an underscore, so none can address it.
+                // Unique per job so a redelivery cannot reclaim a directory a live job is still
+                // reading; the underscore prefix is unreachable, as a bucket ID may not start with one.
                 $attachmentsPath = $this->getLocalDevice($project)->getPath('_attachments/' . ID::unique());
 
                 try {
@@ -164,7 +163,6 @@ class Messaging extends Action
         try {
             $message = $dbForProject->getDocument('messages', $messageId);
 
-            // A message that already reached a terminal status keeps it.
             if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
                 return;
             }
@@ -216,8 +214,7 @@ class Messaging extends Action
             return;
         }
 
-        // Built once for the whole send: every batch and every retry attempt rebuilds the provider message,
-        // and decrypting an attachment per rebuild would repeat the work up to a few hundred times.
+        // Hoisted out of buildMessage(), which every batch and every retry attempt calls.
         $attachments = $providerType === MESSAGE_TYPE_EMAIL
             ? $this->prepareAttachments($dbForProject, $message, $deviceForFiles, $project, $attachmentsPath)
             : [];
@@ -1058,7 +1055,9 @@ class Messaging extends Action
                 ? $source
                 : $decompressed;
 
-            $this->getLocalDevice($project)->write($target, new Stream($source), $contentType);
+            if (!$this->getLocalDevice($project)->write($target, new Stream($source), $contentType)) {
+                throw new \Exception('Failed to prepare attachment ' . $file->getId());
+            }
 
             $prepared[] = new Attachment($file->getAttribute('name'), $target, $contentType);
         }
