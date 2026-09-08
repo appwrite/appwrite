@@ -10,7 +10,6 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import '../styles.css'
 import {
   getRuntimeConfig,
   getRuntimeConfigScript,
