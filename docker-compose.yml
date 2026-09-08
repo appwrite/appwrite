@@ -90,7 +90,6 @@ services:
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
-      - _APP_REALTIME_CONCURRENCY_WINDOW
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
@@ -395,7 +394,6 @@ services:
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
-      - _APP_REALTIME_CONCURRENCY_WINDOW
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
       - _APP_WORKER_MAX_COROUTINES=78
@@ -551,7 +549,6 @@ services:
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
-      - _APP_REALTIME_CONCURRENCY_WINDOW
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
       # against shared console/cache pools; floor must cover concurrent ticks.

@@ -1881,15 +1881,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-            [
-                'name' => '_APP_REALTIME_CONCURRENCY_WINDOW',
-                'description' => 'Trailing window in seconds over which realtime connection opens and closes are netted into the concurrency gauge. A shorter window hides long-lived connections; a longer one keeps a stopped worker\'s orphaned opens for longer.',
-                'introduction' => '',
-                'default' => '21600',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
             ]
         ],
     ],

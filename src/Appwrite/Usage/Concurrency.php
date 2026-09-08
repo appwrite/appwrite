@@ -29,6 +29,13 @@ class Concurrency
     /** Must match REALTIME_CONCURRENCY_INTERVAL. */
     private const int INTERVAL_SECONDS = 300;
 
+    /**
+     * Trailing window the level is summed over. Calibrated against live
+     * connection counts: shorter hides long-lived connections, longer carries a
+     * killed worker's orphaned opens for longer.
+     */
+    private const int WINDOW_SECONDS = 21600;
+
     /** How far back to look for the newest sample when resuming. */
     private const int MAX_CATCHUP_HOURS = 168;
 
@@ -42,7 +49,7 @@ class Concurrency
      */
     public function sample(Usage $usage, ?\DateTimeInterface $now = null): int
     {
-        $window = $this->window();
+        $window = self::WINDOW_SECONDS;
 
         // Stay behind the current bucket so in-flight deltas land first.
         $end = \DateTime::createFromInterface($now ?? new \DateTimeImmutable())
@@ -147,17 +154,6 @@ class Concurrency
         $usage->addBatch($samples, Usage::TYPE_GAUGE);
 
         return \count($samples);
-    }
-
-    /**
-     * Trailing window the level is summed over, in seconds. Set through
-     * _APP_REALTIME_CONCURRENCY_WINDOW; the default was calibrated against live
-     * connection counts and sits between hiding long-lived connections (shorter)
-     * and carrying a stopped worker's orphaned opens (longer).
-     */
-    private function window(): int
-    {
-        return \max(self::INTERVAL_SECONDS, (int) System::getEnv('_APP_REALTIME_CONCURRENCY_WINDOW', 21600));
     }
 
     /**
