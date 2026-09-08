@@ -321,8 +321,7 @@ $server->onReceive(function (int $fd, string $data) use (
     $span->set('mqtt.fd', $fd);
     $span->set('project.id', $connection->projectId);
     $span->set('user.id', $connection->identity['userId'] ?? '');
-    $span->set('mqtt.clientId', $connection->getClientId() ?? '');
-    $span->set('mqtt.cleanStart', $connection->cleanStart ?? '');
+    $span->set('mqtt.clean_start', $connection->cleanStart);
 
     $reply = function (string $packet = '', bool $close = false) use ($server, $fd): void {
         if ($packet !== '') {
