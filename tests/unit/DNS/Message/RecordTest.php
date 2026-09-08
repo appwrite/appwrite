@@ -150,6 +150,100 @@ final class RecordTest extends TestCase
         $this->assertSame(\strlen($data), $offset);
     }
 
+    public function testEncodeMxRecordWithZeroPriorityMatchesBytes(): void
+    {
+        // Zero is the highest priority a mail exchange can be given, and it is a value the sender
+        // chose rather than one it omitted. It has to reach the wire as two zero octets.
+        $record = new Record(
+            name: 'mail.example.com',
+            type: Record::TYPE_MX,
+            class: Record::CLASS_IN,
+            ttl: 3600,
+            rdata: 'mail.exchange.example.com',
+            priority: 0,
+        );
+
+        // Raw RR: mail.example.com. 3600 IN MX 0 mail.exchange.example.com.
+        $expected = "\x04mail\x07example\x03com\x00"
+            . "\x00\x0F"
+            . "\x00\x01"
+            . "\x00\x00\x0E\x10"
+            . "\x00\x1D"
+            . "\x00\x00"
+            . "\x04mail\x08exchange\x07example\x03com\x00";
+
+        $this->assertSame($expected, $record->encode());
+    }
+
+    public function testDecodeMxRecordWithZeroPriorityParsesFields(): void
+    {
+        // Raw RR: mail.example.com. 3600 IN MX 0 mail.exchange.example.com.
+        $data = "\x04mail\x07example\x03com\x00"
+            . "\x00\x0F"
+            . "\x00\x01"
+            . "\x00\x00\x0E\x10"
+            . "\x00\x1D"
+            . "\x00\x00"
+            . "\x04mail\x08exchange\x07example\x03com\x00";
+
+        $offset = 0;
+        $record = Record::decode($data, $offset);
+
+        // A zero read off the wire stays a zero, rather than becoming the null that means "this
+        // record type carries no priority".
+        $this->assertSame(0, $record->priority);
+        $this->assertSame('mail.exchange.example.com', $record->rdata);
+        $this->assertSame(\strlen($data), $offset);
+    }
+
+    public function testEncodeSrvRecordWithZeroNumericsMatchesBytes(): void
+    {
+        // RFC 2782 gives all three fields a meaning at zero: highest priority, no share of the
+        // weighted draw, and the port that marks the service unavailable on this target.
+        $record = new Record(
+            name: '_sip._tcp.example.com',
+            type: Record::TYPE_SRV,
+            class: Record::CLASS_IN,
+            ttl: 7200,
+            rdata: 'sip.example.com',
+            priority: 0,
+            weight: 0,
+            port: 0,
+        );
+
+        // Raw RR: _sip._tcp.example.com. 7200 IN SRV 0 0 0 sip.example.com.
+        $expected = "\x04_sip\x04_tcp\x07example\x03com\x00"
+            . "\x00\x21"
+            . "\x00\x01"
+            . "\x00\x00\x1C\x20"
+            . "\x00\x17"
+            . "\x00\x00\x00\x00\x00\x00"
+            . "\x03sip\x07example\x03com\x00";
+
+        $this->assertSame($expected, $record->encode());
+    }
+
+    public function testDecodeSrvRecordWithZeroNumericsParsesFields(): void
+    {
+        // Raw RR: _sip._tcp.example.com. 7200 IN SRV 0 0 0 sip.example.com.
+        $data = "\x04_sip\x04_tcp\x07example\x03com\x00"
+            . "\x00\x21"
+            . "\x00\x01"
+            . "\x00\x00\x1C\x20"
+            . "\x00\x17"
+            . "\x00\x00\x00\x00\x00\x00"
+            . "\x03sip\x07example\x03com\x00";
+
+        $offset = 0;
+        $record = Record::decode($data, $offset);
+
+        $this->assertSame(0, $record->priority);
+        $this->assertSame(0, $record->weight);
+        $this->assertSame(0, $record->port);
+        $this->assertSame('sip.example.com', $record->rdata);
+        $this->assertSame(\strlen($data), $offset);
+    }
+
     public function testEncodeTxtRecordMatchesBytes(): void
     {
         $record = new Record(

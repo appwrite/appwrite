@@ -411,6 +411,53 @@ ZONE;
         $this->assertSame('mail.example.com', $roundTrip->records[2]->name);
     }
 
+    public function testExportAndImportKeepZeroMxPriority(): void
+    {
+        // The zone file is the only thing a resolver reads. A priority of 0 written as an empty
+        // field does not just lose the priority: the line stops parsing, and an import failure
+        // takes every other record in the zone with it.
+        $zone = new Zone(
+            'example.com',
+            [
+                new Record('mail.example.com', Record::TYPE_MX, Record::CLASS_IN, 300, 'mail.example.com', priority: 0),
+            ],
+            new Record('example.com', Record::TYPE_SOA, Record::CLASS_IN, 1800, 'ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800'),
+        );
+
+        $exported = File::export($zone, includeComments: false);
+        $this->assertStringContainsString("mail\t300\tIN\tMX\t0 mail\n", $exported);
+
+        $roundTrip = File::import($exported);
+        $record = $this->findRecord($roundTrip->records, Record::TYPE_MX);
+
+        $this->assertInstanceOf(Record::class, $record);
+        $this->assertSame(0, $record->priority);
+        $this->assertSame('mail.example.com', $record->rdata);
+    }
+
+    public function testExportAndImportKeepZeroSrvNumerics(): void
+    {
+        $zone = new Zone(
+            'example.com',
+            [
+                new Record('_sip._tcp.example.com', Record::TYPE_SRV, Record::CLASS_IN, 300, 'sip.example.com', priority: 0, weight: 0, port: 0),
+            ],
+            new Record('example.com', Record::TYPE_SOA, Record::CLASS_IN, 1800, 'ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800'),
+        );
+
+        $exported = File::export($zone, includeComments: false);
+        $this->assertStringContainsString("_sip._tcp\t300\tIN\tSRV\t0 0 0 sip\n", $exported);
+
+        $roundTrip = File::import($exported);
+        $record = $this->findRecord($roundTrip->records, Record::TYPE_SRV);
+
+        $this->assertInstanceOf(Record::class, $record);
+        $this->assertSame(0, $record->priority);
+        $this->assertSame(0, $record->weight);
+        $this->assertSame(0, $record->port);
+        $this->assertSame('sip.example.com', $record->rdata);
+    }
+
     public function testImportSupportsPtrRecords(): void
     {
         $soa = self::DEFAULT_SOA;
