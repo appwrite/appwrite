@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useWebGLAvailable } from '@/hooks/use-webgl-available'
 import {
   Color,
   PerspectiveCamera,
@@ -438,6 +439,18 @@ export function World({
   onReady,
 }: WorldProps) {
   const eventSourceRef = useRef<HTMLDivElement>(null)
+  const webglAvailable = useWebGLAvailable()
+  const skippedReadyRef = useRef(false)
+
+  useEffect(() => {
+    if (webglAvailable !== false || skippedReadyRef.current) return
+    skippedReadyRef.current = true
+    onReady?.()
+  }, [onReady, webglAvailable])
+
+  if (webglAvailable !== true) {
+    return null
+  }
 
   return (
     <div ref={eventSourceRef} className="h-full w-full">
