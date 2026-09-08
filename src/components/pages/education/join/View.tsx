@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { Loader2 } from 'lucide-react'
+import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,9 @@ export function View() {
   const queryClient = useQueryClient()
   const { account: accountUnknown, isLoading, isAuthenticated } = useAuth()
   const account = accountUnknown as Models.User | undefined
+  const accountLabel = isAuthenticated
+    ? account?.email || account?.name
+    : undefined
 
   const [isRedirectingToGithub, setIsRedirectingToGithub] = useState(false)
   const [error, setError] = useState<EnrollmentError | null>(null)
@@ -179,6 +183,11 @@ export function View() {
                   <p className="text-muted-foreground text-[13px] leading-relaxed">
                     {visibleError.description}
                   </p>
+                  {accountLabel ? (
+                    <div className="break-words">
+                      <AuthAccountChip accountLabel={accountLabel} />
+                    </div>
+                  ) : null}
                 </div>
                 {error?.recovery === 'connect' ? (
                   <Button
@@ -244,6 +253,11 @@ export function View() {
                       'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.',
                     )}
                   </p>
+                  {accountLabel ? (
+                    <div className="break-words">
+                      <AuthAccountChip accountLabel={accountLabel} />
+                    </div>
+                  ) : null}
                 </div>
                 <Button
                   className="w-full"
