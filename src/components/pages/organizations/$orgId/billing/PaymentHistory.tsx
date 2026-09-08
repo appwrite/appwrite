@@ -95,18 +95,6 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   }
 }
 
-function extractUrlFromResponse(response: unknown): string | undefined {
-  if (!response || typeof response !== 'object') {
-    return undefined
-  }
-
-  const responseObject = response as Record<string, unknown>
-  const candidate =
-    responseObject.url || responseObject.href || responseObject.link
-
-  return typeof candidate === 'string' ? candidate : undefined
-}
-
 export function PaymentHistory() {
   const t = useT()
   const params = useParams({ strict: false })
@@ -295,25 +283,10 @@ export function PaymentHistory() {
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    const response =
-                      await sdk.forConsole.organizations.getInvoiceView({
-                        organizationId: orgId,
-                        invoiceId,
-                      })
-
-                    let url: string
-                    if (typeof response === 'string') {
-                      url = response
-                    } else if (response && typeof response === 'object') {
-                      url = extractUrlFromResponse(response) || ''
-                      if (!url) {
-                        const endpoint = sdk.forConsole.client.config.endpoint
-                        url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/view`
-                      }
-                    } else {
-                      const endpoint = sdk.forConsole.client.config.endpoint
-                      url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/view`
-                    }
+                    const url = sdk.forConsole.organizations.getInvoiceView({
+                      organizationId: orgId,
+                      invoiceId,
+                    })
 
                     window.open(url, '_blank', 'noopener,noreferrer')
                   } catch (error) {
@@ -327,25 +300,10 @@ export function PaymentHistory() {
                 onDownloadInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    const response =
-                      await sdk.forConsole.organizations.getInvoiceDownload({
-                        organizationId: orgId,
-                        invoiceId,
-                      })
-
-                    let url: string
-                    if (typeof response === 'string') {
-                      url = response
-                    } else if (response && typeof response === 'object') {
-                      url = extractUrlFromResponse(response) || ''
-                      if (!url) {
-                        const endpoint = sdk.forConsole.client.config.endpoint
-                        url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/download`
-                      }
-                    } else {
-                      const endpoint = sdk.forConsole.client.config.endpoint
-                      url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/download`
-                    }
+                    const url = sdk.forConsole.organizations.getInvoiceDownload({
+                      organizationId: orgId,
+                      invoiceId,
+                    })
 
                     const pdfResponse = await fetch(url, {
                       method: 'GET',
