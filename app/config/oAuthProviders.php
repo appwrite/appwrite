@@ -464,6 +464,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
     ],
+    'vercel' => [
+        'name' => 'Vercel',
+        'developers' => 'https://vercel.com/docs/integrations/create-integration/vercel-api-integrations',
+        'icon' => 'icon-vercel',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Vercel',
+    ],
     'wordpress' => [
         'name' => 'WordPress',
         'developers' => 'https://developer.wordpress.com/docs/oauth2/',
