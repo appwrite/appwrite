@@ -8,6 +8,13 @@ timeToRead: 8
 author: atharva
 category: tutorial
 featured: false
+faqs:
+  - question: "Can I use Prisma ORM with Appwrite Postgres?"
+    answer: "Yes. Appwrite Postgres accepts standard PostgreSQL connections. Use Prisma ORM with the PostgreSQL driver adapter to query your database through a generated TypeScript client."
+  - question: "How do I apply Prisma ORM schema changes to Appwrite Postgres?"
+    answer: "Generate SQL from your model changes with Prisma Migrate, then review and commit the migration files. Apply them with npx prisma migrate deploy through the direct connection on port 5432."
+  - question: "When should I regenerate Prisma Client?"
+    answer: "Run npx prisma generate after changing your Prisma schema so the generated client includes the updated models and fields. Applying a SQL migration and generating the client are separate steps in this guide."
 ---
 
 ORMs are a popular way to work with database records as objects in application code. With Appwrite Postgres, you can use Prisma ORM to describe your data in a schema file and generate a TypeScript client for it.
@@ -22,11 +29,9 @@ Open your project at [appwrite.io](https://appwrite.io), then choose **Databases
 
 Name the database `Reading list`, keep the automatically generated ID, and choose **Starter**. Leave replicas and PITR off for this example. Review the configuration and price, then click **Create database**. The [PostgreSQL quick start](/docs/products/databases/postgresql/quick-start) covers the available options.
 
-## Open the database {% #open-database %}
+Once provisioning finishes, the SQL editor opens. The sidebar gives you access to your tables and connection credentials.
 
 ![The Reading list database workspace in Appwrite](/images/blog/prisma-orm-appwrite-postgres/database-workspace.avif)
-
-Once provisioning finishes, the SQL editor opens. The sidebar gives you access to your tables and connection credentials.
 
 # Configure Prisma ORM {% #configure-prisma-orm %}
 
@@ -42,15 +47,11 @@ npm install --save-dev prisma@7.10.0 typescript tsx @types/node @types/pg
 npx prisma init --datasource-provider postgresql --output ../generated/prisma
 ```
 
-Use `"type": "module"` in `package.json`. In `.env`, set `DATABASE_URL` to the copied connection string with port `5432`. Keep `.env` out of Git.
+Use `"type": "module"` in `package.json`. In `.env`, set `DATABASE_URL` to the copied connection string with port `5432`. We use this direct endpoint for migrations because they can depend on a consistent database session. Port `6432` uses the connection pooler. Keep the other connection values and TLS settings unchanged, and keep `.env` out of Git. See [connection options](/docs/products/databases/postgresql/connections).
 
 ```env
 DATABASE_URL="postgresql://<USER>:<PASSWORD>@<HOST>:5432/<DATABASE>?sslmode=require"
 ```
-
-{% info title="Connections for migrations" %}
-We use the direct endpoint on port `5432` for migrations so they keep the same database session. Port `6432` uses the connection pooler. Preserve the other values and TLS settings from your copied URL. See [connection options](/docs/products/databases/postgresql/connections).
-{% /info %}
 
 Update the generated `prisma7.config.ts`:
 
