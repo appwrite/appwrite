@@ -12,8 +12,6 @@ jobs:
     name: ${{ matrix.project }}
     runs-on: runs-on=${{ github.run_id }}/runner=e2e
     timeout-minutes: ${{ matrix.timeout }}
-    # Live suites share one account. Keep its session valid until teardown has
-    # deleted this run's projects; another PR must not sign in over it.
     concurrency:
       group: e2e-${{ matrix.project }}-${{ matrix.project == 'console-live' && 'shared-account' || github.run_id }}
       cancel-in-progress: false
