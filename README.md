@@ -68,7 +68,7 @@ $server->start();
 - **`Adapter\Swoole`** is a Swoole implementation. It uses `open_mqtt_protocol` so the runtime frames one MQTT packet per `onReceive`.
 - **`Server`** is a thin wrapper over an `Adapter`. It delegates the hooks and the `send` / `close` writes, and routes transport errors to callbacks registered with `error()` instead of letting them escape the event loop.
 - **`Client`** is a small broker client over TCP/TLS (`mqtt://` / `mqtts://`) that frames packets the same way. It gives you `connect`, `send`, `receive` / `listen`, with `onOpen` / `onReceive` / `onClose` / `onError`.
-- **`Packet`** is a decoded packet (`type`, `flags`, `qos()`, `body`) plus the version-agnostic wire primitives (`parse`, `encodeLength` / `encodeString`, `pingreq` / `pingresp`). It also reads the two CONNECT fields that sit outside the property block, `getClientId()` and `isCleanStart()`.
+- **`Packet`** is a decoded packet (`type`, `flags`, `qos()`, `dup()`, `body`) plus the version-agnostic wire primitives (`parse`, `readString` / `readInt16`, `encodeLength` / `encodeString`, `pingreq` / `pingresp`). It also reads the two CONNECT fields that sit outside the property block, `getClientId()` and `isCleanStart()`.
 - **`Packet\V3`** and **`Packet\V5`** are the per-version encoders. v3.1.1 has return codes and no properties. v5 has reason codes and a property block (`connack`, `publish`, `puback`, `suback`, `unsuback`, `disconnect`, and, v5 only, `auth`).
 - **`Property`** and **`Properties`** model the MQTT 5.0 property block as objects. `new Property(Property::SESSION_EXPIRY_INTERVAL, 60)` knows its wire type, and a `Properties` collection encodes and parses the block (`(new Properties())->add(new Property(Property::USER, ['projectId' => 'p1']))`).
 
@@ -127,6 +127,16 @@ $server->send($fd, V5::suback($packetId, chr(V5::REASON_SUCCESS)));       // gra
 $server->send($fd, V5::suback($packetId, chr(V5::REASON_NOT_AUTHORIZED))); // denied
 
 $server->send($fd, V5::puback($packetId));
+```
+
+Re-delivering a QoS 1 message (no ack came back) sets the DUP flag, which `Packet::dup()` reads on the way back in. The flag is ignored on QoS 0, where it must be 0.
+
+```php
+$server->send($fd, V5::publish('appwrite/push/user-1', $json, qos: 1, packetId: 42, dup: true));
+
+$packet = Packet::parse($data); // an inbound PUBLISH
+$packet->qos();  // 1
+$packet->dup();  // true = a possible re-delivery
 ```
 
 Read a v5 property block off any packet with `Properties::parse($body, $offset)`, which returns the collection and the offset just past the block:
