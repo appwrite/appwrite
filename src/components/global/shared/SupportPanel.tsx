@@ -20,12 +20,9 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { useT } from '@/lib/i18n/translate'
-
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 interface SupportPanelProps {
   orgId?: string | null
@@ -272,12 +269,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
         </h4>
 
         <div className="space-y-2">
-          <a
-            href={CONTACT_SALES_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
-          >
+          <ContactSalesLink className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <Building2 className="h-4 w-4" />
             </div>
@@ -287,8 +279,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
               </p>
               <p className="text-xs text-muted-foreground">{t('Contact sales')}</p>
             </div>
-            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          </a>
+          </ContactSalesLink>
 
           <MarketingSiteLink className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted" href="/discord">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">

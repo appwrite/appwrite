@@ -354,6 +354,9 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Errors': 'エラー',
   'EU data processing': 'EUデータ処理',
   'Evaluating vendors': 'ベンダー評価中',
+  'Just researching': '情報収集中',
+  'Comparing options': '選択肢を比較中',
+  'Ready to get started': '開始の準備ができている',
   'Event triggers': 'イベントトリガー',
   'Event-driven': 'イベント駆動',
   'Every day at midnight': '毎日深夜0時',
@@ -1440,4 +1443,40 @@ export const jaMarketingDictionary: Record<string, string> = {
   'View post': '投稿を表示',
   'View ticket': 'チケットを表示',
   'Press spin the wheel when you are ready to draw the grand prize winner.': '準備ができたら「ホイールを回す」を押してグランプライズの当選者を抽選してください。',
+  'What you can expect': 'ご提供内容',
+  'Our enterprise team reviews your requirements and follows up with a tailored proposal, usually within 3 business days.':
+    'Enterprise チームが要件を確認し、通常 3 営業日以内にカスタム提案でご連絡します。',
+  'Your details have been sent successfully. We usually get back within 3 business days.':
+    'お問い合わせ内容を送信しました。通常 3 営業日以内にご連絡します。',
+  'Our enterprise team will review your requirements.':
+    'Enterprise チームが要件を確認します。',
+  'We usually get back within 3 business days at': '通常 3 営業日以内に次のメールアドレス宛にご連絡します:',
+  'Compare plans and explore enterprise capabilities on our marketing site.':
+    'マーケティングサイトでプラン比較と Enterprise 機能をご確認ください。',
+  'Enterprise overview': 'Enterprise 概要',
+  'Inquiry submitted': 'お問い合わせを送信しました',
+  'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
+    '組織と要件をお知らせください。Enterprise チームがカスタム提案でご連絡します。',
+  "We couldn't submit your inquiry": 'お問い合わせを送信できませんでした',
+  'Sales inquiries are not configured': '営業お問い合わせが設定されていません',
+  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    '送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
+  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    '営業お問い合わせが設定されていません。送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
+  'Something went wrong while sending your request. Please try again in a moment.':
+    'リクエストの送信中に問題が発生しました。しばらくしてからもう一度お試しください。',
+  'Your details': 'お客様情報',
+  'Fields marked with your account email help us connect your inquiry to your Appwrite account.':
+    'アカウントのメールアドレスは、お問い合わせを Appwrite アカウントと紐づけるために使用します。',
+  'You are signed in. Open the sales inquiry form to share your requirements with our enterprise team.':
+    'サインイン済みです。営業お問い合わせフォームを開いて、Enterprise チームに要件を共有してください。',
+  'Open sales form': '営業フォームを開く',
+  'SOC-2, HIPAA, SSO, extended activity logs':
+    'SOC-2、HIPAA、SSO、拡張アクティビティログ',
+  'Sign in to contact sales': 'サインインして営業に問い合わせ',
+  'Create a free account or sign in to submit an enterprise inquiry. This helps us reduce spam and connect your request to your Appwrite account.':
+    '無料アカウントを作成するかサインインして Enterprise のお問い合わせを送信してください。スパム防止と Appwrite アカウントとの紐づけに役立ちます。',
+  'Sign in to your Appwrite account and submit a sales inquiry. Our team will review your use case and schedule a conversation to scope resources, support, and deployment options.':
+    'Appwrite アカウントにサインインして営業お問い合わせを送信してください。チームがユースケースを確認し、リソース、サポート、デプロイオプションについて打ち合わせの日程を調整します。',
+  'Enter the full URL, including https://': 'https:// を含む完全な URL を入力してください',
 }

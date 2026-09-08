@@ -38,6 +38,7 @@ import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
 import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
+import { Route as PublicSalesRouteImport } from './routes/_public/sales'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
@@ -568,6 +569,11 @@ const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
   path: '/upgrade',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSalesRoute = PublicSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicResetRoute = PublicResetRouteImport.update({
@@ -3108,6 +3114,7 @@ export interface FileRoutesByFullPath {
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -3521,6 +3528,7 @@ export interface FileRoutesByTo {
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -3897,6 +3905,7 @@ export interface FileRoutesById {
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
+  '/_public/sales': typeof PublicSalesRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -4316,6 +4325,7 @@ export interface FileRouteTypes {
     | '/comps'
     | '/init'
     | '/reset'
+    | '/sales'
     | '/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -4729,6 +4739,7 @@ export interface FileRouteTypes {
     | '/comps'
     | '/init'
     | '/reset'
+    | '/sales'
     | '/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -5104,6 +5115,7 @@ export interface FileRouteTypes {
     | '/_public/comps'
     | '/_public/init'
     | '/_public/reset'
+    | '/_public/sales'
     | '/_public/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -5723,6 +5735,13 @@ declare module '@tanstack/react-router' {
       path: '/upgrade'
       fullPath: '/upgrade'
       preLoaderRoute: typeof PublicUpgradeRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/sales': {
+      id: '/_public/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof PublicSalesRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/reset': {
@@ -10182,6 +10201,7 @@ interface PublicRouteChildren {
   PublicCompsRoute: typeof PublicCompsRoute
   PublicInitRoute: typeof PublicInitRoute
   PublicResetRoute: typeof PublicResetRoute
+  PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
@@ -10207,6 +10227,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicCompsRoute: PublicCompsRoute,
   PublicInitRoute: PublicInitRoute,
   PublicResetRoute: PublicResetRoute,
+  PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugAuthorizeContributorPreviewRoute:

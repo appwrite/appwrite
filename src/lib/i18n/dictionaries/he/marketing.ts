@@ -452,6 +452,9 @@ export const heMarketingDictionary: Record<string, string> = {
   'Errors': 'שגיאות',
   'EU data processing': 'עיבוד נתונים באיחוד האירופי',
   'Evaluating vendors': 'בוחנים ספקים',
+  'Just researching': 'בשלב מחקר ראשוני',
+  'Comparing options': 'משווים אפשרויות',
+  'Ready to get started': 'מוכנים להתחיל',
   'Event triggers': 'טריגרים מאירועים',
   'Event-driven': 'מונע אירועים',
   'Every day at midnight': 'כל יום בחצות',
@@ -1594,4 +1597,40 @@ export const heMarketingDictionary: Record<string, string> = {
   'View post': 'צפייה בפוסט',
   'View ticket': 'צפייה בכרטיס',
   'Press spin the wheel when you are ready to draw the grand prize winner.': 'לחצו על "סובבו את הגלגל" כשתהיו מוכנים להגריל את הזוכה בפרס הגדול.',
+  'What you can expect': 'מה לצפות',
+  'Our enterprise team reviews your requirements and follows up with a tailored proposal, usually within 3 business days.':
+    'צוות ה-Enterprise שלנו בוחן את הדרישות שלכם וחוזר עם הצעה מותאמת, בדרך כלל תוך 3 ימי עסקים.',
+  'Your details have been sent successfully. We usually get back within 3 business days.':
+    'הפרטים נשלחו בהצלחה. בדרך כלל נחזור אליכם תוך 3 ימי עסקים.',
+  'Our enterprise team will review your requirements.':
+    'צוות ה-Enterprise שלנו יבחן את הדרישות שלכם.',
+  'We usually get back within 3 business days at': 'בדרך כלל נחזור אליכם תוך 3 ימי עסקים בכתובת',
+  'Compare plans and explore enterprise capabilities on our marketing site.':
+    'השוו תוכניות וגלו יכולות Enterprise באתר השיווקי שלנו.',
+  'Enterprise overview': 'סקירת Enterprise',
+  'Inquiry submitted': 'הפנייה נשלחה',
+  'Tell us about your organization and requirements. Our enterprise team will follow up with a tailored proposal.':
+    'ספרו לנו על הארגון והדרישות שלכם. צוות ה-Enterprise שלנו יחזור אליכם עם הצעה מותאמת.',
+  "We couldn't submit your inquiry": 'לא הצלחנו לשלוח את הפנייה',
+  'Sales inquiries are not configured': 'פניות מכירות אינן מוגדרות',
+  'Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
+  'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
+    'פניות מכירות אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
+  'Something went wrong while sending your request. Please try again in a moment.':
+    'משהו השתבש בשליחת הבקשה. נסו שוב בעוד רגע.',
+  'Your details': 'הפרטים שלכם',
+  'Fields marked with your account email help us connect your inquiry to your Appwrite account.':
+    'שדות שמסומנים עם אימייל החשבון שלכם עוזרים לנו לקשר את הפנייה לחשבון Appwrite שלכם.', // pragma: allowlist secret
+  'You are signed in. Open the sales inquiry form to share your requirements with our enterprise team.':
+    'אתם מחוברים. פתחו את טופס פניית המכירות כדי לשתף את הדרישות שלכם עם צוות ה-Enterprise.',
+  'Open sales form': 'פתיחת טופס מכירות',
+  'SOC-2, HIPAA, SSO, extended activity logs':
+    'SOC-2, HIPAA, SSO, לוגי פעילות מורחבים',
+  'Sign in to contact sales': 'התחברו כדי לפנות למכירות',
+  'Create a free account or sign in to submit an enterprise inquiry. This helps us reduce spam and connect your request to your Appwrite account.':
+    'צרו חשבון חינמי או התחברו כדי לשלוח פניית Enterprise. זה עוזר לנו להפחית ספאם ולקשר את הבקשה לחשבון Appwrite שלכם.', // pragma: allowlist secret
+  'Sign in to your Appwrite account and submit a sales inquiry. Our team will review your use case and schedule a conversation to scope resources, support, and deployment options.':
+    'התחברו לחשבון Appwrite שלכם ושלחו פניית מכירות. הצוות שלנו יבחן את מקרה השימוש שלכם ויתאם שיחה לתכנון משאבים, תמיכה ואפשרויות פריסה.', // pragma: allowlist secret
+  'Enter the full URL, including https://': 'הזינו את כתובת הא URL המלאה, כולל https://',
 }

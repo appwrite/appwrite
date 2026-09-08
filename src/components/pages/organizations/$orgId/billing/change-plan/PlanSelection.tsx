@@ -21,16 +21,13 @@ import {
 } from '@/lib/utils/plan-filter'
 import { getLegacyConsoleOrganizationBillingUrl } from '@/lib/legacy-console-path'
 import { cn } from '@/lib/utils'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import {
   analyticsAttrs,
   getUpgradePlanSelectAnalyticsAction,
 } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 const ENTERPRISE_INTRO =
   'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.'
@@ -195,14 +192,9 @@ export function PlanSelection({
       className="h-8 shrink-0 text-[13px]"
       asChild
     >
-      <a
-        href={CONTACT_SALES_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...analyticsAttrs('upgrade-contact-sales')}
-      >
+      <ContactSalesLink {...analyticsAttrs('upgrade-contact-sales')}>
         {t('Contact sales')}
-      </a>
+      </ContactSalesLink>
     </Button>
   )
 
