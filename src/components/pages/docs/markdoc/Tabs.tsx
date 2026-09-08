@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -58,7 +58,7 @@ export function Tabs({
     setActiveId(id)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (tabs.length === 0) return
 
     const hasOsTabs = tabs.some(
@@ -138,11 +138,13 @@ export function TabsItem({
 }) {
   const ctx = useContext(TabsContext)
   const tabId = id ?? title ?? 'tab'
+  const tabTitle = title ?? tabId
 
-  if (ctx) {
-    ctx.registerTab(tabId, title ?? tabId)
-    if (ctx.activeId !== tabId) return null
-  }
+  useLayoutEffect(() => {
+    ctx?.registerTab(tabId, tabTitle)
+  }, [ctx, tabId, tabTitle])
+
+  if (ctx && ctx.activeId !== tabId) return null
 
   return <div>{children}</div>
 }

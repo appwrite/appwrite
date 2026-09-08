@@ -1,20 +1,20 @@
 ---
 layout: post
 title: "Sunsetting the Appwrite Education program"
-description: Appwrite is sunsetting the Education program on December 1st, 2026, and improving the free tier for all developers. Learn what changes and how to transition.
+description: Appwrite is sunsetting the Education program on November 1st, 2026, and improving the free tier for all developers. Learn what changes and how to transition.
 date: 2026-11-04
 cover: /images/blog/sunsetting-appwrite-education-program/cover.avif
 timeToRead: 7
 author: eldad-fux
-category: announcement
+category: announcement, product
 featured: false
 unlisted: true
 faqs:
   - question: "When does the Appwrite Education program end?"
-    answer: "The Education program ends on **December 1st, 2026**. New enrollments through the GitHub Student Developer Pack will close before that date, and existing Education plan organizations will move off the program on December 1st."
+    answer: "The Education program ends on **November 1st, 2026**. New enrollments through the GitHub Student Developer Pack will close before that date, and existing Education plan organizations will move off the program on November 1st."
   - question: "Why is Appwrite ending the Education program?"
     answer: "The Education plan offered Pro-level resources to verified students, but a large share of platform abuse came through misuse of that program. Maintaining guardrails and support for the program pulled time away from product work. Students who followed the terms mostly used resources close to the free plan anyway, so we are redirecting that investment into free tier improvements for everyone."
-  - question: "What happens to current Education plan students on December 1st?"
+  - question: "What happens to current Education plan students on November 1st?"
     answer: "We will contact every active Education organization with transition options. You can move projects to the [free plan](/pricing), upgrade to [Pro](/pricing), or [self-host Appwrite](/docs/advanced/self-hosting) on your own infrastructure. Our team will help you pick the path that fits your projects."
   - question: "Can students still build on Appwrite for free?"
     answer: "Yes. [Appwrite Cloud](/pricing) still has a free plan, and we are working on improvements that will roll out in the coming weeks. Students who used the Education plan for legitimate coursework can keep building on Cloud without paying, within free plan limits."
@@ -26,19 +26,19 @@ faqs:
 
 We launched the Appwrite Education program to give students Pro-level Cloud resources while they learned to build. Verified members of the [GitHub Student Developer Pack](https://education.github.com/pack) could enroll, link their GitHub account, and receive an Education organization with two projects at Pro usage limits. It was a genuine attempt to help the next generation of developers get started without cost getting in the way.
 
-**On December 1st, 2026, we are sunsetting the Education program.** New sign-ups will close, and existing Education organizations will move off the plan. We will put the time and budget we spent running the program into improving the free tier for every developer on Appwrite Cloud.
+**On November 1st, 2026, we are sunsetting the Education program.** New sign-ups will close, and existing Education organizations will move off the plan. We will put the time and budget we spent running the program into improving the free tier for every developer on Appwrite Cloud.
 
 This post explains why we made that call, what it means if you are on the Education plan today, and what comes next.
 
-# What is changing on December 1st
+# What is changing on November 1st
 
-Starting **December 1st, 2026**:
+Starting **November 1st, 2026**:
 
 - The Appwrite Education program will no longer accept new members.
 - Existing Education plan organizations will be transitioned off the program.
 - Pro-level resources tied to the Education plan will no longer be available through GitHub Student Developer Pack verification.
 
-If you are a verified student on the Education plan today, we will reach out with clear steps before December 1st. You will be able to move your projects to the **free plan**, upgrade to **Pro**, or run **self-hosted Appwrite** on infrastructure you control.
+If you are a verified student on the Education plan today, we will reach out with clear steps before November 1st. You will be able to move your projects to the **free plan**, upgrade to **Pro**, or run **self-hosted Appwrite** on infrastructure you control.
 
 # Why we are sunsetting the Education program
 
@@ -92,7 +92,7 @@ Appwrite has always been built for engineers and the open source community. Endi
 
 If you are on the Education plan today, you do not need to figure this out alone.
 
-Before December 1st, we will contact active Education organizations with:
+Before November 1st, we will contact active Education organizations with:
 
 - A timeline for your organization’s transition
 - Guidance on moving projects to the [free plan](/pricing) or [Pro](/pricing)
@@ -115,7 +115,7 @@ If you are enrolling in school now and exploring backend tools, Appwrite is stil
 
 We are sorry we cannot keep the Education program running as it was. We believe a better free tier, plus the paths above, is a fairer way to support students building coursework and learning projects.
 
-If you are on the Education plan, watch your inbox for transition details before December 1st, 2026. Everyone else: we will share free tier updates here as they ship.
+If you are on the Education plan, watch your inbox for transition details before November 1st, 2026. Everyone else: we will share free tier updates here as they ship.
 
 ---
 

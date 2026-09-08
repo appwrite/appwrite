@@ -4,6 +4,10 @@ title: Free
 description: Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.
 ---
 
+{% info title="Education program sunset" %}
+The Appwrite Education program ends on **November 1st, 2026**. Students on the Education plan will transition to the Free plan, [Pro](/docs/advanced/billing/pro), or [self-hosted Appwrite](/docs/advanced/self-hosting). See [Education billing](/docs/advanced/billing/education) and the [announcement](/blog/post/sunsetting-appwrite-education-program).
+{% /info %}
+
 Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite.
 Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike.
 Learn more about the Free plan's generous resource limits on the [pricing page](https://appwrite.io/pricing).

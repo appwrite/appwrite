@@ -6,6 +6,10 @@ description: Understand Appwrite's plans, add-ons, service level agreements, and
 
 Learn how to manage billing for your organization, find the plan that best suits your needs, explore optional add-ons, and understand Appwrite's service level agreements and billing policies.
 
+{% info title="Education program sunset" %}
+The Appwrite Education program ends on **November 1st, 2026**. Existing Education organizations will transition to the [Free](/docs/advanced/billing/free), [Pro](/docs/advanced/billing/pro), or [self-hosted](/docs/advanced/self-hosting) options. See [Education billing](/docs/advanced/billing/education) and the [announcement](/blog/post/sunsetting-appwrite-education-program).
+{% /info %}
+
 # Manage billing {% #manage-billing %}
 
 Configure your organization's plan, payment methods, and spending controls.
@@ -35,6 +39,10 @@ Learn about Appwrite Enterprise, for large organizations with advanced needs.
 
 {% cards_item href="/docs/advanced/billing/oss" title="Open source" %}
 Appwrite provides special plans for open source projects.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/billing/education" title="Education" %}
+The Education program for GitHub Student Developer Pack members ends November 1st, 2026. See transition options.
 {% /cards_item %}
 {% /cards %}
 

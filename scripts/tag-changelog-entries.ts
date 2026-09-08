@@ -23,6 +23,7 @@ type ChangelogTag =
   | 'security'
   | 'infrastructure'
   | 'integrations'
+  | 'programs'
 
 const TAG_KEYWORDS: Record<ChangelogTag, string[]> = {
   // Products
@@ -44,6 +45,7 @@ const TAG_KEYWORDS: Record<ChangelogTag, string[]> = {
   security: ['security', 'encryption', 'ssl', 'tls', 'certificate', 'gdpr', 'compliance'],
   infrastructure: ['infrastructure', 'region', 'cloud', 'network', 'edge', 'cdn', 'deployment'],
   integrations: ['integration', 'stripe', 'openai', 'anthropic', 'github', 'gitlab'],
+  programs: ['education program', 'startup program', 'student developer pack', 'github education'],
 }
 
 function detectTags(content: string, title: string): ChangelogTag[] {

@@ -231,7 +231,7 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/blog/post/choosing-the-right-baas-in-2025': '/blog/post/backend-as-a-service',
   '/blog/post/choosing-the-right-backend': '/blog/post/backend-as-a-service',
   '/heroes': '/',
-  '/docs/advanced/platform': '/docs',
+  '/docs/advanced/platform': '/docs/advanced/billing',
   '/docs/advanced/platform/billing': '/docs/advanced/billing/payments',
   '/docs/advanced/platform/free': '/docs/advanced/billing/free',
   '/docs/advanced/platform/pro': '/docs/advanced/billing/pro',
