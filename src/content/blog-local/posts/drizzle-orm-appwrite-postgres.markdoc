@@ -27,8 +27,6 @@ Keep **Replica count** at `0`, **Enable PITR** off, and **Daily** backups select
 
 ## Open the database {% #database-workspace %}
 
-![PostgreSQL database workspace with SQL editor and Credentials in the sidebar](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
-
 After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in the sidebar contains the connection details.
 
 # Connect Drizzle {% #connection-string %}
@@ -73,6 +71,8 @@ export const db = drizzle({ client: pool })
 ```
 
 # Create the table with Drizzle Kit {% #first-migration %}
+
+![Appwrite database sidebar showing the books table under the public schema](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
 
 With Drizzle, you can define tables and columns in TypeScript. Drizzle Kit turns that code into SQL migrations.
 
