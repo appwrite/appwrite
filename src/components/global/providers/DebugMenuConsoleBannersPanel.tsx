@@ -89,8 +89,8 @@ export function DebugMenuConsoleBannersPanel() {
       <div className="space-y-2 rounded-lg px-3 py-2.5">
         <p className="text-[13px] font-medium text-foreground">Console banners</p>
         <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
-          Scheduled promo strips on project routes. Preview ignores schedule and
-          dismiss prefs. Dismiss reset clears{' '}
+          Scheduled promo banners (header strips and bottom-left cards). Preview
+          ignores schedule and dismiss prefs. Dismiss reset clears{' '}
           <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
             {USER_PREFS_KEY_DISMISSED_BANNERS}
           </code>{' '}
@@ -139,6 +139,11 @@ export function DebugMenuConsoleBannersPanel() {
                     Cloud only
                   </Badge>
                 ) : null}
+                {banner.placement ? (
+                  <Badge variant="info" className="text-[10px] shrink-0">
+                    {banner.placement}
+                  </Badge>
+                ) : null}
               </div>
 
               <p className="text-[11px] text-[var(--network-globe-edge)]/80">
@@ -151,7 +156,7 @@ export function DebugMenuConsoleBannersPanel() {
                     Preview
                   </p>
                   <p className="text-[10px] text-[var(--network-globe-edge)]/70">
-                    Force-show on project routes
+                    Force-show regardless of schedule
                   </p>
                 </div>
                 <Switch

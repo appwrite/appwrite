@@ -640,6 +640,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Use existing card': '既存のカードを使用',
   'Use this address': 'この住所を使用',
   'View all apps': 'すべてのアプリを表示',
+  'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
   'View invoice': '請求書を表示',
@@ -1077,6 +1078,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Public: '公開',
   Realtime: 'Realtime',
   Recap: 'まとめ',
+  'Catch up on Init': 'Init のまとめを見る',
+  'Rewatch sessions and explore every launch from Init week.':
+    'セッションのリプレイと Init week の発表をチェック。',
   Recommended: '推奨',
   Region: 'リージョン',
   Registrar: 'レジストラ',

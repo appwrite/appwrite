@@ -1,9 +1,11 @@
-export type ConsoleBannerScope = 'project'
+export type ConsoleBannerScope = 'project' | 'console'
+export type ConsoleBannerPlacement = 'header' | 'bottom-left'
 
 export type ConsoleBannerDefinition = {
   id: string
   title: string
   scope: ConsoleBannerScope
+  placement?: ConsoleBannerPlacement
   /** Inclusive start (UTC ms). */
   startMs: number
   /** Inclusive end (UTC ms). */
@@ -14,6 +16,7 @@ export type ConsoleBannerDefinition = {
 
 /** Stable id stored in `console.dismissedBanners` user prefs. */
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
+export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 
 /**
  * Promo window: one month starting the week of 2026-09-14 (UTC).
@@ -30,12 +33,36 @@ export const POSTGRES_PROMO_BANNER_END_MS = Date.UTC(
   999,
 )
 
-/** Registered project-scoped console header banners (promo strips). */
+/**
+ * Init recap floating promo: after Init week through end of week (Sun 13 Sep 2026 UTC).
+ */
+export const INIT_RECAP_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 5, 0, 0, 0, 0)
+export const INIT_RECAP_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  8,
+  13,
+  23,
+  59,
+  59,
+  999,
+)
+
+/** Registered console promo banners (header strips and floating cards). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
+  {
+    id: INIT_RECAP_PROMO_BANNER_ID,
+    title: 'Catch up on Init',
+    scope: 'console',
+    placement: 'bottom-left',
+    startMs: INIT_RECAP_PROMO_BANNER_START_MS,
+    endMs: INIT_RECAP_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+  },
   {
     id: POSTGRES_PROMO_BANNER_ID,
     title: 'Appwrite now speaks PostgreSQL',
     scope: 'project',
+    placement: 'header',
     startMs: POSTGRES_PROMO_BANNER_START_MS,
     endMs: POSTGRES_PROMO_BANNER_END_MS,
     cloudOnly: true,

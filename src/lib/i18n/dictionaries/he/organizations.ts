@@ -213,6 +213,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Catalog: 'קטלוג',
   Categories: 'קטגוריות',
   Category: 'קטגוריה',
+  'Catch up on Init': 'צפו בסיכום Init',
   'Change organization': 'החלפת ארגון',
   'Change plan': 'שינוי תוכנית',
   'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.':
@@ -904,6 +905,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Ready to start': 'מוכן להתחלה',
   Realtime: 'Realtime',
   Recap: 'סיכום',
+  'Rewatch sessions and explore every launch from Init week.':
+    'צפו שוב במפגשים ובכל ההשקות משבוע Init.',
   Recommended: 'מומלץ',
   'Recurring Charge': 'חיוב חוזר',
   'Redirect URIs': 'כתובות URI להפניה',
@@ -1203,6 +1206,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'View invoice': 'צפייה בחשבונית',
   'View members': 'צפייה בחברים',
   'View project': 'צפייה בפרויקט',
+  'View recap': 'צפייה בסיכום',
   'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
     'עדיין לא הצלחנו לאשר שרתי שמות של Appwrite עבור הדומיין הזה. שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו אצל הרשם שהשרתים למטה מוגדרים, המתינו מעט, ונסו שוב.', // pragma: allowlist secret
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
