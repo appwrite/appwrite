@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Fetch\Client as FetchClient;
 
 // Reference Material
 // https://vercel.com/docs/integrations/create-integration/vercel-api-integrations
@@ -130,5 +131,30 @@ class Vercel extends OAuth2
         }
 
         return $this->user;
+    }
+
+    public function verifyCredentials(): void
+    {
+        $client = new FetchClient;
+        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        $response = $client->fetch(
+            url: $this->endpoint.'/v2/oauth/access_token',
+            method: FetchClient::METHOD_POST,
+            body: [
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'code' => 'intentionally-invalid-code',
+                'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
+            ]
+        );
+
+        $json = \json_decode($response->getBody(), true);
+
+        $code = $json['error']['code'] ?? $json['error'] ?? null;
+
+        if ($code === 'invalid_client') {
+            throw new \Exception('Vercel application with the provided Client ID and/or Client Secret is invalid.');
+        }
     }
 }
