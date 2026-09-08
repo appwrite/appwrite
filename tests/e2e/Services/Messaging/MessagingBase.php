@@ -2853,7 +2853,7 @@ trait MessagingBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    public function testSendEmailOverSmtpKeepsSingleRecipientInToHeader(): void
+    public function testSendEmailSmtpHeaders(): void
     {
         $headers = [
             'content-type' => 'application/json',
@@ -2864,10 +2864,10 @@ trait MessagingBase
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
             'providerId' => ID::unique(),
             'name' => 'SMTP-to-header',
-            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
-            'port' => \intval(System::getEnv('_APP_SMTP_PORT', '1025')),
-            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
-            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
             'encryption' => 'none',
             'autoTLS' => false,
             'fromName' => 'Sender',
@@ -2902,6 +2902,7 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
+        // Test for SUCCESS
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
             'messageId' => ID::unique(),
             'targets' => [$target['body']['$id']],
@@ -2914,6 +2915,7 @@ trait MessagingBase
         $messageId = $message['body']['$id'];
         $this->assertEventually(function () use ($messageId, $headers) {
             $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
         }, 30000, 500);
 
@@ -2922,5 +2924,56 @@ trait MessagingBase
         $email = $this->getLastEmailByAddress($recipient);
 
         $this->assertEquals($recipient, $email['to'][0]['address']);
+
+        $ccRecipient = \uniqid() . '@appwrite.io';
+        $cc = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $ccRecipient,
+        ]);
+
+        $this->assertEquals(201, $cc['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => ID::unique(),
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', $headers, [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        // A topic subscriber explicitly included in BCC must stay hidden from CC.
+        // A retry of a lone failed BCC recipient produces the same To/BCC overlap.
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'topics' => [$topic['body']['$id']],
+            'cc' => [$cc['body']['$id']],
+            'bcc' => [$target['body']['$id']],
+            'subject' => 'BCC header check',
+            'content' => 'BCC header check',
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        $email = $this->getLastEmail(1, function (array $email) use ($ccRecipient) {
+            $this->assertEquals($ccRecipient, $email['cc'][0]['address'] ?? null);
+        });
+
+        $this->assertEmpty($email['to'] ?? []);
+        $this->assertEmpty($email['bcc'] ?? []);
     }
 }

@@ -1056,16 +1056,18 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // SMTP hands one envelope to the whole batch, so a multi-recipient send would show every
-        // subscriber the rest of the list. Those move to BCC, which is carried in the envelope and
-        // never written to a header. A lone recipient has nobody to be hidden from, and emptying To
-        // for them only drops the header - the renderer omits any field that renders empty - which
-        // leaves the client with no recipient to show.
-        if ($provider->getAttribute('provider') === 'smtp' && \count($to) > 1) {
-            foreach ($to as $recipient) {
-                $bcc[] = ['email' => $recipient];
+        if ($provider->getAttribute('provider') === 'smtp') {
+            // SMTP sends one message to the whole batch. Hide subscribers from each other.
+            if (\count($to) > 1) {
+                foreach ($to as $recipient) {
+                    $bcc[] = ['email' => $recipient];
+                }
+                $to = [];
+            } else {
+                // Failed BCC recipients re-enter through To on retry. Keep them hidden,
+                // while ordinary single recipients retain a visible To header.
+                $to = \array_values(\array_diff($to, \array_column($bcc, 'email')));
             }
-            $to = [];
         }
 
         return new Email(
