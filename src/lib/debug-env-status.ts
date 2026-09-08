@@ -92,6 +92,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override draft blog post visibility',
   },
   {
+    key: 'VITE_CONSOLE_SCREENSHOT_MODE',
+    group: 'Runtime',
+    description: 'Default screenshot mode before a saved browser preference',
+  },
+  {
     key: 'VITE_CONSOLE_DATABASE_PITR_RESTORE',
     group: 'Runtime',
     description: 'Override dedicated database PITR restore UI',
@@ -242,6 +247,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
     VITE_CONSOLE_BROWSER_ALERTS: isNonEmpty(config.browserAlerts),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
+    VITE_CONSOLE_SCREENSHOT_MODE: isNonEmpty(config.screenshotMode),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),

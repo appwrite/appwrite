@@ -25,6 +25,8 @@ export interface RuntimeConfig {
   browserAlerts: string
   /** Override for the profile's blogDrafts feature ('' = profile default). */
   blogDrafts: string
+  /** Default screenshot mode when the browser has no saved preference. */
+  screenshotMode: string
   /** Override for dedicated database PITR restore UI ('' = profile default). */
   databasePitrRestore: string
   /**
@@ -123,6 +125,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     browserAlerts: read('VITE_CONSOLE_BROWSER_ALERTS'),
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
+    screenshotMode: read('VITE_CONSOLE_SCREENSHOT_MODE'),
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),

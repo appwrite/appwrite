@@ -1632,6 +1632,8 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 
 ## Environment
 
+For screenshot captures, set `VITE_CONSOLE_SCREENSHOT_MODE=true` before starting the dev or production server. Screenshot mode defaults to off when unset. A saved browser preference overrides the environment default; typing `smile` outside an input or editor toggles the mode and saves that choice. Remove `screenshot:modeOpen` from localStorage to use the environment default again.
+
 Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`). Project endpoints are dynamic (per-project region); use `getApiEndpoint(region)` and `getProjectApiEndpoint(projectId)` from `@/lib/appwrite/sdk` for URL construction.
 
 ---
