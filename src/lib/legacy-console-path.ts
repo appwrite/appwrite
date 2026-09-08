@@ -6,6 +6,8 @@
  * console at the host root with plural resource collections and bare IDs.
  */
 
+import { EDUCATION_JOIN_PATH } from './education/paths'
+
 export const LEGACY_CONSOLE_ORIGIN = 'https://cloud.appwrite.io'
 
 export function getLegacyConsoleOrganizationBillingUrl(
@@ -65,13 +67,26 @@ export function isLegacyConsolePath(pathname: string): boolean {
  */
 export function rewriteLegacyConsolePath(pathname: string): string {
   let path = pathname
+  let wasConsolePrefixed = false
 
   if (path === '/console' || path.startsWith('/console/')) {
     path = path.slice('/console'.length)
+    wasConsolePrefixed = true
   }
 
   if (path === '' || path === '/') {
     return '/'
+  }
+
+  // The GitHub Student Developer Pack and the marketing site send students to
+  // `/console/education`, which was the education sign-up flow. Stripping
+  // `/console` would land them on the `/education` marketing page instead, so
+  // those links go to the flow's new home.
+  if (
+    wasConsolePrefixed &&
+    (path === '/education' || path.startsWith('/education/'))
+  ) {
+    return EDUCATION_JOIN_PATH
   }
 
   if (!path.startsWith('/')) {

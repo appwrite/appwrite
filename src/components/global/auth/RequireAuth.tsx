@@ -14,6 +14,7 @@ import {
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -42,6 +43,9 @@ export function isOptionalAuthPage(pathname: string): boolean {
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
   }
+  // GitHub Education enrollment starts from a signed-out student clicking
+  // "Sign up with GitHub", and finishes on the same page once they have a session.
+  if (pathname.replace(/\/+$/, '') === EDUCATION_JOIN_PATH) return true
   // Legacy `/agent` / `/assistant` still soft-auth while they redirect into org scope.
   if (
     pathname === '/agent' ||

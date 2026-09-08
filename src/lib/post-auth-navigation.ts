@@ -10,6 +10,7 @@ import {
   resolveAndPrefetchDefaultOrganization,
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
@@ -120,6 +121,10 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  // Education enrollment provisions its own organization after verifying GitHub.
+  if (redirect && normalizeRedirectPathname(redirect) === EDUCATION_JOIN_PATH) {
+    return
+  }
   if (isPreLaunchModeEnabled()) return
 
   const resolvedRedirect = resolvePostAuthRedirect(redirect)

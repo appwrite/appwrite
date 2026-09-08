@@ -93,8 +93,17 @@ export const Route = createFileRoute('/_auth/verify-email')({
       })
     }
 
-    // Already verified: leave this page for the console.
+    // Already verified, including in another tab: resume the pending flow.
     if (!requiresConsoleEmailVerification(account)) {
+      const targetRedirect = resolvePostAuthRedirect(
+        (location.search as { redirect?: string }).redirect,
+      )
+      if (targetRedirect) {
+        throw redirect({
+          ...toRedirectNavigateOptions(targetRedirect),
+          replace: true,
+        })
+      }
       throw redirect({ to: '/', replace: true })
     }
   },
@@ -153,6 +162,14 @@ function VerifyEmailPage() {
           if (account?.emailVerification) {
             toast.success(t('Email verified successfully'))
             await router.invalidate()
+            const targetRedirect = resolvePostAuthRedirect(search.redirect)
+            if (targetRedirect) {
+              navigate({
+                ...toRedirectNavigateOptions(targetRedirect),
+                replace: true,
+              })
+              return
+            }
             navigate({ to: '/' })
             return
           }

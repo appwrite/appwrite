@@ -109,6 +109,7 @@ import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/i
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
 import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
@@ -935,6 +936,11 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
 const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
   id: '/oauth2/consent',
   path: '/oauth2/consent',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthEducationJoinRoute = AuthEducationJoinRouteImport.update({
+  id: '/education/join',
+  path: '/education/join',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
@@ -3101,6 +3107,7 @@ export interface FileRoutesByFullPath {
   '/r/v.js': typeof ApiRVDotjsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -3509,6 +3516,7 @@ export interface FileRoutesByTo {
   '/r/v.js': typeof ApiRVDotjsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -3880,6 +3888,7 @@ export interface FileRoutesById {
   '/_api/r/v.js': typeof ApiRVDotjsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
@@ -4294,6 +4303,7 @@ export interface FileRouteTypes {
     | '/r/v.js'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
+    | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -4702,6 +4712,7 @@ export interface FileRouteTypes {
     | '/r/v.js'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
+    | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -5072,6 +5083,7 @@ export interface FileRouteTypes {
     | '/_api/r/v.js'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
+    | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_marketing/blog/$page'
@@ -6154,6 +6166,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth2/consent'
       fullPath: '/oauth2/consent'
       preLoaderRoute: typeof AuthOauth2ConsentRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/education/join': {
+      id: '/_auth/education/join'
+      path: '/education/join'
+      fullPath: '/education/join'
+      preLoaderRoute: typeof AuthEducationJoinRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/auth/magic-url': {
@@ -8366,6 +8385,7 @@ interface AuthRouteChildren {
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
+  AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
@@ -8383,6 +8403,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
+  AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
