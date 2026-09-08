@@ -100,7 +100,3 @@ The **Publish** page carries the branding shown on the consent screen, a homepag
 # Labels {% #labels %}
 
 Labels such as `official` and `partner` mark apps the platform vouches for, and consent screens surface them as trust signals. Labels are assigned by Appwrite, not by the app itself, so there is no field for them in the Console. Contact your partner manager to have your app labeled.
-
-{% info title="Dynamically registered apps" %}
-Apps created through OAuth2 dynamic client registration receive the reserved `oauth-dcr` label. Appwrite manages this label, so you cannot add or remove it.
-{% /info %}
