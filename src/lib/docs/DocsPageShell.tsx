@@ -30,14 +30,15 @@ function scrollDocsContentToTop() {
 }
 
 function DocsScrollToTop() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   const previousPathnameRef = useRef(pathname)
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return
     previousPathnameRef.current = pathname
-    scrollDocsContentToTop()
-  }, [pathname])
+    // Article hash navigation runs after the destination content has mounted.
+    if (!hash) scrollDocsContentToTop()
+  }, [pathname, hash])
 
   return null
 }
