@@ -2,7 +2,7 @@
 layout: post
 title: Use Drizzle ORM with Appwrite Postgres
 description: Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.
-date: 2026-09-07
+date: 2026-09-08
 cover: /images/blog/drizzle-orm-appwrite-postgres/cover.avif
 timeToRead: 8
 author: atharva
