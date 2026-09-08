@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
@@ -121,6 +122,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
@@ -159,7 +161,8 @@ class Update extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        Lock $lock
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -234,20 +237,58 @@ class Update extends Base
         // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
+            $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
 
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => $this->getPermissions($teamId, $project->getId()),
-                'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getSequence(),
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'providerRepositoryId' => $providerRepositoryId,
-                'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getSequence(),
-                'resourceType' => 'function',
-                'providerPullRequestIds' => [],
-            ]));
+            // The find-then-write below isn't atomic on its own: the (projectInternalId,
+            // resourceInternalId, resourceType) index on 'repositories' is a regular key
+            // index, not unique, so two concurrent connect requests for the same function
+            // could both pass the "no existing row" check and both create one -- the exact
+            // duplicate-row race this fix exists to close. Locking the whole find-or-create
+            // step serializes concurrent attempts for the same function.
+            $repository = $lock->withKey(
+                'lock:platform:' . $projectInternalId . ':repositories:function:' . $function->getSequence(),
+                function () use ($dbForPlatform, $project, $function, $installation, $providerRepositoryId, $teamId) {
+                    // A stale row can be left over from a previous connect that preceded
+                    // this function's providerRepositoryId being persisted. Reuse it instead
+                    // of appending a duplicate, which would double-fire deployments on every
+                    // subsequent push.
+                    $existingRepository = $dbForPlatform->findOne('repositories', [
+                        Query::equal('projectInternalId', [$project->getSequence()]),
+                        Query::equal('resourceInternalId', [$function->getSequence()]),
+                        Query::equal('resourceType', ['function']),
+                    ]);
+
+                    if (!$existingRepository->isEmpty()) {
+                        // Reset providerPullRequestIds: it tracks which external PR authors
+                        // are authorized to deploy, keyed only by numeric PR ID (see VCS/
+                        // Http/GitHub/Authorize/External/Update.php). Carrying over the old
+                        // repository's list would let a PR on the *new* repository with the
+                        // same numeric ID as one previously authorized on the *old*
+                        // repository deploy without authorization.
+                        return $dbForPlatform->updateDocument('repositories', $existingRepository->getId(), new Document([
+                            'installationId' => $installation->getId(),
+                            'installationInternalId' => $installation->getSequence(),
+                            'providerRepositoryId' => $providerRepositoryId,
+                            'providerPullRequestIds' => [],
+                        ]));
+                    }
+
+                    return $dbForPlatform->createDocument('repositories', new Document([
+                        '$id' => ID::unique(),
+                        '$permissions' => $this->getPermissions($teamId, $project->getId()),
+                        'installationId' => $installation->getId(),
+                        'installationInternalId' => $installation->getSequence(),
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getSequence(),
+                        'providerRepositoryId' => $providerRepositoryId,
+                        'resourceId' => $function->getId(),
+                        'resourceInternalId' => $function->getSequence(),
+                        'resourceType' => 'function',
+                        'providerPullRequestIds' => [],
+                    ]));
+                },
+                target: 'repositories'
+            );
 
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
