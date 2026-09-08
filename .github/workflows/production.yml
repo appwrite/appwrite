@@ -127,8 +127,49 @@ jobs:
                     docker buildx imagetools inspect "$registry/$IMAGE_NAME:$TAG"
                   done
 
+    publish-assets:
+        needs: build
+        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        timeout-minutes: 25
+        permissions:
+            contents: read
+            packages: read
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract the deployed images' client assets
+              env:
+                  DIGEST_AMD64: ${{ needs.build.outputs.digest_amd64 }}
+                  DIGEST_ARM64: ${{ needs.build.outputs.digest_arm64 }}
+              run: bash .github/scripts/extract-assets.sh
+
+            - name: Install the R2 upload client
+              run: |
+                  python3 -m venv .asset-venv
+                  .asset-venv/bin/pip install -r .github/scripts/asset-requirements.txt
+
+            - name: Publish and verify R2 assets
+              env:
+                  R2_ENDPOINT: https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com
+                  R2_BUCKET: appwrite-vibes-production
+                  R2_ORIGIN: https://vibes-assets.appwrite.io
+                  R2_ACCESS_KEY_ID: ${{ secrets.R2_PRODUCTION_ACCESS_KEY_ID }}
+                  R2_SECRET_ACCESS_KEY: ${{ secrets.R2_PRODUCTION_SECRET_ACCESS_KEY }}
+              run: >-
+                  .asset-venv/bin/python .github/scripts/publish-assets.py
+                  --client image-assets/amd64 --client image-assets/arm64 --public public
+
     deploy:
-        needs: manifest
+        # Never roll out HTML that references assets which failed to publish.
+        needs: [manifest, publish-assets]
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
