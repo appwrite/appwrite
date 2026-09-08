@@ -99,6 +99,7 @@ function getTanstackStartCloudOptions() {
     prerender: {
       enabled: true,
       crawlLinks: false,
+      filter: ({ path }: { path: string }) => isInitPrerenderPath(path),
       concurrency: 1,
       failOnError: true,
     },
