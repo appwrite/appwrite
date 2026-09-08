@@ -268,11 +268,6 @@ export const heCatalog: EnCatalog = {
       noRecentPages: 'אין עמודים אחרונים',
       searchPlaceholder: 'חיפוש...',
     },
-    consoleBanner: {
-      ...enCatalog.app.consoleBanner,
-      messagePrefix: 'הפכו רעיונות למוצרים פעילים. Vibe coding מופעל על ידי',
-      dismiss: 'הסתר באנר',
-    },
     debugMenu: enCatalog.app.debugMenu,
   },
   website: {

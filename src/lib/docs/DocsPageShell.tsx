@@ -47,7 +47,6 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
   const docsSearch = useDocsSearchContext()
   const { pathname } = useLocation()
   const isReferenceExplorer = isApiReferenceExplorerPath(pathname)
-  const isReferencesSection = pathname.startsWith('/docs/references')
 
   const layout = (
     <ConsoleLayout
@@ -86,10 +85,8 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
     </ConsoleLayout>
   )
 
-  return isReferencesSection ? (
+  return (
     <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
-  ) : (
-    layout
   )
 }
 

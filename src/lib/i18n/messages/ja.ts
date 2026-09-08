@@ -269,11 +269,6 @@ export const jaCatalog: EnCatalog = {
       noRecentPages: '最近のページはありません',
       searchPlaceholder: '検索...',
     },
-    consoleBanner: {
-      ...enCatalog.app.consoleBanner,
-      messagePrefix: 'アイデアを動くプロダクトに。Vibe coding powered by',
-      dismiss: 'バナーを閉じる',
-    },
     debugMenu: enCatalog.app.debugMenu,
   },
   website: {
