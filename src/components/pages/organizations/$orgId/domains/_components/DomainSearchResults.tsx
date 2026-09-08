@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DomainSuggestionCard } from '@/components/pages/organizations/$orgId/domains/_components/DomainSuggestionCard'
@@ -18,6 +19,7 @@ const FOCUS_MARKETING_CONTENT_WIDTH = 'max-w-2xl'
 
 type DomainSearchResultsProps = {
   initialSearch?: string
+  onSearchValueChange?: (value: string) => void
   onSelectDomain: (full: string, quote: DomainSelectionQuote) => void
   limitReached?: boolean
   limitMessage?: ReactNode
@@ -45,6 +47,7 @@ function DomainSearchField({
   inputId,
   searchValue,
   onSearchValueChange,
+  onSubmitSearch,
   limitMessage,
   footer,
   className,
@@ -52,6 +55,7 @@ function DomainSearchField({
   inputId: string
   searchValue: string
   onSearchValueChange: (value: string) => void
+  onSubmitSearch: () => void
   limitMessage?: ReactNode
   footer?: ReactNode
   className?: string
@@ -70,6 +74,12 @@ function DomainSearchField({
           id={inputId}
           value={searchValue}
           onChange={(e) => onSearchValueChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              onSubmitSearch()
+            }
+          }}
           placeholder={t('e.g. mycompany or mycompany.com')}
           className={DOMAIN_SEARCH_FIELD_CLASS}
           autoFocus
@@ -85,6 +95,7 @@ function DomainSearchField({
 
 export function DomainSearchResults({
   initialSearch = '',
+  onSearchValueChange,
   onSelectDomain,
   limitReached = false,
   limitMessage,
@@ -102,18 +113,22 @@ export function DomainSearchResults({
   const {
     searchValue,
     setSearchValue,
+    submitSearch,
     suggestions,
     error,
+    retry,
+    isRetrying,
     hasContent,
     baseName,
     addRequestedTld,
-  } = useDomainSearch(initialSearch)
+  } = useDomainSearch(initialSearch, onSearchValueChange)
 
   const searchField = (
     <DomainSearchField
       inputId={inputId}
       searchValue={searchValue}
       onSearchValueChange={setSearchValue}
+      onSubmitSearch={submitSearch}
       limitMessage={limitMessage}
       footer={!hasContent ? footer : undefined}
       className={isFocus ? 'max-w-none' : undefined}
@@ -132,7 +147,10 @@ export function DomainSearchResults({
         className={cn(
           'transition-[min-height,padding] duration-300 ease-out',
           hasContent
-            ? cn('min-h-0', isFocus && 'mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6')
+            ? cn(
+                'min-h-0',
+                isFocus && 'mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6',
+              )
             : isFocus
               ? 'flex flex-1 flex-col items-center justify-center px-4 pb-10 pt-6 sm:px-6 sm:pt-8'
               : compactEmptyState
@@ -177,6 +195,22 @@ export function DomainSearchResults({
             isFocus && 'mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6',
           )}
         >
+          {error ? (
+            <div role="alert" className="mb-3 flex items-center gap-3">
+              <p className="text-[12px] text-destructive">
+                {t('Failed to load domain prices. Please try again.')}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isRetrying}
+                onClick={() => void retry()}
+              >
+                {t('Retry')}
+              </Button>
+            </div>
+          ) : null}
           {suggestions.length > 0 ? (
             <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {suggestions.map((suggestion) => (
@@ -196,10 +230,6 @@ export function DomainSearchResults({
           ) : baseName.length > 0 && baseName.length < 2 ? (
             <p className={DOMAIN_SEARCH_HELPER_CLASS}>
               {t('Type at least 2 characters to see suggestions')}
-            </p>
-          ) : baseName.length >= 2 && error ? (
-            <p className="text-[12px] text-destructive">
-              {t('Failed to load domain prices. Please try again.')}
             </p>
           ) : null}
         </div>
