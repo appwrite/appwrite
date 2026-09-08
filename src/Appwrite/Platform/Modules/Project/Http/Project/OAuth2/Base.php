@@ -284,6 +284,7 @@ abstract class Base extends Action
             'bitbucket' => Bitbucket\Update::class,
             'bitly' => Bitly\Update::class,
             'box' => Box\Update::class,
+            'cloudflare' => Cloudflare\Update::class,
             'autodesk' => Autodesk\Update::class,
             'google' => Google\Update::class,
             'zoom' => Zoom\Update::class,
@@ -320,6 +321,7 @@ abstract class Base extends Action
             'kick' => Kick\Update::class,
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
+            'resend' => Resend\Update::class,
         ];
     }
 

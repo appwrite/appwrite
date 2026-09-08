@@ -48,7 +48,7 @@
     const STEP_CONFIG = buildStepConfig();
 
     const stepCache = new Map();
-    let maxStepHeight = 0;
+    const stepHeights = new Map();
     let isTransitioning = false;
     let pendingStep = null;
     let pendingPushState = false;
@@ -183,12 +183,25 @@
         }
     };
 
-    const measureStepHeight = (panel) => {
-        if (!panel) return;
+    // Each step is remembered on its own rather than folded into a running maximum. A
+    // single tall step used to set the floor for every other one, so the short ones -- the
+    // review in particular -- carried its leftover height as dead space.
+    const recordStepHeight = (panel, step) => {
+        if (!panel || step == null) return;
         const height = panel.getBoundingClientRect().height;
         if (!height) return;
-        maxStepHeight = Math.max(maxStepHeight, height);
-        stepContainer.style.setProperty('--step-min-height', `${maxStepHeight}px`);
+        stepHeights.set(Number(step), height);
+    };
+
+    const applyStepHeight = (step) => {
+        const height = stepHeights.get(Number(step));
+        if (!height) return;
+        stepContainer.style.setProperty('--step-min-height', `${height}px`);
+    };
+
+    const measureStepHeight = (panel, step) => {
+        recordStepHeight(panel, step);
+        applyStepHeight(step);
     };
 
     const runStepInit = (step, rootElement) => {
@@ -237,7 +250,7 @@
                         panel.innerHTML = html;
                         stepContainer.appendChild(panel);
                         panel.getBoundingClientRect();
-                        measureStepHeight(panel);
+                        recordStepHeight(panel, step);
                         panel.remove();
                     })
                     .catch(() => null);
@@ -253,7 +266,7 @@
         measurePanel.innerHTML = html;
         stepContainer.appendChild(measurePanel);
         measurePanel.getBoundingClientRect();
-        measureStepHeight(measurePanel);
+        recordStepHeight(measurePanel, step);
         measurePanel.remove();
 
         const newPanel = document.createElement('div');
@@ -265,6 +278,9 @@
         newPanel.getBoundingClientRect();
 
         requestAnimationFrame(() => {
+            // Height and opacity start together, so the card resizes as the step fades
+            // rather than reflowing the outgoing one first.
+            applyStepHeight(step);
             newPanel.classList.remove('is-entering');
             newPanel.classList.add('is-active');
             if (activePanel) {
@@ -440,12 +456,12 @@
         }
         const activePanel = stepContainer.querySelector('.step-panel') || stepContainer;
         runStepInit(step, activePanel);
-        measureStepHeight(activePanel);
+        measureStepHeight(activePanel, step);
         if (step === 5 && installScreen) {
             runStepInit(step, installScreen);
         }
         const preload = () => {
-            measureStepHeight(activePanel);
+            measureStepHeight(activePanel, step);
             preloadSteps(cardSteps);
         };
         if (document.fonts && document.fonts.ready) {

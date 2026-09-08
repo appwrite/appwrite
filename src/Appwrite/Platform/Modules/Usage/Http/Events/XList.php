@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Platform\Enum;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Query;
 use Utopia\System\System;
 use Utopia\Usage\Tenant;
@@ -56,7 +57,7 @@ class XList extends Action
     ];
 
     /**
-     * Query::TYPE_* values supported on the filter surface.
+     * Query methods supported on the filter surface.
      * Equality / set membership / null-presence on dimension columns and
      * string prefix-match on path-shaped fields are useful; we deliberately
      * skip numeric inequality and full-text search since time range has its
@@ -64,13 +65,13 @@ class XList extends Action
      * these LowCardinality(String) columns.
      */
     protected const VALID_FILTER_METHODS = [
-        Query::TYPE_EQUAL,
-        Query::TYPE_NOT_EQUAL,
-        Query::TYPE_CONTAINS,
-        Query::TYPE_STARTS_WITH,
-        Query::TYPE_ENDS_WITH,
-        Query::TYPE_IS_NULL,
-        Query::TYPE_IS_NOT_NULL,
+        QueryMethod::Equal,
+        QueryMethod::NotEqual,
+        QueryMethod::Contains,
+        QueryMethod::StartsWith,
+        QueryMethod::EndsWith,
+        QueryMethod::IsNull,
+        QueryMethod::IsNotNull,
     ];
 
     public static function getName(): string

@@ -29,7 +29,8 @@ class Schedule extends Action
             ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->inject('telemetry');
+            ->inject('telemetry')
+            ->inject('locks');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -49,8 +50,9 @@ class Schedule extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
+        callable $locks,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks);
     }
 
     public function actionWithUsage(
@@ -60,6 +62,7 @@ class Schedule extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
+        callable $locks,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
     ): never {
@@ -70,6 +73,7 @@ class Schedule extends Action
             $dbForPlatform,
             $getProjectDB,
             $telemetry,
+            $locks,
             $publisherForStatsResources,
             $usageConnection,
         );
@@ -82,12 +86,13 @@ class Schedule extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Telemetry $telemetry,
+        callable $locks,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
         $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection));

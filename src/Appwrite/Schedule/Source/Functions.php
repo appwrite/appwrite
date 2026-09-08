@@ -42,7 +42,7 @@ final class Functions extends Database
         // snapshot must not carry them: they would go stale in memory.
         return $projectDB->skipFilters(
             fn () => $projectDB->getDocument($this->collection(), $schedule['resourceId']),
-            ['subQueryVariables', 'subQueryProjectVariables']
+            APP_FUNCTIONS_SUBQUERIES
         );
     }
 

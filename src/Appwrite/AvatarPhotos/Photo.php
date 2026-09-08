@@ -30,6 +30,17 @@ abstract class Photo
     protected const REQUEST_TIMEOUT = 5 * 1000; // 5 seconds
 
     /**
+     * Colours every generated avatar draws in.
+     *
+     * The initials square and the static placeholder are the two images
+     * Appwrite draws itself, and a user moving between them must not see the
+     * avatar change identity — so they share one neutral surface and one
+     * figure colour, at 8.19:1 contrast.
+     */
+    protected const SURFACE = '#4F4F4F';
+    protected const FIGURE = '#FFFFFF';
+
+    /**
      * Machine-readable name of the provider, e.g. 'gravatar'.
      */
     abstract public function getName(): string;
@@ -85,6 +96,6 @@ abstract class Photo
 
         $body = $response->getBody();
 
-        return empty($body) ? null : $body;
+        return $body === '' ? null : $body;
     }
 }

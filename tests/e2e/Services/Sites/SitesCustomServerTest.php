@@ -360,6 +360,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('', $secretVariable['body']['value']);
         $this->assertEquals(true, $secretVariable['body']['secret']);
 
+        // A key that is not a valid env var name is refused
+        foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
+            $invalidVariable = $this->createVariable($siteId, [
+                'variableId' => ID::unique(),
+                'key' => $invalidKey,
+                'value' => 'siteValue',
+            ]);
+
+            $this->assertEquals(400, $invalidVariable['headers']['status-code'], 'Key ' . json_encode($invalidKey) . ' should be refused');
+        }
+
         $variable = $this->getVariable($siteId, $variable['body']['$id']);
 
         $this->assertEquals(200, $variable['headers']['status-code']);

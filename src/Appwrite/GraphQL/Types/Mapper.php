@@ -349,6 +349,7 @@ class Mapper
                 $type = Types::assoc();
                 break;
             case \Utopia\Validator\JSON::class:
+            case \Utopia\Validator\JSON\FCM::class:
             case \Utopia\Validator\JSON\ObjectValidator::class:
                 $type = Types::json();
                 break;

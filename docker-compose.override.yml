@@ -20,7 +20,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - coredns
+      - dns
     ports:
       - 9501:80
     dns:
@@ -301,23 +301,21 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-  coredns:
-    image: coredns/coredns:1.12.4
-    container_name: appwrite-coredns
+  dns:
+    image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
+    container_name: appwrite-dns
     restart: unless-stopped
     logging:
       driver: json-file
       options:
         max-file: "5"
         max-size: 10m
-    command:
-      - -conf
-      - /mnt/resources/Corefile
+    entrypoint: ["unbound", "-d", "-c", "/mnt/resources/unbound.conf"]
     networks:
       appwrite:
         ipv4_address: 172.16.238.100
     volumes:
-      - ./tests/resources/coredns:/mnt/resources:ro
+      - ./tests/resources/dns:/mnt/resources:ro
   maildev:
     image: appwrite/mailcatcher:1.1.1
     container_name: appwrite-mailcatcher
@@ -560,6 +558,35 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+  # S3-compatible storage for the s3 e2e group. Creates the bucket the
+  # _APP_STORAGE_S3_* variables point at once the server is up.
+  minio:
+    profiles:
+      - s3
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: appwrite-minio
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment:
+      - MINIO_ROOT_USER=${_APP_STORAGE_S3_ACCESS_KEY:-minio}
+      - MINIO_ROOT_PASSWORD=${_APP_STORAGE_S3_SECRET:-minio12345}
+      - MINIO_BUCKET=${_APP_STORAGE_S3_BUCKET:-appwrite}
+    entrypoint:
+      - sh
+      - -c
+      - |
+        minio server /data &
+        until mc alias set local http://localhost:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do sleep 1; done
+        mc mb -p "local/$$MINIO_BUCKET"
+        wait
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mc ls "local/$$MINIO_BUCKET" >/dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 20
 configs:
   redisinsight-connections.json:
     content: |

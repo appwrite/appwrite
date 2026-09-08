@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Template\Template;
 use Exception;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
@@ -39,7 +38,6 @@ class Mails extends Action
             ->inject('message')
             ->inject('project')
             ->inject('register')
-            ->inject('log')
             ->inject('telemetry')
             ->callback($this->action(...));
     }
@@ -56,12 +54,11 @@ class Mails extends Action
      * @param Message $message
      * @param Document $project
      * @param Registry $register
-     * @param Log $log
      * @param Telemetry $telemetry
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry): void
     {
         $payload = $message->getPayload();
 
@@ -76,7 +73,7 @@ class Mails extends Action
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+        Span::add('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');

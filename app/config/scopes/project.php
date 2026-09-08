@@ -202,6 +202,74 @@ return [
         'deprecated' => true,
     ],
 
+    // DocumentsDB
+    'documentsdb.read' => [
+        'description' => 'Access to read document databases',
+        'category' => 'Databases',
+    ],
+    'documentsdb.write' => [
+        'description' => 'Access to create, update, and delete document databases',
+        'category' => 'Databases',
+    ],
+    'documentsdb.collections.read' => [
+        'description' => 'Access to read document database collections',
+        'category' => 'Databases',
+    ],
+    'documentsdb.collections.write' => [
+        'description' => 'Access to create, update, and delete document database collections',
+        'category' => 'Databases',
+    ],
+    'documentsdb.documents.read' => [
+        'description' => 'Access to read document database documents',
+        'category' => 'Databases',
+    ],
+    'documentsdb.documents.write' => [
+        'description' => 'Access to create, update, and delete document database documents',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.read' => [
+        'description' => 'Access to read document database collection indexes',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete document database collection indexes',
+        'category' => 'Databases',
+    ],
+
+    // VectorsDB
+    'vectorsdb.read' => [
+        'description' => 'Access to read vector databases',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.write' => [
+        'description' => 'Access to create, update, and delete vector databases',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.collections.read' => [
+        'description' => 'Access to read vector database collections',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.collections.write' => [
+        'description' => 'Access to create, update, and delete vector database collections',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.documents.read' => [
+        'description' => 'Access to read vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.documents.write' => [
+        'description' => 'Access to create, update, and delete vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.read' => [
+        'description' => 'Access to read vector database collection indexes',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete vector database collection indexes',
+        'category' => 'Databases',
+    ],
+
     // Storage
     'buckets.read' => [
         'description' => 'Access to read storage buckets',

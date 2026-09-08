@@ -38,9 +38,9 @@ final class DNSTest extends TestCase
         $this->assertNotEmpty($validator->getDescription());
     }
 
-    public function testCoreDNSFailure(): void
+    public function testFixtureResolverFailure(): void
     {
-        // CoreDNS is configured to return cname.localhost. for stage.webapp.com
+        // The test resolver (tests/resources/dns) returns cname.localhost. for stage.webapp.com
         $validator = new DNS('cname.localhost.', Record::TYPE_CNAME, ['172.16.238.100', '8.8.8.8']);
 
         $result = $validator->isValid('stage.webapp.com');

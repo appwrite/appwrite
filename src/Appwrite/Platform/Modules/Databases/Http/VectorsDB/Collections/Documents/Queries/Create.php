@@ -28,7 +28,7 @@ class Create extends XList
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')
             ->desc('Create query')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'vectorsdb.documents.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

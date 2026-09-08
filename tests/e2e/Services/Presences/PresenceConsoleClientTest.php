@@ -119,8 +119,6 @@ final class PresenceConsoleClientTest extends Scope
     public function testExpiredConsolePresenceDeletedByMaintenance(): void
     {
         $presenceId = ID::unique();
-        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
-        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
 
         $upsert = $this->client->call(
             Client::METHOD_PUT,
@@ -141,6 +139,9 @@ final class PresenceConsoleClientTest extends Scope
         );
         $this->assertSame(200, $upsert['headers']['status-code']);
 
+        // Compute expiry immediately before PATCH. The API requires a future
+        // datetime; stamping it before upsert can already be in the past under load.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
         $expire = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceId,
@@ -199,10 +200,36 @@ final class PresenceConsoleClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 3000): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $raw = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            $frame = \json_decode($raw, true);
+            if (!\is_array($frame)) {
+                continue;
+            }
+
+            $this->assertSame(
+                'connected',
+                $frame['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($frame)
+            );
+            return;
+        }
+
+        $this->fail('Timed out waiting for connected websocket frame on console.');
     }
 
     private function receivePresenceFrame(

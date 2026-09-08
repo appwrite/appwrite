@@ -6,15 +6,7 @@ use Appwrite\AvatarPhotos\Photo;
 use Utopia\Database\Document;
 
 /**
- * Libravatar provider.
- *
- * Libravatar is a federated, self-hosted alternative to Gravatar.
- * Resolution order: the domain's SRV record is consulted first
- * (federation); when that is absent we fall back to the central
- * seccdn.libravatar.org service.
- *
- * Libravatar supports d=404 just like Gravatar — we use that for a clean
- * "no photo here" signal.
+ * Libravatar provider
  */
 class Libavatar extends Photo
 {
@@ -25,20 +17,14 @@ class Libavatar extends Photo
         return 'libavatar';
     }
 
-    public function supports(Document $user): bool
+    public function supports(Document $profile): bool
     {
-        return !empty($user->getAttribute('email', ''));
+        return $profile->getAttribute('emailHash', '') !== '';
     }
 
-    public function get(Document $user, int $width, int $height, string $rating): ?string
+    public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        $email = $user->getAttribute('email', '');
-
-        // Libravatar supports both SHA-256 and MD5; use MD5 for widest
-        // compatibility with older instances.
-        $hash = \md5(\strtolower(\trim($email)));
-
-        $url = self::BASE_URL . $hash . '?' . \http_build_query([
+        $url = self::BASE_URL . $profile->getAttribute('emailHash', '') . '?' . \http_build_query([
             's' => \max($width, $height) > 0 ? \max($width, $height) : 256,
             'd' => '404',
             'r' => $rating,

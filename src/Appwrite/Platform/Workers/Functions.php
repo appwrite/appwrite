@@ -24,7 +24,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -57,7 +56,6 @@ class Functions extends Action
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
-            ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
             ->inject('locks')
@@ -74,7 +72,6 @@ class Functions extends Action
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
-        Log $log,
         Executor $executor,
         callable $getIsResourceBlocked,
         callable $locks
@@ -155,9 +152,9 @@ class Functions extends Action
             $function = $dbForProject->getDocument('functions', $functionId);
         }
 
-        $log->addTag('functionId', $function->getId());
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('function.id', $function->getId());
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
             Span::add('function.id', $function->getId());
@@ -199,7 +196,6 @@ class Functions extends Action
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
-                        log: $log,
                         dbForProject: $dbForProject,
                         queueForWebhooks: $queueForWebhooks,
                         publisherForFunctions: $publisherForFunctions,
@@ -243,7 +239,6 @@ class Functions extends Action
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -279,7 +274,6 @@ class Functions extends Action
                 }
 
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -382,12 +376,16 @@ class Functions extends Action
                 // write it. The lock keeps that to one write, as the request
                 // path does; contention throws and the caller treats it as done.
                 ($this->locks)(
-                    'lock:platform:' . ($project->getSequence() ?: $project->getId()) . ':projects:' . $project->getId() . ':accessedAt',
+                    'lock:platform:projects:'.$project->getId().':accessedAt',
                     APP_PROJECT_ACCESS,
                     function () use ($dbForPlatform, $project, $now): void {
-                        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                            'accessedAt' => $now
-                        ]));
+                        // updateDocument never uses cache, so skip the subqueries.
+                        $dbForPlatform->skipFilters(
+                            fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                                'accessedAt' => $now
+                            ])),
+                            APP_PROJECTS_SUBQUERIES
+                        );
                     }
                 );
 
@@ -470,7 +468,6 @@ class Functions extends Action
     }
 
     /**
-     * @param Log $log
      * @param Database $dbForProject
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
@@ -491,7 +488,6 @@ class Functions extends Action
      * @return void
      */
     private function execute(
-        Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -522,7 +518,7 @@ class Functions extends Action
         Span::add('deployment.id', $deploymentId);
         Span::add('execution.trigger', $trigger);
 
-        $log->addTag('deploymentId', $deploymentId);
+        Span::add('deployment.id', $deploymentId);
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -681,7 +677,7 @@ class Functions extends Action
             $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),

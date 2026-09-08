@@ -31,6 +31,7 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -46,6 +47,12 @@ use Utopia\Validator\Nullable;
 class Create extends Action
 {
     use HTTP;
+
+    /**
+     * Lease for the per-file upload lock, in seconds. Refreshed before the
+     * transfer and before completion so a single chunk always gets the full window.
+     */
+    private const LOCK_TTL = 600;
 
     public static function getName()
     {
@@ -265,71 +272,62 @@ class Create extends Action
             return $merged;
         };
 
-        try {
-            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
-                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-                if (!$file->isEmpty()) {
-                    $chunks = $file->getAttribute('chunksTotal', 1);
-                    $uploaded = $file->getAttribute('chunksUploaded', 0);
-                    $metadata = $file->getAttribute('metadata', []);
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            if (!$file->isEmpty()) {
+                $chunks = $file->getAttribute('chunksTotal', 1);
+                $uploaded = $file->getAttribute('chunksUploaded', 0);
+                $metadata = $file->getAttribute('metadata', []);
 
-                    if ($uploaded === $chunks) {
-                        if (empty($contentRange)) {
-                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                        }
+                if ($uploaded === $chunks) {
+                    if (empty($contentRange)) {
+                        throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                    }
 
-                        $response
-                            ->setStatusCode(Response::STATUS_CODE_OK)
-                            ->dynamic($file, Response::MODEL_FILE);
+                    $response
+                        ->setStatusCode(Response::STATUS_CODE_OK)
+                        ->dynamic($file, Response::MODEL_FILE);
 
-                        $completed = true;
-                        return;
+                    $completed = true;
+
+                    return;
+                }
+            }
+
+            if ($file->isEmpty()) {
+                $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+
+                if (!empty($contentRange)) {
+                    $doc = new Document([
+                        '$id' => ID::custom($fileId),
+                        '$permissions' => $permissions,
+                        'bucketId' => $bucket->getId(),
+                        'bucketInternalId' => $bucket->getSequence(),
+                        'name' => $fileName,
+                        'folder' => $folder,
+                        'path' => $path,
+                        'signature' => '',
+                        'mimeType' => '',
+                        'sizeOriginal' => $fileSize,
+                        'sizeActual' => 0,
+                        'algorithm' => '',
+                        'comment' => '',
+                        'chunksTotal' => $chunks,
+                        'chunksUploaded' => 0,
+                        'search' => implode(' ', [$fileId, $fileName]),
+                        'metadata' => $metadata,
+                    ]);
+
+                    try {
+                        $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                    } catch (DuplicateException) {
+                        throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                    } catch (NotFoundException) {
+                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
                 }
-
-                if ($file->isEmpty()) {
-                    $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
-
-                    if (!empty($contentRange)) {
-                        $doc = new Document([
-                            '$id' => ID::custom($fileId),
-                            '$permissions' => $permissions,
-                            'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getSequence(),
-                            'name' => $fileName,
-                            'folder' => $folder,
-                            'path' => $path,
-                            'signature' => '',
-                            'mimeType' => '',
-                            'sizeOriginal' => $fileSize,
-                            'sizeActual' => 0,
-                            'algorithm' => '',
-                            'comment' => '',
-                            'chunksTotal' => $chunks,
-                            'chunksUploaded' => 0,
-                            'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => $metadata,
-                        ]);
-
-                        try {
-                            $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
-                        } catch (DuplicateException) {
-                            throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                        } catch (NotFoundException) {
-                            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-                        }
-                    }
-                }
-            }, timeout: 120.0);
-        } catch (LockContention) {
-            $response->addHeader('Retry-After', '5');
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
-        }
-
-        if ($completed) {
-            $queueForEvents->reset();
-            return;
-        }
+            }
+        };
 
         $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
@@ -355,7 +353,12 @@ class Create extends Action
                 }
             }
 
-            $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
+            if (empty($chunksUploaded)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
+            }
+
+            // Count distinct completed parts, including previously persisted chunks.
+            $chunksUploaded = max($uploaded, isset($metadata['parts']) ? \count($metadata['parts']) : $chunksUploaded);
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
@@ -517,20 +520,40 @@ class Create extends Action
         };
 
         try {
-            $chunksUploaded = $deviceForFiles->upload(
-                $deviceForLocal->read($fileTmpName),
-                $path,
-                $metadata['content_type'] ?? '',
-                $chunk,
-                $chunks,
-                $metadata
-            );
+            // upload() can finalize and remove chunk files itself. Keep preparation,
+            // transfer and document completion under the same per-file lock.
+            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $path, $chunk, &$chunks, &$metadata): void {
+                $prepareUpload();
 
-            if (empty($chunksUploaded)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
-            }
+                if ($completed) {
+                    $queueForEvents->reset();
 
-            $locks($lockKey, 600, fn () => $finalizeUpload($chunksUploaded), timeout: 120.0);
+                    return;
+                }
+
+                // Restart the lease so the transfer gets the full window,
+                // regardless of how long preparation took.
+                if (!$lock->refresh()) {
+                    throw new LockContention('Upload lease lost before transfer: ' . $lock->token());
+                }
+
+                $chunksUploaded = $deviceForFiles->upload(
+                    $deviceForLocal->read($fileTmpName),
+                    $path,
+                    $metadata['content_type'] ?? '',
+                    $chunk,
+                    $chunks,
+                    $metadata
+                );
+
+                // Never record completion under a lapsed lease: another request
+                // may already own the file and be finalizing it.
+                if (!$lock->isHeld()) {
+                    throw new LockContention('Upload lease lost after transfer: ' . $lock->token());
+                }
+
+                $finalizeUpload($chunksUploaded);
+            }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
