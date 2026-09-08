@@ -138,3 +138,44 @@ test('Docs View resets an unresolved cross-page hash in the existing SPA contain
   ).toBe(true)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 })
+
+test('Docs View preserves scroll for unresolved same-page hashes, including after a hashless arrival', async ({
+  page,
+}) => {
+  await page.goto(`${tablesPath}#${targetId}`, { waitUntil: 'networkidle' })
+  await expectHeadingInDocsViewport(page, targetId)
+  const main = page.locator('#main-content')
+
+  for (const to of [tablesPath, installationPath]) {
+    if (to === installationPath) {
+      await page.evaluate((to) => window.__TSR_ROUTER__!.navigate({ to }), to)
+      await expect(page).toHaveURL(new RegExp(`${installationPath}$`))
+      await expect(
+        page.getByRole('heading', { name: 'Installation_', exact: true }),
+      ).toBeInViewport()
+      await expect
+        .poll(() => main.evaluate((element) => element.scrollTop))
+        .toBe(0)
+      // Simulate the reader scrolling after a hashless arrival.
+      await main.evaluate((element) => {
+        element.scrollTop = 400
+      })
+    }
+    const scrollTop = await main.evaluate((element) => element.scrollTop)
+    expect(scrollTop).toBeGreaterThan(0)
+    await page.evaluate(
+      (to) =>
+        window.__TSR_ROUTER__!.navigate({
+          to,
+          hash: 'removed-section-%',
+        }),
+      to,
+    )
+    await expect(page).toHaveURL(new RegExp(`${to}#removed-section-%$`))
+    await page.waitForLoadState('networkidle')
+    await expect
+      .poll(() => main.evaluate((element) => element.scrollTop))
+      .toBe(scrollTop)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  }
+})
