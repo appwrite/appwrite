@@ -65,7 +65,9 @@ export function requestInitTicketDeviceOrientationAccessFromGesture(): Promise<b
   }
 
   try {
-    return Orientation.requestPermission().then((state) => state === 'granted')
+    return Orientation.requestPermission()
+      .then((state) => state === 'granted')
+      .catch(() => false)
   } catch {
     return Promise.resolve(false)
   }
@@ -130,25 +132,34 @@ export function useInitTicketDeviceTilt({
     onTiltChangeRef.current({ x: 0, y: 0 })
   }, [])
 
-  const startListening = useCallback(async (options?: {
-    /** Set when iOS permission was already requested in the same user gesture. */
-    skipPermission?: boolean
-  }): Promise<boolean> => {
-    if (!enabled || !isSupported || listeningRef.current) {
-      return listeningRef.current
-    }
-
-    if (!options?.skipPermission) {
-      const granted = await requestInitTicketDeviceOrientationAccess()
-      if (!granted) return false
-    }
-
+  const beginListening = useCallback(() => {
     baselineRef.current = null
     orientationActiveRef.current = false
     listeningRef.current = true
     setListening(true)
     return true
-  }, [enabled, isSupported])
+  }, [])
+
+  const startListening = useCallback((options?: {
+    /** Set when iOS permission was already requested in the same user gesture. */
+    skipPermission?: boolean
+  }): Promise<boolean> => {
+    if (!enabled || !isSupported || listeningRef.current) {
+      return Promise.resolve(listeningRef.current)
+    }
+
+    if (options?.skipPermission) {
+      return Promise.resolve(beginListening())
+    }
+
+    // requestPermission() must run synchronously in the caller's user-gesture
+    // stack. Do not await before invoking it (async startListening would defer
+    // the call past the gesture and trigger NotAllowedError on iOS).
+    return requestInitTicketDeviceOrientationAccessFromGesture().then((granted) => {
+      if (!granted) return false
+      return beginListening()
+    })
+  }, [beginListening, enabled, isSupported])
 
   useEffect(() => {
     if (!enabled || !listening) return
