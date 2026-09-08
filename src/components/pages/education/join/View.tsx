@@ -23,6 +23,7 @@ import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks/auth'
 import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 
 type EnrollmentError = {
   title: string
@@ -123,6 +124,7 @@ export function View() {
     setIsRedirectingToGithub(true)
     setError(null)
     try {
+      if (!isAuthenticated) setLastLoginMethod('github')
       await connectGithubForStudentProgram()
     } catch (oauthError: unknown) {
       setIsRedirectingToGithub(false)
@@ -311,7 +313,7 @@ function toEnrollmentError(
       title: t(
         "It looks like you're not currently eligible for the GitHub Student Developer Pack.",
       ),
-      description: t('You can still sign in and explore Appwrite.'),
+      description: t('You can still use Appwrite without an Education plan.'),
       recovery: 'connect',
     }
   }
@@ -319,7 +321,9 @@ function toEnrollmentError(
   if (code === 409) {
     return {
       title: t("You've already joined the Education program."),
-      description: t('Open your organizations to find your Education plan.'),
+      description: t(
+        'Continue to Appwrite, then use the organization switcher to find your Education plan.',
+      ),
     }
   }
 

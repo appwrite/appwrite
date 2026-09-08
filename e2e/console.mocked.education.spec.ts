@@ -90,8 +90,8 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
     const request = route.request()
     const url = new URL(request.url())
     const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
-    if (url.origin === localOrigin) return route.continue()
-    const apiPath = url.pathname.match(/\/v1(\/.*)$/)?.[1]
+    const apiPath = url.pathname.match(/^\/v1(\/.*)$/)?.[1]
+    if (url.origin === localOrigin && !apiPath) return route.continue()
     const headers = corsHeaders(route)
     const json = (status: number, body: unknown) =>
       route.fulfill({
@@ -308,7 +308,7 @@ test.describe('Education enrollment (mocked API)', () => {
       if (code === 409) {
         await expect(
           page.getByText(
-            'Open your organizations to find your Education plan.',
+            'Continue to Appwrite, then use the organization switcher to find your Education plan.',
             { exact: true },
           ),
         ).toBeVisible()

@@ -1259,13 +1259,13 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'GitHub לא השלים את ההתחברות. נסו שוב כדי להצטרף לתוכנית.',
   "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
     'נראה שאינכם זכאים כרגע ל-GitHub Student Developer Pack.',
-  'You can still sign in and explore Appwrite.':
-    'עדיין תוכלו להתחבר ולהתנסות ב-Appwrite.',
+  'You can still use Appwrite without an Education plan.':
+    'עדיין תוכלו להשתמש ב-Appwrite ללא תוכנית Education.',
   "You've already joined the Education program.": 'כבר הצטרפתם לתוכנית Education.',
   'Your Education plan organization is ready.':
     'הארגון שלכם בתוכנית Education מוכן.',
-  'Open your organizations to find your Education plan.':
-    'פתחו את רשימת הארגונים שלכם כדי למצוא את תוכנית Education שלכם.',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
   'We could not check your GitHub connection':
     'לא הצלחנו לבדוק את החיבור שלכם ל-GitHub',
   'We could not set up your Education plan':

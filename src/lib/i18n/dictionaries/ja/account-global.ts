@@ -1143,14 +1143,14 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'GitHub でのサインインが完了しませんでした。もう一度お試しのうえ、プログラムにご参加ください。',
   "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
     '現在、GitHub Student Developer Pack の対象ではないようです。',
-  'You can still sign in and explore Appwrite.':
-    '引き続きサインインして Appwrite をお試しいただけます。',
+  'You can still use Appwrite without an Education plan.':
+    'Education プランがなくても、引き続き Appwrite をご利用いただけます。',
   "You've already joined the Education program.":
     'すでに Education プログラムに参加しています。',
   'Your Education plan organization is ready.':
     'Education プランの組織をご利用いただけます。',
-  'Open your organizations to find your Education plan.':
-    '組織の一覧を開いて、Education プランをご確認ください。',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
   'We could not check your GitHub connection':
     'GitHub との接続を確認できませんでした',
   'We could not set up your Education plan': 'Education プランを設定できませんでした',
