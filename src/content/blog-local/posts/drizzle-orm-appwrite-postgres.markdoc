@@ -44,8 +44,8 @@ Port `6432` routes connections through Appwrite's pooler, which defaults to tran
 In a TypeScript project using ES modules, install the dependencies:
 
 ```sh
-pnpm add drizzle-orm@0.45.2 pg@8.23.0 dotenv@17.4.2
-pnpm add -D drizzle-kit@0.31.10 tsx@4.23.13 typescript@7.0.2 @types/node@22.20.1 @types/pg@8.23.1
+npm install drizzle-orm@0.45.2 pg@8.23.0 dotenv@17.4.2
+npm install --save-dev drizzle-kit@0.31.10 tsx@4.23.13 typescript@7.0.2 @types/node@22.20.1 @types/pg@8.23.1
 ```
 
 Set the connection string in `.env` and exclude that file from Git:
@@ -108,13 +108,13 @@ export default defineConfig({
 Generate the SQL migration:
 
 ```sh
-pnpm exec drizzle-kit generate --name=create_books
+npx drizzle-kit generate --name=create_books
 ```
 
 Review `drizzle/0000_create_books.sql`, then apply it:
 
 ```sh
-pnpm exec drizzle-kit migrate
+npx drizzle-kit migrate
 ```
 
 [`generate`](https://orm.drizzle.team/docs/drizzle-kit-generate) writes SQL from schema changes. [`migrate`](https://orm.drizzle.team/docs/drizzle-kit-migrate) applies pending migrations and records them in Postgres. Commit the `drizzle` directory, including its metadata.
@@ -157,7 +157,7 @@ try {
 Run the seed:
 
 ```sh
-pnpm exec tsx src/seed.ts
+npx tsx src/seed.ts
 ```
 
 The first run inserts three books. `onConflictDoNothing` makes subsequent runs skip existing ISBNs.
@@ -185,7 +185,7 @@ try {
 Run the query:
 
 ```sh
-pnpm exec tsx src/unread.ts
+npx tsx src/unread.ts
 ```
 
 It returns _Kindred_, _The Dispossessed_, and _The Left Hand of Darkness_, ordered by title. Drizzle infers the result's `title` and `author` types from the schema.
@@ -212,7 +212,7 @@ export const books = pgTable('books', {
 Generate the next migration:
 
 ```sh
-pnpm exec drizzle-kit generate --name=add_rating
+npx drizzle-kit generate --name=add_rating
 ```
 
 The generated `drizzle/0001_add_rating.sql` contains:
@@ -249,15 +249,15 @@ const branch = branches.find((item) => item.branchName === branchId)
 ```
 {% /multicode %}
 
-Branch provisioning is asynchronous. Fetch the branch list again once provisioning finishes, then use the branch's `connectionString` as `DATABASE_URL`. Run `pnpm exec drizzle-kit migrate` and verify the result. Restore your original `DATABASE_URL` before continuing below. Branch changes do not merge back. See [database branches](/docs/products/databases/postgresql/branches).
+Branch provisioning is asynchronous. Fetch the branch list again once provisioning finishes, then use the branch's `connectionString` as `DATABASE_URL`. Run `npx drizzle-kit migrate` and verify the result. Restore your original `DATABASE_URL` before continuing below. Branch changes do not merge back. See [database branches](/docs/products/databases/postgresql/branches).
 
 {% /info %}
 
 Apply it and rerun the query:
 
 ```sh
-pnpm exec drizzle-kit migrate
-pnpm exec tsx src/unread.ts
+npx drizzle-kit migrate
+npx tsx src/unread.ts
 ```
 
 The same three books remain. In Appwrite, refresh **Columns** to see `rating`; the existing rows have `null` in that column.
@@ -297,8 +297,8 @@ try {
 Run it, then check the unread list:
 
 ```sh
-pnpm exec tsx src/rate.ts
-pnpm exec tsx src/unread.ts
+npx tsx src/rate.ts
+npx tsx src/unread.ts
 ```
 
 The rated query returns _Kindred_ with a rating of `5`. The unread query returns the two Ursula K. Le Guin books. Refresh **Rows** in Appwrite to inspect the saved values.
