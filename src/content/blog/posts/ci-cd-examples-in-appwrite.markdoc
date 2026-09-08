@@ -31,16 +31,16 @@ The Appwrite CLI has undergone significant updates to enhance support for Contin
 
 To support CI/CD pipelines, the Appwrite CLI now fully accommodates non-interactive actions for all commands. This is important for CI/CD pipelines, where manual intervention needs to be minimized.
 
-### The `--force` flag
+### The `--force` flag
 
-You can use the `--force` flag with any command that typically prompts for user confirmation, such as `appwrite push tables`. This flag pre-answers all prompts with "YES," allowing the command to run without interruption.
+You can use the `--force` flag with any command that typically prompts for user confirmation, such as `appwrite push tables`. This flag pre-answers all prompts with "YES," allowing the command to run without interruption.
 
 ```bash
 appwrite push tables --force
 
 ```
 
-### The `--all` flag
+### The `--all` flag
 
 The `--all` flag can be used to push or pull all available resources for services. This flag is designed to simplify bulk operations, making it easier to manage multiple resources at once in your CI/CD pipelines.
 
@@ -147,7 +147,7 @@ Adapting CI/CD pipelines with these new features ensures that deployments are st
 
 - **Full automation**
 
-Using flags like `--force` and `--all` means that all necessary commands can be executed automatically, fitting seamlessly into your CI/CD workflows.
+Using flags like `--force` and `--all` means that all necessary commands can be executed automatically, fitting seamlessly into your CI/CD workflows.
 
 - **User-level command execution**
 

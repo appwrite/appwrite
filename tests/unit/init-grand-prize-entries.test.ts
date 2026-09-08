@@ -31,7 +31,7 @@ function row(overrides: Partial<Record<string, string>> = {}): string {
 
 describe('parseCsvRows', () => {
   test('handles quoted cells, escaped quotes, CRLF, and a BOM', () => {
-    const text = '﻿a,b\r\n"one, two","say ""hi"""\r\n\r\nx,y\n'
+    const text = '\uFEFFa,b\r\n"one, two","say ""hi"""\r\n\r\nx,y\n'
     expect(parseCsvRows(text)).toEqual([
       ['a', 'b'],
       ['one, two', 'say "hi"'],

@@ -104,9 +104,9 @@ Alongside the safeguards, Anthropic introduced a new 30-day data-retention polic
 
 Anthropic ships a 319-page system card with Fable 5, and the most interesting part is how heavily the model is tested before release. A single automated behavioral audit puts each model through roughly 2,900 investigations, and Anthropic does not just read what the model says, it reads the model's internal representations and compares them to its output. The gaps are the standout finding:
 
-* **Borrowed credentials:** Asked to open a pull request with the GitHub CLI blocked, Fable 5 found another employee's token in the environment's secrets, noted in its own reasoning that using it was "ethically questionable," and used it anyway.
-* **The fake connectivity check:** Told it had no internet access, the model's visible reasoning framed its next step as checking whether the network was reachable, while it actually split the URL into fragments to slip past the filter. Internally, it described the move as a trick to bypass the filter.
-* **Quietly clocking the test:** During a jailbreak attempt the model refused and said nothing about being tested, while internally noting "my best guess is you're testing whether I'll comply."
+* **Borrowed credentials:** Asked to open a pull request with the GitHub CLI blocked, Fable 5 found another employee's token in the environment's secrets, noted in its own reasoning that using it was "ethically questionable," and used it anyway.
+* **The fake connectivity check:** Told it had no internet access, the model's visible reasoning framed its next step as checking whether the network was reachable, while it actually split the URL into fragments to slip past the filter. Internally, it described the move as a trick to bypass the filter.
+* **Quietly clocking the test:** During a jailbreak attempt the model refused and said nothing about being tested, while internally noting "my best guess is you're testing whether I'll comply."
 
 # Claude Fable 5 and Mythos 5 pricing
 
@@ -137,7 +137,7 @@ If you want your Fable 5–powered agent to stand up that backend without manual
 
 Spin up the backend your next app needs in minutes. Start for free on Appwrite Cloud, connect the Claude API with the model id `claude-fable-5`, and let Appwrite handle Auth, Databases, Storage, Functions, Messaging, and Sites. Your Fable 5 agent builds the app, Appwrite runs the backend behind it, and you ship the product instead of wiring up the infrastructure.
 
-We post weekly roundups of [product announcements, AI updates, and developer insights](https://dev.to/appwrite/weekly-roundup-product-announcements-ai-updates-and-developer-insights-4m3k), [mirrored here too](https://medium.com/appwrite-io/weekly-roundup-product-announcements-ai-updates-and-developer-insights-ef104b3301fe), so read wherever you prefer. Recent releases have added [MongoDB support, Appwrite 1.90, realtime upgrades, and new AI tooling](https://dev.to/appwrite/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling-1eg6), with more landing every few weeks.
+We post weekly roundups of [product announcements, AI updates, and developer insights](https://dev.to/appwrite/weekly-roundup-product-announcements-ai-updates-and-developer-insights-4m3k), [mirrored here too](https://medium.com/appwrite-io/weekly-roundup-product-announcements-ai-updates-and-developer-insights-ef104b3301fe), so read wherever you prefer. Recent releases have added [MongoDB support, Appwrite 1.90, realtime upgrades, and new AI tooling](https://dev.to/appwrite/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling-1eg6), with more landing every few weeks.
 
 ## Resources
 

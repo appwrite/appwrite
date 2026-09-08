@@ -11,8 +11,9 @@ export function isConsoleBannerVisible(
     preview?: boolean
   },
 ): boolean {
-  if (options?.dismissed) return false
+  // Debug preview ignores schedule, cloud, and dismiss prefs.
   if (options?.preview) return true
+  if (options?.dismissed) return false
   if (banner.cloudOnly) {
     if (options?.cloud === false) return false
     if (options?.cloud !== true && !isCloudProfile()) return false

@@ -1,3 +1,5 @@
+import type { AnalyticsActionId } from '@/lib/analytics-actions'
+
 export type ConsoleBannerScope = 'project' | 'console'
 export type ConsoleBannerPlacement = 'header' | 'bottom-left'
 
@@ -12,6 +14,8 @@ export type ConsoleBannerDefinition = {
   endMs: number
   /** When true, only shown on cloud profile. */
   cloudOnly?: boolean
+  /** CTA analytics action id (`data-analytics` / Plausible event). */
+  event: AnalyticsActionId
 }
 
 /** Stable id stored in `console.dismissedBanners` user prefs. */
@@ -57,6 +61,7 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     startMs: INIT_RECAP_PROMO_BANNER_START_MS,
     endMs: INIT_RECAP_PROMO_BANNER_END_MS,
     cloudOnly: true,
+    event: 'init-recap-promo-banner-view-recap',
   },
   {
     id: POSTGRES_PROMO_BANNER_ID,
@@ -66,6 +71,7 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     startMs: POSTGRES_PROMO_BANNER_START_MS,
     endMs: POSTGRES_PROMO_BANNER_END_MS,
     cloudOnly: true,
+    event: 'postgres-promo-banner-try-now',
   },
 ] as const
 

@@ -28,9 +28,9 @@ Toggle **Generate API key on completion** in the `APPWRITE_API_KEY` variable, so
 
 Fill the `STRIPE_SECRET_KEY` variable with the key you copied from Stripe's Dashboard under the **API keys** section. 
 
-Similarly, fill the `STRIPE_WEBHOOK_SECRET` variable with the secret copied after creating **Webhook**. 
+Similarly, fill the `STRIPE_WEBHOOK_SECRET` variable with the secret copied after creating **Webhook**. 
 
-If you are self-hosting Appwrite, you will need to change `APPWRITE_ENDPOINT` as well, under the **Optional variables** section. 
+If you are self-hosting Appwrite, you will need to change `APPWRITE_ENDPOINT` as well, under the **Optional variables** section. 
 
 When done, click the **Next** button.
 

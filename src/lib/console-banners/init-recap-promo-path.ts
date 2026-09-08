@@ -13,8 +13,24 @@ function isAuthPage(pathname: string): boolean {
   )
 }
 
-function isFullscreenWizardPath(pathname: string): boolean {
+export function isFullscreenWizardPath(pathname: string): boolean {
   return pathname.includes('/create') || pathname.includes('/apps/add')
+}
+
+function isProjectConsolePath(pathname: string): boolean {
+  return pathname.split('/').filter(Boolean)[0] === 'projects'
+}
+
+/**
+ * Header promos (Postgres) mount on project chrome. The recap card is a
+ * `fixed` sibling of the overflow-hidden app shell, so it paints above that
+ * header. Hide recap on project routes while a header promo is visible.
+ */
+export function shouldHideInitRecapForHeaderPromo(
+  pathname: string,
+  headerPromoVisible: boolean,
+): boolean {
+  return headerPromoVisible && isProjectConsolePath(pathname)
 }
 
 function isInitPath(pathname: string): boolean {

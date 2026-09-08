@@ -128,7 +128,8 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `e2e` / `e2e:ui` / `test` / `test:ui` | Playwright e2e smoke tests                                                                                                        |
 | `format` / `format:check`             | Prettier                                                                                                                          |
 | `install-browsers`                    | Install Chromium for Playwright                                                                                                   |
-| `lint`                                | ESLint                                                                                                                            |
+| `lint`                                | ESLint, connect-snippet width, and hidden Unicode in `src/content`                                                                |
+| `lint:content`                        | Fail if blog/docs/changelog/integrations contain NBSP, zero-width, or BOM characters (`--fix` to rewrite)                         |
 | `serve`                               | Preview production build                                                                                                          |
 | `start`                               | Production Bun server                                                                                                             |
 | `import:blog`                         | Import blog from website                                                                                                          |
@@ -260,11 +261,14 @@ bun run test:ui
 
 ## Linting & Formatting
 
-This project uses ESLint and Prettier for code quality:
+This project uses ESLint and Prettier for code quality. `bun run lint` also checks connect-snippet line width and hidden Unicode (NBSP, zero-width, BOM) in `src/content`.
 
 ```bash
 # Lint code
 bun run lint
+
+# Rewrite hidden Unicode in content to normal spaces
+bun run lint:content -- --fix
 
 # Format code
 bun run format

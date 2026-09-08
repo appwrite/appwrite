@@ -103,7 +103,7 @@ With native support, your builds run without modification, deploy faster, and st
 
 We've shipped significant performance improvements across functions and static sites.
 
-Function cold starts are now 58% faster in the Frankfurt (FRA) region with more consistent start times across executions.
+Function cold starts are now 58% faster in the Frankfurt (FRA) region with more consistent start times across executions.
 
 Static sites are now served directly through our edge proxies, eliminating the need for dedicated runtimes.
 

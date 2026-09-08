@@ -68,8 +68,8 @@ You can create a new project or migrate your existing project to the SFO region.
 
 Want to switch to a new region? Here are some resources to help you:
 
-- Video: [Changing regions with migrations](https://www.youtube.com/watch?v=Ya2R6dD_xxE)
-- Blog: [How to change regions in Appwrite Cloud using migrations](/blog/post/change-regions-with-migrations)
+- Video: [Changing regions with migrations](https://www.youtube.com/watch?v=Ya2R6dD_xxE)
+- Blog: [How to change regions in Appwrite Cloud using migrations](/blog/post/change-regions-with-migrations)
 
 # New TablesDB API with updated terminology
 
@@ -83,7 +83,7 @@ Here’s what’s changed:
 - Documents are now Rows
 - Attributes are now Columns
 
-To support the terminology change, we’ve added the TablesDB API.
+To support the terminology change, we’ve added the TablesDB API.
 
 A new API layer that helps you work with relational database concepts like tables, columns, and rows, without requiring any changes to your existing apps.
 

@@ -15,6 +15,7 @@ import {
   renderNewsSitemapXml,
   selectNewsSitemapEntries,
 } from '@/lib/sitemap/news'
+import { isSitemapFileSectionId } from '@/lib/sitemap'
 import { parseNewsSitemapXml } from '@/lib/sitemap/parse-news-xml'
 import { renderSitemapIndexXml } from '@/lib/sitemap/xml'
 
@@ -319,6 +320,11 @@ describe('news sitemap discovery', () => {
     )
 
     expect(index).toContain(`${ORIGIN}${NEWS_SITEMAP_PATH}`)
+  })
+
+  test('news is listed in the index, not as a static urlset file', () => {
+    expect(isSitemapFileSectionId('pages')).toBe(true)
+    expect(isSitemapFileSectionId('news')).toBe(false)
   })
 
   test('robots.txt advertises the news sitemap', () => {

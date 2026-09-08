@@ -170,7 +170,7 @@ Now, these tools are not strictly related to remote work. However, they have gre
 
 ![Plausible](/images/blog/how-to-build-remote-tech-stack/9.avif)
 
-[Plausible](http://plausible.io) is a privacy-friendly alternative to Google Analytics, which we opted for as part of [our commitment to data privacy](https://appwrite.io/blog/post/How-to-put-privacy-first). It is an open-source analytics platform with some of the highest [privacy standards](https://plausible.io/privacy). It helps us get demographic and user behavior data from the website and Appwrite Cloud in a privacy-friendly manner.
+[Plausible](http://plausible.io) is a privacy-friendly alternative to Google Analytics, which we opted for as part of [our commitment to data privacy](https://appwrite.io/blog/post/How-to-put-privacy-first). It is an open-source analytics platform with some of the highest [privacy standards](https://plausible.io/privacy). It helps us get demographic and user behavior data from the website and Appwrite Cloud in a privacy-friendly manner.
 
 Some Plausible pros:
 

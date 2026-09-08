@@ -49,7 +49,7 @@ You can now filter directly on relationship columns in Appwrite Databases using 
 
 # New text column types for Appwrite Databases
 
-Appwrite Databases now supports four explicit text column types: `varchar`, `text`, `mediumtext`, and `longtext`. The new types make storage trade-offs clear for both developers and AI agents. Existing legacy string schemas continue to work with full backward support. Live on Appwrite Cloud.
+Appwrite Databases now supports four explicit text column types: `varchar`, `text`, `mediumtext`, and `longtext`. The new types make storage trade-offs clear for both developers and AI agents. Existing legacy string schemas continue to work with full backward support. Live on Appwrite Cloud.
 
 [Learn more](https://appwrite.io/blog/post/new-string-types)
 
@@ -65,7 +65,7 @@ Appwrite Realtime now includes channel helpers, a fluent type-safe API for build
 
 # Realtime queries: Server-side event filtering
 
-Appwrite Realtime now supports queries when subscribing to channels. Events are filtered server-side, so your callbacks only receive updates that match your conditions. Combine filters with `Query.and()` and `Query.or()`, and subscribe to the same channel multiple times with different filters. Available across Web, Flutter, React Native, Apple, and Android SDKs.
+Appwrite Realtime now supports queries when subscribing to channels. Events are filtered server-side, so your callbacks only receive updates that match your conditions. Combine filters with `Query.and()` and `Query.or()`, and subscribe to the same channel multiple times with different filters. Available across Web, Flutter, React Native, Apple, and Android SDKs.
 
 [Learn more](https://appwrite.io/blog/post/announcing-realtime-queries)
 
@@ -89,11 +89,11 @@ Appwrite Arena is an open-source benchmark that tests how well AI models underst
 
 # Community recognitions
 
-We are excited to feature Shivam as part of our monthly community recognitions for February 2026. Shivam created [NotesBee](https://notesbee.appwrite.network/), an Android notes app that also securely stores WhatsApp exports so only you can see them.
+We are excited to feature Shivam as part of our monthly community recognitions for February 2026. Shivam created [NotesBee](https://notesbee.appwrite.network/), an Android notes app that also securely stores WhatsApp exports so only you can see them.
 
-For March, a community member created [Skincare Buddy](https://skincare-buddy.appwrite.network/), a skincare tracking app that helps you manage your routine and share curated data with AI tools for personalized insights.
+For March, a community member created [Skincare Buddy](https://skincare-buddy.appwrite.network/), a skincare tracking app that helps you manage your routine and share curated data with AI tools for personalized insights.
 
-If you would like to participate in next month's Community Recognitions, [join our Discord server](https://discord.gg/3nfbe6NhkE) and showcase your project.
+If you would like to participate in next month's Community Recognitions, [join our Discord server](https://discord.gg/3nfbe6NhkE) and showcase your project.
 
 # Engineering Resources
 
@@ -107,4 +107,4 @@ If you would like to participate in next month's Community Recognitions, [join 
 
 We have a lot more to come, including new features and a big partnership announcement we are very excited to share.
 
-Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.

@@ -23,6 +23,7 @@ import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]m
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
@@ -487,6 +488,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHelloRoute = ApiHelloRouteImport.update({
@@ -3038,6 +3044,7 @@ export interface FileRoutesByFullPath {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -3447,6 +3454,7 @@ export interface FileRoutesByTo {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -3814,6 +3822,7 @@ export interface FileRoutesById {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -4228,6 +4237,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -4637,6 +4647,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -5003,6 +5014,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -5419,6 +5431,7 @@ export interface RootRouteChildren {
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
@@ -5539,6 +5552,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/hello': {
@@ -10171,6 +10191,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
@@ -10195,13 +10216,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

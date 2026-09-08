@@ -71,7 +71,7 @@ Here’s the keys you need:
 
 The function template syncs rows in an Appwrite database table to a Meilisearch index. It should get you up and running, but you will need to add real data to build a useful search index.
 
-If you want to see the source code, you can find it on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/sync-with-meilisearch). Now, let’s navigate to our functions page on **[Appwrite](https://cloud.appwrite.io/)**. From there, we will select the **Templates** tab, search for and select the **Sync with Meilisearch** function template.
+If you want to see the source code, you can find it on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/sync-with-meilisearch). Now, let’s navigate to our functions page on **[Appwrite](https://cloud.appwrite.io/)**. From there, we will select the **Templates** tab, search for and select the **Sync with Meilisearch** function template.
 
 
 
@@ -79,7 +79,7 @@ If you want to see the source code, you can find it on our [templates GitHub re
 
 The function requires `APPWRITE_API_KEY`, `APPWRITE_DATABASE_ID`, `APPWRITE_TABLE_ID`, `MEILISEARCH_ENDPOINT`, `MEILISEARCH_ADMIN_API_KEY`, `MEILISEARCH_SEARCH_API_KEY`, `MEILISEARCH_INDEX_NAME`. Once you have added them you can proceed to the Connect step.
 
-Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
+Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
 
 
 
@@ -88,7 +88,7 @@ Select **Create a new repository** (this will generate a GitHub repository for
 
 # Testing the Template
 
-Visit the **Domains** tab on the function page and copy the domain URL to test the function.
+Visit the **Domains** tab on the function page and copy the domain URL to test the function.
 
 
 ![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/va05oaxklo04x6xh6fka.png)

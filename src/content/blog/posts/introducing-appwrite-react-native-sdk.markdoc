@@ -56,10 +56,10 @@ First thing first, you must set up an Appwrite project. To do so, you must eithe
 
 ![qa.appwrite.org_console_project-test_overview_platforms.png](/images/blog/introducing-appwrite-react-native-sdk/appwrite.avif)
 
-Once that is done, under **Add a platform**, add an **Android app** or an **Apple app**. You can skip optional steps.
+Once that is done, under **Add a platform**, add an **Android app** or an **Apple app**. You can skip optional steps.
 
-- **iOS steps:** Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier** in the **General** tab for your app's primary target in XCode.
-- **Android steps:** Add your app's **name** and **package name.** Your package name is generally the **applicationId** in your app-level `build.gradle` file.
+- **iOS steps:** Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier** in the **General** tab for your app's primary target in XCode.
+- **Android steps:** Add your app's **name** and **package name.** Your package name is generally the **applicationId** in your app-level `build.gradle` file.
 
 ## Step 2: Install the React Native SDK
 

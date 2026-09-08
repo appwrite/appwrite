@@ -93,7 +93,7 @@ You can also watch the [product tour](https://www.youtube.com/watch?v=QdDgPeuBZ1
 
 # How Messaging works
 
-Now that we have learned about the three core concepts of Appwrite Messaging, let us dive deeper into how the product works. Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. However, there is a lot more that goes on under the hood. 
+Now that we have learned about the three core concepts of Appwrite Messaging, let us dive deeper into how the product works. Each time you send or schedule a push notification, email, or SMS text, it's recorded in Appwrite as a **message** is displayed in the **Messages** tab. However, there is a lot more that goes on under the hood. 
 
 Here's a step-by-step breakdown of how Appwrite Messaging works:
 

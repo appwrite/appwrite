@@ -37,9 +37,9 @@ HIPAA compliance for web apps means protecting health information (PHI) anytime 
 
 HIPAA applies when you are building for, or operating as, a covered entity or a business associate and handling PHI in that context. Not every health-related application automatically falls under HIPAA. Compliance obligations attach based on the legal relationship and how protected health information is handled.
 
-For teams, **HIPAA compliance for developers** isn't a one-time checkbox, it's an ongoing responsibility built into how your app is designed, deployed, and maintained. In practice, it comes down to safeguarding **confidentiality, integrity, and availability** through secure authentication, encryption, audit logging, and strong data-handling workflows across the full application lifecycle.
+For teams, **HIPAA compliance for developers** isn't a one-time checkbox, it's an ongoing responsibility built into how your app is designed, deployed, and maintained. In practice, it comes down to safeguarding **confidentiality, integrity, and availability** through secure authentication, encryption, audit logging, and strong data-handling workflows across the full application lifecycle.
 
-If your system collects or processes PHI, and especially if vendors touch that data, you'll also need **Business Associate Agreements (BAAs)** in place. A structured compliance checklist helps confirm where PHI flows and whether your infrastructure (including your **HIPAA compliant backend**) meets the required safeguards.
+If your system collects or processes PHI, and especially if vendors touch that data, you'll also need **Business Associate Agreements (BAAs)** in place. A structured compliance checklist helps confirm where PHI flows and whether your infrastructure (including your **HIPAA compliant backend**) meets the required safeguards.
 
 # Understanding HIPAA rules
 
@@ -47,9 +47,9 @@ To build secure healthcare software, teams need a clear understanding of HIPAA r
 
 HIPAA is typically enforced through three core rules:
 
-- [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html): Requires administrative, technical, and physical safeguards to protect ePHI, including access controls, encryption, and ongoing risk assessments.
-- [HIPAA Privacy Rule](https://www.hhs.gov/hipaa/for-professionals/privacy/index.html): Governs how PHI can be used and disclosed, ensuring patient data is only accessible to authorized users for legitimate purposes.
-- [Breach Notification Rule](https://www.hhs.gov/hipaa/for-professionals/breach-notification/index.html): Requires organizations to report data breaches to affected individuals and the Department of Health and Human Services (HHS), and in some cases the media.
+- [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html): Requires administrative, technical, and physical safeguards to protect ePHI, including access controls, encryption, and ongoing risk assessments.
+- [HIPAA Privacy Rule](https://www.hhs.gov/hipaa/for-professionals/privacy/index.html): Governs how PHI can be used and disclosed, ensuring patient data is only accessible to authorized users for legitimate purposes.
+- [Breach Notification Rule](https://www.hhs.gov/hipaa/for-professionals/breach-notification/index.html): Requires organizations to report data breaches to affected individuals and the Department of Health and Human Services (HHS), and in some cases the media.
 
 Together, these rules form the foundation for HIPAA compliance and long-term trust in healthcare services.
 
@@ -109,9 +109,9 @@ From a trust perspective, auditability reinforces accountability. It ensures tha
 
 ## 5. Third-party services and shared responsibility
 
-Modern web apps often rely on third-party services. If any vendor handles protected health information (PHI), they must be willing to sign a **Business Associate Agreement (BAA)** and meet HIPAA requirements. These **business associates** have contractual obligations to protect healthcare data and support compliance.
+Modern web apps often rely on third-party services. If any vendor handles protected health information (PHI), they must be willing to sign a **Business Associate Agreement (BAA)** and meet HIPAA requirements. These **business associates** have contractual obligations to protect healthcare data and support compliance.
 
-Every dependency becomes part of your trust chain, so teams should evaluate vendors carefully and avoid tools that aren't designed for regulated use cases. HIPAA compliance is a shared responsibility across the stack, not something a single provider can "cover" on its own, especially when **covered entities** and healthcare clearinghouses are involved.
+Every dependency becomes part of your trust chain, so teams should evaluate vendors carefully and avoid tools that aren't designed for regulated use cases. HIPAA compliance is a shared responsibility across the stack, not something a single provider can "cover" on its own, especially when **covered entities** and healthcare clearinghouses are involved.
 
 If you self-host Appwrite, you will typically need Business Associate Agreements with your infrastructure provider and any downstream services that create, receive, maintain, or transmit PHI on your behalf, such as cloud hosting, email providers, analytics tools, or logging services.
 
@@ -140,7 +140,7 @@ Appwrite provides several technical safeguards that help teams build HIPAA-align
 
 > Note: Underlying disk-level encryption, infrastructure hardening, and managed service configurations remain the responsibility of your hosting environment and deployment setup.
 
-For detailed technical guidance, see the [**Appwrite HIPAA documentation**](/docs/advanced/security/hipaa).
+For detailed technical guidance, see the [**Appwrite HIPAA documentation**](/docs/advanced/security/hipaa).
 
 # A responsible approach to building healthcare software that handles health information
 

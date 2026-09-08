@@ -11,6 +11,8 @@ import {
   INIT_RECAP_PROMO_BANNER_ID,
   isConsoleBannerVisible,
   isInitRecapPromoPath,
+  POSTGRES_PROMO_BANNER_ID,
+  shouldHideInitRecapForHeaderPromo,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
 import { cn } from '@/lib/utils'
@@ -22,6 +24,7 @@ import {
 } from '@/lib/user-prefs-keys'
 
 const INIT_RECAP_PROMO_BANNER = getConsoleBannerById(INIT_RECAP_PROMO_BANNER_ID)!
+const POSTGRES_PROMO_BANNER = getConsoleBannerById(POSTGRES_PROMO_BANNER_ID)!
 
 export function InitRecapPromoBanner() {
   const t = useT()
@@ -32,13 +35,10 @@ export function InitRecapPromoBanner() {
   const dismissBanner = useDismissConsoleBanner()
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
 
+  const prefs = account?.prefs as UserPrefs | undefined
   const dismissedFromPrefs = useMemo(
-    () =>
-      isConsoleBannerDismissed(
-        account?.prefs as UserPrefs | undefined,
-        INIT_RECAP_PROMO_BANNER_ID,
-      ),
-    [account?.prefs],
+    () => isConsoleBannerDismissed(prefs, INIT_RECAP_PROMO_BANNER_ID),
+    [prefs],
   )
 
   const preview = isPreviewEnabled(INIT_RECAP_PROMO_BANNER_ID)
@@ -47,6 +47,10 @@ export function InitRecapPromoBanner() {
   const visible = isConsoleBannerVisible(INIT_RECAP_PROMO_BANNER, {
     preview,
     dismissed,
+  })
+  const postgresHeaderVisible = isConsoleBannerVisible(POSTGRES_PROMO_BANNER, {
+    preview: isPreviewEnabled(POSTGRES_PROMO_BANNER_ID),
+    dismissed: isConsoleBannerDismissed(prefs, POSTGRES_PROMO_BANNER_ID),
   })
 
   if (!visible) return null
@@ -58,6 +62,9 @@ export function InitRecapPromoBanner() {
   }
   if (!preview) {
     if (!features.init || !isAuthenticated || !onPromoPath) return null
+  }
+  if (shouldHideInitRecapForHeaderPromo(location.pathname, postgresHeaderVisible)) {
+    return null
   }
 
   const persistDismiss = () => {
@@ -99,7 +106,7 @@ export function InitRecapPromoBanner() {
 
       <Link
         to="/init"
-        {...analyticsAttrs('init-recap-promo-banner-view-recap')}
+        {...analyticsAttrs(INIT_RECAP_PROMO_BANNER.event)}
         aria-label={`${t('Catch up on Init')}. ${t('View recap')}`}
         onClick={persistDismiss}
         className="group block p-4 pt-3 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
