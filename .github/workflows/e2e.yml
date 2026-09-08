@@ -15,6 +15,7 @@ jobs:
     concurrency:
       group: e2e-${{ matrix.project }}-${{ matrix.project == 'console-live' && 'shared-account' || github.run_id }}
       cancel-in-progress: false
+      queue: max
     strategy:
       fail-fast: false
       matrix:
