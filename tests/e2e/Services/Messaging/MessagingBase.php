@@ -2864,8 +2864,10 @@ trait MessagingBase
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
             'providerId' => ID::unique(),
             'name' => 'SMTP-to-header',
-            'host' => 'maildev',
+            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
             'port' => \intval(System::getEnv('_APP_SMTP_PORT', '1025')),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
             'encryption' => 'none',
             'autoTLS' => false,
             'fromName' => 'Sender',
