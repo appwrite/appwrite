@@ -59,7 +59,14 @@ export async function waitForTerminalPrompt(
 ): Promise<void> {
   await expect
     .poll(
-      async () => lastNonEmptyLine(await terminalRows(page).innerText()),
+      async () => {
+        // xterm only renders the viewport, which may still show scrollback
+        // after a long command. Follow output before looking for its prompt.
+        await page.locator(`${SHELL} .xterm-viewport`).evaluate((viewport) => {
+          viewport.scrollTop = viewport.scrollHeight
+        })
+        return lastNonEmptyLine(await terminalRows(page).innerText())
+      },
       { timeout },
     )
     .toMatch(PROMPT_LINE)
@@ -79,10 +86,11 @@ export async function runTerminalCommand(
   command: string,
 ): Promise<void> {
   const textarea = terminalTextarea(page)
-  await textarea.click({ force: true })
+  // This is xterm's invisible IME input, not a pointer target. A forced click
+  // can hit terminal content underneath it instead of focusing the input.
   await textarea.focus()
-  // Paste the whole command. Typing character-by-character wraps at the
-  // panel width and xterm treats that wrap as Enter, splitting the command.
+  await expect(textarea).toBeFocused()
+  // Insert the command as one input event, then submit it separately.
   await page.keyboard.insertText(command)
   await page.keyboard.press('Enter')
 }
