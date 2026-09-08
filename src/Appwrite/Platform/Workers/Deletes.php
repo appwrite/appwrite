@@ -43,6 +43,8 @@ use function Swoole\Coroutine\batch;
 
 class Deletes extends Action
 {
+    protected \Closure $locks;
+
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
     public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
 
@@ -76,7 +78,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('locks');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -108,6 +111,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        callable $locks,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -142,6 +146,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $locks,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -236,7 +241,10 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        callable $locks,
     ): void {
+        $this->locks = \Closure::fromCallable($locks);
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -595,16 +603,33 @@ class Deletes extends Action
                 $queries[] = Query::notEqual('$id', $activeDeploymentId);
             }
 
-            $this->deleteByGroup(
+            $this->listByGroup(
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($publisherForDeletes, $project) {
-                    $publisherForDeletes->enqueue(new DeleteMessage(
-                        project: $project,
-                        type: DELETE_TYPE_DOCUMENT,
-                        document: $deployment,
-                    ));
+                function (Document $candidate) use ($dbForProject, $publisherForDeletes, $project, $resource) {
+                    $deployment = ($this->locks)('jobs-deployment:' . $candidate->getId(), 30, function () use ($dbForProject, $candidate, $resource): Document {
+                        // Selection precedes the lock. A completion may have made
+                        // this deployment active while retention was waiting.
+                        $current = $dbForProject->findOne($resource->getCollection(), [Query::equal('$id', [$resource->getId()])]);
+                        if ($current->getAttribute('deploymentId') === $candidate->getId()) {
+                            return new Document();
+                        }
+
+                        $deployment = $dbForProject->getDocument('deployments', $candidate->getId());
+                        if (!$deployment->isEmpty() && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                            throw new \RuntimeException('Failed to remove deployment from DB');
+                        }
+                        return $deployment;
+                    }, 10.0);
+
+                    if (!$deployment->isEmpty()) {
+                        $publisherForDeletes->enqueue(new DeleteMessage(
+                            project: $project,
+                            type: DELETE_TYPE_DOCUMENT,
+                            document: $deployment,
+                        ));
+                    }
                 }
             );
         };
@@ -1753,6 +1778,25 @@ class Deletes extends Action
         Database $database,
         ?callable $callback = null
     ): void {
+        if ($collection === 'deployments') {
+            // Bulk deletion must not remove a row under an in-flight Jobs
+            // transition. Only the DB delete is locked; storage cleanup is not.
+            $this->listByGroup($collection, $queries, $database, function (Document $candidate) use ($database, $callback): void {
+                $deployment = ($this->locks)('jobs-deployment:' . $candidate->getId(), 30, function () use ($database, $candidate): Document {
+                    $deployment = $database->getDocument('deployments', $candidate->getId());
+                    if (!$deployment->isEmpty() && !$database->deleteDocument('deployments', $deployment->getId())) {
+                        throw new \RuntimeException('Failed to remove deployment from DB');
+                    }
+                    return $deployment;
+                }, 10.0);
+
+                if (!$deployment->isEmpty() && $callback !== null) {
+                    $callback($deployment);
+                }
+            });
+            return;
+        }
+
         $start = \microtime(true);
 
         $message = 'collection:'.$database->getNamespace().'_'.$collection;

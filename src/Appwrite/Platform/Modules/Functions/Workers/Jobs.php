@@ -124,11 +124,18 @@ class Jobs extends Action
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
-                $cache->save($key, true);
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+                return;
+            }
+
+            // Terminal outcomes are immutable, but late logs and source-size
+            // artifacts still belong to the build (callbacks arrive out of order).
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)
+                && $event->event !== 'orchestrator.job.log'
+                && !($event->event === 'orchestrator.job.artifact' && ($event->data['artifactId'] ?? '') === 'sourceSize')) {
                 return;
             }
 
@@ -159,6 +166,11 @@ class Jobs extends Action
             // (success), so key off the status change rather than the event.
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
+            }
+
+            // Failed handlers must remain retryable, including deferred-work enqueue failures.
+            if ($event->id !== '') {
+                $cache->save($key, true);
             }
         }, self::LOCK_TIMEOUT);
     }
@@ -239,7 +251,7 @@ class Jobs extends Action
      * every attempt at the transition, not only the first, so an override must be
      * idempotent.
      */
-    protected function onVerified(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
+    protected function onVerified(Database $dbForProject, Document $project, Document $deployment, Cache $cache, int $buildSize = 0): void
     {
     }
 
@@ -442,7 +454,7 @@ class Jobs extends Action
 
         // Every check this worker makes has passed, so the deployment is publishable
         // as far as it is concerned. Idempotent: each retry of the join arrives here.
-        $this->onVerified($dbForProject, $project, $deployment, $cache);
+        $this->onVerified($dbForProject, $project, $deployment, $cache, $size);
 
         // Something else is not finished. Whatever it is reports back as its own
         // callback, which re-enters through onCallback() and retries this.

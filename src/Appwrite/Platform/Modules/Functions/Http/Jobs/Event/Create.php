@@ -57,6 +57,13 @@ class Create extends Action
 
         $event = \json_decode($body, true) ?? [];
 
+        // Internal queue events must never be supplied by callback ingestion.
+        // Unknown jobs-service events were no-ops in the worker; acknowledge them.
+        if (!\in_array($event['type'] ?? '', ['orchestrator.job.log', 'orchestrator.job.artifact', 'orchestrator.job.exit', 'orchestrator.job.complete'], true)) {
+            $response->noContent();
+            return;
+        }
+
         // The project isn't a request-scoped resource here (the jobs-service is
         // the caller), so resolve it from the job meta Appwrite authored. The
         // worker reloads the full project document from this id.

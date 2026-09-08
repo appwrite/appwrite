@@ -14,7 +14,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
-use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -80,31 +79,34 @@ class Update extends Action
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        // Read and decide under the same lock as completion; never cancel a
+        // stale snapshot or fall back to an unlocked write on contention.
+        $deployment = $locks('jobs-deployment:' . $deploymentId, 30, function () use ($dbForProject, $deploymentId, $function) {
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->isEmpty()) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
+            if ($deployment->isEmpty()) {
+                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+            }
 
-        if (
-            $deployment->getAttribute('resourceId') !== $function->getId()
-            || $deployment->getAttribute('resourceType') !== 'functions'
-        ) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
+            if (
+                $deployment->getAttribute('resourceId') !== $function->getId()
+                || $deployment->getAttribute('resourceType') !== 'functions'
+            ) {
+                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+            }
 
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
-            throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
-        }
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+            }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
-        $endTime = new \DateTime('now');
-        $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+            if ($deployment->getAttribute('status') === 'canceled') {
+                return $deployment;
+            }
 
-        // Write under the Jobs worker's per-deployment lock: its handlers
-        // read-modify-write buildLogs, and an unserialized cancel write here
-        // loses the closing log line to an in-flight append.
-        $cancel = function () use ($dbForProject, $deployment, $duration) {
+            $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
+            $endTime = new \DateTime('now');
+            $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+
             try {
                 return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
             } catch (TransactionException) {
@@ -124,13 +126,7 @@ class Update extends Action
 
                 return $deployment;
             }
-        };
-
-        try {
-            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
-        } catch (Contention) {
-            $deployment = $cancel();
-        }
+        }, 10.0);
 
         // Best-effort cleanup — the deployment is already marked 'canceled'.
         try {
