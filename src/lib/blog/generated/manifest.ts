@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "prisma-orm-appwrite-postgres",
+    "href": "/blog/post/prisma-orm-appwrite-postgres",
+    "title": "Use Prisma ORM with Appwrite Postgres",
+    "description": "Model your data with Prisma ORM, generate a typed client, and test schema migrations against Appwrite Postgres.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/prisma-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-worker-topologies",
     "href": "/blog/post/announcing-worker-topologies",
     "title": "Introducing worker topologies for self-hosted Appwrite",
