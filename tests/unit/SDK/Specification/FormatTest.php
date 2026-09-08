@@ -357,6 +357,58 @@ final class FormatTest extends TestCase
         $this->assertSame('["one","two"]', $properties['text']['example']);
     }
 
+    public static function defaultLocations(): \Iterator
+    {
+        yield ['GET'];
+        yield ['POST'];
+    }
+
+    #[DataProvider('defaultLocations')]
+    public function testEmptyObjectDefaultsSerializeAsObjects(string $method): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route($method, '/v1/tests'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('headers', [], new Assoc(), 'Headers.', optional: true)
+            ->param('data', [], new JSON(), 'Data.', optional: true)
+            ->param('metadata', ['enabled' => true], new Assoc(), 'Metadata.', optional: true)
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
+            ->param('count', 0, new Range(0, 100), 'Count.', optional: true)
+            ->param('enabled', false, new BooleanValidator(true), 'Enabled.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        // Check serialized JSON, where PHP's empty array and empty object differ.
+        $operation = json_decode(json_encode($spec, JSON_THROW_ON_ERROR), flags: JSON_THROW_ON_ERROR)->paths->{'/tests'}->{strtolower($method)};
+        if ($method === 'GET') {
+            $schemas = [];
+            foreach ($operation->parameters as $parameter) {
+                $schemas[$parameter->name] = $parameter->schema;
+            }
+        } else {
+            $schemas = (array) $operation->requestBody->content->{'application/json'}->schema->properties;
+        }
+
+        foreach (['headers', 'data'] as $name) {
+            $this->assertSame('object', $schemas[$name]->type);
+            $this->assertSame('{}', json_encode($schemas[$name]->default));
+        }
+        $this->assertEquals((object) ['enabled' => true], $schemas['metadata']->default);
+        $this->assertSame('array', $schemas['labels']->type);
+        $this->assertSame([], $schemas['labels']->default);
+        $this->assertSame(0, $schemas['count']->default);
+        $this->assertFalse($schemas['enabled']->default);
+    }
+
     public function testArrayListItemTypesAreValidOpenApiTypes(): void
     {
         Method::$processed = [];

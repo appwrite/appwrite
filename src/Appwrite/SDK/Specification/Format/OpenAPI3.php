@@ -981,7 +981,11 @@ class OpenAPI3 extends Format
                 }
 
                 if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
-                    $node['schema']['default'] = $param['default'];
+                    // PHP uses [] for empty maps too; preserve the declared
+                    // object type when serializing its default to JSON.
+                    $node['schema']['default'] = $node['schema']['type'] === 'object' && $param['default'] === []
+                        ? new \stdClass()
+                        : $param['default'];
                 }
 
                 $pathAliases = [$name, ...($param['aliases'] ?? [])];
