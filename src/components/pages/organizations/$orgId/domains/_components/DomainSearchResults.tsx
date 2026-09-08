@@ -18,6 +18,7 @@ const FOCUS_MARKETING_CONTENT_WIDTH = 'max-w-2xl'
 
 type DomainSearchResultsProps = {
   initialSearch?: string
+  onSearchValueChange?: (value: string) => void
   onSelectDomain: (full: string, quote: DomainSelectionQuote) => void
   limitReached?: boolean
   limitMessage?: ReactNode
@@ -93,6 +94,7 @@ function DomainSearchField({
 
 export function DomainSearchResults({
   initialSearch = '',
+  onSearchValueChange,
   onSelectDomain,
   limitReached = false,
   limitMessage,
@@ -116,7 +118,7 @@ export function DomainSearchResults({
     hasContent,
     baseName,
     addRequestedTld,
-  } = useDomainSearch(initialSearch)
+  } = useDomainSearch(initialSearch, onSearchValueChange)
 
   const searchField = (
     <DomainSearchField

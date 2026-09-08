@@ -123,8 +123,15 @@ export function buildDomainSuggestions({
   })
 }
 
-export function useDomainSearch(initialSearch = '') {
-  const [searchValue, setSearchValue] = useState(initialSearch)
+export function useDomainSearch(
+  initialSearch = '',
+  onSearchValueChange?: (value: string) => void,
+) {
+  const [localSearchValue, setLocalSearchValue] = useState(initialSearch)
+  // Public search is controlled by the route so shared links and browser
+  // history restore the input. Purchase wizards keep their local search state.
+  const searchValue = onSearchValueChange ? initialSearch : localSearchValue
+  const setSearchValue = onSearchValueChange ?? setLocalSearchValue
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [requested, setRequested] = useState<{
     baseName: string
