@@ -7,13 +7,14 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 100+ fitness studios solo with Appwrite",
     "description": "Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 100+ yoga and pilates studios serving 11,000 students in six months.",
-    "date": "2026-09-08",
-    "lastUpdated": "2026-09-08",
+    "date": "2026-09-09",
+    "lastUpdated": "2026-09-09",
     "timeToRead": 5,
     "author": "aditya-oberai",
     "category": "customer-stories",
     "featured": false,
-    "cover": "/images/blog/customer-story-lorari/cover.avif","hasCover": true
+    "cover": "/images/blog/customer-story-lorari/cover.avif",
+    "hasCover": true
   },
   {
     "slug": "drizzle-orm-appwrite-postgres",
