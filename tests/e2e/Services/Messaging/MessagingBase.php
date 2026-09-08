@@ -2875,20 +2875,34 @@ trait MessagingBase
 
         $this->assertEquals(201, $provider['headers']['status-code']);
 
+        // Distinct from the user's own email, whose target is created automatically
+        // and holds that identifier already.
         $recipient = \uniqid() . '@appwrite.io';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => $recipient,
+            'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'SMTP Recipient',
         ]);
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
+        // Bind the target to this provider. A target without a provider id is
+        // delivered through whichever enabled email provider is found first,
+        // which other tests in this suite also create.
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $recipient,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
             'messageId' => ID::unique(),
-            'targets' => [$user['body']['targets'][0]['$id']],
+            'targets' => [$target['body']['$id']],
             'subject' => 'To header check',
             'content' => 'To header check',
         ]);
