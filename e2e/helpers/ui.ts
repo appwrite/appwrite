@@ -140,15 +140,23 @@ export function dedicatedDatabaseFailedLocator(page: Page) {
 }
 
 async function readDedicatedBannerTitle(page: Page): Promise<string | null> {
-  const failed = dedicatedDatabaseFailedLocator(page).first()
-  if (await failed.isVisible().catch(() => false)) {
-    return ((await failed.textContent()) ?? '').trim() || 'Database update failed'
-  }
-  const busy = dedicatedDatabaseBusyLocator(page).first()
-  if (await busy.isVisible().catch(() => false)) {
-    return ((await busy.textContent()) ?? '').trim() || 'Database is not ready'
-  }
-  return null
+  // Provisioning banners can disappear as soon as the database becomes ready.
+  // Snapshot visible matches instead of waiting for a banner after checking it.
+  const failed = await dedicatedDatabaseFailedLocator(page)
+    .filter({ visible: true })
+    .evaluateAll((elements) =>
+      elements.length
+        ? elements[0].textContent?.trim() || 'Database update failed'
+        : null,
+    )
+  if (failed) return failed
+  return dedicatedDatabaseBusyLocator(page)
+    .filter({ visible: true })
+    .evaluateAll((elements) =>
+      elements.length
+        ? elements[0].textContent?.trim() || 'Database is not ready'
+        : null,
+    )
 }
 
 async function assertDedicatedDatabaseNotFailed(page: Page): Promise<void> {
