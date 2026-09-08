@@ -1,6 +1,6 @@
 /**
  * TTF assets under `public/fonts-ttf/` for cover export (fontconfig on Linux Docker,
- * SVG @font-face embed on macOS). Regenerate from WOFF2 in `public/fonts/` if brand
+ * SVG @font-face embed on macOS). Regenerate from WOFF2 in `src/assets/fonts/` if brand
  * fonts change.
  */
 export const COVER_EXPORT_TTF_SOURCES = {

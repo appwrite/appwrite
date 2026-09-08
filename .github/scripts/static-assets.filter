@@ -1,3 +1,3 @@
-# Publish browser assets only; HTML, source maps and server exports stay on the app.
-+ /{assets,images,fonts,icons}/**.{js,mjs,css,wasm,json,avif,webp,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,otf,mp4,webm,mov}
+# Only Vite content-hashed output; never publish unversioned public files.
++ /assets/*-????????.{js,mjs,css,wasm,json,avif,webp,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,otf,mp4,webm,mov}
 - **

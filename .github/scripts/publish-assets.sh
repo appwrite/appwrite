@@ -15,12 +15,7 @@ for arch in amd64 arm64; do
     --filter-from .github/scripts/static-assets.filter --checksum --immutable
 done
 
-# Vite's generated JS/CSS/WASM filenames have an eight-character content hash.
-# copy retains old chunks; sync would delete files still used by open tabs.
-hashed='/assets/*-????????.{js,mjs,css,wasm}'
-rclone copy "$merged" "r2:$R2_BUCKET" --include "$hashed" \
-  --checksum --immutable --metadata \
+# Only content-hashed build assets are shared between environments.
+# copy retains old chunks for open tabs and rollback.
+rclone copy "$merged" "r2:$R2_BUCKET" --checksum --immutable --metadata \
   --metadata-set 'cache-control=public, max-age=31536000, immutable'
-rclone copy "$merged" "r2:$R2_BUCKET" --exclude "$hashed" \
-  --checksum --metadata \
-  --metadata-set 'cache-control=public, max-age=300, must-revalidate'

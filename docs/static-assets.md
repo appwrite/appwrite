@@ -1,45 +1,38 @@
 # Console static assets
 
-TanStack Start uses Vite's CDN `base` while its router `basepath` stays `/`.
-The staging and production workflows build with `CDN_ORIGIN` set to their respective
-R2 custom domains (`https://cdn.staging.appwrite.io` and `https://cdn.appwrite.io`).
-Generated scripts, styles, lazy chunks and CSS asset URLs use
-the CDN; font preloads use the same base. Omit `CDN_ORIGIN` for local asset URLs.
-Changing environments requires a rebuild; other application config remains runtime config.
+Staging and production share `https://cdn.appwrite.io` and the existing bucket name
+`appwrite-console-production`. Both workflows pass the same build-time `CDN_ORIGIN`
+to Vite; TanStack Start uses its native CDN base while the router basepath stays `/`.
+Prerendered pages and SSR use the same generated URLs. Local builds omit the origin.
+There is no CDN runtime configuration, URL wrapper, or custom transform.
 
-After building, CI extracts `dist/client` from both exact image digests and uses
-rclone to publish the static files before updating `application-configuration`.
-`rclone copy --checksum --immutable` combines both outputs locally and rejects
-conflicting paths before upload. The images are not rebuilt for upload.
+Only content-hashed Vite output is published. Fonts live in `src/assets/fonts` and
+are referenced by CSS and preload imports, so Vite generates matching hashed URLs.
+Existing root-relative public images, icons and downloads remain on the app origin.
+For new CDN images, import them from source (for example
+`import illustration from './illustration.svg'`) so Vite owns the URL and hash.
 
-Only `.github/scripts/static-assets.filter` paths and extensions are published.
-HTML, source maps, server output and discovery exports stay on Bun. Hardcoded
-public URLs in JSX/content (for example `/images/example.avif`) still resolve
-against Bun; neither Vite nor TanStack rewrites arbitrary strings. Public files
-referenced by CSS are also uploaded. For new CDN assets, prefer Vite asset imports
-(for example `import illustration from './illustration.svg'`) so Vite owns their
-URLs and content hashes. No runtime URL resolver or custom transform is needed.
-
-`rclone copy` retains previous chunks for open tabs and rollback. Hashed JS/CSS/WASM
-files are immutable and cached for one year; other public assets use a five-minute
-TTL. Rclone handles checksums, retries and MIME/metadata. Upload failure blocks
-deployment. Image rollback does not restore overwritten unversioned public files.
+After building, each workflow extracts `dist/client` from both exact image digests.
+Rclone combines the outputs locally with `copy --checksum --immutable`, rejecting
+conflicting paths, then copies only the hashed assets to the shared bucket with
+one-year immutable caching. Upload failure blocks deployment. No upload rebuilds
+the image, deletes old chunks, or overwrites unversioned public files. Different
+staging and production builds safely coexist; rollback retains the old URLs.
+The existing build workflows remain independent, with identical CDN settings.
 
 ## Setup
 
-Apply infrastructure first and wait for both custom domains to become Active.
-R2 CORS allows anonymous GET/HEAD requests for browser modules and fonts.
-Add bucket-scoped R2 Object Read & Write repository secrets:
+1. Apply the infrastructure through CI and wait for `cdn.appwrite.io` to become Active.
+2. Add bucket-scoped Object Read & Write repository secrets `R2_ACCESS_KEY_ID` and
+   `R2_SECRET_ACCESS_KEY`, used by both deployment workflows.
+3. Deploy staging, verify scripts/styles/fonts and client navigation, then release
+   production. No application-configuration change is required.
 
-| Environment | Bucket                        | Secrets                                                          |
-| ----------- | ----------------------------- | ---------------------------------------------------------------- |
-| Staging     | `appwrite-console-staging`    | `R2_STAGING_ACCESS_KEY_ID`, `R2_STAGING_SECRET_ACCESS_KEY`       |
-| Production  | `appwrite-console-production` | `R2_PRODUCTION_ACCESS_KEY_ID`, `R2_PRODUCTION_SECRET_ACCESS_KEY` |
-
-Then merge the Console change, verify staging scripts/styles/fonts and client-side
-navigation, and release production. There is no Worker or routing activation step.
-Credentials are used only by the uploader, never by the build or running app.
+R2 CORS permits anonymous GET/HEAD requests for browser modules and fonts.
+Credentials are used only by the uploader. There is no Worker or staging CDN domain.
+The shared CDN makes staging assets public, just like production assets.
 
 References: [Vite public base](https://vite.dev/guide/build#public-base-path),
+[Vite asset imports](https://vite.dev/guide/assets),
 [TanStack CDN URLs](https://tanstack.com/start/latest/docs/framework/react/guide/cdn-asset-urls),
 [rclone copy](https://rclone.org/commands/rclone_copy/).
