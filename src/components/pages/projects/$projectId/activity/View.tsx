@@ -51,6 +51,7 @@ import {
   useProjectActivity,
   useProject,
   useOrganizationPlan,
+  type ActivitiesResult,
 } from '@/lib/react-query/hooks'
 import {
   inferActivityUiResourceTypeFromPath,
@@ -463,17 +464,20 @@ function toDisplayActivity(
 
 interface ViewProps {
   projectId: string
+  /** First-page list from the route loader so client navigations paint with data. */
+  initialData?: ActivitiesResult
 }
 
-export function View({ projectId }: ViewProps) {
+export function View({ projectId, initialData }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const navigate = activityRouteApi.useNavigate()
   const { event: eventIdFromUrl, query: queryFromSearch } =
     activityRouteApi.useSearch()
 
-  const { project } = useProject(projectId)
-  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { project, isLoading: projectLoading } = useProject(projectId)
+  const { plan: organizationPlan, isFetched: planFetched } =
+    useOrganizationPlan(project?.teamId)
   const { showActivityChart } = useDebugOverrides()
   const { lookups: countryLookups, countries } = useCountryLookups()
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -534,14 +538,43 @@ export function View({ projectId }: ViewProps) {
     return getActivitiesFilterColumns(countryElements)
   }, [countries])
 
-  const { events, hasMore, isLoading, refetch } = useProjectActivities({
+  const activityListEnabled =
+    !!projectId &&
+    !projectLoading &&
+    (!project?.teamId || planFetched || !!organizationPlan)
+
+  const {
+    events: eventsFromHook,
+    hasMore: hasMoreFromHook,
+    isLoading,
+    isFetching,
+    isPending,
+    refetch,
+  } = useProjectActivities({
     projectId,
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
     cursorBefore: listCursor.cursorBefore,
     planRetentionHours: activityLogRetentionHours,
     filterQueryKey: queryFromSearch ?? null,
+    enabled: activityListEnabled,
   })
+
+  const isFirstPage =
+    currentPage === 1 &&
+    listCursor.cursorAfter == null &&
+    listCursor.cursorBefore == null
+  const useLoaderList =
+    isFirstPage &&
+    !!initialData &&
+    eventsFromHook.length === 0 &&
+    (isLoading || isFetching || isPending)
+  const events =
+    useLoaderList && initialData ? initialData.events : eventsFromHook
+  const hasMore =
+    useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
+  const showListLoading =
+    events.length === 0 && (isLoading || isFetching || isPending)
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -1000,7 +1033,7 @@ export function View({ projectId }: ViewProps) {
           </div>
         )}
 
-        {isLoading && events.length === 0 ? (
+        {showListLoading ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
         ) : events.length > 0 ? (
           <>
