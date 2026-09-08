@@ -18,4 +18,5 @@ done
 # Only content-hashed build assets are shared between environments.
 # copy retains old chunks for open tabs and rollback.
 rclone copy "$merged" "r2:$R2_BUCKET" --checksum --immutable --metadata \
+  --transfers 16 --stats 30s --stats-one-line --stats-log-level NOTICE \
   --metadata-set 'cache-control=public, max-age=31536000, immutable'
