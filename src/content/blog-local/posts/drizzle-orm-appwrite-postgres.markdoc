@@ -8,6 +8,13 @@ timeToRead: 8
 author: atharva
 category: tutorial
 featured: false
+faqs:
+  - question: "Can I use Drizzle ORM with Appwrite Postgres?"
+    answer: "Yes. Drizzle ORM connects to Appwrite Postgres with a standard PostgreSQL connection string. You can define tables in TypeScript and use Drizzle Kit to manage SQL migrations."
+  - question: "Which connection should I use for Drizzle migrations?"
+    answer: "Use the direct endpoint on port 5432 for migrations. It preserves the database session for operations that depend on session settings or session-level locks."
+  - question: "Can I test a migration without changing my production database?"
+    answer: "Yes. Create a database branch, point the migration configuration at its connection string, and test the migration there. Branch changes do not merge back into the source database."
 ---
 
 ORMs are a popular way to work with databases through application code. Appwrite Postgres fits into that workflow with a standard PostgreSQL connection string. With Drizzle ORM, you can write typed queries in TypeScript and manage schema migrations through Drizzle Kit.
@@ -24,21 +31,11 @@ Enter `Bookshelf` as the name and leave **Database ID** auto-generated. Select t
 
 Keep **Replica count** at `0`, **Enable PITR** off, and **Daily** backups selected. Review the price in **Database summary**, then click **Create database**. See the [PostgreSQL quick start](https://appwrite.io/docs/products/databases/postgresql/quick-start) for provisioning options.
 
-## Open the database {% #database-workspace %}
-
-![PostgreSQL database workspace with SQL editor and Credentials in the sidebar](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
-
-After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in the sidebar contains the connection details.
-
 # Connect Drizzle {% #connection-string %}
 
-Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged.
+After provisioning, open **Credentials → DSN → Copy**. Change the URL's port from `6432` to `5432`, keeping the other values unchanged. We recommend this direct endpoint for migrations that rely on session settings or session-level locks. The pooler on port `6432` uses transaction mode by default, so transactions can use different sessions. See [connection pooling](/docs/products/databases/postgresql/connection-pooling).
 
 ![Database connection details with the password hidden](/images/blog/drizzle-orm-appwrite-postgres/database-credentials.avif)
-
-{% info title="Why use the direct connection?" %}
-Port `6432` routes connections through Appwrite's pooler, which defaults to transaction mode. It returns a database connection to the pool after each transaction, so later transactions can use a different session. Migration steps that rely on session settings or session-level locks need a consistent connection. Port `5432` provides that direct connection, which is why we recommend it for migrations. See [connection pooling](/docs/products/databases/postgresql/connection-pooling) for the differences between pool modes.
-{% /info %}
 
 In a TypeScript project using ES modules, install the dependencies:
 
