@@ -302,7 +302,11 @@ The rated query returns _Kindred_ with a rating of `5`. The unread query returns
 
 ![Books table in Appwrite with Kindred marked as read and rated 5](/images/blog/drizzle-orm-appwrite-postgres/books-rows.avif)
 
-For an application, reuse the connection pool across requests and close it at shutdown. The `pool.end()` calls here let the standalone scripts exit. Appwrite also provides the pooled endpoint on port `6432` for runtime connections; see [connection options](https://appwrite.io/docs/products/databases/postgresql/connections).
+# Use Drizzle in your application {% #conclusion %}
+
+Drizzle brings your database schema into TypeScript, so you can write typed queries and catch type errors during development. Drizzle Kit produces SQL migrations you can review and commit alongside your application code. With Appwrite managing Postgres, you can use this workflow in your own production applications.
+
+As your schema grows, you can test migrations on a database branch before applying them to production. For runtime connections, use the pooled endpoint on port `6432` and reuse the pool across requests. Close it at application shutdown. The `pool.end()` calls in this guide let each standalone script exit. See [connection options](https://appwrite.io/docs/products/databases/postgresql/connections) for details.
 
 # Resources
 
