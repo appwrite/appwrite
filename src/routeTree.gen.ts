@@ -111,6 +111,10 @@ import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.devi
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
+import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
+import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
+import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
+import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
 import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
 import { Route as ApiRERouteImport } from './routes/_api/r/e'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
@@ -945,6 +949,28 @@ const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
 const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
   id: '/_api/sitemap/news.xml',
   path: '/sitemap/news.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
+  id: '/_api/references-api/service',
+  path: '/references-api/service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferencesApiOpenApiSpecRoute =
+  ApiReferencesApiOpenApiSpecRouteImport.update({
+    id: '/_api/references-api/open-api-spec',
+    path: '/references-api/open-api-spec',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiNavCountsRoute =
+  ApiReferencesApiNavCountsRouteImport.update({
+    id: '/_api/references-api/nav-counts',
+    path: '/references-api/nav-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
+  id: '/_api/references-api/model',
+  path: '/references-api/model',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
@@ -3099,6 +3125,10 @@ export interface FileRoutesByFullPath {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/references-api/model': typeof ApiReferencesApiModelRoute
+  '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/references-api/service': typeof ApiReferencesApiServiceRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -3507,6 +3537,10 @@ export interface FileRoutesByTo {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/references-api/model': typeof ApiReferencesApiModelRoute
+  '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/references-api/service': typeof ApiReferencesApiServiceRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -3878,6 +3912,10 @@ export interface FileRoutesById {
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/r/e': typeof ApiRERoute
   '/_api/r/v.js': typeof ApiRVDotjsRoute
+  '/_api/references-api/model': typeof ApiReferencesApiModelRoute
+  '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/_api/references-api/service': typeof ApiReferencesApiServiceRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -4292,6 +4330,10 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/references-api/model'
+    | '/references-api/nav-counts'
+    | '/references-api/open-api-spec'
+    | '/references-api/service'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/oauth2/consent'
@@ -4700,6 +4742,10 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/references-api/model'
+    | '/references-api/nav-counts'
+    | '/references-api/open-api-spec'
+    | '/references-api/service'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/oauth2/consent'
@@ -5070,6 +5116,10 @@ export interface FileRouteTypes {
     | '/_api/og/init.png'
     | '/_api/r/e'
     | '/_api/r/v.js'
+    | '/_api/references-api/model'
+    | '/_api/references-api/nav-counts'
+    | '/_api/references-api/open-api-spec'
+    | '/_api/references-api/service'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
     | '/_auth/oauth2/consent'
@@ -5448,6 +5498,10 @@ export interface RootRouteChildren {
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiRERoute: typeof ApiRERoute
   ApiRVDotjsRoute: typeof ApiRVDotjsRoute
+  ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
+  ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
+  ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
+  ApiReferencesApiServiceRoute: typeof ApiReferencesApiServiceRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -6168,6 +6222,34 @@ declare module '@tanstack/react-router' {
       path: '/sitemap/news.xml'
       fullPath: '/sitemap/news.xml'
       preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/service': {
+      id: '/_api/references-api/service'
+      path: '/references-api/service'
+      fullPath: '/references-api/service'
+      preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/open-api-spec': {
+      id: '/_api/references-api/open-api-spec'
+      path: '/references-api/open-api-spec'
+      fullPath: '/references-api/open-api-spec'
+      preLoaderRoute: typeof ApiReferencesApiOpenApiSpecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/nav-counts': {
+      id: '/_api/references-api/nav-counts'
+      path: '/references-api/nav-counts'
+      fullPath: '/references-api/nav-counts'
+      preLoaderRoute: typeof ApiReferencesApiNavCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/model': {
+      id: '/_api/references-api/model'
+      path: '/references-api/model'
+      fullPath: '/references-api/model'
+      preLoaderRoute: typeof ApiReferencesApiModelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/r/v.js': {
@@ -10208,6 +10290,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiRERoute: ApiRERoute,
   ApiRVDotjsRoute: ApiRVDotjsRoute,
+  ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,
+  ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
+  ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,
+  ApiReferencesApiServiceRoute: ApiReferencesApiServiceRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,

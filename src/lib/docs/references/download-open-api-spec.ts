@@ -4,7 +4,7 @@ import {
   isReferenceVersion,
   type ReferenceVersion,
 } from './constants'
-import { loadReferenceOpenApiSpecFn } from '@/server/functions/api-reference'
+import { fetchReferenceOpenApiSpec } from './reference-api'
 
 function downloadJsonFile(content: string, filename: string): void {
   const blob = new Blob([content], { type: 'application/json' })
@@ -26,7 +26,7 @@ export async function downloadReferenceOpenApiSpec(
     throw new Error('Invalid reference version')
   }
 
-  const spec = await loadReferenceOpenApiSpecFn({ data: { version, mode } })
+  const spec = await fetchReferenceOpenApiSpec(version, mode)
   const content = JSON.stringify(spec, null, 2)
   downloadJsonFile(content, getReferenceOpenApiSpecDownloadFilename(version, mode))
 }
