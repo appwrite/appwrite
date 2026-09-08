@@ -17,9 +17,9 @@ This guide provisions a database and adds a `books` table. A second migration ad
 
 # Provision Postgres {% #create-database %}
 
-![Create database screen with PostgreSQL under Native databases](/images/blog/drizzle-orm-appwrite-postgres/engine-selection.avif)
-
 In your project at [appwrite.io](https://appwrite.io), open **Databases → Create database**. Under **Native databases**, select **PostgreSQL**.
+
+![Create database screen with PostgreSQL under Native databases](/images/blog/drizzle-orm-appwrite-postgres/engine-selection.avif)
 
 Enter `Bookshelf` as the name and leave **Database ID** auto-generated. Select the **Starter** tier for this example.
 
@@ -27,13 +27,15 @@ Keep **Replica count** at `0`, **Enable PITR** off, and **Daily** backups select
 
 ## Open the database {% #database-workspace %}
 
+![PostgreSQL database workspace with SQL editor and Credentials in the sidebar](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
+
 After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in the sidebar contains the connection details.
 
 # Connect Drizzle {% #connection-string %}
 
-![Database connection details with the password hidden](/images/blog/drizzle-orm-appwrite-postgres/database-credentials.avif)
-
 Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged.
+
+![Database connection details with the password hidden](/images/blog/drizzle-orm-appwrite-postgres/database-credentials.avif)
 
 {% info title="Why use the direct connection?" %}
 Port `6432` routes connections through Appwrite's pooler, which defaults to transaction mode. It returns a database connection to the pool after each transaction, so later transactions can use a different session. Migration steps that rely on session settings or session-level locks need a consistent connection. Port `5432` provides that direct connection, which is why we recommend it for migrations. See [connection pooling](/docs/products/databases/postgresql/connection-pooling) for the differences between pool modes.
@@ -121,9 +123,9 @@ npx drizzle-kit migrate
 
 ## Verify the table in Appwrite {% #verify-table %}
 
-![Appwrite database sidebar showing the books table under the public schema](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
+In Appwrite, select **Data**, choose the `public` schema, and refresh the table list. Open `books` and select **Columns** to see the four columns defined in your schema.
 
-In Appwrite, select **Data**, choose the `public` schema, and refresh the table list. The `books` table should now exist.
+![The books table in Appwrite with isbn, title, author, and read columns](/images/blog/drizzle-orm-appwrite-postgres/books-table-created.avif)
 
 # Insert and query books {% #query-data %}
 
@@ -189,9 +191,6 @@ try {
 It returns _Kindred_, _The Dispossessed_, and _The Left Hand of Darkness_, ordered by title. Drizzle infers the result's `title` and `author` types from the schema.
 
 # Add a column through a migration {% #second-migration %}
-
-![Books table columns after the second migration, including the nullable integer rating column](/images/blog/drizzle-orm-appwrite-postgres/books-columns.avif)
-
 
 Replace `src/schema.ts` with this version to add a nullable rating:
 
@@ -260,9 +259,9 @@ npx tsx src/unread.ts
 
 The same three books remain. In Appwrite, refresh **Columns** to see `rating`; the existing rows have `null` in that column.
 
-# Update and query the new column {% #update-record %}
+![Books table columns after the second migration, including the nullable integer rating column](/images/blog/drizzle-orm-appwrite-postgres/books-columns.avif)
 
-![Books table in Appwrite showing the rating column added by a Drizzle migration](/images/blog/drizzle-orm-appwrite-postgres/books-rows.avif)
+# Update and query the new column {% #update-record %}
 
 Create `src/rate.ts` to mark _Kindred_ as read, assign a rating, and query rated books:
 
@@ -300,6 +299,8 @@ npx tsx src/unread.ts
 ```
 
 The rated query returns _Kindred_ with a rating of `5`. The unread query returns the two Ursula K. Le Guin books. Refresh **Rows** in Appwrite to inspect the saved values.
+
+![Books table in Appwrite with Kindred marked as read and rated 5](/images/blog/drizzle-orm-appwrite-postgres/books-rows.avif)
 
 For an application, reuse the connection pool across requests and close it at shutdown. The `pool.end()` calls here let the standalone scripts exit. Appwrite also provides the pooled endpoint on port `6432` for runtime connections; see [connection options](https://appwrite.io/docs/products/databases/postgresql/connections).
 
