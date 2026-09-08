@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Tasks;
+namespace Tests\E2E\General\Certificates;
 
 use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Publisher\Certificate;
@@ -10,14 +10,13 @@ use Appwrite\Event\Publisher\Delete;
 use Appwrite\Platform\Tasks\Maintenance;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Queue;
 
 final class MaintenanceTest extends TestCase
 {
-    private CertificateDatabase $database;
+    private Database $database;
     private MockPublisher $publisher;
     private string|false $region;
     private string|false $format;
@@ -28,18 +27,24 @@ final class MaintenanceTest extends TestCase
         $this->format = getenv('_APP_RULES_FORMAT');
         putenv('_APP_REGION=default');
         putenv('_APP_RULES_FORMAT=md5');
-        $this->database = new CertificateDatabase();
+        $this->database = new Database();
         $this->publisher = new MockPublisher();
     }
 
     protected function tearDown(): void
     {
+        if (isset($this->database)) {
+            $this->database->delete();
+        }
         putenv($this->region === false ? '_APP_REGION' : '_APP_REGION=' . $this->region);
         putenv($this->format === false ? '_APP_RULES_FORMAT' : '_APP_RULES_FORMAT=' . $this->format);
     }
 
     public function testExpiredFinalRenewalIsQueuedForReconciliation(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $expired = '2020-01-01T00:00:00.000+00:00';
         $now = DateTime::now();
         $future = DateTime::formatTz(DateTime::format(new \DateTime('+1 day')));
@@ -65,6 +70,9 @@ final class MaintenanceTest extends TestCase
 
     public function testSkippedCertificatesDoNotStarveRenewalsOrConsumeLimit(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $expired = '2020-01-01T00:00:00.000+00:00';
         for ($i = 0; $i < 201; $i++) {
             $this->seed('failed' . $i, APP_LIMIT_CERTIFICATE_ATTEMPTS, RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $expired, $expired);
@@ -81,6 +89,9 @@ final class MaintenanceTest extends TestCase
 
     public function testStaleCertificateDoesNotScheduleReplacement(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $future = DateTime::formatTz(DateTime::format(new \DateTime('+1 day')));
         $this->seed('replacement', 0, RULE_STATUS_VERIFIED, null, $future);
         $this->database->createDocument('certificates', new Document([
@@ -112,7 +123,7 @@ final class MaintenanceTest extends TestCase
             'type' => 'api',
             'region' => 'default',
             'projectId' => 'project',
-            'projectInternalId' => 7,
+            'projectInternalId' => '7',
             'certificateId' => $id,
             'status' => $status,
         ]));

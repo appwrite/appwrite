@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform;
+namespace Tests\E2E\General\Certificates;
 
-use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Provider as CertificateProvider;
 use Utopia\Cdn\Certificates\Status;
 
-final class CertificateProvider implements Provider
+final class Provider implements CertificateProvider
 {
     public bool $instant = false;
     public bool $renew = true;

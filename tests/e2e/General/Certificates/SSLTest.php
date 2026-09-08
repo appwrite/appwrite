@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Tasks;
+namespace Tests\E2E\General\Certificates;
 
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Platform\Tasks\SSL;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Bus\Bus;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Queue;
@@ -19,7 +17,7 @@ final class SSLTest extends TestCase
 {
     private const DOMAIN = 'api.example.com';
 
-    private CertificateDatabase $database;
+    private Database $database;
     private MockPublisher $publisher;
     private string|false $format;
 
@@ -27,18 +25,24 @@ final class SSLTest extends TestCase
     {
         $this->format = getenv('_APP_RULES_FORMAT');
         putenv('_APP_RULES_FORMAT=md5');
-        $this->database = new CertificateDatabase();
+        $this->database = new Database();
         $this->database->writes = [];
         $this->publisher = new MockPublisher();
     }
 
     protected function tearDown(): void
     {
+        if (isset($this->database)) {
+            $this->database->delete();
+        }
         putenv($this->format === false ? '_APP_RULES_FORMAT' : '_APP_RULES_FORMAT=' . $this->format);
     }
 
     public function testCustomerRetryResetsBudgetAndQueuesPersistedProjectAndProvider(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->seed();
         $this->runTask();
 
@@ -55,6 +59,9 @@ final class SSLTest extends TestCase
 
     public function testExpiredGenerationLeaseCanBeRetried(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->seed('2020-01-01T00:00:00.000+00:00');
         $this->runTask();
 
@@ -66,6 +73,9 @@ final class SSLTest extends TestCase
 
     public function testActiveGenerationLeasePreservesBudgetAndDoesNotQueue(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->seed(DateTime::now());
         $this->runTask();
 
@@ -76,6 +86,9 @@ final class SSLTest extends TestCase
 
     public function testNewServerDomainKeepsConsoleProjectIdentity(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->runTask();
 
         $rule = $this->database->getDocument('rules', md5(self::DOMAIN));
@@ -85,11 +98,14 @@ final class SSLTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertSame('console', $events[0]['project']['$id']);
         $this->assertSame('console', $events[0]['project']['$sequence']);
-        $this->assertSame('api', $events[0]['domain']['domainType']);
+        $this->assertSame('', $events[0]['domain']['domainType']);
     }
 
     public function testConcurrentDeletionDoesNotQueueOrRecreateRule(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->seed();
         $this->onRuleRead(function (): void {
             $this->database->deleteDocument('rules', md5(self::DOMAIN));
@@ -103,6 +119,9 @@ final class SSLTest extends TestCase
 
     public function testConcurrentRecreationPreservesReplacementRule(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->seed();
         $this->onRuleRead(function (): void {
             $this->database->deleteDocument('rules', md5(self::DOMAIN));

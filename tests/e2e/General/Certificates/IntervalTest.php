@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Tasks;
+namespace Tests\E2E\General\Certificates;
 
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Platform\Tasks\Interval;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Platform\CertificateDatabase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Queue;
 
 final class IntervalTest extends TestCase
 {
-    private CertificateDatabase $database;
+    private Database $database;
     private MockPublisher $publisher;
     private string|false $region;
     private string|false $edition;
@@ -30,12 +29,15 @@ final class IntervalTest extends TestCase
         putenv('_APP_REGION=default');
         putenv('_APP_EDITION=self-hosted');
         putenv('_APP_ROUTER_AUTO_CERTIFICATES=enabled');
-        $this->database = new CertificateDatabase();
+        $this->database = new Database();
         $this->publisher = new MockPublisher();
     }
 
     protected function tearDown(): void
     {
+        if (isset($this->database)) {
+            $this->database->delete();
+        }
         putenv($this->region === false ? '_APP_REGION' : '_APP_REGION=' . $this->region);
         putenv($this->edition === false ? '_APP_EDITION' : '_APP_EDITION=' . $this->edition);
         putenv($this->autoCertificates === false ? '_APP_ROUTER_AUTO_CERTIFICATES' : '_APP_ROUTER_AUTO_CERTIFICATES=' . $this->autoCertificates);
@@ -43,6 +45,9 @@ final class IntervalTest extends TestCase
 
     public function testOlderFailuresAreNotStarvedByExhaustedFirstPage(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         for ($i = 0; $i < 100; $i++) {
             $this->seed('capped' . $i, APP_LIMIT_CERTIFICATE_ATTEMPTS);
         }
@@ -59,6 +64,9 @@ final class IntervalTest extends TestCase
 
     public function testOnlyEligibleRegionAndExpiredWorkAreQueued(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->seed('other-region', 0, ['region' => 'elsewhere']);
         $this->seed('recent', 0, ['$updatedAt' => DateTime::now()]);
         $this->seed('active', 0, [], ['updated' => DateTime::now()]);
@@ -72,6 +80,9 @@ final class IntervalTest extends TestCase
 
     public function testRecentExpiredWorkDoesNotWaitUntilTheNextDay(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $expired = DateTime::formatTz(DateTime::format(new \DateTime('-30 minutes')));
         $this->seed('failed', 1, ['$updatedAt' => $expired]);
         $this->seed('expired', 2, ['$updatedAt' => $expired, 'status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => $expired]);
@@ -83,6 +94,9 @@ final class IntervalTest extends TestCase
     #[DataProvider('issuancePolicies')]
     public function testAutomaticIssuancePolicyRespected(string $edition, string $autoCertificates, array $expected): void
     {
+        /**
+         * Test for SUCCESS
+         */
         putenv('_APP_EDITION=' . $edition);
         putenv('_APP_ROUTER_AUTO_CERTIFICATES=' . $autoCertificates);
         $this->seed('owned', 1, [
@@ -110,6 +124,9 @@ final class IntervalTest extends TestCase
 
     public function testExpiredFinalAttemptIsQueuedForReconciliation(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->seed('failed', APP_LIMIT_CERTIFICATE_ATTEMPTS);
         $this->seed('active', APP_LIMIT_CERTIFICATE_ATTEMPTS, ['status' => RULE_STATUS_CERTIFICATE_GENERATING], ['updated' => DateTime::now()]);
         $this->seed('pending', APP_LIMIT_CERTIFICATE_ATTEMPTS, ['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
@@ -134,7 +151,7 @@ final class IntervalTest extends TestCase
             '$createdAt' => '2020-01-01T00:00:00.000+00:00',
             '$updatedAt' => '2020-01-01T00:00:00.000+00:00',
             'domain' => $id . '.example.com', 'type' => 'api', 'region' => 'default',
-            'projectId' => 'project', 'projectInternalId' => 7,
+            'projectId' => 'project', 'projectInternalId' => '7',
             'certificateId' => $id, 'status' => RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
         ], $rule)));
     }

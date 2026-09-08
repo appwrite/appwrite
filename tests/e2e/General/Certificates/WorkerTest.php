@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Workers;
+namespace Tests\E2E\General\Certificates;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Certificate as CertificateMessage;
@@ -15,8 +15,6 @@ use Appwrite\Platform\Workers\Certificates;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
-use Tests\Unit\Platform\CertificateDatabase;
-use Tests\Unit\Platform\CertificateProvider;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Document;
@@ -24,28 +22,29 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
-final class CertificatesTest extends TestCase
+final class WorkerTest extends TestCase
 {
-    private CertificateDatabase $database;
-    private CertificateProvider $provider;
+    private Database $database;
+    private Provider $provider;
     private MockPublisher $publisher;
     private Event $events;
     private Bus $bus;
     private string|false $format;
     private string|false $email;
+    private Document $project;
 
     protected function setUp(): void
     {
         $this->format = getenv('_APP_RULES_FORMAT');
-        putenv('_APP_RULES_FORMAT=md5');
         $this->email = getenv('_APP_EMAIL_CERTIFICATES');
+        putenv('_APP_RULES_FORMAT=md5');
         putenv('_APP_EMAIL_CERTIFICATES=admin@example.com');
-        $this->database = new CertificateDatabase();
-        $this->provider = new CertificateProvider();
+        $this->database = new Database();
+        $this->provider = new Provider();
         $this->publisher = new MockPublisher();
         $this->events = new Event($this->publisher);
         $this->bus = (new Bus())->setResolver(static fn () => null);
-        $this->database->createDocument('projects', new Document(['$id' => 'project', '$sequence' => 7]));
+        $this->project = $this->database->createDocument('projects', new Document(['$id' => 'project']));
         $this->database->createDocument('certificates', new Document(['$id' => 'certificate', 'domain' => 'example.com', 'attempts' => 0, 'updated' => null]));
         $this->database->createDocument('rules', new Document([
             '$id' => md5('example.com'),
@@ -53,7 +52,7 @@ final class CertificatesTest extends TestCase
             'type' => 'api',
             'region' => 'default',
             'projectId' => 'project',
-            'projectInternalId' => 7,
+            'projectInternalId' => $this->project->getSequence(),
             'certificateId' => 'certificate',
             'status' => RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
         ]));
@@ -61,12 +60,18 @@ final class CertificatesTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (isset($this->database)) {
+            $this->database->delete();
+        }
         putenv($this->format === false ? '_APP_RULES_FORMAT' : '_APP_RULES_FORMAT=' . $this->format);
         putenv($this->email === false ? '_APP_EMAIL_CERTIFICATES' : '_APP_EMAIL_CERTIFICATES=' . $this->email);
     }
 
     public function testDelayedFailuresExhaustOneAttemptPerIssuance(): void
     {
+        /**
+         * Test for FAILURE
+         */
         for ($attempt = 1; $attempt <= APP_LIMIT_CERTIFICATE_ATTEMPTS; $attempt++) {
             $this->runWorker();
             $this->assertSame($attempt, $this->certificate()->getAttribute('attempts'));
@@ -82,6 +87,9 @@ final class CertificatesTest extends TestCase
 
     public function testSynchronousFailureCountsOnceAndReleasesLease(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onIssue = static fn () => throw new \RuntimeException('Provider unavailable');
         try {
             $this->runWorker();
@@ -97,6 +105,9 @@ final class CertificatesTest extends TestCase
 
     public function testConcurrentDuplicateDoesNotStartAnotherIssuance(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onIssue = function (): void {
             $this->provider->onIssue = null;
             $this->runWorker();
@@ -109,6 +120,9 @@ final class CertificatesTest extends TestCase
     #[DataProvider('lookupFailures')]
     public function testLookupFailuresExhaustRetries(string $lookup): void
     {
+        /**
+         * Test for FAILURE
+         */
         $calls = 0;
         $this->provider->renew = false;
         $this->provider->{$lookup} = static function () use (&$calls): void {
@@ -142,6 +156,9 @@ final class CertificatesTest extends TestCase
     #[DataProvider('recoveredCertificates')]
     public function testFinalAttemptReconcilesIssuedCertificate(bool $instant, string $status, bool $skipRenewCheck, ?string $renewDate): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->instant = $instant;
         $this->provider->renew = false;
         $this->provider->status = Status::ISSUED;
@@ -174,6 +191,9 @@ final class CertificatesTest extends TestCase
 
     public function testRecoveryPreservesFutureRenewalDate(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->instant = true;
         $this->provider->renew = false;
         $this->database->updateDocument('certificates', 'certificate', new Document(['renewDate' => '2099-01-01T00:00:00.000+00:00']));
@@ -186,6 +206,9 @@ final class CertificatesTest extends TestCase
 
     public function testFinalAttemptLookupFailureStopsRecovery(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onRenew = static fn () => throw new \RuntimeException('Provider unavailable');
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
         $this->database->updateDocument('certificates', 'certificate', new Document([
@@ -211,6 +234,9 @@ final class CertificatesTest extends TestCase
     #[DataProvider('exhaustedCertificates')]
     public function testFinalAttemptDoesNotIssueAgain(bool $renew, string $status, bool $skipRenewCheck): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->renew = $renew;
         $this->provider->status = $status;
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
@@ -238,6 +264,9 @@ final class CertificatesTest extends TestCase
 
     public function testFinalAttemptPreservesPendingIssuance(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->renew = false;
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
         $this->database->updateDocument('certificates', 'certificate', new Document([
@@ -255,6 +284,9 @@ final class CertificatesTest extends TestCase
 
     public function testPendingDuplicatePreservesAttemptsWithoutCallingIssuance(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->runWorker();
         $this->provider->renew = false;
         $this->provider->status = Status::PENDING;
@@ -266,6 +298,9 @@ final class CertificatesTest extends TestCase
 
     public function testExistingIssuedCertificateRestoresVerifiedStatus(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->renew = false;
         $this->provider->status = Status::ISSUED;
         $this->database->updateDocument('certificates', 'certificate', new Document(['attempts' => 3]));
@@ -277,6 +312,9 @@ final class CertificatesTest extends TestCase
 
     public function testUnknownStatusDoesNotSuppressIssuance(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->renew = false;
         $this->provider->status = Status::UNKNOWN;
         $this->runWorker();
@@ -286,6 +324,9 @@ final class CertificatesTest extends TestCase
 
     public function testInstantSuccessResetsAttemptsAndEmitsUpdatedRule(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->provider->instant = true;
         $this->database->updateDocument('certificates', 'certificate', new Document(['attempts' => 3]));
         $this->database->writes = [];
@@ -302,6 +343,9 @@ final class CertificatesTest extends TestCase
 
     public function testStaleWorkerCannotOverwriteAReplacementLease(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onIssue = function (): void {
             $this->database->updateDocument('certificates', 'certificate', new Document(['updated' => '2099-01-01T00:00:00.000+00:00', 'attempts' => 4, 'logs' => 'new worker']));
             $this->setRule(['logs' => 'new worker']);
@@ -315,6 +359,9 @@ final class CertificatesTest extends TestCase
 
     public function testDeletedRuleAndCertificateAreNotRecreatedOnCompletion(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onIssue = function (): void {
             $this->database->deleteDocument('rules', md5('example.com'));
             $this->database->deleteDocument('certificates', 'certificate');
@@ -327,6 +374,9 @@ final class CertificatesTest extends TestCase
 
     public function testLeaseReplacedDuringProviderLookupPreventsIssuance(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onRenew = function (): void {
             $this->database->updateDocument('certificates', 'certificate', new Document(['updated' => '2099-01-01T00:00:00.000+00:00', 'attempts' => 4]));
         };
@@ -338,6 +388,9 @@ final class CertificatesTest extends TestCase
 
     public function testRecreatedRuleDuringLookupPreventsIssuance(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onRenew = function (): void {
             $replacement = $this->rule()->getArrayCopy();
             unset($replacement['$sequence']);
@@ -351,6 +404,9 @@ final class CertificatesTest extends TestCase
 
     public function testStaleFailureDoesNotSendAnAdministratorEmail(): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->provider->onIssue = function (): void {
             $this->database->deleteDocument('rules', md5('example.com'));
             throw new \RuntimeException('Deleted during issuance');
@@ -368,6 +424,9 @@ final class CertificatesTest extends TestCase
     #[DataProvider('rejections')]
     public function testIneligibleMessagesDoNotCallProvider(string $status, string $project): void
     {
+        /**
+         * Test for FAILURE
+         */
         $this->setRule(['status' => $status]);
         $this->database->writes = [];
         $this->runWorker($project);
@@ -383,6 +442,9 @@ final class CertificatesTest extends TestCase
 
     public function testExpiredLeaseCanRecoverAndUsesPersistedDomainType(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->database->updateDocument('certificates', 'certificate', new Document(['updated' => '2020-01-01T00:00:00.000+00:00', 'attempts' => 2]));
         $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING, 'deploymentResourceType' => 'site']);
         $this->runWorker();
@@ -391,8 +453,11 @@ final class CertificatesTest extends TestCase
     }
 
     #[DataProvider('consoleSequences')]
-    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(string|int|null $sequence): void
+    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(?string $sequence): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->setRule(['projectId' => 'console', 'projectInternalId' => $sequence]);
         $this->runWorker('console', 'console');
         $this->assertCount(1, $this->provider->issued);
@@ -404,10 +469,10 @@ final class CertificatesTest extends TestCase
     {
         yield ['console'];
         yield [null];
-        yield [0];
+        yield ['0'];
     }
 
-    private function runWorker(string $project = 'project', string $sequence = '7', bool $skipRenewCheck = false): void
+    private function runWorker(string $project = 'project', ?string $sequence = null, bool $skipRenewCheck = false): void
     {
         $webhooks = $this->createStub(Webhook::class);
         $webhooks->method('from')->willReturnSelf();
@@ -415,7 +480,7 @@ final class CertificatesTest extends TestCase
         $realtime->method('setSubscribers')->willReturnSelf();
         $realtime->method('from')->willReturnSelf();
         $message = new CertificateMessage(
-            project: new Document(['$id' => $project, '$sequence' => $sequence]),
+            project: new Document(['$id' => $project, '$sequence' => $sequence ?? $this->project->getSequence()]),
             domain: new Document(['domain' => 'example.com', 'domainType' => 'api']),
             validationDomain: 'example.com',
             skipRenewCheck: $skipRenewCheck,
