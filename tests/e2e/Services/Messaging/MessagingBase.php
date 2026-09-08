@@ -2852,4 +2852,59 @@ trait MessagingBase
 
         $this->assertEquals(404, $response['headers']['status-code']);
     }
+
+    public function testSendEmailOverSmtpKeepsSingleRecipientInToHeader(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SMTP-to-header',
+            'host' => 'maildev',
+            'port' => \intval(System::getEnv('_APP_SMTP_PORT', '1025')),
+            'encryption' => 'none',
+            'autoTLS' => false,
+            'fromName' => 'Sender',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $recipient = \uniqid() . '@appwrite.io';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => $recipient,
+            'password' => 'password',
+            'name' => 'SMTP Recipient',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'targets' => [$user['body']['targets'][0]['$id']],
+            'subject' => 'To header check',
+            'content' => 'To header check',
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        // A single recipient must stay in To. Moving them to BCC leaves the message
+        // with no To header at all, and clients show no recipient.
+        $email = $this->getLastEmailByAddress($recipient);
+
+        $this->assertEquals($recipient, $email['to'][0]['address']);
+    }
 }
