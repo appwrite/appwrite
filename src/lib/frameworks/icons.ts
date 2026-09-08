@@ -180,6 +180,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   vercel: 'vercel.svg',
   digitalocean: 'digitalocean.svg',
   'digital-ocean': 'digitalocean.svg',
+  akamai: 'akamai.svg',
+  linode: 'akamai.svg',
   coolify: 'coolify.svg',
   rxdb: 'rxdb.svg',
   firebase: 'firebase.svg',

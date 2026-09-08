@@ -6,6 +6,10 @@ description: Set up your self-hosted Appwrite instance easily. Read the installa
 
 Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud.
 
+{% info title="Looking for the source?" icon="github" %}
+Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the [appwrite/appwrite](https://github.com/appwrite/appwrite) repository.
+{% /info %}
+
 {% info title="Upgrading from older versions" %}
 If you are migrating from an older version of Appwrite, you need to follow the [migration instructions](/docs/advanced/self-hosting/production/updates)
 {% /info %}
@@ -60,23 +64,15 @@ Choose the deployment method that best fits your needs:
 * Provider
 * Installation Link
 ---
-* {% only_dark %}{% icon_image src="/images/one-click/dark/digitalocean.svg" alt="DigitalOcean logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/one-click/digitalocean.svg" alt="DigitalOcean logo" size="m" /%}{% /only_light %}
+* {% icon icon="digitalocean" size="m" /%}
 * DigitalOcean
 * [Click to install](https://marketplace.digitalocean.com/apps/appwrite)
 ---
-* {% only_dark %}{% icon_image src="/images/one-click/dark/gitpod.svg" alt="Gitpod logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/one-click/gitpod.svg" alt="Gitpod logo" size="m" /%}{% /only_light %}
-* Gitpod
-* [Click to install](https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod)
----
-* {% only_dark %}{% icon_image src="/images/one-click/dark/akamai.svg" alt="Akamai logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/one-click/akamai.svg" alt="Akamai logo" size="m" /%}{% /only_light %}
+* {% icon icon="akamai" size="m" /%}
 * Akamai Compute
 * [Click to install](https://www.linode.com/marketplace/apps/appwrite/appwrite/)
 ---
-* {% only_dark %}{% icon_image src="/images/one-click/dark/aws.svg" alt="AWS logo" size="m" /%}{% /only_dark %}
-{% only_light %}{% icon_image src="/images/one-click/aws.svg" alt="AWS logo" size="m" /%}{% /only_light %}
+* {% icon icon="aws" size="m" /%}
 * AWS Marketplace
 * [Click to install](https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6)
 {% /table %}

@@ -8,7 +8,10 @@ export const docsMarkdocConfig: Config = {
     multicode: { render: 'MultiCode' },
     info: {
       render: 'Info',
-      attributes: { title: { type: String, required: true } },
+      attributes: {
+        title: { type: String, required: true },
+        icon: { type: String },
+      },
     },
     tabs: { render: 'Tabs' },
     tabsitem: {

@@ -111,6 +111,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'microsoft.svg',
     'vercel.svg',
     'digitalocean.svg',
+    'akamai.svg',
     'coolify.svg',
     'docker.svg',
     'terraform.svg',
