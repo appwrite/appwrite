@@ -5,6 +5,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
+import {
+  RECORD_NUMBER_MAX,
+  RECORD_TTL_MAX,
+  parseRecordNumber,
+} from '@/lib/domains/record-numeric-fields'
 import type { Models } from '@appwrite.io/console'
 
 const DNS_RECORD_DESCRIPTIONS: Record<string, string> = {
@@ -79,17 +84,22 @@ export function UpdateRecordDialog({
     e.preventDefault()
     if (!name.trim() || !value.trim()) return
 
+    const parsedTtl = parseRecordNumber(ttl)
+    const parsedPriority = parseRecordNumber(priority)
+    const parsedWeight = parseRecordNumber(weight)
+    const parsedPort = parseRecordNumber(port)
+
     onUpdate({
       type: record.type,
       name: name.trim(),
       value: value.trim(),
-      ttl: parseInt(ttl) || 3600,
+      ttl: parsedTtl ?? 3600,
       priority:
         record.type === 'MX' || record.type === 'SRV'
-          ? parseInt(priority) || undefined
+          ? parsedPriority
           : undefined,
-      weight: record.type === 'SRV' ? parseInt(weight) || undefined : undefined,
-      port: record.type === 'SRV' ? parseInt(port) || undefined : undefined,
+      weight: record.type === 'SRV' ? parsedWeight : undefined,
+      port: record.type === 'SRV' ? parsedPort : undefined,
       comment: comment.trim() || undefined,
     })
   }
@@ -157,6 +167,7 @@ export function UpdateRecordDialog({
                     value={ttl}
                     onChange={(e) => setTtl(e.target.value)}
                     min="1"
+                    max={RECORD_TTL_MAX}
                     disabled={isLoading}
                   />
                 </div>
@@ -172,6 +183,7 @@ export function UpdateRecordDialog({
                       value={priority}
                       onChange={(e) => setPriority(e.target.value)}
                       min="0"
+                      max={RECORD_NUMBER_MAX}
                       disabled={isLoading}
                     />
                   </div>
@@ -189,6 +201,7 @@ export function UpdateRecordDialog({
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
                         min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
                       />
                     </div>
@@ -202,8 +215,8 @@ export function UpdateRecordDialog({
                         type="number"
                         value={port}
                         onChange={(e) => setPort(e.target.value)}
-                        min="1"
-                        max="65535"
+                        min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
                       />
                     </div>
