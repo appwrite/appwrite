@@ -42,7 +42,7 @@ export function BlogToc({ items }: BlogTocProps) {
     <aside
       aria-hidden={items.length === 0 ? true : undefined}
       className={cn(
-        'sticky top-14 z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
+        'sticky top-14 z-10 hidden w-full min-w-0 max-w-[240px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
         'max-h-[calc(100dvh-5rem)]',
       )}
     >
