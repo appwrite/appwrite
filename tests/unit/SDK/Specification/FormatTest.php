@@ -234,6 +234,51 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('x-enum-keys', $kind);
     }
 
+    #[DataProvider('defaultLocations')]
+    public function testAnnotatedEnumDefaultsMatchAllowedValues(string $method): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route($method, '/v1/tests'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('timezone', '', new WhiteList(['utc', 'europe/london']), 'Timezone.', optional: true, enum: new Enum(name: 'TestTimezone'))
+            ->param('validZone', 'utc', new WhiteList(['utc', 'europe/london']), 'Valid timezone.', optional: true, enum: new Enum(name: 'TestValidTimezone'))
+            ->param('zones', ['invalid'], new ArrayList(new WhiteList(['utc', 'europe/london'])), 'Timezones.', optional: true, enum: new Enum(name: 'TestZones'))
+            ->param('validZones', ['utc'], new ArrayList(new WhiteList(['utc', 'europe/london'])), 'Valid timezones.', optional: true, enum: new Enum(name: 'TestValidZones'))
+            ->param('emptyZones', [], new ArrayList(new WhiteList(['utc'])), 'Empty timezones.', optional: true, enum: new Enum(name: 'TestEmptyZones'))
+            ->param('openZone', 'custom', new AnyOf([new WhiteList(['utc']), new Text(64)]), 'Open timezone.', optional: true, enum: new Enum(name: 'TestOpenZone'))
+            ->param('openZones', ['custom'], new AnyOf([new ArrayList(new WhiteList(['utc'])), new ArrayList(new Text(64))]), 'Open timezones.', optional: true, enum: new Enum(name: 'TestOpenZones'));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $operation = $spec['paths']['/tests'][strtolower($method)];
+        if ($method === 'GET') {
+            $schemas = array_column($operation['parameters'], 'schema', 'name');
+        } else {
+            $schemas = $operation['requestBody']['content']['application/json']['schema']['properties'];
+        }
+
+        $this->assertArrayHasKey('oneOf', $schemas['timezone']);
+        $this->assertArrayNotHasKey('default', $schemas['timezone']);
+        $this->assertSame(['utc', 'europe/london'], array_column(array_column($schemas['timezone']['oneOf'], 'enum'), 0));
+        $this->assertSame('utc', $schemas['validZone']['default']);
+        $this->assertArrayNotHasKey('default', $schemas['zones']);
+        $this->assertSame(['utc'], $schemas['validZones']['default']);
+        $this->assertSame([], $schemas['emptyZones']['default']);
+        $this->assertArrayHasKey('anyOf', $schemas['openZone']);
+        $this->assertSame('custom', $schemas['openZone']['default']);
+        $this->assertArrayHasKey('anyOf', $schemas['openZones']['items']);
+        $this->assertSame(['custom'], $schemas['openZones']['default']);
+    }
+
     public function testEnumNameMustNotOverlapServiceName(): void
     {
         Method::$processed = [];
