@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import type { ComponentProps, ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
@@ -56,7 +57,7 @@ export function MarketingSiteLink({
 
   return (
     <a
-      href={url}
+      href={assetUrl(url)}
       className={className}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       {...props}

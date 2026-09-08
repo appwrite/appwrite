@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useMemo, useRef, Fragment } from 'react'
 import {
   useParams,
@@ -1054,7 +1055,7 @@ export function View() {
                                           />
                                         ) : null}
                                         <img
-                                          src={screenshotUrl}
+                                          src={assetUrl(screenshotUrl)}
                                           alt={`${siteData.name || t('Site')} ${t('preview')}`}
                                           onLoad={() => {
                                             setLoadedScreenshots((prev) =>

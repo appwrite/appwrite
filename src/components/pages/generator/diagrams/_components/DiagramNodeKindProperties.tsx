@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useRef } from 'react'
 import { CoverBuiltInIconPicker } from '@/components/pages/generator/_components/CoverBuiltInIconPicker'
 import { CoverHeroBrowserFrame } from '@/components/global/shared/CoverHeroBrowserFrame'
@@ -163,7 +164,7 @@ export function DiagramNodeKindProperties({
                 frameHeight={SCREENSHOT_PREVIEW_FRAME_HEIGHT}
                 themeId={themeId}
                 closed
-                src={node.imageSrc}
+                src={assetUrl(node.imageSrc)}
                 focusX={focus.focusX}
                 focusY={focus.focusY}
                 alt={node.label || 'Screenshot'}

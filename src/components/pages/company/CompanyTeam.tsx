@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
 import { scrollToCompanySection } from '@/lib/company/section-scroll'
 import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
@@ -142,7 +143,7 @@ function TeamPhoto({
         )}
       >
         <img
-          src={src}
+          src={assetUrl(src)}
           alt={t(alt)}
           className="h-full w-full object-cover object-center"
           loading="lazy"

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { CheckCircle2, ChevronDown, QrCode } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -14,7 +15,7 @@ import { useT } from '@/lib/i18n/translate'
 function BotAvatar() {
   return (
     <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
-      <img src="/icons/appwrite.svg" alt="" className="size-4" aria-hidden />
+      <img src={assetUrl("/icons/appwrite.svg")} alt="" className="size-4" aria-hidden />
     </span>
   )
 }
@@ -25,7 +26,7 @@ export function SitesGitPreviewsVisual() {
     <ProductFeatureVisualFrame
       eyebrow="GitHub and Origin"
       title={t('Pull request')}
-      headerIconSrc={['/icons/github.svg', '/icons/origin.svg']}
+      headerIconSrc={[assetUrl('/icons/github.svg'), assetUrl('/icons/origin.svg')]}
     >
       <div className="flex gap-3">
         <BotAvatar />
@@ -36,7 +37,7 @@ export function SitesGitPreviewsVisual() {
 
           <div className="mt-2 overflow-hidden rounded-lg border border-border bg-background/90 transition-colors group-hover/visual:border-foreground/10">
             <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-              <img src="/icons/appwrite.svg" alt="" className="size-4 shrink-0" aria-hidden />
+              <img src={assetUrl("/icons/appwrite.svg")} alt="" className="size-4 shrink-0" aria-hidden />
               <p className="text-[12px] font-semibold text-foreground">{t('Appwrite Sites')}</p>
             </div>
 

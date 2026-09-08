@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { applyFaviconHref } from '@/lib/favicon'
 import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
@@ -13,7 +14,7 @@ export function DynamicFavicon() {
     if (typeof window === 'undefined' || !mounted) return
     if (!usesThemeAwareFaviconHost()) return
 
-    applyFaviconHref('/logo-theme.svg', {
+    applyFaviconHref(assetUrl('/logo-theme.svg'), {
       source: 'dynamic-favicon',
       reason: 'Theme-aware favicon host (dev/local)',
       variant: 'theme',

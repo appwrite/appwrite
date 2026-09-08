@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Template Configuration View Component
  *
@@ -72,7 +73,7 @@ function FadeImage({
 
   return (
     <img
-      src={src}
+      src={assetUrl(src)}
       alt={alt}
       className={cn(
         className,
@@ -437,7 +438,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <div className="absolute start-6 -end-4 top-4 aspect-video transform -rotate-3">
             <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
               <FadeImage
-                src={screenshotUrl}
+                src={assetUrl(screenshotUrl)}
                 alt={`${template.name} preview`}
                 className="absolute inset-0 h-full w-full object-cover object-top"
               />
@@ -511,7 +512,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               asChild
             >
               <a
-                href={templateSourceUrl}
+                href={assetUrl(templateSourceUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -528,7 +529,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               asChild
             >
               <a
-                href={template.demoUrl}
+                href={assetUrl(template.demoUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
               >

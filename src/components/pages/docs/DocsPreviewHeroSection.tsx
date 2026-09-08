@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { Button } from '@/components/ui/button'
 import {
   docsContentPaddingX,
@@ -58,7 +59,7 @@ export function DocsPreviewHeroSection() {
                 className={FRAMEWORK_CHIP_CLASS}
               >
                 <img
-                  src={tool.iconSrc}
+                  src={assetUrl(tool.iconSrc)}
                   alt=""
                   className={cn('size-4', PUBLIC_ICON_MUTED_CLASSES)}
                 />

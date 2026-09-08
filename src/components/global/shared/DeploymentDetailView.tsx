@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
@@ -676,7 +677,7 @@ export function DeploymentDetailView({
                 <div className="absolute inset-0">
                   <img
                     key={screenshotId}
-                    src={screenshotUrl}
+                    src={assetUrl(screenshotUrl)}
                     alt={t('Deployment screenshot')}
                     onLoad={() => setSidebarScreenshotLoaded(true)}
                     className={cn(
@@ -744,7 +745,7 @@ export function DeploymentDetailView({
                       }}
                     >
                       <a
-                        href={domainUrl(domain)}
+                        href={assetUrl(domainUrl(domain))}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
@@ -803,7 +804,7 @@ export function DeploymentDetailView({
               <div className="min-w-0">
                 {deployment.providerCommitAuthorUrl ? (
                   <a
-                    href={deployment.providerCommitAuthorUrl}
+                    href={assetUrl(deployment.providerCommitAuthorUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="link-neutral truncate text-[11px]"
@@ -841,7 +842,7 @@ export function DeploymentDetailView({
                 <div className="flex min-w-0 flex-1 items-center gap-1">
                   {resolvedCommitUrl ? (
                     <a
-                      href={resolvedCommitUrl}
+                      href={assetUrl(resolvedCommitUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="min-w-0 truncate font-mono text-[11px] link-neutral"
@@ -914,7 +915,7 @@ export function DeploymentDetailView({
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 {resolvedBranchUrl ? (
                   <a
-                    href={resolvedBranchUrl}
+                    href={assetUrl(resolvedBranchUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="link-neutral min-w-0 truncate text-[11px]"
@@ -976,7 +977,7 @@ export function DeploymentDetailView({
               </span>
               {repositoryUrl ? (
                 <a
-                  href={repositoryUrl}
+                  href={assetUrl(repositoryUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="link-neutral truncate text-[11px]"
@@ -1668,7 +1669,7 @@ export function DeploymentDetailView({
                       </span>
                       {deployment.providerCommitAuthorUrl ? (
                         <a
-                          href={deployment.providerCommitAuthorUrl}
+                          href={assetUrl(deployment.providerCommitAuthorUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="link-neutral min-w-0 truncate text-[12px] sm:text-[13px] font-medium"

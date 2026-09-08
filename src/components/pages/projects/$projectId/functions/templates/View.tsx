@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   useMemo,
   useState,
@@ -691,7 +692,7 @@ function FunctionTemplateDetailDrawer({
           {sourceUrl ? (
             <Button variant="outline" className="gap-1.5 sm:w-auto" asChild>
               <a
-                href={sourceUrl}
+                href={assetUrl(sourceUrl)}
                 target="_blank"
                 rel="noreferrer noopener"
               >
@@ -969,7 +970,7 @@ function TemplateCatalogFilters({
           )}
         </p>
         <a
-          href="https://github.com/appwrite/templates"
+          href={assetUrl("https://github.com/appwrite/templates")}
           target="_blank"
           rel="noreferrer noopener"
           className="link-neutral inline-flex max-w-full items-center gap-1.5 pt-0.5 text-[13px]"

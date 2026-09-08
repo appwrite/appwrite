@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   forwardRef,
   useCallback,
@@ -88,10 +89,10 @@ function getInitTicketStackIconSrc(
   usesDarkImage: boolean,
 ): string | null {
   if (iconKey === 'appwrite') {
-    return `/icons/${usesDarkImage ? 'appwrite-white.svg' : 'appwrite.svg'}`
+    return assetUrl(`/icons/${usesDarkImage ? 'appwrite-white.svg' : 'appwrite.svg'}`)
   }
   const iconFile = getFrameworkIconFile(iconKey)
-  return iconFile ? `/icons/${iconFile}` : null
+  return iconFile ? assetUrl(`/icons/${iconFile}`) : null
 }
 
 function TicketStackIcons({
@@ -118,7 +119,7 @@ function TicketStackIcons({
           >
             {iconSrc ? (
               <img
-                src={iconSrc}
+                src={assetUrl(iconSrc)}
                 alt=""
                 aria-hidden
                 className={cn(
@@ -266,7 +267,7 @@ function TicketFaceShell({
     >
       <img
         key={ticketBgSrc}
-        src={ticketBgSrc}
+        src={assetUrl(ticketBgSrc)}
         alt=""
         className={cn(
           'pointer-events-none absolute inset-0 size-full object-contain object-top',

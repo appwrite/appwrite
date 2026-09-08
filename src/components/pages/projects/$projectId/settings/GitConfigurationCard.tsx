@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import {
   ExternalLink,
@@ -283,7 +284,7 @@ export function GitConfigurationCard({
                   asChild
                 >
                   <a
-                    href={vcsAuthUrl(provider.id)}
+                    href={assetUrl(vcsAuthUrl(provider.id))}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -415,7 +416,7 @@ export function GitConfigurationCard({
                                   </div>
                                   {providerUrl ? (
                                     <a
-                                      href={providerUrl}
+                                      href={assetUrl(providerUrl)}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="text-[13px] font-medium link-neutral"
@@ -444,10 +445,10 @@ export function GitConfigurationCard({
                                     {knownProvider ? (
                                       <DropdownMenuItem asChild>
                                         <a
-                                          href={vcsAuthUrl(
+                                          href={assetUrl(vcsAuthUrl(
                                             knownProvider.id,
                                             'update',
-                                          )}
+                                          ))}
                                           target="_blank"
                                           rel="noreferrer"
                                           className={menuItemRowClassName}
@@ -506,7 +507,7 @@ export function GitConfigurationCard({
                 asChild
               >
                 <a
-                  href={vcsAuthUrl(provider.id)}
+                  href={assetUrl(vcsAuthUrl(provider.id))}
                   target="_blank"
                   rel="noreferrer"
                 >

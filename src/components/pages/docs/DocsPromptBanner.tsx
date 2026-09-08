@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { BrainCircuit, Check, ChevronDown, Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -123,7 +124,7 @@ export function DocsPromptBanner({
           <DropdownMenuContent align="start" className="z-[10050] min-w-[200px]">
             {aiChatIDEs.map((ide) => (
               <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
-                <img src={ide.iconPath} alt="" className="size-4" />
+                <img src={assetUrl(ide.iconPath)} alt="" className="size-4" />
                 <span className="ms-2">Prompt {ide.name}</span>
                 <ExternalLink
                   className="ms-auto size-2.5 shrink-0 text-muted-foreground/30"

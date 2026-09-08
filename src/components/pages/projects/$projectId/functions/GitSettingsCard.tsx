@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -378,7 +379,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       asChild
                       aria-label={t('Open repository in new tab')}
                     >
-                      <a href={repository.url} target="_blank" rel="noreferrer">
+                      <a href={assetUrl(repository.url)} target="_blank" rel="noreferrer">
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     </Button>

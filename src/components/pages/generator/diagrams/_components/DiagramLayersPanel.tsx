@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState } from 'react'
 import {
   DndContext,
@@ -74,7 +75,7 @@ function LayerNodeIcon({ node }: { node: DiagramNode }) {
   if (node.kind === 'service' && node.iconSrc) {
     return (
       <CoverIconPreview
-        src={getDiagramNodeIconSrc(node)}
+        src={assetUrl(getDiagramNodeIconSrc(node))}
         colorMode="app"
         size={14}
         className="shrink-0"
@@ -85,7 +86,7 @@ function LayerNodeIcon({ node }: { node: DiagramNode }) {
   if (node.kind === 'icon') {
     return (
       <CoverIconPreview
-        src={getDiagramNodeIconSrc(node)}
+        src={assetUrl(getDiagramNodeIconSrc(node))}
         colorMode="app"
         size={14}
         className="shrink-0"

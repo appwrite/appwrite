@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
@@ -50,10 +51,10 @@ const LINK_KIND_META: Record<
   news: { icon: Megaphone, typeLabel: 'News' },
   product: { icon: Rocket, typeLabel: 'Product' },
   'product-hunt': {
-    iconSrc: '/icons/product-hunt.svg',
+    iconSrc: assetUrl('/icons/product-hunt.svg'),
     typeLabel: 'Product Hunt',
   },
-  youtube: { iconSrc: '/icons/youtube.svg', typeLabel: 'YouTube' },
+  youtube: { iconSrc: assetUrl('/icons/youtube.svg'), typeLabel: 'YouTube' },
 }
 
 function MilestoneLinkContent({
@@ -72,7 +73,7 @@ function MilestoneLinkContent({
     <>
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
         {iconSrc ? (
-          <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
+          <img src={assetUrl(iconSrc)} alt="" className="size-3.5" aria-hidden />
         ) : Icon ? (
           <Icon className="size-3.5" aria-hidden />
         ) : null}
@@ -138,7 +139,7 @@ function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
               </MarketingSiteLink>
             ) : (
               <a
-                href={resolveSiteLinkUrl(link.href, features.marketing)}
+                href={assetUrl(resolveSiteLinkUrl(link.href, features.marketing))}
                 {...(isSiteLinkExternal(link.href, features.marketing)
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}
@@ -177,7 +178,7 @@ function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }
               aria-label={`${t('Enlarge image:')} ${image.alt}`}
             >
               <img
-                src={image.src}
+                src={assetUrl(image.src)}
                 alt=""
                 className="h-14 w-[4.5rem] object-cover object-center sm:h-16 sm:w-24"
                 loading="lazy"

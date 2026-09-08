@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
@@ -376,7 +377,7 @@ export function MysqlDatabaseReplicasCard({
               asChild
             >
               <a
-                href={CONTACT_ENTERPRISE_URL}
+                href={assetUrl(CONTACT_ENTERPRISE_URL)}
                 target="_blank"
                 rel="noopener noreferrer"
               >

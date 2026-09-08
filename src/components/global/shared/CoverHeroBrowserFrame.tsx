@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import {
   buildCoverScreenshotFrameShellLayout,
@@ -136,7 +137,7 @@ export function CoverHeroBrowserFrame({
       >
         {src ? (
           <img
-            src={src}
+            src={assetUrl(src)}
             alt={t(alt)}
             draggable={false}
             className="block h-full w-full object-cover"

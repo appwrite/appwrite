@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   createContext,
   useContext,
@@ -123,7 +124,7 @@ export function PolicyMarkdown({ content, className }: PolicyMarkdownProps) {
             const external = isExternalLink(href)
             return (
               <a
-                href={href}
+                href={assetUrl(href)}
                 {...props}
                 {...(external
                   ? { target: '_blank', rel: 'noopener noreferrer' }

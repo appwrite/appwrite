@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -407,7 +408,7 @@ export function ConsoleSidebar({
       if (isImagineIcon) {
         return (
           <img
-            src="/imagine-icon.svg"
+            src={assetUrl("/imagine-icon.svg")}
             alt=""
             className={cn(
               'h-4 w-4 shrink-0',

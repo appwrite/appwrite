@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   createContext,
@@ -127,7 +128,7 @@ export function ImagePreviewGalleryDialog({
                 ) : null}
 
                 <img
-                  src={activeItem.src}
+                  src={assetUrl(activeItem.src)}
                   alt={activeItem.alt}
                   className="size-full object-contain"
                 />

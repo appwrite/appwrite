@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useRef } from 'react'
 import { format, isValid, parse } from 'date-fns'
 import { Input } from '@/components/ui/input'
@@ -256,7 +257,7 @@ function CoverFieldInput({
         {isUploadedImage ? (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 p-3">
             <img
-              src={stringValue}
+              src={assetUrl(stringValue)}
               alt=""
               className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
             />

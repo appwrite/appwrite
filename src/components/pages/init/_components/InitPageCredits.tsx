@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Heart } from 'lucide-react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
@@ -36,7 +37,7 @@ export function InitPageCredits({
           <>
             Community globe by{' '}
             <a
-              href={ACETERNITY_GLOBE_URL}
+              href={assetUrl(ACETERNITY_GLOBE_URL)}
               target="_blank"
               rel="noopener noreferrer"
               className={CREDIT_LINK_CLASS}
@@ -48,7 +49,7 @@ export function InitPageCredits({
         ) : null}
         Jool animation by{' '}
         <a
-          href="https://animejs.com/"
+          href={assetUrl("https://animejs.com/")}
           target="_blank"
           rel="noopener noreferrer"
           className={CREDIT_LINK_CLASS}

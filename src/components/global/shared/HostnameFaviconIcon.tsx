@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { Globe } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -55,9 +56,9 @@ export function HostnameFaviconIcon({
   return (
     <div className={frameClass} aria-hidden>
       <img
-        src={sdk.forConsole.avatars.getFavicon({
+        src={assetUrl(sdk.forConsole.avatars.getFavicon({
           url: `https://${normalizedHostname}`,
-        })}
+        }))}
         alt=""
         className="h-full w-full object-contain p-0.5"
         onError={() => setFailed(true)}

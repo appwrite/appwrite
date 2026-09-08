@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Create Site View Component
  *
@@ -376,7 +377,7 @@ export function CreateSiteView() {
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {vcsOAuthProviders.map((provider) => (
                   <Button key={provider.id} size="sm" variant="secondary" asChild>
-                    <a href={getVcsAuthUrl(provider.id)}>
+                    <a href={assetUrl(getVcsAuthUrl(provider.id))}>
                       <VcsIcon
                         type={provider.id}
                         className="me-1.5 h-3.5 w-3.5"
@@ -449,7 +450,7 @@ export function CreateSiteView() {
                       {vcsOAuthProviders.map((p) => (
                         <a
                           key={p.id}
-                          href={getVcsAuthUrl(p.id)}
+                          href={assetUrl(getVcsAuthUrl(p.id))}
                           className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                           <p.Icon className="h-3 w-3" />
@@ -589,7 +590,7 @@ export function CreateSiteView() {
                       )}
                     </p>
                     <a
-                      href={getVcsAuthUrl(knownProvider.id, 'update')}
+                      href={assetUrl(getVcsAuthUrl(knownProvider.id, 'update'))}
                       className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
                     >
                       <VcsIcon

@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState } from 'react'
 import { Package } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -46,7 +47,7 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
   if (app?.logoUri && !logoFailed) {
     return (
       <img
-        src={app.logoUri}
+        src={assetUrl(app.logoUri)}
         alt={app.name}
         className={cn(
           'size-14 shrink-0 rounded-xl object-cover ring-1 ring-border/50',
@@ -63,7 +64,7 @@ export function OAuth2AppAvatar({ app, className }: OAuth2AppAvatarProps) {
     return (
       <div className={frameClassName}>
         <img
-          src={faviconSrc}
+          src={assetUrl(faviconSrc)}
           alt={app?.name ?? ''}
           className="size-full object-contain p-2"
           height={56}

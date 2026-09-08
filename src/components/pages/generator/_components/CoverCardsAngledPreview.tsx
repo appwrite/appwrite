@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { CoverIntegrationGlassCard } from '@/components/global/shared/CoverIntegrationGlassCard'
 import { PerspectiveScreenshotScene } from '@/components/global/shared/PerspectiveScreenshotCard'
@@ -150,7 +151,7 @@ export function CoverCardsAngledPreview({
                 return (
                   <CoverIntegrationGlassCard
                     key={`filled-${index}-${slot.src}`}
-                    src={slot.src}
+                    src={assetUrl(slot.src)}
                     iconSize={layoutStyle.iconSize}
                     themeId={normalizedData.theme}
                     style={

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useRef, useEffect } from 'react'
 import * as React from 'react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -489,35 +490,35 @@ const topAiAgents: AiAgentData[] = [
   {
     name: 'ChatGPT',
     platform: 'OpenAI',
-    icon: '/icons/chatgpt.svg',
+    icon: assetUrl('/icons/chatgpt.svg'),
     requests: 12400,
     topPages: ['/docs', '/api-reference', '/getting-started'],
   },
   {
     name: 'Claude',
     platform: 'Anthropic',
-    icon: '/icons/claude.svg',
+    icon: assetUrl('/icons/claude.svg'),
     requests: 8900,
     topPages: ['/docs', '/pricing', '/features'],
   },
   {
     name: 'Gemini',
     platform: 'Google',
-    icon: '/icons/google.svg',
+    icon: assetUrl('/icons/google.svg'),
     requests: 6200,
     topPages: ['/docs', '/blog', '/'],
   },
   {
     name: 'Perplexity',
     platform: 'Perplexity AI',
-    icon: '/icons/perplexity.svg',
+    icon: assetUrl('/icons/perplexity.svg'),
     requests: 4100,
     topPages: ['/docs', '/', '/pricing'],
   },
   {
     name: 'Copilot',
     platform: 'Microsoft',
-    icon: '/icons/microsoft.svg',
+    icon: assetUrl('/icons/microsoft.svg'),
     requests: 2800,
     topPages: ['/docs', '/api-reference'],
   },
@@ -758,7 +759,7 @@ function MapContent({ data }: { data: LocationData[] }) {
                 <div className="flex items-center gap-2">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                     <img
-                      src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                      src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
                       alt={`${location.country} flag`}
                       className="h-full w-full object-cover"
                       role="img"
@@ -1312,7 +1313,7 @@ export function View({
                             <div className="relative flex flex-1 items-center gap-2">
                               <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-muted/30">
                                 <img
-                                  src={agent.icon}
+                                  src={assetUrl(agent.icon)}
                                   alt=""
                                   className={`h-3.5 w-3.5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
                                   loading="lazy"
@@ -1893,7 +1894,7 @@ export function View({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                        src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
                                         alt={`${location.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -1971,7 +1972,7 @@ export function View({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                        src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
                                         alt={`${region.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -2046,7 +2047,7 @@ export function View({
                                     <div className="relative flex flex-1 items-center gap-2">
                                       <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                         <img
-                                          src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                          src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
                                           alt={`${city.country} flag`}
                                           className="h-full w-full object-cover"
                                           role="img"

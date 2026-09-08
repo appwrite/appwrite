@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -15,9 +16,9 @@ export function ImaginePlaceholder() {
     <div className="flex-grow flex flex-col justify-center items-center gap-6 text-center">
       <img
         src={
-          theme === 'dark'
+          assetUrl(theme === 'dark'
             ? '/imagine-logo-dark.svg'
-            : '/imagine-logo-light.svg'
+            : '/imagine-logo-light.svg')
         }
         alt={t('Imagine Logo')}
         className="size-14"

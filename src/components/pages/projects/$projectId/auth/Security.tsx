@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -741,7 +742,7 @@ export function PasswordDictionaryCard({
                 "Enabling this option prevents users from setting insecure passwords by comparing the user's password with the",
               )}{' '}
               <a
-                href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt"
+                href={assetUrl("https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="link-neutral"

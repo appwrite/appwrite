@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CoverBuiltInIconPicker } from '@/components/pages/generator/_components/CoverBuiltInIconPicker'
 import { CoverIconPreview } from '@/components/pages/generator/_components/CoverIconPreview'
@@ -165,7 +166,7 @@ export function CoverCardsAngledIconGridEditor({
               }}
             >
               {!isHidden && slot.src ? (
-                <CoverIconPreview src={slot.src} themeId={data.theme} size={20} />
+                <CoverIconPreview src={assetUrl(slot.src)} themeId={data.theme} size={20} />
               ) : null}
             </button>
           )
@@ -227,7 +228,7 @@ export function CoverCardsAngledIconGridEditor({
                 {isCustomImage ? (
                   <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 p-3">
                     <img
-                      src={editingIconValue}
+                      src={assetUrl(editingIconValue)}
                       alt=""
                       className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
                     />

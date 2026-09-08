@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -273,7 +274,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
 
         <div className="space-y-2">
           <a
-            href={CONTACT_SALES_URL}
+            href={assetUrl(CONTACT_SALES_URL)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
@@ -310,7 +311,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
           </MarketingSiteLink>
 
           <a
-            href="https://github.com/appwrite/appwrite/issues/new/choose"
+            href={assetUrl("https://github.com/appwrite/appwrite/issues/new/choose")}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
@@ -340,7 +341,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
           <Separator />
           <div className="p-4">
             <a
-              href="https://status.appwrite.online"
+              href={assetUrl("https://status.appwrite.online")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"

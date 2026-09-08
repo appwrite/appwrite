@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { ImageIcon, Maximize2 } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { ThinkingBubble } from '@/components/global/shared/ThinkingBubble'
@@ -52,7 +53,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
   if (inTable || isAudio) {
     if (isAudio) {
       return (
-        <audio src={src} controls className="w-full">
+        <audio src={assetUrl(src)} controls className="w-full">
           Your browser does not support the audio element.
         </audio>
       )
@@ -60,7 +61,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
 
     return (
       <img
-        src={src}
+        src={assetUrl(src)}
         alt={alt}
         title={contain ? undefined : title}
         loading="lazy"
@@ -111,7 +112,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
             </div>
           ) : (
             <img
-              src={src}
+              src={assetUrl(src)}
               alt={alt}
               title={contain ? undefined : title}
               loading="lazy"

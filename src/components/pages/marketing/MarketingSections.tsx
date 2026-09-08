@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { LucideIcon } from 'lucide-react'
 import type { ComponentType, SVGProps } from 'react'
 import type { ReactNode } from 'react'
@@ -504,7 +505,7 @@ export function MarketingInvolvementCards({
             return (
               <a
                 key={item.title}
-                href={item.href}
+                href={assetUrl(item.href)}
                 {...(item.external
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}

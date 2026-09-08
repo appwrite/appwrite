@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { cn } from '@/lib/utils'
 
 const SIZE_CLASSNAMES = {
@@ -35,7 +36,7 @@ export function MarketplaceAppLogo({
       )}
     >
       <img
-        src={src}
+        src={assetUrl(src)}
         alt={alt}
         className="h-full w-full object-contain grayscale invert-[.44] dark:invert-[.63]"
       />

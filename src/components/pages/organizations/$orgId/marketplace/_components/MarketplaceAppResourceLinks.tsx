@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { LucideIcon } from 'lucide-react'
 import {
   ExternalLink,
@@ -58,7 +59,7 @@ export function MarketplaceAppResourceLinks({
         {links.map((link) => (
           <a
             key={link.label}
-            href={link.url}
+            href={assetUrl(link.url)}
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-foreground/20 hover:bg-accent/40"

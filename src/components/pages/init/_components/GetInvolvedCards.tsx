@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
@@ -39,7 +40,7 @@ function GetInvolvedCard({
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {item.iconSrc ? (
           <img
-            src={item.iconSrc}
+            src={assetUrl(item.iconSrc)}
             alt=""
             className="size-5 dark:invert-0"
             aria-hidden
@@ -77,7 +78,7 @@ function GetInvolvedCard({
   if (resolved) {
     return (
       <a
-        href={resolved.href}
+        href={assetUrl(resolved.href)}
         {...(resolved.external
           ? { target: '_blank', rel: 'noopener noreferrer' }
           : {})}

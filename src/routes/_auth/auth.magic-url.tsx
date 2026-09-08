@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -126,7 +127,7 @@ function MagicUrlPage() {
                   alt="Appwrite console illustration"
                   className="h-full w-full object-cover"
                   height="600"
-                  src="/cover.avif"
+                  src={assetUrl("/cover.avif")}
                   width="600"
                 />
               </div>

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
@@ -63,7 +64,7 @@ function MarkdownContentLink({
   const external = /^https?:\/\//i.test(safeHref)
   return (
     <a
-      href={safeHref}
+      href={assetUrl(safeHref)}
       {...props}
       {...(external
         ? { target: '_blank', rel: 'nofollow ugc noopener noreferrer' }

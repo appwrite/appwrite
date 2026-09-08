@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Function Deploying View
  *
@@ -285,7 +286,7 @@ export function DeployingView({
                         <CopyableId id={func.$id} size="xs" />
                         {functionUrl && (
                           <a
-                            href={functionUrl}
+                            href={assetUrl(functionUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-2 flex items-center gap-1 link-neutral text-[12px]"
@@ -299,7 +300,7 @@ export function DeployingView({
                     {functionUrl && (
                       <Button asChild>
                         <a
-                          href={functionUrl}
+                          href={assetUrl(functionUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

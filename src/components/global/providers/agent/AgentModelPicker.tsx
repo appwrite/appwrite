@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
@@ -47,7 +48,7 @@ function ModelIcon({
   if (icon) {
     return (
       <img
-        src={icon}
+        src={assetUrl(icon)}
         alt=""
         className={cn('h-3.5 w-3.5 shrink-0', PUBLIC_ICON_MUTED_CLASSES, className)}
       />
@@ -215,7 +216,7 @@ export function AgentModelPicker({
             />
           ) : (
             <img
-              src="/icons/appwrite.svg"
+              src={assetUrl("/icons/appwrite.svg")}
               alt=""
               className={cn(
                 'shrink-0',
@@ -298,7 +299,7 @@ export function AgentModelPicker({
                       className={cn('gap-2', itemClassName, !value && 'bg-accent/50')}
                     >
                       <img
-                        src="/icons/appwrite.svg"
+                        src={assetUrl("/icons/appwrite.svg")}
                         alt=""
                         className={cn(
                           'shrink-0',

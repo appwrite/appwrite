@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState, type MouseEvent } from 'react'
 import {
   PolicySidebarSection,
@@ -69,7 +70,7 @@ export function CompareToc({ className }: { className?: string }) {
           {pricingPageSections.map((section) => (
             <li key={section.id} className="min-w-0">
               <a
-                href={`#${section.id}`}
+                href={assetUrl(`#${section.id}`)}
                 title={t(section.label)}
                 onClick={(event) => handleClick(event, section.id)}
                 className={policySidebarLinkClassName(activeId === section.id)}

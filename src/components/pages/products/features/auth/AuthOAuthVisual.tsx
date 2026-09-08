@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Badge } from '@/components/ui/badge'
 import { MockProviderTile } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
@@ -5,21 +6,21 @@ import { ProductFeatureVisualFrame } from '@/components/pages/products/features/
 import { useT } from '@/lib/i18n/translate'
 
 const POPULAR_PROVIDERS = [
-  { id: 'google', name: 'Google', icon: '/icons/google.svg', enabled: true },
-  { id: 'github', name: 'GitHub', icon: '/icons/github.svg', enabled: true },
-  { id: 'apple', name: 'Apple', icon: '/icons/apple.svg', enabled: true },
-  { id: 'discord', name: 'Discord', icon: '/icons/discord-simple.svg', enabled: false },
-  { id: 'microsoft', name: 'Microsoft', icon: '/icons/microsoft.svg', enabled: false },
-  { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.svg', enabled: false },
+  { id: 'google', name: 'Google', icon: assetUrl('/icons/google.svg'), enabled: true },
+  { id: 'github', name: 'GitHub', icon: assetUrl('/icons/github.svg'), enabled: true },
+  { id: 'apple', name: 'Apple', icon: assetUrl('/icons/apple.svg'), enabled: true },
+  { id: 'discord', name: 'Discord', icon: assetUrl('/icons/discord-simple.svg'), enabled: false },
+  { id: 'microsoft', name: 'Microsoft', icon: assetUrl('/icons/microsoft.svg'), enabled: false },
+  { id: 'spotify', name: 'Spotify', icon: assetUrl('/icons/spotify.svg'), enabled: false },
 ] as const
 
 const MORE_PROVIDERS = [
-  { id: 'gitlab', name: 'GitLab', icon: '/icons/gitlab.svg' },
-  { id: 'linkedin', name: 'LinkedIn', icon: '/icons/linkedin.svg' },
-  { id: 'slack', name: 'Slack', icon: '/icons/slack.svg' },
-  { id: 'twitch', name: 'Twitch', icon: '/icons/twitch.svg' },
-  { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.svg' },
-  { id: 'okta', name: 'Okta', icon: '/icons/okta.svg' },
+  { id: 'gitlab', name: 'GitLab', icon: assetUrl('/icons/gitlab.svg') },
+  { id: 'linkedin', name: 'LinkedIn', icon: assetUrl('/icons/linkedin.svg') },
+  { id: 'slack', name: 'Slack', icon: assetUrl('/icons/slack.svg') },
+  { id: 'twitch', name: 'Twitch', icon: assetUrl('/icons/twitch.svg') },
+  { id: 'facebook', name: 'Facebook', icon: assetUrl('/icons/facebook.svg') },
+  { id: 'okta', name: 'Okta', icon: assetUrl('/icons/okta.svg') },
 ] as const
 
 export function AuthOAuthVisual() {
@@ -74,7 +75,7 @@ export function AuthOAuthVisual() {
                 key={provider.id}
                 className="flex flex-col items-center gap-1 rounded-lg border border-border bg-background/80 px-1.5 py-2"
               >
-                <ProductFeaturePublicIcon src={provider.icon} inactive />
+                <ProductFeaturePublicIcon src={assetUrl(provider.icon)} inactive />
                 <span className="truncate text-[9px] text-muted-foreground">{provider.name}</span>
               </div>
             ))}

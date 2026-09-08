@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Template Configuration View (Function)
  *
@@ -450,7 +451,7 @@ export function TemplateConfigView({
             asChild
           >
             <a
-              href={`https://github.com/${template.providerOwner || 'appwrite'}/${template.providerRepositoryId}`}
+              href={assetUrl(`https://github.com/${template.providerOwner || 'appwrite'}/${template.providerRepositoryId}`)}
               target="_blank"
               rel="noopener noreferrer"
             >

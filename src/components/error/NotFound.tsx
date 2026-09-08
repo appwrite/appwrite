@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   Link,
   useCanGoBack,
@@ -191,7 +192,7 @@ function NotFoundContent({
           {t('Looking for product docs?')}{' '}
           {docsExternal ? (
             <a
-              href={docsHref}
+              href={assetUrl(docsHref)}
               className="link-neutral"
               onClick={(event) => {
                 event.preventDefault()

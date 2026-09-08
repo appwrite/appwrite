@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Terminal, type LucideIcon } from 'lucide-react'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
@@ -16,31 +17,31 @@ const DATABASE_TOOLS: DatabaseTool[] = [
     id: 'prisma',
     name: 'Prisma',
     description: 'Type-safe schema and client for Node.js and TypeScript.',
-    iconSrc: '/icons/prisma.svg',
+    iconSrc: assetUrl('/icons/prisma.svg'),
   },
   {
     id: 'drizzle',
     name: 'Drizzle',
     description: 'Lightweight TypeScript ORM with SQL-like query builder.',
-    iconSrc: '/icons/drizzle.svg',
+    iconSrc: assetUrl('/icons/drizzle.svg'),
   },
   {
     id: 'sequelize',
     name: 'Sequelize',
     description: 'Promise-based ORM for Node.js with multi-dialect support.',
-    iconSrc: '/icons/sequelize.svg',
+    iconSrc: assetUrl('/icons/sequelize.svg'),
   },
   {
     id: 'typeorm',
     name: 'TypeORM',
     description: 'Active Record and Data Mapper patterns for TypeScript.',
-    iconSrc: '/icons/typeorm.svg',
+    iconSrc: assetUrl('/icons/typeorm.svg'),
   },
   {
     id: 'sqlalchemy',
     name: 'SQLAlchemy',
     description: 'Python SQL toolkit and ORM for expressive queries.',
-    iconSrc: '/icons/sqlalchemy.svg',
+    iconSrc: assetUrl('/icons/sqlalchemy.svg'),
   },
   {
     id: 'psql',
@@ -81,7 +82,7 @@ export function DatabasesOrmCatalog({ className }: DatabasesOrmCatalogProps) {
           >
             <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
               {tool.iconSrc ? (
-                <ProductFeaturePublicIcon src={tool.iconSrc} />
+                <ProductFeaturePublicIcon src={assetUrl(tool.iconSrc)} />
               ) : Lucide ? (
                 <Lucide className="size-3.5 text-muted-foreground" aria-hidden />
               ) : null}

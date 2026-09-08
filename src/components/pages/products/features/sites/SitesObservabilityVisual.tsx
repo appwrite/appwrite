@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState, type ReactNode } from 'react'
 import { subDays } from 'date-fns'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
@@ -206,7 +207,7 @@ function TrafficUsageChart({
 const SITE_LOGS = [
   { id: '1', status: 200, method: 'GET', path: '/pricing', duration: '124ms', selected: true },
   { id: '2', status: 200, method: 'GET', path: '/', duration: '89ms', selected: false },
-  { id: '3', status: 304, method: 'GET', path: '/assets/logo.svg', duration: '8ms', selected: false },
+  { id: '3', status: 304, method: 'GET', path: assetUrl('/assets/logo.svg'), duration: '8ms', selected: false },
   { id: '4', status: 404, method: 'GET', path: '/old-blog/post', duration: '12ms', selected: false },
   { id: '5', status: 200, method: 'POST', path: '/api/contact', duration: '342ms', selected: false },
   { id: '6', status: 500, method: 'GET', path: '/dashboard', duration: '1.2s', selected: false },

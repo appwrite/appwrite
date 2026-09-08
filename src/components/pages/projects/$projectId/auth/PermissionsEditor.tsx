@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import * as React from 'react'
 import {
   useState,
@@ -335,7 +336,7 @@ function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <Avatar className="size-6 shrink-0">
-        {user?.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
+        {user?.avatar && <AvatarImage src={assetUrl(user.avatar)} alt={displayName} />}
         <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
           {initials}
         </AvatarFallback>
@@ -624,7 +625,7 @@ function UserSelectionModal({
                       />
                       <Avatar className="size-8">
                         {user.avatar && (
-                          <AvatarImage src={user.avatar} alt={displayName} />
+                          <AvatarImage src={assetUrl(user.avatar)} alt={displayName} />
                         )}
                         <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                           {initials}
@@ -974,7 +975,7 @@ function MemberSelectionModal({
                   <Avatar className="size-8">
                     {selectedUser.avatar && (
                       <AvatarImage
-                        src={selectedUser.avatar}
+                        src={assetUrl(selectedUser.avatar)}
                         alt={selectedUserName}
                       />
                     )}
@@ -1105,7 +1106,7 @@ function MemberSelectionModal({
                           <Avatar className="size-8">
                             {user.avatar && (
                               <AvatarImage
-                                src={user.avatar}
+                                src={assetUrl(user.avatar)}
                                 alt={displayName}
                               />
                             )}

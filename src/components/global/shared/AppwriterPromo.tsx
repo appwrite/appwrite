@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,8 +11,8 @@ import { useT } from '@/lib/i18n/translate'
 const APPWRITER_STORE_HREF =
   'https://appwrite.store/products/preorder-the-appwriter'
 
-const APPWRITER_INIT_IMAGE_LIGHT = '/images/init/prize-day-2-swag-light.jpg'
-const APPWRITER_INIT_IMAGE_DARK = '/images/init/prize-day-3-swag.jpg'
+const APPWRITER_INIT_IMAGE_LIGHT = assetUrl('/images/init/prize-day-2-swag-light.jpg')
+const APPWRITER_INIT_IMAGE_DARK = assetUrl('/images/init/prize-day-3-swag.jpg')
 const APPWRITER_PROMO_IMAGE_ASPECT = '16 / 10'
 
 export function AppwriterPromo({ className }: { className?: string }) {
@@ -38,7 +39,7 @@ export function AppwriterPromo({ className }: { className?: string }) {
         style={{ aspectRatio: APPWRITER_PROMO_IMAGE_ASPECT }}
       >
         <img
-          src={imageSrc}
+          src={assetUrl(imageSrc)}
           alt={t('The Appwriter mechanical keyboard') /* pragma: allowlist secret */}
           className="size-full object-cover object-center"
           loading="lazy"
@@ -61,7 +62,7 @@ export function AppwriterPromo({ className }: { className?: string }) {
       </div>
 
       <Button variant="outline" size="sm" className="h-8 w-full text-[12px]" asChild>
-        <a href={APPWRITER_STORE_HREF} target="_blank" rel="noopener noreferrer">
+        <a href={assetUrl(APPWRITER_STORE_HREF)} target="_blank" rel="noopener noreferrer">
           {t('Order from the Appwrite Store')} {/* pragma: allowlist secret */}
           <ChevronRight className="size-3.5" aria-hidden />
         </a>

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { createSignal, Show } from 'solid-js'
 import { Account } from 'appwrite'
 import { client } from '../lib/appwrite'
@@ -44,7 +45,7 @@ export function SignIn() {
       />
       <button type="submit">Sign in</button>
       <p>
-        No account? <a href="/sign-up">Sign up</a>
+        No account? <a href={assetUrl("/sign-up")}>Sign up</a>
       </p>
     </form>
   )

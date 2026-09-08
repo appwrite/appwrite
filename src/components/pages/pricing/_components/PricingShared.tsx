@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { Check, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -64,7 +65,7 @@ export function PricingPlanCta({
 
   return (
     <Button variant={plan.ctaVariant} className={buttonClassName} asChild>
-      <a href={plan.href} target="_blank" rel="noopener noreferrer" {...analytics}>
+      <a href={assetUrl(plan.href)} target="_blank" rel="noopener noreferrer" {...analytics}>
         {t(plan.cta)}
       </a>
     </Button>
@@ -218,7 +219,7 @@ export function ComparisonCellValue({ value }: { value: ComparisonCell }) {
   if (isLinkCell(value)) {
     return (
       <a
-        href={value.href}
+        href={assetUrl(value.href)}
         className="text-[13px] link-neutral"
         target="_blank"
         rel="noopener noreferrer"

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
@@ -50,7 +51,7 @@ export function PolicyRelatedLinks({
           <li key={link.slug}>
             {link.external ? (
               <a
-                href={link.href}
+                href={assetUrl(link.href)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={linkClassName(false, embedded)}

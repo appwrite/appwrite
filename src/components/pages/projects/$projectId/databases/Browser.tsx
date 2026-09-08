@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   ZoomIn,
@@ -1194,7 +1195,7 @@ export function Browser({}: BrowserProps) {
                     </div>
                     {/* Iframe */}
                     <iframe
-                      src={frame.url}
+                      src={assetUrl(frame.url)}
                       className="w-full h-[calc(100%-2.5rem)] border-0 pointer-events-none"
                       title={frame.name}
                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"

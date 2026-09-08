@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import {
   COMMUNITY_SUPPORT_ACTIONS,
@@ -29,7 +30,7 @@ export function ActionLink({
   if (isAbsoluteHttpUrl(action.href)) {
     return (
       <a
-        href={action.href}
+        href={assetUrl(action.href)}
         target="_blank"
         rel="noopener noreferrer"
         className={className}

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeftRight, Check, ChevronDown } from 'lucide-react'
@@ -197,7 +198,7 @@ export function View({
               </div>
               {pullRequestUrl ? (
                 <a
-                  href={pullRequestUrl}
+                  href={assetUrl(pullRequestUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`${chipClassName} hover:bg-muted transition-colors`}

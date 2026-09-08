@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -118,7 +119,7 @@ function BrowserIcon({
     <div className="relative">
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50 overflow-hidden">
         <img
-          src={iconUrl}
+          src={assetUrl(iconUrl)}
           alt={clientCode}
           className="h-9 w-9 object-contain p-1"
           onError={() => setError(true)}
@@ -398,7 +399,7 @@ export function AccountSessions({
                               >
                                 {providerIcon ? (
                                   <img
-                                    src={`/icons/${providerIcon}`}
+                                    src={assetUrl(`/icons/${providerIcon}`)}
                                     alt={session.provider}
                                     className={`h-3 w-3 ${PUBLIC_ICON_MUTED_CLASSES}`}
                                     onError={(e) => {
@@ -419,7 +420,7 @@ export function AccountSessions({
                       <div className="flex items-center gap-2">
                         {flagUrl ? (
                           <img
-                            src={flagUrl}
+                            src={assetUrl(flagUrl)}
                             alt={session.countryName || ''}
                             className="h-4 w-4 rounded-sm border border-border/30 shadow-sm"
                             onError={(e) => {

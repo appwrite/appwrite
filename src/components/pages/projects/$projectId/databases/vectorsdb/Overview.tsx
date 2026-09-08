@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 // Database-level overview (tabs: tables list, visualizer, monitor, …) - per product copy.
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -742,7 +743,7 @@ export function Overview({
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={handleOpenInChatGPT}>
                       <img
-                        src="/icons/chatgpt.svg"
+                        src={assetUrl("/icons/chatgpt.svg")}
                         alt="ChatGPT"
                         className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
@@ -750,7 +751,7 @@ export function Overview({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleOpenInClaude}>
                       <img
-                        src="/icons/claude.svg"
+                        src={assetUrl("/icons/claude.svg")}
                         alt="Claude"
                         className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
@@ -758,7 +759,7 @@ export function Overview({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleOpenInCursor}>
                       <img
-                        src="/icons/cursor-ai.svg"
+                        src={assetUrl("/icons/cursor-ai.svg")}
                         alt="Cursor"
                         className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
@@ -766,7 +767,7 @@ export function Overview({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleOpenInLovable}>
                       <img
-                        src="/icons/lovable.svg"
+                        src={assetUrl("/icons/lovable.svg")}
                         alt="Lovable"
                         className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />

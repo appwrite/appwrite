@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { Github } from 'lucide-react'
 import { EducationPartnerLogos } from '@/components/pages/education/EducationPartnerLogos'
@@ -48,7 +49,7 @@ export function View() {
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
           <a
-            href={educationHero.githubEducationUrl}
+            href={assetUrl(educationHero.githubEducationUrl)}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -82,7 +83,7 @@ export function View() {
             </div>
             <div className="overflow-hidden rounded-xl border border-border bg-card/50">
               <img
-                src={educationKickstart.image}
+                src={assetUrl(educationKickstart.image)}
                 alt=""
                 className="h-auto w-full object-cover"
                 loading="lazy"
@@ -110,7 +111,7 @@ export function View() {
                 </p>
                 <Button variant="outline" className="mt-6 w-fit" asChild>
                   {step.external ? (
-                    <a href={step.href} target="_blank" rel="noopener noreferrer">
+                    <a href={assetUrl(step.href)} target="_blank" rel="noopener noreferrer">
                       {t(step.label)}
                     </a>
                   ) : (

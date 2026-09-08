@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import Markdoc from '@markdoc/markdoc'
 import React from 'react'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
@@ -66,7 +67,7 @@ const baseMarkdocComponents = {
   CallToAction: ({ href, title }: { href?: string; title?: string }) => (
     <div className="not-prose my-6">
       <a
-        href={href}
+        href={assetUrl(href)}
         className="inline-flex items-center rounded-lg bg-[var(--brand-cta)] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90"
       >
         {title}
@@ -78,7 +79,7 @@ const baseMarkdocComponents = {
   RateLimitStrategyAnimation,
   Video: ({ src, title }: { src?: string; title?: string }) => (
     <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
-      <video src={src} controls className="w-full" title={title} />
+      <video src={assetUrl(src)} controls className="w-full" title={title} />
     </div>
   ),
   Youtube: MarkdocYoutube,

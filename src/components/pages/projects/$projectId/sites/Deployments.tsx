@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useTheme } from 'next-themes'
 import {
   useState,
@@ -874,7 +875,7 @@ export function View() {
                                 <div className="absolute inset-0 group">
                                   <img
                                     key={screenshotId}
-                                    src={screenshotUrl}
+                                    src={assetUrl(screenshotUrl)}
                                     alt={t('Deployment screenshot')}
                                     onLoad={() => setScreenshotLoaded(true)}
                                     className={cn(
@@ -1041,7 +1042,7 @@ export function View() {
                                     const label = `${cardDeployment.providerRepositoryOwner}/${cardDeployment.providerRepositoryName}`
                                     return repoUrl ? (
                                       <a
-                                        href={repoUrl}
+                                        href={assetUrl(repoUrl)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="truncate link-neutral"
@@ -1159,7 +1160,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={assetUrl(domainUrl(rule.domain))}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1320,7 +1321,7 @@ export function View() {
                                 {activeDomains.map((rule) => (
                                   <a
                                     key={rule.$id}
-                                    href={domainUrl(rule.domain)}
+                                    href={assetUrl(domainUrl(rule.domain))}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
@@ -1579,7 +1580,7 @@ export function View() {
                                         {vcsProvider.icon}
                                         {repoUrl ? (
                                           <a
-                                            href={repoUrl}
+                                            href={assetUrl(repoUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral truncate"
@@ -1656,7 +1657,7 @@ export function View() {
                                       <div className="text-[12px] text-foreground line-clamp-1 font-mono">
                                         {commitUrl ? (
                                           <a
-                                            href={commitUrl}
+                                            href={assetUrl(commitUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral"
@@ -1709,7 +1710,7 @@ export function View() {
                                                   {` ${t('by')} `}
                                                   {commitAuthorUrl ? (
                                                     <a
-                                                      href={commitAuthorUrl}
+                                                      href={assetUrl(commitAuthorUrl)}
                                                       target="_blank"
                                                       rel="noopener noreferrer"
                                                       className="link-neutral"

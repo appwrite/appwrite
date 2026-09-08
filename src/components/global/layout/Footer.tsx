@@ -1,3 +1,4 @@
+import { assetUrl, assetCss } from '@/lib/asset-url'
 import { Settings2, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -311,7 +312,7 @@ function FooterGroupLinks({
       {links.map((link) => (
         <li key={link.label}>
           <a
-            href={link.href}
+            href={assetUrl(link.href)}
             {...(link.external
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
@@ -387,42 +388,42 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
     {
       label: footerCopy.social.github,
       href: 'https://github.com/appwrite', // pragma: allowlist secret
-      icon: '/icons/github.svg',
+      icon: assetUrl('/icons/github.svg'),
     },
-    { label: footerCopy.social.x, href: 'https://x.com/appwrite', icon: '/icons/x.svg' }, // pragma: allowlist secret
+    { label: footerCopy.social.x, href: 'https://x.com/appwrite', icon: assetUrl('/icons/x.svg') }, // pragma: allowlist secret
     {
       label: footerCopy.social.youtube,
       href: 'https://youtube.com/@appwrite', // pragma: allowlist secret
-      icon: '/icons/youtube.svg',
+      icon: assetUrl('/icons/youtube.svg'),
     },
     {
       label: footerCopy.social.linkedIn,
       href: 'https://www.linkedin.com/company/appwrite/', // pragma: allowlist secret
-      icon: '/icons/linkedin.svg',
+      icon: assetUrl('/icons/linkedin.svg'),
     },
     {
       label: footerCopy.social.instagram,
       href: 'https://www.instagram.com/appwrite.io/', // pragma: allowlist secret
-      icon: '/icons/instagram.svg',
+      icon: assetUrl('/icons/instagram.svg'),
     },
     {
       label: footerCopy.social.discord,
       href: preLaunch ? `${MARKETING_SITE_ORIGIN}/discord` : '/discord',
-      icon: '/icons/discord-simple.svg',
+      icon: assetUrl('/icons/discord-simple.svg'),
     },
     {
       label: footerCopy.social.dailyDevSquad,
       href: 'https://apwr.dev/dailydev',
-      icon: '/icons/daily-dev.svg',
+      icon: assetUrl('/icons/daily-dev.svg'),
     },
   ]
 
   const getSocialIconMaskStyle = (iconPath: string) => ({
-    maskImage: `url(${iconPath})`,
+    maskImage: assetCss(`url(${iconPath})`),
     maskRepeat: 'no-repeat',
     maskPosition: 'center',
     maskSize: 'contain',
-    WebkitMaskImage: `url(${iconPath})`,
+    WebkitMaskImage: assetCss(`url(${iconPath})`),
     WebkitMaskRepeat: 'no-repeat',
     WebkitMaskPosition: 'center',
     WebkitMaskSize: 'contain',
@@ -458,7 +459,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             {resourceLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
-                  href={link.href}
+                  href={assetUrl(link.href)}
                   {...(link.external
                     ? { target: '_blank', rel: 'noopener noreferrer' }
                     : {})}
@@ -479,7 +480,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             {socialLinks.map((social) => (
               <a
                 key={social.label}
-                href={social.href}
+                href={assetUrl(social.href)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -497,7 +498,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
         {/* Right: SOC 2 (hidden on narrow containers), legal links, copyright */}
         <div className="flex shrink-0 items-center gap-2">
           <a
-            href={getDocsPageUrl('/docs/advanced/security', localMarketing)}
+            href={assetUrl(getDocsPageUrl('/docs/advanced/security', localMarketing))}
             {...(isMarketingPageExternal(localMarketing)
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
@@ -521,7 +522,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             {legalLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
-                  href={link.href}
+                  href={assetUrl(link.href)}
                   {...(link.external
                     ? { target: '_blank', rel: 'noopener noreferrer' }
                     : {})}

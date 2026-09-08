@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { Link2 } from 'lucide-react'
 import type { MouseEvent, ReactNode } from 'react'
 import { DOCS_HEADING_LINK_TEXT_CLASS } from '@/lib/docs/prose-link'
@@ -30,7 +31,7 @@ export function DocsHeadingLink({
   return (
     <span className="inline-flex max-w-full items-center gap-2">
       <a
-        href={`#${headingId}`}
+        href={assetUrl(`#${headingId}`)}
         className={cn(
           DOCS_HEADING_LINK_TEXT_CLASS,
           'focus:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',

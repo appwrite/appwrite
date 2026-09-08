@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import { Search, X } from 'lucide-react'
 import type {
@@ -157,7 +158,7 @@ function SidebarLinks({
           return (
             <a
               key={link.id}
-              href={link.href}
+              href={assetUrl(link.href)}
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener noreferrer' : undefined}
               className={className}

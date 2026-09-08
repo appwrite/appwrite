@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
@@ -5,9 +6,9 @@ import { Syn } from '@/components/pages/home/product-bento/MockSyntax'
 import { useT } from '@/lib/i18n/translate'
 
 const FRAMEWORKS = [
-  { id: 'nextjs', label: 'Next.js', icon: '/icons/nextjs.svg' },
-  { id: 'nuxt', label: 'Nuxt', icon: '/icons/nuxt.svg' },
-  { id: 'svelte', label: 'SvelteKit', icon: '/icons/svelte.svg' },
+  { id: 'nextjs', label: 'Next.js', icon: assetUrl('/icons/nextjs.svg') },
+  { id: 'nuxt', label: 'Nuxt', icon: assetUrl('/icons/nuxt.svg') },
+  { id: 'svelte', label: 'SvelteKit', icon: assetUrl('/icons/svelte.svg') },
 ] as const
 
 export function AuthSsrVisual() {
@@ -21,7 +22,7 @@ export function AuthSsrVisual() {
               key={framework.id}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 px-2.5 py-1.5"
             >
-              <ProductFeaturePublicIcon src={framework.icon} className="size-3.5" />
+              <ProductFeaturePublicIcon src={assetUrl(framework.icon)} className="size-3.5" />
               <span className="text-[11px] font-medium text-foreground">{framework.label}</span>
             </div>
           ))}

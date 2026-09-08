@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, type ComponentType, useEffect } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import {
@@ -297,7 +298,7 @@ function DocsGlobalNavItem({
 
   const link = external ? (
     <a
-      href={resolvedHref}
+      href={assetUrl(resolvedHref)}
       target="_blank"
       rel="noopener noreferrer"
       onClick={onNavigate}

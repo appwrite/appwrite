@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState, useEffect, useCallback, type CSSProperties, type SyntheticEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -498,7 +499,7 @@ export function FileInspectorPanel({
                   controls
                   playsInline
                   preload="auto"
-                  src={videoSourceUrl}
+                  src={assetUrl(videoSourceUrl)}
                   aria-label={`${t('Video preview:')} ${file.name}`}
                   onLoadedMetadata={onVideoLoadedMetadata}
                   onLoadedData={onVideoLoadedData}
@@ -519,7 +520,7 @@ export function FileInspectorPanel({
               )}
             >
               <img
-                src={previewUrl}
+                src={assetUrl(previewUrl)}
                 alt={file.name}
                 decoding="async"
                 onLoad={(e) => {

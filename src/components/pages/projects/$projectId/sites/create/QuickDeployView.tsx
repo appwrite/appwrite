@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Quick Deploy View Component
  *
@@ -287,7 +288,7 @@ export function QuickDeployView({
               className="w-full h-8 text-[12px]"
               asChild
             >
-              <a href={repoUrl} target="_blank" rel="noopener noreferrer">
+              <a href={assetUrl(repoUrl)} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="me-1.5 h-3.5 w-3.5" />
                 {t('View on GitHub')}
               </a>
@@ -387,7 +388,7 @@ export function QuickDeployView({
             </p>
             {repoUrl && (
               <a
-                href={repoUrl}
+                href={assetUrl(repoUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[11px] text-muted-foreground hover:text-foreground"

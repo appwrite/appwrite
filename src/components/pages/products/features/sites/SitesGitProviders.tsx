@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -8,13 +9,13 @@ const GIT_PROVIDERS: {
   icon: string
   comingSoon?: boolean
 }[] = [
-  { id: 'github', name: 'GitHub', icon: '/icons/github.svg' },
-  { id: 'origin', name: 'Origin', icon: '/icons/origin.svg' },
-  { id: 'gitlab', name: 'GitLab', icon: '/icons/gitlab.svg', comingSoon: true },
-  { id: 'gitea', name: 'Gitea', icon: '/icons/gitea.svg', comingSoon: true },
-  { id: 'forgejo', name: 'Forgejo', icon: '/icons/forgejo.svg', comingSoon: true },
-  { id: 'gogs', name: 'Gogs', icon: '/icons/gogs.svg', comingSoon: true },
-  { id: 'bitbucket', name: 'Bitbucket', icon: '/icons/bitbucket.svg', comingSoon: true },
+  { id: 'github', name: 'GitHub', icon: assetUrl('/icons/github.svg') },
+  { id: 'origin', name: 'Origin', icon: assetUrl('/icons/origin.svg') },
+  { id: 'gitlab', name: 'GitLab', icon: assetUrl('/icons/gitlab.svg'), comingSoon: true },
+  { id: 'gitea', name: 'Gitea', icon: assetUrl('/icons/gitea.svg'), comingSoon: true },
+  { id: 'forgejo', name: 'Forgejo', icon: assetUrl('/icons/forgejo.svg'), comingSoon: true },
+  { id: 'gogs', name: 'Gogs', icon: assetUrl('/icons/gogs.svg'), comingSoon: true },
+  { id: 'bitbucket', name: 'Bitbucket', icon: assetUrl('/icons/bitbucket.svg'), comingSoon: true },
 ]
 
 type SitesGitProvidersProps = {
@@ -39,7 +40,7 @@ export function SitesGitProviders({ className }: SitesGitProvidersProps) {
                 : 'bg-background/80 text-foreground',
             )}
           >
-            <ProductFeaturePublicIcon src={provider.icon} inactive={provider.comingSoon} />
+            <ProductFeaturePublicIcon src={assetUrl(provider.icon)} inactive={provider.comingSoon} />
             {provider.name}
           </span>
         ))}

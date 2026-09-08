@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Connect to your project – simplified modal for project credentials and SDK setup.
  * Adapted from Supabase-style connect flow; tailored to Appwrite (endpoint, project ID, API keys).
@@ -952,7 +953,7 @@ export function ConnectProject({
                       <ExternalLink className="h-3.5 w-3.5" />
                     </DocsRouteLink>
                     <a
-                      href={APPWRITE_AGENT_SKILLS_REPO}
+                      href={assetUrl(APPWRITE_AGENT_SKILLS_REPO)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 link-neutral text-[13px]"

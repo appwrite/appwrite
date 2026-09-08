@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState } from 'react'
 import { Flag } from '@appwrite.io/console'
 import { ChevronRight, Globe } from 'lucide-react'
@@ -170,7 +171,7 @@ function CountryFlagIcon({ countryCode }: { countryCode: string }) {
   return (
     <div className={breakdownLeadingIconFrameClass} aria-hidden>
       <img
-        src={flagUrl}
+        src={assetUrl(flagUrl)}
         alt=""
         className="h-full w-full object-cover"
         onError={() => setFailed(true)}

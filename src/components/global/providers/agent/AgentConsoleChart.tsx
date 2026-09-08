@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
@@ -215,7 +216,7 @@ export function ConsoleChartView({
           {href ? (
             openInNewTab ? (
               <a
-                href={buildConsoleUrl(href)}
+                href={assetUrl(buildConsoleUrl(href))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 text-[12px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"

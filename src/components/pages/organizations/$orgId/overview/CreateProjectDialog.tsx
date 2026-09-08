@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -287,7 +288,7 @@ export function CreateProjectDialog({
                                 <div className="flex items-center gap-2 w-full">
                                   {flagUrl ? (
                                     <img
-                                      src={flagUrl}
+                                      src={assetUrl(flagUrl)}
                                       alt={`${regionName} flag`}
                                       className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
                                       onError={(e) => {
@@ -342,7 +343,7 @@ export function CreateProjectDialog({
                               <div className="flex items-center gap-2 w-full">
                                 {flagUrl ? (
                                   <img
-                                    src={flagUrl}
+                                    src={assetUrl(flagUrl)}
                                     alt={`${regionName} flag`}
                                     className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
                                     onError={(e) => {

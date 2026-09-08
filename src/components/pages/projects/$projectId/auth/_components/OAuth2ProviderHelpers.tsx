@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import {
   Check,
@@ -170,11 +171,11 @@ export function OAuth2ProviderHelpers({
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
               <img
-                src={iconPath}
+                src={assetUrl(iconPath)}
                 alt=""
                 className={cn('h-5 w-5', PUBLIC_ICON_MUTED_CLASSES)}
                 onError={(e) => {
-                  e.currentTarget.src = '/icons/empty.svg'
+                  e.currentTarget.src = assetUrl('/icons/empty.svg')
                 }}
               />
             </div>

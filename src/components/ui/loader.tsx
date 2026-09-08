@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { ExternalLink, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
@@ -87,7 +88,7 @@ export function FullscreenLoader({
               const Icon = getStatusIcon(statusBanner.state)
               return (
                 <a
-                  href={statusBanner.href}
+                  href={assetUrl(statusBanner.href)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(

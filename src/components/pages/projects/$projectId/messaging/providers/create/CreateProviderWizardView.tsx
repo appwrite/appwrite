@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Fullscreen create-provider wizard for messaging.
  * Stage 1: pick a provider (Email / SMS / Push).
@@ -652,7 +653,7 @@ function ProviderCard({
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {provider.icon ? (
           <img
-            src={`/icons/${provider.icon}`}
+            src={assetUrl(`/icons/${provider.icon}`)}
             alt={provider.name}
             className={cn('h-5 w-5', PUBLIC_ICON_MUTED_CLASSES)}
           />

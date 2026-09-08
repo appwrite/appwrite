@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
@@ -91,7 +92,7 @@ function ThreadMarkdownLink({
   const external = isExternalLink(safeHref)
   return (
     <a
-      href={safeHref}
+      href={assetUrl(safeHref)}
       {...props}
       rel="nofollow ugc noopener noreferrer"
       {...(external ? { target: '_blank' } : {})}
@@ -128,7 +129,7 @@ export function ThreadMarkdown({
             if (isDiscordEmojiImageUrl(src)) {
               return (
                 <img
-                  src={src}
+                  src={assetUrl(src)}
                   alt={alt ?? ''}
                   className="inline-block h-5 w-5 align-text-bottom"
                   loading="lazy"

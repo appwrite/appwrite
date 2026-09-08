@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Mail } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useT } from '@/lib/i18n/translate'
@@ -45,7 +46,7 @@ export function MarketplaceAppContacts({
           return isEmail ? (
             <a
               key={contact}
-              href={`mailto:${contact}`}
+              href={assetUrl(`mailto:${contact}`)}
               className={`${cardClass} transition-colors hover:border-foreground/20 hover:bg-accent/40`}
             >
               {body}

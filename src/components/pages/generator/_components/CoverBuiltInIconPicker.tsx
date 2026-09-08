@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { CoverIconPreview } from '@/components/pages/generator/_components/CoverIconPreview'
@@ -78,7 +79,7 @@ function IconPickerGrid({
                 : 'border-transparent hover:border-border hover:bg-accent/50',
             )}
           >
-            <CoverIconPreview src={icon.path} colorMode="app" size={32} />
+            <CoverIconPreview src={assetUrl(icon.path)} colorMode="app" size={32} />
           </button>
         )
       })}
@@ -126,7 +127,7 @@ function LucideIconPickerGrid({
                 : 'border-transparent hover:border-border hover:bg-accent/50',
             )}
           >
-            <CoverIconPreview src={value} colorMode="app" size={32} />
+            <CoverIconPreview src={assetUrl(value)} colorMode="app" size={32} />
           </button>
         )
       })}
@@ -219,7 +220,7 @@ export function CoverBuiltInIconPicker({
 
       <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 p-3">
         {selectedPath && !isCustomImage ? (
-          <CoverIconPreview src={selectedPath} colorMode="app" size={40} />
+          <CoverIconPreview src={assetUrl(selectedPath)} colorMode="app" size={40} />
         ) : (
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-background text-[11px] text-muted-foreground">
             None

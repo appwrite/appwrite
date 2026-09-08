@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState, type RefObject } from 'react'
 import { docsTocLinkClassName } from '@/lib/docs/nav-styles'
 import { DOCS_TOC_SECTION_TITLE_CLASS } from '@/lib/docs/prose-typography'
@@ -79,7 +80,7 @@ export function DocsPreviewInlineToc({
           return (
             <li key={item.id} className="min-w-0">
               <a
-                href={`#${item.id}`}
+                href={assetUrl(`#${item.id}`)}
                 title={label}
                 onClick={(event) => handleTocClick(event, item.id)}
                 className={cn(

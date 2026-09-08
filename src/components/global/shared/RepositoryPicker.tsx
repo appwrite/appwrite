@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Shared repository picker for connecting to a Git repository.
  * Used in site creation wizard, site settings, and function settings
@@ -273,7 +274,7 @@ export function RepositoryPicker({
         <div className="flex flex-wrap items-center justify-center gap-2">
           {vcsOAuthProviders.map((provider) => (
             <Button key={provider.id} size="sm" variant="secondary" asChild>
-              <a href={vcsAuthUrl(provider.id)}>
+              <a href={assetUrl(vcsAuthUrl(provider.id))}>
                 <provider.Icon className="me-1.5 h-3.5 w-3.5" />
                 {t(`Connect ${provider.label}`)}
               </a>
@@ -351,7 +352,7 @@ export function RepositoryPicker({
                   {vcsOAuthProviders.map((p) => (
                     <a
                       key={p.id}
-                      href={vcsAuthUrl(p.id)}
+                      href={assetUrl(vcsAuthUrl(p.id))}
                       className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                     >
                       <p.Icon className="h-3 w-3" />
@@ -571,7 +572,7 @@ export function RepositoryPicker({
                 <p className="text-[12px] text-muted-foreground">
                   {t("Can't find a repository?")}{' '}
                   <a
-                    href={vcsAuthUrl(knownProvider.id, 'update')}
+                    href={assetUrl(vcsAuthUrl(knownProvider.id, 'update'))}
                     className="link-neutral"
                   >
                     {t(`Update ${knownProvider.label} permissions`)}

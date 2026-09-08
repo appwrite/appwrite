@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { useT } from '@/lib/i18n/translate'
@@ -33,7 +34,7 @@ export function MarketplaceAppImages({
       {resolved.map((src, index) => (
         <img
           key={`${src}-${index}`}
-          src={src}
+          src={assetUrl(src)}
           alt={t('Screenshot {number} of {name}')
             .replace('{number}', String(index + 1))
             .replace('{name}', appName)}

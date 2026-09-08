@@ -1,3 +1,4 @@
+import { assetUrl, assetCss } from '@/lib/asset-url'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +22,7 @@ type Entity = {
   vy?: number
 }
 
-const APPWRITE_LOGO_SRC = '/logo.svg'
+const APPWRITE_LOGO_SRC = assetUrl('/logo.svg')
 
 const LIGHTNING_SVG = encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 11 14 9 22 19 10 11 10 13 2"/></svg>`,
@@ -388,8 +389,8 @@ export function LightningCollectorGame({
                 bottom: GROUND_HEIGHT + entity.y,
                 backgroundImage:
                   entity.type === 'hazard'
-                    ? `url("data:image/svg+xml;utf8,${LIGHTNING_SVG}")`
-                    : `url("${APPWRITE_LOGO_SRC}")`,
+                    ? assetCss(`url("data:image/svg+xml;utf8,${LIGHTNING_SVG}")`)
+                    : assetCss(`url("${APPWRITE_LOGO_SRC}")`),
                 backgroundRepeat: 'no-repeat',
                 backgroundSize: 'contain',
                 opacity: entity.type === 'hazard' ? 0.95 : 0.9,

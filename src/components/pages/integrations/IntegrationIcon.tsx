@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Puzzle } from 'lucide-react'
 import { getIntegrationIconPath } from '@/lib/integrations/icons'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -45,7 +46,7 @@ export function IntegrationIcon({
         )}
       >
         <img
-          src={iconPath}
+          src={assetUrl(iconPath)}
           alt={label}
           className={cn(iconClass, PUBLIC_ICON_MUTED_CLASSES)}
           loading="lazy"

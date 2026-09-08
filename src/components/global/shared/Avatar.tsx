@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Ghost } from 'lucide-react'
 
@@ -198,7 +199,7 @@ export function PhotoAvatar({
       />
       <img
         ref={imageRef}
-        src={src}
+        src={assetUrl(src)}
         alt=""
         width={pixels}
         height={pixels}
@@ -253,7 +254,7 @@ export function EmailAvatar({
 
   return (
     <img
-      src={src}
+      src={assetUrl(src)}
       alt=""
       width={pixels}
       height={pixels}

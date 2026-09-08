@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -221,7 +222,7 @@ function ShareActions({
             </button>
           ) : null}
           <a
-            href={twitterShareHref}
+            href={assetUrl(twitterShareHref)}
             target="_blank"
             rel="noopener noreferrer"
             className={shareMenuItemClass}
@@ -231,7 +232,7 @@ function ShareActions({
             Share on X
           </a>
           <a
-            href={linkedInShareHref}
+            href={assetUrl(linkedInShareHref)}
             target="_blank"
             rel="noopener noreferrer"
             className={shareMenuItemClass}

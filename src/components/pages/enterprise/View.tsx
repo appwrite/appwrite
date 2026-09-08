@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { Check } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -173,7 +174,7 @@ export function View() {
                 className="flex min-h-14 items-center justify-center rounded-lg border border-border bg-card/45 px-3 py-3"
               >
                 <TrustedByLogo
-                  src={logo.src}
+                  src={assetUrl(logo.src)}
                   alt={logo.alt}
                   width={logo.width}
                   height={logo.height}

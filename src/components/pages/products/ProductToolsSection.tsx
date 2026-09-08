@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { ComponentType, ReactNode } from 'react'
 import {
   Braces,
@@ -43,7 +44,7 @@ function ToolsTileLink({
 }) {
   return (
     <a
-      href={href}
+      href={assetUrl(href)}
       className={cn(
         'group block h-full p-4 transition-colors hover:bg-accent/15 sm:p-5',
         className,

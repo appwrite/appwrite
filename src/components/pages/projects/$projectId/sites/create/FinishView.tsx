@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 /**
  * Finish View Component
  *
@@ -227,7 +228,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           {screenshotUrl ? (
             <div className="aspect-video w-full overflow-hidden bg-muted">
               <img
-                src={screenshotUrl}
+                src={assetUrl(screenshotUrl)}
                 alt={`${site.name} ${t('preview')}`}
                 className="h-full w-full object-cover object-top"
               />
@@ -252,7 +253,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
                   <CopyableId id={site.$id} size="xs" />
                   {siteUrl && (
                     <a
-                      href={siteUrl}
+                      href={assetUrl(siteUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 flex items-center gap-1.5 link-neutral text-[12px]"
@@ -269,7 +270,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
               </div>
               {siteUrl && (
                 <Button asChild>
-                  <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={assetUrl(siteUrl)} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="me-1.5 h-4 w-4" />
                     {t('Visit site')}
                   </a>
@@ -399,7 +400,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           {qrImageUrl ? (
             <div className="p-4 bg-white rounded-lg">
               <img
-                src={qrImageUrl}
+                src={assetUrl(qrImageUrl)}
                 alt={t('QR code to open site on mobile')}
                 className="h-48 w-48 rounded"
               />

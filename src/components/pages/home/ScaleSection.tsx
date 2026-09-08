@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useT } from '@/lib/i18n/translate'
 import { GITHUB_STARS_THOUSANDS } from '@/lib/marketing/social-stats'
@@ -9,7 +10,7 @@ const SCALE_QUOTE = {
   name: 'Ryan O\u2019Connor',
   title: 'Founder',
   company: 'K-Collect',
-  avatar: '/images/testimonials/ryan-oconner-testimonial.avif',
+  avatar: assetUrl('/images/testimonials/ryan-oconner-testimonial.avif'),
 } as const
 
 function ScaleQuoteBelowChart() {
@@ -28,7 +29,7 @@ function ScaleQuoteBelowChart() {
       </blockquote>
       <figcaption className="mt-7 flex items-center justify-center gap-2.5 sm:mt-8">
         <Avatar className="size-8">
-          <AvatarImage src={SCALE_QUOTE.avatar} alt="" />
+          <AvatarImage src={assetUrl(SCALE_QUOTE.avatar)} alt="" />
           <AvatarFallback className="text-xs">RO</AvatarFallback>
         </Avatar>
         <p className="text-start text-sm leading-snug">

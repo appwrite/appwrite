@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -25,7 +26,7 @@ const CHAT_MESSAGES: ChatMessage[] = [
     id: 'walter-1',
     name: "Walter O'Brien",
     time: '8:32 AM',
-    avatar: '/images/community/avatars/walter.avif',
+    avatar: assetUrl('/images/community/avatars/walter.avif'),
     fallback: 'WO',
     content:
       'Hello devs! I am getting a CORS error when sending a request to the backend. Can you help me?',
@@ -34,7 +35,7 @@ const CHAT_MESSAGES: ChatMessage[] = [
     id: 'steven-1',
     name: 'Steven',
     time: '8:38 AM',
-    avatar: '/images/avatars/steven.avif',
+    avatar: assetUrl('/images/avatars/steven.avif'),
     fallback: 'S',
     isReply: true,
     content: (
@@ -54,7 +55,7 @@ const CHAT_MESSAGES: ChatMessage[] = [
     id: 'walter-2',
     name: "Walter O'Brien",
     time: '9:05 AM',
-    avatar: '/images/community/avatars/walter.avif',
+    avatar: assetUrl('/images/community/avatars/walter.avif'),
     fallback: 'WO',
     content: 'Yes!',
   },
@@ -62,7 +63,7 @@ const CHAT_MESSAGES: ChatMessage[] = [
     id: 'steven-2',
     name: 'Steven',
     time: '9:08 AM',
-    avatar: '/images/avatars/steven.avif',
+    avatar: assetUrl('/images/avatars/steven.avif'),
     fallback: 'S',
     isReply: true,
     content: (
@@ -105,7 +106,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       >
         <div className="flex gap-3">
           <Avatar className="size-10 shrink-0 ring-1 ring-black/[0.06] dark:ring-transparent">
-            <AvatarImage src={message.avatar} alt="" />
+            <AvatarImage src={assetUrl(message.avatar)} alt="" />
             <AvatarFallback className="text-[11px]">{message.fallback}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

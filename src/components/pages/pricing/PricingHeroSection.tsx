@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { ArrowRight } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
@@ -112,7 +113,7 @@ export function StackConsolidationSection() {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button variant="outline" className="h-10 text-[13px]" asChild>
             <a
-              href={`#${PRICING_COMPARE_ANCHOR_ID}`}
+              href={assetUrl(`#${PRICING_COMPARE_ANCHOR_ID}`)}
               onClick={(event: MouseEvent<HTMLAnchorElement>) => {
                 event.preventDefault()
                 scrollToComparisonSection(PRICING_COMPARE_ANCHOR_ID)

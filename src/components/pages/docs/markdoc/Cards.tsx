@@ -1,5 +1,6 @@
 'use client'
 
+import { assetUrl } from '@/lib/asset-url'
 import { ArrowRight, type LucideIcon } from 'lucide-react'
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -118,7 +119,7 @@ function CardItemIcon({ resolved }: { resolved: ResolvedCardIcon }) {
     <span className="mb-3 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
       {resolved.type === 'image' ? (
         <img
-          src={resolved.src}
+          src={assetUrl(resolved.src)}
           alt=""
           className={cn(MARKDOC_BRAND_ICON_CLASS, PUBLIC_ICON_MUTED_CLASSES)}
         />
@@ -199,7 +200,7 @@ export function CardsItem({
   if (href.startsWith('http') || href.startsWith('//')) {
     return (
       <a
-        href={href}
+        href={assetUrl(href)}
         target="_blank"
         rel="noopener noreferrer"
         className={CARD_LINK_CLASS}

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -245,7 +246,7 @@ export function SupportWizardFullscreen() {
           </p>
           <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
             <a
-              href={CONTACT_SALES_URL}
+              href={assetUrl(CONTACT_SALES_URL)}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -283,7 +284,7 @@ export function SupportWizardFullscreen() {
         <div className="px-6 py-4">
           <div className="grid grid-cols-2 gap-2">
             <a
-              href="https://status.appwrite.online"
+              href={assetUrl("https://status.appwrite.online")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
@@ -298,7 +299,7 @@ export function SupportWizardFullscreen() {
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
             </DocsRouteLink>
             <a
-              href={SUPPORT_DISCORD_URL}
+              href={assetUrl(SUPPORT_DISCORD_URL)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
@@ -315,7 +316,7 @@ export function SupportWizardFullscreen() {
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
             </a>
             <a
-              href={SUPPORT_GITHUB_ISSUES_URL}
+              href={assetUrl(SUPPORT_GITHUB_ISSUES_URL)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
@@ -401,7 +402,7 @@ export function SupportWizardFullscreen() {
                 <p className="text-[13px] text-muted-foreground">
                   {t('Need 24/7 or enterprise support?')}{' '}
                   <a
-                    href={CONTACT_SALES_URL}
+                    href={assetUrl(CONTACT_SALES_URL)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-foreground underline hover:no-underline"
@@ -453,12 +454,12 @@ export function SupportWizardFullscreen() {
                     {t(
                       "We're having a temporary issue with the support portal, and our engineering team are aware. In the meantime, please reach out at",
                     )}{' '}
-                    <a href={`mailto:${APPWRITE_SUPPORT_EMAIL}`}>
+                    <a href={assetUrl(`mailto:${APPWRITE_SUPPORT_EMAIL}`)}>
                       {APPWRITE_SUPPORT_EMAIL}
                     </a>
                     {t(', on')}{' '}
                     <a
-                      href={SUPPORT_DISCORD_URL}
+                      href={assetUrl(SUPPORT_DISCORD_URL)}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -466,7 +467,7 @@ export function SupportWizardFullscreen() {
                     </a>
                     {t(', or on')}{' '}
                     <a
-                      href={SUPPORT_GITHUB_ISSUES_URL}
+                      href={assetUrl(SUPPORT_GITHUB_ISSUES_URL)}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

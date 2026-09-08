@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import {
@@ -54,20 +55,20 @@ import { getEnglishCatalog, useI18n } from '@/lib/i18n'
 const HOME_COPY = getEnglishCatalog().website.home
 
 const frameworkTools = [
-  { name: HOME_COPY.frameworkTools.react, icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
-  { name: HOME_COPY.frameworkTools.tanstackStart, icon: '/icons/tanstack.svg', href: '/docs/quick-starts/tanstack-start' },
-  { name: HOME_COPY.frameworkTools.nextjs, icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
-  { name: HOME_COPY.frameworkTools.vue, icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
-  { name: HOME_COPY.frameworkTools.sveltekit, icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
-  { name: HOME_COPY.frameworkTools.android, icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
-  { name: HOME_COPY.frameworkTools.ios, icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
-  { name: HOME_COPY.frameworkTools.flutter, icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
-  { name: HOME_COPY.frameworkTools.claude, icon: '/icons/claude.svg', href: '/docs/tooling/mcp/claude-code' },
-  { name: HOME_COPY.frameworkTools.chatgpt, icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/codex' },
-  { name: HOME_COPY.frameworkTools.cursor, icon: '/icons/cursor-ai.svg', href: '/docs/tooling/mcp/cursor' },
-  { name: HOME_COPY.frameworkTools.lovable, icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
-  { name: HOME_COPY.frameworkTools.opencode, icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
-  { name: HOME_COPY.frameworkTools.bun, icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
+  { name: HOME_COPY.frameworkTools.react, icon: assetUrl('/icons/react.svg'), href: '/docs/quick-starts/react' },
+  { name: HOME_COPY.frameworkTools.tanstackStart, icon: assetUrl('/icons/tanstack.svg'), href: '/docs/quick-starts/tanstack-start' },
+  { name: HOME_COPY.frameworkTools.nextjs, icon: assetUrl('/icons/nextjs.svg'), href: '/docs/quick-starts/nextjs' },
+  { name: HOME_COPY.frameworkTools.vue, icon: assetUrl('/icons/vue.svg'), href: '/docs/quick-starts/vue' },
+  { name: HOME_COPY.frameworkTools.sveltekit, icon: assetUrl('/icons/svelte.svg'), href: '/docs/quick-starts/sveltekit' },
+  { name: HOME_COPY.frameworkTools.android, icon: assetUrl('/icons/android.svg'), href: '/docs/quick-starts/android' },
+  { name: HOME_COPY.frameworkTools.ios, icon: assetUrl('/icons/apple.svg'), href: '/docs/quick-starts/apple' },
+  { name: HOME_COPY.frameworkTools.flutter, icon: assetUrl('/icons/flutter.svg'), href: '/docs/quick-starts/flutter' },
+  { name: HOME_COPY.frameworkTools.claude, icon: assetUrl('/icons/claude.svg'), href: '/docs/tooling/mcp/claude-code' },
+  { name: HOME_COPY.frameworkTools.chatgpt, icon: assetUrl('/icons/chatgpt.svg'), href: '/docs/tooling/ai/agents/codex' },
+  { name: HOME_COPY.frameworkTools.cursor, icon: assetUrl('/icons/cursor-ai.svg'), href: '/docs/tooling/mcp/cursor' },
+  { name: HOME_COPY.frameworkTools.lovable, icon: assetUrl('/icons/lovable.svg'), href: '/docs/tooling/ai/vibe-coding/lovable' },
+  { name: HOME_COPY.frameworkTools.opencode, icon: assetUrl('/icons/opencode.svg'), href: '/docs/tooling/mcp/opencode' },
+  { name: HOME_COPY.frameworkTools.bun, icon: assetUrl('/icons/bun.svg'), href: '/docs/products/functions/runtimes' },
 ] as const
 
 type ProductBentoProductId = Extract<
@@ -225,8 +226,8 @@ function getSecurityItems(homeCopy: HomeCopy) {
 
 /** Bump when replacing homepage hero dashboard screenshots so caches refetch. */
 const HOME_HERO_IMAGE_CACHE_BUST = '20260729'
-const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
-const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
+const HOME_HERO_LIGHT_SRC = assetUrl(`/images/heroes/console-app-light.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`)
+const HOME_HERO_DARK_SRC = assetUrl(`/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`)
 
 export const Route = createFileRoute('/_marketing/home')({
   staticData: {
@@ -360,7 +361,7 @@ function HomePage() {
                 </div>
                 <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
                   <img
-                    src={HOME_HERO_LIGHT_SRC}
+                    src={assetUrl(HOME_HERO_LIGHT_SRC)}
                     alt={homeCopy.heroImageAlt}
                     width={1920}
                     height={1234}
@@ -369,7 +370,7 @@ function HomePage() {
                     className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
                   />
                   <img
-                    src={HOME_HERO_DARK_SRC}
+                    src={assetUrl(HOME_HERO_DARK_SRC)}
                     alt={homeCopy.heroImageAlt}
                     width={1920}
                     height={1234}
@@ -401,7 +402,7 @@ function HomePage() {
                   className="group flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110"
                 >
                   <img
-                    src={tool.icon}
+                    src={assetUrl(tool.icon)}
                     alt=""
                     className="size-8 object-contain opacity-45 transition-opacity duration-200 group-hover:opacity-100 dark:opacity-40 dark:group-hover:opacity-100"
                   />

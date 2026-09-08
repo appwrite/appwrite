@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import {
   PerspectiveScreenshotCard,
@@ -94,7 +95,7 @@ export function CoverScreenshotAngledPreview({
             contentScale={data.displayScale}
           >
             <PerspectiveScreenshotCard
-              src={data.screenshot}
+              src={assetUrl(data.screenshot)}
               width={cardWidth}
               focusX={data.focusX}
               focusY={data.focusY}

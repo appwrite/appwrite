@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import type { LaunchEventDailyPrize, LaunchEventOnlineUser } from '@/lib/init/types'
 import { buildInitSpinningGiveawayRaffleActivity } from '@/lib/init/init-presence-activity'
@@ -194,7 +195,7 @@ export function InitGiveawayRaffleBack({
             {hasPrizeImage ? (
               <div className="relative aspect-[3/2] overflow-hidden bg-muted/20">
                 <img
-                  src={prizeImageSrc}
+                  src={assetUrl(prizeImageSrc)}
                   alt={giveaway.visual?.imageAlt ?? giveaway.prizeDescription}
                   className="absolute inset-0 size-full object-cover object-center"
                 />

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,7 @@ export function View({ ticketId, imageSrc: imageSrcFromLoader }: InitTicketShare
           style={{ aspectRatio: INIT_TICKET_ASPECT_RATIO }}
         >
           <img
-            src={imageSrc}
+            src={assetUrl(imageSrc)}
             alt="Init ticket"
             width={INIT_TICKET_IMAGE_WIDTH}
             height={INIT_TICKET_IMAGE_HEIGHT}

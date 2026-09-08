@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Package } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -41,7 +42,7 @@ export function PackageManagerIcon({
   if (iconFile) {
     return (
       <img
-        src={`/icons/${iconFile}`}
+        src={assetUrl(`/icons/${iconFile}`)}
         alt={packageManager}
         className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { CSSProperties } from 'react'
 import { CoverIconPreview } from '@/components/pages/generator/_components/CoverIconPreview'
 import { getCoverScreenshotGlassColors } from '@/lib/cover-generator/cover-screenshot-frame'
@@ -40,7 +41,7 @@ export function CoverIntegrationGlassCard({
     >
       {src ? (
         <div style={{ margin: padding }}>
-          <CoverIconPreview src={src} themeId={themeId} size={iconSize} />
+          <CoverIconPreview src={assetUrl(src)} themeId={themeId} size={iconSize} />
         </div>
       ) : (
         <div

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useRef, useState } from 'react'
 import { ID } from '@appwrite.io/console'
 import { ImageIcon, Loader2, Upload, X } from 'lucide-react'
@@ -102,7 +103,7 @@ export function AppLogoFilePicker({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         {previewUrl ? (
           <MarketplaceAppLogo
-            src={previewUrl}
+            src={assetUrl(previewUrl)}
             size="xl"
             alt={t('App logo preview')}
           />

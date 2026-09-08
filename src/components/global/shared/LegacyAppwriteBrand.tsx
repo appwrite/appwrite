@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { cn } from '@/lib/utils'
 import { LEGACY_ICON_SRC, LEGACY_LOGO_SRC } from '@/lib/legacy-theme-assets'
 
@@ -8,7 +9,7 @@ export function LegacyAppwriteIcon({
 }) {
   return (
     <img
-      src={LEGACY_ICON_SRC}
+      src={assetUrl(LEGACY_ICON_SRC)}
       alt=""
       aria-hidden
       className={cn('h-6 w-auto shrink-0', className)}
@@ -25,7 +26,7 @@ export function LegacyAppwriteLogo({
 }) {
   return (
     <img
-      src={LEGACY_LOGO_SRC}
+      src={assetUrl(LEGACY_LOGO_SRC)}
       alt={ariaLabel}
       className={cn('h-6 w-auto shrink-0', className)}
     />

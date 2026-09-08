@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState, type ComponentType } from 'react'
 import {
   Box,
@@ -867,7 +868,7 @@ function ConsoleResourceListView({
               asChild
             >
               <a
-                href={buildConsoleUrl(listHref)}
+                href={assetUrl(buildConsoleUrl(listHref))}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -999,7 +1000,7 @@ function ConsoleResourceListView({
               {' · '}
               {openInNewTab ? (
                 <a
-                  href={buildConsoleUrl(listHref)}
+                  href={assetUrl(buildConsoleUrl(listHref))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-foreground underline-offset-2 hover:underline"

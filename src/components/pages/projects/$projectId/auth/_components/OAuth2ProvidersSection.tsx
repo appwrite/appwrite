@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   useCallback,
   useEffect,
@@ -926,12 +927,12 @@ export function OAuth2ProvidersSection({
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
                 <img
-                  src={getOAuth2ProviderIconPath(row.$id)}
+                  src={assetUrl(getOAuth2ProviderIconPath(row.$id))}
                   alt=""
                   className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
                   onError={(e) => {
                     const t = e.currentTarget
-                    t.src = '/icons/empty.svg'
+                    t.src = assetUrl('/icons/empty.svg')
                   }}
                 />
               </div>

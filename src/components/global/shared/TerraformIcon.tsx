@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +46,7 @@ export function TerraformIcon({
 
   return (
     <img
-      src="/icons/terraform.svg"
+      src={assetUrl("/icons/terraform.svg")}
       alt=""
       className={cn('h-4 w-4 shrink-0', PUBLIC_ICON_MUTED_CLASSES, className)}
       aria-hidden

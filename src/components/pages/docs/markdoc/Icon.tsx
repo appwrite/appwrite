@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   MARKDOC_BRAND_ICON_CLASS,
   MARKDOC_INLINE_LUCIDE_ICON_CLASS,
@@ -24,7 +25,7 @@ export function MarkdocIcon({ icon }: { icon?: string; size?: string }) {
 
   return (
     <img
-      src={resolved.src}
+      src={assetUrl(resolved.src)}
       alt=""
       className={cn(
         'inline-block align-middle',
@@ -48,7 +49,7 @@ export function MarkdocIconImage({
 
   return (
     <img
-      src={resolvedSrc}
+      src={assetUrl(resolvedSrc)}
       alt={alt ?? ''}
       className={cn(
         'inline-block align-middle',

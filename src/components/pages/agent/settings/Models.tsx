@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { ChevronRight, Cpu, Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,7 @@ function ModelIcon({ model }: { model: AssistantModel }) {
   if (icon) {
     return (
       <img
-        src={icon}
+        src={assetUrl(icon)}
         alt=""
         className={cn('h-4 w-4 shrink-0', PUBLIC_ICON_MUTED_CLASSES)}
       />

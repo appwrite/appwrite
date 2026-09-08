@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
@@ -99,7 +100,7 @@ function RefetchSitePreview() {
       >
         <div className="flex min-w-0 items-center gap-2">
           <img
-            src="/icons/refetch.svg"
+            src={assetUrl("/icons/refetch.svg")}
             alt=""
             width={72}
             height={16}
@@ -266,10 +267,10 @@ export function SitesProductVisual() {
               aria-label={t('GitHub and Origin')}
             >
               <span className="flex size-8 items-center justify-center rounded-md bg-muted/40">
-                <ProductFeaturePublicIcon src="/icons/github.svg" />
+                <ProductFeaturePublicIcon src={assetUrl("/icons/github.svg")} />
               </span>
               <span className="flex size-8 items-center justify-center rounded-md bg-muted/40">
-                <ProductFeaturePublicIcon src="/icons/origin.svg" />
+                <ProductFeaturePublicIcon src={assetUrl("/icons/origin.svg")} />
               </span>
             </div>
             <div className="min-w-0 flex-1">
@@ -315,7 +316,7 @@ export function SitesProductVisual() {
           <PipelineRow revealDelayMs={1400}>
             <div className={cn('flex items-start gap-2.5 px-3.5 py-3', productBentoContainer.panel)}>
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted/40">
-                <img src="/icons/appwrite.svg" alt="" className="size-3.5" aria-hidden />
+                <img src={assetUrl("/icons/appwrite.svg")} alt="" className="size-3.5" aria-hidden />
               </span>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>

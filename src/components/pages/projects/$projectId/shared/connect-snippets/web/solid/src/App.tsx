@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { createResource, Show } from 'solid-js'
 import { Account } from 'appwrite'
 import { client } from './lib/appwrite'
@@ -24,9 +25,9 @@ function Home() {
           <div>
             <p>Sign in to get started.</p>
             <p>
-              <a href="/sign-in">Sign in</a>
+              <a href={assetUrl("/sign-in")}>Sign in</a>
               {' · '}
-              <a href="/sign-up">Sign up</a>
+              <a href={assetUrl("/sign-up")}>Sign up</a>
             </p>
           </div>
         }

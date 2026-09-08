@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { BLOG_COVER_ASPECT_CLASS } from '@/lib/blog/constants'
 import type { BlogAuthor } from '@/lib/blog/types'
@@ -45,7 +46,7 @@ export function BlogCover({ title, cover, className }: BlogCoverProps) {
       )}
     >
       <img
-        src={cover}
+        src={assetUrl(cover)}
         alt=""
         loading="lazy"
         decoding="async"
@@ -93,7 +94,7 @@ export function BlogAvatar({ name, avatar, className }: BlogAvatarProps) {
 
   return (
     <img
-      src={avatar}
+      src={assetUrl(avatar)}
       alt=""
       loading="lazy"
       decoding="async"

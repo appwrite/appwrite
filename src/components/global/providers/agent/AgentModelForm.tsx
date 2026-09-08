@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Cpu } from 'lucide-react'
 import { toast } from 'sonner'
@@ -85,7 +86,7 @@ function ProviderIcon({
   if (provider?.icon) {
     return (
       <img
-        src={provider.icon}
+        src={assetUrl(provider.icon)}
         alt=""
         className={cn('h-4 w-4', PUBLIC_ICON_MUTED_CLASSES, className)}
       />
@@ -112,7 +113,7 @@ function ModelIcon({
   if (icon) {
     return (
       <img
-        src={icon}
+        src={assetUrl(icon)}
         alt=""
         className={cn('h-4 w-4', PUBLIC_ICON_MUTED_CLASSES, className)}
       />

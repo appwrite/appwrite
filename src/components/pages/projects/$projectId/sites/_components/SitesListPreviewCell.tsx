@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import type { Models } from '@appwrite.io/console'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import {
@@ -45,7 +46,7 @@ export function SitesListPreviewCell({
           ) : null}
           <img
             key={screenshotKey}
-            src={screenshotUrl}
+            src={assetUrl(screenshotUrl)}
             alt={`${site.name || t('Site')} ${t('preview')}`}
             onLoad={onLoad}
             className={cn(

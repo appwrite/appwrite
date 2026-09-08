@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Gift, Globe, Link2, Plus, Trash2 } from 'lucide-react'
@@ -117,7 +118,7 @@ function ReferralCountryFlag({ flagUrl }: { flagUrl: string | null }) {
 
   return (
     <img
-      src={flagUrl}
+      src={assetUrl(flagUrl)}
       alt=""
       className="h-4 w-4 shrink-0 rounded-sm border border-border/30 object-cover shadow-sm"
       width={16}

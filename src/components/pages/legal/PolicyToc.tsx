@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { PolicySlug } from '@/lib/legal/policies'
@@ -66,7 +67,7 @@ export function PolicyToc({ items, currentPolicy, className }: PolicyTocProps) {
               {items.map((item) => (
                 <li key={item.id} className="min-w-0">
                   <a
-                    href={`#${item.id}`}
+                    href={assetUrl(`#${item.id}`)}
                     title={t(item.label)}
                     className={policySidebarLinkClassName(activeId === item.id)}
                   >

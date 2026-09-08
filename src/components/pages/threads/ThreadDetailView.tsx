@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
@@ -81,7 +82,7 @@ export function ThreadDetailView({
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <ThreadShareActions path={threadPath} title={thread.title} />
                 <Button variant="brandCta" className="shrink-0" asChild>
-                  <a href={discordLink} target="_blank" rel="noopener noreferrer">
+                  <a href={assetUrl(discordLink)} target="_blank" rel="noopener noreferrer">
                     View on Discord
                     <ExternalLink className="ms-1.5 h-4 w-4" />
                   </a>
@@ -141,7 +142,7 @@ export function ThreadDetailView({
                   Reply to this thread by joining our Discord.
                 </p>
                 <Button className="mt-4" variant="brandCta" asChild>
-                  <a href={discordLink} target="_blank" rel="noopener noreferrer">
+                  <a href={assetUrl(discordLink)} target="_blank" rel="noopener noreferrer">
                     Reply on Discord
                     <ExternalLink className="ms-1.5 h-4 w-4" />
                   </a>

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -39,7 +40,7 @@ export function DetailView({ entry }: DetailViewProps) {
 
           {entry.cover ? (
             <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card/40">
-              <img src={entry.cover} alt="" className="block w-full" loading="lazy" />
+              <img src={assetUrl(entry.cover)} alt="" className="block w-full" loading="lazy" />
             </div>
           ) : null}
 

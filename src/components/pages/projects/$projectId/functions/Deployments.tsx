@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   useState,
   useEffect,
@@ -939,7 +940,7 @@ export function View() {
                             const label = `${activeDeployment.providerRepositoryOwner}/${activeDeployment.providerRepositoryName}`
                             return repoUrl ? (
                               <a
-                                href={repoUrl}
+                                href={assetUrl(repoUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="truncate link-neutral"
@@ -1082,7 +1083,7 @@ export function View() {
                         {activeDomains.map((rule) => (
                           <a
                             key={rule.$id}
-                            href={domainUrl(rule.domain)}
+                            href={assetUrl(domainUrl(rule.domain))}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1512,7 +1513,7 @@ export function View() {
                                         {vcsProvider.icon}
                                         {repoUrl ? (
                                           <a
-                                            href={repoUrl}
+                                            href={assetUrl(repoUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral truncate"
@@ -1589,7 +1590,7 @@ export function View() {
                                       <div className="text-[12px] text-foreground line-clamp-1 font-mono">
                                         {commitUrl ? (
                                           <a
-                                            href={commitUrl}
+                                            href={assetUrl(commitUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral"
@@ -1642,7 +1643,7 @@ export function View() {
                                                   {` ${t('by')} `}
                                                   {commitAuthorUrl ? (
                                                     <a
-                                                      href={commitAuthorUrl}
+                                                      href={assetUrl(commitAuthorUrl)}
                                                       target="_blank"
                                                       rel="noopener noreferrer"
                                                       className="link-neutral"
