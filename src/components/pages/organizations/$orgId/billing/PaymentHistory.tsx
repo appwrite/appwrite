@@ -283,10 +283,9 @@ export function PaymentHistory() {
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    const url = sdk.forConsole.getInvoiceUrl({
+                    const url = sdk.forConsole.organizations.getInvoiceView({
                       organizationId: orgId,
                       invoiceId,
-                      action: 'view',
                     })
 
                     window.open(url, '_blank', 'noopener,noreferrer')
@@ -301,10 +300,9 @@ export function PaymentHistory() {
                 onDownloadInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    const url = sdk.forConsole.getInvoiceUrl({
+                    const url = sdk.forConsole.organizations.getInvoiceDownload({
                       organizationId: orgId,
                       invoiceId,
-                      action: 'download',
                     })
 
                     const pdfResponse = await fetch(url, {

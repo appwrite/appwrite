@@ -265,26 +265,6 @@ function createConsoleSdkRaw(client: Client) {
       return new Organization(organizationClient)
     },
     organizations: new Organizations(client),
-    // The pinned SDK sends invoice API requests instead of returning URLs.
-    // Keep navigation synchronous and use the active client's auth query values.
-    getInvoiceUrl({
-      organizationId,
-      invoiceId,
-      action,
-    }: {
-      organizationId: string
-      invoiceId: string
-      action: 'view' | 'download'
-    }): string {
-      const url = new URL(
-        `${client.config.endpoint}/organizations/${encodeURIComponent(organizationId)}/invoices/${encodeURIComponent(invoiceId)}/${action}`,
-      )
-      url.searchParams.set('project', client.config.project)
-      if (client.config.impersonateuserid) {
-        url.searchParams.set('impersonateuserid', client.config.impersonateuserid)
-      }
-      return url.toString()
-    },
     presences: new Presences(client),
     usage: new Usage(client),
     webhooks: new Webhooks(client),
