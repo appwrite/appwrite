@@ -78,6 +78,10 @@ class Create extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        if (false === $user->getAttribute('status')) { // Account is blocked
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
