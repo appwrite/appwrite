@@ -184,12 +184,6 @@ try {
 }
 ```
 
-Run the query:
-
-```sh
-npx tsx src/unread.ts
-```
-
 It returns _Kindred_, _The Dispossessed_, and _The Left Hand of Darkness_, ordered by title. Drizzle infers the result's `title` and `author` types from the schema.
 
 # Add a column through a migration {% #second-migration %}
