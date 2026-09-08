@@ -52,10 +52,6 @@ export function TransferDomainInWizard({
 
   useEffect(() => {
     const raw = domainInput.trim().toLowerCase()
-    if (!raw.includes('.')) {
-      setDebouncedPriceDomain('')
-      return
-    }
     const timer = setTimeout(
       () => setDebouncedPriceDomain(raw),
       PRICE_DEBOUNCE_MS,
@@ -66,6 +62,18 @@ export function TransferDomainInWizard({
   const priceQuery = useQuery(
     domainTransferPriceQueryOptions(debouncedPriceDomain),
   )
+
+  const normalizedDomain = domainInput.trim().toLowerCase()
+  const isQuoteCurrent =
+    normalizedDomain === debouncedPriceDomain &&
+    priceQuery.data?.domain === normalizedDomain
+  const hasTransferQuote =
+    isQuoteCurrent &&
+    priceQuery.isSuccess &&
+    !priceQuery.isFetching &&
+    priceQuery.data.price != null &&
+    Number.isFinite(priceQuery.data.price) &&
+    priceQuery.data.price > 0
 
   useEffect(() => {
     if (!organization) return
@@ -147,6 +155,9 @@ export function TransferDomainInWizard({
       if (!domain || !domain.includes('.')) {
         throw new Error(t('Enter a full domain name (e.g. example.com)'))
       }
+      if (!hasTransferQuote) {
+        throw new Error(t('A valid transfer price is required to continue.'))
+      }
       if (!authCode.trim()) {
         throw new Error(t('Authorization code is required'))
       }
@@ -205,6 +216,7 @@ export function TransferDomainInWizard({
   const canStartTransfer =
     !transferMutation.isPending &&
     !isDomainLimitReached &&
+    hasTransferQuote &&
     completedPaymentMethods.length > 0 &&
     !!paymentMethodId &&
     domainInput.trim().includes('.') &&
@@ -221,10 +233,16 @@ export function TransferDomainInWizard({
       footerAlign="right"
       sidebar={
         <TransferDomainInSummary
-          quotedDomain={debouncedPriceDomain}
-          isPriceLoading={priceQuery.isFetching && !!debouncedPriceDomain}
-          priceError={!!priceQuery.isError}
-          quote={priceQuery.data}
+          quotedDomain={normalizedDomain}
+          isPriceLoading={
+            !!normalizedDomain &&
+            (normalizedDomain !== debouncedPriceDomain || priceQuery.isFetching)
+          }
+          priceError={
+            normalizedDomain === debouncedPriceDomain && priceQuery.isError
+          }
+          quote={isQuoteCurrent ? priceQuery.data : undefined}
+          onRetry={() => void priceQuery.refetch()}
         />
       }
       footer={
