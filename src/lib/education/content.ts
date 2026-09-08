@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Beaker, BookOpen, MessageCircle } from 'lucide-react'
+import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 
 export type EducationFaqItem = {
   question: string
@@ -61,7 +62,7 @@ export const educationSteps = [
     title: 'Access the Education plan',
     description:
       'Create your Appwrite account through the Education program sign up page. Once verified, the Education plan will be applied to your account.',
-    href: '/sign-up',
+    href: EDUCATION_JOIN_PATH,
     label: 'Sign up',
     external: false,
   },

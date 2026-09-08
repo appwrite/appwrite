@@ -84,6 +84,7 @@ export const ANALYTICS_ACTIONS = {
   'enterprise-compare-plans': 'Enterprise Compare Plans Clicked',
   'enterprise-form-submit': 'Enterprise Form Submit Clicked',
   'education-sign-up': 'Education Sign Up Clicked',
+  'education-connect-github': 'Education Connect GitHub Clicked',
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
