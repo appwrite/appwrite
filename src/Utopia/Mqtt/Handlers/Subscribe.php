@@ -52,6 +52,7 @@ class Subscribe extends Action
         $denied = $connection->protocol >= 5 ? V5::REASON_NOT_AUTHORIZED : V3::SUBSCRIBE_FAILURE;
 
         $granted = '';
+        $topics = [];
         while ($offset < strlen($body)) {
             [$filter, $offset] = Packet::readString($body, $offset);
             $offset += 1; // subscription options byte
@@ -68,6 +69,11 @@ class Subscribe extends Action
             $mqtt->subscribe($connection->projectId, $connection->fd, $subId ?: $filter, [], [$filter]);
             $granted .= chr(Packet::QOS_1); // granted max QoS 1
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
+
+            // TODO: if we can save directly in the same cache key only
+            $key = 'mqtt:sub:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $filter;
+            getCache()->save($key, ['subId' => $subId, 'qos' => Packet::QOS_1]);
+            $topics[] = $filter;
         }
 
         $reply(
@@ -76,5 +82,23 @@ class Subscribe extends Action
                 : V3::suback($packetId, $granted),
             false,
         );
+
+        // session replay
+        // TODO: update the ttl + bulk fetch + bulk upload to the cache to reduce the network calls
+        foreach ($topics as $topic) {
+            $lastMessageCursorKey =  'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $topic;
+            $payload = getCache()->load($lastMessageCursorKey, 3600);
+            $sequence = $payload['sequence'] ?? null;
+            var_dump($payload);
+            if ($sequence !== null) {
+                // TODO: fetch the last global message cursor then calculate the depth and send
+                $packetId = $connection->nextPacketId();
+                $publish = $connection->protocol >= 5
+                    ? V5::publish($topic, json_encode($payload), Packet::QOS_1, $packetId, dup: true)
+                    : V3::publish($topic, json_encode($payload), Packet::QOS_1, $packetId, dup: true);
+                $reply($publish, false);
+                $connection->track($packetId, $topic, $sequence);
+            }
+        }
     }
 }
