@@ -54,6 +54,7 @@ type Scenario = {
   linked?: boolean
   membershipStatus?: 403 | 409
   failPrefs?: boolean
+  pausePrefs?: Promise<void>
   identityUnavailable?: boolean
 }
 
@@ -169,6 +170,7 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
       if (request.method() === 'PATCH') {
         const body = request.postDataJSON() as { prefs: Models.Preferences }
         preferenceWrites.push(body.prefs)
+        if (scenario.pausePrefs) await scenario.pausePrefs
         if (scenario.failPrefs) return failure(500, 'general_server_error')
         if (scenario.account) scenario.account.prefs = body.prefs
         return json(200, scenario.account)
@@ -284,6 +286,44 @@ test.describe('Education enrollment (mocked API)', () => {
       ).toHaveCount(0)
     })
   }
+
+  test('setup stays pending until the Education organization opens without a confirmation step', async ({
+    page,
+  }) => {
+    let finishPreferences!: () => void
+    const pausePrefs = new Promise<void>((resolve) => {
+      finishPreferences = resolve
+    })
+    const api = await mockEducationApi(page, {
+      account: student(),
+      linked: true,
+      pausePrefs,
+    })
+    try {
+      await page.goto('/education/join')
+      await expect.poll(() => api.preferenceWrites.length).toBe(1)
+      await expect(
+        page.getByText('Setting up your Education plan organization...', {
+          exact: true,
+        }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('heading', {
+          name: 'Your Education plan organization is ready.',
+          exact: true,
+        }),
+      ).toHaveCount(0)
+      await expect(
+        page.getByRole('link', { name: 'Continue to Appwrite', exact: true }),
+      ).toHaveCount(0)
+    } finally {
+      finishPreferences()
+    }
+    await expect(page).toHaveURL(
+      (url) => url.pathname === `/organizations/${ORGANIZATION.$id}`,
+    )
+    expect(api.membershipRequests).toEqual([PROGRAM_PATH])
+  })
 
   for (const code of [403, 409] as const) {
     test(`${code} preserves the account and provides an exit`, async ({

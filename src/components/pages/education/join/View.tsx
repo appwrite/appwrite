@@ -45,7 +45,7 @@ export function View() {
 
   const [isRedirectingToGithub, setIsRedirectingToGithub] = useState(false)
   const [error, setError] = useState<EnrollmentError | null>(null)
-  const [organizationId, setOrganizationId] = useState<string | null>(null)
+  const [isOpeningOrganization, setIsOpeningOrganization] = useState(false)
   const needsEmailVerification =
     isAuthenticated && requiresConsoleEmailVerification(account)
 
@@ -64,7 +64,7 @@ export function View() {
     onSuccess: async (organization) => {
       // Organization creation is the success boundary. Preference writes and
       // navigation must never turn it into a failed enrollment or a second POST.
-      setOrganizationId(organization.$id)
+      setIsOpeningOrganization(true)
       track('Resource Created', { resource: 'education-membership' })
       addToStudentMailingList(account)
       await Promise.allSettled([
@@ -81,7 +81,10 @@ export function View() {
           replace: true,
         })
       } catch {
-        // Keep the success screen and its direct organization link available.
+        // The organization exists. Retry navigation without repeating enrollment.
+        window.location.replace(
+          `/organizations/${encodeURIComponent(organization.$id)}`,
+        )
       }
     },
     onError: (enrollError: unknown) => {
@@ -142,7 +145,7 @@ export function View() {
     }
   }
 
-  const isEnrolling = joinMutation.isPending
+  const isEnrolling = joinMutation.isPending || isOpeningOrganization
   const visibleError =
     error ??
     (identitiesQuery.isError
@@ -160,21 +163,7 @@ export function View() {
       <div className="flex min-h-full flex-col items-center p-6 md:p-10">
         <div className="my-auto w-full min-w-0 max-w-md">
           <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 p-6 md:p-8">
-            {organizationId ? (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {t('Your Education plan organization is ready.')}
-                </h1>
-                <Button className="w-full" asChild>
-                  <Link
-                    to="/organizations/$orgId"
-                    params={{ orgId: organizationId }}
-                  >
-                    {t('Continue to Appwrite')}
-                  </Link>
-                </Button>
-              </div>
-            ) : visibleError ? (
+            {visibleError ? (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">

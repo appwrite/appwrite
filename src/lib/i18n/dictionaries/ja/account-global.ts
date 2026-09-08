@@ -1146,8 +1146,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'Education プランがなくても、引き続き Appwrite をご利用いただけます。',
   "You've already joined the Education program.":
     'すでに Education プログラムに参加しています。',
-  'Your Education plan organization is ready.':
-    'Education プランの組織をご利用いただけます。',
   'Continue to Appwrite, then use the organization switcher to find your Education plan.':
     'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
   'We could not check your GitHub connection':

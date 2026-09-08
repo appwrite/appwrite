@@ -1261,8 +1261,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'You can still use Appwrite without an Education plan.':
     'עדיין תוכלו להשתמש ב-Appwrite ללא תוכנית Education.',
   "You've already joined the Education program.": 'כבר הצטרפתם לתוכנית Education.',
-  'Your Education plan organization is ready.':
-    'הארגון שלכם בתוכנית Education מוכן.',
   'Continue to Appwrite, then use the organization switcher to find your Education plan.':
     'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
   'We could not check your GitHub connection':
