@@ -2,7 +2,8 @@
 
 TanStack Start uses Vite's CDN `base` while its router `basepath` stays `/`.
 The staging and production workflows build with `CDN_ORIGIN` set to their respective
-R2 custom domains. Generated scripts, styles, lazy chunks and CSS asset URLs use
+R2 custom domains (`https://cdn.staging.appwrite.io` and `https://cdn.appwrite.io`).
+Generated scripts, styles, lazy chunks and CSS asset URLs use
 the CDN; font preloads use the same base. Omit `CDN_ORIGIN` for local asset URLs.
 Changing environments requires a rebuild; other application config remains runtime config.
 
