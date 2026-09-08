@@ -1,7 +1,7 @@
 # Console static assets
 
 Staging and production share `https://cdn.appwrite.io` and the existing bucket name
-`appwrite-console-production`. Both workflows pass the same build-time `CDN_ORIGIN`
+`appwrite-console`. Both workflows pass the same build-time `CDN_ORIGIN`
 to Vite; TanStack Start uses its native CDN base while the router basepath stays `/`.
 Prerendered pages and SSR use the same generated URLs. Local builds omit the origin.
 There is no CDN runtime configuration, URL wrapper, or custom transform.

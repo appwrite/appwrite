@@ -164,7 +164,7 @@ jobs:
                   RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
                   RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
                   RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-                  R2_BUCKET: appwrite-console-production
+                  R2_BUCKET: appwrite-console
 
     deploy:
         # Never roll out HTML that references assets which failed to publish.
