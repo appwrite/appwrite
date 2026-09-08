@@ -72,8 +72,6 @@ export const db = drizzle({ client: pool })
 
 # Create the table with Drizzle Kit {% #first-migration %}
 
-![Appwrite database sidebar showing the books table under the public schema](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
-
 With Drizzle, you can define tables and columns in TypeScript. Drizzle Kit turns that code into SQL migrations.
 
 Define the `books` table in `src/schema.ts`:
@@ -120,6 +118,10 @@ npx drizzle-kit migrate
 ```
 
 [`generate`](https://orm.drizzle.team/docs/drizzle-kit-generate) writes SQL from schema changes. [`migrate`](https://orm.drizzle.team/docs/drizzle-kit-migrate) applies pending migrations and records them in Postgres. Commit the `drizzle` directory, including its metadata.
+
+## Verify the table in Appwrite {% #verify-table %}
+
+![Appwrite database sidebar showing the books table under the public schema](/images/blog/drizzle-orm-appwrite-postgres/database-editor.avif)
 
 In Appwrite, select **Data**, choose the `public` schema, and refresh the table list. The `books` table should now exist.
 
