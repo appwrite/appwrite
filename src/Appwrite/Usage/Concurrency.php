@@ -8,15 +8,16 @@ use Utopia\Usage\Usage;
 use Utopia\Usage\UsageQuery;
 
 /**
- * Folds `realtime.connections` deltas into a concurrency level and samples it
- * into a gauge of the same name, one bucket at a time:
+ * Samples `realtime.connections` into a concurrency gauge of the same name,
+ * one bucket at a time, as the net of the deltas inside a trailing window:
  *
- *   level(bucket) = level(previous bucket) + sum(deltas in bucket)
+ *   level(bucket) = max(0, sum(deltas in (bucket end − window, bucket end]))
  *
- * Deriving this per request would mean re-reading every delta since the project
- * began, so the gauge is its own state and each run resumes from the newest
- * sample. The caller's loop interval controls freshness only -- one run emits
- * every whole bucket in the elapsed window.
+ * Carrying the level forward from the previous sample would be exact if every
+ * open were matched by a close, but a realtime worker that stops takes its open
+ * connections' closes with it, so a carried level only ever ratchets upward.
+ * The window bounds that error to one window after a restart and needs no
+ * state, at the price of not seeing connections older than the window.
  *
  * Shared by the self-hosted and Cloud `stats-resources` tasks so both editions
  * fold the same way; the two differ in how they schedule it and how they report
@@ -27,10 +28,7 @@ class Concurrency
     /** Must match REALTIME_CONCURRENCY_INTERVAL. */
     private const int INTERVAL_SECONDS = 300;
 
-    /**
-     * How far back to look for a tenant's carried level. The gauge is only
-     * written when a project has deltas, so this must outlast a quiet spell.
-     */
+    /** How far back to look for the newest sample when resuming. */
     private const int MAX_CATCHUP_HOURS = 168;
 
     /** Row cap per cross-tenant query, one row per (tenant, bucket). */
@@ -41,10 +39,14 @@ class Concurrency
      *
      * @return int Number of gauge samples written.
      */
-    public function sample(Usage $usage): int
+    public function sample(Usage $usage, ?\DateTimeInterface $now = null): int
     {
+        $window = $this->window();
+
         // Stay behind the current bucket so in-flight deltas land first.
-        $end = (new \DateTime())->sub(new \DateInterval('PT' . REALTIME_CONCURRENCY_LAG_SECONDS . 'S'));
+        $end = \DateTime::createFromInterface($now ?? new \DateTimeImmutable())
+            ->setTimezone(new \DateTimeZone('UTC'))
+            ->sub(new \DateInterval('PT' . REALTIME_CONCURRENCY_LAG_SECONDS . 'S'));
 
         // Whole buckets only: a partial trailing bucket would be sampled short,
         // and the next run resumes past it without re-reading.
@@ -52,18 +54,20 @@ class Concurrency
             \intdiv($end->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS
         );
 
-        $levels = $this->lastLevels($usage);
         $start = $this->since($this->lastSampleAt($usage), $end);
 
         if ($start >= $end) {
             return 0;
         }
 
-        // One query covers every tenant; no baseline is needed, since the level
-        // is carried from the previous sample.
+        // Read one window ahead of the first emitted bucket so its level is
+        // complete. Bucket labels are starts, so the earliest label inside the
+        // window is one interval after `start − window`.
+        $readFrom = (clone $start)->sub(new \DateInterval('PT' . ($window - self::INTERVAL_SECONDS) . 'S'));
+
         $rows = $usage->findAcrossTenants([
             UsageFilter::equal('metric', [METRIC_REALTIME_CONNECTIONS]),
-            UsageFilter::greaterThanEqual('time', $start->format('Y-m-d H:i:s')),
+            UsageFilter::greaterThanEqual('time', $readFrom->format('Y-m-d H:i:s')),
             UsageFilter::lessThan('time', $end->format('Y-m-d H:i:s')),
             UsageQuery::groupBy('tenant'),
             UsageQuery::groupByInterval('time', REALTIME_CONCURRENCY_INTERVAL),
@@ -71,24 +75,51 @@ class Concurrency
             UsageFilter::limit(self::MAX_ROWS),
         ], Usage::TYPE_EVENT);
 
-        $samples = [];
+        /** @var array<string, array<int, int>> $deltas tenant → bucket start → net delta */
+        $deltas = [];
         foreach ($rows as $row) {
             $tenant = $row->getTenant();
             if ($tenant === '' || $tenant === null) {
                 continue;
             }
 
-            // Rows are time-ascending, so folding in order is correct. A
-            // negative total means deltas were lost; a level cannot be < 0.
-            $level = \max(0, ($levels[$tenant] ?? 0) + (int) $row->getValue());
-            $levels[$tenant] = $level;
+            $time = new \DateTime((string) $row->getAttribute('time'), new \DateTimeZone('UTC'));
+            $bucket = \intdiv($time->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS;
+            $deltas[$tenant][$bucket] = ($deltas[$tenant][$bucket] ?? 0) + (int) $row->getValue();
+        }
 
-            $samples[] = [
-                'tenant' => $tenant,
-                'metric' => METRIC_REALTIME_CONNECTIONS,
-                'value' => $level,
-                'time' => new \DateTime((string) $row->getAttribute('time')),
-            ];
+        $samples = [];
+        foreach ($deltas as $tenant => $byBucket) {
+            \ksort($byBucket);
+            $buckets = \array_keys($byBucket);
+            $count = \count($buckets);
+
+            // Slide the window over the emitted buckets: `enter` admits buckets
+            // up to the current one, `leave` retires those a full window old.
+            $level = 0;
+            $enter = 0;
+            $leave = 0;
+            for ($at = $start->getTimestamp(); $at < $end->getTimestamp(); $at += self::INTERVAL_SECONDS) {
+                while ($enter < $count && $buckets[$enter] <= $at) {
+                    $level += $byBucket[$buckets[$enter++]];
+                }
+                while ($leave < $enter && $buckets[$leave] <= $at - $window) {
+                    $level -= $byBucket[$buckets[$leave++]];
+                }
+
+                // No deltas inside the window: nothing is known to be open.
+                if ($enter === $leave) {
+                    continue;
+                }
+
+                // Negative when the closes we see belong to opens we no longer do.
+                $samples[] = [
+                    'tenant' => $tenant,
+                    'metric' => METRIC_REALTIME_CONNECTIONS,
+                    'value' => \max(0, $level),
+                    'time' => (new \DateTime('@' . $at))->setTimezone(new \DateTimeZone('UTC')),
+                ];
+            }
         }
 
         if ($samples === []) {
@@ -101,30 +132,14 @@ class Concurrency
     }
 
     /**
-     * Latest level per tenant. Values only: a grouped read returns the
-     * aggregate and its grouping columns, not `time`, so the resume point comes
-     * from {@see lastSampleAt()}.
-     *
-     * @return array<string, int>
+     * Trailing window the level is summed over, in seconds. Set through
+     * _APP_REALTIME_CONCURRENCY_WINDOW; the default was calibrated against live
+     * connection counts and sits between hiding long-lived connections (shorter)
+     * and carrying a stopped worker's orphaned opens (longer).
      */
-    private function lastLevels(Usage $usage): array
+    private function window(): int
     {
-        $rows = $usage->findAcrossTenants([
-            UsageFilter::equal('metric', [METRIC_REALTIME_CONNECTIONS]),
-            UsageFilter::greaterThanEqual('time', $this->catchupFloor()),
-            UsageQuery::groupBy('tenant'),
-            UsageFilter::limit(self::MAX_ROWS),
-        ], Usage::TYPE_GAUGE);
-
-        $levels = [];
-        foreach ($rows as $row) {
-            $tenant = $row->getTenant();
-            if ($tenant !== '' && $tenant !== null) {
-                $levels[$tenant] = (int) $row->getValue();
-            }
-        }
-
-        return $levels;
+        return \max(self::INTERVAL_SECONDS, (int) System::getEnv('_APP_REALTIME_CONCURRENCY_WINDOW', 21600));
     }
 
     /**
@@ -143,12 +158,12 @@ class Concurrency
 
         $time = isset($rows[0]) ? (string) $rows[0]->getAttribute('time', '') : '';
 
-        return $time === '' ? null : new \DateTime($time);
+        return $time === '' ? null : new \DateTime($time, new \DateTimeZone('UTC'));
     }
 
     private function catchupFloor(): string
     {
-        return (new \DateTime())
+        return (new \DateTime('now', new \DateTimeZone('UTC')))
             ->sub(new \DateInterval('PT' . self::MAX_CATCHUP_HOURS . 'H'))
             ->format('Y-m-d H:i:s');
     }
