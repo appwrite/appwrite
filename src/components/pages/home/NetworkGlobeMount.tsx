@@ -1,5 +1,6 @@
 'use client'
 
+import { createClientOnlyFn } from '@tanstack/react-start'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
 import { useT } from '@/lib/i18n/translate'
@@ -10,11 +11,13 @@ import {
 } from '@/lib/home/build-network-globe-data'
 import type { NetworkSegment } from '@/lib/home/network-locations'
 
-const LazyNetworkGlobe = lazy(() =>
+const loadNetworkGlobe = createClientOnlyFn(() =>
   import('./NetworkGlobe.client').then((module) => ({
     default: module.NetworkGlobe,
   })),
 )
+
+const LazyNetworkGlobe = lazy(() => loadNetworkGlobe()!)
 
 const GLOBE_FRAME_CLASSNAME =
   'relative mx-auto w-full max-w-[min(100%,50rem)] overflow-hidden aspect-[100/48] sm:max-w-[min(100%,60rem)] lg:max-w-[min(100%,68rem)] xl:max-w-[min(100%,76rem)]'
@@ -69,7 +72,7 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
     if (!mounted) return
 
     const preloadGlobe = () => {
-      void import('./NetworkGlobe.client')
+      void loadNetworkGlobe()
       setShouldMountGlobe(true)
     }
 

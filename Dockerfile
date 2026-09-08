@@ -11,7 +11,10 @@ FROM base AS build
 # (endpoint, profile, fingerprint key, growth endpoint, Stripe key, Sentry DSN,
 # instrumentation/Plausible script srcs) is now supplied at RUNTIME via the
 # container env and injected into the browser by runtime-config.ts - so a single
-# image can be promoted across environments.
+# image uses runtime application config. CDN_ORIGIN is baked into asset URLs.
+ARG CDN_ORIGIN
+ENV CDN_ORIGIN=${CDN_ORIGIN}
+
 ARG VITE_APPWRITE_PROJECT_ID
 ENV VITE_APPWRITE_PROJECT_ID=${VITE_APPWRITE_PROJECT_ID}
 

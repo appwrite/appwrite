@@ -139,14 +139,14 @@ function getHeadFontPreloads() {
     return [
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-regular.woff2',
+        href: `${import.meta.env.BASE_URL}fonts/inter/inter-v8-latin-regular.woff2`,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
       },
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-600.woff2',
+        href: `${import.meta.env.BASE_URL}fonts/inter/inter-v8-latin-600.woff2`,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
@@ -156,21 +156,21 @@ function getHeadFontPreloads() {
   return [
     {
       rel: 'preload' as const,
-      href: '/fonts/aeonik-pro/AeonikPro-Regular.woff2',
+      href: `${import.meta.env.BASE_URL}fonts/aeonik-pro/AeonikPro-Regular.woff2`,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2',
+      href: `${import.meta.env.BASE_URL}fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2`,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/inter/inter-latin-400-normal.woff2',
+      href: `${import.meta.env.BASE_URL}fonts/inter/inter-latin-400-normal.woff2`,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,

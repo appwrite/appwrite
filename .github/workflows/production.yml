@@ -85,8 +85,9 @@ jobs:
                   provenance: false
                   # Only build-time (brand) constants are passed here. Per-environment
                   # public config is supplied at runtime via the Helm chart env, so the
-                  # same image is promoted across environments.
+                  # CDN origin is the one environment-specific build setting.
                   build-args: |
+                      "CDN_ORIGIN=https://console-assets.appwrite.io"
                       "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
                       "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
                       "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
@@ -151,21 +152,20 @@ jobs:
                   DIGEST_ARM64: ${{ needs.build.outputs.digest_arm64 }}
               run: bash .github/scripts/extract-assets.sh
 
-            - name: Install the R2 upload client
-              run: |
-                  python3 -m venv .asset-venv
-                  .asset-venv/bin/pip install -r .github/scripts/asset-requirements.txt
-
-            - name: Publish and verify R2 assets
+            - name: Publish assets to R2
+              uses: docker://rclone/rclone@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5 # 1.75.1
+              with:
+                  entrypoint: /bin/sh
+                  args: .github/scripts/publish-assets.sh
               env:
-                  R2_ENDPOINT: https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com
+                  RCLONE_CONFIG_R2_TYPE: s3
+                  RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+                  RCLONE_CONFIG_R2_ENDPOINT: https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com
+                  RCLONE_CONFIG_R2_REGION: auto
+                  RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
+                  RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_PRODUCTION_ACCESS_KEY_ID }}
+                  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_PRODUCTION_SECRET_ACCESS_KEY }}
                   R2_BUCKET: appwrite-console-production
-                  R2_ORIGIN: https://console-assets.appwrite.io
-                  R2_ACCESS_KEY_ID: ${{ secrets.R2_PRODUCTION_ACCESS_KEY_ID }}
-                  R2_SECRET_ACCESS_KEY: ${{ secrets.R2_PRODUCTION_SECRET_ACCESS_KEY }}
-              run: >-
-                  .asset-venv/bin/python .github/scripts/publish-assets.py
-                  --client image-assets/amd64 --client image-assets/arm64 --public public
 
     deploy:
         # Never roll out HTML that references assets which failed to publish.

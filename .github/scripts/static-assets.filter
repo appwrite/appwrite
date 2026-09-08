@@ -1,0 +1,3 @@
+# Keep aligned with the infrastructure console asset Worker's allowlist.
++ /{assets,images,fonts,icons}/**.{js,mjs,css,wasm,json,avif,webp,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,otf,mp4,webm,mov}
+- **

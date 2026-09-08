@@ -1,3 +1,5 @@
+import type { ViteHotContext } from 'vite/types/hot'
+
 /**
  * Module-level docs HMR bridge.
  *
@@ -48,14 +50,16 @@ function scheduleDocsContentHmr() {
   }, 30)
 }
 
-if (import.meta.hot) {
+// Use Vite's event payload types rather than the merged Bun/TanStack HMR declarations.
+const hot = import.meta.hot as ViteHotContext | undefined
+if (hot) {
   // Primary path: Vite plugin watches markdoc/partials and sends this event.
-  import.meta.hot.on('docs-content-update', () => {
+  hot.on('docs-content-update', () => {
     scheduleDocsContentHmr()
   })
 
   // Fallback when a docs importer is already in the client module graph.
-  import.meta.hot.on(
+  hot.on(
     'vite:afterUpdate',
     (payload: {
       updates: Array<{ path: string; acceptedPath?: string }>

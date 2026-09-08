@@ -72,9 +72,7 @@ e2e/screenshots/
 .cache
 
 # Static asset publishing tools and extracted container files
-.asset-venv/
 image-assets/
-.github/scripts/__pycache__/
 
 # Playwright MCP
 .playwright-mcp
