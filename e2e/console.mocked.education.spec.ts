@@ -50,6 +50,7 @@ function student(verified = true): Models.User<Models.Preferences> {
 
 type Scenario = {
   account: Models.User<Models.Preferences> | null
+  profile?: 'cloud' | 'self-hosted'
   linked?: boolean
   membershipStatus?: 403 | 409
   failPrefs?: boolean
@@ -68,17 +69,18 @@ function corsHeaders(route: Route) {
 
 /** All external traffic is intercepted, including OAuth and the mailing list. */
 async function mockEducationApi(page: Page, scenario: Scenario) {
-  await page.addInitScript(() => {
+  await page.addInitScript((profile) => {
     window.localStorage.setItem(
       'debug:consoleProfile',
       JSON.stringify({
-        id: 'cloud',
-        features: { userVerification: true },
+        id: profile,
+        features: { userVerification: profile === 'cloud' },
       }),
     )
-  })
+  }, scenario.profile ?? 'cloud')
   const membershipRequests: string[] = []
   const identityRequests: string[] = []
+  const oauthRequests: string[] = []
   const deletions: string[] = []
   const verificationUrls: string[] = []
   const preferenceWrites: Models.Preferences[] = []
@@ -114,6 +116,7 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
     if (request.method() === 'DELETE') deletions.push(apiPath)
 
     if (apiPath === '/account/sessions/oauth2/github') {
+      oauthRequests.push(apiPath)
       // Stop at Appwrite's OAuth entry point instead of contacting GitHub.
       return route.fulfill({
         status: 200,
@@ -202,6 +205,7 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
   return {
     membershipRequests,
     identityRequests,
+    oauthRequests,
     deletions,
     verificationUrls,
     preferenceWrites,
@@ -209,6 +213,23 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
 }
 
 test.describe('Education enrollment (mocked API)', () => {
+  test('self-hosted guests return to sign-in without starting enrollment', async ({
+    page,
+  }) => {
+    const api = await mockEducationApi(page, {
+      account: null,
+      profile: 'self-hosted',
+    })
+    await page.goto('/education/join')
+    await expect(page).toHaveURL(/\/sign-in(?:\?|$)/)
+    await expect(
+      page.getByRole('heading', { name: 'Welcome back', exact: true }),
+    ).toBeVisible()
+    expect(api.membershipRequests).toEqual([])
+    expect(api.identityRequests).toEqual([])
+    expect(api.oauthRequests).toEqual([])
+  })
+
   test('guest starts GitHub OAuth with student scopes and enrollment return URLs', async ({
     page,
   }) => {
