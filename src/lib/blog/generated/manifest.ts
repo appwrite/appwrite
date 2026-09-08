@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "drizzle-orm-appwrite-postgres",
+    "href": "/blog/post/drizzle-orm-appwrite-postgres",
+    "title": "Use Drizzle ORM with Appwrite Postgres",
+    "description": "Connect Drizzle ORM to Appwrite Postgres, query data with TypeScript, and apply SQL migrations as your schema changes.",
+    "date": "2026-09-08",
+    "lastUpdated": "2026-09-08",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "tutorial",
+    "featured": false,
+    "cover": "/images/blog/drizzle-orm-appwrite-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-worker-topologies",
     "href": "/blog/post/announcing-worker-topologies",
     "title": "Introducing worker topologies for self-hosted Appwrite",
