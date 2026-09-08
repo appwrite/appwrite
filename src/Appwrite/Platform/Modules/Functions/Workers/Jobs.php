@@ -149,6 +149,13 @@ class Jobs extends Action
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
+            // Deduplicate successful handlers before notifications: a realtime
+            // failure must not replay a persisted log append. Handler failures,
+            // including deferred-work enqueue failures, remain retryable.
+            if ($event->id !== '') {
+                $cache->save($key, true);
+            }
+
             // Console realtime on every callback (log stream + status).
             $queueForRealtime
                 ->setSubscribers(['console'])
@@ -166,11 +173,6 @@ class Jobs extends Action
             // (success), so key off the status change rather than the event.
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
-            }
-
-            // Failed handlers must remain retryable, including deferred-work enqueue failures.
-            if ($event->id !== '') {
-                $cache->save($key, true);
             }
         }, self::LOCK_TIMEOUT);
     }
