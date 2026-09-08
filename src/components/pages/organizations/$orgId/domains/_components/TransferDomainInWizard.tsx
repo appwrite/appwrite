@@ -64,10 +64,13 @@ export function TransferDomainInWizard({
   )
 
   const normalizedDomain = domainInput.trim().toLowerCase()
+  const canQuoteDomain =
+    domainTransferPriceQueryOptions(normalizedDomain).enabled === true
   const isQuoteCurrent =
     normalizedDomain === debouncedPriceDomain &&
     priceQuery.data?.domain === normalizedDomain
   const hasTransferQuote =
+    canQuoteDomain &&
     isQuoteCurrent &&
     priceQuery.isSuccess &&
     !priceQuery.isFetching &&
@@ -233,9 +236,9 @@ export function TransferDomainInWizard({
       footerAlign="right"
       sidebar={
         <TransferDomainInSummary
-          quotedDomain={normalizedDomain}
+          quotedDomain={canQuoteDomain ? normalizedDomain : ''}
           isPriceLoading={
-            !!normalizedDomain &&
+            canQuoteDomain &&
             (normalizedDomain !== debouncedPriceDomain || priceQuery.isFetching)
           }
           priceError={

@@ -176,6 +176,53 @@ const unavailable =
   'Transfer pricing is unavailable for this domain. Try another domain or contact support.'
 
 test.describe('domain transfer pricing (mocked API)', () => {
+  test('incomplete domains keep the neutral summary without requesting prices', async ({
+    page,
+  }, testInfo) => {
+    const requests = await mockApi(page, { price: 52.79 })
+    const priceRequests: string[] = []
+    page.on('request', (request) => {
+      if (appwriteApiPath(request.url()) === '/domains/prices') {
+        priceRequests.push(request.url())
+      }
+    })
+    const start = await openWizard(page, '')
+    await expect(page.locator('[data-fullscreen-loader]')).toBeHidden()
+    await page.clock.install()
+    await page.clock.pauseAt(new Date())
+    for (const domain of ['', 'example', '.example', 'example.']) {
+      await page.getByLabel('Domain name', { exact: true }).fill(domain)
+      // Check both the immediate state and after the pricing debounce settles.
+      for (const elapsed of [0, 600]) {
+        await page.clock.runFor(elapsed)
+        await expect(
+          page.getByText('Enter your full domain name to load a price quote.'),
+        ).toBeVisible()
+        await expect(page.getByText(unavailable)).toBeHidden()
+        await expect(page.getByRole('button', { name: 'Try again' })).toBeHidden()
+        await expect(page.getByText('Total due today')).toBeHidden()
+        await expect(start).toBeDisabled()
+      }
+    }
+    expect(priceRequests).toHaveLength(0)
+    expect(requests).toHaveLength(0)
+    const path = testInfo.outputPath('transfer-incomplete.png')
+    await page.screenshot({ path, fullPage: true })
+    await testInfo.attach('Incomplete domain neutral summary', {
+      path,
+      contentType: 'image/png',
+    })
+    await page.clock.resume()
+    await page.getByLabel('Domain name', { exact: true }).fill('example.com')
+    await expect(start).toBeEnabled()
+    await page.getByLabel('Domain name', { exact: true }).fill('example')
+    await expect(
+      page.getByText('Enter your full domain name to load a price quote.'),
+    ).toBeVisible()
+    await expect(page.getByText('Total due today')).toBeHidden()
+    await expect(start).toBeDisabled()
+  })
+
   test('initial quote must finish loading before transfer starts', async ({
     page,
   }) => {
