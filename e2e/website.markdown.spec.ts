@@ -147,6 +147,28 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('https://appwrite.io/sitemap/news.xml')
   })
 
+  test('sitemap index lists section sitemaps', async ({ request }) => {
+    const response = await request.get('/sitemap.xml')
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/xml/)
+    const body = await response.text()
+    expect(body).toContain('<sitemapindex')
+    expect(body).toContain('https://appwrite.io/sitemap/pages.xml')
+    expect(body).toContain('https://appwrite.io/sitemap/docs.xml')
+    expect(body).toContain('https://appwrite.io/sitemap/news.xml')
+  })
+
+  test('pages sitemap is a urlset', async ({ request }) => {
+    const response = await request.get('/sitemap/pages.xml')
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/xml/)
+    const body = await response.text()
+    expect(body).toContain('<urlset')
+    expect(body).toContain('https://appwrite.io/pricing')
+  })
+
   test('Google News sitemap is valid XML with news tags', async ({ request }) => {
     const response = await request.get('/sitemap/news.xml')
 

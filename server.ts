@@ -269,6 +269,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||
     normalized === 'robots.txt' ||
+    normalized === 'sitemap.xml' ||
     normalized === '.well-known/mcp/server-card.json' ||
     normalized === '.well-known/ai-catalog.json' ||
     normalized === '.well-known/agent-skills/index.json'
@@ -866,9 +867,9 @@ async function initializeServer() {
           'application/json; charset=utf-8',
         ),
 
-      // Serve static assets (preloaded or on-demand). robots.txt, llms exports,
-      // and discovery documents are excluded so they use tracked handlers above
-      // or fall through to TanStack.
+      // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,
+      // llms exports, and discovery documents are excluded so they use tracked
+      // handlers above or fall through to TanStack.
       ...staticRoutes,
 
       // Fallback to TanStack Start handler for all other routes. HTML responses

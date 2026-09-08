@@ -92,11 +92,12 @@ export function isPreLaunchHeavyContentPath(
     '/llms-full.txt',
     '/blog/rss.xml',
     '/changelog/rss.xml',
-    '/sitemap.xml',
-    '/sitemap/news.xml',
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
+  if (normalized === '/sitemap.xml' || normalized.startsWith('/sitemap/')) {
+    return true
+  }
   if (normalized.startsWith('/docs/llms')) return true
   if (normalized.startsWith('/.well-known/')) return true
 

@@ -1,3 +1,4 @@
+import { fetchThreadsSitemapEntries } from '@/lib/threads/sitemap'
 import { SITEMAP_MAX_URLS_PER_FILE } from './config'
 import {
   assertSitemapEligible,
@@ -10,6 +11,23 @@ import { getDocsSitemapEntries } from './providers/docs'
 import { getIntegrationsSitemapEntries } from './providers/integrations'
 import { getMarketingSitemapEntries } from './providers/marketing'
 import type { SitemapBuildResult, SitemapEntry, SitemapSection } from './types'
+
+export const SITEMAP_FILE_SECTION_IDS = [
+  'pages',
+  'docs',
+  'blog',
+  'changelog',
+  'integrations',
+  'threads',
+] as const
+
+export type SitemapFileSectionId = (typeof SITEMAP_FILE_SECTION_IDS)[number]
+
+export function isSitemapFileSectionId(
+  section: string,
+): section is SitemapFileSectionId {
+  return (SITEMAP_FILE_SECTION_IDS as readonly string[]).includes(section)
+}
 
 type SectionDefinition = {
   id: string
@@ -59,8 +77,14 @@ function validateEntries(sectionId: string, entries: SitemapEntry[]): SitemapEnt
   return deduped
 }
 
-export function collectSitemapSections(): SitemapBuildResult {
-  const sections: SitemapSection[] = SECTION_DEFINITIONS.map(({ id, getEntries }) => ({
+export async function collectSitemapSections(): Promise<SitemapBuildResult> {
+  const threadsEntries = await fetchThreadsSitemapEntries()
+  const hasThreads = SECTION_DEFINITIONS.some((definition) => definition.id === 'threads')
+  const definitions = hasThreads
+    ? SECTION_DEFINITIONS
+    : [...SECTION_DEFINITIONS, { id: 'threads', getEntries: () => threadsEntries }]
+
+  const sections: SitemapSection[] = definitions.map(({ id, getEntries }) => ({
     id,
     entries: validateEntries(id, getEntries()),
   }))
@@ -81,6 +105,9 @@ export function registerSitemapSection(definition: SectionDefinition): void {
   SECTION_DEFINITIONS.push(definition)
 }
 
-export function getSitemapSection(sectionId: string): SitemapSection | null {
-  return collectSitemapSections().sections.find((section) => section.id === sectionId) ?? null
+export async function getSitemapSection(
+  sectionId: string,
+): Promise<SitemapSection | null> {
+  const { sections } = await collectSitemapSections()
+  return sections.find((section) => section.id === sectionId) ?? null
 }

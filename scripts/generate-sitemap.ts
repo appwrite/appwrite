@@ -1,41 +1,52 @@
 /**
  * Generates sitemap.xml (index) and section sitemaps under public/sitemap/.
  * Run manually when content changes: bun run generate:sitemap
+ *
+ * This script runs after `vite build` (which copies public/ into dist/client),
+ * so write into dist/client too; otherwise a clean build never contains the
+ * gitignored sitemap files and production 404s /sitemap.xml.
  */
+import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   NEWS_SITEMAP_SECTION_ID,
   generateSitemapFiles,
-  registerSitemapSection,
 } from '../src/lib/sitemap/index.ts'
-import { fetchThreadsSitemapEntries } from '../src/lib/threads/sitemap.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
 const PUBLIC_DIR = join(VIBES_ROOT, 'public')
-const SITEMAP_DIR = join(PUBLIC_DIR, 'sitemap')
 
-async function main() {
-  const threadsEntries = await fetchThreadsSitemapEntries()
-  registerSitemapSection({
-    id: 'threads',
-    getEntries: () => threadsEntries,
-  })
+async function writeSitemapOutputs(
+  outputDir: string,
+  indexXml: string,
+  sectionFiles: Record<string, string>,
+) {
+  const sitemapDir = join(outputDir, 'sitemap')
+  await mkdir(sitemapDir, { recursive: true })
 
-  const { indexXml, sectionFiles, totalUrls } = generateSitemapFiles()
-
-  await mkdir(SITEMAP_DIR, { recursive: true })
-
-  await writeFile(join(PUBLIC_DIR, 'sitemap.xml'), indexXml, 'utf-8')
+  await writeFile(join(outputDir, 'sitemap.xml'), indexXml, 'utf-8')
 
   await Promise.all(
     Object.entries(sectionFiles)
       .filter(([sectionId]) => sectionId !== NEWS_SITEMAP_SECTION_ID)
       .map(([sectionId, xml]) =>
-        writeFile(join(SITEMAP_DIR, `${sectionId}.xml`), xml, 'utf-8'),
+        writeFile(join(sitemapDir, `${sectionId}.xml`), xml, 'utf-8'),
       ),
+  )
+}
+
+async function main() {
+  const { indexXml, sectionFiles, totalUrls } = await generateSitemapFiles()
+
+  const outputDirs = [PUBLIC_DIR]
+  const clientDir = join(VIBES_ROOT, 'dist', 'client')
+  if (existsSync(clientDir)) outputDirs.push(clientDir)
+
+  await Promise.all(
+    outputDirs.map((dir) => writeSitemapOutputs(dir, indexXml, sectionFiles)),
   )
 
   const sectionSummary = Object.entries(sectionFiles)

@@ -9,9 +9,9 @@ export type GeneratedSitemapFiles = {
   totalUrls: number
 }
 
-export function generateSitemapFiles(): GeneratedSitemapFiles {
+export async function generateSitemapFiles(): Promise<GeneratedSitemapFiles> {
   const origin = getSitemapSiteOrigin()
-  const { sections, totalUrls } = collectSitemapSections()
+  const { sections, totalUrls } = await collectSitemapSections()
   const buildDate = new Date().toISOString().slice(0, 10)
 
   const sectionFiles = Object.fromEntries(
@@ -34,7 +34,13 @@ export function generateSitemapFiles(): GeneratedSitemapFiles {
 }
 
 export { renderSitemapIndexXml, renderUrlsetXml } from './xml'
-export { collectSitemapSections, getSitemapSection, registerSitemapSection } from './collect'
+export {
+  collectSitemapSections,
+  getSitemapSection,
+  isSitemapFileSectionId,
+  registerSitemapSection,
+  SITEMAP_FILE_SECTION_IDS,
+} from './collect'
 export { getSitemapSiteOrigin, DEFAULT_SITE_ORIGIN } from './config'
 export { isExcludedFromSitemap } from './excluded-paths'
 export {
