@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { DocsLeftNav } from '@/components/pages/docs/DocsLeftNav'
@@ -22,7 +22,7 @@ function scrollDocsContentToTop() {
 
   const main = document.getElementById('main-content')
   if (main) {
-    main.scrollTo({ top: 0, behavior: 'auto' })
+    main.scrollTo({ top: 0, behavior: 'instant' })
     return
   }
 
@@ -33,9 +33,11 @@ function DocsScrollToTop() {
   const { pathname } = useLocation()
   const previousPathnameRef = useRef(pathname)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (previousPathnameRef.current === pathname) return
     previousPathnameRef.current = pathname
+    // The persistent shell owns cross-page resets, even when an article remounts.
+    // Run before article passive effects resolve a valid destination hash.
     scrollDocsContentToTop()
   }, [pathname])
 
