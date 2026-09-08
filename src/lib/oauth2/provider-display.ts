@@ -3,10 +3,10 @@ import { OAuthProvider } from '@appwrite.io/console'
 /** Shown first in the OAuth2 grid (subset of {@link OAuthProvider}). */
 export const OAUTH2_POPULAR_PROVIDER_IDS: ReadonlySet<string> = new Set([
   OAuthProvider.Apple,
+  OAuthProvider.Appwrite,
   OAuthProvider.Facebook,
   OAuthProvider.Github,
   OAuthProvider.Google,
-  OAuthProvider.Linkedin,
   OAuthProvider.Microsoft,
 ])
 
