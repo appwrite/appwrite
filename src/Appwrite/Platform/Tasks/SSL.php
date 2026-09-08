@@ -125,6 +125,7 @@ class SSL extends Action
                 ]));
             });
             if ($rule === null) {
+                Console::warning('Rule for domain ' . $domain->get() . ' changed or is already generating a certificate.');
                 return;
             }
 
