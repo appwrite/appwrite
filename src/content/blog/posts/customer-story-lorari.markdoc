@@ -1,7 +1,7 @@
 ---
 layout: post
 title: How Lorari scaled to 130+ fitness studios solo with Appwrite
-description: Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 130+ yoga and pilates studios serving 13,000 students in six months.
+description: Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 130+ yoga and pilates studios serving 13,000 students in seven months.
 date: 2026-09-09
 cover: /images/blog/customer-story-lorari/cover.avif
 timeToRead: 5
@@ -15,7 +15,7 @@ faqs:
   - question: "How does Lorari use Appwrite?"
     answer: "Lorari runs on Appwrite Cloud. It uses [Appwrite TablesDB](/docs/products/databases/tablesdb) for studios, students, classes, bookings, and memberships, [Appwrite Storage](/docs/products/storage) for studio branding and uploads, and [Appwrite Auth](/docs/products/auth) for studio and student accounts. The front end is built with React and Node.js."
   - question: "How fast has Lorari grown?"
-    answer: "Lorari launched in February 2026. By July 2026 it had onboarded over 130 studios with around 13,000 students using their studio's branded app, and was adding roughly 10% more studios every week. Most studios are in Spain, with others in Mexico and Argentina."
+    answer: "Lorari launched in February 2026. By September 2026 it had onboarded over 130 studios with around 13,000 students using their studio's branded app, and was adding roughly 10% more studios every week. Most studios are in Spain, with others in Mexico and Argentina."
   - question: "Why did Lorari choose Appwrite over Firebase or Supabase?"
     answer: "Marti tried Firebase and found it too complex to start with as a first-time app builder, and Supabase did not click for him. Appwrite's Console and documentation made the data model easy to understand, so he could build his first app without prior backend experience and keep the same backend as the product scaled."
   - question: "Can a non-engineer build a SaaS product with Appwrite?"
@@ -28,7 +28,7 @@ Marti Mestre Faus did not set out to build a company. While still in college in 
 
 That tool was the first thing Marti ever shipped. He learned software development by building it, and he built it on Appwrite.
 
-After graduating, he took the same idea, rebuilt it for any studio that runs group classes, and named it [Lorari](https://www.lorari.com/). Six months after launch, over 130 yoga, pilates, and fitness studios run their daily operations on it.
+After graduating, he took the same idea, rebuilt it for any studio that runs group classes, and named it [Lorari](https://www.lorari.com/). Seven months after launch, over 130 yoga, pilates, and fitness studios run their daily operations on it.
 
 # The challenge
 

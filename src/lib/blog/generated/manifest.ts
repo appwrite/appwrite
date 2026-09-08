@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
-    "description": "Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 130+ yoga and pilates studios serving 13,000 students in six months.",
+    "description": "Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 130+ yoga and pilates studios serving 13,000 students in seven months.",
     "date": "2026-09-09",
     "lastUpdated": "2026-09-09",
     "timeToRead": 5,
