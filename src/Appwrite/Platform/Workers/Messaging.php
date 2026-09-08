@@ -139,7 +139,15 @@ class Messaging extends Action
 
                     throw $e;
                 } finally {
-                    $this->getLocalDevice($project)->delete($attachmentsPath, true);
+                    // Decrypted plaintext must not linger. A failed delete and an absent directory both come
+                    // back false, so only a directory that is still there after the attempt is worth
+                    // reporting; throwing here would bury whatever the send itself threw.
+                    $deviceForLocal = $this->getLocalDevice($project);
+                    $deviceForLocal->delete($attachmentsPath, true);
+
+                    if ($deviceForLocal->exists($attachmentsPath)) {
+                        Span::add('message.attachments_cleanup_failed', $attachmentsPath);
+                    }
                 }
                 break;
             default:
