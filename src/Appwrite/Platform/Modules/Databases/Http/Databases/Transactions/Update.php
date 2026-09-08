@@ -348,8 +348,16 @@ class Update extends Action
             }
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
+
                 $usage
                     ->setResource('database')
+                    ->setResourceId($database->getId())
                     ->setResourceInternalId((string) $databaseInternalId)
                     ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
             }

@@ -947,7 +947,7 @@ final class FormatTest extends TestCase
 
     }
 
-    public function testNoContentMethodsKeepProducesMetadata(): void
+    public function testNoContentMethodsOmitProducesMetadata(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -975,7 +975,7 @@ final class FormatTest extends TestCase
         $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
 
         $this->assertArrayNotHasKey('content', $openApiMethod['responses']['204']);
-        $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
+        $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
 
     public static function binaryResponseTypes(): \Iterator

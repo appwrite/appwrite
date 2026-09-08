@@ -545,20 +545,6 @@ class OpenAPI3 extends Format
                 }
             }
 
-            // No response declares content (e.g. 204 No content): keep the produced
-            // content type available for SDK generation.
-            $hasResponseContent = false;
-            foreach ($temp['responses'] as $responseData) {
-                if (isset($responseData['content'])) {
-                    $hasResponseContent = true;
-                    break;
-                }
-            }
-
-            if (!$hasResponseContent && $produces !== '') {
-                $temp['x-appwrite']['produces'] = [$produces];
-            }
-
             if (!empty($scope)) {
                 $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
