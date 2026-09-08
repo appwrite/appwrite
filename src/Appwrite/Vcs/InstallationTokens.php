@@ -9,9 +9,29 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\VCS\Adapter\Git;
 
 class InstallationTokens
 {
+    /**
+     * The adapter acting for a repository's installation, its token refreshed.
+     * Null when the installation is gone or belongs to another provider:
+     * repository ids are scoped to a provider's server, so the same id can
+     * name a repository on a different one.
+     */
+    public function adapterForRepository(Document $repository, string $provider, Database $dbForPlatform, Factory $vcsFactory): ?Git
+    {
+        $authorization = $dbForPlatform->getAuthorization();
+        $installationId = $repository->getAttribute('installationId', '');
+        $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $installationId));
+
+        if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== $provider) {
+            return null;
+        }
+
+        return $vcsFactory->fromInstallation($this->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+    }
+
     /**
      * Refreshes an installation's token, resolving the OAuth2 client for its provider.
      */
