@@ -5,6 +5,8 @@ import {
   confirmStaleHashedAsset,
   extractHashedAssetUrl,
   forceReloadForStaleChunk,
+  importNamedDefault,
+  isFailedHashedLazyExportError,
   isHashedBuildAssetUrl,
   isLazyRouteComponentLoadError,
   isStaleChunkLoadError,
@@ -96,6 +98,39 @@ describe('isStaleChunkLoadError', () => {
     error.stack = `${error.message}\n    at https://example.com/assets/View-abc.js:12:4`
     expect(isLazyRouteComponentLoadError(error)).toBe(false)
     expect(isStaleChunkLoadError(error)).toBe(false)
+  })
+
+  test('treats lazyRouteComponent errorComponent reads as stale', () => {
+    const error = new Error(
+      "Cannot read properties of undefined (reading 'errorComponent')",
+    )
+    error.stack = `${error.message}\n    at https://example.com/assets/lazyRouteComponent-abc.js:1:139`
+    expect(isLazyRouteComponentLoadError(error)).toBe(true)
+    expect(isStaleChunkLoadError(error)).toBe(true)
+  })
+
+  test('treats missing hashed lazy named exports as stale', () => {
+    expect(
+      isFailedHashedLazyExportError(
+        new Error('Failed to load hashed module export: NetworkGlobe'),
+      ),
+    ).toBe(true)
+    const firefox = new Error(
+      'can\'t access property "NetworkGlobe", e is undefined',
+    )
+    expect(isFailedHashedLazyExportError(firefox)).toBe(true)
+    expect(isStaleChunkLoadError(firefox)).toBe(true)
+    const viewError = new Error(
+      "Cannot read properties of undefined (reading 'View')",
+    )
+    expect(isFailedHashedLazyExportError(viewError)).toBe(true)
+    expect(isStaleChunkLoadError(viewError)).toBe(true)
+  })
+
+  test('importNamedDefault throws a classified error when the export is missing', async () => {
+    await expect(
+      importNamedDefault(async () => ({}) as Record<string, unknown>, 'View'),
+    ).rejects.toThrow('Failed to load hashed module export: View')
   })
 })
 
@@ -238,6 +273,25 @@ describe('tryReloadForStaleChunk', () => {
     error.stack = `${error.message}\n    at https://example.com/assets/lazyRouteComponent-abc.js:1:139`
 
     expect(tryReloadForStaleChunk(error)).toBe(true)
+
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(locationMock.reload).toHaveBeenCalled()
+  })
+
+  test('reloads on missing hashed lazy named exports', async () => {
+    const locationMock = mockBrowser()
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response('ok')),
+    ) as unknown as typeof fetch
+
+    expect(
+      tryReloadForStaleChunk(
+        new Error('Failed to load hashed module export: NetworkGlobe'),
+      ),
+    ).toBe(true)
 
     await Promise.resolve()
     await Promise.resolve()

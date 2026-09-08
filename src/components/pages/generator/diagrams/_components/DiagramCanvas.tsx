@@ -163,6 +163,7 @@ export function DiagramCanvas({
   } | null>(null)
 
   const findPortTarget = useCallback((clientX: number, clientY: number) => {
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null
     const element = window.document
       .elementFromPoint(clientX, clientY)
       ?.closest('[data-diagram-port]')
@@ -379,7 +380,13 @@ export function DiagramCanvas({
 
       setPendingConnectDraft({ nodeId, side })
       onPortClick(nodeId, side)
-      event.currentTarget.setPointerCapture(event.pointerId)
+      if (typeof event.currentTarget.setPointerCapture === 'function') {
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId)
+        } catch {
+          /* pointer already released */
+        }
+      }
 
       const handlePointerMove = (moveEvent: PointerEvent) => {
         const gesture = connectGestureRef.current

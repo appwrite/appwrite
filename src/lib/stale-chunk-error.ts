@@ -95,6 +95,51 @@ export function extractHashedAssetUrl(
 }
 
 /**
+ * Thrown when a named export is missing because the hashed chunk resolved to
+ * `undefined` (stale deploy) instead of rejecting the import.
+ */
+export const MISSING_HASHED_MODULE_EXPORT_PREFIX =
+  'Failed to load hashed module export:'
+
+const LAZY_ROUTE_EXPORT_NAMES = 'component|errorComponent'
+
+/** Named React.lazy / dynamic-import exports that fail the same way after deploys. */
+const HASHED_LAZY_EXPORT_NAMES =
+  'NetworkGlobe|InitCommunityGlobe|View|Terminal|FitAddon|SearchAddon'
+
+function isUndefinedExportRead(message: string, exportNames: string): boolean {
+  return (
+    new RegExp(
+      `Cannot read propert(?:y|ies) of undefined \\(reading ['"](?:${exportNames})['"]\\)`,
+      'i',
+    ).test(message) ||
+    new RegExp(`can't access property ['"](?:${exportNames})['"]`, 'i').test(
+      message,
+    ) ||
+    new RegExp(
+      `undefined is not an object \\(evaluating ['"][^'"]*(?:${exportNames})['"]\\)`,
+      'i',
+    ).test(message)
+  )
+}
+
+/**
+ * Load a named export as a React.lazy default. Missing exports throw a
+ * classified stale-chunk error instead of `reading 'X' of undefined`.
+ */
+export async function importNamedDefault<T>(
+  loader: () => Promise<{ [exportName: string]: unknown }>,
+  exportName: string,
+): Promise<{ default: T }> {
+  const mod = await loader()
+  const value = mod?.[exportName]
+  if (value == null) {
+    throw new Error(`${MISSING_HASHED_MODULE_EXPORT_PREFIX} ${exportName}`)
+  }
+  return { default: value as T }
+}
+
+/**
  * TanStack `lazyRouteComponent` loads `importer().then(mod => mod[exportName])`
  * with `exportName` typically `'component'`. After a deploy, a 404'd chunk can
  * fulfill as `undefined` instead of rejecting, which throws:
@@ -103,21 +148,18 @@ export function extractHashedAssetUrl(
  */
 export function isLazyRouteComponentLoadError(error: unknown): boolean {
   const message = errorMessage(error)
-  const isUndefinedComponentRead =
-    /Cannot read propert(?:y|ies) of undefined \(reading ['"]component['"]\)/i.test(
-      message,
-    ) ||
-    /can't access property ['"]component['"] of (?:undefined|null)/i.test(
-      message,
-    ) ||
-    /undefined is not an object \(evaluating ['"][^'"]*component['"]\)/i.test(
-      message,
-    )
-  if (!isUndefinedComponentRead) return false
+  if (!isUndefinedExportRead(message, LAZY_ROUTE_EXPORT_NAMES)) return false
 
   const stack = error instanceof Error ? (error.stack ?? '') : ''
   if (!stack) return true
   return /lazyRouteComponent/i.test(stack)
+}
+
+/** React.lazy `.then(m => ({ default: m.X }))` when the chunk is missing. */
+export function isFailedHashedLazyExportError(error: unknown): boolean {
+  const message = errorMessage(error)
+  if (message.startsWith(MISSING_HASHED_MODULE_EXPORT_PREFIX)) return true
+  return isUndefinedExportRead(message, HASHED_LAZY_EXPORT_NAMES)
 }
 
 /**
@@ -135,6 +177,7 @@ export function isStaleChunkLoadError(
   context?: { event?: Event; fromVitePreload?: boolean },
 ): boolean {
   if (isLazyRouteComponentLoadError(error)) return true
+  if (isFailedHashedLazyExportError(error)) return true
 
   const message = errorMessage(error)
   if (messageIndicatesHtmlMimeForScript(message)) return true
@@ -452,7 +495,8 @@ export function tryReloadForStaleChunk(
   const message = errorMessage(error)
   if (
     messageIndicatesHtmlMimeForScript(message) ||
-    isLazyRouteComponentLoadError(error)
+    isLazyRouteComponentLoadError(error) ||
+    isFailedHashedLazyExportError(error)
   ) {
     return beginGuardedReload()
   }

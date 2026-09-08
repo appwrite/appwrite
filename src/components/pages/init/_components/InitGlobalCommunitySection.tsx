@@ -5,12 +5,11 @@ import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activi
 import { INIT_GLOBE_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { InitCommunityCountry } from '@/lib/init/types'
 import { formatInitCappedCount } from '@/lib/init/presence'
+import { importNamedDefault } from '@/lib/stale-chunk-error'
 import { cn } from '@/lib/utils'
 
 const loadInitCommunityGlobe = createClientOnlyFn(() =>
-  import('./InitCommunityGlobe.client').then((module) => ({
-    default: module.InitCommunityGlobe,
-  })),
+  importNamedDefault(() => import('./InitCommunityGlobe.client'), 'InitCommunityGlobe'),
 )
 
 const LazyInitCommunityGlobe = lazy(() => loadInitCommunityGlobe()!)

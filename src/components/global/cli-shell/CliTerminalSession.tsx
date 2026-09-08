@@ -17,6 +17,7 @@ import {
 } from '@/lib/cli-shell/cli-terminal-search-run'
 import type { CliTerminalApi } from '@/lib/cli-shell/cli-terminal-api'
 import { scheduleCliTerminalMount } from '@/lib/cli-shell/schedule-cli-terminal-mount'
+import { MISSING_HASHED_MODULE_EXPORT_PREFIX } from '@/lib/stale-chunk-error'
 import { cn } from '@/lib/utils'
 import { CLI_SHELL_COLLAPSE_MS } from '@/lib/cli-shell/constants'
 import { useCliShell } from './CliShellProvider'
@@ -115,6 +116,7 @@ export function CliTerminalSession({
   > | null>(null)
   const isPanelResizingRef = useRef(isPanelResizing)
   const fitRafRef = useRef<number | null>(null)
+  const nestedFitRafRef = useRef<number | null>(null)
   const runCommandRef = useRef(runCommand)
   const completeTabRef = useRef(completeTab)
   const registerTerminalRef = useRef(registerTerminal)
@@ -202,6 +204,10 @@ export function CliTerminalSession({
     if (fitRafRef.current !== null) {
       cancelAnimationFrame(fitRafRef.current)
     }
+    if (nestedFitRafRef.current !== null) {
+      cancelAnimationFrame(nestedFitRafRef.current)
+      nestedFitRafRef.current = null
+    }
 
     fitRafRef.current = requestAnimationFrame(() => {
       fitRafRef.current = null
@@ -222,8 +228,11 @@ export function CliTerminalSession({
 
         fitAddon.fit()
         // Refit once layout settles (e.g. horizontal scrollbar in narrow panes).
-        requestAnimationFrame(() => {
+        nestedFitRafRef.current = requestAnimationFrame(() => {
+          nestedFitRafRef.current = null
           try {
+            if (fitAddonRef.current !== fitAddon) return
+            if (terminalRef.current !== terminal) return
             const next = fitAddon.proposeDimensions()
             if (
               next &&
@@ -252,15 +261,19 @@ export function CliTerminalSession({
     let terminalCleanup: (() => void) | undefined
 
     const mountTerminal = async () => {
-      const [
-        { Terminal },
-        { FitAddon },
-        { SearchAddon },
-      ] = await Promise.all([
+      const [xtermMod, fitMod, searchMod] = await Promise.all([
         import('@xterm/xterm'),
         import('@xterm/addon-fit'),
         import('@xterm/addon-search'),
       ])
+      const Terminal = xtermMod?.Terminal
+      const FitAddon = fitMod?.FitAddon
+      const SearchAddon = searchMod?.SearchAddon
+      if (!Terminal || !FitAddon || !SearchAddon) {
+        throw new Error(
+          `${MISSING_HASHED_MODULE_EXPORT_PREFIX} Terminal`,
+        )
+      }
       if (disposed || !terminalContainerRef.current) return
 
       const terminal = new Terminal({
@@ -466,11 +479,19 @@ export function CliTerminalSession({
           cancelAnimationFrame(fitRafRef.current)
           fitRafRef.current = null
         }
+        if (nestedFitRafRef.current !== null) {
+          cancelAnimationFrame(nestedFitRafRef.current)
+          nestedFitRafRef.current = null
+        }
         dataDisposable.dispose()
         resultsDisposable.dispose()
         resizeObserver.disconnect()
         unregisterTerminalRef.current(currentSessionId)
-        terminal.dispose()
+        try {
+          terminal.dispose()
+        } catch {
+          /* xterm may already have torn down its renderer */
+        }
         inputSessionRef.current = null
         terminalRef.current = null
         fitAddonRef.current = null

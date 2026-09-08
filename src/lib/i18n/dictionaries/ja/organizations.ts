@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaOrganizationsDictionary: Record<string, string> = {
+  'A valid transfer price is required to continue.':
+    '続行するには有効な移管料金が必要です。',
+  "We couldn't load a transfer price. Try again to continue.":
+    '移管料金を読み込めませんでした。続行するには、もう一度お試しください。',
+  'Transfer pricing is unavailable for this domain. Try another domain or contact support.':
+    'このドメインの移管料金は取得できません。別のドメインを試すか、サポートにお問い合わせください。',
+
   '(optional)': '(任意)',
   ', on': '、',
   ', or on': '、または',
