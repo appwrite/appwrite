@@ -34,6 +34,12 @@ class Specification extends Model
             'default' => '',
             'example' => APP_COMPUTE_SPECIFICATION_DEFAULT
         ]);
+        $this->addRule('reason', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Reason why specification is disabled. Possible values: unsupported, plan.',
+            'default' => '',
+            'example' => 'unsupported',
+        ]);
     }
 
     /**
