@@ -159,4 +159,16 @@ class Mqtt extends MessagingAdapter
     {
         return $this->subscriptions()->getSubscribers($projectId, $topic) !== [];
     }
+
+    /**
+     * The subscription-store record for an fd: its project, user, and subscriptions,
+     * or null when the fd holds none. This is the store's copy (the projectId/userId
+     * captured at subscribe time), not the live Connection object from open().
+     *
+     * @return array{projectId: string, userId: string, subs: array<string, array{topic: string, qos: int}>}|null
+     */
+    public function getConnection(int $fd): ?array
+    {
+        return $this->subscriptions()->getConnection($fd);
+    }
 }

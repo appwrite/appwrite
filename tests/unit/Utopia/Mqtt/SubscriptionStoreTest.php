@@ -162,4 +162,20 @@ final class SubscriptionStoreTest extends TestCase
         $this->assertSame([2 => 1], $this->store->getSubscribers(self::PROJECT, 'test/hello'));
         $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'other/x'));
     }
+
+    public function testGetConnectionReturnsTheFdRecord(): void
+    {
+        $this->store->subscribe(self::PROJECT, 'user-1', 'sub', 'test/hello', 9, 1);
+
+        $connection = $this->store->getConnection(9);
+
+        $this->assertSame(self::PROJECT, $connection['projectId']);
+        $this->assertSame('user-1', $connection['userId']);
+        $this->assertSame('test/hello', $connection['subs']['sub']['topic']);
+    }
+
+    public function testGetConnectionIsNullForAnUnknownFd(): void
+    {
+        $this->assertNull($this->store->getConnection(404));
+    }
 }

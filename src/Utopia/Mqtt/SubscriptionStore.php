@@ -127,6 +127,14 @@ class SubscriptionStore
     }
 
     /**
+     * @return array{projectId: string, userId: string, subs: array<string, array{topic: string, qos: int}>}|null
+     */
+    public function getConnection(int $fd): ?array
+    {
+        return $this->connections[$fd] ?? null;
+    }
+
+    /**
      *
      * @return array<int, int> fd => granted QoS
      */
