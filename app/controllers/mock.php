@@ -82,6 +82,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         $responseJson = [
             'access_token' => $canonicalEmail ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
+            'id_token' => 'eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0.',
             'expires_in' => 14400
         ];
 

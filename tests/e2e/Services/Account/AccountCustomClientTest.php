@@ -2528,6 +2528,7 @@ final class AccountCustomClientTest extends Scope
         // providerAccessToken, whereas createOAuth2Session persists it (see mock provider '123456').
         $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertEquals('eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0.', $response['body']['providerIdToken']);
     }
 
     public function testCreateOidcOAuth2Token(): void
@@ -3195,6 +3196,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+        $this->assertEquals('eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0.', $response['body']['providerIdToken']);
         $this->assertGreaterThan(DateTime::addSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
@@ -3211,6 +3213,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+        $this->assertEquals('eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0.', $response['body']['providerIdToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
 
         // Clean up - delete the user

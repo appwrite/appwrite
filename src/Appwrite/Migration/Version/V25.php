@@ -225,6 +225,22 @@ class V25 extends Migration
                         Console::warning("Failed to create attribute \"photo\" in collection {$id}: {$th->getMessage()}");
                     }
 
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'providerIdToken');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"providerIdToken\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'sessions':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'providerIdToken');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"providerIdToken\" in collection {$id}: {$th->getMessage()}");
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
