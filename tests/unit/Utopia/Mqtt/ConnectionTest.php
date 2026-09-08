@@ -50,4 +50,23 @@ final class ConnectionTest extends TestCase
             $this->assertSame(Exception::USER_UNAUTHORIZED, $e->getType());
         }
     }
+
+    public function testAcknowledgeResolvesATrackedDelivery(): void
+    {
+        $connection = new Connection(1);
+        $connection->track(7, 'appwrite/push/user-1', 42);
+
+        $this->assertSame(['topic' => 'appwrite/push/user-1', 'sequence' => 42], $connection->acknowledge(7));
+    }
+
+    public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
+    {
+        $connection = new Connection(1);
+        $connection->track(7, 'appwrite/push/user-1', 42);
+
+        $connection->acknowledge(7);
+
+        $this->assertNull($connection->acknowledge(7), 'a second ack for the same id resolves to nothing');
+        $this->assertNull($connection->acknowledge(99), 'an ack for an untracked id resolves to nothing');
+    }
 }

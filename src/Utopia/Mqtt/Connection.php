@@ -7,8 +7,8 @@ use Appwrite\Extend\Exception;
 /**
  * Per-connection state, keyed by the transport's file descriptor. Handlers mutate
  * it across the packet lifecycle: CONNECT records the protocol level, client id,
- * clean-start flag, and resolved identity; PUBLISH draws outbound packet ids for
- * QoS 1 delivery.
+ * clean-start flag, and resolved identity; delivery draws outbound packet ids and
+ * tracks each QoS 1 message in flight until its PUBACK.
  */
 class Connection
 {
@@ -32,6 +32,15 @@ class Connection
 
     private int $packetId = 0;
 
+    /**
+     * Outbound QoS 1 deliveries awaiting a PUBACK, keyed by packet id. Each entry
+     * keeps the topic and the durable sequence delivered, so the matching PUBACK
+     * can advance that topic's cursor. Emptied as acks arrive.
+     *
+     * @var array<int, array{topic: string, sequence: int}>
+     */
+    private array $inflight = [];
+
     public function __construct(
         public readonly int $fd,
     ) {
@@ -43,6 +52,27 @@ class Connection
         $this->packetId = ($this->packetId % 0xFFFF) + 1;
 
         return $this->packetId;
+    }
+
+    /** Record an outbound QoS 1 delivery so its PUBACK can be matched back to a topic and sequence. */
+    public function track(int $packetId, string $topic, int $sequence): void
+    {
+        $this->inflight[$packetId] = ['topic' => $topic, 'sequence' => $sequence];
+    }
+
+    /**
+     * Resolve a PUBACK to the delivery it acknowledges, removing it from the
+     * in-flight set. Returns the topic and sequence, or null for an unknown or
+     * duplicate ack.
+     *
+     * @return array{topic: string, sequence: int}|null
+     */
+    public function acknowledge(int $packetId): ?array
+    {
+        $delivery = $this->inflight[$packetId] ?? null;
+        unset($this->inflight[$packetId]);
+
+        return $delivery;
     }
 
     public function setClientId(string $clientId): void
