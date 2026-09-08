@@ -138,6 +138,123 @@ You can also move the `tablesDB` and `tables` arrays into separate JSON files wi
 Learn more about multi-file configuration
 {% /arrow_link %}
 
+## Column types and formats {% #column-types-and-formats %}
+
+Each entry in a table's `columns` array uses `type` to select its base data type. For `"type": "string"`, `format` selects a specialized string validator: `email`, `url`, `ip`, or `enum`. For example, an email column is a string with an email format, not `"type": "email"`.
+
+The following values are supported by the [CLI 27.3.0 schema dispatcher](https://github.com/appwrite/sdk-for-cli/blob/9d267aba479afce4a75dee6fefce96ded58f4d50/internal/schema/operations.go#L180-L226). Availability also depends on your Appwrite server version.
+
+{% table %}
+* Config `type`
+* Usage
+---
+* `varchar`
+* Plain text with a maximum `size`. Use this for new plain text columns on servers that support it.
+---
+* `string`
+* Legacy plain text with a maximum `size`, or a formatted string using one of the formats below.
+---
+* `text`, `mediumtext`, `longtext`
+* Larger text values. These types do not use `size`.
+---
+* `integer`, `bigint`
+* Whole numbers, with optional `min` and `max` bounds.
+---
+* `double`
+* Floating-point numbers, with optional `min` and `max` bounds. Maps to the `float` API endpoint.
+---
+* `boolean`
+* `true` or `false` values.
+---
+* `datetime`
+* Date and time values in ISO 8601 format. This is a type, not a string format.
+---
+* `relationship`
+* Relationships to another table, configured with fields such as `relatedTable` and `relationType`.
+---
+* `point`, `linestring`, `polygon`
+* Spatial values. `linestring` maps to the `line` API endpoint.
+{% /table %}
+
+The CLI commands `create-float-column` and `update-float-column` use **float** in their names, but the corresponding JSON entry must use `"type": "double"`, not `"type": "float"`.
+
+### String formats {% #string-formats %}
+
+Use `"type": "string"` for all four formats, even when other plain text columns use `varchar`. Adding `format` to `varchar` does not select a formatted-string endpoint.
+
+{% table %}
+* Config `format`
+* Accepted values
+---
+* `email`
+* Email addresses.
+---
+* `url`
+* URLs.
+---
+* `ip`
+* IP addresses.
+---
+* `enum`
+* One of the strings in the required `elements` array.
+{% /table %}
+
+Omit `format` for plain text. Formatted strings do not need `size`; enums need `elements` instead. Do not use arbitrary JSON Schema formats such as `uuid`: the CLI only dispatches the four formats listed above, and an unrecognized string format falls back to plain string creation.
+
+`array` is a separate boolean modifier, not a type. For example, `"type": "varchar", "array": true` stores a list of strings. Spatial and relationship creation do not accept this modifier. There is no `"type": "array"` or arbitrary `"type": "object"` in this dispatcher.
+
+### Column configuration examples {% #column-configuration-examples %}
+
+The following JSON array contains complete column definitions for plain text, email, enum, floating-point numbers, and a list of strings. Add the entries you need to a table's `columns` array in `appwrite.config.json`. Keep any existing columns you want to retain: removing a column from the configuration can delete it when you push.
+
+```json
+[
+    {
+        "key": "title",
+        "type": "varchar",
+        "size": 255,
+        "required": true,
+        "array": false
+    },
+    {
+        "key": "contactEmail",
+        "type": "string",
+        "format": "email",
+        "required": true,
+        "array": false
+    },
+    {
+        "key": "publicationStatus",
+        "type": "string",
+        "format": "enum",
+        "elements": ["draft", "published", "archived"],
+        "required": false,
+        "array": false,
+        "default": "draft"
+    },
+    {
+        "key": "rating",
+        "type": "double",
+        "required": false,
+        "array": false,
+        "min": 0,
+        "max": 5,
+        "default": 2.5
+    },
+    {
+        "key": "tags",
+        "type": "varchar",
+        "size": 100,
+        "required": false,
+        "array": true
+    }
+]
+```
+
+Include `key`, `type`, and `required` for these columns, plus `size` for plain `varchar` or legacy `string` columns, and `elements` for enums. An enum's default must be one of its `elements`; a numeric default must fall within its bounds. Do not set a default for required columns or array columns.
+
+The same `type` and `format` distinction applies to legacy collection `attributes`. Keep the plain text type returned by your server when pulling an existing schema; changing `string` to `varchar` is a type change, not just a spelling change. Changing a column's type requires recreation and can lose its data.
+
 # Push table {% #push-table %}
 
 {% partial file="cli-push-command.md" /%}
