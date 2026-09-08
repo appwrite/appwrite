@@ -1,5 +1,5 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   getConsoleBannerById,
   isConsoleBannerVisible,
+  isFullscreenWizardPath,
   POSTGRES_PROMO_BANNER_ID,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
@@ -35,6 +36,7 @@ const POSTGRES_PROMO_IMAGE_MASK_STYLE = {
 
 export function PostgresPromoBanner() {
   const t = useT()
+  const location = useLocation()
   const { projectId } = useParams({ strict: false })
   const { account } = useAuth()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
@@ -55,7 +57,9 @@ export function PostgresPromoBanner() {
     dismissed: optimisticDismissed || dismissedFromPrefs,
   })
 
-  if (!visible) return null
+  if (!visible || !projectId || isFullscreenWizardPath(location.pathname)) {
+    return null
+  }
 
   const handleDismiss = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -73,9 +77,9 @@ export function PostgresPromoBanner() {
     >
       <Link
         to="/projects/$projectId/databases/create"
-        params={{ projectId: projectId! }}
+        params={{ projectId }}
         search={CREATE_DATABASE_WIZARD_POSTGRES_SEARCH}
-        {...analyticsAttrs('postgres-promo-banner-try-now')}
+        {...analyticsAttrs(POSTGRES_PROMO_BANNER.event)}
         aria-label={`${t('Appwrite now speaks PostgreSQL')}. ${t('Setup')}`}
         className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >

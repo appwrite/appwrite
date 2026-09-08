@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
+import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import {
   CONSOLE_BANNERS,
   formatConsoleBannerUtcRange,
@@ -149,6 +150,18 @@ export function DebugMenuConsoleBannersPanel() {
               <p className="text-[11px] text-[var(--network-globe-edge)]/80">
                 {formatConsoleBannerUtcRange(banner)}
               </p>
+
+              <div className="space-y-0.5">
+                <p className="text-[10px] uppercase tracking-wide text-[var(--network-globe-edge)]/60">
+                  Event
+                </p>
+                <p className="font-mono text-[10px] text-[var(--network-globe-edge)]/80">
+                  {banner.event}
+                </p>
+                <p className="text-[11px] text-foreground">
+                  {ANALYTICS_ACTIONS[banner.event]}
+                </p>
+              </div>
 
               <div className="flex items-center justify-between gap-3 rounded-md border border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] bg-background/60 px-3 py-2">
                 <div className="min-w-0">

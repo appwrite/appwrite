@@ -4,7 +4,10 @@ import {
   getConsoleBannerScheduleStatus,
   INIT_RECAP_PROMO_BANNER_ID,
 } from '@/lib/console-banners/catalog'
-import { isInitRecapPromoPath } from '@/lib/console-banners/init-recap-promo-path'
+import {
+  isInitRecapPromoPath,
+  shouldHideInitRecapForHeaderPromo,
+} from '@/lib/console-banners/init-recap-promo-path'
 
 describe('Init recap promo banner', () => {
   const banner = getConsoleBannerById(INIT_RECAP_PROMO_BANNER_ID)!
@@ -44,5 +47,26 @@ describe('isInitRecapPromoPath', () => {
     expect(isInitRecapPromoPath('/sign-in')).toBe(false)
     expect(isInitRecapPromoPath('/projects/abc/databases/create')).toBe(false)
     expect(isInitRecapPromoPath('/projects/abc/apps/add')).toBe(false)
+  })
+})
+
+describe('shouldHideInitRecapForHeaderPromo', () => {
+  it('hides the recap on project routes while a header promo is visible', () => {
+    expect(
+      shouldHideInitRecapForHeaderPromo('/projects/abc/overview', true),
+    ).toBe(true)
+  })
+
+  it('keeps the recap on org and account routes', () => {
+    expect(
+      shouldHideInitRecapForHeaderPromo('/organizations/org/overview', true),
+    ).toBe(false)
+    expect(shouldHideInitRecapForHeaderPromo('/account', true)).toBe(false)
+  })
+
+  it('keeps the recap on project routes when no header promo is visible', () => {
+    expect(
+      shouldHideInitRecapForHeaderPromo('/projects/abc/overview', false),
+    ).toBe(false)
   })
 })
