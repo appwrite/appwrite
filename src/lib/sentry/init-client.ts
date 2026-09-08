@@ -1,20 +1,29 @@
 import * as Sentry from '@sentry/tanstackstart-react'
 import { getRuntimeConfig } from '@/lib/runtime-config'
-import { getSentryEnvironment } from '@/lib/sentry/environment'
+import {
+  getSentryEnvironment,
+  isLocalDevelopmentRuntime,
+} from '@/lib/sentry/environment'
 import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
 let sentryInitialized = false
+
+type InitSentryClientOptions = {
+  /** Debug menu test only: allow init on localhost / Vite dev. */
+  force?: boolean
+}
 
 /**
  * Initialize the browser Sentry client when a DSN is configured.
  * Idempotent: safe to call multiple times (e.g. after consent, HMR, debug test).
  */
-export function initSentryClient(): boolean {
+export function initSentryClient(options?: InitSentryClientOptions): boolean {
   if (typeof window === 'undefined') return false
   if (sentryInitialized) return !!Sentry.getClient()
 
   const sentryDsn = getRuntimeConfig().sentryDsn
   if (!sentryDsn) return false
+  if (!options?.force && isLocalDevelopmentRuntime()) return false
 
   Sentry.init({
     dsn: sentryDsn,
@@ -51,7 +60,7 @@ export async function sendSentryDebugTestError(): Promise<SentryDebugTestResult>
     return { ok: false, reason: 'VITE_SENTRY_DSN is not set in runtime config' }
   }
 
-  if (!initSentryClient()) {
+  if (!initSentryClient({ force: true })) {
     return { ok: false, reason: 'Sentry client failed to initialize' }
   }
 
