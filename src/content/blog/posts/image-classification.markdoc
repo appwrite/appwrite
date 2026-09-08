@@ -48,13 +48,13 @@ Convolutional neural networks (CNNs) use multiple layers to process data. Convol
 
 ### Transformers
 
-The transformer architecture has completely changed the language processing field of AI. Researchers have investigated using the Transformer architecture since 2020, by converting sections of images into tokens with [Google's ViT](https://arxiv.org/pdf/2010.11929) and [Microsoft's Swin Transformer](https://arxiv.org/pdf/2103.14030). In these cases, Transformers showed yields matching or even greater results than CNNs.
+The transformer architecture has completely changed the language processing field of AI. Researchers have investigated using the Transformer architecture since 2020, by converting sections of images into tokens with [Google's ViT](https://arxiv.org/pdf/2010.11929) and [Microsoft's Swin Transformer](https://arxiv.org/pdf/2103.14030). In these cases, Transformers showed yields matching or even greater results than CNNs.
 
-Currently, Transformers are leading benchmarks on most image classification datasets, including ImageNet ([OmniVec](https://arxiv.org/pdf/2311.05709)), CIFAR-10 (ViT-H/14), and [STL-10](https://cs.stanford.edu/~acoates/stl10/) (ViT-L/16). Still, they need help with datasets containing many classes, such as CIFAR-100, which is currently topped by an [EfficientNet](https://arxiv.org/pdf/1905.11946) (CNN). Another downside to transformers is that they require significantly more data than a CNN to train.
+Currently, Transformers are leading benchmarks on most image classification datasets, including ImageNet ([OmniVec](https://arxiv.org/pdf/2311.05709)), CIFAR-10 (ViT-H/14), and [STL-10](https://cs.stanford.edu/~acoates/stl10/) (ViT-L/16). Still, they need help with datasets containing many classes, such as CIFAR-100, which is currently topped by an [EfficientNet](https://arxiv.org/pdf/1905.11946) (CNN). Another downside to transformers is that they require significantly more data than a CNN to train.
 
 ### Capsule Networks (CapNet)
 
-[CapNets](https://arxiv.org/pdf/1710.09829) were invented by Geoffrey Hinton to remedy CNN's issue of recognizing different orientations. Unlike CNNs, CapNets don't use max-pooling techniques, which may cause important details to be lost in an image. Instead, they utilize smaller groups of neurons called capsules, designed to detect specific objects and output a vector instead of a single float value. Because of this output, CapNets can understand relationships between objects better (Eyes appear above the nose, etc.…) to build up a more accurate classifier even when viewing images with different orientations.
+[CapNets](https://arxiv.org/pdf/1710.09829) were invented by Geoffrey Hinton to remedy CNN's issue of recognizing different orientations. Unlike CNNs, CapNets don't use max-pooling techniques, which may cause important details to be lost in an image. Instead, they utilize smaller groups of neurons called capsules, designed to detect specific objects and output a vector instead of a single float value. Because of this output, CapNets can understand relationships between objects better (Eyes appear above the nose, etc.…) to build up a more accurate classifier even when viewing images with different orientations.
 
 # Datasets
 
@@ -79,7 +79,7 @@ To show you how you might use image classification in your application, we can c
 
 ### Step 1: Train the TensorFlow model
 
-Install TensorFlow and NumPy installed on your machine, then paste the following code into a file called training.py; this is a modified version of the TensorFlow image classification tutorial found [here](https://www.tensorflow.org/tutorials/images/classification).
+Install TensorFlow and NumPy installed on your machine, then paste the following code into a file called training.py; this is a modified version of the TensorFlow image classification tutorial found [here](https://www.tensorflow.org/tutorials/images/classification).
 
 ```python
 import matplotlib.pyplot as plt
@@ -256,13 +256,13 @@ Pillow
 
 ### Step 4: Deploy your function
 
-Move the `model.tflite` file that was created into the same directory as the `main.py` file and then change directories to that containing the `appwrite.config.json`. This `model.tflite` is quite a small file, so store it in the function. If using larger models, upload them to Appwrite Storage and then use `getFileDownload` to download them to the function. 
+Move the `model.tflite` file that was created into the same directory as the `main.py` file and then change directories to that containing the `appwrite.config.json`. This `model.tflite` is quite a small file, so store it in the function. If using larger models, upload them to Appwrite Storage and then use `getFileDownload` to download them to the function. 
 
-With the file now copied, run appwrite deploy function and select the function to deploy it to Appwrite.
+With the file now copied, run appwrite deploy function and select the function to deploy it to Appwrite.
 
 ### Step 5: Update your environment variables 
 
-Now that the function has been deployed, navigate to it on the Appwrite console and set the `APPWRITE_API_KEY` and `APPWRITE_BUCKET_ID` environment variables to be ready for execution. Make sure to redeploy the function so these new environment variables are set.
+Now that the function has been deployed, navigate to it on the Appwrite console and set the `APPWRITE_API_KEY` and `APPWRITE_BUCKET_ID` environment variables to be ready for execution. Make sure to redeploy the function so these new environment variables are set.
 
 ### Step 6: Test your function
 
@@ -275,7 +275,7 @@ Finally, send a `POST` request to the function with a JSON body that contains a 
 The classification result will be returned shortly as a response. This function can also accept a file event. To build on this function, you may want to upload the result to the database to identify images uploaded to your instance automatically.
 
 # Conclusion
-This demo should give you a good starting point for experimenting with AI and Appwrite. Try making a more advanced version or using safe tensors instead, and if you make anything cool, do not hesitate to let us know on our [Discord server](https://appwrite.io/discord). 
+This demo should give you a good starting point for experimenting with AI and Appwrite. Try making a more advanced version or using safe tensors instead, and if you make anything cool, do not hesitate to let us know on our [Discord server](https://appwrite.io/discord). 
 
 Check out the resources below to learn how to integrate AI into your Appwrite-powered application. We can’t wait to see what you build!
 

@@ -106,11 +106,11 @@ After your site has been successfully deployed, Appwrite will show you a **Congr
 
 Appwrite provides a few options to help you continue setting up or expanding your project.
 
-You can **Add domain**, connecting an existing custom domain you own or registering a new one through the console.
+You can **Add domain**, connecting an existing custom domain you own or registering a new one through the console.
 
-You can **Share site**, allowing you to collaborate with your team by sharing access to your project.
+You can **Share site**, allowing you to collaborate with your team by sharing access to your project.
 
-You can also **Open on mobile**, previewing your live site directly from a mobile or tablet device to ensure everything looks and functions as expected across different screen sizes.
+You can also **Open on mobile**, previewing your live site directly from a mobile or tablet device to ensure everything looks and functions as expected across different screen sizes.
 
 ## Wrapping up
 And with that, the Docusaurus template is deployed to Appwrite Sites. You can explore other templates or deploy any other websites you'd like.

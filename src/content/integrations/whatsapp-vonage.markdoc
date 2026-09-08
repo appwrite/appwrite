@@ -48,13 +48,13 @@ Ensure you save the following information for later use:
 | Signature secret | Head to the **Vonage API dashboard** > **API Settings** > **Signature secret** |
 | WhatsApp phone number | Head to the **Vonage API dashboard** > **Developer Tools** > **Messages API Sandbox** > enable **WhatsApp** and copy phone number |
 
-Once the Appwrite Function is deployed, we will return here to add the Function URL as the **Inbound Webhook** link.
+Once the Appwrite Function is deployed, we will return here to add the Function URL as the **Inbound Webhook** link.
 
 ## Step 2: Create the Appwrite Function
 
 For this step, [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. In case you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
 
-In your Appwrite project, go to the **Functions** page, click on the **Templates** tab, search for ‘Vonage’, and select the **WhatsApp with Vonage** function template. 
+In your Appwrite project, go to the **Functions** page, click on the **Templates** tab, search for ‘Vonage’, and select the **WhatsApp with Vonage** function template. 
 
 ![Function template](/images/integrations/whatsapp-vonage/template.avif)
 
@@ -62,11 +62,11 @@ During the setup process, add the Vonage **API key**, **API secret, signature se
 
 ![Env variables](/images/integrations/whatsapp-vonage/variables.avif)
 
-Then, create a new repository with the default branch and root directory settings. You can edit this repository later to update the function logic. Once the function is ready, visit the **Domains** tab on the function page and copy the domain to add to the **Inbound Webhook** link on the **Messages API Sandbox** page on your Vonage account.
+Then, create a new repository with the default branch and root directory settings. You can edit this repository later to update the function logic. Once the function is ready, visit the **Domains** tab on the function page and copy the domain to add to the **Inbound Webhook** link on the **Messages API Sandbox** page on your Vonage account.
 
 ## Step 3: Test the integration
 
-Open **WhatsApp** on your phone, join the Vonage WhatsApp Channel (via the steps mentioned on the *Messaging API Sandbox* on *Vonage*), and send any message to the WhatsApp number. You shall receive a message in the format: `Hi there! You sent me: <SENT MESSAGE>`
+Open **WhatsApp** on your phone, join the Vonage WhatsApp Channel (via the steps mentioned on the *Messaging API Sandbox* on *Vonage*), and send any message to the WhatsApp number. You shall receive a message in the format: `Hi there! You sent me: <SENT MESSAGE>`
 
 ![demo](/images/integrations/whatsapp-vonage/demo.avif)
 

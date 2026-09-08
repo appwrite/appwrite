@@ -25,6 +25,9 @@ jobs:
       - name: Check connect snippet line width
         run: bun run lint:snippets
 
+      - name: Check content for hidden Unicode
+        run: bun run lint:content
+
       - name: Build
         run: bun run build
         env:

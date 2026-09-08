@@ -34,7 +34,7 @@ To implement the Hugging Face image classification function, there are several s
 
 ## Step 1: Sign up for Hugging Face
 
-First, you must [sign up for a Hugging Face account](https://huggingface.co/join). Once your account is set up, visit your profile settings, head to the [Access Tokens](https://huggingface.co/settings/tokens) page, and create an **access token** with the **Inference** permissions. Save this token for further usage.
+First, you must [sign up for a Hugging Face account](https://huggingface.co/join). Once your account is set up, visit your profile settings, head to the [Access Tokens](https://huggingface.co/settings/tokens) page, and create an **access token** with the **Inference** permissions. Save this token for further usage.
 
 ![Create API token](/images/integrations/ai-hugging-face-image-classification/hugging-face-create-api-token.avif)
 
@@ -42,7 +42,7 @@ First, you must [sign up for a Hugging Face account](https://huggingface.co/join
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. If you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
 
-Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **Image Classification** function template.
+Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **Image Classification** function template.
 
 ![Function template](/images/integrations/ai-hugging-face-image-classification/appwrite-functions-image-classification-hugging-face.avif)
 

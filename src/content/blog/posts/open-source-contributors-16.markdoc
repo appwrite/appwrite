@@ -34,49 +34,49 @@ Therefore, we’d like to conclude Init by celebrating the people who made 1.6 p
 
 We appreciate the work of everyone involved, from coding and translations to documentation. We’d like to extend our deepest thanks to:
 
-- [@ItzNotABug](https://github.com/ItzNotABug) who:
+- [@ItzNotABug](https://github.com/ItzNotABug) who:
     - added a theme on SPA Init in [#1190](https://github.com/appwrite/console/pull/1190)
     - fixed redirecting back to the dashboard during password recovery in [#1188](https://github.com/appwrite/console/pull/1188)
-    - fixed PNPM commands in the Contributing guide in [#1256](https://github.com/appwrite/console/pull/1256)
-    - removed unnecessary bullet point marker in [#1240](https://github.com/appwrite/console/pull/1240)
-    - fixed the tooltip location in [#1275](https://github.com/appwrite/console/pull/1275)
-    - fixed input label alignment in [#1234](https://github.com/appwrite/console/pull/1234)
-    - fixed cancel icon shifting in [#1207](https://github.com/appwrite/console/pull/1207)
-    - fixed failing `GitHub` install on preview instances in [#1282](https://github.com/appwrite/console/pull/1282)
-    - removed unnecessary plus icon in [#1283](https://github.com/appwrite/console/pull/1283)
-    - deleted expired tags per project in [#8239](https://github.com/appwrite/appwrite/pull/8239)
+    - fixed PNPM commands in the Contributing guide in [#1256](https://github.com/appwrite/console/pull/1256)
+    - removed unnecessary bullet point marker in [#1240](https://github.com/appwrite/console/pull/1240)
+    - fixed the tooltip location in [#1275](https://github.com/appwrite/console/pull/1275)
+    - fixed input label alignment in [#1234](https://github.com/appwrite/console/pull/1234)
+    - fixed cancel icon shifting in [#1207](https://github.com/appwrite/console/pull/1207)
+    - fixed failing `GitHub` install on preview instances in [#1282](https://github.com/appwrite/console/pull/1282)
+    - removed unnecessary plus icon in [#1283](https://github.com/appwrite/console/pull/1283)
+    - deleted expired tags per project in [#8239](https://github.com/appwrite/appwrite/pull/8239)
     - added tests to validate headers aren’t being overridden in [#8228](https://github.com/appwrite/appwrite/pull/8228)
-    - added `default` to table columns in [#8271](https://github.com/appwrite/appwrite/pull/8271)
-    - fixed document APIs that don't support redirects in [#8233](https://github.com/appwrite/appwrite/pull/8233)
-    - fixed the domain check in [#8472](https://github.com/appwrite/appwrite/pull/8472)
-    - updated Appwrite versions in [#884](https://github.com/appwrite/sdk-generator/pull/884)
-- [@blackviking27](https://github.com/blackviking27) who fixed the wizard footer overlapping with the language indicator in [#1152](https://github.com/appwrite/console/pull/1152)
-- [@iamAyushChamoli](https://github.com/iamAyushChamoli) who fixed syntax for Android in documentation in [#1238](https://github.com/appwrite/console/pull/1238)
+    - added `default` to table columns in [#8271](https://github.com/appwrite/appwrite/pull/8271)
+    - fixed document APIs that don't support redirects in [#8233](https://github.com/appwrite/appwrite/pull/8233)
+    - fixed the domain check in [#8472](https://github.com/appwrite/appwrite/pull/8472)
+    - updated Appwrite versions in [#884](https://github.com/appwrite/sdk-generator/pull/884)
+- [@blackviking27](https://github.com/blackviking27) who fixed the wizard footer overlapping with the language indicator in [#1152](https://github.com/appwrite/console/pull/1152)
+- [@iamAyushChamoli](https://github.com/iamAyushChamoli) who fixed syntax for Android in documentation in [#1238](https://github.com/appwrite/console/pull/1238)
 - [@Anush008](https://github.com/Anush008) who
-    - added the sync-with-qdrant template for JavaScript in [#288](https://github.com/appwrite/templates/pull/288)
-    - added the sync-with-qdrant template for TypeScript in [#290](https://github.com/appwrite/templates/pull/290)
-    - added the sync-with-qdrant template for Bun  in [#291](https://github.com/appwrite/templates/pull/291)
-    - added the sync-with-qdrant template for Python in [#289](https://github.com/appwrite/templates/pull/289)
-- [@navjotNSK](https://github.com/navjotNSK) who added Hong Kong in translations by in [#8179](https://github.com/appwrite/appwrite/pull/8179)
-- [@2002Bishwajeet](https://github.com/2002Bishwajeet) who fixed setting the target field if the existing target document is false by in [#8236](https://github.com/appwrite/appwrite/pull/8236)
-- [@Achraf112Ben](https://github.com/Achraf112Ben) who added Darija (Moroccan Arabic) translation file in [#7501](https://github.com/appwrite/appwrite/pull/7501)
-- [@xuelink](https://github.com/xuelink) who removed unused import in templates in [#283](https://github.com/appwrite/templates/pull/283)
-- [@Snehasis4321](https://github.com/Snehasis4321) who fixed push notifications not working for node in [#282](https://github.com/appwrite/templates/pull/282)
-- [@kunalArya1](https://github.com/kunalArya1) who fixed variable names and logging in Web and React Native docs templates in [#890](https://github.com/appwrite/sdk-generator/pull/890)
-- [@MarkPerkins](https://github.com/MarkPerkins) who removed force unwrapping of incoming URL parameters in [#887](https://github.com/appwrite/sdk-generator/pull/887)
-- [@naman1608](https://github.com/naman1608)  who improved inline docs for Android SDK templates in [#873](https://github.com/appwrite/sdk-generator/pull/873)
-- [@svenopdehipt](https://github.com/svenopdehipt) who updated the Flutter code to use `js_interop` in [#810](https://github.com/appwrite/sdk-generator/pull/810)
-- [@us3r001](https://github.com/us3r001) who fixed the `jsonSerialize` return type in PHP query template in [#869](https://github.com/appwrite/sdk-generator/pull/869)
-- [@Suven-p](https://github.com/Suven-p) who updated the Go client in [#647](https://github.com/appwrite/sdk-generator/pull/647)
-- [@Im-Madhur-Gupta](https://github.com/Im-Madhur-Gupta) who added inline doc comments to the Web SDK template  in [#721](https://github.com/appwrite/sdk-generator/pull/721)
-- [@adarshjhaa100](https://github.com/adarshjhaa100) who created a hint to run Init and deploy commands in [#720](https://github.com/appwrite/sdk-generator/pull/720)
-- [@zlmr](https://github.com/zlmr) who:
-    - fixed closing Android realtime socket properly on unsubscribe in [#814](https://github.com/appwrite/sdk-generator/pull/814)
-    - fixed Apple realtime socket cleanup in [#815](https://github.com/appwrite/sdk-generator/pull/815)
-- [@StarZeus](https://github.com/StarZeus) who helped fix an Appwrite CLI login issue regarding the setting of cookies in [#802](https://github.com/appwrite/sdk-generator/pull/802)
-- [@theemaster](https://github.com/theemaster) who updated .NET SDK to allow null value in user model in [#800](https://github.com/appwrite/sdk-generator/pull/800)
-- [@KillTrot](https://github.com/KillTrot)  who changed `GetValues` to `TryGetValues` when parsing Content-Type header in the .NET SDK in [#806](https://github.com/appwrite/sdk-generator/pull/806)
-- [@svenopdehipt](https://github.com/svenopdehipt)  who added support for vision OS and fixed warnings & errors in [#777](https://github.com/appwrite/sdk-generator/pull/777)
+    - added the sync-with-qdrant template for JavaScript in [#288](https://github.com/appwrite/templates/pull/288)
+    - added the sync-with-qdrant template for TypeScript in [#290](https://github.com/appwrite/templates/pull/290)
+    - added the sync-with-qdrant template for Bun  in [#291](https://github.com/appwrite/templates/pull/291)
+    - added the sync-with-qdrant template for Python in [#289](https://github.com/appwrite/templates/pull/289)
+- [@navjotNSK](https://github.com/navjotNSK) who added Hong Kong in translations by in [#8179](https://github.com/appwrite/appwrite/pull/8179)
+- [@2002Bishwajeet](https://github.com/2002Bishwajeet) who fixed setting the target field if the existing target document is false by in [#8236](https://github.com/appwrite/appwrite/pull/8236)
+- [@Achraf112Ben](https://github.com/Achraf112Ben) who added Darija (Moroccan Arabic) translation file in [#7501](https://github.com/appwrite/appwrite/pull/7501)
+- [@xuelink](https://github.com/xuelink) who removed unused import in templates in [#283](https://github.com/appwrite/templates/pull/283)
+- [@Snehasis4321](https://github.com/Snehasis4321) who fixed push notifications not working for node in [#282](https://github.com/appwrite/templates/pull/282)
+- [@kunalArya1](https://github.com/kunalArya1) who fixed variable names and logging in Web and React Native docs templates in [#890](https://github.com/appwrite/sdk-generator/pull/890)
+- [@MarkPerkins](https://github.com/MarkPerkins) who removed force unwrapping of incoming URL parameters in [#887](https://github.com/appwrite/sdk-generator/pull/887)
+- [@naman1608](https://github.com/naman1608)  who improved inline docs for Android SDK templates in [#873](https://github.com/appwrite/sdk-generator/pull/873)
+- [@svenopdehipt](https://github.com/svenopdehipt) who updated the Flutter code to use `js_interop` in [#810](https://github.com/appwrite/sdk-generator/pull/810)
+- [@us3r001](https://github.com/us3r001) who fixed the `jsonSerialize` return type in PHP query template in [#869](https://github.com/appwrite/sdk-generator/pull/869)
+- [@Suven-p](https://github.com/Suven-p) who updated the Go client in [#647](https://github.com/appwrite/sdk-generator/pull/647)
+- [@Im-Madhur-Gupta](https://github.com/Im-Madhur-Gupta) who added inline doc comments to the Web SDK template  in [#721](https://github.com/appwrite/sdk-generator/pull/721)
+- [@adarshjhaa100](https://github.com/adarshjhaa100) who created a hint to run Init and deploy commands in [#720](https://github.com/appwrite/sdk-generator/pull/720)
+- [@zlmr](https://github.com/zlmr) who:
+    - fixed closing Android realtime socket properly on unsubscribe in [#814](https://github.com/appwrite/sdk-generator/pull/814)
+    - fixed Apple realtime socket cleanup in [#815](https://github.com/appwrite/sdk-generator/pull/815)
+- [@StarZeus](https://github.com/StarZeus) who helped fix an Appwrite CLI login issue regarding the setting of cookies in [#802](https://github.com/appwrite/sdk-generator/pull/802)
+- [@theemaster](https://github.com/theemaster) who updated .NET SDK to allow null value in user model in [#800](https://github.com/appwrite/sdk-generator/pull/800)
+- [@KillTrot](https://github.com/KillTrot)  who changed `GetValues` to `TryGetValues` when parsing Content-Type header in the .NET SDK in [#806](https://github.com/appwrite/sdk-generator/pull/806)
+- [@svenopdehipt](https://github.com/svenopdehipt)  who added support for vision OS and fixed warnings & errors in [#777](https://github.com/appwrite/sdk-generator/pull/777)
 
 # How you can contribute
 
@@ -84,11 +84,11 @@ Open source is at the core of Appwrite. We believe in building in the open, shar
 
  If you would like to play a more substantial role in the development of Appwrite, here are some ways you can make a difference:
 
-- Share your suggestions in the [issues](https://github.com/appwrite/appwrite/issues) listed on our GitHub repo.
-- Make bug fixes and feature contributions by creating [pull requests](https://github.com/appwrite/appwrite/pulls).
-- Raise feedback and new ideas about Appwrite in our [GitHub Discussions](https://github.com/appwrite/appwrite/discussions).
-- Participate with other Appwrite developers in our [Discord community](https://appwrite.io/discord).
-- Share your Appwrite project with our community on the [Built With Appwrite](https://builtwith.appwrite.io/) platform.
-- Add any Appwrite-related educational content on our [awesome-appwrite](https://github.com/appwrite/awesome-appwrite) repo.
+- Share your suggestions in the [issues](https://github.com/appwrite/appwrite/issues) listed on our GitHub repo.
+- Make bug fixes and feature contributions by creating [pull requests](https://github.com/appwrite/appwrite/pulls).
+- Raise feedback and new ideas about Appwrite in our [GitHub Discussions](https://github.com/appwrite/appwrite/discussions).
+- Participate with other Appwrite developers in our [Discord community](https://appwrite.io/discord).
+- Share your Appwrite project with our community on the [Built With Appwrite](https://builtwith.appwrite.io/) platform.
+- Add any Appwrite-related educational content on our [awesome-appwrite](https://github.com/appwrite/awesome-appwrite) repo.
 
 Together, let’s continue to build Appwrite through the power of open-source, and help every developer build like a team of hundreds.

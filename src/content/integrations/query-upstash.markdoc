@@ -42,7 +42,7 @@ First, [create an account on Upstash](https://console.upstash.com/login) and set
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. If you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
 
-Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Upstash** function template.
+Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Upstash** function template.
 
 ![Function template](/images/integrations/query-upstash/template.avif)
 
@@ -52,7 +52,7 @@ Add the **Upstash endpoint** and **token** you saved in the **Variables** step. 
 
 ## Step 3: Test the function
 
-Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. Sending a GET (HTTP) Request to this endpoint will add a randomly generated mock embedding and query for the one most similar entry in the database.
+Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. Sending a GET (HTTP) Request to this endpoint will add a randomly generated mock embedding and query for the one most similar entry in the database.
 
 ```bash
 curl DEPLOYED_FUNCTION_DOMAIN \

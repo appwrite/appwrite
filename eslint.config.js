@@ -27,6 +27,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': 'error',
       'unused-imports/no-unused-imports': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'no-irregular-whitespace': [
+        'error',
+        { skipStrings: false, skipTemplates: false, skipJSXText: false },
+      ],
     },
   },
 )

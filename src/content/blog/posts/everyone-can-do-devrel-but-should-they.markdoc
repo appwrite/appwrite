@@ -22,25 +22,25 @@ faqs:
     answer: "At [Appwrite](/), DevRel work spans developer advocacy, content production, community management, product feedback, and contributions back to the product. The team builds with Appwrite, ships sample apps, writes for the blog and docs, and runs initiatives like office hours and the [Discord community](/discord)."
 ---
 
-One thing that I can say, having spent five years in communities and over two years as a Developer Advocate at Appwrite, is that Developer Relations (or DevRel) isn’t just a job but a philosophy. DevRel is something we can do by helping developers in our communities, sharing knowledge through our content, or writing code and building projects. That being said, should everyone be rushing towards a job in Developer Relations? Recently, I have observed a bubble developing around this space. I want to take this blog as an opportunity to share my opinion on whether everyone should chase DevRel as a career.
+One thing that I can say, having spent five years in communities and over two years as a Developer Advocate at Appwrite, is that Developer Relations (or DevRel) isn’t just a job but a philosophy. DevRel is something we can do by helping developers in our communities, sharing knowledge through our content, or writing code and building projects. That being said, should everyone be rushing towards a job in Developer Relations? Recently, I have observed a bubble developing around this space. I want to take this blog as an opportunity to share my opinion on whether everyone should chase DevRel as a career.
 
 Before deciding whether everyone should become a DevRel professional, let’s discuss what DevRel is.
 
 # Understanding DevRel
 
-> Developer Relations, or DevRel, is a domain that focuses on maintaining relationships with the folks building on an organization's technologies or products.
+> Developer Relations, or DevRel, is a domain that focuses on maintaining relationships with the folks building on an organization's technologies or products.
 
-Essentially DevRel acts as the **bridge between the code and the community**. DevRel folks are often responsible for maintaining communication between organizations and developers to ensure a better information flow and feedback loop. Thus, both entities have a better experience and growth path.
+Essentially DevRel acts as the **bridge between the code and the community**. DevRel folks are often responsible for maintaining communication between organizations and developers to ensure a better information flow and feedback loop. Thus, both entities have a better experience and growth path.
 
 ![bridge](/images/blog/everyone-can-do-devrel-but-should-they/bridge.avif)
 
-DevRel teams came into inception because as we move towards a more technologically-enabled world, we see more people developing solutions to problems using programming and computer science and more companies catering to such folks. With more and more organizations catering their services to developers, it became apparent that these organizations need people who can **build** with their platforms, **communicate** with developers, **educate** newcomers, **grow** their audience, etc. DevRel aims to fit this gap precisely.
+DevRel teams came into inception because as we move towards a more technologically-enabled world, we see more people developing solutions to problems using programming and computer science and more companies catering to such folks. With more and more organizations catering their services to developers, it became apparent that these organizations need people who can **build** with their platforms, **communicate** with developers, **educate** newcomers, **grow** their audience, etc. DevRel aims to fit this gap precisely.
 
 Now that we’ve discussed what DevRel is, let’s talk briefly about what skills and experience DevRel practitioners need to succeed.
 
 # What experience should DevRel practitioners possess 
 
-Considering that DevRel can be viewed as an amalgam of **code**, **content**, and **community**, most roles in this space need you to be a jack of all three trades while being a master of (at least) one. As a Developer Advocate at Appwrite, I provide technical assistance and contribute to our product aside from creating content for our blog and social media, developing new community initiatives, and so on.
+Considering that DevRel can be viewed as an amalgam of **code**, **content**, and **community**, most roles in this space need you to be a jack of all three trades while being a master of (at least) one. As a Developer Advocate at Appwrite, I provide technical assistance and contribute to our product aside from creating content for our blog and social media, developing new community initiatives, and so on.
 
 My experience has taught me that, while there is always space to learn, as a DevRel practitioner (for example, Developer Advocate), you should gain experience on all three fronts (whether through dedicated jobs or by alternate means) before rushing into this career, and here is why:
 
@@ -60,13 +60,13 @@ My journey toward Developer Relations started by volunteering in communities. Fr
 
 While I firmly insist that DevRel isn’t a fad, currently, a bubble is beginning to exist. Far too many people are prematurely rushing toward this domain for three reasons:
 
-- DevRel might seem like an **easier, more accessible way into tech than software development** (in all honesty, this isn’t true at all!)
-- DevRel provides people with a **platform where their voice seems to matter more**.
-- DevRel work can help **grow someone’s personal brand**.
+- DevRel might seem like an **easier, more accessible way into tech than software development** (in all honesty, this isn’t true at all!)
+- DevRel provides people with a **platform where their voice seems to matter more**.
+- DevRel work can help **grow someone’s personal brand**.
 
 Truthfully, anyone chasing a DevRel career in this manner often does not sustain here for long. This is because DevRel has so much beneath the tip of the iceberg. Aside from just speaking at stages and delivering pre-planned content or engaging with people in communities and social media, people in DevRel are often invested in various functions such as developer experience testing and feedback, sample application development, planning new community initiatives, technical and community thought leadership, quantifying the impact the community has on the product’s growth, and more depending on what their products need. Many of these aren’t always done publicly, so it is difficult to perceive them.
 
-It is necessary to evaluate whether these are functions you want to be involved in. Pre-maturely deciding whether DevRel is the space for you can also cause you to **burn out** rather severely and impact your career direction!
+It is necessary to evaluate whether these are functions you want to be involved in. Pre-maturely deciding whether DevRel is the space for you can also cause you to **burn out** rather severely and impact your career direction!
 
 # Taking this decision
 
@@ -76,7 +76,7 @@ The truth is that code, content, and community are vast spaces of their own; you
 
 # A little about Appwrite
 
-[Appwrite](http://appwrite.io/) is an open-source Backend-as-a-Service (BaaS) platform that lets you add Authentication, Databases, Functions, and Storage to your product and build any application at any scale, own your data, and use your preferred coding languages and tools.
+[Appwrite](http://appwrite.io/) is an open-source Backend-as-a-Service (BaaS) platform that lets you add Authentication, Databases, Functions, and Storage to your product and build any application at any scale, own your data, and use your preferred coding languages and tools.
 
 Learn more about Appwrite:
 

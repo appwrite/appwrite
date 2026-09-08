@@ -104,11 +104,11 @@ Appwrite Databases now have smarter queries. We've added two sets of new queries
 
 [Time Helper Queries](/docs/products/databases/queries#time-helpers)
 
-`createdBefore`, `createdAfter`, `updatedBefore`, `updatedAfter`
+`createdBefore`, `createdAfter`, `updatedBefore`, `updatedAfter`
 
 [Inversion Queries](/docs/products/databases/queries)
 
-`notSearch`, `notContains`, `notBetween`, `notStartsWith`, `notEndsWith`
+`notSearch`, `notContains`, `notBetween`, `notStartsWith`, `notEndsWith`
 
 Together, these new queries make your code cleaner, reduce the need for workarounds, and give you more control over your data.
 
@@ -116,7 +116,7 @@ Together, these new queries make your code cleaner, reduce the need for workarou
 
 Before this feature, updating a number meant fetching the entire row, modifying it on the client, and writing it back, a process prone to race conditions, unnecessary bandwidth use, and extra logic to handle edge cases.
 
-With **Atomic numeric operations,** you simply send a delta (like `+1` or `-3`), and Appwrite applies the update atomically on the server. 
+With **Atomic numeric operations,** you simply send a delta (like `+1` or `-3`), and Appwrite applies the update atomically on the server. 
 
 [Learn more about Atomic numeric operations](/blog/post/announcing-atomic-numeric-operations)
 

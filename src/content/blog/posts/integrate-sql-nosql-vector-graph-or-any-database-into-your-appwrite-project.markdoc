@@ -262,7 +262,7 @@ await client.executeQuery(
 );
 ```
 
-Finally, you can view your data using `RETURN` clause in a query.
+Finally, you can view your data using `RETURN` clause in a query.
 
 ```jsx
 // Query data

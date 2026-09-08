@@ -48,7 +48,7 @@ Then, click on the **Search** page from the left sidebar and **create a new Inde
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. In case you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates. Additionally, for this template, you must have an Appwrite Database and Collection filled with data in advance.
 
-Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Algolia** function template.
+Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Algolia** function template.
 
 ![Function template](/images/integrations/search-algolia/template.avif)
 
@@ -60,7 +60,7 @@ Then, create a new repository with the default branch and root directory setting
 
 ## Step 3: Test the function
 
-Once all the steps are complete, it is time to test the function! Before we go further, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function.
+Once all the steps are complete, it is time to test the function! Before we go further, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function.
 
 Send a POST (HTTP) Request to the function URL to index the Appwrite Collection in Algolia. 
 

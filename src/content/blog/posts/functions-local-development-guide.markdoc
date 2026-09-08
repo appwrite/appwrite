@@ -30,9 +30,9 @@ In this guide, we'll walk through setting up and developing Appwrite Functions l
 
 Local development offers several advantages when working with serverless functions:
 
-1. **Faster iteration:** Developing functions locally allows you to test changes quickly without the need to deploy them to a live environment. This speeds up the development process and enables rapid iteration.
-2. **Offline development:** With local development, you can work on your functions even when you're offline. This is especially useful when you're traveling or in areas with limited internet connectivity.
-3. **Debugging:** Local development provides better debugging capabilities, allowing you to troubleshoot issues more effectively before deploying your functions to a live environment. This can help you avoid catastrophic errors by identifying and fixing problems early, without the risk of affecting your live application.
+1. **Faster iteration:** Developing functions locally allows you to test changes quickly without the need to deploy them to a live environment. This speeds up the development process and enables rapid iteration.
+2. **Offline development:** With local development, you can work on your functions even when you're offline. This is especially useful when you're traveling or in areas with limited internet connectivity.
+3. **Debugging:** Local development provides better debugging capabilities, allowing you to troubleshoot issues more effectively before deploying your functions to a live environment. This can help you avoid catastrophic errors by identifying and fixing problems early, without the risk of affecting your live application.
 4. **Cost efficiency:** Running functions locally helps keep development setup costs low, as you don't need to continuously deploy functions to a cloud environment for testing.
 
 Let's see how to set up and develop Appwrite Functions locally using the new CLI which we’ll reveal more of tomorrow.
@@ -54,7 +54,7 @@ Before developing functions, you need to set up a project. First, log in to your
 appwrite login
 ```
 
-If you’ve already worked with the Appwrite CLI, you can use `appwrite whoami` to check if you are signed in. This command will display your account details.
+If you’ve already worked with the Appwrite CLI, you can use `appwrite whoami` to check if you are signed in. This command will display your account details.
 
 Next, initialize your project in the directory where you want to develop your function:
 
@@ -100,11 +100,11 @@ The CLI will generate the function's code in a directory within your project. Th
 
 Appwrite commands need your appwrite.config.json file to work, which is located in the root directory of your project. However, if you run Appwrite commands from the function directory, the CLI will automatically look for the `appwrite.config.json` file in the parent directories. So, commands from the function directory should work without any issues.
 
-This way, you don't have to worry about switching directories when you need to do commands like `npm install` (which needs to be done in the function directory) or `appwrite deploy` (which needs the `appwrite.config.json` file).
+This way, you don't have to worry about switching directories when you need to do commands like `npm install` (which needs to be done in the function directory) or `appwrite deploy` (which needs the `appwrite.config.json` file).
 
 # Developing locally
 
-You can start developing and testing your function locally. To do this, ensure you have Docker installed on your system. You can download Docker from [here](https://www.docker.com/products/docker-desktop).
+You can start developing and testing your function locally. To do this, ensure you have Docker installed on your system. You can download Docker from [here](https://www.docker.com/products/docker-desktop).
 
 Next, run the following command to start your function locally:
 
@@ -157,11 +157,11 @@ By default, environment variables from your remote instance won't be loaded duri
 appwrite run function --with-variables
 ```
 
-Additionally, environment variables can also be read from a `.env` file in your function folder during local development.
+Additionally, environment variables can also be read from a `.env` file in your function folder during local development.
 
 # Impersonating users
 
-You can impersonate a user during local function executions to automatically set the correct values for `x-appwrite-user-id` and `x-appwrite-user-jwt` headers:
+You can impersonate a user during local function executions to automatically set the correct values for `x-appwrite-user-id` and `x-appwrite-user-jwt` headers:
 
 ```bash
 appwrite run function --user-id="YOUR_USER_ID"

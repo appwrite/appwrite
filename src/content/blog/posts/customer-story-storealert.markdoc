@@ -24,7 +24,7 @@ faqs:
     answer: "Devkind reported a 60% reduction in development time and 40% lower server costs after picking Appwrite for StoreAlert. The biggest wins come from skipping auth, database, storage, and scheduled-task infrastructure that you would otherwise have to build and operate yourself."
 ---
 
-In 2023, a client of [Devkind](https://www.devkind.com.au/), a software development and marketing agency from Melbourne, Australia, faced a major setback with several products disappearing from their Shopify store without any trace of when or how it happened. Without an event log, tracking the issue was impossible. This incident highlighted a glaring gap in e-commerce store management: the lack of real-time visibility into key store events.
+In 2023, a client of [Devkind](https://www.devkind.com.au/), a software development and marketing agency from Melbourne, Australia, faced a major setback with several products disappearing from their Shopify store without any trace of when or how it happened. Without an event log, tracking the issue was impossible. This incident highlighted a glaring gap in e-commerce store management: the lack of real-time visibility into key store events.
 
 Seeing the critical need for better event tracking, Kazim Ali, Co-Founder of Devkind, envisioned a powerful solution: a tool designed to notify merchants in real time of important store events while maintaining a detailed event history. This tool would eliminate uncertainty by providing store owners with the transparency they need to stay in control and solving headaches across various departments, including marketing, auditing, logistics, and more, by streamlining event tracking and ensuring operational clarity.
 

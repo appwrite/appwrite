@@ -55,14 +55,14 @@ Log in to your Appwrite account and select the project you want to configure. En
 
 ## Step 2: Configure mock numbers
 
-1. **Navigate to `Project > Auth > Security` :** Scroll to the **Mock phone numbers** section
+1. **Navigate to `Project > Auth > Security` :** Scroll to the **Mock phone numbers** section
 2. **Generate Mock Number**: Click the **generate number** button. This will generate a mock phone number and verification code that you can use to test user authentication.
 
     ![Mock-numbers-Appwrite](/images/blog/mock-numbers-use-cases/1.avif)
 
     You can regenerate the number and verification code by clicking the icon beside the input field or you can edit it directly. To generate another mock phone number and verification code, click the **Add number** button.
 
-3. **Save Changes**: Click the `Update` button to apply the mock number configurations.
+3. **Save Changes**: Click the `Update` button to apply the mock number configurations.
 
 ## Step 3: Implement mock numbers in your application
 
@@ -87,8 +87,8 @@ const account = new Account(client)
 In this code:
 
 - We import the necessary modules from the Appwrite SDK.
-- We create and configure a `Client` instance with the Appwrite endpoint and project ID.
-- We create an `Account` instance associated with the client.
+- We create and configure a `Client` instance with the Appwrite endpoint and project ID.
+- We create an `Account` instance associated with the client.
 
 ## Create a phone session using a mock number
 
@@ -120,9 +120,9 @@ async function createPhoneSession(phone, secret) {
 
 Here's what happens in this function:
 
-- The `createPhoneToken` method generates a phone token for the provided phone number.
-- We extract the `userId` from the token.
-- The `createSession` method creates a session using the `userId` and the provided secret (verification code).
+- The `createPhoneToken` method generates a phone token for the provided phone number.
+- We extract the `userId` from the token.
+- The `createSession` method creates a session using the `userId` and the provided secret (verification code).
 - If successful, the session details are logged; otherwise, the error is logged.
 
 ## Example usage
@@ -136,8 +136,8 @@ const mockPhoneNumber = 'mock_phone_number'// Replace with your mock numberconst
 
 In this example:
 
-- Replace `'mock_phone_number'` with your actual mock number.
-- Replace `'mock_verification_code'` with the verification code set for the mock number.
+- Replace `'mock_phone_number'` with your actual mock number.
+- Replace `'mock_verification_code'` with the verification code set for the mock number.
 
 ## Step 4: Validate and test
 

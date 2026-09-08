@@ -88,7 +88,7 @@ And because they’re scoped and temporary by design, they stay secure and manag
 
 # How to get started
 
-To create a new Dev Key, navigate to Overview > Integrations > Dev keys and click Create Dev key. You can then implement the Dev Key while initializing the Appwrite client in your app.
+To create a new Dev Key, navigate to Overview > Integrations > Dev keys and click Create Dev key. You can then implement the Dev Key while initializing the Appwrite client in your app.
 
 [Visit the docs](/docs/advanced/platform/dev-keys) to learn more.
 
