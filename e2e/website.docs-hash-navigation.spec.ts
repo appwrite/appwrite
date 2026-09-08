@@ -179,3 +179,42 @@ test('Docs View preserves scroll for unresolved same-page hashes, including afte
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   }
 })
+
+test('DocsPageShell resets invalid article fragments after a sibling route remount', async ({
+  page,
+}) => {
+  await page.goto(`${tablesPath}#${targetId}`, { waitUntil: 'networkidle' })
+  await expectHeadingInDocsViewport(page, targetId)
+  const main = await page.locator('#main-content').elementHandle()
+  await page.evaluate(() =>
+    window.__TSR_ROUTER__!.navigate({ to: '/docs/quick-starts' }),
+  )
+  await expect(
+    page.getByRole('heading', { name: 'Quick start_', exact: true }),
+  ).toBeInViewport()
+  await expect(page.locator(`#${targetId}`)).toHaveCount(0)
+  // The sibling route unmounts the article View, not the docs scroll container.
+  await main!.evaluate((element) => {
+    element.scrollTop = 400
+  })
+  expect(await main!.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    0,
+  )
+  await page.evaluate(
+    (to) => window.__TSR_ROUTER__!.navigate({ to, hash: 'removed-section-%' }),
+    tablesPath,
+  )
+  await expect(page).toHaveURL(new RegExp(`${tablesPath}#removed-section-%$`))
+  await expect(
+    page.getByRole('heading', { name: 'Tables_', exact: true }),
+  ).toBeInViewport()
+  expect(
+    await main!.evaluate(
+      (element) => element === document.getElementById('main-content'),
+    ),
+  ).toBe(true)
+  await expect
+    .poll(() => main!.evaluate((element) => element.scrollTop))
+    .toBe(0)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+})

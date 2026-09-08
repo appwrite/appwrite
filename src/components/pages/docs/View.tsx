@@ -45,7 +45,6 @@ function isSameDocsPage(a: DocsPageData, b: DocsPageData): boolean {
 export function View({ page: initialPage }: ViewProps) {
   const [page, setPage] = useState(initialPage)
   const { pathname, hash } = useLocation()
-  const renderedPathnameRef = useRef<string | null>(null)
   const pageRef = useRef(page)
   pageRef.current = page
 
@@ -57,18 +56,11 @@ export function View({ page: initialPage }: ViewProps) {
   useEffect(() => {
     // The loader can finish before View swaps its local page. Only scroll once
     // the destination article (and its headings) is actually in the DOM.
-    const renderedPathname = pathname.replace(/\/+$/, '')
-    if (renderedPathname !== `/docs/${page.meta.slug}`) return
+    if (pathname.replace(/\/+$/, '') !== `/docs/${page.meta.slug}` || !hash)
+      return
 
     const main = document.getElementById('main-content')
     if (!main) return
-
-    const isCrossPage =
-      renderedPathnameRef.current !== null &&
-      renderedPathnameRef.current !== renderedPathname
-    // Record hashless arrivals too, but never the pending route's old content.
-    renderedPathnameRef.current = renderedPathname
-    if (!hash) return
 
     let id = hash.replace(/^#/, '')
     try {
@@ -77,10 +69,7 @@ export function View({ page: initialPage }: ViewProps) {
       // A malformed escape can still be a literal heading ID.
     }
     const target = document.getElementById(id)
-    if (!target || !main.contains(target)) {
-      if (isCrossPage) main.scrollTo({ top: 0, behavior: 'instant' })
-      return
-    }
+    if (!target || !main.contains(target)) return
 
     const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0
     main.scrollTo({
