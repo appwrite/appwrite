@@ -6,6 +6,7 @@
 /** All SVG filenames in /public/icons (sorted). */
 export const PUBLIC_ICON_FILENAMES = [
   'actix.svg',
+  'akamai.svg',
   'algolia.svg',
   'amazon.svg',
   'analog.svg',
@@ -142,6 +143,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'react.svg',
   'reddit.svg',
   'redis.svg',
+  'refetch.svg',
   'refine.svg',
   'remix.svg',
   'resend.svg',
