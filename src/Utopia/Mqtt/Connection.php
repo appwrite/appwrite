@@ -2,7 +2,7 @@
 
 namespace Utopia\Mqtt;
 
-use Exception;
+use Appwrite\Extend\Exception;
 
 /**
  * Per-connection state, keyed by the transport's file descriptor. Handlers mutate
@@ -18,7 +18,7 @@ class Connection
     /** Project id from the CONNECT User Property. */
     public string $projectId = '';
 
-    /** The per-device session anchor: the client-supplied CONNECT id, or a derived fallback (see resolveClientId). */
+    /** The per-device session anchor: the client-supplied CONNECT id, or an account-level fallback (see setClientId). */
     private string $clientId = '';
 
     /** Clean Start (5.0) / Clean Session (3.1.1): true discards any stored session, so delivery is live-only. */
@@ -47,10 +47,10 @@ class Connection
 
     public function setClientId(string $clientId): void
     {
-        if (empty($this->identity)) {
-            // TODO: has a better way here
-            throw new Exception("Account identity needs to be resolved first");
+        if ($this->identity === []) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Client id cannot be set before the identity is resolved');
         }
+
         $this->clientId = $clientId !== ''
             ? $clientId
             : 'custom_' . $this->projectId . '_' . ($this->identity['userId'] ?? '');

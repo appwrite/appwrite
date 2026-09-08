@@ -2,6 +2,7 @@
 
 namespace Utopia\Mqtt;
 
+use Appwrite\Extend\Exception;
 use Utopia\DI\Container;
 use Utopia\Platform\Action;
 
@@ -21,7 +22,7 @@ class Dispatcher
     public function addHandler(Action $handler): self
     {
         $type = $handler->getLabels()[self::LABEL_TYPE]
-            ?? throw new \LogicException('MQTT packet handler is missing the packetType label.');
+            ?? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'MQTT packet handler is missing the packetType label.');
 
         $this->handlers[$type] = $handler;
 
