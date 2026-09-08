@@ -289,7 +289,6 @@ export function View() {
                   </p>
                 ) : null}
                 <p className="text-muted-foreground text-center text-xs">
-                  {t('Not a student?')}{' '}
                   <MarketingSiteLink className="link-neutral" href="/education">
                     {t('Read about the program')}
                   </MarketingSiteLink>

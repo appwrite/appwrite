@@ -1133,7 +1133,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
-  'Not a student?': '学生ではありませんか?',
   'Read about the program': 'プログラムについて読む',
   'Checking your account...': 'アカウントを確認しています...',
   'Setting up your Education plan organization...':

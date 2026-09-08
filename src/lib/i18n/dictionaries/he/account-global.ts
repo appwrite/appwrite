@@ -1249,7 +1249,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
-  'Not a student?': 'לא סטודנטים?',
   'Read about the program': 'מידע על התוכנית',
   'Checking your account...': 'בודקים את החשבון שלכם...',
   'Setting up your Education plan organization...':
