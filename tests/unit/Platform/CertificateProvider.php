@@ -23,7 +23,7 @@ final class CertificateProvider implements Provider
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
         $this->issued[] = [$domain, $domainType];
-        ($this->onIssue ?? static fn () => null)();
+        $this->onIssue?->__invoke();
         return null;
     }
 
@@ -34,13 +34,13 @@ final class CertificateProvider implements Provider
 
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
-        ($this->onRenew ?? static fn () => null)();
+        $this->onRenew?->__invoke();
         return $this->renew;
     }
 
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
-        ($this->onStatus ?? static fn () => null)();
+        $this->onStatus?->__invoke();
         return $this->status;
     }
 

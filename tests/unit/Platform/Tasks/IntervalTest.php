@@ -141,8 +141,7 @@ final class IntervalTest extends TestCase
 
     private function runTask(): void
     {
-        // Exercise the registered callback without starting Swoole's long-lived
-        // timer/event loop. No private method is exposed by this test seam.
+        // Exercise the registered callback without starting Swoole's timer loop.
         $interval = new class () extends Interval {
             public function getTasks(): array
             {

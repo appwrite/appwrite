@@ -89,7 +89,7 @@ final class UpdateTest extends TestCase
             }
             protected function verifyRule(Document $rule): void
             {
-                ($this->verify ?? static fn () => null)();
+                $this->verify?->__invoke();
             }
         };
         $action->action(

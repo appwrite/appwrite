@@ -107,7 +107,6 @@ class Certificates extends Action
         $certificateMessage = \Appwrite\Event\Message\Certificate::fromArray($payload);
         $document = $certificateMessage->domain;
         $domain   = new Domain($document->getAttribute('domain', ''));
-        $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
@@ -120,7 +119,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $certificateMessage->project);
+                $this->handleCertificateGenerationAction($domain, $certificateMessage->project, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $bus, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -210,7 +209,7 @@ class Certificates extends Action
 
     /**
      * @param Domain $domain
-     * @param ?string $domainType
+     * @param Document $project
      * @param Database $dbForPlatform
      * @param MailPublisher $publisherForMails
      * @param Event $queueForEvents
@@ -218,7 +217,6 @@ class Certificates extends Action
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Provider $certificates
-     * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
@@ -233,7 +231,7 @@ class Certificates extends Action
      */
     private function handleCertificateGenerationAction(
         Domain $domain,
-        ?string $domainType,
+        Document $project,
         Database $dbForPlatform,
         MailPublisher $publisherForMails,
         Event $queueForEvents,
@@ -241,12 +239,10 @@ class Certificates extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Provider $certificates,
-        ValidatorAuthorization $authorization,
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $validationDomain = null,
-        ?Document $project = null,
     ): void {
         // Resolve the current rule, then lock and re-check it before claiming
         // issuance. A queued message must not act on a recreated domain owner.
@@ -267,7 +263,6 @@ class Certificates extends Action
             if ($current->isEmpty()
                 || $current->getSequence() !== $rule->getSequence()
                 || $current->getAttribute('domain') !== $domain->get()
-                || $project === null
                 || $current->getAttribute('projectId') !== $project->getId()
                 || ($current->getAttribute('projectId') !== 'console' && (string) $current->getAttribute('projectInternalId') !== (string) $project->getSequence())
                 || !\in_array($current->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED, RULE_STATUS_CERTIFICATE_GENERATION_FAILED], true)) {
@@ -283,9 +278,7 @@ class Certificates extends Action
                 return null;
             }
 
-            // `updated` stopped recording completion in February 2026. It now
-            // holds an in-flight lease, cleared on completion and expiring after
-            // a worker crash. Old completion timestamps are already expired.
+            // `updated` holds the lease until completion or expiry after a crash.
             $updates = new Document(['updated' => $lease, 'logs' => $logs]);
             if ($certificate->isEmpty()) {
                 $updates->setAttributes(['$id' => ID::unique(), 'domain' => $domain->get(), 'attempts' => 0]);
@@ -442,11 +435,7 @@ class Certificates extends Action
     }
 
     /**
-     * Update all existing domain documents so they have relation to correct certificate document.
-     * This solves issues:
-     * - when adding a domain for which there is already a certificate
-     * - when renew creates new document? It might?
-     * - overall makes it more reliable
+     * Save the rule's certificate status and publish the update.
      *
      * @param Document $rule Rule document that is affected by new certificate
      * @param Database $dbForPlatform Database connection for console
