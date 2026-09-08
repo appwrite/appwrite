@@ -82,4 +82,13 @@ return function (Container $container): void {
 
         return $user;
     }, ['project', 'authMethod', 'credential', 'authorization']);
+
+    // TODO: needed a better naming
+    $container->set('setMessageCursor', function (string $projectId, string $userId, string $clientId, string $topic, string $messageId) {
+
+    });
+
+    $container->set('getMessages', function (string $projectId, string $userId, string $clientId, string $topic, string $messageId) {
+
+    });
 };
