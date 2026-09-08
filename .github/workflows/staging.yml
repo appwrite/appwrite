@@ -85,10 +85,10 @@ jobs:
                   # imagetools to merge an index of indexes.
                   provenance: false
                   # Only build-time (brand) constants are passed here. Per-environment
-                  # public config is supplied at runtime via the Helm chart env, so the
-                  # CDN origin is the one environment-specific build setting.
+                  # public config, including the CDN origin, comes from the Helm chart.
+                  # Only asset build identity is fixed in the image.
                   build-args: |
-                      "CDN_ORIGIN=https://cdn.staging.appwrite.io"
+                      "ASSET_BUILD_ID=${{ github.run_id }}-${{ github.run_attempt }}"
                       "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
                       "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
                       "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
@@ -125,7 +125,8 @@ jobs:
                     for digest in $DIGESTS; do
                       refs+=("$registry/$IMAGE_NAME@$digest")
                     done
-                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" "${refs[@]}"
+                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" \
+                      --tag "$registry/$IMAGE_NAME:build-${{ github.run_id }}-${{ github.run_attempt }}" "${refs[@]}"
                     docker buildx imagetools inspect "$registry/$IMAGE_NAME:$TAG"
                   done
 

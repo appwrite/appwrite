@@ -30,6 +30,7 @@ import {
 export type { RuntimeConfig }
 
 const EMPTY_CONFIG: RuntimeConfig = {
+  cdnOrigin: '',
   appwriteEndpoint: '',
   consoleProfile: '',
   fingerprintKey: '',

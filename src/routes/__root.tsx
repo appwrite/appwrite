@@ -1,3 +1,4 @@
+import { assetUrl } from '@/lib/asset-url'
 import {
   HeadContent,
   Scripts,
@@ -5,7 +6,7 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import appCss from '../styles.css?url'
+import '../styles.css'
 import {
   getRuntimeConfig,
   getRuntimeConfigScript,
@@ -139,14 +140,14 @@ function getHeadFontPreloads() {
     return [
       {
         rel: 'preload' as const,
-        href: `${import.meta.env.BASE_URL}fonts/inter/inter-v8-latin-regular.woff2`,
+        href: assetUrl('/fonts/inter/inter-v8-latin-regular.woff2'),
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
       },
       {
         rel: 'preload' as const,
-        href: `${import.meta.env.BASE_URL}fonts/inter/inter-v8-latin-600.woff2`,
+        href: assetUrl('/fonts/inter/inter-v8-latin-600.woff2'),
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
@@ -156,21 +157,21 @@ function getHeadFontPreloads() {
   return [
     {
       rel: 'preload' as const,
-      href: `${import.meta.env.BASE_URL}fonts/aeonik-pro/AeonikPro-Regular.woff2`,
+      href: assetUrl('/fonts/aeonik-pro/AeonikPro-Regular.woff2'),
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: `${import.meta.env.BASE_URL}fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2`,
+      href: assetUrl('/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2'),
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: `${import.meta.env.BASE_URL}fonts/inter/inter-latin-400-normal.woff2`,
+      href: assetUrl('/fonts/inter/inter-latin-400-normal.woff2'),
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
@@ -212,7 +213,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     links: [
       {
         rel: 'icon',
-        href: import.meta.env.DEV ? '/logo-theme.svg' : '/logo.svg',
+        href: import.meta.env.DEV ? assetUrl('/logo-theme.svg') : assetUrl('/logo.svg'),
         type: 'image/svg+xml',
       },
       ...(import.meta.env.DEV
@@ -220,12 +221,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         : [
             {
               rel: 'shortcut icon' as const,
-              href: '/favicon.ico',
+              href: assetUrl('/favicon.ico'),
             },
           ]),
       {
         rel: 'apple-touch-icon',
-        href: '/apple-touch-icon.png',
+        href: assetUrl('/apple-touch-icon.png'),
         sizes: '180x180',
       },
       ...getHeadFontPreloads(),
@@ -447,7 +448,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <link rel="stylesheet" href={appCss} />
         <HeadContent />
       </head>
       <body suppressHydrationWarning>

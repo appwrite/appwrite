@@ -11,9 +11,9 @@ FROM base AS build
 # (endpoint, profile, fingerprint key, growth endpoint, Stripe key, Sentry DSN,
 # instrumentation/Plausible script srcs) is now supplied at RUNTIME via the
 # container env and injected into the browser by runtime-config.ts - so a single
-# image uses runtime application config. CDN_ORIGIN is baked into asset URLs.
-ARG CDN_ORIGIN
-ENV CDN_ORIGIN=${CDN_ORIGIN}
+# image can be promoted across environments. Only its asset build ID is fixed.
+ARG ASSET_BUILD_ID=local
+ENV ASSET_BUILD_ID=${ASSET_BUILD_ID}
 
 ARG VITE_APPWRITE_PROJECT_ID
 ENV VITE_APPWRITE_PROJECT_ID=${VITE_APPWRITE_PROJECT_ID}
@@ -32,7 +32,8 @@ COPY . .
 # FOR_SITES=true disables client/server sourcemaps and prerender marketing pages at build time.
 RUN --mount=type=secret,id=sentry_auth_token \
     SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null || true)" \
-    FOR_SITES=true bun run build:node
+    FOR_SITES=true bun run build:node \
+    && printf '%s\n' "$ASSET_BUILD_ID" > dist/client/asset-build-id.txt
 
 FROM base AS prod-deps
 

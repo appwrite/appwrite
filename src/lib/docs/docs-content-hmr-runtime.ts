@@ -51,7 +51,7 @@ function scheduleDocsContentHmr() {
 }
 
 // Use Vite's event payload types rather than the merged Bun/TanStack HMR declarations.
-const hot = import.meta.hot as ViteHotContext | undefined
+const hot = import.meta.hot as unknown as ViteHotContext | undefined
 if (hot) {
   // Primary path: Vite plugin watches markdoc/partials and sends this event.
   hot.on('docs-content-update', () => {
