@@ -69,6 +69,15 @@ class Packet
     }
 
     /**
+     * The DUP flag of a PUBLISH (fixed-header bit 3): a possible re-delivery of an
+     * earlier QoS 1 attempt. Always 0 on a first delivery and on QoS 0.
+     */
+    public function dup(): bool
+    {
+        return ($this->flags & 0x08) === 0x08;
+    }
+
+    /**
      * Clean Start (5.0) / Clean Session (3.1.1) of a CONNECT: bit 1 of the
      * connect-flags byte. Same position in both protocol versions.
      */
@@ -125,6 +134,16 @@ class Packet
         $length = strlen($value);
 
         return chr($length >> 8) . chr($length & 0xFF) . $value;
+    }
+
+    /**
+     * Read a two-byte big-endian integer (a packet id, keep-alive, etc.).
+     *
+     * @return array{0: int, 1: int} value and the new offset
+     */
+    public static function readInt16(string $data, int $offset): array
+    {
+        return [(ord($data[$offset]) << 8) + ord($data[$offset + 1]), $offset + 2];
     }
 
     /** Decode a variable-length integer. @return array{0: int, 1: int} value and byte count */

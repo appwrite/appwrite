@@ -101,4 +101,25 @@ final class PacketTest extends TestCase
     {
         $this->assertSame('', Packet::getClientId(Packet::parse(V5::connect('', 60, true))->body));
     }
+
+    public function testReadInt16DecodesTwoBigEndianBytes(): void
+    {
+        $this->assertSame([0x1234, 2], Packet::readInt16("\x12\x34", 0));
+        $this->assertSame([7, 4], Packet::readInt16("\xFF\xFF\x00\x07", 2)); // read at an offset
+    }
+
+    public function testDupFlagRoundTripsOnBothVersions(): void
+    {
+        $this->assertTrue(Packet::parse(V5::publish('t', 'p', 1, 7, dup: true))->dup());
+        $this->assertFalse(Packet::parse(V5::publish('t', 'p', 1, 7))->dup());
+        $this->assertTrue(Packet::parse(V3::publish('t', 'p', 1, 7, dup: true))->dup());
+        $this->assertFalse(Packet::parse(V3::publish('t', 'p', 1, 7))->dup());
+    }
+
+    public function testDupIsMaskedOnQos0(): void
+    {
+        // DUP must be 0 on QoS 0, even when a re-delivery is requested.
+        $this->assertFalse(Packet::parse(V5::publish('t', 'p', 0, 0, dup: true))->dup());
+        $this->assertFalse(Packet::parse(V3::publish('t', 'p', 0, 0, dup: true))->dup());
+    }
 }

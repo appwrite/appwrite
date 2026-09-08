@@ -91,8 +91,11 @@ class V3
         return chr(Packet::CONNACK << 4) . Packet::encodeLength(strlen($variable)) . $variable;
     }
 
-    /** PUBLISH: topic, packet id (QoS > 0), then payload. */
-    public static function publish(string $topic, string $payload, int $qos, int $packetId): string
+    /**
+     * PUBLISH: topic, packet id (QoS > 0), then payload. Set $dup to mark a re-delivery
+     * of an earlier QoS 1 attempt; it is ignored on QoS 0, where the DUP flag must be 0.
+     */
+    public static function publish(string $topic, string $payload, int $qos, int $packetId, bool $dup = false): string
     {
         $variable = Packet::encodeString($topic);
         if ($qos > 0) {
@@ -100,7 +103,9 @@ class V3
         }
         $variable .= $payload;
 
-        return chr((Packet::PUBLISH << 4) | ($qos << 1)) . Packet::encodeLength(strlen($variable)) . $variable;
+        $flags = ($qos << 1) | ($dup && $qos > 0 ? 0x08 : 0);
+
+        return chr((Packet::PUBLISH << 4) | $flags) . Packet::encodeLength(strlen($variable)) . $variable;
     }
 
     /** PUBACK: the two-byte packet id. */
