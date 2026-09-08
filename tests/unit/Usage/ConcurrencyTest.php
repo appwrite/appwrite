@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Usage;
 
 use Appwrite\Usage\Concurrency;
@@ -9,7 +11,7 @@ use Utopia\Query\Query;
 use Utopia\Usage\Metric;
 use Utopia\Usage\Usage;
 
-class ConcurrencyTest extends TestCase
+final class ConcurrencyTest extends TestCase
 {
     /** Pinned so exactly one whole bucket, 11:55–12:00, has closed behind the lag. */
     private const string NOW = '2026-09-08 12:07:30';
@@ -70,6 +72,31 @@ class ConcurrencyTest extends TestCase
             ['tenant' => 't1', 'value' => 9, 'time' => '2026-09-08 11:50:00'],
             ['tenant' => 't1', 'value' => 3, 'time' => self::BUCKET],
         ], $written);
+    }
+
+    public function testBucketWithoutDeltasIsNotSampled(): void
+    {
+        // The window still holds the +3, but nothing happened in 11:55.
+        $written = $this->sample(
+            gauge: [self::metric('t1', 3, self::PREVIOUS_SAMPLE)],
+            events: [self::metric('t1', 3, self::PREVIOUS_SAMPLE)],
+        );
+
+        $this->assertSame([], $written);
+    }
+
+    public function testCappedReadSamplesOnlyTheBucketsItCompleted(): void
+    {
+        // Exactly the cap across two buckets: the read is time-ascending, so the
+        // later bucket may be missing rows and has to wait for the next run.
+        $events = [self::metric('t0', 1, '2026-09-08 11:50:00')];
+        for ($i = 1; $i < Concurrency::MAX_ROWS; $i++) {
+            $events[] = self::metric('t' . $i, 1, self::BUCKET);
+        }
+
+        $written = $this->sample(gauge: [self::metric('t0', 0, '2026-09-08 11:45:00')], events: $events);
+
+        $this->assertSame([['tenant' => 't0', 'value' => 1, 'time' => '2026-09-08 11:50:00']], $written);
     }
 
     public function testEventReadCoversOneWindowBeforeTheFirstEmittedBucket(): void

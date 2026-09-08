@@ -2,6 +2,7 @@
 
 namespace Appwrite\Usage;
 
+use Utopia\Console;
 use Utopia\Query\Query as UsageFilter;
 use Utopia\System\System;
 use Utopia\Usage\Usage;
@@ -32,7 +33,7 @@ class Concurrency
     private const int MAX_CATCHUP_HOURS = 168;
 
     /** Row cap per cross-tenant query, one row per (tenant, bucket). */
-    private const int MAX_ROWS = 50_000;
+    public const int MAX_ROWS = 50_000;
 
     /**
      * Sample every whole bucket that has closed since the last sample.
@@ -75,6 +76,22 @@ class Concurrency
             UsageFilter::limit(self::MAX_ROWS),
         ], Usage::TYPE_EVENT);
 
+        // Time-ascending, so a capped result is still complete for every bucket
+        // before the last one it returned: sample up to there and let the next
+        // run resume, rather than write levels that are missing deltas.
+        if (\count($rows) >= self::MAX_ROWS) {
+            $lastTime = new \DateTime((string) \end($rows)->getAttribute('time'), new \DateTimeZone('UTC'));
+            $cut = \intdiv($lastTime->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS;
+
+            if ($cut <= $start->getTimestamp()) {
+                Console::warning('Realtime concurrency: over ' . self::MAX_ROWS . ' tenant buckets before the first bucket closed; nothing sampled');
+
+                return 0;
+            }
+
+            $end->setTimestamp($cut);
+        }
+
         /** @var array<string, array<int, int>> $deltas tenant → bucket start → net delta */
         $deltas = [];
         foreach ($rows as $row) {
@@ -107,8 +124,9 @@ class Concurrency
                     $level -= $byBucket[$buckets[$leave++]];
                 }
 
-                // No deltas inside the window: nothing is known to be open.
-                if ($enter === $leave) {
+                // Only buckets the tenant had deltas in are written, as before:
+                // the window changes the value, not how often it is sampled.
+                if (!isset($byBucket[$at])) {
                     continue;
                 }
 
