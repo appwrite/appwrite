@@ -230,7 +230,7 @@ export function View() {
                   <img
                     src="/assets/logomark/logo.svg"
                     alt="Appwrite"
-                    className="h-6 w-auto brightness-0 dark:invert"
+                    className="h-6 w-auto"
                   />
                   <div className="bg-border h-6 w-px" aria-hidden />
                   <GitHubIcon className="h-6 w-6" />
