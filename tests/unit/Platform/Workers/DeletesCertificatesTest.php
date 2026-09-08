@@ -53,7 +53,52 @@ final class DeletesCertificatesTest extends TestCase
         $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
     }
 
-    private function runWorker(CertificateDatabase $database, CertificateProvider $provider, array $attributes): void
+    #[DataProvider('replacements')]
+    public function testStaleDeletionRemovesUnreferencedCertificate(string $certificateId): void
+    {
+        $database = new CertificateDatabase();
+        $provider = new CertificateProvider();
+        $database->createDocument('certificates', new Document(['$id' => 'certificate', 'domain' => 'example.com']));
+        if ($certificateId !== '') {
+            $database->createDocument('certificates', new Document(['$id' => $certificateId, 'domain' => 'example.com']));
+        }
+        $database->createDocument('rules', new Document([
+            '$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => $certificateId,
+        ]));
+        $bus = $this->createMock(Bus::class);
+        $bus->expects($this->never())->method('dispatch');
+
+        $this->runWorker($database, $provider, ['type' => 'api'], $bus);
+
+        $this->assertSame([], $provider->deleted);
+        $this->assertFalse($database->getDocument('rules', 'replacement')->isEmpty());
+        if ($certificateId !== '') {
+            $this->assertFalse($database->getDocument('certificates', $certificateId)->isEmpty());
+        }
+        $this->assertTrue($database->getDocument('certificates', 'certificate')->isEmpty());
+    }
+
+    public static function replacements(): \Iterator
+    {
+        yield 'new certificate' => ['new-certificate'];
+        yield 'no certificate yet' => [''];
+    }
+
+    public function testStaleDeletionPreservesCertificateReferencedByAnotherRule(): void
+    {
+        $database = new CertificateDatabase();
+        $provider = new CertificateProvider();
+        $database->createDocument('certificates', new Document(['$id' => 'certificate']));
+        $database->createDocument('rules', new Document(['$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => '']));
+        $database->createDocument('rules', new Document(['$id' => 'other', 'domain' => 'other.example.com', 'certificateId' => 'certificate']));
+
+        $this->runWorker($database, $provider, ['type' => 'api']);
+
+        $this->assertSame([], $provider->deleted);
+        $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
+    }
+
+    private function runWorker(CertificateDatabase $database, CertificateProvider $provider, array $attributes, ?Bus $bus = null): void
     {
         $publisher = new MockPublisher();
         $device = $this->createStub(Device::class);
@@ -78,7 +123,7 @@ final class DeletesCertificatesTest extends TestCase
             100,
             new DeletePublisher($publisher, new Queue('deletes')),
             new Usage($publisher, new Queue('usage')),
-            (new Bus())->setResolver(static fn () => null),
+            $bus ?? (new Bus())->setResolver(static fn () => null),
             $this->createStub(Store::class),
         );
     }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Publisher\Certificate;
 use DateTime;
 use Swoole\Coroutine\Channel;
@@ -77,6 +78,10 @@ class Interval extends Action
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
         $intervalCertificateGeneration = (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_GENERATION', '300'); // 5 minutes
+        $certificateIssuer = new Certificates(
+            System::getEnv('_APP_EDITION', 'self-hosted'),
+            System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled'),
+        );
 
         return [
             [
@@ -88,8 +93,8 @@ class Interval extends Action
             ],
             [
                 'name' => 'certificateGeneration',
-                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
-                    $this->generateCertificate($dbForPlatform, $publisherForCertificates);
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) use ($certificateIssuer) {
+                    $this->generateCertificate($dbForPlatform, $publisherForCertificates, $certificateIssuer);
                 },
                 'interval' => $intervalCertificateGeneration * 1000,
             ]
@@ -148,7 +153,7 @@ class Interval extends Action
      * Retry certificate generation for domains whose last attempt failed, the
      * issuance counterpart to the DNS verification retry above.
      */
-    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates, Certificates $certificateIssuer): void
     {
         $leasedUntil = DatabaseDateTime::format(new DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'));
         $region = System::getEnv('_APP_REGION', 'default');
@@ -177,24 +182,32 @@ class Interval extends Action
                 try {
                     // Re-read under the row lock: another scheduler, a manual
                     // retry or a status poll may have changed this rule.
-                    $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $leasedUntil, $region): ?Document {
+                    $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $leasedUntil, $region, $certificateIssuer): ?Document {
                         $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
+                        $status = $current->getAttribute('status');
                         if ($current->isEmpty()
                             || $current->getAttribute('region') !== $region
-                            || !\in_array($current->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATION_FAILED, RULE_STATUS_CERTIFICATE_GENERATING], true)
+                            || !\in_array($status, [RULE_STATUS_CERTIFICATE_GENERATION_FAILED, RULE_STATUS_CERTIFICATE_GENERATING], true)
                             || new DateTime($current->getUpdatedAt()) >= new DateTime($leasedUntil)) {
+                            return null;
+                        }
+
+                        if ($current->getAttribute('owner') === 'Appwrite' && !$certificateIssuer->isAutoIssueEnabled($current)) {
                             return null;
                         }
 
                         $certificate = $dbForPlatform->getDocument('certificates', $current->getAttribute('certificateId', ''));
                         $lease = $certificate->getAttribute('updated');
-                        if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS
+                        // An interrupted final attempt still needs reconciliation;
+                        // the worker enforces the budget before issuing again.
+                        if (($status === RULE_STATUS_CERTIFICATE_GENERATION_FAILED
+                                && $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS)
                             || (!empty($lease) && new DateTime($lease) >= new DateTime($leasedUntil))) {
                             return null;
                         }
                         // Delayed issuance is reconciled by the status poller.
                         // Only an expired worker lease needs a generating retry.
-                        if ($current->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING && empty($lease)) {
+                        if ($status === RULE_STATUS_CERTIFICATE_GENERATING && empty($lease)) {
                             return null;
                         }
 

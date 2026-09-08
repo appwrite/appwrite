@@ -1838,23 +1838,24 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
-        // A queued deletion can outlive its rule. Do not remove the certificate
-        // or invalidate routing for a domain that has since been recreated.
-        if (!$dbForPlatform->findOne('rules', [Query::equal('domain', [$document->getAttribute('domain')])])->isEmpty()) {
-            return;
+        // A queued deletion can outlive its rule. Preserve provider TLS and
+        // routing for a domain that has since been recreated.
+        $domain = $document->getAttribute('domain');
+        if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
+            $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
+
+            // Route cleanup to the provider that issued it; without the type the proxy
+            // falls back to custom-domain providers, which skip Network-owned domains.
+            $domainType = $document->getAttribute('deploymentResourceType', $document->getAttribute('type'));
+            $certificates->deleteCertificate($domain, $domainType);
         }
 
-        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
-
-        // Route cleanup to the provider that issued it; without the type the proxy
-        // falls back to custom-domain providers, which skip Network-owned domains.
-        $domain = $document->getAttribute('domain');
-        $domainType = $document->getAttribute('deploymentResourceType', $document->getAttribute('type'));
-        $certificates->deleteCertificate($domain, $domainType);
-
-        // Delete certificate document, so Appwrite is aware of change
-        if (isset($document['certificateId'])) {
-            $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
+        // A replacement can use a different certificate. Remove the old record
+        // once no rule references it so it cannot keep scheduling renewals.
+        $certificateId = $document->getAttribute('certificateId', '');
+        if (!empty($certificateId)
+            && $dbForPlatform->findOne('rules', [Query::equal('certificateId', [$certificateId])])->isEmpty()) {
+            $dbForPlatform->deleteDocument('certificates', $certificateId);
         }
     }
 

@@ -14,6 +14,7 @@ final class CertificateProvider implements Provider
     public string $status = Status::PENDING;
     public ?\Closure $onIssue = null;
     public ?\Closure $onRenew = null;
+    public ?\Closure $onStatus = null;
     /** @var array<array{string, ?string}> */
     public array $issued = [];
     /** @var array<array{string, ?string}> */
@@ -39,6 +40,7 @@ final class CertificateProvider implements Provider
 
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
+        ($this->onStatus ?? static fn () => null)();
         return $this->status;
     }
 

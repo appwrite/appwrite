@@ -106,6 +106,153 @@ final class CertificatesTest extends TestCase
         $this->assertSame(1, $this->certificate()->getAttribute('attempts'));
     }
 
+    #[DataProvider('lookupFailures')]
+    public function testLookupFailuresExhaustRetries(string $lookup): void
+    {
+        $calls = 0;
+        $this->provider->renew = false;
+        $this->provider->{$lookup} = static function () use (&$calls): void {
+            $calls++;
+            throw new \RuntimeException('Provider lookup failed');
+        };
+        for ($attempt = 1; $attempt <= APP_LIMIT_CERTIFICATE_ATTEMPTS; $attempt++) {
+            try {
+                $this->runWorker();
+                $this->fail('Expected provider lookup failure');
+            } catch (\RuntimeException $error) {
+                $this->assertSame('Provider lookup failed', $error->getMessage());
+            }
+            $this->assertSame($attempt, $this->certificate()->getAttribute('attempts'));
+            $this->assertNull($this->certificate()->getAttribute('updated'));
+        }
+
+        $this->runWorker();
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $calls);
+        $this->assertCount(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->publisher->getEvents('mails'));
+        $this->assertSame([], $this->provider->issued);
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $this->rule()->getAttribute('status'));
+    }
+
+    public static function lookupFailures(): \Iterator
+    {
+        yield 'renewal lookup' => ['onRenew'];
+        yield 'status lookup' => ['onStatus'];
+    }
+
+    #[DataProvider('recoveredCertificates')]
+    public function testFinalAttemptReconcilesIssuedCertificate(bool $instant, string $status, bool $skipRenewCheck, ?string $renewDate): void
+    {
+        $this->provider->instant = $instant;
+        $this->provider->renew = false;
+        $this->provider->status = Status::ISSUED;
+        $this->setRule(['status' => $status]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+            'updated' => '2020-01-01T00:00:00.000+00:00',
+            'renewDate' => $renewDate,
+        ]));
+
+        $this->runWorker(skipRenewCheck: $skipRenewCheck);
+
+        $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
+        $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
+        $this->assertNull($this->certificate()->getAttribute('updated'));
+        $this->assertSame([], $this->provider->issued);
+        if ($instant) {
+            $this->assertNotEmpty($this->certificate()->getAttribute('renewDate'));
+            $this->assertGreaterThan(new \DateTime(), new \DateTime($this->certificate()->getAttribute('renewDate')));
+        }
+    }
+
+    public static function recoveredCertificates(): \Iterator
+    {
+        yield 'instant issuance' => [true, RULE_STATUS_CERTIFICATE_GENERATING, false, null];
+        yield 'instant renewal' => [true, RULE_STATUS_VERIFIED, false, '2020-01-01T00:00:00.000+00:00'];
+        yield 'delayed issuance' => [false, RULE_STATUS_CERTIFICATE_GENERATING, false, null];
+        yield 'forced message' => [true, RULE_STATUS_CERTIFICATE_GENERATING, true, null];
+    }
+
+    public function testRecoveryPreservesFutureRenewalDate(): void
+    {
+        $this->provider->instant = true;
+        $this->provider->renew = false;
+        $this->database->updateDocument('certificates', 'certificate', new Document(['renewDate' => '2099-01-01T00:00:00.000+00:00']));
+
+        $this->runWorker();
+
+        $this->assertSame('2099-01-01T00:00:00.000+00:00', $this->certificate()->getAttribute('renewDate'));
+        $this->assertSame([], $this->provider->issued);
+    }
+
+    public function testFinalAttemptLookupFailureStopsRecovery(): void
+    {
+        $this->provider->onRenew = static fn () => throw new \RuntimeException('Provider unavailable');
+        $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+            'updated' => '2020-01-01T00:00:00.000+00:00',
+        ]));
+
+        try {
+            $this->runWorker();
+            $this->fail('Expected provider lookup failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Provider unavailable', $error->getMessage());
+        }
+        $this->runWorker();
+
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->certificate()->getAttribute('attempts'));
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $this->rule()->getAttribute('status'));
+        $this->assertNull($this->certificate()->getAttribute('updated'));
+        $this->assertSame([], $this->provider->issued);
+        $this->assertCount(1, $this->publisher->getEvents('mails'));
+    }
+
+    #[DataProvider('exhaustedCertificates')]
+    public function testFinalAttemptDoesNotIssueAgain(bool $renew, string $status, bool $skipRenewCheck): void
+    {
+        $this->provider->renew = $renew;
+        $this->provider->status = $status;
+        $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+            'updated' => '2020-01-01T00:00:00.000+00:00',
+        ]));
+
+        $this->runWorker(skipRenewCheck: $skipRenewCheck);
+        $this->runWorker();
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $this->rule()->getAttribute('status'));
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->certificate()->getAttribute('attempts'));
+        $this->assertNull($this->certificate()->getAttribute('updated'));
+        $this->assertSame([], $this->provider->issued);
+        $this->assertNull($this->publisher->getEvents('mails'));
+    }
+
+    public static function exhaustedCertificates(): \Iterator
+    {
+        yield 'renewal needed' => [true, Status::UNKNOWN, false];
+        yield 'missing subscription' => [false, Status::UNKNOWN, false];
+        yield 'forced message' => [true, Status::UNKNOWN, true];
+    }
+
+    public function testFinalAttemptPreservesPendingIssuance(): void
+    {
+        $this->provider->renew = false;
+        $this->setRule(['status' => RULE_STATUS_CERTIFICATE_GENERATING]);
+        $this->database->updateDocument('certificates', 'certificate', new Document([
+            'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+            'updated' => '2020-01-01T00:00:00.000+00:00',
+        ]));
+
+        $this->runWorker();
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->certificate()->getAttribute('attempts'));
+        $this->assertNull($this->certificate()->getAttribute('updated'));
+        $this->assertSame([], $this->provider->issued);
+    }
+
     public function testPendingDuplicatePreservesAttemptsWithoutCallingIssuance(): void
     {
         $this->runWorker();
@@ -157,12 +304,12 @@ final class CertificatesTest extends TestCase
     {
         $this->provider->onIssue = function (): void {
             $this->database->updateDocument('certificates', 'certificate', new Document(['updated' => '2099-01-01T00:00:00.000+00:00', 'attempts' => 4, 'logs' => 'new worker']));
-            $this->setRule(['status' => RULE_STATUS_VERIFIED, 'logs' => 'new worker']);
+            $this->setRule(['logs' => 'new worker']);
         };
         $this->runWorker();
         $this->assertSame(4, $this->certificate()->getAttribute('attempts'));
         $this->assertSame('new worker', $this->rule()->getAttribute('logs'));
-        $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $this->rule()->getAttribute('status'));
         $this->assertNull($this->publisher->getEvents('functions'));
     }
 
@@ -260,7 +407,7 @@ final class CertificatesTest extends TestCase
         yield [0];
     }
 
-    private function runWorker(string $project = 'project', string $sequence = '7'): void
+    private function runWorker(string $project = 'project', string $sequence = '7', bool $skipRenewCheck = false): void
     {
         $webhooks = $this->createStub(Webhook::class);
         $webhooks->method('from')->willReturnSelf();
@@ -271,6 +418,7 @@ final class CertificatesTest extends TestCase
             project: new Document(['$id' => $project, '$sequence' => $sequence]),
             domain: new Document(['domain' => 'example.com', 'domainType' => 'api']),
             validationDomain: 'example.com',
+            skipRenewCheck: $skipRenewCheck,
         );
         (new Certificates())->action(
             (new Message())->setPayload($message->toArray()),

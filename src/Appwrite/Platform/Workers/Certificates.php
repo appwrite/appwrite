@@ -278,7 +278,8 @@ class Certificates extends Action
             $certificate = empty($certificateId) ? new Document() : $dbForPlatform->getDocument('certificates', $certificateId, forUpdate: true);
             $previous = $certificate->getAttribute('updated');
             if ((!empty($previous) && new \DateTime($previous) > new \DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'))
-                || $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
+                || ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS
+                    && $current->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED)) {
                 return null;
             }
 
@@ -310,17 +311,28 @@ class Certificates extends Action
         // route issuance to a different provider after a domain changes type.
         $domainType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type'));
         $error = null;
+        $issuanceStarted = false;
+        $exhausted = $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS;
 
         try {
-            if (!$skipRenewCheck) {
+            // A crash on the final attempt may leave a usable certificate at
+            // the provider. Reconcile it even when issuance cannot be retried.
+            if (!$skipRenewCheck || $exhausted) {
                 $this->validateDomain($rule, $domain, $validationDomain);
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    $status = $certificates->isInstantGeneration($domain->get(), $domainType)
+                    $instant = $certificates->isInstantGeneration($domain->get(), $domainType);
+                    $status = $instant
                         ? Status::ISSUED
                         : $certificates->getCertificateStatus($domain->get(), $domainType);
                     if ($status === Status::ISSUED) {
                         $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                         $certificate->setAttribute('attempts', 0);
+                        $renewDate = $certificate->getAttribute('renewDate');
+                        if ($instant && (empty($renewDate) || new \DateTime($renewDate) <= new \DateTime())) {
+                            // A crash may lose the renewal date. Schedule another
+                            // eligibility check so maintenance keeps renewing it.
+                            $certificate->setAttribute('renewDate', DateTime::addSeconds(new \DateTime(), max(1, (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'))));
+                        }
                         $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                         return;
                     }
@@ -334,8 +346,13 @@ class Certificates extends Action
                 }
             }
 
-            // Count each real issuance once, before calling the provider. A
-            // delayed failure is reconciled later without spending another try.
+            if ($exhausted) {
+                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                $logs .= "\033[90m[{$date}] \033[31mSSL certificate retry limit reached. Retry manually after resolving the failure. \033[0m\n";
+                return;
+            }
+
+            // Reserve the attempt before issuance so a crash still counts it.
             $started = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $certificate, $lease, $claimedStatus): ?Document {
                 $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
                 if ($current->isEmpty()
@@ -347,7 +364,10 @@ class Certificates extends Action
                     return null;
                 }
                 $latest = $dbForPlatform->getDocument('certificates', $certificate->getId(), forUpdate: true);
-                if ($latest->isEmpty() || $latest->getSequence() !== $certificate->getSequence() || $latest->getAttribute('updated') !== $lease) {
+                if ($latest->isEmpty()
+                    || $latest->getSequence() !== $certificate->getSequence()
+                    || $latest->getAttribute('updated') !== $lease
+                    || $latest->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS) {
                     return null;
                 }
                 return $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
@@ -359,6 +379,7 @@ class Certificates extends Action
                 return;
             }
             $certificate = $started;
+            $issuanceStarted = true;
             $renewDate = $certificates->issueCertificate(ID::unique(), $domain->get(), $domainType);
             $certificate->setAttribute('renewDate', $renewDate);
             $date = \date('H:i:s');
@@ -371,6 +392,11 @@ class Certificates extends Action
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
             }
         } catch (Throwable $e) {
+            // Failed validation or provider lookups also consume a retry, but
+            // an issuance failure must not count the reserved attempt twice.
+            if (!$issuanceStarted && !$exhausted) {
+                $certificate->setAttribute('attempts', $certificate->getAttribute('attempts', 0) + 1);
+            }
             $date = \date('H:i:s');
             $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
             $logs .= \mb_strcut($e->getMessage(), 0, 500000);
