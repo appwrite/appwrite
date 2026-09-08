@@ -79,8 +79,10 @@ export async function runTerminalCommand(
   command: string,
 ): Promise<void> {
   const textarea = terminalTextarea(page)
-  await textarea.click({ force: true })
+  // xterm positions this hidden input at the cursor; focus it directly rather
+  // than force-clicking through terminal output or overlapping controls.
   await textarea.focus()
+  await expect(textarea).toBeFocused()
   // Paste the whole command. Typing character-by-character wraps at the
   // panel width and xterm treats that wrap as Enter, splitting the command.
   await page.keyboard.insertText(command)

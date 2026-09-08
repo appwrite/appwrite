@@ -1,3 +1,4 @@
+import { createClientOnlyFn } from '@tanstack/react-start'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringGlobeActivity } from '@/lib/init/init-presence-activity'
@@ -7,12 +8,11 @@ import { formatInitCappedCount } from '@/lib/init/presence'
 import { importNamedDefault } from '@/lib/stale-chunk-error'
 import { cn } from '@/lib/utils'
 
-const LazyInitCommunityGlobe = lazy(() =>
-  importNamedDefault(
-    () => import('./InitCommunityGlobe.client'),
-    'InitCommunityGlobe',
-  ),
+const loadInitCommunityGlobe = createClientOnlyFn(() =>
+  importNamedDefault(() => import('./InitCommunityGlobe.client'), 'InitCommunityGlobe'),
 )
+
+const LazyInitCommunityGlobe = lazy(() => loadInitCommunityGlobe()!)
 
 function InitGlobePresenceStats({
   countries,
