@@ -35,7 +35,11 @@ After provisioning, Appwrite opens the SQL editor. The **Credentials** entry in 
 
 ![Database connection details with the password hidden](/images/blog/drizzle-orm-appwrite-postgres/database-credentials.avif)
 
-Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged. The [Drizzle integration documentation](https://appwrite.io/docs/products/databases/postgresql/integrations/drizzle) covers direct and pooled connections.
+Open **Credentials → DSN → Copy**. For this guide, change the copied URL's port from `6432` to the direct endpoint at `5432`. Keep the hostname, credentials, database name, and TLS parameters unchanged.
+
+{% info title="Why use the direct connection?" %}
+Port `6432` routes connections through Appwrite's pooler, while `5432` connects directly to Postgres. Appwrite recommends the direct endpoint for migrations to preserve session-level behavior. The [Drizzle integration documentation](https://appwrite.io/docs/products/databases/postgresql/integrations/drizzle) covers separate connections for migrations and application queries.
+{% /info %}
 
 In a TypeScript project using ES modules, install the dependencies:
 
