@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { MarketingCtaSection } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
@@ -9,7 +8,7 @@ export function ThreadsPreFooter() {
     <MarketingCtaSection title="Need support?">
       <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
         <a
-          href={assetUrl(MARKETING_SOCIAL_STATS.discord.link)}
+          href={MARKETING_SOCIAL_STATS.discord.link}
           target="_blank"
           rel="noopener noreferrer"
         >

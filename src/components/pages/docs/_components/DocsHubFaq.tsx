@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import {
   Accordion,
@@ -32,7 +31,7 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
         Appwrite is an open-source backend platform: Auth, Databases, Storage, Functions,
         Realtime, Messaging, and hosting for sites. You can build against{' '}
         <a
-          href={assetUrl("https://cloud.appwrite.io/")}
+          href="https://cloud.appwrite.io/"
           target="_blank"
           rel="noopener noreferrer"
           className={FAQ_LINK_CLASS}
@@ -166,7 +165,7 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
         </MarketingSiteLink>{' '}
         for product help options, and use{' '}
         <a
-          href={assetUrl("https://github.com/appwrite/appwrite/issues")}
+          href="https://github.com/appwrite/appwrite/issues"
           target="_blank"
           rel="noopener noreferrer"
           className={FAQ_LINK_CLASS}

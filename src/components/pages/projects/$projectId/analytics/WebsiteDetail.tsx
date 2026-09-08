@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useRef, useEffect } from 'react'
 import * as React from 'react'
 import { cn } from '@/lib/utils'
@@ -697,7 +696,7 @@ function MapContent({ data }: { data: LocationData[] }) {
                 <div className="flex items-center gap-2">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                     <img
-                      src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
+                      src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
                       alt={`${location.country} flag`}
                       className="h-full w-full object-cover"
                       role="img"
@@ -1636,7 +1635,7 @@ export function WebsiteAnalyticsDetail({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
+                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
                                         alt={`${location.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -1714,7 +1713,7 @@ export function WebsiteAnalyticsDetail({
                                   <div className="relative flex flex-1 items-center gap-2">
                                     <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                       <img
-                                        src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
+                                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
                                         alt={`${region.country} flag`}
                                         className="h-full w-full object-cover"
                                         role="img"
@@ -1789,7 +1788,7 @@ export function WebsiteAnalyticsDetail({
                                     <div className="relative flex flex-1 items-center gap-2">
                                       <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                                         <img
-                                          src={assetUrl(`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`)}
+                                          src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
                                           alt={`${city.country} flag`}
                                           className="h-full w-full object-cover"
                                           role="img"

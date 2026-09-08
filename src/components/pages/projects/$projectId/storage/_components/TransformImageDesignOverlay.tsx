@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import {
   useCallback,
   useEffect,
@@ -600,7 +599,7 @@ export function TransformImageDesignOverlay({
       >
         <img
           ref={localImgRef}
-          src={assetUrl(localImgSrc)}
+          src={localImgSrc}
           alt={imgAlt}
           draggable={false}
           onLoad={handleLocalLoad}
@@ -676,7 +675,7 @@ export function TransformImageDesignOverlay({
             >
               <img
                 ref={localImgRef}
-                src={assetUrl(pristineSrc)}
+                src={pristineSrc}
                 alt={imgAlt}
                 draggable={false}
                 onLoad={handleLocalLoad}
@@ -703,7 +702,7 @@ export function TransformImageDesignOverlay({
                     style={{ opacity: state.opacity }}
                   >
                     <img
-                      src={assetUrl(localImgSrc)}
+                      src={localImgSrc}
                       alt=""
                       aria-hidden
                       draggable={false}
@@ -723,7 +722,7 @@ export function TransformImageDesignOverlay({
                       )}
                     >
                       <img
-                        src={assetUrl(serverImgSrc)}
+                        src={serverImgSrc}
                         alt={rightShowServer ? imgAlt : ''}
                         aria-hidden={!rightShowServer}
                         draggable={false}
@@ -791,7 +790,7 @@ export function TransformImageDesignOverlay({
             <>
                 <img
                   ref={localImgRef}
-                  src={assetUrl(localImgSrc)}
+                  src={localImgSrc}
                   alt={showServerFidelity ? '' : imgAlt}
                   aria-hidden={showServerFidelity}
                   draggable={false}
@@ -814,7 +813,7 @@ export function TransformImageDesignOverlay({
                   )}
                 >
                   <img
-                    src={assetUrl(serverImgSrc)}
+                    src={serverImgSrc}
                     alt={showServerFidelity ? imgAlt : ''}
                     aria-hidden={!showServerFidelity}
                     draggable={false}

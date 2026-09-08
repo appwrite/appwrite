@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Check, Copy, Download } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -35,13 +34,13 @@ function AssetDownloadButtons({
       )}
     >
       <Button variant="secondary" size="sm" className="h-8 gap-1.5 text-[12px]" asChild>
-        <a href={assetUrl(svgHref)} download>
+        <a href={svgHref} download>
           <Download className="h-3.5 w-3.5" />
           SVG
         </a>
       </Button>
       <Button variant="secondary" size="sm" className="h-8 gap-1.5 text-[12px]" asChild>
-        <a href={assetUrl(rasterHref)} download>
+        <a href={rasterHref} download>
           <Download className="h-3.5 w-3.5" />
           PNG
         </a>
@@ -123,7 +122,7 @@ function LogoPreview({
             previewClassName,
           )}
         >
-          <img src={assetUrl(src)} alt={t(alt)} className="max-h-16 w-full max-w-[240px] object-contain" />
+          <img src={src} alt={t(alt)} className="max-h-16 w-full max-w-[240px] object-contain" />
         </div>
       </div>
       <div className="flex items-center justify-between gap-3 bg-muted/30 px-4 py-3">
@@ -148,7 +147,7 @@ function CoBrandPreview({
     <div className={assetCardClassName}>
       <div className="border-b border-border bg-muted/20 p-4 sm:p-5">
         <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-border/70 bg-[#19191D] p-8 shadow-sm">
-          <img src={assetUrl(src)} alt={t(alt)} className="max-h-20 w-full max-w-md object-contain" />
+          <img src={src} alt={t(alt)} className="max-h-20 w-full max-w-md object-contain" />
         </div>
       </div>
       <div className="bg-muted/30 px-4 py-3">
@@ -173,7 +172,7 @@ function ProductVisualCard({
       <div className="border-b border-border bg-muted/20 p-4 sm:p-5">
         <div className="overflow-hidden rounded-lg border border-border/70 bg-background shadow-sm">
           <img
-            src={assetUrl(imageSrc)}
+            src={imageSrc}
             alt={t(title)}
             className="aspect-video w-full object-cover"
           />
@@ -187,7 +186,7 @@ function ProductVisualCard({
           className="h-8 gap-1.5 text-[12px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
           asChild
         >
-          <a href={assetUrl(downloadHref)} download>
+          <a href={downloadHref} download>
             <Download className="h-3.5 w-3.5" />
             {t('Download')}
           </a>
@@ -216,7 +215,7 @@ export function View() {
               className="max-w-2xl"
             />
             <Button variant="brandCta" className="gap-1.5" asChild>
-              <a href={assetUrl("/assets.zip")} download>
+              <a href="/assets.zip" download>
                 <Download className="h-4 w-4" />
                 {t('Download assets')}
               </a>
@@ -248,20 +247,20 @@ export function View() {
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 <LogoPreview
-                  src={assetUrl("/assets/logotype/white.svg")}
+                  src="/assets/logotype/white.svg"
                   alt={t('Appwrite logo with black text') /* pragma: allowlist secret */}
                   label={t('Light background')}
                   previewClassName="bg-[#EDEDF0]"
-                  svgHref={assetUrl("/assets/logotype/white.svg")}
-                  rasterHref={assetUrl("/assets/logotype/white.avif")}
+                  svgHref="/assets/logotype/white.svg"
+                  rasterHref="/assets/logotype/white.avif"
                 />
                 <LogoPreview
-                  src={assetUrl("/assets/logotype/black.svg")}
+                  src="/assets/logotype/black.svg"
                   alt={t('Appwrite logo with white text') /* pragma: allowlist secret */}
                   label={t('Dark background')}
                   previewClassName="bg-[#19191D]"
-                  svgHref={assetUrl("/assets/logotype/black.svg")}
-                  rasterHref={assetUrl("/assets/logotype/black.avif")}
+                  svgHref="/assets/logotype/black.svg"
+                  rasterHref="/assets/logotype/black.avif"
                 />
               </div>
 
@@ -275,7 +274,7 @@ export function View() {
                   )}
                 </p>
                 <CoBrandPreview
-                  src={assetUrl("/assets/logotype/co-brand.svg")}
+                  src="/assets/logotype/co-brand.svg"
                   alt={t('Appwrite logo besides a generic logo') /* pragma: allowlist secret */}
                   label={t('Co-branding logotype example')}
                 />
@@ -293,20 +292,20 @@ export function View() {
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 <LogoPreview
-                  src={assetUrl("/assets/logomark/logo.svg")}
+                  src="/assets/logomark/logo.svg"
                   alt={t('Appwrite logomark') /* pragma: allowlist secret */}
                   label={t('Light background')}
                   previewClassName="bg-[#EDEDF0]"
-                  svgHref={assetUrl("/assets/logomark/logo.svg")}
-                  rasterHref={assetUrl("/assets/logomark/logo.avif")}
+                  svgHref="/assets/logomark/logo.svg"
+                  rasterHref="/assets/logomark/logo.avif"
                 />
                 <LogoPreview
-                  src={assetUrl("/assets/logomark/logo.svg")}
+                  src="/assets/logomark/logo.svg"
                   alt={t('Appwrite logomark on dark background') /* pragma: allowlist secret */}
                   label={t('Dark background')}
                   previewClassName="bg-[#19191D]"
-                  svgHref={assetUrl("/assets/logomark/logo.svg")}
-                  rasterHref={assetUrl("/assets/logomark/logo.avif")}
+                  svgHref="/assets/logomark/logo.svg"
+                  rasterHref="/assets/logomark/logo.avif"
                 />
               </div>
 
@@ -320,7 +319,7 @@ export function View() {
                   )}
                 </p>
                 <CoBrandPreview
-                  src={assetUrl("/assets/logomark/co-brand.svg")}
+                  src="/assets/logomark/co-brand.svg"
                   alt={t('Logomark cobrand example')}
                   label={t('Co-branding lockup example')}
                 />

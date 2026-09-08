@@ -1,4 +1,3 @@
-import { assetCss, assetUrl } from '@/lib/asset-url'
 import { cn } from '@/lib/utils'
 
 type TrustedByLogoProps = {
@@ -40,11 +39,11 @@ const maskStyle = (maskUrl: string, width: number, height: number) =>
   ({
     width,
     height,
-    maskImage: assetCss(`url(${maskUrl})`),
+    maskImage: `url(${maskUrl})`,
     maskPosition: 'center',
     maskRepeat: 'no-repeat',
     maskSize: 'contain',
-    WebkitMaskImage: assetCss(`url(${maskUrl})`),
+    WebkitMaskImage: `url(${maskUrl})`,
     WebkitMaskPosition: 'center',
     WebkitMaskRepeat: 'no-repeat',
     WebkitMaskSize: 'contain',
@@ -88,7 +87,7 @@ export function TrustedByLogo({
 
   return (
     <img
-      src={assetUrl(src)}
+      src={src}
       alt={alt}
       width={width}
       height={height}

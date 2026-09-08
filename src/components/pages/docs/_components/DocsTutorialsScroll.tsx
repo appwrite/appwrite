@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Carousel,
@@ -103,7 +102,7 @@ export function DocsTutorialsScroll() {
                     aria-hidden
                   />
                   <img
-                    src={assetUrl(tutorial.iconSrc)}
+                    src={tutorial.iconSrc}
                     alt=""
                     className={cn('relative z-10 size-12', PUBLIC_ICON_MUTED_CLASSES)}
                   />

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
@@ -80,7 +79,7 @@ function SmallCardLogo({
 
   return (
     <TrustedByLogo
-      src={assetUrl(sizedLogo.src)}
+      src={sizedLogo.src}
       alt={sizedLogo.alt}
       width={sizedLogo.width}
       height={sizedLogo.height}
@@ -210,7 +209,7 @@ function CaseStudyPanelContent({
         }}
       >
         <TrustedByLogo
-          src={assetUrl(study.logo)}
+          src={study.logo}
           alt={study.company}
           width={panelLogoDimensions.width}
           height={panelLogoDimensions.height}
@@ -252,7 +251,7 @@ function CaseStudyPanelContent({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
             <Avatar className="size-8">
-              <AvatarImage src={assetUrl(study.avatar)} alt="" />
+              <AvatarImage src={study.avatar} alt="" />
               <AvatarFallback className="text-[11px]">{initials}</AvatarFallback>
             </Avatar>
             <p className="min-w-0 text-[13px] leading-5 text-foreground">

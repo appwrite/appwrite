@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { LayoutTemplate } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -18,7 +17,7 @@ function TemplateScreenshot({
 
   return (
     <img
-      src={assetUrl(src)}
+      src={src}
       alt={alt}
       className={cn(
         className,
@@ -89,7 +88,7 @@ export function SiteTemplateCard({
           <div className="absolute -end-4 start-8 top-4 aspect-video -rotate-3 transition-transform duration-300 group-hover/visual:-rotate-2 group-hover/template:-rotate-2 motion-reduce:transform-none">
             <div className="relative h-full w-full overflow-hidden rounded-lg bg-muted/30 ring-1 ring-border">
               <TemplateScreenshot
-                src={assetUrl(screenshotUrl)}
+                src={screenshotUrl}
                 alt={template.name}
                 className="absolute inset-0 h-full w-full object-cover object-top"
               />

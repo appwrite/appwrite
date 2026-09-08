@@ -18,7 +18,6 @@ export const runtimeConfigMiddleware = createMiddleware({
   type: 'request',
 }).server(async ({ next }) => {
   const result = await next()
-  if (process.env.TSS_PRERENDERING === 'true') return result
   const response = result.response
   if (!response?.headers) {
     return result

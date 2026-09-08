@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -595,7 +594,7 @@ export function SignIn({
             alt="Image"
             className="h-full w-full object-cover"
             height="600"
-            src={assetUrl("/cover.avif")}
+            src="/cover.avif"
             width="600"
           />
         </div>

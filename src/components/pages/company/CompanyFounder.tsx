@@ -1,4 +1,3 @@
-import { assetUrl, assetCss } from '@/lib/asset-url'
 import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
 import { companyFounder } from '@/lib/company/founder'
@@ -16,8 +15,8 @@ function SocialIconMask({
     <span
       className="h-4 w-4 bg-current"
       style={{
-        WebkitMaskImage: assetCss(`url(${icon})`),
-        maskImage: assetCss(`url(${icon})`),
+        WebkitMaskImage: `url(${icon})`,
+        maskImage: `url(${icon})`,
         WebkitMaskSize: 'contain',
         maskSize: 'contain',
         WebkitMaskRepeat: 'no-repeat',
@@ -36,25 +35,25 @@ const founderSocialLinks = [
     id: 'website',
     href: companyFounder.links.website,
     label: `${companyFounder.name} website`,
-    icon: assetUrl('/icons/globe.svg'),
+    icon: '/icons/globe.svg',
   },
   {
     id: 'github',
     href: companyFounder.links.github,
     label: `${companyFounder.name} on GitHub`,
-    icon: assetUrl('/icons/github.svg'),
+    icon: '/icons/github.svg',
   },
   {
     id: 'twitter',
     href: companyFounder.links.twitter,
     label: `${companyFounder.name} on X`,
-    icon: assetUrl('/icons/x.svg'),
+    icon: '/icons/x.svg',
   },
   {
     id: 'linkedin',
     href: companyFounder.links.linkedin,
     label: `${companyFounder.name} on LinkedIn`,
-    icon: assetUrl('/icons/linkedin.svg'),
+    icon: '/icons/linkedin.svg',
   },
 ] as const
 
@@ -72,7 +71,7 @@ export function CompanyFounder() {
         <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] xl:gap-12">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-start">
             <img
-              src={assetUrl(companyFounder.image.src)}
+              src={companyFounder.image.src}
               alt={companyFounder.image.alt}
               className="size-20 rounded-full object-cover object-center sm:size-24"
               loading="lazy"
@@ -88,7 +87,7 @@ export function CompanyFounder() {
               {founderSocialLinks.map((link) => (
                 <a
                   key={link.id}
-                  href={assetUrl(link.href)}
+                  href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={link.label}

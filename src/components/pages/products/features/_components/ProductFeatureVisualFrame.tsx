@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
@@ -57,7 +56,7 @@ export function ProductFeatureVisualFrame({
           {headerIcons.length > 0 ? (
             <div className="flex shrink-0 items-center gap-1.5">
               {headerIcons.map((src) => (
-                <ProductFeaturePublicIcon key={src} src={assetUrl(src)} className="size-5 shrink-0" />
+                <ProductFeaturePublicIcon key={src} src={src} className="size-5 shrink-0" />
               ))}
             </div>
           ) : null}

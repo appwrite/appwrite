@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import Markdoc from '@markdoc/markdoc'
 import React, { useMemo, type ReactNode } from 'react'
 import {
@@ -86,7 +85,7 @@ const markdocComponents = {
   CallToAction: ({ href, title }: { href?: string; title?: string }) => (
     <div className="not-prose my-6">
       <a
-        href={assetUrl(href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href)}
+        href={href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href}
         className="inline-flex items-center rounded-lg bg-[var(--brand-cta)] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90"
         target={href?.startsWith('/') ? '_blank' : undefined}
         rel={href?.startsWith('/') ? 'noopener noreferrer' : undefined}
@@ -97,7 +96,7 @@ const markdocComponents = {
   ),
   Video: ({ src, title }: { src?: string; title?: string }) => (
     <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
-      <video src={assetUrl(src)} controls className="w-full" title={title} />
+      <video src={src} controls className="w-full" title={title} />
     </div>
   ),
   Youtube: MarkdocYoutube,
@@ -199,7 +198,7 @@ export function ChangelogMarkdown({
           <div className="not-prose my-6">
             <a
               href={
-                assetUrl(href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href)
+                href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href
               }
               className={cn(
                 'inline-flex items-center rounded-lg bg-[var(--brand-cta)] px-4 py-2 font-medium text-white hover:opacity-90',

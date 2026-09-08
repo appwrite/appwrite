@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { ArrowRight } from 'lucide-react'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
@@ -91,7 +90,7 @@ export function DocsHeroSection() {
                 className="flex size-9 items-center justify-center"
               >
                 <img
-                  src={assetUrl(tool.iconSrc)}
+                  src={tool.iconSrc}
                   alt=""
                   className={cn('size-7', PUBLIC_ICON_MUTED_CLASSES)}
                 />

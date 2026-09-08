@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { LucideIcon } from 'lucide-react'
 import {
   Tooltip,
@@ -51,7 +50,7 @@ export function ProductAvatarsList({
           </span>
         ) : item.imageSrc ? (
           <img
-            src={assetUrl(item.imageSrc)}
+            src={item.imageSrc}
             alt=""
             className={cn(
               'size-4 object-contain sm:size-[17px]',

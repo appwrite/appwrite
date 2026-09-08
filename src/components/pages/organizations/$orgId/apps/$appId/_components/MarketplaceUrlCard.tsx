@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -66,7 +65,7 @@ export function MarketplaceUrlCard({ appId }: { appId: string }) {
             asChild
           >
             <a
-              href={assetUrl(marketplaceUrl)}
+              href={marketplaceUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t('Open')}

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import type {
   InitDisplayEvent,
@@ -53,7 +52,7 @@ function ReleaseOptionLink({
 
   return (
     <a
-      href={assetUrl(resolved.href)}
+      href={resolved.href}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={className}
     >

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Event Editor – Progressive disclosure pill-style builder
  * Vertical stack of selectable pill groups. Each row reveals the next.
@@ -116,7 +115,7 @@ export function EventEditor({
           <DialogDescription className="text-[13px] mt-2">
             {t(resolvedDescription)}{' '}
             <a
-              href={assetUrl(resolvedDocsLink)}
+              href={resolvedDocsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="link-neutral"

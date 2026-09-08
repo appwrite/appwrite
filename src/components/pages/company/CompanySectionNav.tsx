@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { companyPageSections } from '@/lib/company/sections'
 import { scrollToCompanySection, scrollToCompanySectionFromHash } from '@/lib/company/section-scroll'
@@ -60,7 +59,7 @@ export function CompanySectionNav() {
             return (
               <li key={section.id}>
                 <a
-                  href={assetUrl(`#${section.id}`)}
+                  href={`#${section.id}`}
                   onClick={(event) => handleClick(event, section.id)}
                   className={cn(
                     'inline-flex h-8 items-center justify-center rounded-full border px-3.5 text-[12px] font-medium transition-colors',

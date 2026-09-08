@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { MouseEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,7 +27,7 @@ export function InitDayCardHeaderNav({ day }: InitDayCardHeaderNavProps) {
       size="icon"
       className="size-6 shrink-0 text-muted-foreground"
     >
-      <a href={assetUrl(hash)} aria-label={`Link to day ${day.day}`} onClick={handleClick}>
+      <a href={hash} aria-label={`Link to day ${day.day}`} onClick={handleClick}>
         <Link2 className="size-3.5" aria-hidden />
       </a>
     </Button>

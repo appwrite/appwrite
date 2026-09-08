@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -155,7 +154,7 @@ export function StorageFilePreviewThumb({
           )}
         >
           <img
-            src={assetUrl(previewSrc)}
+            src={previewSrc}
             alt={name ?? ''}
             className="h-full w-full object-cover"
           />
@@ -181,7 +180,7 @@ export function StorageFilePreviewThumb({
   if (previewSrc) {
     return (
       <img
-        src={assetUrl(previewSrc)}
+        src={previewSrc}
         alt={name ?? ''}
         className={cn(imgClass, className)}
       />

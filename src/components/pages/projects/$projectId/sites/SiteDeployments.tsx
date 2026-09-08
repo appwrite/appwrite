@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import {
@@ -733,7 +732,7 @@ export function SiteDeploymentsView() {
                           <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
                             <img
                               key={screenshotId}
-                              src={assetUrl(screenshotUrl)}
+                              src={screenshotUrl}
                               alt={t('Deployment screenshot')}
                               onLoad={() => setScreenshotLoaded(true)}
                               className={cn(
@@ -902,7 +901,7 @@ export function SiteDeploymentsView() {
                                 const label = `${activeDeploymentForCard.providerRepositoryOwner}/${activeDeploymentForCard.providerRepositoryName}`
                                 return repoUrl ? (
                                   <a
-                                    href={assetUrl(repoUrl)}
+                                    href={repoUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="truncate link-neutral"
@@ -1016,7 +1015,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={assetUrl(domainUrl(rule.domain))}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1215,7 +1214,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={assetUrl(domainUrl(rule.domain))}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
@@ -1443,7 +1442,7 @@ export function SiteDeploymentsView() {
                                         {vcsProvider.icon}
                                         {repoUrl ? (
                                           <a
-                                            href={assetUrl(repoUrl)}
+                                            href={repoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral truncate"
@@ -1520,7 +1519,7 @@ export function SiteDeploymentsView() {
                                       <div className="text-[12px] text-foreground line-clamp-1 font-mono">
                                         {commitUrl ? (
                                           <a
-                                            href={assetUrl(commitUrl)}
+                                            href={commitUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="link-neutral"
@@ -1573,7 +1572,7 @@ export function SiteDeploymentsView() {
                                                   {` ${t('by')} `}
                                                   {commitAuthorUrl ? (
                                                     <a
-                                                      href={assetUrl(commitAuthorUrl)}
+                                                      href={commitAuthorUrl}
                                                       target="_blank"
                                                       rel="noopener noreferrer"
                                                       className="link-neutral"

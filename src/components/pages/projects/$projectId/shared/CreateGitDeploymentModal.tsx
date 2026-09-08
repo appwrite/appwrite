@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Create deployment from Git – branch selector and optional repo connect.
  * Used for both Functions and Sites. If repo is already linked, show branch + activate.
@@ -366,7 +365,7 @@ export function CreateGitDeploymentModal({
                   )}
                   {repository.url && (
                     <a
-                      href={assetUrl(repository.url)}
+                      href={repository.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 link-neutral text-[12px] mt-1"

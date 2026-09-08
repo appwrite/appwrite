@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Globe } from 'lucide-react'
 import { getFrameworkIconFile } from '@/lib/frameworks'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -35,7 +34,7 @@ export function FrameworkIcon({
   if (iconFile) {
     return (
       <img
-        src={assetUrl(`/icons/${iconFile}`)}
+        src={`/icons/${iconFile}`}
         alt={framework}
         className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />

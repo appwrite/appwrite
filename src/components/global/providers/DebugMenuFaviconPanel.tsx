@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useParams, useRouterState } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -72,7 +71,7 @@ function FaviconPreview({
       aria-hidden={alt ? undefined : true}
     >
       <img
-        src={assetUrl(href)}
+        src={href}
         alt={alt ?? ''}
         className="h-full w-full object-contain"
         draggable={false}

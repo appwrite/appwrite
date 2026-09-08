@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { useT } from '@/lib/i18n/translate'
@@ -28,7 +27,7 @@ export function SpecificationsUpgradeNote({
           <>
             {t('or')}{' '}
             <a
-              href={assetUrl(CONTACT_SALES_URL)}
+              href={CONTACT_SALES_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-foreground underline hover:no-underline"

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Shared rendering for a VCS call that failed because of the installation
  * itself, rather than because the repository/branch/directory is genuinely
@@ -138,7 +137,7 @@ function VcsInstallationErrorActions({
         variant={reconnectIsPrimary ? 'default' : 'outline'}
         className="text-[13px]"
       >
-        <a href={assetUrl(reconnectUrl)}>
+        <a href={reconnectUrl}>
           <PlugZap className="me-1.5 h-3.5 w-3.5" />
           {t('Reconnect installation')}
         </a>

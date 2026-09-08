@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { docsGridQuickStarts, docsGridTwoCol } from '@/lib/docs/docs-container'
@@ -78,7 +77,7 @@ function QuickStartsPreviewMenu() {
                     <span className="flex items-center gap-2.5">
                       <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
                         <img
-                          src={assetUrl(item.iconSrc)}
+                          src={item.iconSrc}
                           alt=""
                           className={cn('size-3.5', PUBLIC_ICON_MUTED_CLASSES)}
                         />

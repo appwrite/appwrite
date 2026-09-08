@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { Link, useLocation } from '@tanstack/react-router'
 import type { ComponentProps, MouseEvent, ReactNode } from 'react'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
@@ -101,7 +100,7 @@ export function DocsRouteLink({
     return (
       <a
         {...props}
-        href={assetUrl(externalUrl)}
+        href={externalUrl}
         target="_blank"
         rel="noopener noreferrer"
         className={className}
@@ -126,7 +125,7 @@ export function DocsRouteLink({
     }
 
     return (
-      <a {...props} href={assetUrl(href)} className={className} onClick={handlePreviewClick}>
+      <a {...props} href={href} className={className} onClick={handlePreviewClick}>
         {children}
       </a>
     )
@@ -134,7 +133,7 @@ export function DocsRouteLink({
 
   if (!route) {
     return (
-      <a {...props} href={assetUrl(href)} className={className} onClick={onClick}>
+      <a {...props} href={href} className={className} onClick={onClick}>
         {children}
       </a>
     )

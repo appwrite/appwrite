@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Mail, Phone, Bell } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -60,7 +59,7 @@ export function MessagingProviderIcon({
   if (iconFile) {
     return (
       <img
-        src={assetUrl(`/icons/${iconFile}`)}
+        src={`/icons/${iconFile}`}
         alt={altLabel}
         className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Repository Configuration View (Function)
  *
@@ -377,7 +376,7 @@ export function RepositoryConfigView({
           </div>
           {repository?.url && (
             <a
-              href={assetUrl(repository.url)}
+              href={repository.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { isLegacyTheme, LEGACY_LOGO_SRC } from '@/lib/legacy-theme-assets'
@@ -12,7 +11,7 @@ export function AppwriteLogo({ className }: { className?: string }) {
   }, [])
 
   if (mounted && isLegacyTheme(theme, resolvedTheme)) {
-    return <img src={assetUrl(LEGACY_LOGO_SRC)} alt="Appwrite" className={className} />
+    return <img src={LEGACY_LOGO_SRC} alt="Appwrite" className={className} />
   }
 
   // Determine which logo to use based on theme
@@ -20,7 +19,7 @@ export function AppwriteLogo({ className }: { className?: string }) {
   // appwrite-dark.svg has light fill (#EDEDF0) - use on dark backgrounds
   // Default to dark mode if theme is not yet resolved (matches defaultTheme="dark" in ThemeProvider)
   const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true // Default to dark during SSR/initial render
-  const logoSrc = isDark ? assetUrl('/appwrite-dark.svg') : assetUrl('/appwrite-light.svg')
+  const logoSrc = isDark ? '/appwrite-dark.svg' : '/appwrite-light.svg'
 
-  return <img src={assetUrl(logoSrc)} alt="Appwrite" className={className} />
+  return <img src={logoSrc} alt="Appwrite" className={className} />
 }

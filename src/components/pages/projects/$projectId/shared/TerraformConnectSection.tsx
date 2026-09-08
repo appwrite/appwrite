@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useState } from 'react'
 import { ExternalLink, Key, Plus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -382,7 +381,7 @@ export function TerraformConnectSection({
 
         <div className="flex flex-col gap-2">
           <a
-            href={assetUrl(TERRAFORM_REGISTRY_PROVIDER_DOCS)}
+            href={TERRAFORM_REGISTRY_PROVIDER_DOCS}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
@@ -392,7 +391,7 @@ export function TerraformConnectSection({
             <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </a>
           <a
-            href={assetUrl(TERRAFORM_PROVIDER_REPO)}
+            href={TERRAFORM_PROVIDER_REPO}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 link-neutral text-[13px]"

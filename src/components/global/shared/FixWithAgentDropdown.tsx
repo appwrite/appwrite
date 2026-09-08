@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { BrainCircuit, ChevronDown, Copy, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -93,7 +92,7 @@ export function FixWithAgentDropdown({
         <div className="my-1 h-px bg-border" />
         {aiChatIDEs.map((ide) => (
           <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
-            <img src={assetUrl(ide.iconPath)} alt={ide.name} className="h-4 w-4" />
+            <img src={ide.iconPath} alt={ide.name} className="h-4 w-4" />
             <span className="ms-2">
               {t('Prompt')} {ide.name}
             </span>

@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -61,7 +60,7 @@ const METADATA_MARKDOWN_COMPONENTS: Components = {
 
     return (
       <a
-        href={assetUrl(href)}
+        href={href}
         target={openInNewWindow ? '_blank' : undefined}
         rel={openInNewWindow ? 'noopener noreferrer' : undefined}
         className="font-medium text-foreground underline underline-offset-2 hover:text-primary"

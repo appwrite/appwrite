@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -60,7 +59,7 @@ export function ChangelogLink({
   if (external || href.startsWith('#')) {
     return (
       <a
-        href={assetUrl(href)}
+        href={href}
         className={linkClassName}
         {...(external && !href.startsWith('#')
           ? { target: '_blank', rel: 'noopener noreferrer' }
@@ -143,7 +142,7 @@ export function ChangelogLink({
   if (href.startsWith('/')) {
     return (
       <a
-        href={assetUrl(`${MARKETING_SITE_ORIGIN}${href}`)}
+        href={`${MARKETING_SITE_ORIGIN}${href}`}
         className={linkClassName}
         target="_blank"
         rel="noopener noreferrer"
@@ -154,7 +153,7 @@ export function ChangelogLink({
   }
 
   return (
-    <a href={assetUrl(href)} className={linkClassName}>
+    <a href={href} className={linkClassName}>
       {children}
     </a>
   )

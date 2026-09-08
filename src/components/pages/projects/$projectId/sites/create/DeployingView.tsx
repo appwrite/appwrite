@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Deploying View Component
  *
@@ -484,7 +483,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                       </div>
                     )}
                     <img
-                      src={assetUrl(screenshotUrl)}
+                      src={screenshotUrl}
                       alt={`${site.name} ${t('preview')}`}
                       className="h-full w-full object-cover object-top"
                       onLoad={() => setPreviewImageLoaded(true)}
@@ -521,7 +520,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                         <CopyableId id={site.$id} size="xs" />
                         {siteUrl && (
                           <a
-                            href={assetUrl(siteUrl)}
+                            href={siteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-2 flex items-center gap-1.5 link-neutral text-[12px]"
@@ -541,7 +540,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     {siteUrl && (
                       <Button asChild>
                         <a
-                          href={assetUrl(siteUrl)}
+                          href={siteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -671,7 +670,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
             {qrImageUrl ? (
               <div className="p-4 bg-white rounded-lg">
                 <img
-                  src={assetUrl(qrImageUrl)}
+                  src={qrImageUrl}
                   alt={t('QR code to open site on mobile')}
                   className="h-48 w-48 rounded"
                 />

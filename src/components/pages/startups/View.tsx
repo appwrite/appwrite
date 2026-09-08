@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Check } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
@@ -181,11 +180,11 @@ export function View() {
                 {step.href && step.label ? (
                   <Button variant="outline" className="mt-6 w-fit" asChild>
                     {step.external ? (
-                      <a href={assetUrl(step.href)} target="_blank" rel="noopener noreferrer">
+                      <a href={step.href} target="_blank" rel="noopener noreferrer">
                         {t(step.label)}
                       </a>
                     ) : (
-                      <a href={assetUrl(step.href)}>{t(step.label)}</a>
+                      <a href={step.href}>{t(step.label)}</a>
                     )}
                   </Button>
                 ) : null}

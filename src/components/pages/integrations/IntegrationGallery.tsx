@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Carousel,
@@ -57,7 +56,7 @@ export function IntegrationGallery({ images, className }: IntegrationGalleryProp
               >
                 <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
                   <img
-                    src={assetUrl(image)}
+                    src={image}
                     alt=""
                     className="aspect-[16/9] w-full object-cover"
                     loading={index === 0 ? 'eager' : 'lazy'}

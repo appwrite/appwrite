@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { CoverCardsAngledPreview } from '@/components/pages/generator/_components/CoverCardsAngledPreview'
 import { CoverScreenshotAngledPreview } from '@/components/pages/generator/_components/CoverScreenshotAngledPreview'
 import {
@@ -52,7 +51,7 @@ export function CoverPreviewContent({
   if (previewUrl) {
     return (
       <img
-        src={assetUrl(previewUrl)}
+        src={previewUrl}
         alt=""
         draggable={false}
         className={cn('block max-w-none', className)}

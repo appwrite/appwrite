@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -156,7 +155,7 @@ export function CreateDatabaseDedicatedOptions({
                   asChild
                 >
                   <a
-                    href={assetUrl(CONTACT_ENTERPRISE_URL)}
+                    href={CONTACT_ENTERPRISE_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

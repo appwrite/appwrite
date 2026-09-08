@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { LaunchEvent } from '@/lib/init/types'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -45,7 +44,7 @@ export function EventCtaButton({
     return (
       <Button variant={variant} size={size} className={sizeClass} asChild>
         <a
-          href={assetUrl(resolvedHref.href)}
+          href={resolvedHref.href}
           target={external ? '_blank' : undefined}
           rel={external ? 'noopener noreferrer' : undefined}
         >

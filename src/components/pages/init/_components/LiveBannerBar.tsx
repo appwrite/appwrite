@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { LaunchEvent } from '@/lib/init/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,7 +31,7 @@ export function LiveBannerBar({ liveBanner }: LiveBannerBarProps) {
         {resolvedHref ? (
           <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
             <a
-              href={assetUrl(resolvedHref.href)}
+              href={resolvedHref.href}
               {...(resolvedHref.external
                 ? { target: '_blank', rel: 'noopener noreferrer' }
                 : {})}

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { BadgeCheck } from 'lucide-react'
 import { getIntegrationCategoryHeading } from '@/lib/integrations/categories'
@@ -35,7 +34,7 @@ export function IntegrationCard({
       {isFeatured && integration.cover ? (
         <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-muted sm:aspect-auto sm:w-[42%]">
           <img
-            src={assetUrl(integration.cover)}
+            src={integration.cover}
             alt=""
             className="h-full w-full object-cover"
             loading="lazy"

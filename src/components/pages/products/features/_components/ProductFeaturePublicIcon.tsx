@@ -1,15 +1,14 @@
-import { assetCss } from '@/lib/asset-url'
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
 export function productFeaturePublicIconMaskStyle(iconSrc: string): CSSProperties {
   return {
-    maskImage: assetCss(`url(${iconSrc})`),
+    maskImage: `url(${iconSrc})`,
     maskMode: 'alpha',
     maskRepeat: 'no-repeat',
     maskPosition: 'center',
     maskSize: 'contain',
-    WebkitMaskImage: assetCss(`url(${iconSrc})`),
+    WebkitMaskImage: `url(${iconSrc})`,
     WebkitMaskRepeat: 'no-repeat',
     WebkitMaskPosition: 'center',
     WebkitMaskSize: 'contain',

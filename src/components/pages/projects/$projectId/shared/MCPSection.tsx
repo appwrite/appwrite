@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState } from 'react'
 import { Check, Copy, Download, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -69,7 +68,7 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'claude-code',
       name: 'Claude Code',
-      iconPath: assetUrl('/icons/claude.svg'),
+      iconPath: '/icons/claude.svg',
       language: 'bash',
       code: getMcpClaudeCodeInstallCommand(
         t('select "appwrite", then "Authenticate"'),
@@ -78,14 +77,14 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: assetUrl('/icons/codex.svg'),
+      iconPath: '/icons/codex.svg',
       language: 'bash',
       code: MCP_CODEX_INSTALL_COMMAND,
     },
     {
       id: 'cursor',
       name: 'Cursor',
-      iconPath: assetUrl('/icons/cursor-ai.svg'),
+      iconPath: '/icons/cursor-ai.svg',
       language: 'json',
       code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
       installUrl: getCursorMcpInstallUrl(),
@@ -93,14 +92,14 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'claude-desktop',
       name: 'Claude Desktop',
-      iconPath: assetUrl('/icons/claude.svg'),
+      iconPath: '/icons/claude.svg',
       language: 'json',
       code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
     },
     {
       id: 'vscode',
       name: 'VS Code',
-      iconPath: assetUrl('/icons/vscode.svg'),
+      iconPath: '/icons/vscode.svg',
       language: 'json',
       code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
       installUrl: getVscodeMcpInstallUrl(),
@@ -108,7 +107,7 @@ function getCloudMcpTools(t: Translator): McpToolConfig[] {
     {
       id: 'opencode',
       name: 'OpenCode',
-      iconPath: assetUrl('/icons/opencode.svg'),
+      iconPath: '/icons/opencode.svg',
       language: 'json',
       code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
     },
@@ -126,42 +125,42 @@ function getSelfHostedMcpTools(
     {
       id: 'claude-code',
       name: 'Claude Code',
-      iconPath: assetUrl('/icons/claude.svg'),
+      iconPath: '/icons/claude.svg',
       language: 'bash',
       code: getSelfHostedClaudeCodeInstallCommand(projectId, endpoint),
     },
     {
       id: 'codex',
       name: 'Codex',
-      iconPath: assetUrl('/icons/codex.svg'),
+      iconPath: '/icons/codex.svg',
       language: 'toml',
       code: getSelfHostedCodexConfig(projectId, endpoint),
     },
     {
       id: 'cursor',
       name: 'Cursor',
-      iconPath: assetUrl('/icons/cursor-ai.svg'),
+      iconPath: '/icons/cursor-ai.svg',
       language: 'json',
       code: editorConfig,
     },
     {
       id: 'claude-desktop',
       name: 'Claude Desktop',
-      iconPath: assetUrl('/icons/claude.svg'),
+      iconPath: '/icons/claude.svg',
       language: 'json',
       code: editorConfig,
     },
     {
       id: 'vscode',
       name: 'VS Code',
-      iconPath: assetUrl('/icons/vscode.svg'),
+      iconPath: '/icons/vscode.svg',
       language: 'json',
       code: editorConfig,
     },
     {
       id: 'opencode',
       name: 'OpenCode',
-      iconPath: assetUrl('/icons/opencode.svg'),
+      iconPath: '/icons/opencode.svg',
       language: 'json',
       code: jsonSnippet(getSelfHostedOpencodeConfig(projectId, endpoint)),
     },
@@ -215,7 +214,7 @@ export function MCPSection({
         label: tool.name,
         icon: (
           <img
-            src={assetUrl(tool.iconPath)}
+            src={tool.iconPath}
             alt=""
             className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
           />
@@ -239,7 +238,7 @@ export function MCPSection({
         'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the',
       )}{' '}
       <a
-        href={assetUrl(MCP_SELF_HOSTED_DOCS_URL)}
+        href={MCP_SELF_HOSTED_DOCS_URL}
         target="_blank"
         rel="noreferrer"
         className={docsLinkClassName}

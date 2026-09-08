@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { createElement, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
@@ -164,7 +163,7 @@ export function CoverIconPreview({
 
   return (
     <img
-      src={assetUrl(src)}
+      src={src}
       alt=""
       draggable={false}
       className={cn('shrink-0 object-contain', previewClasses, className)}

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import {
   MarketingCtaSection,
@@ -192,17 +191,17 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
   const authorSocialLinks = [
     {
       href: author.github,
-      icon: assetUrl('/icons/github.svg'),
+      icon: '/icons/github.svg',
       label: 'Author GitHub',
     },
     {
       href: author.twitter,
-      icon: assetUrl('/icons/x.svg'),
+      icon: '/icons/x.svg',
       label: 'Author on X',
     },
     {
       href: author.linkedin,
-      icon: assetUrl('/icons/linkedin.svg'),
+      icon: '/icons/linkedin.svg',
       label: 'Author LinkedIn',
     },
   ].filter((link): link is { href: string; icon: string; label: string } =>
@@ -253,13 +252,13 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
                     asChild
                   >
                     <a
-                      href={assetUrl(link.href)}
+                      href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={link.label}
                     >
                       <ProductFeaturePublicIcon
-                        src={assetUrl(link.icon)}
+                        src={link.icon}
                         tone="muted-foreground"
                       />
                     </a>

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { formatDate } from '@/lib/date-utils'
 import type { ChangelogEntry } from '@/lib/changelog/types'
@@ -26,7 +25,7 @@ export function ChangelogEntryCard({ entry }: ChangelogEntryCardProps) {
           className="block overflow-hidden rounded-xl border border-border bg-card/40"
         >
           <img
-            src={assetUrl(entry.cover)}
+            src={entry.cover}
             alt=""
             loading="lazy"
             className="aspect-video w-full object-cover"

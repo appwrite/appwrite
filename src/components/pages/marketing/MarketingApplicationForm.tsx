@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -177,7 +176,7 @@ export function MarketingApplicationForm({
         <p className="text-[12px] leading-5 text-muted-foreground">
           {t('This form is protected by reCAPTCHA, and the Google')}{' '}
           <a
-            href={assetUrl("https://policies.google.com/privacy")}
+            href="https://policies.google.com/privacy"
             className="text-foreground underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"
@@ -186,7 +185,7 @@ export function MarketingApplicationForm({
           </a>{' '}
           {t('and')}{' '}
           <a
-            href={assetUrl("https://policies.google.com/terms")}
+            href="https://policies.google.com/terms"
             className="text-foreground underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"

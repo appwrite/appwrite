@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import {
   createContext,
   memo,
@@ -1124,7 +1123,7 @@ function MessageAttachments({
                     )}
                   >
                     <img
-                      src={assetUrl(attachment.previewUrl!)}
+                      src={attachment.previewUrl!}
                       alt={attachment.name}
                       onLoad={(event) => {
                         setLoadedImageKeys((previous) => {
@@ -1213,7 +1212,7 @@ function MessageAttachments({
                         className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
                       >
                         <a
-                          href={assetUrl(attachment.openUrl)}
+                          href={attachment.openUrl}
                           target="_blank"
                           rel="noreferrer"
                           aria-label={`${t('Open')} ${attachment.name}`}
@@ -1229,7 +1228,7 @@ function MessageAttachments({
                         className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
                       >
                         <a
-                          href={assetUrl(attachment.downloadUrl)}
+                          href={attachment.downloadUrl}
                           download={attachment.name}
                           aria-label={`${t('Download')} ${attachment.name}`}
                         >
@@ -1289,7 +1288,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
               >
                 <a
-                  href={assetUrl(activeFullscreenAttachment.openUrl)}
+                  href={activeFullscreenAttachment.openUrl}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`${t('Open')} ${activeFullscreenAttachment.name}`}
@@ -1305,7 +1304,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
               >
                 <a
-                  href={assetUrl(activeFullscreenAttachment.downloadUrl)}
+                  href={activeFullscreenAttachment.downloadUrl}
                   download={activeFullscreenAttachment.name}
                   aria-label={`${t('Download')} ${activeFullscreenAttachment.name}`}
                 >
@@ -1363,7 +1362,7 @@ function MessageAttachments({
                 </div>
               ) : null}
               <img
-                src={assetUrl(activeFullscreenAttachment.fullscreenPreviewUrl)}
+                src={activeFullscreenAttachment.fullscreenPreviewUrl}
                 alt={activeFullscreenAttachment.name}
                 onLoad={() =>
                   setLoadedImageKeys((previous) => {
@@ -1431,7 +1430,7 @@ function MessageAttachments({
                       )}
                     >
                       <img
-                        src={assetUrl(imageAttachment.previewUrl!)}
+                        src={imageAttachment.previewUrl!}
                         alt={imageAttachment.name}
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -6042,14 +6041,14 @@ export function AgentPanelContent({
                       >
                         {isImageAttachment ? (
                           <img
-                            src={assetUrl(sdk.forConsole.storage.getFilePreview({
+                            src={sdk.forConsole.storage.getFilePreview({
                               bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                               fileId: attachmentId,
                               height: 240,
                               output: composerAvifSupported
                                 ? ImageFormat.Avif
                                 : undefined,
-                            }))}
+                            })}
                             alt={attachmentName}
                             onLoad={(event) => {
                               const image =
@@ -6211,14 +6210,14 @@ export function AgentPanelContent({
                           {attachment.mimeType.startsWith('image/') &&
                           attachment.fileId ? (
                             <img
-                              src={assetUrl(sdk.forConsole.storage.getFilePreview({
+                              src={sdk.forConsole.storage.getFilePreview({
                                 bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                                 fileId: attachment.fileId,
                                 height: 240,
                                 output: composerAvifSupported
                                   ? ImageFormat.Avif
                                   : undefined,
-                              }))}
+                              })}
                               alt={attachment.name}
                               onLoad={(event) => {
                                 const image =

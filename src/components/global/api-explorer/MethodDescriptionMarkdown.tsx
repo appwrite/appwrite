@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -111,7 +110,7 @@ export function MethodDescriptionMarkdown({
 
             return (
               <a
-                href={assetUrl(href)}
+                href={href}
                 target={openInNewWindow ? '_blank' : undefined}
                 rel={openInNewWindow ? 'noopener noreferrer' : undefined}
                 className={LINK_CLASS}

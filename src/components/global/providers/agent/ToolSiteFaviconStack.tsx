@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { Globe } from 'lucide-react'
 import {
@@ -28,7 +27,7 @@ function FaviconImage({ site }: { site: ToolSite }) {
         <Globe className="h-3 w-3" aria-hidden />
       ) : (
         <img
-          src={assetUrl(src)}
+          src={src}
           alt=""
           width={20}
           height={20}
@@ -62,7 +61,7 @@ export function ToolSiteFaviconStack({
             <Tooltip key={site.url}>
               <TooltipTrigger asChild>
                 <a
-                  href={assetUrl(site.url)}
+                  href={site.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(

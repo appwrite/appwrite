@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -135,7 +134,7 @@ export function View({ initialData }: ViewProps = {}) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 {logoUrl ? (
-                  <MarketplaceAppLogo src={assetUrl(logoUrl)} size="lg" />
+                  <MarketplaceAppLogo src={logoUrl} size="lg" />
                 ) : (
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <CategoryIcon className="h-6 w-6" />

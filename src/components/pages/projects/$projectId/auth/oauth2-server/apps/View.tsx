@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState } from 'react'
 import {
   Copy,
@@ -100,7 +99,7 @@ function AppLogoThumb({
     >
       {src ? (
         <img
-          src={assetUrl(src)}
+          src={src}
           alt={t('App logo preview')}
           className="h-full w-full object-contain"
         />

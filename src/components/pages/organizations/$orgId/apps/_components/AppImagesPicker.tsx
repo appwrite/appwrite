@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useRef, useState } from 'react'
 import { ID } from '@appwrite.io/console'
 import { ImagePlus, Loader2, X } from 'lucide-react'
@@ -145,7 +144,7 @@ export function AppImagesPicker({
               className="group relative aspect-[16/10] overflow-hidden rounded-lg border border-border bg-card"
             >
               <img
-                src={assetUrl(src)}
+                src={src}
                 alt={t('Marketplace image')}
                 className="h-full w-full object-cover"
               />

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -85,7 +84,7 @@ function CloudStatusBannerInner({
     >
       <div className="min-h-0 overflow-hidden">
         <a
-          href={assetUrl(statusUrl)}
+          href={statusUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

@@ -21,18 +21,41 @@ env:
     TAG: ${{ github.event.release.tag_name || github.sha }}
 
 jobs:
-    image:
-        # Promote the immutable image tag from a successful staging deployment.
-        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
-        timeout-minutes: 10
-        permissions:
-            actions: read
-            contents: read
-            packages: read
+    build:
+        # One job per architecture, each on a runner of that architecture, so the
+        # arm64 image is built natively instead of under QEMU emulation.
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: amd64
+                      platform: linux/amd64
+                      runner: 4cpu-linux-x64
+                      family: c7
+                    - arch: arm64
+                      platform: linux/arm64
+                      runner: 4cpu-linux-arm64
+                      family: c7g
+        runs-on: runs-on=${{ github.run_id }}/runner=${{ matrix.runner }}/family=${{ matrix.family }}/extras=otel
+        timeout-minutes: 45
+        env:
+            DOCKER_BUILD_RECORD_UPLOAD: false
+        # Matrix legs share one output map, so each leg has to write to its own
+        # key; the leg it does not belong to gets an empty value, which GitHub
+        # drops rather than writing over the other leg's digest.
         outputs:
-            digest_amd64: ${{ steps.image.outputs.digest_amd64 }}
-            digest_arm64: ${{ steps.image.outputs.digest_arm64 }}
+            digest_amd64: ${{ matrix.arch == 'amd64' && steps.build.outputs.digest || '' }}
+            digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
         steps:
+            - name: Checkout the repo
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+              with:
+                  driver: docker-container
+                  cleanup: false
+
             - name: Login to GitHub Container Registry
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
@@ -40,28 +63,39 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Resolve the staging image for this release commit
-              id: image
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  GH_REPO: ${{ github.repository }}
-                  SOURCE_SHA: ${{ github.sha }}
-              run: |
-                  run=$(gh api "repos/$GH_REPO/actions/workflows/staging.yml/runs?head_sha=$SOURCE_SHA&status=success&per_page=1" \
-                    --jq '.workflow_runs[0] | select(. != null) | "\(.id)-\(.run_attempt)"')
-                  if [[ ! "$run" =~ ^[0-9]+-[0-9]+$ ]]; then
-                    echo "Release commit must have a successful staging deployment first" >&2
-                    exit 1
-                  fi
-                  docker buildx imagetools inspect --raw "$REGISTRY_GITHUB/$IMAGE_NAME:build-$run" > manifest.json
-                  for arch in amd64 arm64; do
-                    digest=$(jq -er --arg arch "$arch" '[.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch)] | if length == 1 then .[0].digest else error("Expected one image per architecture") end' manifest.json)
-                    [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
-                    echo "digest_$arch=$digest" >> "$GITHUB_OUTPUT"
-                  done
+            - name: Login to Docker Hub
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Build and push by digest
+              id: build
+              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+              with:
+                  context: .
+                  platforms: ${{ matrix.platform }}
+                  # Pushed by digest, with no tag of its own: the manifest job below
+                  # is what tags the merged index, so ${TAG} is the only tag that ever
+                  # appears in the registries - no per-arch tags to clean up.
+                  outputs: type=image,"name=${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }},${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+                  # Default provenance would push an image index per arch, leaving
+                  # imagetools to merge an index of indexes.
+                  provenance: false
+                  # Only build-time (brand) constants are passed here. Per-environment
+                  # public config is supplied at runtime via the Helm chart env, so the
+                  # CDN origin is the one environment-specific build setting.
+                  build-args: |
+                      "CDN_ORIGIN=https://cdn.appwrite.io"
+                      "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
+                      "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
+                      "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
+                      "VITE_LEGAL_EMAIL=${{ vars.VITE_LEGAL_EMAIL }}"
+                  secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest:
-        needs: image
+        needs: build
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 10
         steps:
@@ -83,7 +117,7 @@ jobs:
               # Digests are content-addressed, so the same pair is valid in both
               # registries.
               env:
-                  DIGESTS: ${{ needs.image.outputs.digest_amd64 }} ${{ needs.image.outputs.digest_arm64 }}
+                  DIGESTS: ${{ needs.build.outputs.digest_amd64 }} ${{ needs.build.outputs.digest_arm64 }}
               run: |
                   for registry in "$REGISTRY_GITHUB" "$REGISTRY_DOCKERHUB"; do
                     refs=()
@@ -95,7 +129,7 @@ jobs:
                   done
 
     publish-assets:
-        needs: image
+        needs: build
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 25
         permissions:
@@ -114,8 +148,8 @@ jobs:
 
             - name: Extract the deployed images' client assets
               env:
-                  DIGEST_AMD64: ${{ needs.image.outputs.digest_amd64 }}
-                  DIGEST_ARM64: ${{ needs.image.outputs.digest_arm64 }}
+                  DIGEST_AMD64: ${{ needs.build.outputs.digest_amd64 }}
+                  DIGEST_ARM64: ${{ needs.build.outputs.digest_arm64 }}
               run: bash .github/scripts/extract-assets.sh
 
             - name: Publish assets to R2

@@ -108,10 +108,6 @@ function getTanstackStartCloudOptions() {
 
 export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'
-  const assetBuildId = process.env.ASSET_BUILD_ID || 'local'
-  if (!/^[A-Za-z0-9_-]+$/.test(assetBuildId)) {
-    throw new Error('ASSET_BUILD_ID must contain only letters, digits, underscores and hyphens')
-  }
   // Source-map upload is a build-time concern, gated only on the auth token.
   // The runtime Sentry DSN is injected via runtime config (see runtime-config.ts).
   const sentryPlugins = process.env.SENTRY_AUTH_TOKEN
@@ -125,8 +121,9 @@ export default defineConfig(async () => {
     : []
 
   return {
-    base: '',
-    define: { __CONSOLE_ASSET_BUILD_ID__: JSON.stringify(assetBuildId) },
+    base: process.env.CDN_ORIGIN
+      ? `${process.env.CDN_ORIGIN.replace(/\/$/, '')}/`
+      : '/',
     plugins: [
       // this is the plugin that enables path aliases
       viteTsConfigPaths({

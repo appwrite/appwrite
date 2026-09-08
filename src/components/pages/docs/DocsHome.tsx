@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { DocsHomeSectionHeading } from './_components/DocsHomeSectionHeading'
 import {
   DOCS_HOME_INTEGRATIONS,
@@ -69,7 +68,7 @@ function IntegrationIcon({
     return (
       <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/40">
         <img
-          src={assetUrl(iconSrc)}
+          src={iconSrc}
           alt=""
           className={cn('size-4', PUBLIC_ICON_MUTED_CLASSES)}
         />
@@ -95,7 +94,7 @@ function MigrationIcon({ title, iconSrc }: { title: string; iconSrc?: string }) 
   if (iconSrc) {
     return (
       <img
-        src={assetUrl(iconSrc)}
+        src={iconSrc}
         alt=""
         className={cn(
           'shrink-0',

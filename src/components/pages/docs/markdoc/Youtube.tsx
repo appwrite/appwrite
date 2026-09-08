@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { Play } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import {
@@ -76,7 +75,7 @@ export function MarkdocYoutube({ src, thumbnail, id, title }: MarkdocYoutubeProp
           <div className="relative aspect-video w-full">
             {thumbnailSrc ? (
               <img
-                src={assetUrl(thumbnailSrc)}
+                src={thumbnailSrc}
                 alt=""
                 loading="lazy"
                 decoding="async"
@@ -126,7 +125,7 @@ export function MarkdocYoutube({ src, thumbnail, id, title }: MarkdocYoutubeProp
             {open ? (
               <iframe
                 key={playerKey}
-                src={assetUrl(withAutoplay(embedSrc))}
+                src={withAutoplay(embedSrc)}
                 title={dialogTitle}
                 className="size-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

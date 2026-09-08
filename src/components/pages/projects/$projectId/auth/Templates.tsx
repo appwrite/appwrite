@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -647,7 +646,7 @@ function TemplateEditor({
             asChild
           >
             <a
-              href={assetUrl("https://github.com/appwrite/appwrite/pulls")}
+              href="https://github.com/appwrite/appwrite/pulls"
               target="_blank"
               rel="noopener noreferrer"
             >

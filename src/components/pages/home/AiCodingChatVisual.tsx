@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import {
   useEffect,
   useId,
@@ -62,7 +61,7 @@ const EXECUTIONS = [
 
 
 const UPLOAD_IMAGE = {
-  src: assetUrl('/images/home/kittens.avif'),
+  src: '/images/home/kittens.avif',
   name: 'kittens.jpg',
   size: '41 KB',
 } as const
@@ -410,7 +409,7 @@ function FilesArtifact() {
       </div>
       <div className="flex items-center gap-2.5 rounded-md border border-border/80 bg-background/70 px-2.5 py-2">
         <img
-          src={assetUrl(UPLOAD_IMAGE.src)}
+          src={UPLOAD_IMAGE.src}
           alt=""
           className="size-10 shrink-0 rounded object-cover"
         />
@@ -496,7 +495,7 @@ function McpConnectCard({
       <div className="flex items-start gap-2.5 px-2.5 py-2">
         <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
           <img
-            src={assetUrl("/icons/mcp.svg")}
+            src="/icons/mcp.svg"
             alt=""
             className={cn('size-3.5 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
           />
@@ -547,7 +546,7 @@ function McpConnectCard({
             </div>
             <div className="px-3 py-2.5">
               <div className="mb-2 flex items-center gap-2">
-                <img src={assetUrl("/icons/appwrite.svg")} alt="" className="size-4" />
+                <img src="/icons/appwrite.svg" alt="" className="size-4" />
                 <p className="text-[12px] font-medium text-foreground">
                   {t('Authorize Appwrite MCP')}
                 </p>
@@ -594,7 +593,7 @@ function ToolRow({
       <span className="flex size-5 shrink-0 items-center justify-center rounded-sm border border-border bg-background">
         {icon === 'mcp' ? (
           <img
-            src={assetUrl("/icons/mcp.svg")}
+            src="/icons/mcp.svg"
             alt=""
             className={cn('size-3 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
           />
@@ -655,7 +654,7 @@ function ChatMessage({
       {image ? (
         <div className="group relative w-fit max-w-full overflow-hidden rounded-md border border-border bg-muted/20">
           <img
-            src={assetUrl(image.src)}
+            src={image.src}
             alt={image.name}
             className="h-auto max-h-64 w-auto max-w-full"
           />
@@ -743,7 +742,7 @@ function MockAgentComposer({
                 <div className="flex min-w-max flex-nowrap gap-1.5">
                   <div className="w-40 shrink-0 rounded-md border border-border bg-muted/20 p-1.5">
                     <img
-                      src={assetUrl(attachment.src)}
+                      src={attachment.src}
                       alt={attachment.name}
                       className="mb-1 aspect-video w-full rounded object-cover"
                     />
@@ -809,7 +808,7 @@ function MockAgentComposer({
           <MockComposerChip
             icon={
               <img
-                src={assetUrl("/icons/chatgpt.svg")}
+                src="/icons/chatgpt.svg"
                 alt=""
                 className={cn('h-3.5 w-3.5 shrink-0', PUBLIC_ICON_MUTED_CLASSES)}
               />

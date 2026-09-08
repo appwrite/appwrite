@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type {
   InitDisplayEvent,
@@ -52,9 +51,9 @@ function usePrizePresenceHandlers(activity: string) {
 }
 
 const PLATFORM_META = {
-  youtube: { label: 'YouTube', icon: assetUrl('/icons/youtube.svg') },
-  discord: { label: 'Discord', icon: assetUrl('/icons/discord-simple.svg') },
-  reddit: { label: 'Reddit', icon: assetUrl('/icons/reddit.svg') },
+  youtube: { label: 'YouTube', icon: '/icons/youtube.svg' },
+  discord: { label: 'Discord', icon: '/icons/discord-simple.svg' },
+  reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 } as const
 
 const DAILY_PLACEMENT = [
@@ -91,7 +90,7 @@ function PrizeImage({
     <>
       {hasImage && visual ? (
         <img
-          src={assetUrl(imageSrc)}
+          src={imageSrc}
           alt={visual.imageAlt}
           className={cn(
             'absolute inset-0 size-full object-cover object-center',
@@ -166,7 +165,7 @@ function DailyPrizeCell({
               {giveaway.sessionTitle}
             </h4>
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
-              <img src={assetUrl(meta.icon)} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
+              <img src={meta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
               <span className={PRIZE_LINE}>{meta.label}</span>
             </div>
           </div>
@@ -182,7 +181,7 @@ function DailyPrizeCell({
   if (resolvedHref) {
     return (
       <a
-        href={assetUrl(resolvedHref.href)}
+        href={resolvedHref.href}
         {...(resolvedHref.external
           ? { target: '_blank', rel: 'noopener noreferrer' }
           : {})}
@@ -251,7 +250,7 @@ function GrandPrizeCell({
           </h4>
           {grandPrize.sessionTitle && platformMeta ? (
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
-              <img src={assetUrl(platformMeta.icon)} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
+              <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
               <span className={PRIZE_LINE}>
                 {platformMeta.label} · {grandPrize.sessionTitle}
               </span>

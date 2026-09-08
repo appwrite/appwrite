@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
@@ -51,7 +50,7 @@ export function LanguageIcon({
 
   return (
     <img
-      src={assetUrl(`/icons/${iconFile}`)}
+      src={`/icons/${iconFile}`}
       alt={language}
       className={cn(
         sizeClass,

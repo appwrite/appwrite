@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { Models } from '@appwrite.io/console'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { INIT_TICKET_SECTION_HASH } from '@/lib/init/links'
@@ -70,7 +69,7 @@ export function InitTicketPeek({
     >
       {resolvedHref ? (
         <a
-          href={assetUrl(resolvedHref.href)}
+          href={resolvedHref.href}
           {...(resolvedHref.external
             ? { target: '_blank', rel: 'noopener noreferrer' }
             : {})}

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -557,11 +556,11 @@ export function IdentitiesSection({
                   className="text-[10px] shrink-0 gap-1.5 font-medium"
                 >
                   <img
-                    src={assetUrl(`/icons/${getProviderIcon(identity.provider)}`)}
+                    src={`/icons/${getProviderIcon(identity.provider)}`}
                     alt={identity.provider}
                     className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
                     onError={(e) => {
-                      e.currentTarget.src = assetUrl('/icons/empty.svg')
+                      e.currentTarget.src = '/icons/empty.svg'
                     }}
                   />
                   {getProviderName(identity.provider)}
@@ -950,7 +949,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
                   <div className="flex justify-center">
                     <div className="rounded-lg bg-white p-4">
                       <img
-                        src={assetUrl(qrCodeUrl)}
+                        src={qrCodeUrl}
                         alt={t('MFA QR Code')}
                         className="mx-auto block aspect-square w-full max-w-[192px]"
                       />

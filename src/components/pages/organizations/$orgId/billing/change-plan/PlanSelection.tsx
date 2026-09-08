@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import type { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -197,7 +196,7 @@ export function PlanSelection({
       asChild
     >
       <a
-        href={assetUrl(CONTACT_SALES_URL)}
+        href={CONTACT_SALES_URL}
         target="_blank"
         rel="noopener noreferrer"
         {...analyticsAttrs('upgrade-contact-sales')}
@@ -309,7 +308,7 @@ export function PlanSelection({
               asChild
             >
               <a
-                href={assetUrl(legacyConsoleBillingUrl)}
+                href={legacyConsoleBillingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 {...analyticsAttrs('upgrade-legacy-console-downgrade')}

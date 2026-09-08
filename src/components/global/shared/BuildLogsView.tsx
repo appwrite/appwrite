@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * BuildLogsView – shared build logs with line numbers and ANSI syntax highlighting.
  * Used in deployment details and create-site deploying wizard.
@@ -85,7 +84,7 @@ function replaceVercelTriangle(
       parts.push(
         <img
           key={keyCounter++}
-          src={assetUrl("/icons/appwrite.svg")}
+          src="/icons/appwrite.svg"
           alt="Appwrite"
           className={`inline-block h-[1em] w-[1em] align-middle ${PUBLIC_ICON_MUTED_CLASSES}`}
         />,

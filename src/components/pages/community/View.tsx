@@ -1,4 +1,3 @@
-import { assetUrl, assetCss } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { Github } from 'lucide-react'
 import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
@@ -62,8 +61,8 @@ function SocialIconMask({
     <span
       className={`inline-block shrink-0 bg-foreground ${className}`}
       style={{
-        WebkitMaskImage: assetCss(`url(${icon})`),
-        maskImage: assetCss(`url(${icon})`),
+        WebkitMaskImage: `url(${icon})`,
+        maskImage: `url(${icon})`,
         WebkitMaskSize: 'contain',
         maskSize: 'contain',
         WebkitMaskRepeat: 'no-repeat',
@@ -81,28 +80,28 @@ const COMMUNITY_PLATFORM_CARDS = [
   {
     label: 'Discord',
     href: MARKETING_SOCIAL_STATS.discord.link,
-    icon: assetUrl('/icons/discord-simple.svg'),
+    icon: '/icons/discord-simple.svg',
     stat: MARKETING_SOCIAL_STATS.discord.stat,
     statLabel: 'members',
   },
   {
     label: 'X',
     href: MARKETING_SOCIAL_STATS.twitter.link,
-    icon: assetUrl('/icons/x.svg'),
+    icon: '/icons/x.svg',
     stat: MARKETING_SOCIAL_STATS.twitter.stat,
     statLabel: 'followers',
   },
   {
     label: 'GitHub',
     href: MARKETING_SOCIAL_STATS.github.link,
-    icon: assetUrl('/icons/github-circle.svg'),
+    icon: '/icons/github-circle.svg',
     stat: MARKETING_SOCIAL_STATS.github.stat,
     statLabel: 'stargazers',
   },
   {
     label: 'YouTube',
     href: MARKETING_SOCIAL_STATS.youtube.link,
-    icon: assetUrl('/icons/youtube.svg'),
+    icon: '/icons/youtube.svg',
     stat: MARKETING_SOCIAL_STATS.youtube.stat,
     statLabel: 'subscribers',
   },
@@ -120,7 +119,7 @@ export function View({ issues }: ViewProps) {
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <a
-            href={assetUrl(MARKETING_SOCIAL_STATS.discord.link)}
+            href={MARKETING_SOCIAL_STATS.discord.link}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -129,7 +128,7 @@ export function View({ issues }: ViewProps) {
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
           <a
-            href={assetUrl(MARKETING_SOCIAL_STATS.github.link)}
+            href={MARKETING_SOCIAL_STATS.github.link}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -155,7 +154,7 @@ export function View({ issues }: ViewProps) {
           />
           <Button variant="outline" className="mt-8" asChild>
             <a
-              href={assetUrl(communityContributors.contributorsUrl)}
+              href={communityContributors.contributorsUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -185,7 +184,7 @@ export function View({ issues }: ViewProps) {
                 </p>
                 <Button variant="outline" className="mt-6" asChild>
                   <a
-                    href={assetUrl(communityGetInvolved.issuesUrl)}
+                    href={communityGetInvolved.issuesUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -215,7 +214,7 @@ export function View({ issues }: ViewProps) {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <a
-                            href={assetUrl(issue.url)}
+                            href={issue.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[13px] font-medium link-neutral"
@@ -263,7 +262,7 @@ export function View({ issues }: ViewProps) {
           />
           <div className="mt-8 flex justify-center">
             <Button variant="outline" asChild>
-              <a href={assetUrl(communityShowcase.href)} target="_blank" rel="noopener noreferrer">
+              <a href={communityShowcase.href} target="_blank" rel="noopener noreferrer">
                 {t('View all projects')}
               </a>
             </Button>
@@ -275,13 +274,13 @@ export function View({ issues }: ViewProps) {
                 className="overflow-hidden rounded-xl border border-border bg-card/50"
               >
                 <a
-                  href={assetUrl(project.href)}
+                  href={project.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group block h-full transition-colors hover:bg-accent/15"
                 >
                   <img
-                    src={assetUrl(project.image)}
+                    src={project.image}
                     alt=""
                     className="aspect-[16/10] w-full border-b border-border object-cover"
                     loading="lazy"
@@ -312,7 +311,7 @@ export function View({ issues }: ViewProps) {
               {COMMUNITY_PLATFORM_CARDS.map((platform) => (
                 <li key={platform.label}>
                   <a
-                    href={assetUrl(platform.href)}
+                    href={platform.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex min-h-[160px] flex-col rounded-xl border border-border bg-card/50 p-5 transition-colors hover:bg-accent/15"

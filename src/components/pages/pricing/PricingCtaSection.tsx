@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
@@ -94,7 +93,7 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
             </Link>
           ) : (
             <a
-              href={assetUrl(plan.href)}
+              href={plan.href}
               target="_blank"
               rel="noopener noreferrer"
               {...analyticsAttrs(PRICING_PROMO_CTA_ACTIONS[plan.id])}

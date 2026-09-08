@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useTheme } from 'next-themes'
 import type { CSSProperties, ReactNode } from 'react'
 import { useMemo } from 'react'
@@ -144,7 +143,7 @@ export function DocsLink({
   if (external || href.startsWith('#')) {
     return (
       <a
-        href={assetUrl(href)}
+        href={href}
         className={DOCS_PROSE_LINK_CLASS}
         {...(external && !href.startsWith('#')
           ? { target: '_blank', rel: 'noopener noreferrer' }

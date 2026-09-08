@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import type { LaunchEventGiveaway } from '@/lib/init/types'
 import { useInitThemeImageSrc } from '@/lib/init/use-init-theme-image'
@@ -42,7 +41,7 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
       <div className={cn('w-full shrink-0 border-b border-border', PRIZE_IMAGE_INSET)}>
         <div className={cn(PRIZE_IMAGE_FRAME, 'aspect-[3/2]')}>
           <img
-            src={assetUrl(imageSrc)}
+            src={imageSrc}
             alt={giveaway.imageAlt}
             className={cn(
               'absolute inset-0 size-full object-cover object-center',
@@ -79,7 +78,7 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" size="sm" className="h-9 flex-1 text-[13px]" asChild>
-            <a href={assetUrl(ctaHref)}>
+            <a href={ctaHref}>
               {ctaLabel}
               <ChevronRight className="size-4" aria-hidden />
             </a>
@@ -87,7 +86,7 @@ export function GiveawayPromoCard({ giveaway }: GiveawayPromoCardProps) {
           {secondaryCtaLabel && resolvedSecondaryHref ? (
             <Button variant="outline" size="sm" className="h-9 flex-1 text-[13px]" asChild>
               <a
-                href={assetUrl(resolvedSecondaryHref.href)}
+                href={resolvedSecondaryHref.href}
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -1,14 +1,13 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Copy, Server } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from '@/components/pages/home/product-bento/MockSyntax'
 
 const COMPATIBLE_TOOLS = [
-  { id: 'rclone', name: 'rclone', iconSrc: assetUrl('/icons/rclone.svg') },
-  { id: 'terraform', name: 'Terraform', iconSrc: assetUrl('/icons/terraform.svg') },
-  { id: 'aws-cli', name: 'AWS CLI', iconSrc: assetUrl('/icons/amazon.svg') },
-  { id: 'cyberduck', name: 'Cyberduck', iconSrc: assetUrl('/icons/cyberduck.svg') },
+  { id: 'rclone', name: 'rclone', iconSrc: '/icons/rclone.svg' },
+  { id: 'terraform', name: 'Terraform', iconSrc: '/icons/terraform.svg' },
+  { id: 'aws-cli', name: 'AWS CLI', iconSrc: '/icons/amazon.svg' },
+  { id: 'cyberduck', name: 'Cyberduck', iconSrc: '/icons/cyberduck.svg' },
 ] as const
 
 function MockCredentialRow({
@@ -117,7 +116,7 @@ export function S3StorageDayVisual() {
                   style={{ transitionDelay: `${120 + index * 30}ms` }}
                 >
                   <span className="flex size-5 shrink-0 items-center justify-center rounded border border-border bg-muted/30">
-                    <img src={assetUrl(tool.iconSrc)} alt="" className="size-3" aria-hidden />
+                    <img src={tool.iconSrc} alt="" className="size-3" aria-hidden />
                   </span>
                   <span
                     className={cn(

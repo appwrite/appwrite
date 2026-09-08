@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
@@ -38,7 +37,7 @@ type BenchmarkRow = {
 const BENCHMARK_ROWS: BenchmarkRow[] = [
   {
     model: 'GPT 5.5',
-    icon: assetUrl('/icons/chatgpt.svg'),
+    icon: '/icons/chatgpt.svg',
     cost: '$5.00',
     overall: 97.7,
     auth: 98.5,
@@ -50,7 +49,7 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
   },
   {
     model: 'Claude Opus 4.7',
-    icon: assetUrl('/icons/claude.svg'),
+    icon: '/icons/claude.svg',
     cost: '$5.00',
     overall: 97.1,
     auth: 99,
@@ -62,7 +61,7 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
   },
   {
     model: 'Claude Opus 4.8',
-    icon: assetUrl('/icons/claude.svg'),
+    icon: '/icons/claude.svg',
     cost: '$5.00',
     overall: 97.1,
     auth: 99.3,
@@ -74,7 +73,7 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
   },
   {
     model: 'Grok Build 0.1',
-    icon: assetUrl('/icons/grok-build.svg'),
+    icon: '/icons/grok-build.svg',
     cost: '$1.00',
     overall: 96.7,
     auth: 92,
@@ -113,7 +112,7 @@ function PluginTile({
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
         <img
-          src={assetUrl(plugin.iconPath)}
+          src={plugin.iconPath}
           alt=""
           className={cn('size-4 object-contain', PUBLIC_ICON_MUTED_CLASSES)}
         />
@@ -194,7 +193,7 @@ function ArenaBlock() {
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button variant="outline" className="h-10 text-[13px]" asChild>
             <a
-              href={assetUrl("https://arena.appwrite.io/")}
+              href="https://arena.appwrite.io/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -251,7 +250,7 @@ function BenchmarkTable() {
             <TableRow key={row.model} className="hover:bg-accent/10">
               <TableCell className="px-4 py-3">
                 <span className="flex items-center gap-2.5">
-                  <img src={assetUrl(row.icon)} alt="" className="size-4 object-contain" />
+                  <img src={row.icon} alt="" className="size-4 object-contain" />
                   <span className="text-[13px] font-medium text-foreground">
                     {row.model}
                   </span>

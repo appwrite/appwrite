@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -119,7 +118,7 @@ export function VerifyEmail({
             alt="Image"
             className="h-full w-full object-cover"
             height="600"
-            src={assetUrl("/cover.avif")}
+            src="/cover.avif"
             width="600"
           />
         </div>

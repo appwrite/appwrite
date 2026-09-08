@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Calendar, Mail, MessageSquare, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
@@ -57,7 +56,7 @@ export function EnterpriseSuccessManager({
           {/* Avatar */}
           <div className="relative shrink-0">
             <img
-              src={assetUrl(manager.avatar)}
+              src={manager.avatar}
               alt={manager.name}
               className="h-14 w-14 rounded-full object-cover ring-2 ring-background"
             />
@@ -72,7 +71,7 @@ export function EnterpriseSuccessManager({
             </h4>
             <p className="text-[13px] text-muted-foreground">{manager.title}</p>
             <a
-              href={assetUrl(`mailto:${manager.email}`)}
+              href={`mailto:${manager.email}`}
               className="mt-1 inline-flex items-center gap-1.5 link-neutral text-[12px]"
             >
               <Mail className="h-3 w-3" />
@@ -91,7 +90,7 @@ export function EnterpriseSuccessManager({
             asChild
           >
             <a
-              href={assetUrl(manager.calendlyUrl)}
+              href={manager.calendlyUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -109,7 +108,7 @@ export function EnterpriseSuccessManager({
             asChild
           >
             <a
-              href={assetUrl(manager.slackChannelUrl)}
+              href={manager.slackChannelUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -125,7 +124,7 @@ export function EnterpriseSuccessManager({
           {t(
             'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our',
           )}{' '}
-          <a href={assetUrl("#")} className="link-neutral">
+          <a href="#" className="link-neutral">
             {t('priority support portal')}
           </a>
           .

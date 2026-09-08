@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { client } from './lib/appwrite'
 import { Account } from 'appwrite'
@@ -27,9 +26,9 @@ function Home() {
       <div>
         <p>Sign in to get started.</p>
         <p>
-          <a href={assetUrl("/sign-in")}>Sign in</a>
+          <a href="/sign-in">Sign in</a>
           {' · '}
-          <a href={assetUrl("/sign-up")}>Sign up</a>
+          <a href="/sign-up">Sign up</a>
         </p>
       </div>
     )

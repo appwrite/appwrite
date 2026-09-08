@@ -27,9 +27,6 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check runtime CDN assets
-        run: bun test tests/unit/cdn-assets.test.ts
-
       - name: Check connect snippet line width
         run: bun run lint:snippets
 

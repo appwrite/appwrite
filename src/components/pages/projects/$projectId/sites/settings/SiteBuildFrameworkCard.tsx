@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
@@ -90,7 +89,7 @@ function AdapterOptionCard({
         <AdapterOptionDescription desc={desc} code={code} />
         {url && (
           <a
-            href={assetUrl(url)}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block text-[13px] link-neutral"

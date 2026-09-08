@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useCallback } from 'react'
 import { Browser, Flag, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -218,11 +217,11 @@ function ActivityBrowserIcon({ code }: { code?: string }) {
   return (
     <div className={AVATAR_SERVICE_FRAME}>
       <img
-        src={assetUrl(sdk.forConsole.avatars.getBrowser({
+        src={sdk.forConsole.avatars.getBrowser({
           code: trimmed as Browser,
           width: AVATAR_SERVICE_FETCH_PX,
           height: AVATAR_SERVICE_FETCH_PX,
-        }))}
+        })}
         alt=""
         className={AVATAR_SERVICE_IMG}
         onError={() => setFailed(true)}
@@ -567,7 +566,7 @@ export function ActivityLogDrawer({
                           aria-label={flagAlt}
                         >
                           <img
-                            src={assetUrl(flagUrl)}
+                            src={flagUrl}
                             alt=""
                             className={AVATAR_SERVICE_IMG}
                           />

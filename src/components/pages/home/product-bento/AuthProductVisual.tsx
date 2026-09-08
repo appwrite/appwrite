@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Mail } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -8,21 +7,21 @@ const OAUTH_PROVIDERS = [
   {
     id: 'google',
     label: 'Google',
-    icon: assetUrl('/icons/google.svg'),
+    icon: '/icons/google.svg',
     hoverClass:
       'group-hover:border-blue-500/35 group-hover:bg-blue-500/[0.06] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
   },
   {
     id: 'github',
     label: 'GitHub',
-    icon: assetUrl('/icons/github.svg'),
+    icon: '/icons/github.svg',
     hoverClass:
       'group-hover:border-foreground/25 group-hover:bg-foreground/[0.04] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
   },
   {
     id: 'apple',
     label: 'Apple',
-    icon: assetUrl('/icons/apple.svg'),
+    icon: '/icons/apple.svg',
     hoverClass:
       'group-hover:border-foreground/30 group-hover:bg-foreground/[0.05] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
   },
@@ -87,7 +86,7 @@ function OAuthButton({
       )}
       style={highlighted ? { animationDelay: `${80 + index * 90}ms` } : undefined}
     >
-      <img src={assetUrl(provider.icon)} alt="" className={cn('size-3.5 shrink-0', productBentoIdle.providerIcon)} aria-hidden />
+      <img src={provider.icon} alt="" className={cn('size-3.5 shrink-0', productBentoIdle.providerIcon)} aria-hidden />
       <span className="truncate">{provider.label}</span>
     </div>
   )

@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -101,8 +100,8 @@ export function ThreadShareActions({
               asChild
               aria-label="Share on X"
             >
-              <a href={assetUrl(twitterShareHref)} target="_blank" rel="noopener noreferrer">
-                <ProductFeaturePublicIcon src={assetUrl("/icons/x.svg")} tone="muted-foreground" />
+              <a href={twitterShareHref} target="_blank" rel="noopener noreferrer">
+                <ProductFeaturePublicIcon src="/icons/x.svg" tone="muted-foreground" />
               </a>
             </Button>
           </TooltipTrigger>
@@ -120,8 +119,8 @@ export function ThreadShareActions({
               asChild
               aria-label="Share on LinkedIn"
             >
-              <a href={assetUrl(linkedInShareHref)} target="_blank" rel="noopener noreferrer">
-                <ProductFeaturePublicIcon src={assetUrl("/icons/linkedin.svg")} tone="muted-foreground" />
+              <a href={linkedInShareHref} target="_blank" rel="noopener noreferrer">
+                <ProductFeaturePublicIcon src="/icons/linkedin.svg" tone="muted-foreground" />
               </a>
             </Button>
           </TooltipTrigger>

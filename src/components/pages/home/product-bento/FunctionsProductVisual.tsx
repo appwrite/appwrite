@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Clock, Database, Mail } from 'lucide-react'
 import type { CSSProperties, LucideIcon } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
@@ -34,7 +33,7 @@ const USE_CASES: UseCase[] = [
     id: 'stripe',
     label: 'Stripe webhooks',
     detail: 'Verify events and sync billing state',
-    iconSrc: assetUrl('/icons/stripe.svg'),
+    iconSrc: '/icons/stripe.svg',
     color: BRAND.purple,
   },
   {
@@ -76,7 +75,7 @@ function UseCaseRow({ useCase, index }: { useCase: UseCase; index: number }) {
         )}
       >
         {useCase.iconSrc ? (
-          <img src={assetUrl(useCase.iconSrc)} alt="" className={cn('size-3.5', productBentoIdle.providerIcon)} aria-hidden />
+          <img src={useCase.iconSrc} alt="" className={cn('size-3.5', productBentoIdle.providerIcon)} aria-hidden />
         ) : Icon ? (
           <Icon
             className="size-3.5 text-muted-foreground transition-colors duration-300 group-hover:text-[var(--row-color)] motion-reduce:group-hover:text-muted-foreground"

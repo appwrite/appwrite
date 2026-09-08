@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Fragment, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, KeyRound, Loader2, Package } from 'lucide-react'
@@ -62,7 +61,7 @@ function ConnectedAppAvatar({
   if (app?.logoUri) {
     return (
       <img
-        src={assetUrl(app.logoUri)}
+        src={app.logoUri}
         alt={app.name}
         className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
         height={36}
@@ -74,7 +73,7 @@ function ConnectedAppAvatar({
   if (knownClient) {
     return (
       <img
-        src={assetUrl(knownClient.iconPath)}
+        src={knownClient.iconPath}
         alt={knownClient.name}
         className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
         height={36}

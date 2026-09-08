@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import {
@@ -385,7 +384,7 @@ function OnboardingProgressPanel({
         {complete ? (
           <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
             <a
-              href={assetUrl(MARKETING_SOCIAL_STATS.github.link)}
+              href={MARKETING_SOCIAL_STATS.github.link}
               target="_blank"
               rel="noopener noreferrer"
             >

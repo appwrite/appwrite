@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { ArrowUpDown, Tags } from 'lucide-react'
 import { CloudMarkIcon } from '@/components/global/shared/CloudMarkIcon'
 import { PlatformIcon } from '@/components/global/shared/Icon'
@@ -44,7 +43,7 @@ export function ReferencePlatformIcon({
   if (platform === 'client-graphql' || platform === 'server-graphql') {
     return (
       <img
-        src={assetUrl("/icons/graphql.svg")}
+        src="/icons/graphql.svg"
         alt=""
         aria-hidden
         className={cn(ICON_SIZE_CLASS, PUBLIC_ICON_MUTED_CLASSES, className)}

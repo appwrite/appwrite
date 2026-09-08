@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo, useState, type MouseEvent } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { X } from 'lucide-react'
@@ -24,7 +23,7 @@ import {
 const POSTGRES_PROMO_BANNER = getConsoleBannerById(POSTGRES_PROMO_BANNER_ID)!
 
 const POSTGRES_PROMO_ELEPHANT_SRC =
-  assetUrl('/images/console/banners/postgres-promo-elephant.avif')
+  '/images/console/banners/postgres-promo-elephant.avif'
 
 const POSTGRES_PROMO_IMAGE_MASK_STYLE = {
   WebkitMaskImage:
@@ -89,7 +88,7 @@ export function PostgresPromoBanner() {
           className="pointer-events-none absolute inset-y-0 start-0 hidden w-[min(38%,320px)] overflow-hidden sm:block"
         >
           <img
-            src={assetUrl(POSTGRES_PROMO_ELEPHANT_SRC)}
+            src={POSTGRES_PROMO_ELEPHANT_SRC}
             alt=""
             className="absolute start-[-5px] bottom-[-48px] h-[120px] w-auto max-w-none"
             style={POSTGRES_PROMO_IMAGE_MASK_STYLE}

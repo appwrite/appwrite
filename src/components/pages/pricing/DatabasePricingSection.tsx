@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import type { MouseEvent, ReactNode } from 'react'
 import {
   Table,
@@ -38,7 +37,7 @@ function CompareLink({
 }) {
   return (
     <a
-      href={assetUrl(href)}
+      href={href}
       className="link-neutral"
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault()

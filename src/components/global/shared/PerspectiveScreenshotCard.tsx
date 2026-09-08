@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { CSSProperties, ReactNode } from 'react'
 import { CoverHeroBrowserFrame } from '@/components/global/shared/CoverHeroBrowserFrame'
 import { getCoverScreenshotAngledShellDimensions } from '@/lib/cover-generator/cover-screenshot-angled-frame'
@@ -223,7 +222,7 @@ export function PerspectiveScreenshotCard({
             frameWidth={width}
             frameHeight={shellDimensions!.shellHeight}
             themeId={themeId}
-            src={assetUrl(src)}
+            src={src}
             alt={t(alt)}
             focusX={focusX}
             focusY={focusY}
@@ -232,7 +231,7 @@ export function PerspectiveScreenshotCard({
           />
         ) : src ? (
           <img
-            src={assetUrl(src)}
+            src={src}
             alt={t(alt)}
             draggable={false}
             className="block h-full w-full object-cover"

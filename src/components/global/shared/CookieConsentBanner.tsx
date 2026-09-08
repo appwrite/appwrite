@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Cookie } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -64,7 +63,7 @@ export function CookieConsentBanner({
                 <>
                   {t('Choose which optional cookies you allow. Read our')}{' '}
                   <a
-                    href={assetUrl(cookiesPolicyHref)}
+                    href={cookiesPolicyHref}
                     className="link-unstyled font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {t('Cookies Policy')}
@@ -77,7 +76,7 @@ export function CookieConsentBanner({
                     'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our', // pragma: allowlist secret
                   )}{' '}
                   <a
-                    href={assetUrl(cookiesPolicyHref)}
+                    href={cookiesPolicyHref}
                     className="link-unstyled font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {t('Cookies Policy')}

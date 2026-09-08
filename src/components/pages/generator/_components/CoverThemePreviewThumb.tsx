@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { buildCoverOgBackgroundDataUri } from '@/lib/cover-generator/og/og-background'
 import type { CoverThemeId } from '@/lib/cover-generator/themes'
@@ -28,7 +27,7 @@ export function CoverThemePreviewThumb({
 
   return (
     <img
-      src={assetUrl(src)}
+      src={src}
       alt=""
       aria-hidden
       draggable={false}

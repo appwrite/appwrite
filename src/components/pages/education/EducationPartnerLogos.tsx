@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
@@ -19,16 +18,16 @@ export function EducationPartnerLogos({ className }: EducationPartnerLogosProps)
 
   const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
   const appwriteLogo = isDark
-    ? assetUrl('/images/education/appwrite-logotype-white.svg')
-    : assetUrl('/images/education/appwrite-logotype-black.svg')
+    ? '/images/education/appwrite-logotype-white.svg'
+    : '/images/education/appwrite-logotype-black.svg'
   const githubLogo = isDark
-    ? assetUrl('/images/education/github-mark.svg')
-    : assetUrl('/images/education/github-lockup-black.svg')
+    ? '/images/education/github-mark.svg'
+    : '/images/education/github-lockup-black.svg'
 
   return (
     <div className={cn('inline-flex items-center justify-center', className)}>
       <img
-        src={assetUrl(appwriteLogo)}
+        src={appwriteLogo}
         alt="Appwrite"
         className={cn(LOGO_HEIGHT_CLASS, 'pe-5')}
         loading="lazy"
@@ -38,7 +37,7 @@ export function EducationPartnerLogos({ className }: EducationPartnerLogosProps)
         aria-hidden
       />
       <img
-        src={assetUrl(githubLogo)}
+        src={githubLogo}
         alt="GitHub"
         className={cn(LOGO_HEIGHT_CLASS, 'ps-5')}
         loading="lazy"

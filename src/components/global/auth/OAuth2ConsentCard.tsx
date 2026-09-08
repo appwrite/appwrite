@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -899,7 +898,7 @@ export function OAuth2ConsentCard({
             <>
               <span aria-hidden>·</span>
               <a
-                href={assetUrl(app.privacyPolicyUrl)}
+                href={app.privacyPolicyUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="link-neutral"
@@ -912,7 +911,7 @@ export function OAuth2ConsentCard({
             <>
               <span aria-hidden>·</span>
               <a
-                href={assetUrl(app.termsUrl)}
+                href={app.termsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="link-neutral"

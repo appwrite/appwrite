@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -50,7 +49,7 @@ export function DocsPageHeaderActions({
             Copy
           </Button>
           <Button variant="outline" size="sm" className={buttonClassName} asChild>
-            <a href={assetUrl(markdownUrl)} target="_blank" rel="noopener noreferrer">
+            <a href={markdownUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="me-1.5 size-3.5" />
               Raw
             </a>

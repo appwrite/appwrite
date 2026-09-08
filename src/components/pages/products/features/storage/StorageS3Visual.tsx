@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Copy, Server } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
@@ -6,10 +5,10 @@ import { ProductFeatureVisualFrame } from '@/components/pages/products/features/
 import { useT } from '@/lib/i18n/translate'
 
 const COMPATIBLE_TOOLS = [
-  { id: 'rclone', name: 'rclone', iconSrc: assetUrl('/icons/rclone.svg') },
-  { id: 'terraform', name: 'Terraform', iconSrc: assetUrl('/icons/terraform.svg') },
-  { id: 'aws-cli', name: 'AWS CLI', iconSrc: assetUrl('/icons/amazon.svg') },
-  { id: 'cyberduck', name: 'Cyberduck', iconSrc: assetUrl('/icons/cyberduck.svg') },
+  { id: 'rclone', name: 'rclone', iconSrc: '/icons/rclone.svg' },
+  { id: 'terraform', name: 'Terraform', iconSrc: '/icons/terraform.svg' },
+  { id: 'aws-cli', name: 'AWS CLI', iconSrc: '/icons/amazon.svg' },
+  { id: 'cyberduck', name: 'Cyberduck', iconSrc: '/icons/cyberduck.svg' },
 ] as const
 
 function MockCredentialRow({
@@ -85,7 +84,7 @@ export function StorageS3Visual() {
                 className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1.5 transition-colors group-hover/visual:border-foreground/10 group-hover/visual:bg-muted/40"
               >
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30">
-                  <ProductFeaturePublicIcon src={assetUrl(tool.iconSrc)} className="size-3.5" />
+                  <ProductFeaturePublicIcon src={tool.iconSrc} className="size-3.5" />
                 </span>
                 <span className="min-w-0 truncate text-[10px] font-medium text-foreground">
                   {tool.name}

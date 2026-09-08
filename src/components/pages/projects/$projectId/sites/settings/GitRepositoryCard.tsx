@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Repository card - Git connection and configuration for the site.
  * Shows the repository picker (or connect-provider empty state) when no repo
@@ -390,7 +389,7 @@ export function GitRepositoryCard({
                       aria-label={t('Open repository in new tab')}
                     >
                       <a
-                        href={assetUrl((repository as { url?: string }).url!)}
+                        href={(repository as { url?: string }).url!}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
@@ -93,7 +92,7 @@ export function OAuth2RelayCard({
           </p>
           <p className="text-muted-foreground text-[13px] leading-relaxed">
             {t('If you are not redirected, please click on the following')}{' '}
-            <a href={assetUrl(callbackLink ?? '#')} className="link-neutral">
+            <a href={callbackLink ?? '#'} className="link-neutral">
               {t('link')}
             </a>
             .
@@ -124,7 +123,7 @@ export function OAuth2RelayCard({
               'Your OAuth login flow is missing a proper redirect URL. Please check the',
             )}{' '}
             <a
-              href={assetUrl(CREATE_OAUTH2_SESSION_DOCS)}
+              href={CREATE_OAUTH2_SESSION_DOCS}
               target="_blank"
               rel="noreferrer"
               className="link-neutral"

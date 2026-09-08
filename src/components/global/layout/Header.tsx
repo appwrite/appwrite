@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -222,7 +221,7 @@ function MarketingNavLink({
   const navAnalytics = getMarketingNavAnalyticsAction(item.href)
   return (
     <a
-      href={assetUrl(item.href)}
+      href={item.href}
       className={cn(
         'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
@@ -253,7 +252,7 @@ function MarketingMobileNavLink({
   return (
     <SheetClose asChild>
       <a
-        href={assetUrl(item.href)}
+        href={item.href}
         className="link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         {...(item.href === '/changelog' && showChangelogBadge
@@ -703,7 +702,7 @@ export function ConsoleHeader({
                 </Link>
               ) : (
                 <a
-                  href={assetUrl(resolvedInitHeaderNavCta.href)}
+                  href={resolvedInitHeaderNavCta.href}
                   target={
                     resolvedInitHeaderNavCta.external ? '_blank' : undefined
                   }
@@ -1649,7 +1648,7 @@ export function ConsoleHeader({
                       ) : marketingNavLinksExternal ? (
                         <DropdownMenuItem asChild>
                           <a
-                            href={assetUrl(homeHref)}
+                            href={homeHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={ACCOUNT_MENU_ITEM_CLASS}
@@ -1675,7 +1674,7 @@ export function ConsoleHeader({
                       <DropdownMenuItem asChild>
                         {marketingNavLinksExternal ? (
                           <a
-                            href={assetUrl(docsHref)}
+                            href={docsHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={ACCOUNT_MENU_ITEM_CLASS}
@@ -1699,7 +1698,7 @@ export function ConsoleHeader({
                       <DropdownMenuItem asChild>
                         {marketingNavLinksExternal ? (
                           <a
-                            href={assetUrl(changelogHref)}
+                            href={changelogHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={ACCOUNT_MENU_ITEM_CLASS}
@@ -1737,7 +1736,7 @@ export function ConsoleHeader({
                       {isCloud && (
                         <DropdownMenuItem asChild>
                           <a
-                            href={assetUrl("https://cloud.appwrite.io")}
+                            href="https://cloud.appwrite.io"
                             target="_blank"
                             rel="noopener noreferrer"
                             className={ACCOUNT_MENU_ITEM_CLASS}

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
@@ -57,7 +56,7 @@ export function RegionFlag({
       )}
     >
       <img
-        src={assetUrl(flagUrl)}
+        src={flagUrl}
         alt={`${region} flag`}
         className="h-full w-full object-cover"
         role="img"

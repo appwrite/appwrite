@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type {
   LaunchEvent,
   LaunchEventScheduleItem,
@@ -20,9 +19,9 @@ export const INIT_SCHEDULE_PLATFORM_META: Record<
   LaunchSchedulePlatform,
   { label: string; icon: string }
 > = {
-  youtube: { label: 'YouTube', icon: assetUrl('/icons/youtube.svg') },
-  discord: { label: 'Discord', icon: assetUrl('/icons/discord-simple.svg') },
-  reddit: { label: 'Reddit', icon: assetUrl('/icons/reddit.svg') },
+  youtube: { label: 'YouTube', icon: '/icons/youtube.svg' },
+  discord: { label: 'Discord', icon: '/icons/discord-simple.svg' },
+  reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 }
 
 export function InitScheduleRow({
@@ -68,7 +67,7 @@ export function InitScheduleRow({
         )}
       >
         <img
-          src={assetUrl(meta.icon)}
+          src={meta.icon}
           alt=""
           className={cn('size-3', PUBLIC_ICON_MUTED_CLASSES)}
           aria-hidden
@@ -121,7 +120,7 @@ export function InitScheduleRow({
   const mainContent =
     !inlineWhenWide && resolvedAction ? (
       <a
-        href={assetUrl(resolvedAction.href)}
+        href={resolvedAction.href}
         {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="flex min-w-0 flex-1 items-start gap-4"
       >
@@ -174,7 +173,7 @@ export function InitScheduleRow({
               />
             ) : null}
             <a
-              href={assetUrl(resolvedAction.href)}
+              href={resolvedAction.href}
               {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >

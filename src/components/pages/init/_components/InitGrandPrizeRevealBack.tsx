@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import {
   InitGrandPrizeCsvError,
   parseInitGrandPrizeEntries,
@@ -34,9 +33,9 @@ import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
 import { PRIZE_CARD_BG } from './prize-image-styles'
 
 const PLATFORM_META = {
-  youtube: { label: 'YouTube', icon: assetUrl('/icons/youtube.svg') },
-  discord: { label: 'Discord', icon: assetUrl('/icons/discord-simple.svg') },
-  reddit: { label: 'Reddit', icon: assetUrl('/icons/reddit.svg') },
+  youtube: { label: 'YouTube', icon: '/icons/youtube.svg' },
+  discord: { label: 'Discord', icon: '/icons/discord-simple.svg' },
+  reddit: { label: 'Reddit', icon: '/icons/reddit.svg' },
 } as const
 
 const CSV_ACCEPT = '.csv,text/csv,text/plain'
@@ -59,7 +58,7 @@ function WinnerLink({ href, label }: { href: string; label: string }) {
 
   return (
     <a
-      href={assetUrl(href)}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground underline-offset-4 hover:underline"
@@ -327,7 +326,7 @@ export function InitGrandPrizeRevealBack({
             {hasPrizeImage ? (
               <div className="relative aspect-[4/3] overflow-hidden bg-muted/20">
                 <img
-                  src={assetUrl(prizeImageSrc)}
+                  src={prizeImageSrc}
                   alt={grandPrize.visual?.imageAlt ?? grandPrize.title}
                   className="absolute inset-0 size-full object-cover object-center"
                 />
@@ -341,7 +340,7 @@ export function InitGrandPrizeRevealBack({
               <p className="text-[13px] text-muted-foreground">{grandPrize.description}</p>
               {grandPrize.sessionTitle && platformMeta ? (
                 <div className="flex min-w-0 items-center gap-1.5 pt-1 text-[11px] text-muted-foreground">
-                  <img src={assetUrl(platformMeta.icon)} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
+                  <img src={platformMeta.icon} alt="" className="size-3 shrink-0 opacity-70" aria-hidden />
                   <span className="truncate">
                     {platformMeta.label} · {grandPrize.sessionTitle}
                   </span>

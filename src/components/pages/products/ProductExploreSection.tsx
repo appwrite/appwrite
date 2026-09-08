@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { ArrowRight } from 'lucide-react'
 import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
 import { scrollMarketingMainToTop } from '@/lib/marketing/MarketingScrollToTop'
@@ -65,7 +64,7 @@ function ProductExploreCard({
 
   return (
     <a
-      href={assetUrl(product.path)}
+      href={product.path}
       aria-current={isCurrent ? 'page' : undefined}
       className={cardClassName}
       onClick={(event) => {

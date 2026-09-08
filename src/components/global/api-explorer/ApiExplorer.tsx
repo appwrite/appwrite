@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Copy, Download, ChevronDown, Loader2, AlertCircle, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -2248,7 +2247,7 @@ function ResponseSection({
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-b-2 border-border">
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-muted/20 p-4">
               <img
-                src={assetUrl(imagePreviewUrl)}
+                src={imagePreviewUrl}
                 alt={t('Response preview')}
                 className="max-h-full max-w-full rounded-lg border border-border object-contain"
               />

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -104,7 +103,7 @@ export function StreamingMarkdown({
 
             return (
               <a
-                href={assetUrl(href)}
+                href={href}
                 target={openInNewWindow ? '_blank' : undefined}
                 rel={openInNewWindow ? 'noopener noreferrer' : undefined}
                 {...props}
@@ -171,7 +170,7 @@ export function StreamingMarkdown({
             if (!src) return null
             return (
               <img
-                src={assetUrl(src)}
+                src={src}
                 alt={alt || ''}
                 className="my-2 h-auto max-h-64 w-auto max-w-full rounded-md border border-border"
                 loading="lazy"

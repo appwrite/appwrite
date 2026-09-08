@@ -1,4 +1,3 @@
-# Only shipped static files; no HTML, server exports, source maps or build metadata.
-+ /{assets,images,fonts,fonts-ttf,icons,favicons,legal}/**.{js,mjs,css,wasm,json,avif,webp,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,otf,mp4,webm,mov,mp3,wav,ogg,m4a,pdf}
-+ /*.{svg,ico,png,avif,webp,zip,json}
+# Publish browser assets only; HTML, source maps and server exports stay on the app.
++ /{assets,images,fonts,icons}/**.{js,mjs,css,wasm,json,avif,webp,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,otf,mp4,webm,mov}
 - **

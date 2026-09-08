@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
 import { formatInitCappedCount } from '@/lib/init/presence'
 import type {
@@ -243,7 +242,7 @@ function CollapsedHeroBar({
                       asChild
                     >
                       <a
-                        href={assetUrl(resolvedLiveHref.href)}
+                        href={resolvedLiveHref.href}
                         {...(resolvedLiveHref.external
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
@@ -280,7 +279,7 @@ function CollapsedHeroBar({
                 {resolvedLiveHref ? (
                   <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
                     <a
-                      href={assetUrl(resolvedLiveHref.href)}
+                      href={resolvedLiveHref.href}
                       {...(resolvedLiveHref.external
                         ? { target: '_blank', rel: 'noopener noreferrer' }
                         : {})}
@@ -444,7 +443,7 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
               ) : event.prizes ? (
                 <>
                   <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                    <a href={assetUrl(`#${INIT_PRIZES_SECTION_ID}`)}>
+                    <a href={`#${INIT_PRIZES_SECTION_ID}`}>
                       {event.giveaway?.ctaLabel ?? 'View prizes'}
                     </a>
                   </Button>

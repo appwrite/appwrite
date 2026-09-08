@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSection'
 import {
@@ -65,7 +64,7 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={assetUrl(product.docsPath)} {...analyticsAttrs('product-view-docs')}>
+          <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
             {pageLayoutCopy.viewDocs}
           </a>
         </Button>

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import {
@@ -167,7 +166,7 @@ export function SiteDomainsView() {
                       <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
-                            href={assetUrl(domainUrl(ruleData.domain))}
+                            href={domainUrl(ruleData.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"

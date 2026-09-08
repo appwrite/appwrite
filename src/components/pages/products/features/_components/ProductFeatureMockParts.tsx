@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
@@ -79,7 +78,7 @@ export function MockProviderTile({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <ProductFeaturePublicIcon src={assetUrl(iconSrc)} inactive={!enabled} />
+          <ProductFeaturePublicIcon src={iconSrc} inactive={!enabled} />
           <span className="truncate text-[11px] font-medium text-foreground">{name}</span>
         </div>
         <Switch

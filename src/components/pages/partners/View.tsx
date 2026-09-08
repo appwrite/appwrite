@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Check, ChevronRight, Handshake, Puzzle } from 'lucide-react'
 import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { MarketingApplicationForm } from '@/components/pages/marketing/MarketingApplicationForm'
@@ -51,7 +50,7 @@ export function View() {
         align="left"
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={assetUrl(`#${PARTNERS_FORM_ID}`)}>{t('Become a Partner')}</a>
+          <a href={`#${PARTNERS_FORM_ID}`}>{t('Become a Partner')}</a>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
           <MarketingSiteLink href={partnersHero.catalogUrl}>
@@ -89,14 +88,14 @@ export function View() {
                 )}
               />
               <Button variant="outline" className="mt-6" asChild>
-                <a href={assetUrl(`#${PARTNERS_FORM_ID}`)}>{t('Become a Partner')}</a>
+                <a href={`#${PARTNERS_FORM_ID}`}>{t('Become a Partner')}</a>
               </Button>
             </div>
             <div className="flex flex-col items-center gap-2">
               {partnerTiers.map((tier, index) => (
                 <img
                   key={tier.title}
-                  src={assetUrl(tier.badge)}
+                  src={tier.badge}
                   alt={`${t(tier.title)} ${t('Badge')}`}
                   className="max-w-[280px] object-contain"
                   style={{
@@ -118,7 +117,7 @@ export function View() {
             {partnerWays.map((way) => (
               <a
                 key={way.title}
-                href={assetUrl(way.href)}
+                href={way.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group link-unstyled flex items-start gap-3 rounded-xl border border-border bg-card/50 p-5 transition-colors hover:bg-accent/50 sm:p-6"

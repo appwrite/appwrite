@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import type { ReactNode } from 'react'
@@ -40,7 +39,7 @@ function InitOrgPromoBannerLink({
   if (cta.href) {
     return (
       <a
-        href={assetUrl(cta.href)}
+        href={cta.href}
         target={cta.external !== false ? '_blank' : undefined}
         rel={cta.external !== false ? 'noopener noreferrer' : undefined}
         className={className}

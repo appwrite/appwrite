@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { ArrowRightCircle, X } from 'lucide-react'
@@ -54,7 +53,7 @@ export function ConsoleBanner() {
   // Determine which logo to use based on theme
   // Default to dark mode if theme is not yet resolved
   const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
-  const logoSrc = isDark ? assetUrl('/imagine-logo-dark.svg') : assetUrl('/imagine-logo-light.svg')
+  const logoSrc = isDark ? '/imagine-logo-dark.svg' : '/imagine-logo-light.svg'
 
   if (isHidden) {
     return null
@@ -64,14 +63,14 @@ export function ConsoleBanner() {
     <div className="sticky bottom-0 z-20 flex min-h-[54px] shrink-0 items-center border-t border-border bg-muted/50 backdrop-blur-sm px-3 py-3 sm:py-0 sm:h-[54px]">
       <div className="mx-auto w-full max-w-7xl flex items-center">
         <a
-          href={assetUrl("https://imagine.dev")}
+          href="https://imagine.dev"
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-1 min-h-0 items-center gap-3 text-start transition-opacity hover:opacity-80 py-1 sm:py-0"
         >
           <div className="flex items-center ps-2.5 py-1.5 shrink-0">
             <img
-              src={assetUrl(logoSrc)}
+              src={logoSrc}
               alt={consoleBannerCopy.imagineAlt}
               className="h-5 w-auto shrink-0"
             />

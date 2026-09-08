@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useState } from 'react'
 import { docsTocLinkClassName } from '@/lib/docs/nav-styles'
 import { DOCS_TOC_SECTION_TITLE_CLASS } from '@/lib/docs/prose-typography'
@@ -57,7 +56,7 @@ export function DocsToc({ items }: DocsTocProps) {
               return (
                 <li key={item.id} className="min-w-0">
                   <a
-                    href={assetUrl(`#${item.id}`)}
+                    href={`#${item.id}`}
                     title={label}
                     className={cn(
                       docsTocLinkClassName(activeId === item.id),

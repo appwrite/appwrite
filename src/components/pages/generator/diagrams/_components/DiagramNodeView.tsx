@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { CoverBrandTheme } from '@/lib/cover-generator/brand-theme'
 import type { CoverEditorThemeId } from '@/lib/cover-generator/themes'
 import { CoverIconPreview } from '@/components/pages/generator/_components/CoverIconPreview'
@@ -182,7 +181,7 @@ export function DiagramNodeView({
         }}
       >
         <CoverIconPreview
-          src={assetUrl(getDiagramNodeIconSrc(node))}
+          src={getDiagramNodeIconSrc(node)}
           themeId={themeId}
           colorMode="cover"
           size={iconSize}
@@ -225,7 +224,7 @@ export function DiagramNodeView({
             frameHeight={frameHeight}
             themeId={themeId}
             closed
-            src={assetUrl(node.imageSrc)}
+            src={node.imageSrc}
             focusX={focus.focusX}
             focusY={focus.focusY}
             alt={node.label || 'Screenshot'}
@@ -317,7 +316,7 @@ export function DiagramNodeView({
           }}
         >
           <CoverIconPreview
-            src={assetUrl(getDiagramNodeIconSrc(node))}
+            src={getDiagramNodeIconSrc(node)}
             themeId={themeId}
             colorMode="cover"
             size={24}

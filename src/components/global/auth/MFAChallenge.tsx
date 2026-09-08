@@ -1,6 +1,5 @@
 'use client'
 
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate, useRouter } from '@tanstack/react-router'
@@ -573,7 +572,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
             alt="Image"
             className="h-full w-full object-cover"
             height="600"
-            src={assetUrl("/cover.avif")}
+            src="/cover.avif"
             width="600"
           />
         </div>

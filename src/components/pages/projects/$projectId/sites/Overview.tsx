@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useParams, Link } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
 import {
@@ -382,7 +381,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={assetUrl(domainUrl(rule.domain))}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 font-mono text-[11px] link-neutral"
@@ -582,7 +581,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={assetUrl(domainUrl(rule.domain))}
+                                href={domainUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

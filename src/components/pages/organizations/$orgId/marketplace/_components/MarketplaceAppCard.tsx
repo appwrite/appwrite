@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/types'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
@@ -25,7 +24,7 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       subtitle={app.shortDescription}
       icon={logoUrl ? undefined : CategoryIcon}
       customIcon={
-        logoUrl ? <MarketplaceAppLogo src={assetUrl(logoUrl)} /> : undefined
+        logoUrl ? <MarketplaceAppLogo src={logoUrl} /> : undefined
       }
       iconColor={logoUrl ? 'bg-transparent p-0' : undefined}
       onClick={onClick}

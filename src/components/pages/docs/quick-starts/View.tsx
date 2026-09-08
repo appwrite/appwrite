@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useMemo } from 'react'
 import { DocsLayout } from '@/components/pages/docs/DocsLayout'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -42,7 +41,7 @@ export function View() {
                   >
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
                       <img
-                        src={assetUrl(item.iconSrc)}
+                        src={item.iconSrc}
                         alt=""
                         className={cn('size-4', PUBLIC_ICON_MUTED_CLASSES)}
                       />

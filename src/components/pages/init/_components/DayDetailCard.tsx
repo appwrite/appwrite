@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import type { ReactNode } from 'react'
 import type {
   LaunchEventDay,
@@ -55,7 +54,7 @@ function VideoThumbnail({
   if (resolved) {
     return (
       <a
-        href={assetUrl(resolved.href)}
+        href={resolved.href}
         {...(resolved.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="group block transition-opacity hover:opacity-90"
       >
@@ -149,7 +148,7 @@ function DayPrimaryLink({
 
   return (
     <a
-      href={assetUrl(resolved.href)}
+      href={resolved.href}
       {...(resolved.external
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {})}
@@ -219,7 +218,7 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
         </DocsRouteLink>
       ) : (
         <a
-          href={assetUrl(resolved.href)}
+          href={resolved.href}
           {...(resolved.external
             ? { target: '_blank', rel: 'noopener noreferrer' }
             : {})}

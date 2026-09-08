@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import {
   Bell,
   Globe,
@@ -36,8 +35,8 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
       'Reach users instantly on iOS, Android, and web with APNS and FCM.',
     icon: Smartphone,
     providers: [
-      { id: 'apns', name: 'APNS', icon: assetUrl('/icons/apple.svg') },
-      { id: 'fcm', name: 'FCM', icon: assetUrl('/icons/firebase.svg') },
+      { id: 'apns', name: 'APNS', icon: '/icons/apple.svg' },
+      { id: 'fcm', name: 'FCM', icon: '/icons/firebase.svg' },
     ],
   },
   {
@@ -47,10 +46,10 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
       'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.',
     icon: Mail,
     providers: [
-      { id: 'resend', name: 'Resend', icon: assetUrl('/icons/resend.svg') },
-      { id: 'sendgrid', name: 'SendGrid', icon: assetUrl('/icons/sendgrid.svg') },
-      { id: 'mailgun', name: 'Mailgun', icon: assetUrl('/icons/mailgun.svg') },
-      { id: 'ses', name: 'Amazon SES', icon: assetUrl('/icons/amazon.svg') },
+      { id: 'resend', name: 'Resend', icon: '/icons/resend.svg' },
+      { id: 'sendgrid', name: 'SendGrid', icon: '/icons/sendgrid.svg' },
+      { id: 'mailgun', name: 'Mailgun', icon: '/icons/mailgun.svg' },
+      { id: 'ses', name: 'Amazon SES', icon: '/icons/amazon.svg' },
       { id: 'smtp', name: 'SMTP' },
     ],
   },
@@ -61,9 +60,9 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
     icon: MessagesSquare,
     comingSoon: true,
     providers: [
-      { id: 'slack', name: 'Slack', icon: assetUrl('/icons/slack.svg') },
-      { id: 'discord', name: 'Discord', icon: assetUrl('/icons/discord-simple.svg') },
-      { id: 'whatsapp', name: 'WhatsApp', icon: assetUrl('/icons/whatsapp.svg') },
+      { id: 'slack', name: 'Slack', icon: '/icons/slack.svg' },
+      { id: 'discord', name: 'Discord', icon: '/icons/discord-simple.svg' },
+      { id: 'whatsapp', name: 'WhatsApp', icon: '/icons/whatsapp.svg' },
     ],
   },
   {
@@ -81,11 +80,11 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
       'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.',
     icon: MessageSquare,
     providers: [
-      { id: 'twilio', name: 'Twilio', icon: assetUrl('/icons/twilio.svg') },
-      { id: 'vonage', name: 'Vonage', icon: assetUrl('/icons/vonage.svg') },
-      { id: 'msg91', name: 'MSG91', icon: assetUrl('/icons/msg91.svg') },
-      { id: 'telesign', name: 'Telesign', icon: assetUrl('/icons/telesign.svg') },
-      { id: 'textmagic', name: 'Textmagic', icon: assetUrl('/icons/textmagic.svg') },
+      { id: 'twilio', name: 'Twilio', icon: '/icons/twilio.svg' },
+      { id: 'vonage', name: 'Vonage', icon: '/icons/vonage.svg' },
+      { id: 'msg91', name: 'MSG91', icon: '/icons/msg91.svg' },
+      { id: 'telesign', name: 'Telesign', icon: '/icons/telesign.svg' },
+      { id: 'textmagic', name: 'Textmagic', icon: '/icons/textmagic.svg' },
     ],
   },
 ]
@@ -106,7 +105,7 @@ function ChannelTileIcon({ icon: Icon }: { icon: LucideIcon }) {
 
 function ProviderLogo({ provider }: { provider: MessagingProviderItem }) {
   if (provider.icon) {
-    return <ProductFeaturePublicIcon src={assetUrl(provider.icon)} />
+    return <ProductFeaturePublicIcon src={provider.icon} />
   }
 
   return <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden />

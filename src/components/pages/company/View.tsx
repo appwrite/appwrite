@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Github } from 'lucide-react'
 import { CompanyFounder } from '@/components/pages/company/CompanyFounder'
 import { CompanyHero } from '@/components/pages/company/CompanyHero'
@@ -60,13 +59,13 @@ export function View() {
             {ventureInvestors.map((investor) => (
               <li key={investor.name}>
                 <a
-                  href={assetUrl(investor.href)}
+                  href={investor.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-24 items-center justify-center rounded-xl border border-border bg-card/50 p-4 transition-colors hover:bg-card"
                 >
                   <img
-                    src={assetUrl(investor.logoSrc)}
+                    src={investor.logoSrc}
                     alt={investor.name}
                     className="max-h-10 w-full max-w-[140px] object-contain dark:invert"
                   />
@@ -98,7 +97,7 @@ export function View() {
                   <div className="mt-auto flex gap-2 pt-4">
                     {investor.github ? (
                       <a
-                        href={assetUrl(investor.github)}
+                        href={investor.github}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${investor.name} ${t('on GitHub')}`}
@@ -109,7 +108,7 @@ export function View() {
                     ) : null}
                     {investor.twitter ? (
                       <a
-                        href={assetUrl(investor.twitter)}
+                        href={investor.twitter}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${investor.name} ${t('on X')}`}
@@ -151,7 +150,7 @@ export function View() {
               {companyOpenRoles.map((role) => (
                 <li key={role.id}>
                   <a
-                    href={assetUrl(role.href)}
+                    href={role.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between sm:gap-4"

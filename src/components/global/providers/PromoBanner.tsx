@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import {
   createContext,
   useContext,
@@ -84,7 +83,7 @@ function PromoBannerComponent({
                 <div className="relative h-[140px] overflow-hidden bg-muted">
                   {banner.image ? (
                     <img
-                      src={assetUrl(banner.image)}
+                      src={banner.image}
                       alt=""
                       className="h-full w-full object-cover"
                     />

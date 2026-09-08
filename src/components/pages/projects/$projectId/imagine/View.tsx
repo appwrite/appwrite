@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useState, useRef, useEffect } from 'react'
 import { ArrowUp, Heart, Eye, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -201,7 +200,7 @@ export function View() {
         {/* CTA Buttons */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <a
-            href={assetUrl("https://imagine.dev")}
+            href="https://imagine.dev"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-colors hover:bg-foreground/90"
@@ -210,7 +209,7 @@ export function View() {
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
           <a
-            href={assetUrl("https://imagine.dev/sign-in")}
+            href="https://imagine.dev/sign-in"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
@@ -219,7 +218,7 @@ export function View() {
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
           <a
-            href={assetUrl("https://imagine.dev/sign-up")}
+            href="https://imagine.dev/sign-up"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
@@ -250,7 +249,7 @@ export function View() {
               {/* Project Image */}
               <div className="relative h-28 overflow-hidden">
                 <img
-                  src={assetUrl(project.image)}
+                  src={project.image}
                   alt={project.title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />

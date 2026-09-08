@@ -9,7 +9,6 @@
  */
 
 export interface RuntimeConfig {
-  cdnOrigin: string
   appwriteEndpoint: string
   consoleProfile: string
   /** HMAC key for the console fingerprint token. Public (ships to the browser). */
@@ -111,7 +110,6 @@ export function resolveAppwriteEndpointFallback(
 export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
   const read = (key: string) => readEnvValue(env, key)
   return {
-    cdnOrigin: normalizeCdnOrigin(read('CDN_ORIGIN')),
     appwriteEndpoint: readAppwriteEndpointFromEnv(env),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
     fingerprintKey:
@@ -151,10 +149,6 @@ export function injectRuntimeConfigIntoHtml(
   html: string,
   configJson: string,
 ): string {
-  if (html.includes(CDN_PRERENDER_ORIGIN)) {
-    const { cdnOrigin = '' } = JSON.parse(configJson) as Partial<RuntimeConfig>
-    html = stampAssetOrigin(html, cdnOrigin)
-  }
   if (html.includes(RUNTIME_CONFIG_PLACEHOLDER)) {
     return html.split(RUNTIME_CONFIG_PLACEHOLDER).join(configJson)
   }
@@ -167,23 +161,4 @@ export function injectRuntimeConfigIntoHtml(
     RUNTIME_CONFIG_SCRIPT_ASSIGNMENT,
     `window.__APP_CONFIG__=${configJson};`,
   )
-}
-
-/** An origin only, so HTML substitution cannot introduce markup or path changes. */
-export function normalizeCdnOrigin(value: string): string {
-  if (!value) return ''
-  const url = new URL(value)
-  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password ||
-      url.pathname !== '/' || url.search || url.hash) {
-    throw new Error('CDN_ORIGIN must be an HTTP(S) origin without a path or credentials')
-  }
-  return url.origin
-}
-
-export const CDN_PRERENDER_ORIGIN = 'https://console-cdn.invalid'
-
-export function stampAssetOrigin(html: string, origin: string): string {
-  const normalized = normalizeCdnOrigin(origin)
-  return html.replace(/https:\/\/console-cdn\.invalid\/builds\/([A-Za-z0-9_-]+)/g,
-    (_, buildId: string) => normalized ? `${normalized}/builds/${buildId}` : '')
 }

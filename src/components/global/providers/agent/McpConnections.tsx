@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
@@ -400,7 +399,7 @@ function McpConnectionsList({
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground">
                 {item.isAppwrite ? (
                   <img
-                    src={assetUrl("/icons/appwrite.svg")}
+                    src="/icons/appwrite.svg"
                     alt=""
                     className="h-4 w-4"
                     aria-hidden

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -874,7 +873,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                       onClick={() => handleOpenInIDE(ide)}
                     >
                       <img
-                        src={assetUrl(ide.iconPath)}
+                        src={ide.iconPath}
                         alt={ide.name}
                         className="h-4 w-4"
                       />
@@ -927,7 +926,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   <p className="text-[12px] text-muted-foreground">
                     {t('Demo URL')}:{' '}
                     <a
-                      href={assetUrl(`http://localhost:${manualBlocks.port}`)}
+                      href={`http://localhost:${manualBlocks.port}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="link-neutral inline-flex items-center gap-1"

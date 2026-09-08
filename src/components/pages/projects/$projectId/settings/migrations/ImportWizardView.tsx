@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Fullscreen import data wizard: provider → credentials → get report → resource selection → create migration.
  */
@@ -71,7 +70,7 @@ type ProviderOption = {
 
 const PROVIDERS_OTHER: ProviderOption[] = [
   { id: 'Supabase', label: 'Supabase', lucideIcon: 'zap' },
-  { id: 'Firebase', label: 'Firebase', icon: assetUrl('/icons/firebase.svg') },
+  { id: 'Firebase', label: 'Firebase', icon: '/icons/firebase.svg' },
   { id: 'NHost', label: 'NHost' },
 ]
 
@@ -80,14 +79,14 @@ function getProviderOptions(isCloud: boolean): ProviderOption[] {
     {
       id: 'AppwriteSelfHosted',
       label: 'Appwrite (self-hosted)',
-      icon: assetUrl('/icons/appwrite.svg'),
+      icon: '/icons/appwrite.svg',
     },
   ]
   if (!isCloud) {
     appwrite.push({
       id: 'AppwriteCloud',
       label: 'Appwrite (Cloud)',
-      icon: assetUrl('/icons/appwrite.svg'),
+      icon: '/icons/appwrite.svg',
     })
   }
   return [...appwrite, ...PROVIDERS_OTHER]
@@ -504,7 +503,7 @@ export function ImportWizardView() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
                   {p.icon ? (
                     <img
-                      src={assetUrl(p.icon)}
+                      src={p.icon}
                       alt=""
                       className={`h-5 w-5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
                     />

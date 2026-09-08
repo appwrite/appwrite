@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 /**
  * Connect Repository Section
  *
@@ -323,7 +322,7 @@ export function ConnectRepositorySection({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {vcsOAuthProviders.map((provider) => (
               <Button key={provider.id} variant="secondary" asChild>
-                <a href={assetUrl(vcsAuthUrl(provider.id))}>
+                <a href={vcsAuthUrl(provider.id)}>
                   <VcsIcon type={provider.id} className="me-1.5 h-4 w-4" />
                   {t(`Connect to ${provider.label}`)}
                 </a>
@@ -515,7 +514,7 @@ export function ConnectRepositorySection({
                       .map((p) => (
                         <a
                           key={p.id}
-                          href={assetUrl(vcsAuthUrl(p.id))}
+                          href={vcsAuthUrl(p.id)}
                           className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                           <p.Icon className="h-3 w-3" />

@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { SheetClose } from '@/components/ui/sheet'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -33,7 +32,7 @@ export function MarketingGitHubStarsLink({
 
   const anchor = (
     <a
-      href={assetUrl(link)}
+      href={link}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${t('Appwrite on GitHub')}, ${stat} ${t('stars')}` /* pragma: allowlist secret */}

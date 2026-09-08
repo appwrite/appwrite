@@ -1,4 +1,3 @@
-import { assetUrl } from '@/lib/asset-url'
 import { Bell, CheckCircle2, Mail, Phone, Users } from 'lucide-react'
 import type { CSSProperties, LucideIcon } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
@@ -20,9 +19,9 @@ const CHANNELS = [
 ] as const
 
 const PROVIDERS = [
-  { label: 'SendGrid', icon: assetUrl('/icons/sendgrid.svg') },
-  { label: 'Twilio', icon: assetUrl('/icons/twilio.svg') },
-  { label: 'Firebase', icon: assetUrl('/icons/firebase.svg') },
+  { label: 'SendGrid', icon: '/icons/sendgrid.svg' },
+  { label: 'Twilio', icon: '/icons/twilio.svg' },
+  { label: 'Firebase', icon: '/icons/firebase.svg' },
 ] as const
 
 function channelColorStyle(color: string, extra?: CSSProperties): CSSProperties {
@@ -188,7 +187,7 @@ export function MessagingProductVisual() {
                 {PROVIDERS.map((provider) => (
                   <img
                     key={provider.label}
-                    src={assetUrl(provider.icon)}
+                    src={provider.icon}
                     alt=""
                     className={cn('size-4', productBentoIdle.providerIcon)}
                   />
