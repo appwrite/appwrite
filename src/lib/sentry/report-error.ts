@@ -175,7 +175,7 @@ export function captureExceptionWithContext(
  * Prefer this over waiting for the error UI to mount - the UI can fail to render.
  */
 export function reportRouterCaughtError(
-  error: Error,
+  error: unknown,
   errorInfo?: { componentStack?: string | null },
   options?: { source?: string; pathname?: string; href?: string },
 ): string | undefined {

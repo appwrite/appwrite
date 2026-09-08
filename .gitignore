@@ -71,6 +71,9 @@ e2e/screenshots/
 *.temp
 .cache
 
+# Static asset publishing tools and extracted container files
+image-assets/
+
 # Playwright MCP
 .playwright-mcp
 

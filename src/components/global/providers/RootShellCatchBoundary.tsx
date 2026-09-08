@@ -12,7 +12,9 @@ export function RootShellCatchBoundary({
 }: {
   children: React.ReactNode
 }) {
-  const resetKey = useRouterState({ select: (s) => s.loadedAt })
+  const resetKey = useRouterState({
+    select: (s) => s.resolvedLocation?.state.__TSR_key ?? s.resolvedLocation?.href ?? '',
+  })
 
   return (
     <CatchBoundary

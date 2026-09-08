@@ -7,7 +7,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Air.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Air.woff2') format('woff2');
 }
 
 @font-face {
@@ -17,7 +17,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-AirItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-AirItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -27,7 +27,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Thin.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Thin.woff2') format('woff2');
 }
 
 @font-face {
@@ -37,7 +37,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-ThinItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-ThinItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -47,7 +47,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Light.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Light.woff2') format('woff2');
 }
 
 @font-face {
@@ -57,7 +57,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-LightItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-LightItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -67,7 +67,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Regular.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Regular.woff2') format('woff2');
 }
 
 @font-face {
@@ -77,7 +77,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-RegularItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-RegularItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -87,7 +87,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Medium.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Medium.woff2') format('woff2');
 }
 
 @font-face {
@@ -97,7 +97,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-MediumItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-MediumItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -107,7 +107,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Bold.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Bold.woff2') format('woff2');
 }
 
 @font-face {
@@ -117,7 +117,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-BoldItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-BoldItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -127,7 +127,7 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-Black.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-Black.woff2') format('woff2');
 }
 
 @font-face {
@@ -137,5 +137,5 @@
   font-display: swap;
   src:
     local('Aeonik Pro'), local('AeonikPro'),
-    url('/fonts/aeonik-pro/AeonikPro-BlackItalic.woff2') format('woff2');
+    url('./assets/fonts/aeonik-pro/AeonikPro-BlackItalic.woff2') format('woff2');
 }

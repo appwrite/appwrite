@@ -156,7 +156,7 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.93 0.0035 286.32);
   --sidebar-ring: oklch(0.898 0.004 286.286);
-  /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
+  /* Cloud profile - matches appwrite/website; files in src/assets/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   /* Long-form content body copy - matches appwrite/website (--web-font-family-inter) */

@@ -1,3 +1,8 @@
+import interRegularUrl from '../assets/fonts/inter/inter-v8-latin-regular.woff2?url'
+import interSemiboldUrl from '../assets/fonts/inter/inter-v8-latin-600.woff2?url'
+import aeonikRegularUrl from '../assets/fonts/aeonik-pro/AeonikPro-Regular.woff2?url'
+import notoHebrewRegularUrl from '../assets/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2?url'
+import interLatinRegularUrl from '../assets/fonts/inter/inter-latin-400-normal.woff2?url'
 import {
   HeadContent,
   Scripts,
@@ -5,7 +10,6 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import appCss from '../styles.css?url'
 import {
   getRuntimeConfig,
   getRuntimeConfigScript,
@@ -139,14 +143,14 @@ function getHeadFontPreloads() {
     return [
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-regular.woff2',
+        href: interRegularUrl,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
       },
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-600.woff2',
+        href: interSemiboldUrl,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
@@ -156,21 +160,21 @@ function getHeadFontPreloads() {
   return [
     {
       rel: 'preload' as const,
-      href: '/fonts/aeonik-pro/AeonikPro-Regular.woff2',
+      href: aeonikRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2',
+      href: notoHebrewRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/inter/inter-latin-400-normal.woff2',
+      href: interLatinRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
@@ -447,7 +451,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <link rel="stylesheet" href={appCss} />
         <HeadContent />
       </head>
       <body suppressHydrationWarning>

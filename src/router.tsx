@@ -1,3 +1,5 @@
+// Keep global CSS in the static entry graph so Start includes it in SSR HTML.
+import './styles.css'
 import { createRouter } from '@tanstack/react-router'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
