@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { Loader2 } from 'lucide-react'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
@@ -227,8 +226,12 @@ export function View() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <AppwriteLogo className="h-6 w-auto" />
+                <div className="flex items-center justify-center gap-4">
+                  <img
+                    src="/assets/logomark/logo.svg"
+                    alt="Appwrite"
+                    className="h-6 w-auto brightness-0 dark:invert"
+                  />
                   <div className="bg-border h-6 w-px" aria-hidden />
                   <GitHubIcon className="h-6 w-6" />
                 </div>
