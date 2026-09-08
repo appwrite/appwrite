@@ -21,15 +21,7 @@ This guide provisions a database and adds a `books` table. A second migration ad
 
 In your project at [appwrite.io](https://appwrite.io), open **Databases → Create database**. Under **Native databases**, select **PostgreSQL**.
 
-## Name the database {% #name-database %}
-
-![Database name set to Bookshelf with an automatically generated ID](/images/blog/drizzle-orm-appwrite-postgres/database-name.avif)
-
 Enter `Bookshelf` as the name and leave **Database ID** auto-generated. Select the **Starter** tier for this example.
-
-## Review the configuration {% #database-specifications %}
-
-![PostgreSQL specifications and database summary before creation](/images/blog/drizzle-orm-appwrite-postgres/database-specifications.avif)
 
 Keep **Replica count** at `0`, **Enable PITR** off, and **Daily** backups selected. Review the price in **Database summary**, then click **Create database**. See the [PostgreSQL quick start](https://appwrite.io/docs/products/databases/postgresql/quick-start) for provisioning options.
 
