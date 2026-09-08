@@ -191,7 +191,7 @@ export function useDomainSearch(
     baseName.length >= 2 ||
     (baseName.length === 1 && normalizedSearch.includes('.'))
 
-  const { pricesByDomain, error } = useDomainPrices(
+  const { pricesByDomain, error, retry, isRetrying } = useDomainPrices(
     showSuggestions && debouncedSearch === normalizedSearch ? baseName : '',
     requested.baseName === baseName ? requested.tlds : [],
     priorityTlds,
@@ -240,6 +240,8 @@ export function useDomainSearch(
     submitSearch,
     suggestions,
     error,
+    retry,
+    isRetrying,
     showSuggestions,
     hasContent: searchValue.trim().length > 0,
     baseName,

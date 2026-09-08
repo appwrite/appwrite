@@ -13,7 +13,7 @@ import {
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
@@ -921,6 +921,7 @@ export function useDomainPrices(
   priorityTlds: string[] = ['com', 'dev', 'app', 'io'],
 ) {
   const queryClient = useQueryClient()
+  const inFlight = useRef(new Map<string, Promise<DomainPriceQuotesResult>>())
   const domains = useMemo(
     () =>
       baseName
@@ -945,6 +946,7 @@ export function useDomainPrices(
       queryFn: async (): Promise<DomainPriceQuotesResult> => {
         const quotes = new Map<string, DomainPriceQuote>()
         const missing: string[] = []
+        const requests = new Set<Promise<DomainPriceQuotesResult>>()
         for (const domain of batch) {
           const state = queryClient.getQueryState<DomainPriceQuote>(
             domainPriceQueryKey(domain),
@@ -955,16 +957,42 @@ export function useDomainPrices(
           if (fresh) {
             quotes.set(domain, state.data!)
           } else {
-            missing.push(domain)
+            const pending = inFlight.current.get(domain)
+            if (pending) requests.add(pending)
+            else missing.push(domain)
           }
         }
 
-        const fetched = await fetchDomainPriceQuotes(missing)
-        fetched.quotes.forEach((quote, domain) => {
-          queryClient.setQueryData(domainPriceQueryKey(domain), quote)
-          quotes.set(domain, quote)
-        })
-        return { quotes, failed: fetched.failed }
+        if (missing.length > 0) {
+          // A growing viewport batch can join pending work rather than sending
+          // those domains again. Register it before yielding to another query.
+          const request = fetchDomainPriceQuotes(missing)
+            .then((result) => {
+              result.quotes.forEach((quote, domain) => {
+                queryClient.setQueryData(domainPriceQueryKey(domain), quote)
+              })
+              return result
+            })
+            .finally(() => {
+              for (const domain of missing) inFlight.current.delete(domain)
+            })
+          for (const domain of missing) inFlight.current.set(domain, request)
+          requests.add(request)
+        }
+
+        const settled = await Promise.allSettled(requests)
+        let firstError: unknown
+        for (const result of settled) {
+          if (result.status === 'rejected') {
+            firstError ??= result.reason
+            continue
+          }
+          result.value.quotes.forEach((quote, domain) => {
+            if (batch.includes(domain)) quotes.set(domain, quote)
+          })
+        }
+        if (quotes.size === 0 && firstError) throw firstError
+        return { quotes, failed: batch.filter((domain) => !quotes.has(domain)) }
       },
       enabled: batch.length > 0,
       staleTime: (query) =>
@@ -1017,21 +1045,25 @@ export function useDomainPrices(
     })
   }
 
-  // A partial failure keeps the priced cards usable; it only surfaces as an error
-  // when nothing for the current search could be priced.
-  const failedAll =
-    pricesByDomain.size === 0 &&
-    queries.some(
-      (query) => query.isError || (query.data?.failed.length ?? 0) > 0,
-    )
+  // Keep successful cards usable, but expose failures even when other batches
+  // succeeded. Retrying only failed batches preserves prices already on screen.
+  const failedQueries = queries.filter(
+    (query) => query.isError || (query.data?.failed.length ?? 0) > 0,
+  )
 
   return {
     pricesByDomain,
     isFetching: queries.some((query) => query.isFetching),
-    error: failedAll
-      ? (queries.find((query) => query.error)?.error ??
-        new Error('Failed to load domain prices'))
-      : undefined,
+    isRetrying: failedQueries.some((query) => query.isFetching),
+    retry: () =>
+      Promise.all(
+        failedQueries.map((query) => query.refetch({ cancelRefetch: false })),
+      ),
+    error:
+      failedQueries.length > 0
+        ? (failedQueries.find((query) => query.error)?.error ??
+          new Error('Failed to load domain prices'))
+        : undefined,
   }
 }
 
