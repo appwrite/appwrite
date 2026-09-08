@@ -1,6 +1,6 @@
 # Static assets on R2
 
-Vibes still runs Bun/SSR in the assets Kubernetes cluster. Cloudflare serves
+Console still runs Bun/SSR in the assets Kubernetes cluster. Cloudflare serves
 selected same-origin static URLs from an R2 bucket. HTML, runtime configuration,
 robots/discovery/docs exports, generated OG images, and server handlers continue
 to use Bun. Keep the complete `dist` in the image for serving and fallback.
@@ -40,16 +40,16 @@ Root files such as logos and the web manifest remain served by Bun.
    token as an S3 access key. Never put these credentials in image build arguments
    or Helm values. If credentials are managed centrally, store their values in
    the existing SSM secret system and provision the CI secrets out of band.
-3. Merge this Vibes change and let staging deploy. Publishing is mandatory;
+3. Merge this Console change and let staging deploy. Publishing is mandatory;
    missing credentials or a failed verification prevents the image-tag update.
 4. Enable `assets_routing_environments = ["staging"]` in the infrastructure stack
-   through CI. Test staging, then publish/deploy a Vibes production release before
+   through CI. Test staging, then publish/deploy a Console production release before
    adding `"production"` to that set.
 
 | Environment | Bucket | Verification origin | Repository secrets |
 | --- | --- | --- | --- |
-| Staging | `appwrite-vibes-staging` | `https://vibes-assets.staging.appwrite.io` | `R2_STAGING_ACCESS_KEY_ID`, `R2_STAGING_SECRET_ACCESS_KEY` |
-| Production | `appwrite-vibes-production` | `https://vibes-assets.appwrite.io` | `R2_PRODUCTION_ACCESS_KEY_ID`, `R2_PRODUCTION_SECRET_ACCESS_KEY` |
+| Staging | `appwrite-console-staging` | `https://console-assets.staging.appwrite.io` | `R2_STAGING_ACCESS_KEY_ID`, `R2_STAGING_SECRET_ACCESS_KEY` |
+| Production | `appwrite-console-production` | `https://console-assets.appwrite.io` | `R2_PRODUCTION_ACCESS_KEY_ID`, `R2_PRODUCTION_SECRET_ACCESS_KEY` |
 
 The S3 endpoint is
 `https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com`, region `auto`.
