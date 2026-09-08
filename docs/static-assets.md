@@ -23,8 +23,9 @@ The existing build workflows remain independent, with identical CDN settings.
 ## Setup
 
 1. Apply the infrastructure through CI and wait for `cdn.appwrite.io` to become Active.
-2. Add bucket-scoped Object Read & Write repository secrets `R2_ACCESS_KEY_ID` and
-   `R2_SECRET_ACCESS_KEY`, used by both deployment workflows.
+2. Add bucket-scoped Object Read & Write GitHub environment secrets `R2_ACCESS_KEY_ID` and
+   `R2_SECRET_ACCESS_KEY` in both `staging` and `production`. Each upload job
+   selects its environment; use a separate bucket-scoped credential for each.
 3. Deploy staging, verify scripts/styles/fonts and client navigation, then release
    production. No application-configuration change is required.
 

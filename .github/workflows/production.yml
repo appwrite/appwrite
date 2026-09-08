@@ -128,6 +128,7 @@ jobs:
                   done
 
     publish-assets:
+        environment: production
         needs: build
         runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
         timeout-minutes: 25
