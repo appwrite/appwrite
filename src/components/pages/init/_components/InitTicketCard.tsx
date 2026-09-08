@@ -29,6 +29,7 @@ import {
 } from '@/lib/init/ticket-layout'
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
 import {
+  isIOSDevice,
   prefersInitTicketDeviceTilt,
   requiresInitTicketDeviceOrientationPermission,
   useInitTicketDeviceTilt,
@@ -634,9 +635,10 @@ export const InitTicketCard = forwardRef<
 
   useEffect(() => {
     if (!deviceTiltEnabled) return
-    if (!requiresInitTicketDeviceOrientationPermission()) {
-      void startDeviceTilt()
-    }
+    // iOS (and browsers with requestPermission) require a user gesture; never
+    // auto-start orientation access from an effect.
+    if (isIOSDevice() || requiresInitTicketDeviceOrientationPermission()) return
+    void startDeviceTilt({ skipPermission: true })
   }, [deviceTiltEnabled, startDeviceTilt])
 
   const computeTiltAtClientCoords = useCallback(

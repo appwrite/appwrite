@@ -443,7 +443,13 @@ async function submitNativeDdlForm(
   engine: NativeEngine,
   submit: Locator,
   successToast: string,
+  columnName: string,
 ): Promise<void> {
+  // A previous column's toast can outlive the next drawer opening. Wait for
+  // it to leave before submitting so success belongs to this operation.
+  await expect(page.getByText(successToast, { exact: true })).toHaveCount(0, {
+    timeout: 30_000,
+  })
   await expect(submit).toBeEnabled({ timeout: 15_000 })
   const deadline = Date.now() + 90_000
   let lastError = 'Create did not reach the SQL API'
@@ -459,8 +465,13 @@ async function submitNativeDdlForm(
           ) {
             return false
           }
-          return ENGINE[engine].executionPathIncludes.some((part) =>
-            url.pathname.includes(part),
+          const sql = response.request().postDataJSON()?.sql
+          return (
+            typeof sql === 'string' &&
+            sql.includes(`ADD COLUMN ${quoteIdent(engine, columnName)} `) &&
+            ENGINE[engine].executionPathIncludes.some((part) =>
+              url.pathname.includes(part),
+            )
           )
         } catch {
           return false
@@ -745,6 +756,7 @@ export async function addNativeColumnViaUi(
       .filter({ has: page.locator('#column-name') })
       .getByRole('button', { name: 'Create', exact: true }),
     'Column created',
+    options.name,
   )
   await expect(page.getByRole('heading', { name: 'Create column' })).toHaveCount(
     0,

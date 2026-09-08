@@ -29,15 +29,25 @@ export const loadApiReferenceServiceFn = createServerFn({ method: 'GET' })
     const { loadApiReferenceService } = await import(
       '@/server/api-reference/load-service'
     )
-    const result = await loadApiReferenceService(
-      data.version,
-      data.platform,
-      data.service,
+    const { isReferenceNotFoundError } = await import(
+      '@/lib/docs/references/errors'
     )
-    if (!result) {
-      throw new Error('API_REFERENCE_NOT_FOUND')
+    try {
+      const result = await loadApiReferenceService(
+        data.version,
+        data.platform,
+        data.service,
+      )
+      if (!result) {
+        throw new Error('API_REFERENCE_NOT_FOUND')
+      }
+      return result
+    } catch (error) {
+      if (isReferenceNotFoundError(error)) {
+        throw new Error('API_REFERENCE_NOT_FOUND')
+      }
+      throw error
     }
-    return result
   })
 
 export const loadApiReferenceModelFn = createServerFn({ method: 'GET' })
@@ -69,8 +79,18 @@ export const loadReferenceNavServiceCountsFn = createServerFn({ method: 'GET' })
     const { loadReferenceNavServiceCounts } = await import(
       '@/server/api-reference/reference-nav'
     )
-    const counts = await loadReferenceNavServiceCounts(data.version, data.mode)
-    return Array.from(counts.entries()) as Array<[ReferenceService, number]>
+    const { isReferenceNotFoundError } = await import(
+      '@/lib/docs/references/errors'
+    )
+    try {
+      const counts = await loadReferenceNavServiceCounts(data.version, data.mode)
+      return Array.from(counts.entries()) as Array<[ReferenceService, number]>
+    } catch (error) {
+      if (isReferenceNotFoundError(error)) {
+        throw new Error('API_REFERENCE_NOT_FOUND')
+      }
+      throw error
+    }
   })
 
 export const loadReferenceOpenApiSpecFn = createServerFn({ method: 'GET' })
@@ -80,8 +100,18 @@ export const loadReferenceOpenApiSpecFn = createServerFn({ method: 'GET' })
       '@/server/api-reference/load-spec'
     )
     const { isReferenceVersion } = await import('@/lib/docs/references/constants')
+    const { isReferenceNotFoundError } = await import(
+      '@/lib/docs/references/errors'
+    )
     if (!isReferenceVersion(data.version)) {
       throw new Error('API_REFERENCE_NOT_FOUND')
     }
-    return loadReferenceOpenApiSpecByMode(data.version, data.mode)
+    try {
+      return loadReferenceOpenApiSpecByMode(data.version, data.mode)
+    } catch (error) {
+      if (isReferenceNotFoundError(error)) {
+        throw new Error('API_REFERENCE_NOT_FOUND')
+      }
+      throw error
+    }
   })

@@ -233,6 +233,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         sizes: '180x180',
       },
       ...getHeadFontPreloads(),
+      // TanStack Start dev manifest omits CSS assets (styles load only after JS).
+      // Production prerender/SSR gets stylesheet links from router.tsx → entry manifest.
+      ...(import.meta.env.DEV
+        ? [
+            {
+              rel: 'stylesheet' as const,
+              href: '/src/styles.css?direct',
+              type: 'text/css',
+            },
+          ]
+        : []),
     ],
     scripts: [...scripts],
   }),

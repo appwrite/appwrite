@@ -13,7 +13,7 @@ import {
   getDocsBreadcrumbSchema,
   getDocsArticleSchema,
 } from '@/lib/docs/seo'
-import { loadApiReferenceServiceFn } from '@/server/functions/api-reference'
+import { fetchApiReferenceService } from '@/lib/docs/references/reference-api'
 
 export const Route = createFileRoute('/docs/references/$version/$platform/$service')({
   ssr: true,
@@ -30,9 +30,7 @@ export const Route = createFileRoute('/docs/references/$version/$platform/$servi
     }
 
     try {
-      const data = await loadApiReferenceServiceFn({
-        data: { version, platform, service },
-      })
+      const data = await fetchApiReferenceService(version, platform, service)
       return { data, version, platform, service }
     } catch (error) {
       if (isApiReferenceNotFoundError(error)) {
