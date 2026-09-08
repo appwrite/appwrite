@@ -8,7 +8,6 @@ timeToRead: 8
 author: atharva
 category: tutorial
 featured: false
-draft: true
 ---
 
 ORMs are a popular way to work with databases through application code. Appwrite Postgres fits into that workflow with a standard PostgreSQL connection string. With Drizzle ORM, you can write typed queries in TypeScript and manage schema migrations through Drizzle Kit.
