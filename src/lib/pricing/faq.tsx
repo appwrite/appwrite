@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { useT } from '@/lib/i18n/translate'
 
 export type FaqItem = {
