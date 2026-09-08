@@ -193,6 +193,9 @@ export const ANALYTICS_ACTIONS = {
   'docs-nav-advanced': 'Docs Advanced Nav Clicked',
   'docs-nav-partners': 'Docs Partners Nav Clicked',
 
+  // Project settings
+  'smtp-resend-setup': 'SMTP Resend Setup Clicked',
+
   // Resource creation
   'create-project': 'Create Project Clicked',
   'create-organization': 'Create Organization Clicked',

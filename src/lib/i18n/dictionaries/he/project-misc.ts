@@ -2672,6 +2672,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
+  // SMTP: Resend quick setup
+  'Quick setup with Resend': 'הגדרה מהירה עם Resend',
+  'Connect your Resend account and Appwrite generates a sending-only API key, then fills in the SMTP settings for you. You need a verified domain in Resend.':
+    'חברו את חשבון Resend שלכם ו-Appwrite תיצור מפתח API לשליחה בלבד ותמלא עבורכם את הגדרות ה-SMTP. נדרש דומיין מאומת ב-Resend.',
+  'Set up with Resend': 'הגדרה עם Resend',
+  'Failed to connect Resend': 'החיבור ל-Resend נכשל',
+  'Resend authorization failed': 'ההרשאה ל-Resend נכשלה',
+  'Resend was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'ההרשאה ל-Resend ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
+  'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Choose the verified domain to send from. Appwrite creates a sending-only Resend API key and saves it as your SMTP password.':
+    'בחרו את הדומיין המאומת שממנו יישלחו האימיילים. Appwrite תיצור מפתח API של Resend לשליחה בלבד ותשמור אותו כסיסמת ה-SMTP שלכם.',
+  'Loading domains…': 'טוען דומיינים…',
+  'Failed to load domains from Resend': 'טעינת הדומיינים מ-Resend נכשלה',
+  'No verified domains': 'אין דומיינים מאומתים',
+  'Add and verify a domain in Resend, then check again.':
+    'הוסיפו ואמתו דומיין ב-Resend, ואז בדקו שוב.',
+  'Open Resend': 'פתיחת Resend',
+  'Check again': 'בדיקה חוזרת',
+  'A sending-only API key restricted to this domain will be created in your Resend account.':
+    'מפתח API לשליחה בלבד, המוגבל לדומיין הזה, ייווצר בחשבון Resend שלכם.',
+  'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
+  'Enter a sender name.': 'הזינו שם שולח.',
+  'Enter a sender email on the selected domain.':
+    'הזינו אימייל שולח בדומיין שנבחר.',
+  'Set up': 'הגדרה',
+  'Creating API key and saving SMTP settings…':
+    'יוצר מפתח API ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through Resend.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך Resend.',
+  'Resend authorization expired': 'ההרשאה ל-Resend פגה',
+  'Reconnect your Resend account to continue.':
+    'חברו מחדש את חשבון Resend שלכם כדי להמשיך.',
+  'Reconnect Resend': 'חיבור מחדש של Resend',
+  'Failed to set up SMTP with Resend': 'הגדרת SMTP עם Resend נכשלה',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',

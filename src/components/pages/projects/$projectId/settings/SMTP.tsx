@@ -6,6 +6,8 @@ import {
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import { SendSMTPTestDialog } from './_components/SendSMTPTestDialog'
+import { ResendQuickSetupCard } from './_components/ResendQuickSetupCard'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -167,6 +169,16 @@ export function SMTP({ projectId }: SMTPProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
+      {/* One-click setup through the console Resend OAuth2 provider (cloud only) */}
+      {isCloudProfile() ? (
+        <ResendQuickSetupCard
+          projectId={projectId}
+          project={project}
+          supportsCustomSmtp={supportsCustomSmtp}
+          onSendTestEmail={() => setTestDialogOpen(true)}
+        />
+      ) : null}
+
       {/* SMTP Configuration Card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         {/* Header */}

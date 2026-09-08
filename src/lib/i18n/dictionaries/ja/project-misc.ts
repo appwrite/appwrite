@@ -2667,6 +2667,41 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
+  // SMTP: Resend quick setup
+  'Quick setup with Resend': 'Resend でクイックセットアップ',
+  'Connect your Resend account and Appwrite generates a sending-only API key, then fills in the SMTP settings for you. You need a verified domain in Resend.':
+    'Resend アカウントを接続すると、Appwrite が送信専用の API キーを作成し、SMTP 設定を自動で入力します。Resend で検証済みのドメインが必要です。',
+  'Set up with Resend': 'Resend でセットアップ',
+  'Failed to connect Resend': 'Resend への接続に失敗しました',
+  'Resend authorization failed': 'Resend の認可に失敗しました',
+  'Resend was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'Resend は別の Appwrite アカウントに対して認可されました。このアカウントにサインインした状態でもう一度お試しください。',
+  'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Choose the verified domain to send from. Appwrite creates a sending-only Resend API key and saves it as your SMTP password.':
+    '送信元となる検証済みドメインを選択してください。Appwrite が送信専用の Resend API キーを作成し、SMTP パスワードとして保存します。',
+  'Loading domains…': 'ドメインを読み込み中…',
+  'Failed to load domains from Resend': 'Resend からドメインを読み込めませんでした',
+  'No verified domains': '検証済みのドメインがありません',
+  'Add and verify a domain in Resend, then check again.':
+    'Resend でドメインを追加して検証し、もう一度確認してください。',
+  'Open Resend': 'Resend を開く',
+  'Check again': '再確認',
+  'A sending-only API key restricted to this domain will be created in your Resend account.':
+    'このドメインに制限された送信専用の API キーが Resend アカウントに作成されます。',
+  'Must use the selected domain.': '選択したドメインを使用する必要があります。',
+  'Enter a sender name.': '送信者名を入力してください。',
+  'Enter a sender email on the selected domain.':
+    '選択したドメインの送信者メールアドレスを入力してください。',
+  'Set up': 'セットアップ',
+  'Creating API key and saving SMTP settings…':
+    'API キーを作成して SMTP 設定を保存中…',
+  'Custom SMTP is enabled and your project now sends emails through Resend.':
+    'カスタム SMTP が有効になり、プロジェクトは Resend 経由でメールを送信するようになりました。',
+  'Resend authorization expired': 'Resend の認可が期限切れになりました',
+  'Reconnect your Resend account to continue.':
+    '続行するには Resend アカウントを再接続してください。',
+  'Reconnect Resend': 'Resend を再接続',
+  'Failed to set up SMTP with Resend': 'Resend での SMTP セットアップに失敗しました',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',
