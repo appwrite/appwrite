@@ -95,8 +95,35 @@ export function extractHashedAssetUrl(
 }
 
 /**
- * Sync classification for UI / Sentry: confirmed MIME mismatch, or a failure
- * that names a hashed `/assets/` URL (likely deploy skew). Does not treat
+ * TanStack `lazyRouteComponent` loads `importer().then(mod => mod[exportName])`
+ * with `exportName` typically `'component'`. After a deploy, a 404'd chunk can
+ * fulfill as `undefined` instead of rejecting, which throws:
+ * `Cannot read properties of undefined (reading 'component')`.
+ * That message has no hashed `/assets/` URL, so MIME/URL heuristics miss it.
+ */
+export function isLazyRouteComponentLoadError(error: unknown): boolean {
+  const message = errorMessage(error)
+  const isUndefinedComponentRead =
+    /Cannot read propert(?:y|ies) of undefined \(reading ['"]component['"]\)/i.test(
+      message,
+    ) ||
+    /can't access property ['"]component['"] of (?:undefined|null)/i.test(
+      message,
+    ) ||
+    /undefined is not an object \(evaluating ['"][^'"]*component['"]\)/i.test(
+      message,
+    )
+  if (!isUndefinedComponentRead) return false
+
+  const stack = error instanceof Error ? (error.stack ?? '') : ''
+  if (!stack) return true
+  return /lazyRouteComponent/i.test(stack)
+}
+
+/**
+ * Sync classification for UI / Sentry: confirmed MIME mismatch, a failure
+ * that names a hashed `/assets/` URL (likely deploy skew), or TanStack's
+ * follow-on TypeError when a lazy route module is missing. Does not treat
  * bare "module script failed" / "failed to fetch dynamically imported module"
  * messages as stale — those are common Firefox cancel/abort noise.
  *
@@ -107,6 +134,8 @@ export function isStaleChunkLoadError(
   error: unknown,
   context?: { event?: Event; fromVitePreload?: boolean },
 ): boolean {
+  if (isLazyRouteComponentLoadError(error)) return true
+
   const message = errorMessage(error)
   if (messageIndicatesHtmlMimeForScript(message)) return true
 
@@ -408,9 +437,11 @@ function beginGuardedReload(): boolean {
 /**
  * Reload once per recovery window when a confirmed stale JS chunk is detected.
  *
- * Confirmed = HTML MIME for a module request, or a hashed `/assets/` URL that
- * re-fetches as 404 / text/html. Returns true when the error was claimed
- * (reload started, or async verification started) so callers can preventDefault.
+ * Confirmed = HTML MIME for a module request, a hashed `/assets/` URL that
+ * re-fetches as 404 / text/html, or TanStack lazyRouteComponent's undefined
+ * `component` export after a failed chunk load. Returns true when the error
+ * was claimed (reload started, or async verification started) so callers can
+ * preventDefault.
  */
 export function tryReloadForStaleChunk(
   error: unknown,
@@ -419,7 +450,10 @@ export function tryReloadForStaleChunk(
   if (!getWindow()) return false
 
   const message = errorMessage(error)
-  if (messageIndicatesHtmlMimeForScript(message)) {
+  if (
+    messageIndicatesHtmlMimeForScript(message) ||
+    isLazyRouteComponentLoadError(error)
+  ) {
     return beginGuardedReload()
   }
 

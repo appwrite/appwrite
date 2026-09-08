@@ -93,6 +93,7 @@ export function isPreLaunchHeavyContentPath(
     '/blog/rss.xml',
     '/changelog/rss.xml',
     '/sitemap.xml',
+    '/sitemap/news.xml',
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true

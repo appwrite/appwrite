@@ -6,6 +6,7 @@ import {
   extractHashedAssetUrl,
   forceReloadForStaleChunk,
   isHashedBuildAssetUrl,
+  isLazyRouteComponentLoadError,
   isStaleChunkLoadError,
   staleChunkDocumentUrl,
   tryReloadForStaleChunk,
@@ -68,6 +69,33 @@ describe('isStaleChunkLoadError', () => {
 
   test('does not treat unrelated errors as stale chunks', () => {
     expect(isStaleChunkLoadError(new Error('Project not found'))).toBe(false)
+  })
+
+  test('treats lazyRouteComponent undefined-component TypeErrors as stale', () => {
+    const error = new Error(
+      "Cannot read properties of undefined (reading 'component')",
+    )
+    error.stack = `${error.message}\n    at https://example.com/assets/lazyRouteComponent-abc.js:1:139`
+    expect(isLazyRouteComponentLoadError(error)).toBe(true)
+    expect(isStaleChunkLoadError(error)).toBe(true)
+  })
+
+  test('does not treat other undefined property reads as stale', () => {
+    const error = new Error(
+      "Cannot read properties of undefined (reading 'name')",
+    )
+    error.stack = `${error.message}\n    at https://example.com/assets/lazyRouteComponent-abc.js:1:139`
+    expect(isLazyRouteComponentLoadError(error)).toBe(false)
+    expect(isStaleChunkLoadError(error)).toBe(false)
+  })
+
+  test('does not treat undefined-component reads outside lazyRouteComponent as stale', () => {
+    const error = new Error(
+      "Cannot read properties of undefined (reading 'component')",
+    )
+    error.stack = `${error.message}\n    at https://example.com/assets/View-abc.js:12:4`
+    expect(isLazyRouteComponentLoadError(error)).toBe(false)
+    expect(isStaleChunkLoadError(error)).toBe(false)
   })
 })
 
@@ -196,6 +224,26 @@ describe('tryReloadForStaleChunk', () => {
       tryReloadForStaleChunk(new Error('Importing a module script failed')),
     ).toBe(false)
     expect(locationMock.reload).not.toHaveBeenCalled()
+  })
+
+  test('reloads on lazyRouteComponent undefined-component TypeErrors', async () => {
+    const locationMock = mockBrowser()
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response('ok')),
+    ) as unknown as typeof fetch
+
+    const error = new Error(
+      "Cannot read properties of undefined (reading 'component')",
+    )
+    error.stack = `${error.message}\n    at https://example.com/assets/lazyRouteComponent-abc.js:1:139`
+
+    expect(tryReloadForStaleChunk(error)).toBe(true)
+
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(locationMock.reload).toHaveBeenCalled()
   })
 
   test('reloads after confirming a 404 hashed asset', async () => {

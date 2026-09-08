@@ -26,5 +26,6 @@ Disallow: /blocks
 Disallow: /cache
 
 Sitemap: https://appwrite.io/sitemap.xml
+Sitemap: https://appwrite.io/sitemap/news.xml
 `
 }

@@ -6,6 +6,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  NEWS_SITEMAP_SECTION_ID,
   generateSitemapFiles,
   registerSitemapSection,
 } from '../src/lib/sitemap/index.ts'
@@ -30,9 +31,11 @@ async function main() {
   await writeFile(join(PUBLIC_DIR, 'sitemap.xml'), indexXml, 'utf-8')
 
   await Promise.all(
-    Object.entries(sectionFiles).map(([sectionId, xml]) =>
-      writeFile(join(SITEMAP_DIR, `${sectionId}.xml`), xml, 'utf-8'),
-    ),
+    Object.entries(sectionFiles)
+      .filter(([sectionId]) => sectionId !== NEWS_SITEMAP_SECTION_ID)
+      .map(([sectionId, xml]) =>
+        writeFile(join(SITEMAP_DIR, `${sectionId}.xml`), xml, 'utf-8'),
+      ),
   )
 
   const sectionSummary = Object.entries(sectionFiles)

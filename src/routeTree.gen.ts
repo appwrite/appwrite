@@ -109,6 +109,7 @@ import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
+import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
 import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
 import { Route as ApiRERouteImport } from './routes/_api/r/e'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
@@ -934,6 +935,11 @@ const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
   id: '/auth/magic-url',
   path: '/auth/magic-url',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
+  id: '/_api/sitemap/news.xml',
+  path: '/sitemap/news.xml',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
   id: '/_api/r/v.js',
@@ -3086,6 +3092,7 @@ export interface FileRoutesByFullPath {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -3492,6 +3499,7 @@ export interface FileRoutesByTo {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -3861,6 +3869,7 @@ export interface FileRoutesById {
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/r/e': typeof ApiRERoute
   '/_api/r/v.js': typeof ApiRVDotjsRoute
+  '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -4273,6 +4282,7 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -4679,6 +4689,7 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -5047,6 +5058,7 @@ export interface FileRouteTypes {
     | '/_api/og/init.png'
     | '/_api/r/e'
     | '/_api/r/v.js'
+    | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
@@ -5423,6 +5435,7 @@ export interface RootRouteChildren {
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiRERoute: typeof ApiRERoute
   ApiRVDotjsRoute: typeof ApiRVDotjsRoute
+  ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
@@ -6129,6 +6142,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/magic-url'
       preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_api/sitemap/news.xml': {
+      id: '/_api/sitemap/news.xml'
+      path: '/sitemap/news.xml'
+      fullPath: '/sitemap/news.xml'
+      preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_api/r/v.js': {
       id: '/_api/r/v.js'
@@ -10167,6 +10187,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiRERoute: ApiRERoute,
   ApiRVDotjsRoute: ApiRVDotjsRoute,
+  ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,

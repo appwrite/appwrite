@@ -41,6 +41,9 @@ export async function getRouter() {
     // Fires when any route CatchBoundary catches - before the error UI mounts.
     // Critical for max-update-depth and other crashes that can break the error page.
     defaultOnCatch: (error, errorInfo) => {
+      // Stale hashed chunks often surface here as a generic TypeError from
+      // lazyRouteComponent, not as an unhandled import rejection.
+      if (tryReloadForStaleChunk(error)) return
       reportRouterCaughtError(error, errorInfo, {
         source: 'router-defaultOnCatch',
       })

@@ -10,6 +10,7 @@ describe('isPreLaunchHeavyContentPath', () => {
     expect(isPreLaunchHeavyContentPath('/blog/post/foo')).toBe(true)
     expect(isPreLaunchHeavyContentPath('/blog/rss.xml')).toBe(true)
     expect(isPreLaunchHeavyContentPath('/changelog/rss.xml')).toBe(true)
+    expect(isPreLaunchHeavyContentPath('/sitemap/news.xml')).toBe(true)
     expect(isPreLaunchHeavyContentPath('/docs/quick-start')).toBe(true)
     expect(isPreLaunchHeavyContentPath('/og/image.png')).toBe(true)
     expect(isPreLaunchHeavyContentPath('/llms.txt')).toBe(true)
