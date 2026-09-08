@@ -11,24 +11,42 @@ use Utopia\Fetch\Client as FetchClient;
 
 class Vercel extends OAuth2
 {
+    /**
+     * @var string
+     */
     private string $endpoint = 'https://api.vercel.com';
 
+    /**
+     * @var array
+     */
     protected array $user = [];
 
+    /**
+     * @var array
+     */
     protected array $tokens = [];
 
+    /**
+     * @var array
+     */
     protected array $scopes = [
         'user',
     ];
 
+    /**
+     * @return string
+     */
     public function getName(): string
     {
         return 'vercel';
     }
 
+    /**
+     * @return string
+     */
     public function getLoginURL(): string
     {
-        return 'https://vercel.com/oauth/authorize?'.\http_build_query([
+        return 'https://vercel.com/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -37,12 +55,17 @@ class Vercel extends OAuth2
         ]);
     }
 
+    /**
+     * @param string $code
+     *
+     * @return array
+     */
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint.'/v2/oauth/access_token',
+                $this->endpoint . '/v2/oauth/access_token',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'client_id' => $this->appID,
@@ -53,18 +76,23 @@ class Vercel extends OAuth2
             ), true);
         }
 
-        if (! isset($this->tokens['access_token'])) {
+        if (!isset($this->tokens['access_token'])) {
             throw new Exception('Vercel did not return a valid access token.', 400);
         }
 
         return $this->tokens;
     }
 
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint.'/v2/oauth/access_token',
+            $this->endpoint . '/v2/oauth/access_token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -74,7 +102,7 @@ class Vercel extends OAuth2
             ])
         ), true);
 
-        if (! isset($this->tokens['access_token'])) {
+        if (!isset($this->tokens['access_token'])) {
             throw new Exception('Vercel did not return a valid access token.', 400);
         }
 
@@ -85,6 +113,11 @@ class Vercel extends OAuth2
         return $this->tokens;
     }
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -92,6 +125,11 @@ class Vercel extends OAuth2
         return $user['user']['id'] ?? '';
     }
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -101,12 +139,21 @@ class Vercel extends OAuth2
 
     /**
      * Vercel's /v2/user endpoint does not return an email_verified signal.
+     *
+     * @param string $accessToken
+     *
+     * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         return false;
     }
 
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -114,16 +161,21 @@ class Vercel extends OAuth2
         return $user['user']['name'] ?? $user['user']['username'] ?? '';
     }
 
+    /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
             $response = \json_decode($this->request(
                 'GET',
-                $this->endpoint.'/v2/user',
-                ['Authorization: Bearer '.$accessToken]
+                $this->endpoint . '/v2/user',
+                ['Authorization: Bearer ' . $accessToken]
             ), true);
 
-            if (! \is_array($response['user'] ?? null)) {
+            if (!\is_array($response['user'] ?? null)) {
                 throw new Exception('Vercel did not return valid user information.', 400);
             }
 
@@ -133,13 +185,16 @@ class Vercel extends OAuth2
         return $this->user;
     }
 
+    /**
+     * @return void
+     */
     public function verifyCredentials(): void
     {
-        $client = new FetchClient;
+        $client = new FetchClient();
         $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
 
         $response = $client->fetch(
-            url: $this->endpoint.'/v2/oauth/access_token',
+            url: $this->endpoint . '/v2/oauth/access_token',
             method: FetchClient::METHOD_POST,
             body: [
                 'client_id' => $this->appID,
