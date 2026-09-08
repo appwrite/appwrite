@@ -1,0 +1,24 @@
+[package]
+name = "utopia-waf"
+description = "Web Application Firewall rules management for Utopia (Rust port of utopia-php/waf)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["waf", "firewall", "security", "rules", "utopia"]
+categories = ["web-programming"]
+
+[dependencies]
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-validators = { workspace = true }
+
+[[bench]]
+name = "waf"
+harness = false
+
+[lints]
+workspace = true

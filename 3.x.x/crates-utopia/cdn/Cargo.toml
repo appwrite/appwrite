@@ -1,0 +1,31 @@
+[package]
+name = "utopia-cdn"
+description = "CDN cache purge and certificate providers for Utopia (Rust port of utopia-php/cdn)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["cdn", "cloudflare", "fastly", "cache", "utopia"]
+categories = ["web-programming"]
+
+[dependencies]
+bytes = { workspace = true }
+chrono = { workspace = true }
+http = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-client = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "cdn"
+harness = false
+
+[lints]
+workspace = true

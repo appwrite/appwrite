@@ -1,0 +1,24 @@
+[package]
+name = "appwrite-event"
+description = "Appwrite event payloads and helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "events"]
+categories = ["asynchronous"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

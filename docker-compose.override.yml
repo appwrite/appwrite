@@ -36,6 +36,9 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
+  appwrite-rust:
+    environment:
+      - _APP_VERBOSE=enabled
   appwrite-realtime:
     build:
       context: .

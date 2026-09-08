@@ -1,0 +1,29 @@
+[package]
+name = "appwrite-database"
+description = "Appwrite database helpers on utopia-database"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "database"]
+categories = ["database"]
+
+[dependencies]
+serde_json = { workspace = true }
+utopia-validators = { workspace = true }
+utopia-database = { workspace = true }
+appwrite-exception = { workspace = true }
+aes-gcm = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

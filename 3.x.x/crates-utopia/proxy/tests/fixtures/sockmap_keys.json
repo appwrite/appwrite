@@ -1,0 +1,30 @@
+[
+  {
+    "name": "50000 -> 127.0.0.1:8080",
+    "local_port": 50000,
+    "remote_port_be": [31, 144],
+    "remote_ip_be": [127, 0, 0, 1],
+    "expected_be": [195, 80, 144, 31, 1, 0, 0, 127]
+  },
+  {
+    "name": "5432 -> 10.0.0.1:3306",
+    "local_port": 5432,
+    "remote_port_be": [12, 234],
+    "remote_ip_be": [10, 0, 0, 1],
+    "expected_be": [21, 56, 234, 12, 1, 0, 0, 10]
+  },
+  {
+    "name": "443 -> 8.8.8.8:54321",
+    "local_port": 443,
+    "remote_port_be": [212, 49],
+    "remote_ip_be": [8, 8, 8, 8],
+    "expected_be": [1, 187, 49, 212, 8, 8, 8, 8]
+  },
+  {
+    "name": "1 -> 0.0.0.0:0",
+    "local_port": 1,
+    "remote_port_be": [0, 0],
+    "remote_ip_be": [0, 0, 0, 0],
+    "expected_be": [0, 1, 0, 0, 0, 0, 0, 0]
+  }
+]

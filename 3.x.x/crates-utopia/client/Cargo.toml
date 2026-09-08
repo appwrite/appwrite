@@ -1,0 +1,47 @@
+[package]
+name = "utopia-client"
+description = "PSR-18 HTTP client with reqwest (cURL) and Tokio (Swoole coroutine) backends (Rust port of utopia-php/client)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["http", "client", "psr-18", "reqwest", "utopia"]
+categories = ["web-programming::http-client"]
+
+[features]
+default = []
+# PHP Swoole coroutine adapter. In Rust this is a Tokio/reqwest backend; the
+# public type remains `adapter::swoole_coroutine::Client`.
+tokio = []
+swoole = ["tokio"]
+
+[dependencies]
+base64 = { workspace = true }
+brotli = { workspace = true }
+bytes = { workspace = true }
+flate2 = { workspace = true }
+http = { workspace = true }
+parking_lot = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true, features = ["gzip", "deflate", "brotli", "stream"] }
+    tokio = { workspace = true }
+futures = { workspace = true }
+utopia-pools = { workspace = true }
+utopia-span = { workspace = true }
+
+[dev-dependencies]
+hex = { workspace = true }
+sha2 = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "client"
+harness = false
+
+[lints]
+workspace = true

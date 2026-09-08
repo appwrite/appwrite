@@ -1,0 +1,40 @@
+[package]
+name = "utopia-platform"
+description = "Object-oriented application layer for Utopia (Rust port of utopia-php/platform)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["utopia", "platform", "http", "framework"]
+categories = ["web-programming", "development-tools"]
+
+[features]
+default = ["http", "cli", "worker"]
+http = ["dep:utopia-http"]
+cli = ["dep:utopia-cli"]
+worker = []
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-validators = { workspace = true }
+utopia-servers = { workspace = true }
+utopia-http = { workspace = true, optional = true }
+utopia-cli = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+utopia-di = { workspace = true }
+utopia-http = { workspace = true }
+utopia-cli = { workspace = true }
+
+[[bench]]
+name = "platform"
+harness = false
+
+[lints]
+workspace = true

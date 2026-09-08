@@ -1,0 +1,11 @@
+;; reverse zone file for 127.0.0.1 and ::1
+$TTL 1814400 ; 3 weeks
+@  1814400  IN  SOA     localhost. root.localhost.  (
+                      1999010100 ; serial
+                           10800 ; refresh (3 hours)
+                             900 ; retry (15 minutes)
+                          604800 ; expire (1 week)
+                           86400 ; minimum (1 day)
+                        )
+@  1814400  IN  NS      localhost.
+1  1814400  IN  PTR     localhost.
