@@ -102,7 +102,7 @@ class Update extends Action
         if (!\is_null($serviceAccountJSON)) {
             $serviceAccountJSON = \is_string($serviceAccountJSON)
                 ? \json_decode($serviceAccountJSON, true)
-                : normalizeJsonObject($serviceAccountJSON);
+                : $this->normalizeJsonObject($serviceAccountJSON);
 
             $provider->setAttribute('credentials', [
                 'serviceAccountJSON' => $serviceAccountJSON
@@ -134,5 +134,39 @@ class Update extends Action
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
+    }
+
+    /**
+     * Convert a request JSON object to the associative shape credentials expect while
+     * retaining empty objects at any nested depth. Returns null untouched so the
+     * caller can distinguish "not provided" from an explicit empty object.
+     */
+    private function normalizeJsonObject(null|array|\stdClass $data): ?array
+    {
+        if (\is_null($data)) {
+            return null;
+        }
+
+        $normalizeValue = function (mixed $value) use (&$normalizeValue): mixed {
+            if ($value instanceof \stdClass) {
+                $properties = (array) $value;
+
+                return $properties === []
+                    ? $value
+                    : \array_map($normalizeValue, $properties);
+            }
+
+            if (\is_array($value)) {
+                return \array_map($normalizeValue, $value);
+            }
+
+            return $value;
+        };
+
+        if ($data instanceof \stdClass) {
+            $data = (array) $data;
+        }
+
+        return \array_map($normalizeValue, $data);
     }
 }

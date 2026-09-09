@@ -2,6 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Messaging\Services;
 
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Delete as DeleteMessage;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Email\Create as CreateEmail;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Email\Update as UpdateEmail;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Get as GetMessage;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Push\Create as CreatePush;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Push\Update as UpdatePush;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Sms\Create as CreateSms;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Sms\Update as UpdateSms;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Targets\XList as ListTargets;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\XList as ListMessages;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Create as CreateApnsProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Update as UpdateApnsProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Delete as DeleteProvider;
@@ -87,5 +97,17 @@ class Http extends Service
         $this->addAction(ListSubscribers::getName(), new ListSubscribers());
         $this->addAction(GetSubscriber::getName(), new GetSubscriber());
         $this->addAction(DeleteSubscriber::getName(), new DeleteSubscriber());
+
+        // Messages
+        $this->addAction(CreateEmail::getName(), new CreateEmail());
+        $this->addAction(CreateSms::getName(), new CreateSms());
+        $this->addAction(CreatePush::getName(), new CreatePush());
+        $this->addAction(ListMessages::getName(), new ListMessages());
+        $this->addAction(ListTargets::getName(), new ListTargets());
+        $this->addAction(GetMessage::getName(), new GetMessage());
+        $this->addAction(UpdateEmail::getName(), new UpdateEmail());
+        $this->addAction(UpdateSms::getName(), new UpdateSms());
+        $this->addAction(UpdatePush::getName(), new UpdatePush());
+        $this->addAction(DeleteMessage::getName(), new DeleteMessage());
     }
 }
