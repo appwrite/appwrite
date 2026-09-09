@@ -17,7 +17,7 @@ use Utopia\Psr7\Stream;
 
 final class UploadCallbacksTest extends TestCase
 {
-    public function testManualUploadReceivesExtractionFailures(): void
+    public function testManualUploadSubscribesToArtifactCallbacks(): void
     {
         $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
