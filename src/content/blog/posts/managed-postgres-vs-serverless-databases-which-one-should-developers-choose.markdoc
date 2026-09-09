@@ -104,21 +104,21 @@ It also fits teams that want to avoid capacity planning altogether. If you would
 
 Just weigh the trade-offs honestly. If you know your workload will grow into steady, high-volume traffic, run the numbers, because usage-based pricing can cross over and become more expensive than a right-sized dedicated database at scale.
 
-# Where a backend platform fits in
+# Where Appwrite fits in
 
-Sometimes the real question is not which database engine to run, but how much of the surrounding backend you want to build yourself. Whichever storage model you choose, you still need authentication, file storage, serverless functions, and access control around your data.
+Appwrite gives you both a native PostgreSQL database and its API-first Appwrite Databases, depending on how you want to work with your data.
 
-[Appwrite Databases](/docs/products/databases) takes an API-first approach: instead of managing connections and raw SQL, you interact with your data through APIs and SDKs, with permissions, queries, and realtime updates built in. It pairs the developer experience of a document model with the rest of a [backend as a service](/blog/post/backend-as-a-service), so auth, storage, and functions live alongside your data.
+[Appwrite native PostgreSQL](/blog/post/appwrite-now-speaks-postgresql) gives you a managed PostgreSQL instance with direct access to the database engine. You can connect with `psql`, use ORMs such as Prisma and Drizzle, run your own migrations, and install extensions like PostGIS and pgvector without an Appwrite-specific abstraction between your application and PostgreSQL.
 
-That is a different trade-off from a bare database, and it is a fair one to name. A pure dedicated Postgres or serverless Postgres service gives you direct SQL access and more control over the database engine. A backend platform trades some of that low-level control for speed of development and fewer moving parts to operate. If you are weighing relational against document models more broadly, our breakdown of [SQL vs NoSQL](/blog/post/sql-vs-nosql) and [document vs relational databases](/blog/post/document-vs-relational-databases-vibecoding) go deeper on that decision.
+Appwrite handles the operational work around the database, including backups, point-in-time recovery, scaling, connection pooling, high availability, and network security, while you keep control of the PostgreSQL engine and the tools you already use.
 
-# Getting started with Appwrite Databases
+[Appwrite Databases](/docs/products/databases) takes a different approach. TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite APIs and SDKs, with permissions, queries, and realtime capabilities built in. If you want direct SQL access and the PostgreSQL ecosystem, native PostgreSQL is the better fit. If you want those backend capabilities integrated into the platform, Appwrite Databases gives you that abstraction.
 
-The dedicated-versus-serverless choice comes down to your traffic shape. Steady and predictable workloads favour dedicated Postgres. Spiky and unpredictable workloads favour serverless.
+# Getting started with Appwrite Postgres
 
-But if what you actually want is to ship an application without stitching a database together with auth, storage, and functions yourself, a backend platform removes that work entirely.
+You can provision a native PostgreSQL database directly from the Appwrite Console by choosing the compute specification that fits your workload. Appwrite provisions the database in your project's region and gives you the hostname, credentials, and TLS configuration you need to connect.
 
-[Appwrite Databases](/docs/products/databases) gives you a fully managed database with built-in permissions, queries, and realtime updates, alongside authentication, storage, and functions in one platform. You get automated backups and managed scaling on the [free plan](/pricing) as well as paid tiers, with no servers to provision. [Sign up for Appwrite Cloud](https://cloud.appwrite.io/register) and give your next build a backend to grow on in minutes.
+[Get started with native PostgreSQL on Appwrite](/blog/post/appwrite-now-speaks-postgresql).
 
 # Resources
 
