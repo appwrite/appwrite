@@ -13,6 +13,7 @@ use Appwrite\Event\Publisher\Usage;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Modules\Functions\Workers\Jobs;
+use Appwrite\PubSub\Adapter;
 use Appwrite\Tests\Queue\InMemoryConnection;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -25,6 +26,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Pools\Adapter\Stack;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -64,6 +67,10 @@ final class JobsTest extends TestCase
         $db->setNamespace('jobs_' . ID::unique());
         $db->create();
         $collections = [Database::METADATA];
+        $pools = $register->get('pools');
+        $original = $pools->get('pubsub');
+        $pubsub = new JobsPubSub();
+        $pools->add(new Pool(new Stack(), 'pubsub', 1, static fn () => $pubsub, 1));
 
         try {
             $attributes = [];
@@ -90,7 +97,7 @@ final class JobsTest extends TestCase
 
             $deploymentId = ID::unique();
             $resourceId = ID::unique();
-            $project = new Document(['$id' => ID::unique()]);
+            $project = new Document(['$id' => ID::unique(), 'teamId' => ID::unique()]);
             $db->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 'resourceId' => $resourceId,
@@ -109,7 +116,7 @@ final class JobsTest extends TestCase
             $connection = new InMemoryConnection();
             $publisher = new Redis($connection, $connection);
             $queue = new Queue('jobs-test');
-            $realtime = (new Realtime())->setPaused(true);
+            $realtime = new Realtime();
             $events = new Event($publisher);
             $webhooks = new Webhook($publisher);
             $worker = $extension ? new DeletedDeploymentJobs() : new Jobs();
@@ -143,19 +150,20 @@ final class JobsTest extends TestCase
             if ($delete) {
                 // Test for FAILURE: deletion stays terminal and emits no update.
                 $this->assertTrue($db->getDocument('deployments', $deploymentId)->isEmpty());
-                $this->assertSame('', $realtime->getEvent());
-                $this->assertSame([], $realtime->getPayload());
+                $this->assertSame([], $pubsub->messages);
             } else {
                 // Test for SUCCESS: a surviving deployment still streams logs.
                 $deployment = $db->getDocument('deployments', $deploymentId);
                 $this->assertSame('building', $deployment->getAttribute('status'));
                 $this->assertSame("build output\n", $deployment->getAttribute('buildLogs'));
-                $this->assertSame($deploymentId, $realtime->getPayload()['$id']);
+                $this->assertCount(1, $pubsub->messages);
+                $this->assertSame($deploymentId, $pubsub->messages[0]['data']['payload']['$id']);
+                $this->assertSame("build output\n", $pubsub->messages[0]['data']['payload']['buildLogs']);
             }
 
-            $this->assertSame('', $events->getEvent());
             $this->assertSame(0, $publisher->getQueueSize($queue));
         } finally {
+            $pools->add($original);
             foreach (\array_reverse($collections) as $collection) {
                 $db->deleteCollection($collection);
             }
@@ -172,7 +180,8 @@ final class JobsTest extends TestCase
 }
 
 /**
- * Reproduces a downstream finalizer refreshing a deployment after external work.
+ * Cloud Jobs extends this finalizer and refreshes the deployment after edge work.
+ * Exercise that supported extension boundary without requiring Cloud in CE tests.
  */
 final class DeletedDeploymentJobs extends Jobs
 {
@@ -195,5 +204,25 @@ final class DeletedDeploymentJobs extends Jobs
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         return parent::finalize($dbForProject, $dbForPlatform, $project, $deployment, $success, $message, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, $buildSize);
+    }
+}
+
+final class JobsPubSub implements Adapter
+{
+    public array $messages = [];
+
+    public function ping($message = null): bool
+    {
+        return true;
+    }
+
+    public function subscribe($channels, $callback): void
+    {
+        throw new \LogicException('This publisher does not subscribe');
+    }
+
+    public function publish($channel, $message): void
+    {
+        $this->messages[] = \json_decode($message, true, flags: JSON_THROW_ON_ERROR);
     }
 }
