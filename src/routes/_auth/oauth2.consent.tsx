@@ -13,6 +13,13 @@ import {
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { getOAuth2App } from '@/lib/oauth2/cimd'
+import {
+  accountSwitchUrl,
+  createAccountSwitchRequest,
+  readAccountSwitchRequest,
+  rememberAccountSwitchRequest,
+  type AccountSwitchRequest,
+} from '@/lib/oauth2/account-switch'
 import { isWebRedirect } from '@/lib/oauth2/redirect'
 import { OAuth2ErrorMessage, OAuth2ErrorType } from '@/lib/oauth2/errors'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
@@ -40,24 +47,6 @@ export const Route = createFileRoute('/_auth/oauth2/consent')({
 
 type Phase = 'loading' | 'ready' | 'approved' | 'denied' | 'error'
 type Account = Models.User<Models.Preferences>
-
-const ACCOUNT_SWITCH_STORAGE_PREFIX = 'oauth2-account-switch:'
-
-function rememberAccountSwitchUrl(key: string, url: string) {
-  try {
-    sessionStorage.setItem(`${ACCOUNT_SWITCH_STORAGE_PREFIX}${key}`, url)
-  } catch {
-    // Best-effort: without storage the chip simply won't offer switching.
-  }
-}
-
-function accountSwitchUrlFor(key: string): string | null {
-  try {
-    return sessionStorage.getItem(`${ACCOUNT_SWITCH_STORAGE_PREFIX}${key}`)
-  } catch {
-    return null
-  }
-}
 
 /**
  * OIDC `max_age` must be a non-negative integer count of seconds. Anything else
@@ -119,9 +108,12 @@ function OAuth2ConsentPage() {
   const [completedRedirectUrl, setCompletedRedirectUrl] = useState<
     string | undefined
   >(undefined)
-  const [accountSwitchResumeUrl, setAccountSwitchResumeUrl] = useState<
-    string | null
-  >(null)
+  const [accountSwitchRequest, setAccountSwitchRequest] =
+    useState<AccountSwitchRequest | null>(null)
+  const [switchingAccount, setSwitchingAccount] = useState(false)
+  const [accountSwitchError, setAccountSwitchError] = useState<string | null>(
+    null,
+  )
 
   const onDone = (outcome: OAuth2Outcome, redirectUrl?: string) => {
     setCompletedRedirectUrl(redirectUrl)
@@ -129,13 +121,27 @@ function OAuth2ConsentPage() {
   }
 
   const switchAccount = async () => {
-    if (!accountSwitchResumeUrl) return
-    setPhase('loading')
-    // Clears the session and lands on /sign-in with the consent URL as the
-    // post-login redirect, so the new account resumes this authorization.
-    await performConsoleSignOut(queryClient, {
-      redirect: accountSwitchResumeUrl,
-    })
+    if (switchingAccount) return
+    const resumeUrl = accountSwitchUrl(accountSwitchRequest, grant?.appId)
+    if (!resumeUrl) {
+      setAccountSwitchError(t(OAuth2ErrorMessage.HANDLE_EXPIRED))
+      return
+    }
+    setSwitchingAccount(true)
+    setAccountSwitchError(null)
+    try {
+      // Resume raw authorize input, not the old account's grant or consumed PAR.
+      // The native sign-in/MFA flow will obtain a fresh grant for the new user.
+      await performConsoleSignOut(queryClient, {
+        redirect: resumeUrl,
+        requireServerRevocation: true,
+      })
+    } catch {
+      setSwitchingAccount(false)
+      setAccountSwitchError(
+        t('Could not sign out. Try switching accounts again.'),
+      )
+    }
   }
 
   useEffect(() => {
@@ -147,7 +153,8 @@ function OAuth2ConsentPage() {
     setPhase('loading')
     setError(null)
     setCompletedRedirectUrl(undefined)
-    setAccountSwitchResumeUrl(null)
+    setAccountSwitchRequest(null)
+    setAccountSwitchError(null)
 
     const currentRelativeUrl = window.location.pathname + window.location.search
     const params = new URLSearchParams(window.location.search)
@@ -188,7 +195,7 @@ function OAuth2ConsentPage() {
       loggedInAccount: Account,
       clientId: string | null,
       fromRequestUri: boolean,
-      resumeUrl: string | null,
+      switchRequest: AccountSwitchRequest | null,
     ) {
       if (result.redirectUrl) {
         // Already consented - go straight back to the client.
@@ -208,8 +215,8 @@ function OAuth2ConsentPage() {
         return
       }
       if (result.grantId) {
-        if (resumeUrl) {
-          rememberAccountSwitchUrl(result.grantId, resumeUrl)
+        if (switchRequest) {
+          rememberAccountSwitchRequest(result.grantId, switchRequest)
         }
         if (fromRequestUri) {
           // The handle is now consumed - rewrite to the grant URL so
@@ -229,7 +236,7 @@ function OAuth2ConsentPage() {
     }
 
     async function resumeFromGrant(grantId: string) {
-      setAccountSwitchResumeUrl(accountSwitchUrlFor(grantId))
+      setAccountSwitchRequest(readAccountSwitchRequest(grantId))
       try {
         await loadConsent(grantId)
       } catch (e: unknown) {
@@ -246,8 +253,11 @@ function OAuth2ConsentPage() {
       clientId: string | null,
       requestUri: string,
     ) {
-      const resumeUrl = accountSwitchUrlFor(requestUri)
-      setAccountSwitchResumeUrl(resumeUrl)
+      const storedRequest = readAccountSwitchRequest(requestUri)
+      const switchRequest = accountSwitchUrl(storedRequest, clientId)
+        ? storedRequest
+        : null
+      setAccountSwitchRequest(switchRequest)
       const loggedInAccount = await getAccount()
       if (cancelled) return
 
@@ -271,7 +281,7 @@ function OAuth2ConsentPage() {
           loggedInAccount,
           clientId,
           true,
-          resumeUrl,
+          switchRequest,
         )
       } catch (e: unknown) {
         if (cancelled) return
@@ -291,7 +301,8 @@ function OAuth2ConsentPage() {
 
     // Pre-login entry with raw authorize params in the URL.
     async function startAuthorize(clientId: string) {
-      setAccountSwitchResumeUrl(currentRelativeUrl)
+      const switchRequest = createAccountSwitchRequest(currentRelativeUrl)
+      setAccountSwitchRequest(switchRequest)
       const loggedInAccount = await getAccount()
       if (cancelled) return
 
@@ -305,7 +316,15 @@ function OAuth2ConsentPage() {
             ...readAuthorizeParams(params),
           })
           if (cancelled) return
-          rememberAccountSwitchUrl(par.request_uri, currentRelativeUrl)
+          if (switchRequest) {
+            rememberAccountSwitchRequest(par.request_uri, {
+              ...switchRequest,
+              expiresAt: Math.min(
+                switchRequest.expiresAt,
+                Date.now() + par.expires_in * 1000,
+              ),
+            })
+          }
           goSignIn(
             `/oauth2/consent?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(par.request_uri)}`,
           )
@@ -340,7 +359,7 @@ function OAuth2ConsentPage() {
           loggedInAccount,
           clientId,
           false,
-          currentRelativeUrl,
+          switchRequest,
         )
       } catch (e: unknown) {
         if (cancelled) return
@@ -422,9 +441,9 @@ function OAuth2ConsentPage() {
               app={app}
               accountLabel={accountLabel}
               flow="authorization"
-              onSwitchAccount={
-                accountSwitchResumeUrl ? switchAccount : undefined
-              }
+              onSwitchAccount={accountSwitchRequest ? switchAccount : undefined}
+              switchingAccount={switchingAccount}
+              accountSwitchError={accountSwitchError}
               onDone={onDone}
             />
           )}

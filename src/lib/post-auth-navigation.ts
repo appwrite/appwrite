@@ -87,11 +87,23 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
  * search params - which would lose OAuth2 params like `client_id` (consent) or
  * `user_code` (device) when returning to the flow after sign-up / verification.
  */
-export function toRedirectNavigateOptions(redirect: string): {
-  to: string
-  search: Record<string, string>
-} {
+export function toRedirectNavigateOptions(
+  redirect: string,
+):
+  | { to: string; search: Record<string, string> }
+  | { href: string; reloadDocument: true } {
   const url = new URL(redirect, 'http://localhost')
+  if (
+    isValidRelativeRedirect(redirect) &&
+    url.origin === 'http://localhost' &&
+    url.pathname === '/oauth2/consent' &&
+    !/[\\\u0000-\u001f\u007f]/.test(redirect)
+  ) {
+    // Native raw requests must not pass through parsed search serialization:
+    // it collapses repeated resources and quotes JSON-like state/RAR strings.
+    // href without to uses the installed router's direct document navigation.
+    return { href: redirect, reloadDocument: true }
+  }
   return {
     to: url.pathname,
     search: Object.fromEntries(url.searchParams),

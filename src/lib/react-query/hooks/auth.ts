@@ -384,11 +384,35 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
  */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
-  options?: { redirect?: string },
+  options?: { redirect?: string; requireServerRevocation?: boolean },
 ): Promise<void> {
-  if (consoleSigningOut) return
+  if (consoleSigningOut) {
+    if (options?.requireServerRevocation) {
+      throw new Error('Console sign-out is already in progress')
+    }
+    return
+  }
   consoleSigningOut = true
   showConsoleSignOutCover()
+
+  // Consent switching must not pretend to sign out or revoke other sessions.
+  // Keep credentials, impersonation and cached account data intact on failure.
+  if (options?.requireServerRevocation) {
+    try {
+      await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
+    } catch {
+      consoleSigningOut = false
+      if (typeof document !== 'undefined') {
+        document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
+      }
+      // Do not propagate credential-bearing SDK errors into UI or telemetry.
+      throw new Error('Current console session could not be revoked')
+    }
+    clearConsoleSessionLocally()
+    purgeConsoleAccountCaches(queryClient)
+    redirectToSignInAfterConsoleSignOut(options.redirect)
+    return
+  }
 
   // Drop impersonation headers only. Do not clear session credentials before
   // the delete call or the API request may go out unauthenticated.
