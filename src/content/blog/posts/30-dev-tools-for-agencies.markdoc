@@ -8,7 +8,7 @@ date: 2025-07-04
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: tutorial
+category: tutorials
 faqs:
   - question: "What tools should a small dev agency invest in first?"
     answer: "Start with a code editor (VS Code or Cursor), a version control host (GitHub or GitLab), a project management tool (Linear or Notion), and a backend platform that covers auth, database, and storage so you do not glue together three vendors. [Appwrite](/docs/products/auth) fills the backend slot for most agency projects."

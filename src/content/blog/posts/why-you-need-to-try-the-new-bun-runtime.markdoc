@@ -6,7 +6,7 @@ date: 2024-03-01
 cover: /images/blog/why-you-need-to-try-the-new-bun-runtime/cover.avif
 timeToRead: 15
 author: vincent-ge
-category: product
+category: products
 featured: false
 faqs:
   - question: "What is Bun and how is it different from Node.js?"

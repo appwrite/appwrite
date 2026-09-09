@@ -15,14 +15,14 @@ export const BLOG_FEATURED_SLUG_ORDER = [
 ] as const
 
 export const BLOG_SPOTLIGHT_CATEGORY_SLUGS = [
-  'tutorial',
-  'product',
+  'tutorials',
+  'products',
   'customer-stories',
-  'announcement',
+  'announcements',
   'security',
   'open-source',
   'ai',
-  'startup',
+  'startups',
   'devops',
-  'architecture',
+  'architectures',
 ] as const

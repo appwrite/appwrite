@@ -6,7 +6,7 @@ date: 2023-10-03
 cover: /images/blog/the-journey-and-meaning-behind-our-new-logo/cover.avif
 timeToRead: 5
 author: jade-baudchon
-category:  design
+category: design
 faqs:
   - question: "Why did Appwrite redesign its logo?"
     answer: "The original logo featured the HTML symbol, which no longer represented the many languages Appwrite supports. It also had scaling issues at small sizes, and user research showed the meaning was unclear. The redesign aligns the brand with Appwrite's broader vision and platform reach."

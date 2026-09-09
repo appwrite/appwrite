@@ -6,7 +6,7 @@ date: 2024-07-12
 cover: /images/blog/rest-vs-graphql-websockets/cover.avif
 timeToRead: 5
 author: eldad-fux
-category: product
+category: products
 faqs:
   - question: "When should I choose REST over GraphQL?"
     answer: "Pick REST when your app maps cleanly to resources and CRUD operations, when you want maximum tooling and caching support, or when consumers expect predictable URLs and HTTP semantics. It is also the safer default for IoT, mobile, and public APIs."

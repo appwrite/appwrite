@@ -6,7 +6,7 @@ date: 2024-02-27
 cover: /images/blog/ssr-vs-csr/cover.avif
 timeToRead: 10
 author: dennis-ivy
-category: product
+category: products
 featured: false
 faqs:
   - question: "What is the difference between SSR and CSR in Next.js?"

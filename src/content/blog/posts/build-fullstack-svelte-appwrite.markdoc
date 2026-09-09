@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/build-fullstack-svelte-appwrite/cover.avif
 timeToRead: 15
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "Does Appwrite work with SvelteKit?"
     answer: "Yes. Appwrite has a JavaScript Web SDK that works seamlessly with SvelteKit on both client and server. You can use it from +page.svelte files, +page.server.js load functions, or SvelteKit form actions. SSR sessions work through cookies."

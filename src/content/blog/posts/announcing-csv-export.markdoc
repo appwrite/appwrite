@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/announcing-csv-export/cover.avif
 timeToRead: 5
 author: jake-barnby
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How do I export data from an Appwrite database to CSV?"

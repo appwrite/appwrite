@@ -1,5 +1,5 @@
 /**
- * Regenerates docs manifest, section nav, LLM exports, and sitemap.
+ * Regenerates docs manifest, LLM exports, and sitemap.
  * Run: bun run generate:docs
  */
 import { spawnSync } from 'node:child_process'
@@ -26,6 +26,5 @@ function runTask(task: string) {
 }
 
 runScript('lib/generate-docs-manifest.ts')
-runScript('generate-docs-nav.ts')
 runScript('generate-docs-exports.ts')
 runTask('generate:sitemap')

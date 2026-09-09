@@ -6,7 +6,7 @@ date: 2024-05-08
 cover: /images/blog/messaging-pricing.avif
 timeToRead: 5
 author: eldad-fux
-category: Product
+category: products
 faqs:
   - question: "Why is Appwrite Messaging free for six months?"
     answer: "Messaging was still in beta when this announcement went out. The team wanted real usage data and feedback from the community before setting a final price, so they made it free for six months while collecting that input."

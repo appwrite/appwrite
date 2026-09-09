@@ -6,7 +6,7 @@ date: 2025-03-18
 cover: /images/blog/typescript-7-faster-with-go/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "Is TypeScript itself being rewritten in Go?"
     answer: "No. The TypeScript language, syntax, and type system are unchanged. Only the compiler (tsc) is being ported to Go under the internal name Project Corsa. TypeScript code you write today will still compile the same way."

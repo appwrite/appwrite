@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/hooks-appwrite-databases/cover.avif
 timeToRead: 10
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is a hook in software engineering?"
     answer: "A hook is a point in an application's execution where developers can inject custom code without modifying the core. Hooks let you intercept and transform data, trigger side effects, or extend behavior at well-defined moments like before a database write or after authentication."

@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/how-to-leverage-dynamic-api-keys-for-better-security/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 featured: false
 faqs:
   - question: "What are dynamic API keys in Appwrite?"

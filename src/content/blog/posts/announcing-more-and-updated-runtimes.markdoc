@@ -6,7 +6,7 @@ date: 2024-03-01
 cover: /images/blog/runtimes.avif
 timeToRead: 6
 author: vincent-ge
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "Which runtimes does Appwrite Functions support?"
     answer: "Appwrite Functions supports a wide range of runtimes including Node.js, Bun, Deno, Python, PHP, Ruby, Dart, Kotlin, Java, Swift, and Rust. New versions are added regularly to keep pace with language updates. Check the [Appwrite Functions documentation](/docs/products/functions) for the full list of supported versions."

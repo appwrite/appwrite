@@ -6,7 +6,7 @@ date: 2026-04-09
 cover: /images/blog/x-oauth2-appwrite/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: announcement, tutorial
+category: announcements, tutorials
 featured: false
 faqs:
   - question: "How do I add X (Twitter) login to my Appwrite app?"
