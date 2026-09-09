@@ -63,6 +63,8 @@ export interface CodeEditorProps {
   minimap?: boolean
   /** Accessible name for the editing surface, in place of a label's htmlFor. */
   ariaLabel?: string
+  /** Bracket, occurrence and selection highlighting; off for prose-like markup. */
+  highlightMatches?: boolean
   lineNumbers?: 'on' | 'off'
   /** Entrypoint filename for deployment (e.g. "index.js"). Used when building the gzip package. */
   entrypoint?: string
@@ -88,6 +90,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       className,
       readOnly = false,
       ariaLabel,
+      highlightMatches = true,
       minimap = false,
       lineNumbers = 'on',
       onEditorMount,
@@ -206,6 +209,9 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
             options={{
               readOnly,
               ariaLabel,
+              matchBrackets: highlightMatches ? 'always' : 'never',
+              occurrencesHighlight: highlightMatches ? 'singleFile' : 'off',
+              selectionHighlight: highlightMatches,
               minimap: { enabled: minimap },
               lineNumbers,
               renderLineHighlight: 'none',

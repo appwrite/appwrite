@@ -391,6 +391,7 @@ test.describe('email body preview (mocked API)', () => {
     await source.click()
     await page.keyboard.type('BREAK')
     await expect(source).not.toContainText('BREAK')
+    await expect(page.getByText('Cannot edit in read-only editor')).toBeHidden()
   })
 
   test('switching views does not move the rest of the card', async ({
