@@ -646,13 +646,16 @@ class Jobs extends Action
 
         try {
             $started = (float) (new \DateTimeImmutable($startedAt))->format('U.u');
+            $ended = empty($deployment->getAttribute('buildEndedAt'))
+                ? \microtime(true)
+                : (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u');
         } catch (\Exception) {
             return 0;
         }
 
         // A timeout is a budget, not a measurement: termination grace can
         // legitimately leave the worker running past it.
-        return (int) \ceil(\max(0.0, \microtime(true) - $started));
+        return (int) \ceil(\max(0.0, $ended - $started));
     }
 
     /**
