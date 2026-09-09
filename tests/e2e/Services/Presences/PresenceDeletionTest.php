@@ -40,6 +40,8 @@ final class PresenceDeletionTest extends Scope
         $this->assertIsResource($process);
 
         try {
+            // Keep the normal API hostname when router protection is enabled.
+            $this->client->addHeader('host', (string) \parse_url($this->endpoint, PHP_URL_HOST));
             $this->client->setEndpoint('http://127.0.0.1:' . $port . '/v1');
             $this->assertEventually(function () use ($log): void {
                 $health = $this->client->call(Client::METHOD_GET, '/health/version', timeout: 1);
