@@ -148,9 +148,4 @@ A huge thank you to everyone who joined us during the week, shared an Init ticke
 
 The fastest way to try any of this is to open a project on [Appwrite Cloud](https://cloud.appwrite.io) and pick the piece that matches what you are building: a relational database, a vector store, storage your existing S3 tooling can already talk to, or an auth server your other apps can sign into.
 
-Catch up on everything from Init 2026 at [appwrite.io/init](https://appwrite.io/init), then start here:
-
-- [PostgreSQL documentation](/docs/products/databases/postgresql) for provisioning a database and connecting your existing drivers and ORMs.
-- [VectorsDB documentation](/docs/products/databases/vectorsdb) for embeddings, similarity search, and RAG workloads.
-- [DocumentsDB documentation](/docs/products/databases/documentsdb) and [MySQL documentation](/docs/products/databases/mysql) for the other two database types we shipped on Day 3.
-- [OAuth server documentation](/docs/products/auth/oauth-server) for turning your project into an OAuth 2.1 and OpenID Connect provider.
+Catch up on everything from Init 2026 at [appwrite.io/init](https://appwrite.io/init).
