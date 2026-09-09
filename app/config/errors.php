@@ -734,6 +734,11 @@ return [
         'description' => 'Deployment with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::DEPLOYMENT_INVALID_ROOT_DIRECTORY => [
+        'name' => Exception::DEPLOYMENT_INVALID_ROOT_DIRECTORY,
+        'description' => 'Root directory must stay inside the repository. Remove the ".." segments, then retry the deployment.',
+        'code' => 400,
+    ],
     Exception::DEPLOYMENT_INVALID_FILE_SIZE => [
         'name' => Exception::DEPLOYMENT_INVALID_FILE_SIZE,
         'description' => 'The deployment file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
