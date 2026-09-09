@@ -1945,7 +1945,10 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testGetDeployment(): void
     {
-        $data = $this->setupTestDeployment();
+        // Keep the measured build longer than Kubernetes timestamp precision.
+        $functionId = $this->setupDeployedFunction('Measured build', overrides: ['commands' => 'sleep 2']);
+        $function = $this->getFunction($functionId);
+        $data = ['functionId' => $functionId, 'deploymentId' => $function['body']['deploymentId']];
 
         /**
          * Test for SUCCESS
@@ -1969,7 +1972,26 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testCreateExecution(): void
     {
-        $data = $this->setupTestDeployment();
+        // Other deployment tests can replace the cached function's active build.
+        // Own the function here so the execution identity has a stable target.
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test1',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'GLOBAL_VARIABLE',
+            'value' => 'Global Variable Value',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $deploymentId = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+        $data = ['functionId' => $functionId, 'deploymentId' => $deploymentId];
 
         /**
          * Test for SUCCESS
