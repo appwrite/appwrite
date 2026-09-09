@@ -1,12 +1,13 @@
 /**
- * Browser client for the Resend REST API.
+ * Resend REST adapter for the SMTP quick setup (browser side).
  *
  * `api.resend.com` sends no CORS headers, so requests go through the console's
  * own `_api/resend/*` server routes (see `resend-proxy.ts`), which forward the
  * bearer token verbatim and never persist it.
  */
 
-import type { ResendDomain } from './resend'
+import type { QuickSetupDomain } from './quick-setup'
+import type { SmtpQuickSetupCredential } from './providers'
 
 /** Mount point of the `src/routes/_api/resend/*` server routes. */
 export const RESEND_PROXY_BASE_PATH = '/resend'
@@ -93,16 +94,14 @@ type ResendDomainResponse = {
   id?: unknown
   name?: unknown
   status?: unknown
-  region?: unknown
 }
 
-function normalizeDomain(raw: ResendDomainResponse): ResendDomain | null {
+function normalizeDomain(raw: ResendDomainResponse): QuickSetupDomain | null {
   if (typeof raw.id !== 'string' || typeof raw.name !== 'string') return null
   return {
     id: raw.id,
     name: raw.name,
-    status: typeof raw.status === 'string' ? raw.status : 'unknown',
-    region: typeof raw.region === 'string' ? raw.region : undefined,
+    verified: raw.status === 'verified',
   }
 }
 
@@ -112,8 +111,8 @@ const DOMAINS_MAX_PAGES = 10
 /** Every domain on the connected Resend account (verified or not). */
 export async function listResendDomains(
   accessToken: string,
-): Promise<ResendDomain[]> {
-  const domains: ResendDomain[] = []
+): Promise<QuickSetupDomain[]> {
+  const domains: QuickSetupDomain[] = []
   let after: string | undefined
 
   for (let page = 0; page < DOMAINS_MAX_PAGES; page++) {
@@ -127,7 +126,7 @@ export async function listResendDomains(
 
     const chunk = (result?.data ?? [])
       .map(normalizeDomain)
-      .filter((domain): domain is ResendDomain => domain !== null)
+      .filter((domain): domain is QuickSetupDomain => domain !== null)
     domains.push(...chunk)
 
     if (!result?.has_more || chunk.length === 0) break
@@ -137,17 +136,11 @@ export async function listResendDomains(
   return domains
 }
 
-export interface CreatedResendApiKey {
-  id: string
-  /** Shown once by Resend; becomes the SMTP password. */
-  token: string
-}
-
 /** Mint a sending-only API key, optionally restricted to one domain. */
-export async function createResendApiKey(
+export async function createResendCredential(
   accessToken: string,
   input: { name: string; domainId?: string },
-): Promise<CreatedResendApiKey> {
+): Promise<SmtpQuickSetupCredential> {
   const result = await resendFetch<{ id?: unknown; token?: unknown }>(
     '/api-keys',
     accessToken,
@@ -164,16 +157,16 @@ export async function createResendApiKey(
   if (typeof result?.id !== 'string' || typeof result?.token !== 'string') {
     throw new ResendApiError('Resend did not return an API key', 502)
   }
-  return { id: result.id, token: result.token }
+  return { id: result.id, secret: result.token }
 }
 
 /** Best-effort cleanup when a freshly minted key could not be saved to the project. */
-export async function deleteResendApiKey(
+export async function deleteResendCredential(
   accessToken: string,
-  apiKeyId: string,
+  credentialId: string,
 ): Promise<void> {
   await resendFetch<unknown>(
-    `/api-keys/${encodeURIComponent(apiKeyId)}`,
+    `/api-keys/${encodeURIComponent(credentialId)}`,
     accessToken,
     { method: 'DELETE' },
   )

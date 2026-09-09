@@ -13,9 +13,13 @@ const looseString = z
   .optional()
   .catch(undefined)
 
-/** Params appended by the Resend OAuth2 round trip (see `src/lib/smtp/resend.ts`). */
+/**
+ * Params appended by the SMTP quick setup OAuth2 round trip
+ * (see `src/lib/smtp/quick-setup.ts`).
+ */
 const smtpSearchSchema = z.object({
-  resend: z.enum(['connected', 'failed']).optional().catch(undefined),
+  smtpSetup: z.enum(['connected', 'failed']).optional().catch(undefined),
+  smtpProvider: looseString,
   userId: looseString,
   secret: looseString,
   error: looseString,

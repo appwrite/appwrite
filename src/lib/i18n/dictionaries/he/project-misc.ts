@@ -2672,41 +2672,45 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
-  // SMTP: Resend quick setup
-  'Quick setup with Resend': 'הגדרה מהירה עם Resend',
-  'Connect your Resend account and Appwrite generates a sending-only API key, then fills in the SMTP settings for you. You need a verified domain in Resend.':
-    'חברו את חשבון Resend שלכם ו-Appwrite תיצור מפתח API לשליחה בלבד ותמלא עבורכם את הגדרות ה-SMTP. נדרש דומיין מאומת ב-Resend.',
-  'Set up with Resend': 'הגדרה עם Resend',
-  'Failed to connect Resend': 'החיבור ל-Resend נכשל',
-  'Resend authorization failed': 'ההרשאה ל-Resend נכשלה',
-  'Resend was authorized for a different Appwrite account. Try again while signed in to this account.':
-    'ההרשאה ל-Resend ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
-  'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
-  'Choose the verified domain to send from. Appwrite creates a sending-only Resend API key and saves it as your SMTP password.':
-    'בחרו את הדומיין המאומת שממנו יישלחו האימיילים. Appwrite תיצור מפתח API של Resend לשליחה בלבד ותשמור אותו כסיסמת ה-SMTP שלכם.',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
+  'Set up': 'הגדרה',
+  'Creates a sending-only API key for a verified domain.':
+    'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates a domain sending key for a verified domain.':
+    'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
+  'Creates a restricted API key with mail send access.':
+    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
+  'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
+  'Set up SMTP': 'הגדרת SMTP',
+  'Choose the domain to send from. Appwrite creates a sending credential in your provider account and saves it as your SMTP password.':
+    'בחרו את הדומיין שממנו יישלחו האימיילים. Appwrite תיצור פרטי גישה לשליחה בחשבון הספק שלכם ותשמור אותם כסיסמת ה-SMTP.',
   'Loading domains…': 'טוען דומיינים…',
-  'Failed to load domains from Resend': 'טעינת הדומיינים מ-Resend נכשלה',
+  'Failed to load domains from the email provider':
+    'טעינת הדומיינים מספק האימייל נכשלה',
   'No verified domains': 'אין דומיינים מאומתים',
-  'Add and verify a domain in Resend, then check again.':
-    'הוסיפו ואמתו דומיין ב-Resend, ואז בדקו שוב.',
-  'Open Resend': 'פתיחת Resend',
+  'Add and verify a sending domain, then check again.':
+    'הוסיפו ואמתו דומיין שליחה, ואז בדקו שוב.',
+  'Manage domains': 'ניהול דומיינים',
   'Check again': 'בדיקה חוזרת',
-  'A sending-only API key restricted to this domain will be created in your Resend account.':
-    'מפתח API לשליחה בלבד, המוגבל לדומיין הזה, ייווצר בחשבון Resend שלכם.',
+  'The credential is restricted to this domain and can only send email.':
+    'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
   'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
   'Enter a sender name.': 'הזינו שם שולח.',
   'Enter a sender email on the selected domain.':
     'הזינו אימייל שולח בדומיין שנבחר.',
-  'Set up': 'הגדרה',
-  'Creating API key and saving SMTP settings…':
-    'יוצר מפתח API ושומר את הגדרות ה-SMTP…',
-  'Custom SMTP is enabled and your project now sends emails through Resend.':
-    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך Resend.',
-  'Resend authorization expired': 'ההרשאה ל-Resend פגה',
-  'Reconnect your Resend account to continue.':
-    'חברו מחדש את חשבון Resend שלכם כדי להמשיך.',
-  'Reconnect Resend': 'חיבור מחדש של Resend',
-  'Failed to set up SMTP with Resend': 'הגדרת SMTP עם Resend נכשלה',
+  'Creating credential and saving SMTP settings…':
+    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
+  'Authorization expired': 'ההרשאה פגה',
+  'Reconnect your provider account to continue.':
+    'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
+  'Failed to set up SMTP with the email provider':
+    'הגדרת ה-SMTP מול ספק האימייל נכשלה',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',

@@ -23,34 +23,27 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { projectQueryOptions, useUpdateSMTP } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import {
-  RESEND_DOMAINS_URL,
-  RESEND_SMTP_HOST,
-  RESEND_SMTP_PORT,
-  RESEND_SMTP_SECURE,
-  RESEND_SMTP_USERNAME,
-  buildResendApiKeyName,
-  defaultResendSenderEmail,
+  buildCredentialName,
+  defaultSenderEmail,
   emailBelongsToDomain,
-  isVerifiedResendDomain,
-  pickDefaultResendDomain,
-  sortResendDomains,
-  type ResendDomain,
-} from '@/lib/smtp/resend'
-import {
-  createResendApiKey,
-  deleteResendApiKey,
-  listResendDomains,
-  type CreatedResendApiKey,
-} from '@/lib/smtp/resend-api'
-import { ResendReauthorizeRequiredError } from '@/lib/smtp/resend-oauth'
+  pickDefaultQuickSetupDomain,
+  sortQuickSetupDomains,
+  type QuickSetupDomain,
+} from '@/lib/smtp/quick-setup'
+import type {
+  AvailableSmtpQuickSetupProvider,
+  SmtpQuickSetupCredential,
+} from '@/lib/smtp/providers'
+import { QuickSetupReauthorizeRequiredError } from '@/lib/smtp/quick-setup-oauth'
 
 /**
- * Runs a Resend API call with a valid access token, refreshing it through the
- * console session when needed. Throws {@link ResendReauthorizeRequiredError}
+ * Runs a provider API call with a valid access token, refreshing it through the
+ * console session when needed. Throws {@link QuickSetupReauthorizeRequiredError}
  * when only a new OAuth2 round trip can help.
  */
-export type ResendApiCall = <T>(
+export type ProviderApiCall = <T>(
   run: (accessToken: string) => Promise<T>,
 ) => Promise<T>
 
@@ -63,40 +56,35 @@ type DialogPhase =
   | 'reauthorize'
   | 'error'
 
-interface SetupResendSMTPProps {
+interface SmtpQuickSetupDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
   project: Models.Project | undefined
-  callResend: ResendApiCall
+  provider: AvailableSmtpQuickSetupProvider
+  callProvider: ProviderApiCall
   /** Start a fresh `createOAuth2Token` round trip (token refresh is no longer possible). */
   onReauthorize: () => void
   /** Called from the success step when the user wants to send a test email right away. */
   onSendTestEmail?: () => void
 }
 
-const SERVER_SETTINGS: ReadonlyArray<{ label: string; value: string }> = [
-  { label: 'Server host', value: RESEND_SMTP_HOST },
-  { label: 'Server port', value: String(RESEND_SMTP_PORT) },
-  { label: 'Username', value: RESEND_SMTP_USERNAME },
-  { label: 'Secure protocol', value: RESEND_SMTP_SECURE.toUpperCase() },
-]
-
-export function SetupResendSMTP({
+export function SmtpQuickSetupDialog({
   open,
   onOpenChange,
   projectId,
   project,
-  callResend,
+  provider,
+  callProvider,
   onReauthorize,
   onSendTestEmail,
-}: SetupResendSMTPProps) {
+}: SmtpQuickSetupDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const updateSMTPMutation = useUpdateSMTP(projectId)
 
   const [phase, setPhase] = useState<DialogPhase>('loading')
-  const [domains, setDomains] = useState<ResendDomain[]>([])
+  const [domains, setDomains] = useState<QuickSetupDomain[]>([])
   const [domainId, setDomainId] = useState('')
   const [senderName, setSenderName] = useState('')
   const [senderEmail, setSenderEmail] = useState('')
@@ -106,7 +94,7 @@ export function SetupResendSMTP({
   const selectedDomain = domains.find((domain) => domain.id === domainId)
 
   const failWith = useCallback((error: unknown, fallback: string) => {
-    if (error instanceof ResendReauthorizeRequiredError) {
+    if (error instanceof QuickSetupReauthorizeRequiredError) {
       setPhase('reauthorize')
       return
     }
@@ -119,10 +107,15 @@ export function SetupResendSMTP({
     setErrorMessage('')
     setValidationMessage('')
     try {
-      const list = sortResendDomains(await callResend(listResendDomains))
+      const list = sortQuickSetupDomains(
+        await callProvider(provider.api.listDomains),
+      )
       setDomains(list)
 
-      const initial = pickDefaultResendDomain(list, project?.smtpSenderEmail)
+      const initial = pickDefaultQuickSetupDomain(
+        list,
+        project?.smtpSenderEmail,
+      )
       if (!initial) {
         setPhase('no-domains')
         return
@@ -134,13 +127,13 @@ export function SetupResendSMTP({
         project?.smtpSenderEmail &&
           emailBelongsToDomain(project.smtpSenderEmail, initial.name)
           ? project.smtpSenderEmail
-          : defaultResendSenderEmail(initial.name),
+          : defaultSenderEmail(initial.name),
       )
       setPhase('form')
     } catch (error) {
-      failWith(error, 'Failed to load domains from Resend')
+      failWith(error, 'Failed to load domains from the email provider')
     }
-  }, [callResend, failWith, project])
+  }, [callProvider, failWith, project, provider])
 
   useEffect(() => {
     if (!open) return
@@ -159,7 +152,7 @@ export function SetupResendSMTP({
     setValidationMessage('')
     const domain = domains.find((item) => item.id === nextId)
     if (domain && !emailBelongsToDomain(senderEmail, domain.name)) {
-      setSenderEmail(defaultResendSenderEmail(domain.name))
+      setSenderEmail(defaultSenderEmail(domain.name))
     }
   }
 
@@ -181,11 +174,14 @@ export function SetupResendSMTP({
     setErrorMessage('')
     setPhase('submitting')
 
-    let created: CreatedResendApiKey | null = null
+    let created: SmtpQuickSetupCredential | null = null
     try {
-      created = await callResend((accessToken) =>
-        createResendApiKey(accessToken, {
-          name: buildResendApiKeyName(project?.name ?? ''),
+      created = await callProvider((accessToken) =>
+        provider.api.createCredential(accessToken, {
+          name: buildCredentialName(
+            project?.name ?? '',
+            provider.credentialNameMaxLength,
+          ),
           domainId: selectedDomain.id,
         }),
       )
@@ -195,11 +191,11 @@ export function SetupResendSMTP({
         senderName: name,
         senderEmail: email,
         replyTo: project?.smtpReplyToEmail || '',
-        host: RESEND_SMTP_HOST,
-        port: RESEND_SMTP_PORT,
-        username: RESEND_SMTP_USERNAME,
-        password: created.token,
-        secure: RESEND_SMTP_SECURE,
+        host: provider.smtp.host,
+        port: provider.smtp.port,
+        username: provider.smtp.username(selectedDomain.name),
+        password: created.secret,
+        secure: provider.smtp.secure,
       })
 
       // Make sure the SMTP form behind the dialog already shows the saved
@@ -210,30 +206,61 @@ export function SetupResendSMTP({
       setPhase('success')
     } catch (error) {
       if (created) {
-        // The key exists in Resend but the project never stored it; drop it
-        // so retries do not pile up unused credentials.
+        // The credential exists at the provider but the project never stored
+        // it; drop it so retries do not pile up unused credentials.
         const orphanId = created.id
-        void callResend((accessToken) =>
-          deleteResendApiKey(accessToken, orphanId),
+        void callProvider((accessToken) =>
+          provider.api.deleteCredential(accessToken, orphanId),
         ).catch(() => {})
       }
-      failWith(error, 'Failed to set up SMTP with Resend')
+      failWith(error, 'Failed to set up SMTP with the email provider')
     }
   }
 
   const isBusy = phase === 'loading' || phase === 'submitting'
 
+  const serverSettings: ReadonlyArray<{ label: string; value: string }> = [
+    { label: 'Server host', value: provider.smtp.host },
+    { label: 'Server port', value: String(provider.smtp.port) },
+    {
+      label: 'Username',
+      value: provider.smtp.username(selectedDomain?.name ?? ''),
+    },
+    { label: 'Secure protocol', value: provider.smtp.secure.toUpperCase() },
+  ]
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{t('Set up SMTP with Resend')}</DialogTitle>
+          <DialogTitle>{t('Set up SMTP')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
-              'Choose the verified domain to send from. Appwrite creates a sending-only Resend API key and saves it as your SMTP password.',
+              'Choose the domain to send from. Appwrite creates a sending credential in your provider account and saves it as your SMTP password.',
             )}
           </DialogDescription>
         </DialogHeader>
+        <div className="border-t border-border" />
+
+        {/* Provider identity, so the title needs no interpolated brand name. */}
+        <div className="flex items-center gap-3 px-6 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <img
+              src={provider.iconPath}
+              alt=""
+              aria-hidden="true"
+              className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-foreground">
+              {provider.name}
+            </p>
+            <p className="text-[12px] text-muted-foreground truncate">
+              {t(provider.tagline)}
+            </p>
+          </div>
+        </div>
         <div className="border-t border-border" />
 
         <div className="px-6 py-4">
@@ -252,7 +279,7 @@ export function SetupResendSMTP({
                 {t('No verified domains')}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                {t('Add and verify a domain in Resend, then check again.')}
+                {t('Add and verify a sending domain, then check again.')}
               </p>
             </div>
           ) : null}
@@ -261,39 +288,39 @@ export function SetupResendSMTP({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label
-                  htmlFor="resend-domain"
+                  htmlFor="quick-setup-domain"
                   className="text-[12px] font-medium"
                 >
                   {t('Domain')} <span className="text-destructive">*</span>
                 </Label>
                 <Select value={domainId} onValueChange={handleDomainChange}>
-                  <SelectTrigger id="resend-domain" className="h-9 text-[13px]">
+                  <SelectTrigger
+                    id="quick-setup-domain"
+                    className="h-9 text-[13px]"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain) => {
-                      const verified = isVerifiedResendDomain(domain)
-                      return (
-                        <SelectItem
-                          key={domain.id}
-                          value={domain.id}
-                          disabled={!verified}
-                        >
-                          {domain.name}
-                          {!verified ? (
-                            <span className="text-muted-foreground">
-                              {' '}
-                              ({t('unverified')})
-                            </span>
-                          ) : null}
-                        </SelectItem>
-                      )
-                    })}
+                    {domains.map((domain) => (
+                      <SelectItem
+                        key={domain.id}
+                        value={domain.id}
+                        disabled={!domain.verified}
+                      >
+                        {domain.name}
+                        {!domain.verified ? (
+                          <span className="text-muted-foreground">
+                            {' '}
+                            ({t('unverified')})
+                          </span>
+                        ) : null}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground">
                   {t(
-                    'A sending-only API key restricted to this domain will be created in your Resend account.',
+                    'The credential is restricted to this domain and can only send email.',
                   )}
                 </p>
               </div>
@@ -301,14 +328,14 @@ export function SetupResendSMTP({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="resend-sender-name"
+                    htmlFor="quick-setup-sender-name"
                     className="text-[12px] font-medium"
                   >
                     {t('Sender name')}{' '}
                     <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="resend-sender-name"
+                    id="quick-setup-sender-name"
                     value={senderName}
                     onChange={(event) => {
                       setSenderName(event.target.value)
@@ -320,14 +347,14 @@ export function SetupResendSMTP({
                 </div>
                 <div className="space-y-2">
                   <Label
-                    htmlFor="resend-sender-email"
+                    htmlFor="quick-setup-sender-email"
                     className="text-[12px] font-medium"
                   >
                     {t('Sender email')}{' '}
                     <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="resend-sender-email"
+                    id="quick-setup-sender-email"
                     type="email"
                     value={senderEmail}
                     onChange={(event) => {
@@ -336,7 +363,7 @@ export function SetupResendSMTP({
                     }}
                     placeholder={
                       selectedDomain
-                        ? defaultResendSenderEmail(selectedDomain.name)
+                        ? defaultSenderEmail(selectedDomain.name)
                         : 'noreply@example.com'
                     }
                     className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
@@ -349,7 +376,7 @@ export function SetupResendSMTP({
 
               <div className="rounded-lg border border-border bg-background px-4 py-3">
                 <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-[12px]">
-                  {SERVER_SETTINGS.map((setting) => (
+                  {serverSettings.map((setting) => (
                     <div key={setting.label} className="contents">
                       <dt className="text-muted-foreground">
                         {t(setting.label)}
@@ -374,7 +401,7 @@ export function SetupResendSMTP({
             <div className="flex flex-col items-center justify-center gap-3 py-4">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               <p className="text-[13px] text-muted-foreground text-center">
-                {t('Creating API key and saving SMTP settings…')}
+                {t('Creating credential and saving SMTP settings…')}
               </p>
             </div>
           ) : null}
@@ -384,7 +411,7 @@ export function SetupResendSMTP({
               <CheckCircle2 className="h-10 w-10 text-green-600" />
               <p className="text-[13px] text-foreground">
                 {t(
-                  'Custom SMTP is enabled and your project now sends emails through Resend.',
+                  'Custom SMTP is enabled and your project now sends emails through this provider.',
                 )}
               </p>
               <p className="text-[12px] text-muted-foreground truncate max-w-full">
@@ -396,10 +423,10 @@ export function SetupResendSMTP({
           {phase === 'reauthorize' ? (
             <div className="flex flex-col items-center gap-2 py-2 text-center">
               <p className="text-[13px] font-medium text-foreground">
-                {t('Resend authorization expired')}
+                {t('Authorization expired')}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                {t('Reconnect your Resend account to continue.')}
+                {t('Reconnect your provider account to continue.')}
               </p>
             </div>
           ) : null}
@@ -457,8 +484,12 @@ export function SetupResendSMTP({
                   className="h-9 text-[13px]"
                   asChild
                 >
-                  <a href={RESEND_DOMAINS_URL} target="_blank" rel="noreferrer">
-                    {t('Open Resend')}
+                  <a
+                    href={provider.domainsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('Manage domains')}
                     <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                   </a>
                 </Button>
@@ -517,7 +548,7 @@ export function SetupResendSMTP({
                   className="h-9 text-[13px]"
                   onClick={onReauthorize}
                 >
-                  {t('Reconnect Resend')}
+                  {t('Reconnect')}
                 </Button>
               </>
             ) : null}
