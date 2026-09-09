@@ -152,6 +152,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Billing addresses': '請求先住所',
   'Created At': '作成日時',
   'Delete account': 'アカウントを削除',
+  'Delete identity': 'ID を削除',
   'Delete all sessions': 'すべてのセッションを削除',
   'Delete authenticator app': '認証アプリを削除',
   'Delete billing address': '請求先住所を削除',

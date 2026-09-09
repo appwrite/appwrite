@@ -3,6 +3,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { useRecentResourcesSafe } from '@/components/global/providers/RecentResourcesProvider'
+import { useConfirmDialog } from '@/hooks/use-confirm-dialog'
+import { DEBUG_MENU_DIALOG_LAYER } from '@/lib/debug-menu-position'
 import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import {
   PROJECT_RESOURCE_KIND_LABELS,
@@ -63,15 +65,17 @@ function metaLine(entry: RecentResource): string {
 export function DebugMenuRecentResourcesPanel() {
   const recentResources = useRecentResourcesSafe()
   const resources = recentResources?.resources ?? []
+  const { confirm, confirmDialog } = useConfirmDialog(DEBUG_MENU_DIALOG_LAYER)
 
-  const handleReset = () => {
-    if (
-      !window.confirm(
+  const handleReset = async () => {
+    const confirmed = await confirm({
+      title: 'Clear recent resources',
+      description:
         'Clear all recent Command Center resources from memory and localStorage?',
-      )
-    ) {
-      return
-    }
+      confirmLabel: 'Clear',
+      confirmVariant: 'destructive',
+    })
+    if (!confirmed) return
 
     recentResources?.clearRecentResources()
     toast.success('Recent resources cleared')
@@ -179,6 +183,7 @@ export function DebugMenuRecentResourcesPanel() {
           again to re-record entries with framework icons.
         </p>
       </div>
+      {confirmDialog}
     </div>
   )
 }

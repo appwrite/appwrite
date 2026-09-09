@@ -185,6 +185,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Current: 'נוכחי',
   Delete: 'מחיקה',
   'Delete account': 'מחיקת חשבון',
+  'Delete identity': 'מחיקת זהות',
   'Delete all sessions': 'מחיקת כל הסשנים',
   'Delete authenticator app': 'מחיקת אפליקציית האימות',
   'Delete billing address': 'מחיקת כתובת חיוב',

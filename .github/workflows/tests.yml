@@ -33,6 +33,9 @@ jobs:
       - name: Check content for hidden Unicode
         run: bun run lint:content
 
+      - name: Check for native browser dialogs
+        run: bun run lint:native-dialogs
+
       - name: Build
         run: bun run build
         env:
