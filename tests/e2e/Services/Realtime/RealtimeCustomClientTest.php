@@ -182,7 +182,7 @@ final class RealtimeCustomClientTest extends Scope
          */
         $client = $this->getWebsocket(['account'], [
             'origin' => 'http://localhost'
-        ]);
+        ], timeout: 10);
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
