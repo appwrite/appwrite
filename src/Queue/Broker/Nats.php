@@ -443,8 +443,21 @@ class Nats implements Synchronous, Consumer
     {
         $pid = $message->getPid();
         $jsMessage = $this->inFlight[$pid] ?? null;
-        if ($jsMessage instanceof JetStreamMessage) {
+        if (!$jsMessage instanceof JetStreamMessage) {
+            return;
+        }
+
+        // Dropped however the ack ends. The map records that this instance owes
+        // an ack for the message, not that one succeeded, and ackSync() is a
+        // request-reply that throws on a transient failure. Nothing else would
+        // clear the entry: reject() is the only other place that unsets, and
+        // Adapter::runPhases() deliberately does not reject after a commit
+        // failure -- the work is done, so a NAK there is a guaranteed duplicate.
+        // Left behind, the entry has no owner and pins a JetStreamMessage for
+        // the life of the worker, one per failed ack.
+        try {
             $jsMessage->ackSync();
+        } finally {
             unset($this->inFlight[$pid]);
         }
     }

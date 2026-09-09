@@ -599,6 +599,41 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    public function testAnAckThatFailsDoesNotPinTheMessageInFlight(): void
+    {
+        // commit() acked and then dropped the message from the in-flight map, so
+        // an ack that threw left the entry behind -- and runPhases() does not
+        // reject() after a commit failure, so nothing else ever cleared it. One
+        // pinned JetStreamMessage per failed ack, for the life of the worker.
+        $this->broker->publish($this->queue, ['task' => 'a']);
+
+        $message = $this->broker->receive($this->queue, 2);
+        $this->assertInstanceOf(Message::class, $message);
+
+        $inFlight = new \ReflectionProperty(Nats::class, 'inFlight');
+        $this->assertArrayHasKey($message->getPid(), $inFlight->getValue($this->broker));
+
+        // Closing the connection under the ack is the cheapest stand-in for the
+        // transient failure this guards: ackSync() is a request-reply, so it
+        // raises rather than returning a verdict.
+        $connection = new \ReflectionProperty(Nats::class, 'connection');
+        $connection->getValue($this->broker)->close();
+
+        try {
+            $this->broker->commit($this->queue, $message);
+            $this->fail('the ack must fail on a closed connection');
+        } catch (\Throwable) {
+            // The throw is the point: runPhases() reports it rather than
+            // rejecting work that already happened.
+        }
+
+        $this->assertArrayNotHasKey(
+            $message->getPid(),
+            $inFlight->getValue($this->broker),
+            'a message whose ack failed must not stay in the in-flight map',
+        );
+    }
+
     public function testReceiveExposesTheStreamSequence(): void
     {
         $this->broker->publish($this->queue, ['task' => 'a']);
