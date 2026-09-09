@@ -18,6 +18,60 @@ final class FunctionsScheduleTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    public function testCreateScheduleValidation(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Invalid schedule',
+            'runtime' => 'node-22',
+            'schedule' => '0 22-3,5 * * *',
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+    }
+
+    public function testUpdateScheduleValidation(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $schedule = '0 22-23,0-3 * * *';
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Overnight schedule',
+            'runtime' => 'node-22',
+            'schedule' => $schedule,
+        ]);
+
+        try {
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+
+            /**
+             * Test for FAILURE
+             */
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Invalid schedule',
+                'runtime' => 'node-22',
+                'schedule' => '0 22-3,5 * * *',
+            ]);
+
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testCreateScheduledExecution()
     {
         /**

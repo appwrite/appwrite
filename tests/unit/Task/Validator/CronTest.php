@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Task\Validator;
 
 use Appwrite\Task\Validator\Cron;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Schedule\Trigger\Cron as Trigger;
 
 final class CronTest extends TestCase
 {
@@ -38,5 +40,41 @@ final class CronTest extends TestCase
         // $this->assertEquals($this->object->isValid('0 4,17 * * sun,mon'), true); // execute twice on every Sunday and Monday
         $this->assertFalse($this->object->isValid('bad expression'));
         $this->assertFalse($this->object->isValid('*/5 22-3 * * *'));
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function invalidRanges(): array
+    {
+        return [
+            'minutes' => ['22-3,5 * * * *'],
+            'hours' => ['0 22-3,5 * * *'],
+            'days' => ['0 0 22-3,5 * *'],
+            'months' => ['0 0 1 12-3,5 *'],
+            'weekdays' => ['0 0 * * 5-3,1'],
+        ];
+    }
+
+    #[DataProvider('invalidRanges')]
+    public function testRejectsInvalidRangesInLists(string $expression): void
+    {
+        $this->assertFalse($this->object->isValid($expression));
+    }
+
+    public function testAcceptsOvernightSchedule(): void
+    {
+        $expression = '0 22-23,0-3 * * *';
+
+        $this->assertTrue($this->object->isValid($expression));
+        $occurrences = (new Trigger($expression))->occurrencesBetween(
+            new \DateTimeImmutable('2026-09-09 21:00:00 UTC'),
+            new \DateTimeImmutable('2026-09-10 04:00:00 UTC'),
+        );
+
+        $this->assertSame(
+            ['22:00', '23:00', '00:00', '01:00', '02:00', '03:00'],
+            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('H:i'), $occurrences),
+        );
     }
 }
