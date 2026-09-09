@@ -63,6 +63,7 @@ import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
 
 type EmailBodyView = 'source' | 'preview'
@@ -1143,16 +1144,26 @@ export function View({
                           className="mt-1.5 h-[28rem]"
                           style={EDITOR_SURFACE}
                         >
-                          <CodeEditor
-                            value={emailContent}
-                            onChange={setEmailContent}
-                            language="html"
-                            ariaLabel={t('Body')}
-                            height="28rem"
-                            readOnly={!isDraft}
-                            minimap={false}
-                            lineNumbers="off"
-                          />
+                          {isDraft ? (
+                            <CodeEditor
+                              value={emailContent}
+                              onChange={setEmailContent}
+                              language="html"
+                              ariaLabel={t('Body')}
+                              height="28rem"
+                              minimap={false}
+                              lineNumbers="off"
+                                highlightMatches={false}
+                            />
+                          ) : (
+                            <CodeBlock
+                              code={emailContent}
+                              language="markup"
+                              fixedHeight="28rem"
+                              wrapLines
+                              copyInside
+                            />
+                          )}
                         </div>
                       )}
                     </div>

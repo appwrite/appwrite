@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { emailTemplatePreviewDocument } from '@/lib/email-preview'
 import {
   Dialog,
@@ -888,16 +889,26 @@ function TemplateEditor({
                 className={cn('h-[28rem]', !isSmtpEnabled && 'opacity-60')}
                 style={EDITOR_SURFACE}
               >
-                <CodeEditor
-                  value={localFormData.message}
-                  onChange={(value) => handleLocalFieldChange('message', value)}
-                  language="html"
-                  ariaLabel={t('Message')}
-                  height="28rem"
-                  readOnly={!isSmtpEnabled}
-                  minimap={false}
-                  lineNumbers="off"
-                />
+                {isSmtpEnabled ? (
+                  <CodeEditor
+                    value={localFormData.message}
+                    onChange={(value) => handleLocalFieldChange('message', value)}
+                    language="html"
+                    ariaLabel={t('Message')}
+                    height="28rem"
+                    minimap={false}
+                    lineNumbers="off"
+                    highlightMatches={false}
+                  />
+                ) : (
+                  <CodeBlock
+                    code={localFormData.message}
+                    language="markup"
+                    fixedHeight="28rem"
+                    wrapLines
+                    copyInside
+                  />
+                )}
               </div>
             )}
           </div>
