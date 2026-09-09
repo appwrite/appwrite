@@ -16,6 +16,7 @@ use Utopia\NATS\JetStream\RetentionPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\Queue\Consumer;
+use Utopia\Queue\Consumer\Exclusive;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
@@ -35,7 +36,7 @@ use Utopia\Queue\Queue;
  * queues that map to the same stream — a duplicate name across namespaces, or names
  * that sanitize alike — are rejected loudly by ensure() rather than silently shared.
  */
-class Nats implements Synchronous, Consumer
+class Nats implements Synchronous, Consumer, Exclusive
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';

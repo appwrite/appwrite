@@ -655,7 +655,7 @@ final class NatsBrokerTest extends TestCase
 
         foreach ($subscriptions as $subscription) {
             $this->assertNotNull($subscription->queue, 'the advisory subscription must join a queue group');
-            $this->assertStringContainsString('$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES', $subscription->subject);
+            $this->assertStringContainsString('$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES', (string) $subscription->subject);
         }
     }
 

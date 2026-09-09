@@ -7,6 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Adapter;
 use Utopia\Queue\Consumer;
+use Utopia\Queue\Consumer\Exclusive;
 use Utopia\Queue\Job;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -132,9 +133,77 @@ final class ServerJobsTest extends TestCase
 
         $server->start();
     }
+
+    /**
+     * An exclusive consumer drives one socket. Swoole kills the worker the first
+     * time the parked receive read overlaps a commit from a handler coroutine, so
+     * the configuration has to be refused before any loop runs.
+     */
+    public function testStartRefusesConcurrencyOnAnExclusiveConsumer(): void
+    {
+        $adapter = new RecordingAdapter(exclusive: true);
+        $server = new Server($adapter);
+        $server->job('v1-functions', 8);
+
+        $refusal = null;
+
+        try {
+            $server->start();
+        } catch (\Exception $error) {
+            $refusal = $error;
+        }
+
+        $this->assertInstanceOf(\Exception::class, $refusal, 'the concurrency must be refused');
+        $this->assertStringContainsString("job('v1-functions', 8)", $refusal->getMessage());
+
+        // The refusal has to land before the loops start, not after one has been
+        // handed a cap it cannot survive.
+        $this->assertSame([], $adapter->consumed);
+    }
+
+    public function testStartAcceptsOneCoroutineOnAnExclusiveConsumer(): void
+    {
+        $adapter = new RecordingAdapter(exclusive: true);
+        $server = new Server($adapter);
+        $server->job('v1-functions');
+
+        $server->start();
+
+        $this->assertSame([['queue' => 'v1-functions', 'maxCoroutines' => 1]], $adapter->consumed);
+    }
+
+    /**
+     * The guard is carried by the consumer, not by the concurrency. A consumer
+     * without the marker (Redis serialises its shared connection) keeps running
+     * above one coroutine.
+     */
+    public function testStartKeepsConcurrencyOnAConsumerWithoutTheMarker(): void
+    {
+        $adapter = new RecordingAdapter();
+        $server = new Server($adapter);
+        $server->job('v1-functions', 8);
+
+        $server->start();
+
+        $this->assertSame([['queue' => 'v1-functions', 'maxCoroutines' => 8]], $adapter->consumed);
+    }
 }
 
 final class FakeConsumer implements Consumer
+{
+    public function receive(Queue $queue, int $timeout): ?Message
+    {
+        return null;
+    }
+
+    public function commit(Queue $queue, Message $message): void {}
+
+    public function reject(Queue $queue, Message $message): void {}
+
+    public function close(): void {}
+}
+
+final class ExclusiveFakeConsumer implements Consumer, Exclusive
 {
     public function receive(Queue $queue, int $timeout): ?Message
     {
@@ -158,12 +227,16 @@ final class RecordingAdapter extends Adapter
     /** @var callable[] */
     private array $onWorkerStart = [];
 
-    public function __construct(string $namespace = 'utopia-queue', bool $shared = false)
+    public function __construct(string $namespace = 'utopia-queue', bool $shared = false, bool $exclusive = false)
     {
         if ($shared) {
-            parent::__construct(new FakeConsumer(), 1, $namespace);
+            parent::__construct($exclusive ? new ExclusiveFakeConsumer() : new FakeConsumer(), 1, $namespace);
         } else {
-            parent::__construct(static fn(string $q): Consumer => new FakeConsumer(), 1, $namespace);
+            parent::__construct(
+                static fn(string $q): Consumer => $exclusive ? new ExclusiveFakeConsumer() : new FakeConsumer(),
+                1,
+                $namespace,
+            );
         }
     }
 

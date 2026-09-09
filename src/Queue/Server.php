@@ -5,6 +5,7 @@ namespace Utopia\Queue;
 use Exception;
 use Throwable;
 use Utopia\DI\Container;
+use Utopia\Queue\Consumer\Exclusive;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Servers\Hook;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -433,12 +434,32 @@ class Server
 
                 $queues = [];
                 foreach (array_keys($this->jobs) as $queueName) {
+                    $maxCoroutines = $this->coroutines[$queueName] ?? 1;
+                    $consumer = \is_callable($this->consumer)
+                        ? ($this->consumer)($queueName)
+                        : $this->adapter->createConsumer($queueName);
+
+                    // An exclusive consumer owns a single socket. Above one coroutine the
+                    // receive loop is parked in a read on it while the handlers that are
+                    // still running commit, reject or extend on the same socket, and
+                    // Swoole aborts the worker on the first overlap. Refuse here so a
+                    // concurrency that a Redis worker carries safely cannot reach
+                    // production as a crash loop after the transport is switched.
+                    if ($maxCoroutines > 1 && $consumer instanceof Exclusive) {
+                        throw new Exception(\sprintf(
+                            "Queue '%s' is registered with job('%s', %d), but its consumer %s drives a single socket that only one coroutine may read at a time. Register it as job('%s', 1) and add replicas for throughput.",
+                            $queueName,
+                            $queueName,
+                            $maxCoroutines,
+                            $consumer::class,
+                            $queueName,
+                        ));
+                    }
+
                     $queues[] = [
                         'queue' => new Queue($queueName, $this->adapter->namespace),
-                        'maxCoroutines' => $this->coroutines[$queueName] ?? 1,
-                        'consumer' => \is_callable($this->consumer)
-                            ? ($this->consumer)($queueName)
-                            : $this->adapter->createConsumer($queueName),
+                        'maxCoroutines' => $maxCoroutines,
+                        'consumer' => $consumer,
                     ];
                 }
                 $this->adapter->consume($messageCallback, $successCallback, $errorCallback, $queues);

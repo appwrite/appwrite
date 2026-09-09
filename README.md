@@ -98,6 +98,15 @@ Each queue is a WorkQueue-retention stream (a message is removed once acknowledg
 
 > A NATS connection is single-owner. Run one message at a time per connection (`job('…', 1)`) or lease one connection per coroutine via `Broker\Pool` / `Utopia\Pools`.
 
+`Broker\Nats` carries `Consumer\Exclusive` to say so. `Server::start()` refuses a job registered above one coroutine on a consumer with that marker, because the receive loop parks inside a read on the socket while the handlers still running commit on it, and Swoole ends the worker on the first overlap:
+
+```
+Swoole\Error: Socket#5 has already been bound to another coroutine#2,
+reading of the same socket in coroutine#3 at the same time is not allowed
+```
+
+Scale an exclusive consumer with replicas rather than coroutines. Consumers without the marker, `Broker\Redis` among them, keep their concurrency: `Connection\Locking` serialises the coroutines that share one connection.
+
 ## Background publishing
 
 `Broker\Background` wraps a synchronous publisher with a bounded in-process buffer. `enqueue()` hands work to reader coroutines, applying back pressure when the buffer is full; `publish()` bypasses the buffer and remains synchronous. Call `shutdown()` to drain accepted messages before the process exits.
