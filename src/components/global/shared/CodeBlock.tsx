@@ -360,7 +360,8 @@ export function CodeBlock({
   }, [prismLanguage, languageIsRegistered])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(displayCode)
+    // Render trims a fence's trailing newline; the clipboard gets the input as given.
+    navigator.clipboard.writeText(code)
     setCopied(true)
     toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
