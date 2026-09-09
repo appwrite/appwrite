@@ -3,7 +3,7 @@ layout: post
 title: "Announcing Console IV: the website and Console as one app"
 description: Console IV puts the docs, CLI, Explorer, and your projects in one app so you stop bouncing between the IDE, docs, SDKs, terminals, and the agent.
 date: 2026-08-31
-cover: /images/blog-local/announcing-console-iv/cover.avif
+cover: /images/blog/announcing-console-iv/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: product, announcement
@@ -29,7 +29,7 @@ It is rebuilt on TanStack Start, and it absorbs appwrite.io. The marketing pages
 
 Nothing about your projects changes. Console IV is a new interface over the same APIs, and your bookmarks, API keys, and SDK code keep working.
 
-![Your project on the left. Docs on the right. Same window.](/images/blog-local/announcing-console-iv/console-docs-pane.avif)
+![Your project on the left. Docs on the right. Same window.](/images/blog/announcing-console-iv/console-docs-pane.avif)
 
 # The docs are in the Console now
 
@@ -50,7 +50,7 @@ Two developer tools we are shipping today live in the same app:
 - [Appwrite Terminal](/blog/post/announcing-console-terminal) runs the Appwrite CLI in the browser with your session and project already configured. Open it with `⌘` + `;`.
 - [Appwrite Explorer](/blog/post/announcing-appwrite-explorer) builds and sends live REST requests against the project you are viewing, using your project's OpenAPI specification.
 
-![The CLI, already signed in, already on your project.](/images/blog-local/announcing-console-iv/console-side.avif)
+![The CLI, already signed in, already on your project.](/images/blog/announcing-console-iv/console-side.avif)
 
 Terminal, Explorer, and the docs pane are three answers to one question: how far do you have to travel to act on something you just saw?
 

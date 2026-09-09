@@ -1,13 +1,13 @@
 /**
- * Generates or converts cover images for vibes-native blog posts.
+ * Generates or converts cover images for blog posts.
  *
  * Hand-authored covers: place `cover-source.png` in
- * `public/images/blog-local/<slug>/`, then run this script.
+ * `public/images/blog/<slug>/`, then run this script.
  *
  * Generated covers: slugs with a generator function write `cover-source.png`
  * and `cover.avif` automatically.
  *
- * Run: bun run generate:blog-local-images [slug]
+ * Run: bun run generate:blog-images [slug]
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { access } from 'node:fs/promises'
@@ -219,15 +219,15 @@ async function main() {
   const slug = process.argv[2] ?? 'announcing-console-terminal'
   const generate = IMAGE_GENERATORS[slug]
   if (!generate) {
-    console.error(`Unknown blog-local slug: ${slug}`)
+    console.error(`Unknown blog slug: ${slug}`)
     console.error(`Available: ${Object.keys(IMAGE_GENERATORS).join(', ')}`)
     process.exit(1)
   }
 
-  const outputDir = join(VIBES_ROOT, 'public', 'images', 'blog-local', slug)
+  const outputDir = join(VIBES_ROOT, 'public', 'images', 'blog', slug)
   console.log(`Generating cover for ${slug}...`)
   await generate(outputDir)
-  console.log(`Done. Cover saved to public/images/blog-local/${slug}/`)
+  console.log(`Done. Cover saved to public/images/blog/${slug}/`)
 }
 
 main().catch((error) => {

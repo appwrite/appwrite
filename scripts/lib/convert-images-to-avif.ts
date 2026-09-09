@@ -50,7 +50,6 @@ const CONTENT_REFERENCE_ROOTS = [
   join(VIBES_ROOT, 'src', 'content', 'docs'),
   join(VIBES_ROOT, 'src', 'content', 'docs-partials'),
   join(VIBES_ROOT, 'src', 'content', 'blog'),
-  join(VIBES_ROOT, 'src', 'content', 'blog-local'),
   join(VIBES_ROOT, 'src', 'content', 'changelog'),
   join(VIBES_ROOT, 'src', 'content', 'changelog-local'),
   join(VIBES_ROOT, 'src', 'content', 'integrations'),

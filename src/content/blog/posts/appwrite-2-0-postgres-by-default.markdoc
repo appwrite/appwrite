@@ -3,7 +3,7 @@ layout: post
 title: "Introducing Postgres to self-hosted Appwrite"
 description: Appwrite 2.0 runs new self-hosted instances on Postgres by default. Choose Postgres, MariaDB, or MongoDB in the setup wizard when you install.
 date: 2026-09-07
-cover: /images/blog-local/appwrite-2-0-postgres-by-default/cover.avif
+cover: /images/blog/appwrite-2-0-postgres-by-default/cover.avif
 timeToRead: 4
 author: atharva
 category: product, announcement
@@ -43,13 +43,13 @@ docker run -it --rm \
 
 Then open `http://localhost:20080` in your browser to reach the setup wizard.
 
-![Setup your app step of the Appwrite installation wizard with the database selection](/images/blog-local/appwrite-2-0-postgres-by-default/wizard-setup.avif)
+![Setup your app step of the Appwrite installation wizard with the database selection](/images/blog/appwrite-2-0-postgres-by-default/wizard-setup.avif)
 
 The first step configures your hostname and database. Postgres comes preselected, and you can select MariaDB or MongoDB instead before you install. All three are fully supported, so pick whichever your team is comfortable operating.
 
 The wizard then generates a secret key for your instance, asks for your Console account credentials, and shows a review screen before it installs.
 
-![Review step of the Appwrite installation wizard](/images/blog-local/appwrite-2-0-postgres-by-default/wizard-review.avif)
+![Review step of the Appwrite installation wizard](/images/blog/appwrite-2-0-postgres-by-default/wizard-review.avif)
 
 Click **Install** and the wizard sets up the full Appwrite stack on the database you picked.
 

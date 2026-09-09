@@ -138,8 +138,8 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
 ]
 
 /**
- * Docs section navigation maintained in vibes (not imported from the website repo).
- * Survives `bun run import:docs` without being overwritten.
+ * Docs section navigation maintained by hand in vibes, alongside the generated sections.
+ * Not touched by `bun run generate:docs-nav`.
  */
 export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
   {

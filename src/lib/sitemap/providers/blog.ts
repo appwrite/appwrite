@@ -13,10 +13,7 @@ const packageRoot = path.resolve(
   '../../../..',
 )
 
-const postsDirectories = [
-  path.join(packageRoot, 'src/content/blog/posts'),
-  path.join(packageRoot, 'src/content/blog-local/posts'),
-]
+const postsDirectory = path.join(packageRoot, 'src/content/blog/posts')
 
 function toIsoDate(value: string | undefined): string | undefined {
   if (!value) return undefined
@@ -28,19 +25,17 @@ function toIsoDate(value: string | undefined): string | undefined {
 function readPostLastmodBySlug(): Map<string, string> {
   const lastmodBySlug = new Map<string, string>()
 
-  for (const postsDirectory of postsDirectories) {
-    if (!fs.existsSync(postsDirectory)) continue
+  if (!fs.existsSync(postsDirectory)) return lastmodBySlug
 
-    for (const filename of fs.readdirSync(postsDirectory)) {
-      if (!filename.endsWith('.markdoc')) continue
-      const slug = filename.replace(/\.markdoc$/, '')
-      const raw = fs.readFileSync(path.join(postsDirectory, filename), 'utf8')
-      const { frontmatter } = parseBlogFrontmatter(raw)
-      const lastUpdated = getFrontmatterDate(frontmatter, 'lastUpdated')
-      const date = getFrontmatterDate(frontmatter, 'date')
-      const lastmod = toIsoDate(lastUpdated || date)
-      if (lastmod) lastmodBySlug.set(slug, lastmod)
-    }
+  for (const filename of fs.readdirSync(postsDirectory)) {
+    if (!filename.endsWith('.markdoc')) continue
+    const slug = filename.replace(/\.markdoc$/, '')
+    const raw = fs.readFileSync(path.join(postsDirectory, filename), 'utf8')
+    const { frontmatter } = parseBlogFrontmatter(raw)
+    const lastUpdated = getFrontmatterDate(frontmatter, 'lastUpdated')
+    const date = getFrontmatterDate(frontmatter, 'date')
+    const lastmod = toIsoDate(lastUpdated || date)
+    if (lastmod) lastmodBySlug.set(slug, lastmod)
   }
 
   return lastmodBySlug

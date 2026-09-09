@@ -33,10 +33,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
 const PUBLIC_DIR = join(VIBES_ROOT, 'public')
 const DOCS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs')
-const BLOG_POSTS_DIRS = [
-  join(VIBES_ROOT, 'src', 'content', 'blog', 'posts'),
-  join(VIBES_ROOT, 'src', 'content', 'blog-local', 'posts'),
-]
+const BLOG_POSTS_DIR = join(VIBES_ROOT, 'src', 'content', 'blog', 'posts')
 const CHANGELOG_DIRS = [
   join(VIBES_ROOT, 'src', 'content', 'changelog', 'entries'),
   join(VIBES_ROOT, 'src', 'content', 'changelog-local', 'entries'),
@@ -90,24 +87,22 @@ async function readMarkdocFiles(
 async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]> {
   const postsBySlug = new Map<string, LlmsContentMeta & { date: string }>()
 
-  for (const directory of BLOG_POSTS_DIRS) {
-    for (const { slug, raw } of await readMarkdocFiles(directory)) {
-      const { frontmatter } = parseBlogFrontmatter(raw)
-      if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
-        postsBySlug.delete(slug)
-        continue
-      }
-
-      postsBySlug.set(slug, {
-        slug,
-        title: asString(frontmatter.title) ?? slug,
-        description: asString(frontmatter.description),
-        date:
-          frontmatter.date instanceof Date
-            ? frontmatter.date.toISOString()
-            : (asString(frontmatter.date) ?? ''),
-      })
+  for (const { slug, raw } of await readMarkdocFiles(BLOG_POSTS_DIR)) {
+    const { frontmatter } = parseBlogFrontmatter(raw)
+    if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
+      postsBySlug.delete(slug)
+      continue
     }
+
+    postsBySlug.set(slug, {
+      slug,
+      title: asString(frontmatter.title) ?? slug,
+      description: asString(frontmatter.description),
+      date:
+        frontmatter.date instanceof Date
+          ? frontmatter.date.toISOString()
+          : (asString(frontmatter.date) ?? ''),
+    })
   }
 
   return [...postsBySlug.values()].sort(

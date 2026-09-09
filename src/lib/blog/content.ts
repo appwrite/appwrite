@@ -30,17 +30,10 @@ import type {
  * Lazy glob keeps the full blog corpus out of the server bundle until a post
  * body is requested. Metadata comes from the build-time manifest.
  */
-const importedPostLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
+const postLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
 }) as Record<string, () => Promise<string>>
-
-const localPostLoaders = import.meta.glob('/src/content/blog-local/posts/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-}) as Record<string, () => Promise<string>>
-
-const postLoaders = { ...importedPostLoaders, ...localPostLoaders }
 
 const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
   query: '?raw',
@@ -66,7 +59,7 @@ const FULL_POST_CACHE_MAX = 32
 
 function slugFromModulePath(modulePath: string, segment: string): string {
   const match = modulePath.match(
-    new RegExp(`/src/content/blog(?:-local)?/${segment}/(.+)\\.markdoc$`),
+    new RegExp(`/src/content/blog/${segment}/(.+)\\.markdoc$`),
   )
   return match?.[1] ?? ''
 }

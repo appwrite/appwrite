@@ -3,7 +3,7 @@ layout: post
 title: "Build a memory MCP server on Appwrite"
 description: Give your AI tools a shared, persistent memory. Host a stateless MCP server on Appwrite Functions, store memories in VectorsDB, and protect it with your project's OAuth2 server.
 date: 2026-09-04
-cover: /images/blog-local/build-a-memory-mcp-server/cover.avif
+cover: /images/blog/build-a-memory-mcp-server/cover.avif
 timeToRead: 14
 author: atharva
 category: tutorial
@@ -42,23 +42,23 @@ The repository is a pnpm monorepo: `apps/recall` is the web app (dashboard, sign
 
 # Create the project
 
-![The create project dialog in the Appwrite Console with the name Recall and project ID recall](/images/blog-local/build-a-memory-mcp-server/create-project.avif)
+![The create project dialog in the Appwrite Console with the name Recall and project ID recall](/images/blog/build-a-memory-mcp-server/create-project.avif)
 
 In the [Appwrite Console](https://cloud.appwrite.io), create a new project. Set the name to `Recall`, choose a custom project ID of `recall`, and pick a region close to your users. The project ID appears in every OAuth2 URL later, so a readable ID keeps the discovery documents easy to follow.
 
 # Create the vector database
 
-![The create database wizard with the VectorsDB type selected](/images/blog-local/build-a-memory-mcp-server/create-database-type.avif)
+![The create database wizard with the VectorsDB type selected](/images/blog/build-a-memory-mcp-server/create-database-type.avif)
 
 Open **Databases** and select **Create database**. The wizard asks for a database type: pick **VectorsDB**, the vector database built for embeddings and similarity search. Name the database `Recall` and give it the custom ID `recall`.
 
-![The specifications step of the create database wizard showing compute tiers](/images/blog-local/build-a-memory-mcp-server/create-database-specs.avif)
+![The specifications step of the create database wizard showing compute tiers](/images/blog/build-a-memory-mcp-server/create-database-specs.avif)
 
 Select your preferred tier, then select **Create database**. The tier controls the compute and memory behind the database and can be changed later as the workload grows.
 
 # Create the memories collection
 
-![The create collection dialog with the all-minilm embedding model selected](/images/blog-local/build-a-memory-mcp-server/create-collection.avif)
+![The create collection dialog with the all-minilm embedding model selected](/images/blog/build-a-memory-mcp-server/create-collection.avif)
 
 Inside the database, select **Create collection**. Name it `Memories`, set the custom ID to `memories`, and choose the `all-minilm` embedding model. The model fixes the collection's vector dimension at 384, which keeps embeddings compact and queries fast, a good fit for short personal notes.
 
@@ -85,13 +85,13 @@ await vectorsDB.createIndex({
 })
 ```
 
-![The indexes tab of the memories collection showing the hnsw_cosine index as available](/images/blog-local/build-a-memory-mcp-server/collection-indexes.avif)
+![The indexes tab of the memories collection showing the hnsw_cosine index as available](/images/blog/build-a-memory-mcp-server/collection-indexes.avif)
 
 The index shows up on the collection's **Indexes** tab and switches to **Available** once it finishes building. `hnsw_cosine` matches how text embeddings are usually compared; VectorsDB also supports `hnsw_dot` and `hnsw_euclidean` for models tuned to those distance functions.
 
 # Create an API key
 
-![The create API key drawer with the required scopes selected](/images/blog-local/build-a-memory-mcp-server/create-api-key.avif)
+![The create API key drawer with the required scopes selected](/images/blog/build-a-memory-mcp-server/create-api-key.avif)
 
 The web app's server needs an API key for the operations a user session cannot perform: creating sessions during sign-in, generating embeddings, and reading the collection. Open **API Keys**, select **Create API key**, and grant it the scopes `sessions.write`, `users.read`, `apps.read`, `vectorsdb.read`, `vectorsdb.collections.read`, `vectorsdb.collections.write`, `vectorsdb.indexes.write`, `vectorsdb.documents.read`, `vectorsdb.documents.write`, and `embeddings.write`.
 
@@ -108,7 +108,7 @@ The MCP function itself never touches this key. Appwrite hands the function a fr
 
 # Enable the OAuth2 server
 
-![The OAuth2 server settings page showing the server active, the authorization URL, and the memories scopes](/images/blog-local/build-a-memory-mcp-server/oauth2-server-enabled.avif)
+![The OAuth2 server settings page showing the server active, the authorization URL, and the memories scopes](/images/blog/build-a-memory-mcp-server/oauth2-server-enabled.avif)
 
 Open **Auth**, switch to the **OAuth2 server** tab, and enable the server. Two settings connect it to Recall:
 
@@ -292,7 +292,7 @@ appwrite login
 appwrite push function --function-id memory-mcp --force --activate
 ```
 
-![The function page in the Appwrite Console showing an active deployment and the function domain](/images/blog-local/build-a-memory-mcp-server/function-deployed.avif)
+![The function page in the Appwrite Console showing an active deployment and the function domain](/images/blog/build-a-memory-mcp-server/function-deployed.avif)
 
 The deploy output prints the function's domain. That domain plus `/mcp` is the MCP server URL, and it doubles as the OAuth2 resource identifier: tokens are minted for that exact URL and for nothing else, so a token stolen from one MCP server is useless against another.
 
@@ -300,7 +300,7 @@ The deploy output prints the function's domain. That domain plus `/mcp` is the M
 
 Start the web app with `pnpm dev`, sign up for an account, and save a memory or two from the dashboard.
 
-![The Recall dashboard with saved memories and a semantic search box](/images/blog-local/build-a-memory-mcp-server/recall-dashboard.avif)
+![The Recall dashboard with saved memories and a semantic search box](/images/blog/build-a-memory-mcp-server/recall-dashboard.avif)
 
 Then register the MCP server with Claude Code, using the function domain from the deploy output:
 
@@ -310,7 +310,7 @@ claude mcp add --transport http recall https://<FUNCTION_DOMAIN>/mcp
 
 Run `/mcp` inside Claude Code and pick **Authenticate**. Claude Code fetches the protected-resource metadata from the function, discovers the project's OAuth2 server from it, and opens the browser on Recall's consent screen.
 
-![The Recall consent screen asking the user to grant Claude Code access to their memories](/images/blog-local/build-a-memory-mcp-server/consent-screen.avif)
+![The Recall consent screen asking the user to grant Claude Code access to their memories](/images/blog/build-a-memory-mcp-server/consent-screen.avif)
 
 The card shows exactly what was requested: who is asking, which permissions, and which MCP server the tokens will be limited to. After the user selects **Allow access**, Claude Code exchanges its authorization code for tokens and the tools go live:
 
@@ -330,7 +330,7 @@ Memories saved from Claude Code appear on the Recall dashboard immediately, and 
 
 The connection stays under the user's control. The consent is stored on their account, and the connected apps page lists it with a disconnect button that revokes future token refreshes.
 
-![The connected apps page showing Claude Code with its granted permissions and a disconnect button](/images/blog-local/build-a-memory-mcp-server/connections-page.avif)
+![The connected apps page showing Claude Code with its granted permissions and a disconnect button](/images/blog/build-a-memory-mcp-server/connections-page.avif)
 
 # Where to take it
 

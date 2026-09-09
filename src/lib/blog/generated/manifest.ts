@@ -68,7 +68,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 4,
     "author": "atharva",
     "category": "product, announcement",
-    "cover": "/images/blog-local/appwrite-2-0-postgres-by-default/cover.avif",
+    "cover": "/images/blog/appwrite-2-0-postgres-by-default/cover.avif",
     "hasCover": true
   },
   {
@@ -81,7 +81,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 6,
     "author": "atharva",
     "category": "product, announcement",
-    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-2/cover.avif",
     "hasCover": true
   },
   {
@@ -109,7 +109,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "product, announcement",
     "featured": false,
-    "cover": "/images/blog-local/announcing-appwrite-domains/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-domains/cover.avif",
     "hasCover": true
   },
   {
@@ -123,7 +123,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "arnab-chatterjee",
     "category": "product, announcement",
     "featured": false,
-    "cover": "/images/blog-local/announcing-appwrite-firewall/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-firewall/cover.avif",
     "hasCover": true
   },
   {
@@ -150,7 +150,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 14,
     "author": "atharva",
     "category": "tutorial",
-    "cover": "/images/blog-local/build-a-memory-mcp-server/cover.avif",
+    "cover": "/images/blog/build-a-memory-mcp-server/cover.avif",
     "hasCover": true
   },
   {
@@ -163,7 +163,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 9,
     "author": "atharva",
     "category": "security, best-practices",
-    "cover": "/images/blog-local/firewall-rate-limit-strategies/cover.avif",
+    "cover": "/images/blog/firewall-rate-limit-strategies/cover.avif",
     "hasCover": true
   },
   {
@@ -191,7 +191,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorial",
     "featured": false,
-    "cover": "/images/blog-local/turn-your-app-into-an-mcp-server/cover.avif",
+    "cover": "/images/blog/turn-your-app-into-an-mcp-server/cover.avif",
     "hasCover": true
   },
   {
@@ -205,7 +205,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "harsh-mahajan",
     "category": "announcement",
     "featured": false,
-    "cover": "/images/blog-local/announcing-bitbucket-support/cover.avif",
+    "cover": "/images/blog/announcing-bitbucket-support/cover.avif",
     "hasCover": true
   },
   {
@@ -219,7 +219,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "matej-baco",
     "category": "announcement",
     "featured": false,
-    "cover": "/images/blog-local/announcing-gitlab-support/cover.avif",
+    "cover": "/images/blog/announcing-gitlab-support/cover.avif",
     "hasCover": true
   },
   {
@@ -361,7 +361,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": true,
-    "cover": "/images/blog-local/announcing-appwrite-2/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-2/cover.avif",
     "hasCover": true
   },
   {
@@ -375,7 +375,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": true,
-    "cover": "/images/blog-local/announcing-appwrite-explorer/cover.avif",
+    "cover": "/images/blog/announcing-appwrite-explorer/cover.avif",
     "hasCover": true
   },
   {
@@ -389,7 +389,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "product, announcement",
     "featured": true,
-    "cover": "/images/blog-local/announcing-console-iv/cover.avif",
+    "cover": "/images/blog/announcing-console-iv/cover.avif",
     "hasCover": true
   },
   {
@@ -403,7 +403,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "product, announcement",
     "featured": false,
-    "cover": "/images/blog-local/announcing-console-terminal/cover.avif",
+    "cover": "/images/blog/announcing-console-terminal/cover.avif",
     "hasCover": true
   },
   {
@@ -417,7 +417,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "luke-silver",
     "category": "architecture, announcement",
     "featured": true,
-    "cover": "/images/blog-local/hyperloop-b/cover.avif",
+    "cover": "/images/blog/hyperloop-b/cover.avif",
     "hasCover": true
   },
   {
