@@ -142,6 +142,11 @@ class Jobs extends Action
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
+            // A handler can observe deletion after the initial lookup.
+            if ($deployment->isEmpty()) {
+                return;
+            }
+
             // Console realtime on every callback (log stream + status).
             $queueForRealtime
                 ->setSubscribers(['console'])
@@ -507,6 +512,12 @@ class Jobs extends Action
         Bus $bus,
         int $buildSize = 0,
     ): Document {
+        // A downstream worker may refresh the deployment after asynchronous
+        // work, during which the deployment can be deleted.
+        if ($deployment->isEmpty()) {
+            return $deployment;
+        }
+
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
 
@@ -533,6 +544,10 @@ class Jobs extends Action
             Query::notEqual('status', 'canceled'),
         ]);
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+        if ($deployment->isEmpty()) {
+            return $deployment;
+        }
 
         // latestDeployment* must be written before activate(). activate() sets
         // deploymentId then walks platform rules; under parallel Sites e2e that
