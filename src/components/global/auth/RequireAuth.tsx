@@ -324,10 +324,7 @@ export function RequireAuth({
   useEffect(() => {
     if (!needsEmailVerification) return
     if (location.pathname === '/verify-email') return
-    if (
-      isAuthPage(location.pathname) ||
-      isOptionalAuthPage(location.pathname)
-    ) {
+    if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
       return
     }
     const redirectUrl = getRelativeRedirectUrl(location.pathname)
