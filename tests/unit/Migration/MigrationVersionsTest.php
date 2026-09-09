@@ -259,6 +259,51 @@ final class MigrationVersionsTest extends TestCase
         $this->assertNotContains('attemptId', $migrationAttributes);
     }
 
+    public function testMigrateToTheV25ReleaseStopsShortOfV26Ownership(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
+        $platform = $this->createConfiguredDatabase($authorization, 'migrationV25ReleasePlatform', 'console');
+        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $project = $platform->createDocument('projects', new Document([
+            '$id' => 'pre-v25-project',
+            'version' => '1.9.5',
+        ]));
+
+        $database = $this->createConfiguredDatabase($authorization, 'migrationV25ReleaseProject', 'projects');
+        foreach (['status', 'stage'] as $attribute) {
+            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+        }
+        $database->createDocument('migrations', new Document([
+            '$id' => 'migration',
+            'status' => 'failed',
+            'stage' => 'processing',
+        ]));
+
+        \ob_start();
+        try {
+            $this->runMigration('1.9.6', $platform, $database, $project, $authorization);
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach (['providerBranches', 'providerPaths'] as $attribute) {
+            $this->assertContains($attribute, $this->attributeIds($database, 'functions'));
+            $this->assertContains($attribute, $this->attributeIds($database, 'sites'));
+        }
+        $this->assertContains('scopes', $this->attributeIds($database, 'sites'));
+        $this->assertContains('status', $this->attributeIds($database, 'databases'));
+        $this->assertContains('resourceInternalId', $this->attributeIds($database, 'migrations'));
+
+        $this->assertNotContains('migrationId', $this->attributeIds($database, 'databases'));
+        $this->assertNotContains('migrationAttemptId', $this->attributeIds($database, 'databases'));
+        $this->assertNotContains('attemptId', $this->attributeIds($database, 'migrations'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+    }
+
     public function testMigrateRunsCumulativeV25AndV26FromPreV25Project(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
@@ -291,15 +336,13 @@ final class MigrationVersionsTest extends TestCase
 
         \ob_start();
         try {
-            $this->runMigration($platform, $database, $project, $authorization);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
             $this->assertCumulativeMigration($database);
-            $this->runMigration($platform, $database, $project, $authorization);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
         } finally {
             \ob_end_clean();
         }
 
-        $this->assertSame('V25', Migration::$versions['1.9.6']);
-        $this->assertSame('V26', Migration::$versions['2.0.0']);
         $this->assertCumulativeMigration($database);
         $this->assertSame('ready', $database->getDocument('databases', 'database')->getAttribute('status'));
         $this->assertSame('database-preserved', $database->getDocument('databases', 'database')->getAttribute('legacy'));
@@ -364,9 +407,9 @@ final class MigrationVersionsTest extends TestCase
 
         \ob_start();
         try {
-            $this->runMigration($platform, $database, $project, $authorization);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
             $this->assertCumulativeMigration($database);
-            $this->runMigration($platform, $database, $project, $authorization);
+            $this->runMigration('2.0.0', $platform, $database, $project, $authorization);
         } finally {
             \ob_end_clean();
         }
@@ -511,6 +554,7 @@ final class MigrationVersionsTest extends TestCase
     }
 
     private function runMigration(
+        string $version,
         Database $platform,
         Database $database,
         Document $project,
@@ -523,7 +567,7 @@ final class MigrationVersionsTest extends TestCase
             : $platform;
 
         (new Migrate())->action(
-            '2.0.0',
+            $version,
             $platform,
             $getProjectDatabase,
             $registry,

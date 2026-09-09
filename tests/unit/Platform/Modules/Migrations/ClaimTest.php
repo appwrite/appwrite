@@ -58,6 +58,35 @@ final class InterleavingClaimDatabase extends Database
     }
 }
 
+final class ExclusiveClaimLock
+{
+    /**
+     * @var array<int, string>
+     */
+    public array $keys = [];
+
+    /**
+     * @var array<string, true>
+     */
+    private array $held = [];
+
+    public function __invoke(string $key, int $ttl, callable $callback, float $timeout): mixed
+    {
+        if (isset($this->held[$key])) {
+            throw new Contention('Failed to acquire lock: ' . $key);
+        }
+
+        $this->keys[] = $key;
+        $this->held[$key] = true;
+
+        try {
+            return $callback();
+        } finally {
+            unset($this->held[$key]);
+        }
+    }
+}
+
 final class ClaimTest extends TestCase
 {
     private string|false $claimEnabled;
@@ -833,6 +862,153 @@ final class ClaimTest extends TestCase
             ->getAttribute('attemptId'));
     }
 
+    public function testCompetingClaimForTheSameMigrationIsRefusedWhileTheLockIsHeld(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $refusals = 0;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($claims, $migrationPublisher, $terminal, &$refusals): void {
+            try {
+                $claims->retry(
+                    project: new Document(['$id' => 'project-1']),
+                    migrationId: $terminal->getId(),
+                    platform: [],
+                    publisher: $migrationPublisher,
+                );
+            } catch (Contention) {
+                $refusals++;
+            }
+        };
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertSame(1, $refusals);
+        $this->assertCount(1, $locks->keys);
+        $this->assertCount(1, $publisher->getEvents('migrations'));
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    public function testClaimsForDistinctMigrationsAreNotSerialized(): void
+    {
+        $first = $this->createFailedMigration();
+        $second = $this->createFailedMigration('migration-2');
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $concurrent = null;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($claims, $migrationPublisher, $second, &$concurrent): void {
+            $concurrent = $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $second->getId(),
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+        };
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $first->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertInstanceOf(Document::class, $concurrent);
+        $this->assertCount(2, $locks->keys);
+        $this->assertCount(2, \array_unique($locks->keys));
+        $this->assertCount(2, $publisher->getEvents('migrations'));
+
+        foreach ([$first->getId() => $claimed, $second->getId() => $concurrent] as $id => $expected) {
+            $stored = $this->database->getDocument('migrations', $id);
+            $this->assertSame('pending', $stored->getAttribute('status'));
+            $this->assertSame('finished', $stored->getAttribute('stage'));
+            $this->assertSame($expected->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        }
+    }
+
+    public function testLockIsReleasedWhenTheGuardedClaimIsRefused(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-active',
+            'status' => 'processing',
+            'stage' => 'processing',
+            'resourceData' => [],
+        ]));
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+
+        try {
+            $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $active->getId(),
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+            $this->fail('Expected the active migration to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+
+        $this->database->updateDocument('migrations', $active->getId(), new Document([
+            'status' => 'failed',
+            'stage' => 'finished',
+        ]));
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $active->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertCount(2, $locks->keys);
+        $this->assertCount(1, \array_unique($locks->keys));
+        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertCount(1, $publisher->getEvents('migrations'));
+    }
+
+    public function testLockKeysSeparateProjectsAndMigrations(): void
+    {
+        $first = $this->createFailedMigration();
+        $second = $this->createFailedMigration('migration-2');
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $project = new Document(['$id' => 'project-1']);
+
+        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNull($claims->consume('project-2', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $second)));
+
+        $this->assertCount(4, $locks->keys);
+
+        [$taken, $repeated, $otherProject, $otherMigration] = $locks->keys;
+        $this->assertSame($taken, $repeated);
+        $this->assertNotSame($taken, $otherProject);
+        $this->assertNotSame($taken, $otherMigration);
+        $this->assertNotSame($otherProject, $otherMigration);
+    }
+
     public function testConsumeDerivesTerminalSnapshotForLegacyRetryDelivery(): void
     {
         $terminal = $this->createFailedMigration();
@@ -998,10 +1174,10 @@ final class ClaimTest extends TestCase
         ));
     }
 
-    private function createFailedMigration(): Document
+    private function createFailedMigration(string $id = 'migration-1'): Document
     {
         return $this->database->createDocument('migrations', new Document([
-            '$id' => 'migration-1',
+            '$id' => $id,
             'attemptId' => 'attempt-terminal',
             'status' => 'failed',
             'stage' => 'finished',
@@ -1025,14 +1201,8 @@ final class ClaimTest extends TestCase
         };
     }
 
-    private function locks(): \Closure
+    private function locks(): ExclusiveClaimLock
     {
-        return static function (string $key, int $ttl, callable $callback, float $timeout): mixed {
-            self::assertSame('migration:project-1:migration-1', $key);
-            self::assertSame(30, $ttl);
-            self::assertSame(10.0, $timeout);
-
-            return $callback();
-        };
+        return new ExclusiveClaimLock();
     }
 }
