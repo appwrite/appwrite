@@ -150,6 +150,12 @@ That single call kicks off the authorization code flow, redirects the user to Go
 
 OAuth is also just one of several login methods. Appwrite pairs it with [email and password](/docs/products/auth/email-password), [passwordless authentication](/blog/post/improve-ux-passwordless-auth), phone OTP, and MFA, so you can offer OAuth alongside whatever else your users expect.
 
+# Use Appwrite as an OAuth provider
+
+Appwrite can also sit on the other side of the OAuth flow. With the [Appwrite OAuth2 server](/blog/post/announcing-oauth2-server), your project can act as an OAuth 2.1 and OpenID Connect provider, so third-party apps can offer "Sign in with your product" and request scoped access to your APIs.
+
+Third-party apps register as clients, users approve the permissions they request through a consent screen you host, and Appwrite issues the access, refresh, and ID tokens. You can also define custom scopes for your APIs, while standards-compliant OAuth and OIDC libraries can integrate without Appwrite-specific adapters.
+
 # Getting started with OAuth in Appwrite
 
 OAuth solves a problem you should not solve with passwords: letting an app act on a user's behalf without holding their credentials. Once you understand the four roles, the token exchange, and the flows, the protocol stops feeling mysterious and starts feeling like the obvious way to handle third-party access.
