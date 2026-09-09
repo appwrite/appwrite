@@ -1,0 +1,19 @@
+{
+  "name": "test-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Building...'",
+    "dev": "echo 'Development mode'",
+    "generate:types": "appwrite types packages/types/src --language=ts --verbose"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "typescript": "^5.5.0",
+    "appwrite": "^18.1.1"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
