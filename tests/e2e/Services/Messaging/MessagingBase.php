@@ -861,6 +861,65 @@ trait MessagingBase
         }
     }
 
+    public function testCreateAppwriteProvider(): void
+    {
+        // Test for SUCCESS: the built-in Appwrite (MQTT) push provider needs no credentials.
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Appwrite1',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertEquals('Appwrite1', $provider['body']['name']);
+        $this->assertEquals('appwrite', $provider['body']['provider']);
+        $this->assertEquals('push', $provider['body']['type']);
+        $this->assertTrue($provider['body']['enabled']);
+    }
+
+    public function testUpdateAppwriteProvider(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Appwrite-before',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Test for SUCCESS: name and enabled are updated.
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Appwrite-after',
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Appwrite-after', $response['body']['name']);
+        $this->assertFalse($response['body']['enabled']);
+
+        // Test for FAILURE: an unknown provider id is not found.
+        $missing = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . ID::unique(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Nope',
+        ]);
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
     public function testUpdateProviders(): void
     {
         $providers = $this->setupCreatedProviders();
