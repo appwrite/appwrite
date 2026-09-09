@@ -1482,7 +1482,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('type'), // 'api', 'redirect', 'deployment' (site or function)
+                '$id' => ID::custom('type'), // 'api', 'redirect', 'deployment' (site or function), 'bucket'
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 32,

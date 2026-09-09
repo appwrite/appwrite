@@ -282,6 +282,157 @@ trait ProxyBase
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateBucketRule(): void
+    {
+        $domain = \uniqid() . '-bucket.custom.localhost';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        $setup = $this->setupBucket();
+        $bucketId = $setup['bucketId'];
+        $fileId = $setup['fileId'];
+        $privateFileId = $setup['privateFileId'];
+
+        $this->assertNotEmpty($bucketId);
+        $this->assertNotEmpty($fileId);
+        $this->assertNotEmpty($privateFileId);
+
+        // Domain is not connected yet
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupBucketRule($domain, $bucketId);
+        $this->assertNotEmpty($ruleId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('bucket', $rule['body']['type']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
+        $this->assertEquals('bucket', $rule['body']['deploymentResourceType']);
+        $this->assertEquals($bucketId, $rule['body']['deploymentResourceId']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        // Public file is served by ID at the root path, without project header
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
+        $this->assertStringContainsString('inline', $response['headers']['content-disposition']);
+        $this->assertEquals(\filesize(__DIR__ . '/../../../resources/logo.png'), \strlen($response['body']));
+
+        // File routes of the bucket work on the domain too
+        $response = $proxyClient->call(Client::METHOD_GET, '/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
+
+        // Permissions still apply, so file without read permission is not served
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $privateFileId);
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // File token grants access to the private file
+        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $privateFileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(201, $token['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $privateFileId, [], ['token' => $token['body']['secret']]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
+
+        // Only files of the bucket are served
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . \uniqid());
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId . '/extra');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/v1/storage/buckets/' . $bucketId . '/files');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/v1/storage/buckets/' . \uniqid() . '/files/' . $fileId . '/view');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/v1/health/version');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('type', ['bucket'])->toString(),
+                Query::equal('deploymentResourceType', ['bucket'])->toString(),
+                Query::equal('deploymentResourceId', [$bucketId])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        // Appwrite-owned domains are verified immediately
+        $wildcardRuleId = $this->setupBucketRule(\uniqid() . '.sites.localhost', $bucketId);
+        $rule = $this->getRule($wildcardRuleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('verified', $rule['body']['status']);
+        $this->cleanupRule($wildcardRuleId);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->createBucketRule($domain, $bucketId);
+        $this->assertEquals(409, $rule['headers']['status-code']);
+
+        $rule = $this->createBucketRule(\uniqid() . '-missing.custom.localhost', \uniqid());
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->createBucketRule('http://' . \uniqid() . '-bucket.custom.localhost', $bucketId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createBucketRule(\uniqid() . '-bucket.custom.localhost/some-path', $bucketId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createBucketRule('', $bucketId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createBucketRule(\uniqid() . '-bucket.custom.localhost', '');
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $rule = $this->createBucketRule($sitesDomain, $bucketId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        // Deleting the rule disconnects the domain
+        $this->cleanupRule($ruleId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Deleting the bucket removes its rules
+        $ruleId = $this->setupBucketRule(\uniqid() . '-bucket-cascade.custom.localhost', $bucketId);
+        $this->assertNotEmpty($ruleId);
+
+        $this->cleanupBucket($bucketId);
+
+        $this->assertEventually(function () use ($bucketId) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::equal('type', ['bucket'])->toString(),
+                    Query::equal('deploymentResourceId', [$bucketId])->toString(),
+                ],
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+        });
+    }
+
     public function testCreateFunctionRule(): void
     {
         $domain = \uniqid() . '-function.custom.localhost';

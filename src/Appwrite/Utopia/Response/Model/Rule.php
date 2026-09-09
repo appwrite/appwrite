@@ -36,7 +36,7 @@ class Rule extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action definition for the rule. Possible values are "api", "deployment", or "redirect"',
+                'description' => 'Action definition for the rule. Possible values are "api", "deployment", "redirect", or "bucket"',
                 'default' => '',
                 'example' => 'deployment',
             ])
@@ -67,14 +67,14 @@ class Rule extends Model
             ->addRule('deploymentResourceType', [
                 'type' => self::TYPE_ENUM,
                 'required' => false,
-                'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
+                'description' => 'Type of rule\'s resource. Possible values are "function", "site", or "bucket". Used if rule\'s type is "deployment", "redirect", or "bucket".',
                 'default' => null,
                 'example' => 'function',
-                'enum' => ['function', 'site'],
+                'enum' => ['function', 'site', 'bucket'],
             ])
             ->addRule('deploymentResourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of deployment\'s resource (site or function ID). Used if type is "deployment"',
+                'description' => 'ID of rule\'s resource (site, function, or bucket ID). Used if type is "deployment", "redirect", or "bucket"',
                 'default' => '',
                 'example' => 'n3u9feiwmf',
             ])

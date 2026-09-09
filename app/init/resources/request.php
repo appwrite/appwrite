@@ -366,6 +366,35 @@ return function (Container $context): void {
     }, ['request', 'project']);
 
     /**
+     * Rule associated with the request host.
+     */
+    $context->set('ruleForHost', function (Request $request, Database $dbForPlatform, array $platform, Authorization $authorization) {
+        $hostname = $request->getHostname();
+
+        // Same override as previewHostname, minus the API key variant, so this
+        // resolves before routing and without touching the project.
+        if (Http::isDevelopment()) {
+            $override = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', ''));
+            if (\is_string($override) && $override !== '') {
+                $hostname = $override;
+            }
+        }
+
+        if (empty($hostname) || \in_array($hostname, $platform['hostnames'] ?? [])) {
+            return new Document();
+        }
+
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            return $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($hostname)));
+        }
+
+        return $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            Query::equal('domain', [$hostname]),
+        ]));
+    }, ['request', 'dbForPlatform', 'platform', 'authorization']);
+
+    /**
      * Rule associated with a request origin.
      */
     $context->set('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
@@ -605,7 +634,7 @@ return function (Container $context): void {
         return $match->params['projectId'] ?? '';
     }, ['request', 'utopia']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath) {
+    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath, Document $ruleForHost) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
@@ -653,6 +682,12 @@ return function (Container $context): void {
             }
         }
 
+        // Bucket rules bind their project to the domain, so a file can be
+        // embedded as https://files.example.com/{fileId} without the project header.
+        if ($projectId === '' && $ruleForHost->getAttribute('type', '') === 'bucket') {
+            $projectId = $ruleForHost->getAttribute('projectId', '');
+        }
+
         if ($projectId === '' || $projectId === 'console') {
             return $console;
         }
@@ -660,7 +695,7 @@ return function (Container $context): void {
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
+    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath', 'ruleForHost']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken) {
         if ($user->isEmpty()) {

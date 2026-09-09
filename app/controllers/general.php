@@ -66,6 +66,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -805,6 +806,16 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         }
 
         return true;
+    } elseif ($type === 'bucket') {
+        // The domain serves files of one bucket only. Root paths were already
+        // rewritten onto the file view route before routing.
+        $prefix = '/v1/storage/buckets/' . $rule->getAttribute('deploymentResourceId', '') . '/files/';
+        if (!\str_starts_with($request->getURI(), $prefix)) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, 'This domain serves files of a storage bucket by ID at the root path, for example /{fileId}.', view: $errorView);
+        }
+
+        // Act as API for the file routes of the bucket
+        return false;
     } elseif ($type === 'api') {
         return false;
     } elseif ($type === 'redirect') {
@@ -877,6 +888,30 @@ Http::init()
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
         }
+    });
+
+/**
+ * Bucket domains serve files by ID at the root of the domain, for example
+ * https://files.example.com/{fileId}. Rewrite such paths onto the file view
+ * route before routing, so the regular API action with its hooks, permissions,
+ * usage, and audits handles the request. Other paths stay as they are and are
+ * refused by the router.
+ */
+Http::onRequest()
+    ->inject('request')
+    ->inject('ruleForHost')
+    ->action(function (Request $request, Document $ruleForHost) {
+        if ($ruleForHost->getAttribute('type', '') !== 'bucket') {
+            return;
+        }
+
+        $segments = \array_values(\array_filter(\explode('/', $request->getURI()), fn (string $segment) => $segment !== ''));
+        $fileId = $segments[0] ?? '';
+        if (\count($segments) !== 1 || !(new UID())->isValid($fileId)) {
+            return;
+        }
+
+        $request->setURI('/v1/storage/buckets/' . $ruleForHost->getAttribute('deploymentResourceId', '') . '/files/' . $fileId . '/view');
     });
 
 Http::init()
