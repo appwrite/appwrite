@@ -2707,6 +2707,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Confirm setup': 'セットアップの確認',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    '続行すると、このプロバイダーを認可した Appwrite アカウントにサインインします。',
+  'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
+    'この認可リンクは既に使用されたか、有効期限が切れています。SMTP 設定からもう一度セットアップを開始してください。',
+  'Back to SMTP settings': 'SMTP 設定に戻る',
   'Reconnect to create a new sending credential.':
     '再接続すると、新しい送信用の認証情報を作成します。',
   'Unable to finish setup': 'セットアップを完了できません',
@@ -2715,10 +2723,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'セッションを復元して SMTP 設定に戻ります。',
   'This link is missing required parameters.':
     'このリンクには必要なパラメーターがありません。',
-  'This authorization does not match the account that started it.':
-    'この認可は、開始したアカウントと一致しません。',
-  'We could not finish connecting your email provider. Sign in and try again.':
-    'メールプロバイダーの接続を完了できませんでした。サインインしてもう一度お試しください。',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',

@@ -2711,6 +2711,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Confirm setup': 'אישור ההגדרה',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    'המשך יחבר אתכם לחשבון Appwrite שאישר את הספק הזה.',
+  'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
+    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהגדרות ה-SMTP.',
+  'Back to SMTP settings': 'חזרה להגדרות ה-SMTP',
   'Reconnect to create a new sending credential.':
     'התחברו מחדש כדי ליצור פרטי גישה חדשים לשליחה.',
   'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
@@ -2719,10 +2727,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרות ה-SMTP.',
   'This link is missing required parameters.':
     'בקישור הזה חסרים פרמטרים נדרשים.',
-  'This authorization does not match the account that started it.':
-    'ההרשאה הזו אינה תואמת לחשבון שהתחיל אותה.',
-  'We could not finish connecting your email provider. Sign in and try again.':
-    'לא הצלחנו להשלים את החיבור לספק האימייל שלכם. התחברו ונסו שוב.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',
