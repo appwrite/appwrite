@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e01715f2fe81b1e435e075ad4fa9e099",
+    "content-hash": "0b7bd06aa3aae47b07de2256380e974a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3898,16 +3898,16 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc25",
+            "version": "2.0.0-rc30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "54fa5c8a3606110a6d161be93bbbcf0043bbd262"
+                "reference": "11a45a4cc096f3df5a1219d97de96c46573d68af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/54fa5c8a3606110a6d161be93bbbcf0043bbd262",
-                "reference": "54fa5c8a3606110a6d161be93bbbcf0043bbd262",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/11a45a4cc096f3df5a1219d97de96c46573d68af",
+                "reference": "11a45a4cc096f3df5a1219d97de96c46573d68af",
                 "shasum": ""
             },
             "require": {
@@ -3916,9 +3916,9 @@
                 "utopia-php/di": "^0.3",
                 "utopia-php/psr7": "^0.2.0",
                 "utopia-php/servers": "^0.4",
-                "utopia-php/system": "^0.10",
+                "utopia-php/system": "^0.10 || ^0.11",
                 "utopia-php/telemetry": "^0.4",
-                "utopia-php/validators": "^0.6"
+                "utopia-php/validators": "^0.6 || ^1.0"
             },
             "require-dev": {
                 "swoole/ide-helper": "4.8.3"
@@ -3945,9 +3945,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc25"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc30"
             },
-            "time": "2026-08-27T06:13:20+00:00"
+            "time": "2026-09-09T11:26:49+00:00"
         },
         {
             "name": "utopia-php/image",
