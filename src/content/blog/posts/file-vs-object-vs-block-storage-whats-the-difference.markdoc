@@ -105,6 +105,8 @@ Many production systems use more than one. A typical setup runs its database on 
 
 For most application developers, object storage is the piece you'll actually build on, and it shouldn't require standing up infrastructure to use. [Appwrite Storage](/docs/products/storage) gives you managed object storage with buckets, file uploads and downloads, granular permissions, and built-in [image transformations](/docs/products/storage/images), all through a clean API and client SDKs. It sits alongside Appwrite's auth, databases, and functions, so your file storage and the rest of your backend live in one place.
 
+Appwrite Storage also exposes an [S3-compatible API](/blog/post/announcing-s3-api), so you can use existing S3 clients, SDKs, and tools like the AWS CLI and rclone with your Appwrite buckets and files. The native Storage API and S3 API work against the same data, so no migration is required.
+
 You can create a bucket, upload your first file, and wire it into an app in minutes without provisioning a server or configuring a file system. [Sign up for Appwrite Cloud](https://cloud.appwrite.io) to try it, or follow the quick start to integrate storage into your project today.
 
 # Resources
