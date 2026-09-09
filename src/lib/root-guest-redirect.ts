@@ -55,7 +55,8 @@ export function getRootGuestRedirectStatus(
 /**
  * Where unsigned `/` document requests should go before the SPA boots.
  * Returns null when a console session cookie is present so logged-in users
- * keep the client org redirect in `_public/index.tsx`.
+ * keep the client org redirect in `_public/index.tsx`. Production cookies are
+ * HttpOnly: the client must still call `account.get`, not `document.cookie`.
  *
  * Skipped on localhost/loopback: the Appwrite SDK often stores the session in
  * `localStorage` (`cookieFallback`) instead of an HTTP cookie, so only the

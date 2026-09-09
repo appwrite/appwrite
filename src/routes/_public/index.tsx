@@ -12,7 +12,7 @@ import {
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
-import { hasLikelyConsoleSession } from '@/lib/console-account-get'
+import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -32,9 +32,10 @@ export const Route = createFileRoute('/_public/')({
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    // No session signal: skip account.get and redirect immediately (in-app nav).
-    // Full-page guest visits are handled by rootGuestRedirectMiddleware (301 to /home).
-    if (!hasLikelyConsoleSession()) {
+    // Localhost guests: skip account.get and hop immediately. Production `/`
+    // is only HTML-served when a session cookie was on the request; HttpOnly
+    // cookies are invisible to JS, so still call account.get there.
+    if (shouldSkipRootAccountProbe()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
         replace: true,

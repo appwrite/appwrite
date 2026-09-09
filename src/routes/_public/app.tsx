@@ -12,7 +12,7 @@ import {
   isOAuthLoginMethod,
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
-import { hasLikelyConsoleSession } from '@/lib/console-account-get'
+import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_public/app')({
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    if (!hasLikelyConsoleSession()) {
+    if (shouldSkipRootAccountProbe()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
         replace: true,
