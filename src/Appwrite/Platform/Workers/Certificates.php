@@ -19,6 +19,7 @@ use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -316,8 +317,24 @@ class Certificates extends Action
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    Console::info("Skipping, renew isn't required");
-                    return;
+                    $status = $certificates->isInstantGeneration($domain->get(), $domainType)
+                        ? Status::ISSUED
+                        : $certificates->getCertificateStatus($domain->get(), $domainType);
+                    if ($status === Status::ISSUED) {
+                        Console::info("Skipping, certificate is already issued");
+                        $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                        $certificate->setAttribute('attempts', 0);
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                        return;
+                    }
+                    if (\in_array($status, [Status::PENDING, Status::PROCESSING, Status::RENEWING], true)) {
+                        Console::info("Skipping, certificate is being issued");
+                        $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. We'll periodically check and update the status. \033[0m\n";
+                        return;
+                    }
+                    // Nothing to renew and nothing issued: the provider holds no usable
+                    // certificate for this domain. Issue one so a missing subscription is repaired.
                 }
             }
 

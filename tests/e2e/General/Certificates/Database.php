@@ -40,6 +40,7 @@ final class Database extends UtopiaDatabase
                     'logs' => 1000000,
                 ],
                 'certificates' => ['domain' => 255, 'logs' => 1000000],
+                'projects' => ['region' => 128],
             ];
             foreach ($attributes as $collection => $strings) {
                 $this->createCollection($collection);
