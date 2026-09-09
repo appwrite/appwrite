@@ -110,6 +110,80 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
     }
 
+    public function testCreateDeploymentFromNestedRootDirectory(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repositoryName . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        $this->writeFunctionHelper($workdir, 'gitea-nested-v1', 'docs/nested');
+        $this->gitHelper('git add docs && git commit -m "Add nested function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        // The console's directory picker writes the path in this form; it names
+        // the same directory as 'docs/nested'.
+        $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea nested VCS',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './docs/nested/',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $knownIds = $this->listDeploymentIdsHelper($functionId);
+
+        $this->writeFunctionHelper($workdir, 'gitea-nested-v2', 'docs/nested');
+        $this->gitHelper('git add docs && git commit -m "Update nested function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v2'), 30000, 1000);
+
+        // A push-created deployment must persist the root directory it built
+        // from, since duplicating one reads the value back off this document.
+        $webhookDeployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $webhookDeploymentId, \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $webhookDeployment['headers']['status-code']);
+        $this->assertEquals('./docs/nested/', $webhookDeployment['body']['providerRootDirectory']);
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'deploymentId' => $webhookDeploymentId,
+        ]);
+        $this->assertEquals(202, $duplicate['headers']['status-code'], \json_encode($duplicate['body']));
+
+        // Building from the repository root instead would fail outright: the
+        // root holds only the auto-init README, no entrypoint.
+        $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
+    }
+
     public function testClosePullRequestRemovesAuthorization(): void
     {
         /**
@@ -374,9 +448,14 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertSame(0, $exitCode, "Git command failed: {$command}\n" . \implode("\n", $output));
     }
 
-    private function writeFunctionHelper(string $workdir, string $output): void
+    private function writeFunctionHelper(string $workdir, string $output, string $path = ''): void
     {
-        \file_put_contents($workdir . '/index.js', "module.exports = async (context) => context.res.send('{$output}');\n");
+        $directory = $workdir . ($path === '' ? '' : '/' . $path);
+        if (! \is_dir($directory)) {
+            \mkdir($directory, 0o777, true);
+        }
+
+        \file_put_contents($directory . '/index.js', "module.exports = async (context) => context.res.send('{$output}');\n");
     }
 
     private function waitForDeploymentReadyHelper(string $functionId, string $deploymentId): void
