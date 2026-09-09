@@ -9,6 +9,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database as UtopiaDatabase;
+use Utopia\Database\Document;
 use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
 
@@ -32,29 +33,20 @@ final class Database extends UtopiaDatabase
         $this->setDatabase('certificate_test_' . bin2hex(random_bytes(6)))->setNamespace('test')->setPreserveDates(true);
         $this->create();
         try {
-            $attributes = [
-                'rules' => [
-                    'projectId' => 255, 'projectInternalId' => 255, 'domain' => 255,
-                    'type' => 32, 'region' => 16, 'certificateId' => 255, 'status' => 255,
-                    'deploymentResourceType' => 32, 'owner' => 16, 'search' => 16384,
-                    'logs' => 1000000,
-                ],
-                'certificates' => ['domain' => 255, 'logs' => 1000000],
-                'projects' => ['region' => 128],
-            ];
-            foreach ($attributes as $collection => $strings) {
-                $this->createCollection($collection);
-                foreach ($strings as $attribute => $size) {
-                    $default = $collection === 'rules' && \in_array($attribute, ['deploymentResourceType', 'owner', 'logs'], true) ? '' : null;
-                    $this->createAttribute($collection, $attribute, self::VAR_STRING, $size, false, $default);
-                }
+            // The collections under test are created from their canonical definitions,
+            // the same way a migration does, so this schema cannot drift from production.
+            $collections = require __DIR__ . '/../../../../app/config/collections/platform.php';
+            foreach (['rules', 'certificates'] as $id) {
+                $this->createCollection(
+                    $id,
+                    array_map(fn (array $attribute) => new Document($attribute), $collections[$id]['attributes']),
+                    array_map(fn (array $index) => new Document($index), $collections[$id]['indexes']),
+                );
             }
-            $this->createAttribute('certificates', 'attempts', self::VAR_INTEGER, 0, false);
-            foreach (['updated', 'issueDate', 'renewDate'] as $attribute) {
-                $this->createAttribute('certificates', $attribute, self::VAR_DATETIME, 0, false);
-            }
-            $this->createIndex('rules', 'domain', self::INDEX_UNIQUE, ['domain']);
-            $this->createIndex('certificates', 'domain', self::INDEX_KEY, ['domain']);
+            // The worker only reads a project to publish events. The canonical collection
+            // carries sub-query filters that would pull in five more collections, so a stub is enough.
+            $this->createCollection('projects');
+            $this->createAttribute('projects', 'region', self::VAR_STRING, 128, false);
         } catch (\Throwable $error) {
             $this->delete();
             throw $error;
