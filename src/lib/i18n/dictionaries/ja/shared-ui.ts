@@ -79,6 +79,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Contact sales': '営業に連絡',
   'Cookie preferences': 'Cookie の設定',
   'Cookies Policy': 'Cookie ポリシー',
+  'We use cookies to improve Appwrite.':
+    'Appwrite の改善のために Cookie を使用しています。',
   'Copied line': '行をコピーしました',
   'Copied to clipboard': 'クリップボードにコピーしました',
   'Copy ID': 'ID をコピー',
