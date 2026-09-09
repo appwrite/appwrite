@@ -91,6 +91,8 @@ The **weighted centroid** is the region's average position, with stronger salien
 
 Saliency works across many types of images, but the center of a person's full silhouette often falls around their torso. For a portrait crop, the face is usually a better focal point.
 
+![A portrait comparison showing the saliency focal point on the torso and the face-priority focal point centered on the face](/images/blog-local/introducing-autogravity/portrait-saliency-face.jpg)
+
 AutoGravity uses [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), a lightweight face detector, as an additional signal. A face detector returns rectangular face locations, called **bounding boxes**, and a confidence score for each detection. It finds where a face is but does not identify the person.
 
 YuNet runs first because it is small and fast. If it finds a face above the conservative `0.85` confidence threshold, AutoGravity uses the center of that face. If several faces are present, it combines confidence with bounding-box size to favor a prominent foreground face:
