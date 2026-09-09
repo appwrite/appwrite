@@ -29,6 +29,15 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Twilio\Update as UpdateTw
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Create as CreateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Vonage\Update as UpdateVonageProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\XList as ListProviders;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Create as CreateTopic;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Delete as DeleteTopic;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Get as GetTopic;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\Create as CreateSubscriber;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\Delete as DeleteSubscriber;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\Get as GetSubscriber;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers\XList as ListSubscribers;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\Update as UpdateTopic;
+use Appwrite\Platform\Modules\Messaging\Http\Topics\XList as ListTopics;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -65,5 +74,18 @@ class Http extends Service
         $this->addAction(ListProviders::getName(), new ListProviders());
         $this->addAction(GetProvider::getName(), new GetProvider());
         $this->addAction(DeleteProvider::getName(), new DeleteProvider());
+
+        // Topics
+        $this->addAction(CreateTopic::getName(), new CreateTopic());
+        $this->addAction(ListTopics::getName(), new ListTopics());
+        $this->addAction(GetTopic::getName(), new GetTopic());
+        $this->addAction(UpdateTopic::getName(), new UpdateTopic());
+        $this->addAction(DeleteTopic::getName(), new DeleteTopic());
+
+        // Subscribers
+        $this->addAction(CreateSubscriber::getName(), new CreateSubscriber());
+        $this->addAction(ListSubscribers::getName(), new ListSubscribers());
+        $this->addAction(GetSubscriber::getName(), new GetSubscriber());
+        $this->addAction(DeleteSubscriber::getName(), new DeleteSubscriber());
     }
 }
