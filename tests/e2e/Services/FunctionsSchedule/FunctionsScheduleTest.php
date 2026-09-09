@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\FunctionsSchedule;
 
 use Appwrite\ID;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,7 +19,17 @@ final class FunctionsScheduleTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateScheduleValidation(): void
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function invalidSchedules(): \Iterator
+    {
+        yield 'plain descending range' => ['0 22-3 * * *'];
+        yield 'descending range in a list' => ['0 22-3,5 * * *'];
+    }
+
+    #[DataProvider('invalidSchedules')]
+    public function testCreateScheduleValidation(string $schedule): void
     {
         /**
          * Test for FAILURE
@@ -27,14 +38,15 @@ final class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Invalid schedule',
             'runtime' => 'node-22',
-            'schedule' => '0 22-3,5 * * *',
+            'schedule' => $schedule,
         ]);
 
         $this->assertSame(400, $function['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $function['body']['type']);
     }
 
-    public function testUpdateScheduleValidation(): void
+    #[DataProvider('invalidSchedules')]
+    public function testUpdateScheduleValidation(string $invalidSchedule): void
     {
         /**
          * Test for SUCCESS
@@ -58,7 +70,7 @@ final class FunctionsScheduleTest extends Scope
             $function = $this->updateFunction($functionId, [
                 'name' => 'Invalid schedule',
                 'runtime' => 'node-22',
-                'schedule' => '0 22-3,5 * * *',
+                'schedule' => $invalidSchedule,
             ]);
 
             $this->assertSame(400, $function['headers']['status-code']);
