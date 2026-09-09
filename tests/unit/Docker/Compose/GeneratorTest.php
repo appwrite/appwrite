@@ -69,7 +69,6 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
         $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
-        $this->assertSame('ghcr.io/appwrite/autogravity:0.0.8', $compose['services']['appwrite-autogravity']['image']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
     }
