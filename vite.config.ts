@@ -7,6 +7,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
 import { docsContentHmrPlugin } from './src/lib/docs/vite-docs-content-hmr-plugin'
+import { silenceAbortedSsrPlugin } from './src/lib/vite/silence-aborted-ssr-plugin'
 import {
   getAllMarketingPrerenderPaths,
   getSitesPrerenderBuildSummary,
@@ -126,6 +127,7 @@ export default defineConfig(async () => {
       ? `${process.env.CDN_ORIGIN.replace(/\/$/, '')}/`
       : '/',
     plugins: [
+      silenceAbortedSsrPlugin(),
       // this is the plugin that enables path aliases
       viteTsConfigPaths({
         projects: ['./tsconfig.json'],
