@@ -229,6 +229,137 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
     }
 
+    public function testDeleteAPIRule(): void
+    {
+        $domain = \uniqid() . '-delete-api.custom.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(204, $rule['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('api', $rule['body']['type']);
+
+        $rules = $this->listRules([
+            'queries' => [Query::equal('domain', [$domain])->toString()],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        });
+
+        $this->cleanupRule($ruleId);
+    }
+
+    public function testDeleteProjectRules(): void
+    {
+        $domain = \uniqid() . '-delete-project.custom.localhost';
+        $project = $this->getProject(true);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'domain' => $domain,
+        ]);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(409, $rule['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $project['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Project rules are removed by the deletes worker. Wait for queued
+        // cleanup before recreating the domain.
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        $ruleId = $this->setupAPIRule($domain);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('api', $rule['body']['type']);
+
+        $rules = $this->listRules([
+            'queries' => [Query::equal('domain', [$domain])->toString()],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        });
+
+        $this->cleanupRule($ruleId);
+    }
+
     public function testCreateRedirectRule(): void
     {
         $domain = \uniqid() . '-redirect.custom.localhost';
