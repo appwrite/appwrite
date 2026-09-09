@@ -2239,45 +2239,27 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
-            // default null means client choose their qos level and no restriction
+            // The per-topic sequence, copied from the topic counter at insert time. qos and
+            // expiry are topic settings now (see the topics collection), not per message.
             [
-                '$id' => ID::custom('qos'),
+                '$id' => ID::custom('sequence'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
-            // expiry for offline persistence
-            [
-                '$id' => ID::custom('expireAt'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_topic'),
+                '$id' => ID::custom('_key_topic_sequence'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['topic'],
+                'attributes' => ['topic', 'sequence'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_expireAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['expireAt'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
     ],
@@ -2363,6 +2345,44 @@ return [
                 'default' => '',
                 'array' => false,
                 'filters' => ['topicSearch'],
+            ],
+            // monotonic message counter for this topic. It is the tail sequence, so
+            // a client's backlog depth is this minus the client's cursor.
+            [
+                '$id' => ID::custom('sequence'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            // null lets the subscriber choose.
+            [
+                '$id' => ID::custom('qos'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            // message retention in seconds capped at 7 days. A ledger message expires
+            // this long after it is written.
+            [
+                '$id' => ID::custom('expiry'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ],
         ],
 
