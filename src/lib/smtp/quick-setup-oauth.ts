@@ -7,9 +7,10 @@
  * 2. Back on the SMTP tab, `claimProviderIdentity` calls `account.createSession`
  *    with the returned `userId` + `secret`. The new session carries the provider
  *    access and refresh tokens copied from the identity.
- * 3. `resolveProviderAccessToken` reuses that session (refreshing through
- *    `account.updateSession` when the short-lived access token expired) and
- *    falls back to the stored identity. When neither works, restart at 1.
+ * 3. `resolveProviderAccessToken` reuses that session, or any other session
+ *    this account holds for the provider, refreshing it through
+ *    `account.updateSession` when the short-lived access token expired.
+ *    Only when no session can produce a token does the flow restart at 1.
  *
  * Nothing here is provider-specific beyond the id and scopes passed in, so the
  * same flow serves every entry in `providers.ts`.
@@ -77,24 +78,17 @@ async function getCurrentSession(): Promise<Models.Session> {
 }
 
 /**
- * Appwrite refreshes the provider tokens of the *session* through
- * `updateSession`, so only a session created from that provider's token flow
- * can be refreshed. Identities keep the original (now rotated) refresh token
- * and have no refresh endpoint.
+ * Refresh one of the user's sessions by id. Appwrite re-runs the provider's
+ * refresh grant for whichever session is named, current or not, and answers
+ * with the session including its new provider access token.
  */
-async function refreshFromSession(
-  session: Models.Session,
+async function refreshSessionById(
+  sessionId: string,
   providerId: string,
 ): Promise<ProviderAccessToken> {
-  if (!sessionCanRefreshProvider(session, providerId)) {
-    throw new QuickSetupReauthorizeRequiredError()
-  }
-
   let refreshed: Models.Session
   try {
-    refreshed = await sdk.forConsole.account.updateSession({
-      sessionId: 'current',
-    })
+    refreshed = await sdk.forConsole.account.updateSession({ sessionId })
   } catch (error) {
     throw new QuickSetupReauthorizeRequiredError(undefined, { cause: error })
   }
@@ -107,14 +101,43 @@ async function refreshFromSession(
 }
 
 /**
- * Force a new access token for the current session. Throws
- * {@link QuickSetupReauthorizeRequiredError} when the session is not for this
- * provider or the provider rejected the refresh token.
+ * A session created by this provider's OAuth2 flow that still holds a refresh
+ * token. Signing in again does not remove it, so it usually outlives the
+ * 15-minute access token and is what keeps quick setup off the redirect path.
+ */
+async function findRefreshableProviderSession(
+  providerId: string,
+  excludeSessionId?: string,
+): Promise<Models.Session | null> {
+  const response = await sdk.forConsole.account.listSessions()
+  return (
+    (response.sessions ?? []).find(
+      (session) =>
+        session.$id !== excludeSessionId &&
+        session.provider === providerId &&
+        Boolean(session.providerRefreshToken),
+    ) ?? null
+  )
+}
+
+/**
+ * Force a new access token from any session this account holds for the
+ * provider. Throws {@link QuickSetupReauthorizeRequiredError} only when no
+ * session can produce one, which is the single case that needs the user to
+ * authorize again.
  */
 export async function refreshProviderAccessToken(
   providerId: string,
 ): Promise<ProviderAccessToken> {
-  return await refreshFromSession(await getCurrentSession(), providerId)
+  const session = await getCurrentSession()
+  if (sessionCanRefreshProvider(session, providerId)) {
+    return await refreshSessionById('current', providerId)
+  }
+
+  const other = await findRefreshableProviderSession(providerId, session.$id)
+  if (other) return await refreshSessionById(other.$id, providerId)
+
+  throw new QuickSetupReauthorizeRequiredError()
 }
 
 export async function findProviderIdentity(
@@ -129,7 +152,12 @@ export async function findProviderIdentity(
 
 /**
  * Best available provider access token without user interaction, or `null`
- * when a new authorization is needed.
+ * when only a new authorization can help.
+ *
+ * Tries, in order: the current session's live token, a refresh of the current
+ * session, the identity's token (fresh right after a claim), then a refresh of
+ * any other session this account holds for the provider. Appwrite has no
+ * endpoint to refresh an identity, which is why the sessions carry the flow.
  */
 export async function resolveProviderAccessToken(
   providerId: string,
@@ -143,14 +171,12 @@ export async function resolveProviderAccessToken(
 
   if (sessionCanRefreshProvider(session, providerId)) {
     try {
-      return await refreshFromSession(session, providerId)
+      return await refreshSessionById('current', providerId)
     } catch (error) {
       if (!(error instanceof QuickSetupReauthorizeRequiredError)) throw error
     }
   }
 
-  // Identity tokens are only fresh right after a claim (short lifetime), but
-  // they cover the case where the callback session was replaced since.
   const identity = await findProviderIdentity(providerId)
   if (
     identity?.providerAccessToken &&
@@ -160,6 +186,15 @@ export async function resolveProviderAccessToken(
       token: identity.providerAccessToken,
       expiry: identity.providerAccessTokenExpiry,
       source: 'identity',
+    }
+  }
+
+  const other = await findRefreshableProviderSession(providerId, session.$id)
+  if (other) {
+    try {
+      return await refreshSessionById(other.$id, providerId)
+    } catch (error) {
+      if (!(error instanceof QuickSetupReauthorizeRequiredError)) throw error
     }
   }
 

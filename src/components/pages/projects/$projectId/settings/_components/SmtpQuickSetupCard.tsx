@@ -58,10 +58,11 @@ interface SmtpQuickSetupCardProps {
  * Authorization leaves for the provider and comes back through
  * `/auth/smtp/callback`, which restores the console session (Appwrite drops it
  * when the OAuth2 flow starts) and returns here with `smtpSetup=connected`.
- * From there this card resolves the provider access token from the current
- * session, refreshing it through `updateSession` while the dialog is open and
- * asking for a new authorization when the refresh is no longer possible.
- * Tokens are kept in memory only.
+ * From there this card resolves the provider access token from any session
+ * this account holds for the provider, refreshing it through `updateSession`.
+ * Clicking a connected provider never leaves the page: if no session can
+ * produce a token, the dialog says the authorization expired and the user
+ * decides whether to reconnect. Tokens are kept in memory only.
  */
 export function SmtpQuickSetupCard({
   projectId,
@@ -200,19 +201,33 @@ export function SmtpQuickSetupCard({
     })()
   }, [returnState, queryClient, stripReturnParams, openDialogFor, t])
 
-  const handleSetup = async (provider: SmtpQuickSetupProvider) => {
+  const handleSetup = async (
+    provider: SmtpQuickSetupProvider,
+    connected: boolean,
+  ) => {
     if (!isProviderAvailable(provider) || !accountId) return
 
     setIsConnecting(true)
     try {
-      // A live token means the provider is still connected from this session;
-      // skip the round trip. Otherwise re-authorize, which Appwrite only lets
-      // us do by replacing the current session.
+      // Reuses a live token, or refreshes one from any session this account
+      // holds for the provider.
       if (await openDialogFor(provider)) {
         setIsConnecting(false)
         return
       }
-      // The page unloads on redirect, so the tile stays disabled until then.
+
+      if (connected) {
+        // An already connected provider never gets bounced to the consent
+        // screen on a click. The dialog opens and explains that the
+        // authorization expired, leaving reconnecting to the user.
+        setActiveProvider(provider)
+        setDialogOpen(true)
+        setIsConnecting(false)
+        return
+      }
+
+      // First connection: the page unloads on redirect, so the tile stays
+      // disabled until then.
       startProviderAuthorization(provider, projectId, accountId)
     } catch (error) {
       setIsConnecting(false)
@@ -255,7 +270,12 @@ export function SmtpQuickSetupCard({
                   isConnecting
                 }
                 planTooltip={planTooltip}
-                onSelect={() => void handleSetup(provider)}
+                onSelect={() =>
+                  void handleSetup(
+                    provider,
+                    identityByProvider.has(provider.id),
+                  )
+                }
                 onDisconnect={() => setDisconnecting(provider)}
               />
             ))}
