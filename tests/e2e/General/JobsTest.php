@@ -35,6 +35,9 @@ use Utopia\Storage\Device\Local;
 
 final class JobsTest extends TestCase
 {
+    // Keep the expected 1 MB log limit independent of production configuration.
+    private const int LOG_BYTES = 1_000_000;
+
     #[DataProvider('callbacks')]
     public function testUpdate(string $event, bool $extension, bool $delete, string $log = 'build output', string $expectedLogs = "build output\n"): void
     {
@@ -78,7 +81,7 @@ final class JobsTest extends TestCase
                 $attributes[] = new Document([
                     '$id' => $name,
                     'type' => Database::VAR_STRING,
-                    'size' => $name === 'buildLogs' ? APP_LOG_LENGTH_LIMIT : 512,
+                    'size' => $name === 'buildLogs' ? self::LOG_BYTES : 512,
                     'required' => false,
                     'array' => false,
                 ]);
@@ -158,7 +161,7 @@ final class JobsTest extends TestCase
                 $this->assertSame(\strlen($expectedLogs), \strlen($deployment->getAttribute('buildLogs')));
                 $this->assertSame($expectedLogs, $deployment->getAttribute('buildLogs'));
                 $this->assertTrue(\mb_check_encoding($deployment->getAttribute('buildLogs'), 'UTF-8'));
-                $this->assertLessThanOrEqual(APP_LOG_LENGTH_LIMIT, \strlen($deployment->getAttribute('buildLogs')));
+                $this->assertLessThanOrEqual(self::LOG_BYTES, \strlen($deployment->getAttribute('buildLogs')));
                 $this->assertCount(1, $pubsub->messages);
                 $this->assertSame($deploymentId, $pubsub->messages[0]['data']['payload']['$id']);
                 $this->assertSame($expectedLogs, $pubsub->messages[0]['data']['payload']['buildLogs']);
@@ -181,14 +184,14 @@ final class JobsTest extends TestCase
         yield 'surviving deployment' => ['orchestrator.job.log', false, false];
         yield 'short Unicode logs' => ['orchestrator.job.log', false, false, 'Build complete ✅ café', "Build complete ✅ café\n"];
 
-        $tail = 'é' . \str_repeat('x', APP_LOG_LENGTH_LIMIT - \strlen("é\n"));
+        $tail = 'é' . \str_repeat('x', self::LOG_BYTES - \strlen("é\n"));
         yield 'truncation at Unicode character boundary' => ['orchestrator.job.log', false, false, 'discarded ' . $tail, $tail . "\n"];
 
         $prefix = 'retained ';
         $suffix = ' completed';
         foreach (['é', '€', '🚀'] as $character) {
             for ($bytes = 1; $bytes < \strlen($character); $bytes++) {
-                $tail = $prefix . \str_repeat('x', APP_LOG_LENGTH_LIMIT - $bytes - \strlen($prefix . $suffix . "\n")) . $suffix;
+                $tail = $prefix . \str_repeat('x', self::LOG_BYTES - $bytes - \strlen($prefix . $suffix . "\n")) . $suffix;
                 yield "truncation within {$character} retaining {$bytes} bytes" => [
                     'orchestrator.job.log', false, false,
                     'discarded ' . $character . $tail,
