@@ -266,3 +266,12 @@ export function getDebugMenuTooltipSide(
 ): 'left' | 'right' {
   return position.x > viewportWidth / 2 ? 'left' : 'right'
 }
+
+/**
+ * Layer classes for dialogs opened from inside the debug menu, so they stack
+ * above its popover shell (`z-[10060]`).
+ */
+export const DEBUG_MENU_DIALOG_LAYER = {
+  contentClassName: 'z-[10070]',
+  overlayClassName: 'z-[10070]',
+} as const

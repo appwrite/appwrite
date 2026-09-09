@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
 type ConfirmActionDialogProps = {
   open: boolean
@@ -18,6 +19,10 @@ type ConfirmActionDialogProps = {
   confirmVariant?: 'default' | 'destructive'
   onConfirm: () => void
   isConfirming?: boolean
+  /** Extra classes for the dialog panel (e.g. a higher z-index inside popovers). */
+  contentClassName?: string
+  /** Extra classes for the backdrop. */
+  overlayClassName?: string
 }
 
 export function ConfirmActionDialog({
@@ -29,11 +34,16 @@ export function ConfirmActionDialog({
   confirmVariant = 'default',
   onConfirm,
   isConfirming = false,
+  contentClassName,
+  overlayClassName,
 }: ConfirmActionDialogProps) {
   const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className={cn('sm:max-w-md p-0', contentClassName)}
+        overlayClassName={overlayClassName}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t(title)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
