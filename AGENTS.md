@@ -1141,12 +1141,6 @@ feature flag overrides, preserving the selected profile and other debug settings
 Wait for the resulting UI render before interacting with an enabled feature.
 These flags do not grant backend permissions. Curl cannot call this browser API.
 
-Verify the API with `bun test --timeout 30000 tests/browser/browser-api.test.ts`.
-To also exercise a running development app, prefix that command with
-`BROWSER_API_DEV_URL=http://localhost:3000` (use the actual server port). The
-browser tests use isolated contexts and cover production exposure, validation,
-persistence, resets, and live UI updates when a development URL is provided.
-
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
 **Per-feature env overrides** (optional; unset = profile default):
