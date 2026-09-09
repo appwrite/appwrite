@@ -1,12 +1,14 @@
 ---
 layout: post
-title: 'Introducing AutoGravity: Automatic image cropping for Appwrite'
-description: Learn how AutoGravity turns an image into a useful crop coordinate using saliency detection and a small, efficient model pipeline.
-date: 2026-09-09
-timeToRead: 4
+title: 'Automatic image cropping in Appwrite with AutoGravity'
+description: AutoGravity brings automatic image cropping to Appwrite Storage. Learn how saliency detection and face detection pick the focal point behind gravity=auto.
+date: 2026-09-10
+cover: /images/blog/introducing-autogravity/cover.avif
+timeToRead: 6
 author: torsten-dittmann
-category: announcement
+category: announcements
 featured: false
+unlisted: false
 callToAction: true
 draft: false
 faqs:
@@ -20,31 +22,33 @@ faqs:
     answer: 'AutoGravity combines a quantized full U²-Net model for general saliency analysis with the lightweight YuNet face detector for portrait composition. Both run through ONNX Runtime.'
   - question: 'Does AutoGravity recognize people?'
     answer: 'No. YuNet only detects face bounding boxes. AutoGravity does not identify people or create or store biometric embeddings.'
+  - question: 'Do existing gravity values still work?'
+    answer: 'Yes. The fixed values such as center, top, and bottom-right behave exactly as before. Automatic cropping only runs when a request sets gravity to auto.'
 ---
 
 Cropping an image is easy when its subject is in the center. Real images are rarely that predictable. A person may stand near one edge, an animal may occupy a corner, or the most important object may be surrounded by empty space.
 
-Appwrite's file preview endpoint already supports fixed crop positions such as `center`, `top`, and `bottom-right`. These options are predictable, but they require the developer to know the composition of every image in advance.
+Appwrite's [file preview endpoint](/docs/products/storage/images) already supports fixed crop positions such as `center`, `top`, and `bottom-right`. These options are predictable, but they require the developer to know the composition of every image in advance.
 
-Today, I am introducing [AutoGravity](https://github.com/appwrite/autogravity), an open-source Go service that lets the image choose its own crop focus:
+Today, we are introducing **AutoGravity**, an open-source Go service that adds automatic image cropping to Appwrite Storage. It analyzes an image, finds the point a crop should keep visible, and returns it as a normalized coordinate. Appwrite exposes it through a single new gravity value:
 
 ```http
 ?width=400&height=400&gravity=auto
 ```
 
-To the developer, it feels like a small bit of magic. Behind it is a model pipeline that turns arbitrary image content into one useful coordinate.
+Behind that one parameter is a model pipeline that turns arbitrary image content into a single crop coordinate. The [AutoGravity source](https://github.com/appwrite/autogravity) is public, so every decision described below can be read in the code.
 
 The difference is easiest to see when the subject is far from the middle of the source image:
 
-![A golden retriever positioned on the left side of a wide photograph](/images/blog/introducing-autogravity/original.jpg)
+![A golden retriever positioned on the left side of a wide photograph](/images/blog/introducing-autogravity/original.avif)
 
 | `gravity=center`                                                                                                                        | `gravity=auto`                                                                                                              |
 | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| ![A center crop that removes the golden retriever and shows only the field](/images/blog/introducing-autogravity/center-crop.jpg) | ![An automatic crop that keeps the golden retriever in view](/images/blog/introducing-autogravity/automatic-crop.jpg) |
+| ![A center crop that removes the golden retriever and shows only the field](/images/blog/introducing-autogravity/center-crop.avif) | ![An automatic crop that keeps the golden retriever in view](/images/blog/introducing-autogravity/automatic-crop.avif) |
 
 The fixed center crop preserves the middle of the image, which is mostly grass. Automatic gravity finds the dog and keeps it in view.
 
-# What automatic gravity means
+# What gravity=auto returns
 
 AutoGravity does not crop the image itself. It finds a **focal point**, the X/Y coordinate that Appwrite should try to keep visible while cropping.
 
@@ -63,7 +67,43 @@ The result is normalized to values between `0.0` and `1.0`, so it works independ
 
 Appwrite passes that point to its existing image transformation pipeline, which handles the actual crop. AutoGravity only answers one question: where should the crop focus?
 
-# Finding what stands out
+# Using automatic cropping in a preview request
+
+Nothing changes in how you request a preview. The `gravity` parameter accepts `auto` alongside the fixed positions it already supported, and every other option such as `quality`, `output`, and `borderRadius` combines with it as before.
+
+With the Web SDK, an automatically cropped square thumbnail looks like this:
+
+```client-web
+import { Client, Storage } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const storage = new Storage(client);
+
+const thumbnail = storage.getFilePreview({
+    bucketId: 'photos',
+    fileId: 'golden-retriever.jpg',
+    width: 400,
+    height: 400,
+    gravity: 'auto'
+});
+
+console.log(thumbnail.href);
+```
+
+The same request as a plain URL, which is what the SDK builds for you:
+
+```http
+GET /v1/storage/buckets/photos/files/golden-retriever.jpg/preview?width=400&height=400&gravity=auto&project=<PROJECT_ID>
+```
+
+Appwrite caches transformed images, so the model pipeline runs once per unique combination of file and parameters. Repeated requests for the same thumbnail are served from cache and never touch AutoGravity again.
+
+Fixed gravity values are untouched. If you rely on `center` or `top-left` today, your previews keep rendering exactly as they did.
+
+# How saliency detection finds the subject
 
 The main model behind AutoGravity is [U²-Net](https://arxiv.org/abs/2005.09007), a neural network built for **salient object detection**. In computer vision, salient means visually noticeable or likely to attract attention.
 
@@ -85,13 +125,13 @@ A **connected component** is a group of neighboring high-saliency pixels. AutoGr
 
 The **weighted centroid** is the region's average position, with stronger saliency values contributing more than weaker ones. The resulting point stays near the most visually important part of the strongest subject instead of drifting between unrelated subjects. If the map contains no usable saliency, AutoGravity safely falls back to the image center.
 
-![A comparison showing how an all-saliency centroid falls between two subjects while the strongest connected region selects one subject](/images/blog/introducing-autogravity/strongest-connected-region.png)
+![A comparison showing how an all-saliency centroid falls between two subjects while the strongest connected region selects one subject](/images/blog/introducing-autogravity/strongest-connected-region.avif)
 
-# A small extra hint for portraits
+# Face detection for portrait crops
 
 Saliency works across many types of images, but the center of a person's full silhouette often falls around their torso. For a portrait crop, the face is usually a better focal point.
 
-![A portrait comparison showing the saliency focal point on the torso and the face-priority focal point centered on the face](/images/blog/introducing-autogravity/portrait-saliency-face.jpg)
+![A portrait comparison showing the saliency focal point on the torso and the face-priority focal point centered on the face](/images/blog/introducing-autogravity/portrait-saliency-face.avif)
 
 AutoGravity uses [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), a lightweight face detector, as an additional signal. A face detector returns rectangular face locations, called **bounding boxes**, and a confidence score for each detection. It finds where a face is but does not identify the person.
 
@@ -103,17 +143,17 @@ priority = confidence × √(bounding box area)
 
 If no reliable face is found, the request continues through U²-Net as usual. This makes face detection a useful hint rather than a requirement. Animals, objects, landscapes, blurred faces, and uncertain detections all retain the general saliency behavior.
 
-# Running the models
+# Running U²-Net and YuNet with ONNX Runtime
 
 Both models use ONNX, a portable format for representing trained machine-learning models. ONNX Runtime performs **inference**, which means running a new image through a trained model to produce an output. AutoGravity loads both models once and reuses their inference sessions across requests.
 
-For saliency, I chose full U²-Net over the smaller U²-NetP variant because the smaller model missed clear subjects in some natural scenes. The full model originally stored its weights as 32-bit floating-point numbers, commonly called **FP32**, and occupied approximately 168 MiB.
+For saliency, we chose full U²-Net over the smaller U²-NetP variant because the smaller model missed clear subjects in some natural scenes. The full model originally stored its weights as 32-bit floating-point numbers, commonly called **FP32**, and occupied approximately 168 MiB.
 
-I quantized those weights to 8-bit integers, or **INT8**, reducing the model to approximately 42 MiB. Quantization stores model weights with lower-precision numbers, trading a small amount of numerical precision for a much smaller artifact and lower resource usage.
+We quantized those weights to 8-bit integers, or **INT8**, reducing the model to approximately 42 MiB. Quantization stores model weights with lower-precision numbers, trading a small amount of numerical precision for a much smaller artifact and lower resource usage.
 
 The YuNet model adds only about 230 KiB. When it selects a face, AutoGravity can return immediately without running the larger saliency model.
 
-# One automatic crop interface
+# What AutoGravity does and does not do
 
 The response includes `source: "face"` or `source: "saliency"` to show which signal supplied the focal point. Its confidence value comes from the selected model, so confidence values from the two sources should not be compared directly or treated as calibrated probabilities.
 
@@ -121,9 +161,13 @@ AutoGravity never crops, stores, or modifies the submitted image. It does not pe
 
 The public interface remains one query parameter, `gravity=auto`. The saliency maps, model selection, coordinate mapping, and fallback behavior stay behind it, giving Appwrite a crop that adapts to the image without asking developers to specify where every subject will appear.
 
-# Resources
+# Try automatic image cropping in Appwrite
 
+Add `gravity=auto` to any file preview request and the crop follows the subject instead of the frame. Fixed gravity values keep working exactly as before, so nothing changes until you opt in.
+
+Automatic gravity reaches Appwrite through the [automatic gravity integration](https://github.com/appwrite/appwrite/pull/13501). Once your [Appwrite Cloud](https://cloud.appwrite.io) project or self-hosted release includes it, the option is available on every existing bucket with no configuration. The service itself is open source, so you can read how every focal point is chosen or run it on your own infrastructure.
+
+- [Image preview options](/docs/products/storage/images)
+- [Appwrite Storage](/docs/products/storage)
 - [AutoGravity source code](https://github.com/appwrite/autogravity)
-- [Face-priority implementation](https://github.com/appwrite/autogravity/pull/11)
-- [Automatic gravity integration in Appwrite](https://github.com/appwrite/appwrite/pull/13501)
 - [U²-Net paper](https://arxiv.org/abs/2005.09007)

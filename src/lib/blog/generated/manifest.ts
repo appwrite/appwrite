@@ -3,6 +3,22 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "introducing-autogravity",
+    "href": "/blog/post/introducing-autogravity",
+    "title": "Automatic image cropping in Appwrite with AutoGravity",
+    "description": "AutoGravity brings automatic image cropping to Appwrite Storage. Learn how saliency detection and face detection pick the focal point behind gravity=auto.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 6,
+    "author": "torsten-dittmann",
+    "category": "announcements",
+    "featured": false,
+    "unlisted": false,
+    "draft": false,
+    "cover": "/images/blog/introducing-autogravity/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
@@ -15,20 +31,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "cover": "/images/blog/customer-story-lorari/cover.avif",
     "hasCover": true
-  },
-  {
-    "slug": "introducing-autogravity",
-    "href": "/blog/post/introducing-autogravity",
-    "title": "Introducing AutoGravity: Automatic image cropping for Appwrite",
-    "description": "Learn how AutoGravity turns an image into a useful crop coordinate using saliency detection and a small, efficient model pipeline.",
-    "date": "2026-09-09",
-    "lastUpdated": "2026-09-09",
-    "timeToRead": 4,
-    "author": "torsten-dittmann",
-    "category": "announcement",
-    "featured": false,
-    "draft": false,
-    "hasCover": false
   },
   {
     "slug": "drizzle-orm-appwrite-postgres",

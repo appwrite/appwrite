@@ -24,7 +24,7 @@ Below you can find all the different parameters offered by the preview endpoint 
 | --------------| --------------------------------------------------------------------------------------------------------------- |
 | width         | Set the width of the output image in pixels, the image will be resized keeping the aspect ratio intact. Accepts integer between `0-4000`  |
 | height        | Set the height of the output image in pixels, the image will be resized keeping the aspect ratio intact. Accepts integer between `0-4000` |
-| gravity       | The gravity while cropping the image providing either width, height, or both. Accepts any of: `center`, `top-left`, `top`, `top-right`, `left`, `right`, `bottom-left`, `bottom`, `bottom-right`. |
+| gravity       | The gravity while cropping the image providing either width, height, or both. Accepts any of: `center`, `top-left`, `top`, `top-right`, `left`, `right`, `bottom-left`, `bottom`, `bottom-right`, or `auto`. When set to `auto`, Appwrite detects the main subject of the image and keeps it in view while cropping. |
 | quality       | Set the quality of the output image. Accepts integer between `0-100`, where `100` is the highest quality.          |
 | borderWidth   | Set a border with the given width in pixels to the output image. Accepts integer between `0-100`.               |
 | borderColor   | Set a border-color for the output image. Accepts any valid hex color value without the leading `#`.            |
