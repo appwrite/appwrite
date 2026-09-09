@@ -40,7 +40,6 @@
     "generate:cover-manifest": "bun run scripts/generate-cover-manifest.ts",
     "generate:docs": "bun run scripts/generate-docs.ts",
     "generate:docs-exports": "bun run scripts/generate-docs-exports.ts",
-    "generate:docs-nav": "bun run scripts/generate-docs-nav.ts",
     "generate:github-stars": "node scripts/generate-github-stars.js",
     "generate:public-icon-manifest": "bun run scripts/generate-public-icon-manifest.ts",
     "generate:routes": "tsr generate",

@@ -134,9 +134,8 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `start`                               | Production Bun server                                                                                                             |
 | `generate:blog-images`                | Blog cover images (optional slug)                                                                                                 |
 | `generate:content-images`             | Convert content images to AVIF                                                                                                    |
-| `generate:docs`                       | Docs manifest, nav, LLM exports, sitemap                                                                                          |
+| `generate:docs`                       | Docs manifest, LLM exports, sitemap                                                                                               |
 | `generate:docs-exports`               | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
-| `generate:docs-nav`                   | Docs section navigation only                                                                                                      |
 | `generate:github-stars`               | GitHub star count JSON                                                                                                            |
 | `generate:public-icon-manifest`       | Public icon picker manifest                                                                                                       |
 | `generate:routes`                     | TanStack Router types                                                                                                             |
