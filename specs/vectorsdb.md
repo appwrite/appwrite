@@ -1,6 +1,6 @@
 # VectorsDB API specifications
 
-Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v16.0.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -16,10 +16,9 @@ Base path prefix: `/v1/vectorsdb`
 | --- | --- | --- | --- |
 | [`create`](#vectorsdb-create) | POST | `/v1/vectorsdb` | `Promise<Models.Database>` |
 | [`createCollection`](#vectorsdb-createcollection) | POST | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollection>` |
-| [`createFailover`](#vectorsdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#vectorsdb-createfailover) | POST | `/v1/vectorsdb/{databaseId}/failovers` | `Promise<Models.DedicatedDatabase>` |
 | [`createIndex`](#vectorsdb-createindex) | POST | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.Index>` |
 | [`createOperations`](#vectorsdb-createoperations) | POST | `/v1/vectorsdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
-| [`createTextEmbeddings`](#vectorsdb-createtextembeddings) | POST | `/v1/vectorsdb/embeddings/text` | `Promise<Models.EmbeddingList>` |
 | [`createTransaction`](#vectorsdb-createtransaction) | POST | `/v1/vectorsdb/transactions` | `Promise<Models.Transaction>` |
 | [`delete`](#vectorsdb-delete) | DELETE | `/v1/vectorsdb/{databaseId}` | `Promise<{}>` |
 | [`deleteCollection`](#vectorsdb-deletecollection) | DELETE | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<{}>` |
@@ -29,13 +28,14 @@ Base path prefix: `/v1/vectorsdb`
 | [`get`](#vectorsdb-get) | GET | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#vectorsdb-getcollection) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
 | [`getIndex`](#vectorsdb-getindex) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
-| [`getReplicas`](#vectorsdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#vectorsdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
+| [`getReplicas`](#vectorsdb-getreplicas) | GET | `/v1/vectorsdb/{databaseId}/replicas` | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#vectorsdb-getstatus) | GET | `/v1/vectorsdb/{databaseId}/status` | `Promise<Models.DatabaseStatus>` |
 | [`getTransaction`](#vectorsdb-gettransaction) | GET | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#vectorsdb-list) | GET | `/v1/vectorsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#vectorsdb-listcollections) | GET | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollectionList>` |
 | [`listIndexes`](#vectorsdb-listindexes) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
-| [`listSpecifications`](#vectorsdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listOperations`](#vectorsdb-listoperations) | GET | `/v1/vectorsdb/{databaseId}/operations` | `Promise<Models.DedicatedDatabaseOperationList>` |
+| [`listSpecifications`](#vectorsdb-listspecifications) | GET | `/v1/vectorsdb/specifications` | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTransactions`](#vectorsdb-listtransactions) | GET | `/v1/vectorsdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#vectorsdb-update) | PUT | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#vectorsdb-updatecollection) | PUT | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
@@ -68,6 +68,7 @@ Create a new Database.
 | `enabled` | `boolean` | No | Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
 | `specification` | `string` | No | Database specification. Defaults to `serverless`, which creates the database on the shared pool. Any other value provisions a dedicated database on that specification. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Requires a dedicated `specification`; must be 0 for a serverless database. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Requires a dedicated `specification`; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -78,6 +79,7 @@ sdk.forProject(projectId).vectorsDB.create({
   enabled?: boolean;
   specification?: string;
   replicas?: number;
+  syncMode?: string;
 })
 ```
 
@@ -107,36 +109,30 @@ sdk.forProject(projectId).vectorsDB.list({
 })
 ```
 
-<a id="vectorsdb-embeddings-resource"></a>
+<a id="vectorsdb-specifications-resource"></a>
 
-### Embeddings
+### Specifications
 
-REST resource: `/v1/vectorsdb/embeddings/…`
+REST resource: `/v1/vectorsdb/specifications/…`
 
-<a id="vectorsdb-createtextembeddings"></a>
+<a id="vectorsdb-listspecifications"></a>
 
-#### `createTextEmbeddings`
+#### `listSpecifications`
 
-Generate vector embeddings for an array of text using the selected embedding model. Use the returned vectors to power semantic search and similarity queries against your vector collections.
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, its own prices and overage rates, and whether it is enabled for the organization.
 
-- **HTTP:** `POST`
-- **Path:** `/v1/vectorsdb/embeddings/text`
-- **Returns:** `Promise<Models.EmbeddingList>`
+- **HTTP:** `GET`
+- **Path:** `/v1/vectorsdb/specifications`
+- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
 
 **Parameters**
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `texts` | `string[]` | Yes | Array of text to generate embeddings. |
-| `model` | `EmbeddingModel` | No | The embedding model to use for generating vector embeddings. |
+_No request parameters._
 
 **SDK signature**
 
 ```typescript
-sdk.forProject(projectId).vectorsDB.createTextEmbeddings({
-  texts: string[];
-  model?: EmbeddingModel;
-})
+sdk.forProject(projectId).vectorsDB.listSpecifications()
 ```
 
 <a id="vectorsdb-transactions-resource"></a>
@@ -366,7 +362,9 @@ Update a database by its unique ID.
 | `databaseId` | `string` | Yes | Database ID. |
 | `name` | `string` | Yes | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
+| `specification` | `string` | No | Database specification. Resizing between dedicated specifications changes cpu, memory, storage and the connection ceiling via a rolling cutover with zero downtime. Moving a `serverless` database onto a dedicated specification is a data migration, not a resize. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -375,7 +373,9 @@ sdk.forProject(projectId).vectorsDB.update({
   databaseId: string;
   name: string;
   enabled?: boolean;
+  specification?: string;
   replicas?: number;
+  syncMode?: string;
 })
 ```
 
@@ -691,30 +691,20 @@ sdk.forProject(projectId).vectorsDB.updateCollection({
 })
 ```
 
-<a id="vectorsdb-listspecifications"></a>
+<a id="vectorsdb-failovers-resource"></a>
 
-#### `listSpecifications`
+### Failovers
 
-List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
-
-- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
-
-**Parameters**
-
-_No request parameters._
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).vectorsDB.listSpecifications()
-```
+REST resource: `/v1/vectorsdb/{databaseId}/…`
 
 <a id="vectorsdb-createfailover"></a>
 
 #### `createFailover`
 
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates. A database left mid-operation also accepts this call as a repair once nothing is driving the operation it is stuck in. Repairing a failover that did not finish, a `failed` database, a stranded upgrade or migrate, or a stranded compute resize additionally requires `targetReplicaId` to name the member to promote, because the default target may be the member that operation already promoted.
 
+- **HTTP:** `POST`
+- **Path:** `/v1/vectorsdb/{databaseId}/failovers`
 - **Returns:** `Promise<Models.DedicatedDatabase>`
 
 **Parameters**
@@ -733,12 +723,56 @@ sdk.forProject(projectId).vectorsDB.createFailover({
 })
 ```
 
+<a id="vectorsdb-operations-resource"></a>
+
+### Operations
+
+REST resource: `/v1/vectorsdb/{databaseId}/…`
+
+<a id="vectorsdb-listoperations"></a>
+
+#### `listOperations`
+
+List the lifecycle operations recorded for a dedicated database, newest first. Every provision, update, restore, backup and replication action is recorded here with its outcome, including an attempt that was abandoned because another worker took over the database.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/vectorsdb/{databaseId}/operations`
+- **Returns:** `Promise<Models.DedicatedDatabaseOperationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by operation status. |
+| `limit` | `number` | No | Maximum number of operations to return. |
+| `offset` | `number` | No | Number of operations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).vectorsDB.listOperations({
+  databaseId: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
+<a id="vectorsdb-replicas-resource"></a>
+
+### Replicas
+
+REST resource: `/v1/vectorsdb/{databaseId}/…`
+
 <a id="vectorsdb-getreplicas"></a>
 
 #### `getReplicas`
 
 Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
 
+- **HTTP:** `GET`
+- **Path:** `/v1/vectorsdb/{databaseId}/replicas`
 - **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
 
 **Parameters**
@@ -755,12 +789,20 @@ sdk.forProject(projectId).vectorsDB.getReplicas({
 })
 ```
 
+<a id="vectorsdb-status-resource"></a>
+
+### Status
+
+REST resource: `/v1/vectorsdb/{databaseId}/…`
+
 <a id="vectorsdb-getstatus"></a>
 
 #### `getStatus`
 
 Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
 
+- **HTTP:** `GET`
+- **Path:** `/v1/vectorsdb/{databaseId}/status`
 - **Returns:** `Promise<Models.DatabaseStatus>`
 
 **Parameters**

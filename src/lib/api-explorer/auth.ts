@@ -1,3 +1,7 @@
+import {
+  getAcceptedSecuritySchemeNames,
+  getRequiredSecuritySchemeNames,
+} from './security'
 import type {
   ApiExplorerMethod,
   ApiExplorerProjectPlatform,
@@ -17,6 +21,8 @@ export function getMethodAuthKeys(method: ApiExplorerMethod): string[] {
   if (auth && Object.keys(auth).length > 0) {
     return Object.keys(auth)
   }
+  if (method.security !== undefined)
+    return getRequiredSecuritySchemeNames(method)
   return splitAuthLabel(method.authLabel)
 }
 
@@ -39,7 +45,7 @@ export function methodRequiresApiKey(
 }
 
 function allowsApiKeyInSecurity(method: ApiExplorerMethod): boolean {
-  return Boolean(method.security?.[0]?.Key)
+  return getAcceptedSecuritySchemeNames(method).includes('Key')
 }
 
 /** Server endpoints that require or accept an API key. */
@@ -49,7 +55,9 @@ export function methodSupportsServerApiKey(
 ): boolean {
   if (platform !== 'server') return false
   if (methodRequiresApiKey(method, platform)) return true
-  return allowsApiKeyInSecurity(method) && !getMethodAuthKeys(method).includes('Key')
+  return (
+    allowsApiKeyInSecurity(method) && !getMethodAuthKeys(method).includes('Key')
+  )
 }
 
 /**

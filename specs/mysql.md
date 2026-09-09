@@ -1,6 +1,6 @@
 # MySQL API specifications
 
-Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v16.0.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -39,12 +39,13 @@ Base path prefix: `/v1/mysql`
 | [`listBackupPolicies`](#mysql-listbackuppolicies) | GET | `/v1/mysql/{databaseId}/backups/policies` | `Promise<Models.BackupPolicyList>` |
 | [`listBackups`](#mysql-listbackups) | GET | `/v1/mysql/{databaseId}/backups` | `Promise<Models.DedicatedDatabaseBackupList>` |
 | [`listBranches`](#mysql-listbranches) | GET | `/v1/mysql/{databaseId}/branches` | `Promise<Models.DedicatedDatabaseBranchList>` |
+| [`listOperations`](#mysql-listoperations) | GET | `/v1/mysql/{databaseId}/operations` | `Promise<Models.DedicatedDatabaseOperationList>` |
 | [`listRestorations`](#mysql-listrestorations) | GET | `/v1/mysql/{databaseId}/restorations` | `Promise<Models.DedicatedDatabaseRestorationList>` |
 | [`listSpecifications`](#mysql-listspecifications) | GET | `/v1/mysql/specifications` | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`update`](#mysql-update) | PATCH | `/v1/mysql/{databaseId}` | `Promise<Models.DedicatedDatabase>` |
 | [`updateBackupPolicy`](#mysql-updatebackuppolicy) | PATCH | `/v1/mysql/{databaseId}/backups/policies/{policyId}` | `Promise<Models.BackupPolicy>` |
 | [`updateBackupStorage`](#mysql-updatebackupstorage) | PUT | `/v1/mysql/{databaseId}/backups/storage` | `Promise<Models.DedicatedDatabaseBackupStorage>` |
-| [`updateCredentials`](#mysql-updatecredentials) | PATCH | `/v1/mysql/{databaseId}/credentials` | `Promise<Models.DedicatedDatabase>` |
+| [`updateCredentials`](#mysql-updatecredentials) | PATCH | `/v1/mysql/{databaseId}/credentials` | `Promise<Models.DedicatedDatabaseOperation>` |
 | [`updateMaintenance`](#mysql-updatemaintenance) | PATCH | `/v1/mysql/{databaseId}/maintenance` | `Promise<Models.DedicatedDatabase>` |
 | [`updatePooler`](#mysql-updatepooler) | PATCH | `/v1/mysql/{databaseId}/pooler` | `Promise<Models.DedicatedDatabasePooler>` |
 
@@ -76,7 +77,6 @@ Create a new dedicated database with the chosen engine and configuration. Status
 | `specification` | `string` | No | Specification identifier. Drives the allocated CPU, memory, storage, storage class, and connection ceiling. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5). High availability is enabled when greater than 0. |
 | `syncMode` | `string` | No | Replication sync mode preference. Allowed values: async, sync, quorum. |
-| `standbyRegion` | `string` | No | Standby region for a cross-region replica. When set, a replica is provisioned in this region for cross-region high availability. Must differ from the database region. |
 | `networkIdleTimeoutSeconds` | `number` | No | Connection idle timeout in seconds. |
 | `networkIPAllowlist` | `string[]` | No | IP addresses/CIDR ranges allowed to connect. |
 | `idleTimeoutMinutes` | `number` | No | Minutes of inactivity before container scales to zero. |
@@ -84,8 +84,7 @@ Create a new dedicated database with the chosen engine and configuration. Status
 | `pitrRetentionDays` | `number` | No | Number of days to retain PITR data. |
 | `storageAutoscaling` | `boolean` | No | Enable automatic storage expansion when usage exceeds threshold. |
 | `storageAutoscalingThresholdPercent` | `number` | No | Storage usage percentage (50-95) that triggers automatic expansion. |
-| `storageAutoscalingMaxGb` | `number` | No | Maximum storage size in GB for autoscaling. 0 means no limit. |
-| `api` | `string` | No | Product API that owns this database: tablesdb, documentsdb, or vectorsdb. Omit for a raw database reached directly; its api is its engine. tablesdb/documentsdb/vectorsdb databases are reached only through their product APIs. |
+| `storageAutoscalingMaxGb` | `number` | No | Maximum storage size in GB for autoscaling. Defaults to 3 times the specification's storage. 0 means no limit. |
 
 **SDK signature**
 
@@ -97,7 +96,6 @@ sdk.forProject(projectId).mysql.create({
   specification?: string;
   replicas?: number;
   syncMode?: string;
-  standbyRegion?: string;
   networkIdleTimeoutSeconds?: number;
   networkIPAllowlist?: string[];
   idleTimeoutMinutes?: number;
@@ -106,7 +104,6 @@ sdk.forProject(projectId).mysql.create({
   storageAutoscaling?: boolean;
   storageAutoscalingThresholdPercent?: number;
   storageAutoscalingMaxGb?: number;
-  api?: string;
 })
 ```
 
@@ -144,7 +141,7 @@ REST resource: `/v1/mysql/specifications/…`
 
 #### `listSpecifications`
 
-List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, its own prices and overage rates, and whether it is enabled for the organization.
 
 - **HTTP:** `GET`
 - **Path:** `/v1/mysql/specifications`
@@ -234,8 +231,6 @@ Update a dedicated database configuration. All changes are applied with zero dow
 | `specification` | `string` | No | Specification. Changes cpu, memory, storage, connection ceiling, and node pool based on specification config. Resource changes are applied via rolling cutover with zero downtime. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5). High availability is enabled when greater than 0. |
 | `syncMode` | `string` | No | Replication sync mode preference. Allowed values: async, sync, quorum. |
-| `crossRegionReplicas` | `number` | No | Number of cross-region standby replicas (0-1). Cross-region replication is enabled when greater than 0. |
-| `standbyRegion` | `string` | No | Standby region for the cross-region replica. Required when enabling cross-region replication and no standby region is already configured. Must differ from the database region. |
 | `networkIdleTimeoutSeconds` | `number` | No | Connection idle timeout in seconds (60-86400). |
 | `networkIPAllowlist` | `string[]` | No | IP addresses/CIDR ranges allowed to connect. |
 | `idleTimeoutMinutes` | `number` | No | Minutes before container scales to zero. |
@@ -262,8 +257,6 @@ sdk.forProject(projectId).mysql.update({
   specification?: string;
   replicas?: number;
   syncMode?: string;
-  crossRegionReplicas?: number;
-  standbyRegion?: string;
   networkIdleTimeoutSeconds?: number;
   networkIPAllowlist?: string[];
   idleTimeoutMinutes?: number;
@@ -672,11 +665,11 @@ REST resource: `/v1/mysql/{databaseId}/…`
 
 #### `updateCredentials`
 
-Rotate the primary connection credentials for a dedicated database. Generates a new password and updates the database atomically. Previous credentials stop working immediately. Returns the database with a refreshed connection string carrying the new password.
+Queue a rotation of the primary connection credentials for a dedicated database. A hibernated database is woken by the worker before rotation. List database operations until the returned operation reaches a terminal status, then fetch the database again for the refreshed connection string.
 
 - **HTTP:** `PATCH`
 - **Path:** `/v1/mysql/{databaseId}/credentials`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
+- **Returns:** `Promise<Models.DedicatedDatabaseOperation>`
 
 **Parameters**
 
@@ -702,7 +695,7 @@ REST resource: `/v1/mysql/{databaseId}/…`
 
 #### `createExecution`
 
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header - that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values - the API does not interpolate raw strings.
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
 
 - **HTTP:** `POST`
 - **Path:** `/v1/mysql/{databaseId}/executions`
@@ -738,7 +731,7 @@ REST resource: `/v1/mysql/{databaseId}/…`
 
 #### `createFailover`
 
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates. A database left mid-operation also accepts this call as a repair once nothing is driving the operation it is stuck in. Repairing a failover that did not finish, a `failed` database, a stranded upgrade or migrate, or a stranded compute resize additionally requires `targetReplicaId` to name the member to promote, because the default target may be the member that operation already promoted.
 
 - **HTTP:** `POST`
 - **Path:** `/v1/mysql/{databaseId}/failovers`
@@ -828,6 +821,42 @@ sdk.forProject(projectId).mysql.createMigration({
 })
 ```
 
+<a id="mysql-operations-resource"></a>
+
+### Operations
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-listoperations"></a>
+
+#### `listOperations`
+
+List the lifecycle operations recorded for a dedicated database, newest first. Every provision, update, restore, backup and replication action is recorded here with its outcome, including an attempt that was abandoned because another worker took over the database.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/operations`
+- **Returns:** `Promise<Models.DedicatedDatabaseOperationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by operation status. |
+| `limit` | `number` | No | Maximum number of operations to return. |
+| `offset` | `number` | No | Number of operations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.listOperations({
+  databaseId: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
 <a id="mysql-pitr-resource"></a>
 
 ### Pitr
@@ -904,7 +933,7 @@ Update the connection pooler configuration for a dedicated database. Configure p
 | --- | --- | --- | --- |
 | `databaseId` | `string` | Yes | Database ID. |
 | `mode` | `string` | No | Connection pool mode. Allowed values: transaction, session. Transaction mode returns connections to the pool after each transaction; session mode holds connections for the entire session lifetime. |
-| `maxConnections` | `number` | No | Maximum pooled connections. |
+| `maxConnections` | `number` | No | Client-connection ceiling the pooler accepts. Supported on MySQL and MariaDB only; the PostgreSQL pooler has no client cap, so set networkMaxConnections on the database instead. |
 | `defaultPoolSize` | `number` | No | Default pool size per user. |
 | `readWriteSplitting` | `boolean` | No | Route SELECTs to HA replicas, writes and locked reads to the primary. Defaults to true when HA is enabled. |
 | `poolerCpuRequest` | `string` | No | Pooler sidecar CPU request override (Kubernetes quantity, e.g. "250m" or "1"). Leave null for the proportional default (5% of DB CPU, floor 100m). |
@@ -981,6 +1010,7 @@ Restore a database from a backup or to a specific point in time (PITR). For back
 | `databaseId` | `string` | Yes | Database ID. |
 | `type` | `string` | No | Restoration type. Allowed values: backup, pitr. Use "backup" to restore from a specific backup, or "pitr" for point-in-time recovery. |
 | `backupId` | `string` | No | Backup ID to restore from (required for backup type). |
+| `targetDatabaseId` | `string` | No | Existing database ID to restore into. The target must be distinct, ready, and use the same engine and version. |
 | `targetTime` | `string` | No | Target time for PITR (required for pitr type) as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime. |
 
 **SDK signature**
@@ -990,6 +1020,7 @@ sdk.forProject(projectId).mysql.createRestoration({
   databaseId: string;
   type?: string;
   backupId?: string;
+  targetDatabaseId?: string;
   targetTime?: string;
 })
 ```
