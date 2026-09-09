@@ -12,7 +12,7 @@ import {
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
-import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
+import { hasLikelyConsoleSession } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -25,17 +25,17 @@ import {
 } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_public/')({
-  // If HTML is ever served (localhost, or a session cookie), do not index `/`.
+  // If HTML is ever served (localhost), do not index `/`.
   head: () => ({
     meta: [NOINDEX_ROBOTS_META],
   }),
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    // Localhost guests: skip account.get and hop immediately. Production `/`
-    // is only HTML-served when a session cookie was on the request; HttpOnly
-    // cookies are invisible to JS, so still call account.get there.
-    if (shouldSkipRootAccountProbe()) {
+    // No readable session: skip account.get and go to /home (or /sign-in).
+    // Production document visits never reach this loader (SSR 301). Localhost
+    // uses cookieFallback / document.cookie. Console entry is `/app`.
+    if (!hasLikelyConsoleSession()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
         replace: true,

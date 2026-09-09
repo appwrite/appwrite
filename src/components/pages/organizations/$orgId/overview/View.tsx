@@ -1132,7 +1132,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         // No organizations at all, open creation dialog (only if not already open)
         setCreateOrgDialogOpen(true)
       } else {
-        navigate({ to: '/', replace: true })
+        navigate({ to: '/app', replace: true })
       }
     }
   }, [
@@ -1213,7 +1213,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           params: { orgId: remainingOrgs[0].$id },
           replace: true})
       } else {
-        navigate({ to: '/', replace: true })
+        navigate({ to: '/app', replace: true })
       }
     },
     onError: (error: Error) => {

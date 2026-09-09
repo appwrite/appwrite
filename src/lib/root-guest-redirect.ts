@@ -2,7 +2,6 @@ import {
   getActiveProfileFeatures,
   getActiveProfileWithoutDebugOverride,
 } from '@/lib/console-profiles'
-import { hasConsoleSessionCookieFromHeader } from '@/lib/console-session-cookie'
 import {
   isPreLaunchDocumentRequest,
   isPreLaunchModeEnabled,
@@ -53,14 +52,15 @@ export function getRootGuestRedirectStatus(
 }
 
 /**
- * Where unsigned `/` document requests should go before the SPA boots.
- * Returns null when a console session cookie is present so logged-in users
- * keep the client org redirect in `_public/index.tsx`. Production cookies are
- * HttpOnly: the client must still call `account.get`, not `document.cookie`.
+ * Where `/` document requests should go before the SPA boots.
+ *
+ * Always 301/302 on production hosts (no Cookie-header check). Session cookies
+ * are HttpOnly, so the server cannot usefully distinguish logged-in users;
+ * console entry is `/app`, which calls `account.get` on the client.
  *
  * Skipped on localhost/loopback: the Appwrite SDK often stores the session in
  * `localStorage` (`cookieFallback`) instead of an HTTP cookie, so only the
- * client loader can tell guest vs signed-in. Production domains use the cookie.
+ * client loader can tell guest vs signed-in.
  */
 export function resolveRootGuestRedirect(
   request: Request,
@@ -81,9 +81,6 @@ export function resolveRootGuestRedirect(
   if (!isRootRedirectPath(path)) return null
   if (isLocalSiteRequest(request)) return null
   if (!isPreLaunchDocumentRequest(request)) return null
-  if (hasConsoleSessionCookieFromHeader(request.headers.get('cookie'))) {
-    return null
-  }
 
   const dest: RootGuestRedirectPath = isPreLaunchModeEnabled(
     request.headers.get('cookie'),

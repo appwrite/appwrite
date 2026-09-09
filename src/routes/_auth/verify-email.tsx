@@ -104,7 +104,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
           replace: true,
         })
       }
-      throw redirect({ to: '/', replace: true })
+      throw redirect({ to: '/app', replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -148,7 +148,7 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
-        navigate({ to: '/' })
+        navigate({ to: '/app' })
       }
     },
     onError: async (error: unknown) => {
@@ -170,7 +170,7 @@ function VerifyEmailPage() {
               })
               return
             }
-            navigate({ to: '/' })
+            navigate({ to: '/app' })
             return
           }
         } catch {

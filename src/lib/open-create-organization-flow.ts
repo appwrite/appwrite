@@ -9,7 +9,7 @@ import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
  */
 export function openCreateOrganizationFlow(
   navigate: (opts: {
-    to: '/organizations/$orgId' | '/' | '/upgrade'
+    to: '/organizations/$orgId' | '/' | '/app' | '/upgrade'
     params?: { orgId: string }
     search?: { createOrg: boolean }
   }) => void,
@@ -38,7 +38,7 @@ export function openCreateOrganizationFlow(
     })
   } else {
     navigate({
-      to: '/',
+      to: '/app',
       search: { createOrg: true },
     })
   }

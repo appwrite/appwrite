@@ -12,7 +12,6 @@ import {
   setConsoleAccountUnauthenticatedError,
 } from '@/lib/console-account-cache'
 import { CONSOLE_SESSION_COOKIE_NAME } from '@/lib/console-session-cookie'
-import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 
 type RawConsoleAccountGet = () => Promise<Models.User>
@@ -38,24 +37,6 @@ export function hasLikelyConsoleSession(): boolean {
   }
 
   return document.cookie.includes(`${CONSOLE_SESSION_COOKIE_NAME}=`)
-}
-
-/**
- * Production `a_session_console` is HttpOnly, so {@link hasLikelyConsoleSession}
- * is false even when the user is signed in. Middleware already kept `/` HTML
- * for Cookie-header sessions; the client must still call `account.get`.
- *
- * Skip the probe only on local hosts where guests have neither a readable
- * cookie nor `cookieFallback` (localhost cannot SSR-redirect those).
- */
-export function shouldSkipRootAccountProbe(): boolean {
-  if (typeof window === 'undefined') return true
-  if (hasLikelyConsoleSession()) return false
-  try {
-    return isLocalDevelopmentHost(window.location.hostname)
-  } catch {
-    return false
-  }
 }
 
 /** Called once from `sdk.ts` so every `account.get` shares the same singleton. */

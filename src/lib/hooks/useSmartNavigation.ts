@@ -55,7 +55,7 @@ export function useSmartNavigation({
     }
 
     // Priority 3: No internal history, go to root
-    navigate({ to: '/' as unknown })
+    navigate({ to: '/app' as unknown })
   }, [navigate, fallbackPath, navigationHistory])
 
   return goBack

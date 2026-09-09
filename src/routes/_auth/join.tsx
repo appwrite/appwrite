@@ -154,7 +154,7 @@ function AcceptInviteContent() {
             params: { orgId: search.teamId },
           })
         } else {
-          navigate({ to: '/' })
+          navigate({ to: '/app' })
         }
       }, 2000)
     },
@@ -251,7 +251,7 @@ function AcceptInviteContent() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate({ to: '/' })}
+                      onClick={() => navigate({ to: '/app' })}
                       disabled={isBusy}
                     >
                       {t('Go to dashboard')}
@@ -298,7 +298,7 @@ function AcceptInviteContent() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate({ to: '/' })}
+                      onClick={() => navigate({ to: '/app' })}
                       disabled={isBusy}
                     >
                       {t('Go to dashboard')}
@@ -328,7 +328,7 @@ function AcceptInviteContent() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => navigate({ to: '/' })}
+                    onClick={() => navigate({ to: '/app' })}
                   >
                     {t('Go to dashboard')}
                   </Button>

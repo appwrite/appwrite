@@ -6,10 +6,10 @@ import {
 import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
 /**
- * SSR redirect for `/` on production hosts: guests without a console session
- * cookie go to the marketing home (or /init / sign-in per profile) before the
- * SPA shell loads. Localhost skips this middleware path and uses the client
- * loader in `routes/_public/index.tsx` instead (`cookieFallback` sessions).
+ * SSR redirect for `/` on production hosts: always go to the marketing home
+ * (or /init / sign-in per profile) before the SPA shell loads. Console entry
+ * is `/app` (client `account.get`). Localhost skips this middleware path and
+ * uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
  *
  * `/home` uses 301 so crawlers index the marketing homepage. Pre-launch `/init`
  * stays 302. Any HTML that still renders `/` is noindexed.

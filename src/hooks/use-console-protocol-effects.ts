@@ -120,7 +120,7 @@ export function useConsoleProtocolHandlers(options?: {
             })
           } else {
             void navigate({
-              to: '/',
+              to: '/app',
               search: { create: 'project' },
             })
           }
