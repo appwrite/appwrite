@@ -92,9 +92,11 @@ You can also let developers sign in to the Console with GitHub, GitLab, Bitbucke
 
 # One organization in the Console
 
-On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither, so the Console simplifies organization management. It creates one organization the first time you sign in, puts every project you create from the Console under it, and does not offer a way to create more. While your account belongs to that one organization, the Console hides the organization switcher.
+On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither. The Console creates an organization and an initial project when the first user signs in. After that, the API rejects additional organization creation, whether it comes from the Console, an SDK, or the CLI. This is an instance-wide limit, not a limit per account.
 
-Multi-tenancy is still supported. An organization is a team, and the API still takes a `teamId` when you create a project. Creating another team through the API creates another organization. Once your account belongs to more than one, because you created teams through the API or upgraded an instance that already had several organizations, the Console shows the organization switcher, lists every organization in the project selector, and lets you transfer projects between them.
+Other users join through invitations to the existing organization and use its existing projects. Allowing new accounts to register does not grant them access or create a project for each account. The Console explains how to get an invitation when a user has no organization access.
+
+Organizations that already exist when you upgrade are preserved. Accounts belonging to several can still use the organization switcher and transfer projects between them; the switcher stays hidden for accounts with only one. Teams inside application projects are unaffected by the organization creation limit.
 
 # Coming to self-hosted
 
