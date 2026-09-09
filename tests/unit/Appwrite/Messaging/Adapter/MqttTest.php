@@ -25,11 +25,11 @@ final class MqttTest extends TestCase
         return new Mqtt(new NoTelemetry());
     }
 
-    /** open() the fd, then subscribe it to $topic (subId defaults to the topic). */
-    private function join(Mqtt $mqtt, string $projectId, int $fd, string $topic, string $subId = ''): void
+    /** open() the fd, then subscribe it to $topic (the store keys by topic). */
+    private function join(Mqtt $mqtt, string $projectId, int $fd, string $topic): void
     {
         $mqtt->open($fd);
-        $mqtt->subscribe($projectId, $fd, $subId, [], [$topic]);
+        $mqtt->subscribe($projectId, $fd, '', [], [$topic]);
     }
 
     public function testOpenCreatesAndReusesConnection(): void
@@ -98,19 +98,18 @@ final class MqttTest extends TestCase
     {
         $mqtt = $this->adapter();
         $mqtt->open(41);
-        $mqtt->subscribe('project-a', 41, 'sub-orders', [], ['orders/new']);
-        $mqtt->subscribe('project-a', 41, 'sub-alerts', [], ['alerts/all']);
+        $mqtt->subscribe('project-a', 41, '', [], ['orders/new']);
+        $mqtt->subscribe('project-a', 41, '', [], ['alerts/all']);
 
-        $mqtt->unsubscribeSubscription(41, 'sub-orders');
+        $mqtt->unsubscribeSubscription(41, 'orders/new');
 
         $this->assertFalse($mqtt->hasSubscriber('project-a', 'orders/new'));
         $this->assertSame([41 => 1], $mqtt->getSubscribers('project-a', 'alerts/all'));
     }
 
-    public function testSubscriptionIdFallsBackToTopic(): void
+    public function testUnsubscribeByTopic(): void
     {
         $mqtt = $this->adapter();
-        // Empty subscription id: the topic itself becomes the id used for removal.
         $this->join($mqtt, 'project-a', 51, 'news/tech');
 
         $mqtt->unsubscribeSubscription(51, 'news/tech');
