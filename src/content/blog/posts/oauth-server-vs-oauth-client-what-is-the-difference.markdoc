@@ -132,11 +132,17 @@ window.location.href = authUrl;
 
 Because Appwrite runs the token exchange on the server, your app stays a thin, secure OAuth client without you having to reason about confidential versus public client rules, PKCE, or refresh logic. If OAuth as a concept is still new to you, start with [What is OAuth? A beginner's guide](/blog/post/what-is-oauth-a-beginners-guide) before wiring up providers.
 
-# Getting started with Appwrite Auth
+# Appwrite as an OAuth 2.1 server
 
-The line between an OAuth server and an OAuth client is really a line of responsibility. The server owns identity and issues trust; the client consumes it. Almost every app you build sits on the client side, and the safest way to stay there is to let a managed layer handle the flow instead of rolling your own authorization server.
+Appwrite can also sit on the other side of the OAuth flow. With the [Appwrite OAuth2 server](/blog/post/announcing-oauth2-server), your project can act as an OAuth 2.1 and OpenID Connect provider, so other apps can offer "Sign in with your product" and request scoped access to your APIs.
 
-Appwrite gives you social login, session management, and token handling out of the box, so you can ship OAuth without becoming an OAuth expert first. Configure a provider in the Console and you have working "Sign in with Google" in minutes.
+Third-party apps register as OAuth clients, users approve the permissions they request through a consent screen you host, and Appwrite issues access, refresh, and ID tokens. You can also define custom scopes for your APIs, giving you control over exactly what third-party applications can access.
+
+# Getting started with OAuth in Appwrite
+
+The line between an OAuth server and an OAuth client is really a line of responsibility. If you want users to sign in with providers like Google or GitHub, Appwrite handles the client side of the flow for you. If you want other apps to sign in with your product or access your APIs on behalf of users, your Appwrite project can act as the OAuth 2.1 and OpenID Connect provider.
+
+Appwrite supports both sides of OAuth: consuming existing identity providers through Appwrite Auth and becoming the provider itself with the Appwrite OAuth2 server.
 
 * [Appwrite Auth overview](/docs/products/auth)
 * [OAuth2 providers documentation](/docs/products/auth/oauth2)
