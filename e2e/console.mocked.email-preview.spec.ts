@@ -83,6 +83,7 @@ const TEMPLATE_HTML = `<!doctype html>
 <html>
   <body style="font-family:Arial,sans-serif;">
     <p>Hello {{user}},</p>
+    <p>Sign in to your {{b}}{{project}}{{/b}} account.</p>
     <p><a href="{{redirect}}">Verify email</a></p>
   </body>
 </html>`
@@ -367,7 +368,9 @@ test.describe('email body preview (mocked API)', () => {
 
     await expect(viewOption(page, 'Source')).toBeChecked()
 
-    await sourceEditor(page, 'Body').click()
+    const source = sourceEditor(page, 'Body')
+    await expect(source).toContainText('<!doctype html>')
+    await source.click()
     await page.keyboard.press('ControlOrMeta+A')
     await page.keyboard.type('Hello from the draft')
 
@@ -396,5 +399,17 @@ test.describe('email template preview (mocked API)', () => {
     await expect(
       previewFrame(page).getByRole('link', { name: 'Verify email' }),
     ).toBeVisible()
+  })
+
+  test('the preview renders bold tokens the way the mail worker does', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, emailMessage('sent'), { smtpEnabled: false })
+    await openTemplates(page)
+
+    const project = previewFrame(page).getByText('{{project}}', { exact: true })
+    await expect(project).toBeVisible()
+    await expect(project).toHaveCSS('font-weight', '700')
+    await expect(previewFrame(page).getByText('{{b}}')).toHaveCount(0)
   })
 })

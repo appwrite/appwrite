@@ -18,8 +18,9 @@ describe('emailPreviewDocument', () => {
 })
 
 describe('emailTemplatePreviewDocument', () => {
-  test('renders the bold tokens the mail worker substitutes', () => {
+  test('does not show the bold tokens the mail worker consumes', () => {
     const doc = emailTemplatePreviewDocument('Hi {{b}}{{project}}{{/b}} team')
-    expect(doc).toContain('Hi <strong>{{project}}</strong> team')
+    expect(doc).not.toMatch(/\{\{\/?b\}\}/)
+    expect(doc).toContain('{{project}}')
   })
 })
