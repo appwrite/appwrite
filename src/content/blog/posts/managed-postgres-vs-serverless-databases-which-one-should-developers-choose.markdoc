@@ -19,9 +19,9 @@ faqs:
   - question: Is dedicated Postgres better than a serverless database?
     answer: Dedicated Postgres is better for steady workloads, predictable traffic, low-latency applications, and teams that need dedicated, predictable database capacity. A serverless database is better for spiky, unpredictable, or low-traffic workloads where automatic scaling and usage-based pricing matter more.
 ---
-**Choose dedicated Postgres when your workload is steady and you want dedicated, predictable database capacity. Choose a serverless database when your traffic is spiky or unpredictable and you want compute to scale automatically with demand.** Both can run [PostgreSQL](https://www.postgresql.org/) or a Postgres-compatible engine under the hood, so the real decision is how compute is provisioned and scaled.
+Choosing between dedicated Postgres and a serverless database usually comes down to how predictable your workload is. If your traffic is steady, dedicated capacity gives you more predictable performance and costs. If traffic changes dramatically throughout the day, serverless can take care of scaling without you having to plan capacity in advance.
 
-That distinction matters because picking the wrong model shows up later as a surprise bill, a scaling wall, or a migration you did not budget for. This guide breaks down dedicated Postgres and serverless databases across scaling, pricing, performance, and operations, then gives you concrete guidance on when to pick each.
+Neither model is inherently better. The right choice depends on how your application behaves, how much control you need, and how you want to pay for infrastructure. This guide breaks down those trade-offs across scaling, pricing, performance, and operations.
 
 # What is a dedicated Postgres database?
 
