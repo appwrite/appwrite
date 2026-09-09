@@ -191,7 +191,6 @@ class Exception extends \Exception
     /** Deployments */
     public const string DEPLOYMENT_NOT_FOUND = 'deployment_not_found';
     public const string DEPLOYMENT_INVALID_FILE_SIZE = 'deployment_invalid_file_size';
-    public const string DEPLOYMENT_INVALID_ROOT_DIRECTORY = 'deployment_invalid_root_directory';
 
     /** Builds */
     public const string BUILD_NOT_FOUND = 'build_not_found';

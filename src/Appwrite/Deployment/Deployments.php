@@ -223,11 +223,10 @@ readonly class Deployments
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
-            // A refused variable key or root directory is the owner's to fix,
-            // so the build log carries the actual reason; anything else stays a
-            // generic internal error.
-            $owned = [Exception::VARIABLE_INVALID_KEY, Exception::DEPLOYMENT_INVALID_ROOT_DIRECTORY];
-            $buildLogs = $error instanceof Exception && \in_array($error->getType(), $owned, true)
+            // A refused variable key is the owner's to fix, so the build log
+            // carries the actual reason; anything else stays a generic
+            // internal error.
+            $buildLogs = $error instanceof Exception && $error->getType() === Exception::VARIABLE_INVALID_KEY
                 ? "\n" . $error->getMessage() . "\n"
                 : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
 
@@ -307,11 +306,9 @@ readonly class Deployments
      * Dropping whole `.` segments rather than trimming the character keeps a
      * hidden directory intact — `ltrim('.github', '.')` would deploy `github`.
      *
-     * A `..` segment is refused rather than dropped or resolved. Dropping it
-     * would silently build `docs/x` for a `docs/../x` that names `x`, and
-     * resolving it would let the subdir climb out of the tree it indexes into.
-     *
-     * @throws Exception when a segment would leave the repository
+     * `..` is left alone. Dropping it would silently build `docs/x` for a
+     * `docs/../x` that names `x`, and resolving it here would duplicate what
+     * the extractor already does with the path it is handed.
      */
     public static function rootDirectory(string $rootDirectory): string
     {
@@ -319,13 +316,6 @@ readonly class Deployments
             \explode('/', $rootDirectory),
             fn (string $segment) => $segment !== '' && $segment !== '.',
         );
-
-        if (\in_array('..', $segments, true)) {
-            throw new Exception(
-                Exception::DEPLOYMENT_INVALID_ROOT_DIRECTORY,
-                'Root directory ' . \json_encode($rootDirectory) . ' must stay inside the repository. Remove the ".." segments, then retry the deployment.'
-            );
-        }
 
         return \implode('/', $segments);
     }

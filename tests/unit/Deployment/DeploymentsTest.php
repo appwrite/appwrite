@@ -51,6 +51,9 @@ final class DeploymentsTest extends TestCase
         yield 'shipped site template' => ['./astro/starter', 'astro/starter'];
         yield 'hidden directory' => ['.github', '.github'];
         yield 'dot-prefixed name' => ['..foo', '..foo'];
+        // Left for the extractor to resolve; dropping it would build 'docs/x'.
+        yield 'parent' => ['docs/../x', 'docs/../x'];
+        yield 'parent with prefix' => ['./docs/../x', 'docs/../x'];
         yield 'nested hidden directory' => ['./.github/actions', '.github/actions'];
     }
 
@@ -58,28 +61,6 @@ final class DeploymentsTest extends TestCase
     public function testRootDirectoryCanonicalizes(string $rootDirectory, string $expected): void
     {
         $this->assertSame($expected, Deployments::rootDirectory($rootDirectory));
-    }
-
-    #[DataProvider('escapingRootDirectories')]
-    public function testRootDirectoryRefusesSegmentLeavingTheRepository(string $rootDirectory): void
-    {
-        try {
-            Deployments::rootDirectory($rootDirectory);
-            $this->fail('Expected the root directory to be refused before job submission');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::DEPLOYMENT_INVALID_ROOT_DIRECTORY, $error->getType());
-        }
-    }
-
-    public static function escapingRootDirectories(): \Iterator
-    {
-        yield 'parent' => ['..'];
-        yield 'parent path' => ['../etc'];
-        yield 'parent path with prefix' => ['./../etc'];
-        // Dropping the segment would silently build 'docs/x'; resolving it,
-        // 'x'. Neither is the directory the caller named.
-        yield 'interior parent' => ['docs/../x'];
-        yield 'escaping interior parent' => ['./docs/../../etc'];
     }
 
     public function testFunctionCommandIsDeploymentBuildCommands(): void
