@@ -1241,10 +1241,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Confirm which organization to delete.': '削除する組織を確定してください。',
   'Confirm plan change': 'プラン変更の確認',
   'Confirm organization deletion': '組織削除の確認',
-  'The following will be permanently deleted when your plan changes.':
-    'プランを変更すると、以下が完全に削除されます。',
-  'Everything below will be permanently deleted.':
-    '以下のすべてが完全に削除されます。',
   'Your organization will move to the {plan} plan.':
     '組織は {plan} プランに移行します。',
   'Delete and change plan': '削除してプランを変更',
@@ -1268,4 +1264,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Dedicated databases are spun down': '専用データベースが停止されます',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
+  'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    '削除はただちに実行されます。組織は現在の請求サイクルが終了する {date} に {plan} プランへ移行します。',
 }

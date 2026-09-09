@@ -2065,6 +2065,7 @@ export function ChangePlanWizardFullscreen() {
             ? getBillingPlanDisplayLabel(selectedPlan)
             : undefined
         }
+        planChangeDate={organization?.billingNextInvoiceDate}
         deletions={confirmDeletions}
         deletedOrganizationName={orgToDelete?.name}
         confirming={isSubmitting}

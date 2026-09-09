@@ -1463,10 +1463,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
   'Confirm plan change': 'אישור שינוי התוכנית',
   'Confirm organization deletion': 'אישור מחיקת הארגון',
-  'The following will be permanently deleted when your plan changes.':
-    'הפריטים הבאים יימחקו לצמיתות כשהתוכנית תשתנה.',
-  'Everything below will be permanently deleted.':
-    'כל מה שמופיע למטה יימחק לצמיתות.',
   'Your organization will move to the {plan} plan.':
     'הארגון שלכם יעבור לתוכנית {plan}.',
   'Delete and change plan': 'מחיקה ושינוי תוכנית',
@@ -1490,4 +1486,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
+  'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    'המחיקות מתבצעות עכשיו. הארגון שלכם יעבור לתוכנית {plan} בתאריך {date}, בתום מחזור החיוב הנוכחי.',
 }

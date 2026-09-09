@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/date-utils'
 import { useT } from '@/lib/i18n/translate'
 import type {
   DowngradeDeletionItem,
@@ -58,6 +59,7 @@ export function ConfirmPlanChange({
   open,
   onOpenChange,
   planLabel,
+  planChangeDate,
   deletions,
   deletedOrganizationName,
   confirming,
@@ -66,6 +68,8 @@ export function ConfirmPlanChange({
   open: boolean
   onOpenChange: (open: boolean) => void
   planLabel?: string
+  /** When the plan actually changes. Deletions do not wait for it. */
+  planChangeDate?: string | null
   deletions?: PendingDowngradeDeletions | null
   deletedOrganizationName?: string
   confirming: boolean
@@ -96,11 +100,7 @@ export function ConfirmPlanChange({
               : t('Confirm organization deletion')}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {planLabel
-              ? t(
-                  'The following will be permanently deleted when your plan changes.',
-                )
-              : t('Everything below will be permanently deleted.')}{' '}
+            {t('The following is deleted as soon as you confirm.')}{' '}
             {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
@@ -166,10 +166,16 @@ export function ConfirmPlanChange({
               !showBody && 'pt-4',
             )}
           >
-            {t('Your organization will move to the {plan} plan.').replace(
-              '{plan}',
-              planLabel,
-            )}
+            {planChangeDate
+              ? t(
+                  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.',
+                )
+                  .replace('{plan}', planLabel)
+                  .replace('{date}', formatDate(planChangeDate))
+              : t('Your organization will move to the {plan} plan.').replace(
+                  '{plan}',
+                  planLabel,
+                )}
           </p>
         ) : null}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
