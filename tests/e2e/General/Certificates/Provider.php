@@ -9,6 +9,9 @@ use Utopia\Cdn\Certificates\Status;
 
 final class Provider implements CertificateProvider
 {
+    public bool $instant = false;
+    public bool $renew = true;
+    public string $status = Status::PENDING;
     /** @var array<array{string, ?string}> */
     public array $issued = [];
     /** @var array<array{string, ?string}> */
@@ -22,17 +25,17 @@ final class Provider implements CertificateProvider
 
     public function isInstantGeneration(string $domain, ?string $domainType): bool
     {
-        return false;
+        return $this->instant;
     }
 
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
-        return true;
+        return $this->renew;
     }
 
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
-        return Status::PENDING;
+        return $this->status;
     }
 
     public function deleteCertificate(string $domain, ?string $domainType = null): void
