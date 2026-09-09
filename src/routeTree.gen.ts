@@ -51,6 +51,7 @@ import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_pr
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
+import { Route as PublicAppRouteImport } from './routes/_public/app'
 import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicCacheRouteImport } from './routes/_public/cache'
@@ -635,6 +636,11 @@ const PublicAccountRoute = PublicAccountRouteImport.update({
 const PublicAgentRoute = PublicAgentRouteImport.update({
   id: '/agent',
   path: '/agent',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAppRoute = PublicAppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicAssistantRoute = PublicAssistantRouteImport.update({
@@ -3109,6 +3115,7 @@ export interface FileRoutesByFullPath {
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/agent': typeof PublicAgentRouteWithChildren
+  '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
@@ -3523,6 +3530,7 @@ export interface FileRoutesByTo {
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
+  '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
@@ -3899,6 +3907,7 @@ export interface FileRoutesById {
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/agent': typeof PublicAgentRouteWithChildren
+  '/_public/app': typeof PublicAppRoute
   '/_public/assistant': typeof PublicAssistantRoute
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/cache': typeof PublicCacheRoute
@@ -4320,6 +4329,7 @@ export interface FileRouteTypes {
     | '/example-protected-route'
     | '/account'
     | '/agent'
+    | '/app'
     | '/assistant'
     | '/blocks'
     | '/cache'
@@ -4734,6 +4744,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/terms'
     | '/example-protected-route'
+    | '/app'
     | '/assistant'
     | '/blocks'
     | '/cache'
@@ -5109,6 +5120,7 @@ export interface FileRouteTypes {
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/agent'
+    | '/_public/app'
     | '/_public/assistant'
     | '/_public/blocks'
     | '/_public/cache'
@@ -5826,6 +5838,13 @@ declare module '@tanstack/react-router' {
       path: '/agent'
       fullPath: '/agent'
       preLoaderRoute: typeof PublicAgentRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/app': {
+      id: '/_public/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof PublicAppRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/assistant': {
@@ -10195,6 +10214,7 @@ const PublicProjectsProjectIdRouteWithChildren =
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
   PublicAgentRoute: typeof PublicAgentRouteWithChildren
+  PublicAppRoute: typeof PublicAppRoute
   PublicAssistantRoute: typeof PublicAssistantRoute
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCacheRoute: typeof PublicCacheRoute
@@ -10221,6 +10241,7 @@ interface PublicRouteChildren {
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
   PublicAgentRoute: PublicAgentRouteWithChildren,
+  PublicAppRoute: PublicAppRoute,
   PublicAssistantRoute: PublicAssistantRoute,
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCacheRoute: PublicCacheRoute,

@@ -45,7 +45,8 @@ const TYPED_RESOURCE_RE = new RegExp(
  * should be redirected before the SPA handles it.
  */
 export function isLegacyConsolePath(pathname: string): boolean {
-  if (pathname === '/console' || pathname.startsWith('/console/')) {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  if (normalized === '/console' || normalized.startsWith('/console/')) {
     return true
   }
 
@@ -75,7 +76,7 @@ export function rewriteLegacyConsolePath(pathname: string): string {
   }
 
   if (path === '' || path === '/') {
-    return '/'
+    return wasConsolePrefixed ? '/app' : '/'
   }
 
   // The GitHub Student Developer Pack and the marketing site send students to

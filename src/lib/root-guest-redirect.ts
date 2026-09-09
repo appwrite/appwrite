@@ -9,7 +9,14 @@ import {
 } from '@/lib/pre-launch'
 import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
 
-function isRootPath(pathname: string | undefined): boolean {
+export type RootGuestRedirectPath = '/init' | '/sign-in' | '/home'
+
+export type RootGuestRedirect = {
+  url: URL
+  status: 301 | 302
+}
+
+export function isRootRedirectPath(pathname: string | undefined): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   return normalized === '/'
 }
@@ -22,6 +29,29 @@ function isLocalSiteRequest(request: Request): boolean {
   }
 }
 
+function guestRedirectUrl(
+  requestUrl: string,
+  pathname: RootGuestRedirectPath,
+): URL {
+  const base = new URL(requestUrl)
+  const target = new URL(pathname, base)
+  target.search = base.search
+  return target
+}
+
+/**
+ * 301 for the stable public landing (`/home`, and `/sign-in` when marketing is
+ * off). Crawlers do not send a console session cookie, so this is the URL
+ * they should index; a 302 would leave `/` in the index with no content.
+ *
+ * 302 only for pre-launch `/init`, which is a temporary lock.
+ */
+export function getRootGuestRedirectStatus(
+  pathname: RootGuestRedirectPath,
+): 301 | 302 {
+  return pathname === '/init' ? 302 : 301
+}
+
 /**
  * Where unsigned `/` document requests should go before the SPA boots.
  * Returns null when a console session cookie is present so logged-in users
@@ -31,10 +61,12 @@ function isLocalSiteRequest(request: Request): boolean {
  * `localStorage` (`cookieFallback`) instead of an HTTP cookie, so only the
  * client loader can tell guest vs signed-in. Production domains use the cookie.
  */
-export function resolveRootGuestRedirectUrl(
+export function resolveRootGuestRedirect(
   request: Request,
   pathname?: string,
-): URL | null {
+): RootGuestRedirect | null {
+  if (process.env.TSS_PRERENDERING === 'true') return null
+
   const path =
     pathname ??
     (() => {
@@ -45,28 +77,29 @@ export function resolveRootGuestRedirectUrl(
       }
     })()
 
-  if (!isRootPath(path)) return null
+  if (!isRootRedirectPath(path)) return null
   if (isLocalSiteRequest(request)) return null
   if (!isPreLaunchDocumentRequest(request)) return null
   if (hasConsoleSessionCookieFromHeader(request.headers.get('cookie'))) {
     return null
   }
 
-  const base = new URL(request.url)
-  if (isPreLaunchModeEnabled(request.headers.get('cookie'))) {
-    return new URL('/init', base)
-  }
+  const dest: RootGuestRedirectPath = isPreLaunchModeEnabled(
+    request.headers.get('cookie'),
+  )
+    ? '/init'
+    : getActiveProfileWithoutDebugOverride().features.marketing
+      ? '/home'
+      : '/sign-in'
 
-  const { marketing } = getActiveProfileWithoutDebugOverride().features
-  if (!marketing) {
-    return new URL('/sign-in', base)
+  return {
+    url: guestRedirectUrl(request.url, dest),
+    status: getRootGuestRedirectStatus(dest),
   }
-
-  return new URL('/home', base)
 }
 
-/** Mirrors {@link resolveRootGuestRedirectUrl} for client loaders (no Request). */
-export function resolveRootGuestRedirectPathname(): '/init' | '/sign-in' | '/home' {
+/** Mirrors {@link resolveRootGuestRedirect} for client loaders (no Request). */
+export function resolveRootGuestRedirectPathname(): RootGuestRedirectPath {
   if (isPreLaunchModeEnabled()) {
     return '/init'
   }

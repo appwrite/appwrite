@@ -207,8 +207,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     if (isConsoleSigningOut()) return
     if (
       !is401 ||
-      // The root loader chooses home, init, or sign-in for guests.
       location.pathname === '/' ||
+      location.pathname === '/app' ||
       isAuthPage(location.pathname) ||
       isOptionalAuthPage(location.pathname)
     ) {

@@ -1209,7 +1209,15 @@ export function ConsoleHeader({
               <div className="h-9 w-[4.75rem] shrink-0 rounded-md @[640px]:w-[4.875rem]" />
               <div className="h-9 w-[4.875rem] shrink-0 rounded-md" />
             </div>
-          ) : showGuestHeader ? (
+          ) : (
+            <div
+              className={cn(
+                'flex min-w-0 items-center gap-1 @[640px]:gap-2',
+                showMarketingNav &&
+                  'animate-in fade-in duration-500 fill-mode-both motion-reduce:animate-none',
+              )}
+            >
+          {showGuestHeader ? (
             <>
               {showCenterSearch ? (
                 <button
@@ -1829,6 +1837,8 @@ export function ConsoleHeader({
                 onOpenChange={setImpersonateDialogOpen}
               />
             </>
+          )}
+            </div>
           )}
         </div>
       </header>

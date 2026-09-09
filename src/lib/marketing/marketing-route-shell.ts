@@ -32,6 +32,8 @@ function isConsoleAuthRouteMatch(
 
 function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
+  // `/` is a redirect hop (SSR 301, or a blank client hop on localhost).
+  if (normalized === '/') return true
   if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true

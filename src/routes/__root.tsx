@@ -77,7 +77,7 @@ import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/consol
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
-import { useLocation, useMatches } from '@tanstack/react-router'
+import { useLocation, useMatches, useRouterState } from '@tanstack/react-router'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -397,6 +397,16 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
+  // Use the rendered location, not the pending one. During `/` → `/home` the
+  // desired path is already `/home` while the outlet is still empty; using
+  // that path would wrap the blank hop in the marketing footer.
+  const renderedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+  if (renderedPathname === '/') {
+    return <>{children}</>
+  }
+
   return (
     <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
       <DevConstructionStripe />

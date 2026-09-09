@@ -4,6 +4,7 @@ import {
   isRedirect,
 } from '@tanstack/react-router'
 import { AppwriteException } from '@appwrite.io/console'
+import { FullscreenLoader } from '@/components/ui/loader'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
@@ -11,29 +12,22 @@ import {
   isOAuthLoginMethod,
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
-import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { hasLikelyConsoleSession } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
-import { NOINDEX_ROBOTS_META } from '@/lib/seo/indexing'
 import {
   consoleAccountQueryOptions,
   ensureConsoleAccountQueryData,
 } from '@/lib/react-query/hooks/auth'
 
-export const Route = createFileRoute('/_public/')({
-  // If HTML is ever served (localhost, or a session cookie), do not index `/`.
-  head: () => ({
-    meta: [NOINDEX_ROBOTS_META],
-  }),
+export const Route = createFileRoute('/_public/app')({
+  ssr: false,
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    // No session signal: skip account.get and redirect immediately (in-app nav).
-    // Full-page guest visits are handled by rootGuestRedirectMiddleware (301 to /home).
     if (!hasLikelyConsoleSession()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
@@ -59,10 +53,6 @@ export const Route = createFileRoute('/_public/')({
         })
       }
       return
-    }
-
-    if (isPreLaunchModeEnabled()) {
-      throw redirect({ to: '/init', replace: true })
     }
 
     const urlParams = searchParamsFromRouterLocation(location)
@@ -98,10 +88,10 @@ export const Route = createFileRoute('/_public/')({
       throw redirect({ to: '/account', replace: true })
     }
   },
-  component: RootRedirect,
+  component: ConsoleEntry,
 })
 
-function RootRedirect() {
+function ConsoleEntry() {
   const { accountAccessBlocked, isLoading } = useAuth()
 
   if (!isLoading && accountAccessBlocked) {
@@ -113,8 +103,5 @@ function RootRedirect() {
     )
   }
 
-  // Authenticated users are redirected from the loader after org data is prefetched.
-  // Production guests never reach this component (SSR 301). Localhost cannot
-  // read the session cookie on the server, so keep this outlet empty.
-  return null
+  return <FullscreenLoader />
 }

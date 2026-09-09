@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
+import { hasLikelyConsoleSession } from '@/lib/console-account-get'
 import { kickoffDefaultOrganizationPrefetch } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import {
@@ -17,6 +18,12 @@ export const Route = createFileRoute('/_public')({
     if (typeof window !== 'undefined') {
       const { queryClient } = context
       const accountQuery = consoleAccountQueryOptions()
+
+      // Guest `/` must not wait on account.get. That fetch delayed the client
+      // hop and let marketing chrome paint around an empty outlet.
+      if (location.pathname === '/' && !hasLikelyConsoleSession()) {
+        return { currentUser: null }
+      }
 
       if (isOptionalAuthPage(location.pathname)) {
         if (shouldRevalidateConsoleAccount(queryClient)) {
