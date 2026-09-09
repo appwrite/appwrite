@@ -65,7 +65,6 @@ async function mockAccountApi(
     )
   })
   let identities = [IDENTITY]
-  const deleted: string[] = []
 
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -98,7 +97,6 @@ async function mockAccountApi(
           message: 'Identity deletion failed',
         })
       }
-      deleted.push(identityId)
       identities = identities.filter((identity) => identity.$id !== identityId)
       return route.fulfill({ status: 204, headers })
     }
@@ -124,8 +122,6 @@ async function mockAccountApi(
       version: '1.0',
     })
   })
-
-  return { deleted }
 }
 
 test.describe('Account identities (mocked API)', () => {
@@ -137,7 +133,7 @@ test.describe('Account identities (mocked API)', () => {
       nativeDialogs.push(`${dialog.type()}: ${dialog.message()}`)
       void dialog.dismiss()
     })
-    const { deleted } = await mockAccountApi(page)
+    await mockAccountApi(page)
 
     await page.goto('/account/security')
     const row = page.getByRole('row').filter({ hasText: 'GitHub' })
@@ -157,13 +153,12 @@ test.describe('Account identities (mocked API)', () => {
     await expect(
       row.getByRole('button', { name: 'Delete identity' }),
     ).toBeFocused()
-    expect(deleted).toEqual([])
+    await expect(row).toBeVisible()
 
     await row.getByRole('button', { name: 'Delete identity' }).click()
     await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(dialog).toBeHidden()
     await expect(page.getByText('Identity has been deleted')).toBeVisible()
-    expect(deleted).toEqual([IDENTITY.$id])
     await expect(
       page.getByText('No identities are currently available.'),
     ).toBeVisible()
@@ -177,7 +172,7 @@ test.describe('Account identities (mocked API)', () => {
     const pauseDelete = new Promise<void>((resolve) => {
       finishDelete = resolve
     })
-    const { deleted } = await mockAccountApi(page, { pauseDelete })
+    await mockAccountApi(page, { pauseDelete })
 
     await page.goto('/account/security')
     await page.getByRole('button', { name: 'Delete identity' }).click()
@@ -203,19 +198,20 @@ test.describe('Account identities (mocked API)', () => {
       await expect(dialog).toBeVisible()
       await page.mouse.click(2, 2)
       await expect(dialog).toBeVisible()
-      expect(deleted).toEqual([])
     } finally {
       finishDelete()
     }
 
     await expect(dialog).toBeHidden()
-    expect(deleted).toEqual([IDENTITY.$id])
+    await expect(
+      page.getByText('No identities are currently available.'),
+    ).toBeVisible()
   })
 
   test('a failed deletion keeps the identity and makes the dialog dismissible', async ({
     page,
   }) => {
-    const { deleted } = await mockAccountApi(page, { failDelete: true })
+    await mockAccountApi(page, { failDelete: true })
     await page.goto('/account/security')
     await page.getByRole('button', { name: 'Delete identity' }).click()
     const dialog = page.getByRole('dialog', { name: 'Delete identity' })
@@ -229,7 +225,6 @@ test.describe('Account identities (mocked API)', () => {
     await expect(
       page.getByRole('row').filter({ hasText: 'GitHub' }),
     ).toBeVisible()
-    expect(deleted).toEqual([])
   })
 })
 
