@@ -99,18 +99,50 @@ class Vercel extends OAuth2
             throw new Exception('Vercel did not return a valid access token.', 400);
         }
 
+        // When Vercel integration supplies no refresh token, store the access token
+        // so that session extension can preserve it instead of erasing it.
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $this->tokens['access_token'];
+        }
+
         return $this->tokens;
     }
 
-    /**
-     * Vercel's /v2/oauth/access_token endpoint does not document a
-     * refresh_token grant, and the documented token response includes
-     * no refresh_token or expiry field. Treating the access token as
-     * non-expiring here; this should be revisited if Vercel's docs
-     * change or if this is confirmed/denied via direct testing.
-     */
     public function refreshTokens(string $refreshToken): array
     {
+        if (empty($refreshToken)) {
+            return $this->tokens;
+        }
+
+        // When a real Vercel refresh token (vcr_...) is provided, exchange it.
+        if (\str_starts_with($refreshToken, 'vcr_')) {
+            try {
+                $response = \json_decode($this->request(
+                    'POST',
+                    $this->endpoint.'/v2/oauth/access_token',
+                    ['Content-Type: application/x-www-form-urlencoded'],
+                    \http_build_query([
+                        'client_id' => $this->appID,
+                        'client_secret' => $this->getClientSecret(),
+                        'grant_type' => 'refresh_token',
+                        'refresh_token' => $refreshToken,
+                    ])
+                ), true);
+
+                if (isset($response['access_token'])) {
+                    $this->tokens = $response;
+                    if (empty($this->tokens['refresh_token'])) {
+                        $this->tokens['refresh_token'] = $refreshToken;
+                    }
+
+                    return $this->tokens;
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        // When tokens do not support a refresh flow or no refresh token is provided,
+        // preserve the existing token so session extension does not wipe it.
         $this->tokens = [
             'access_token' => $refreshToken,
             'refresh_token' => $refreshToken,
@@ -169,6 +201,9 @@ class Vercel extends OAuth2
 
     public function verifyCredentials(): void
     {
+        // Require that the integration slug is configured and non-empty
+        $this->getSlug();
+
         $client = new FetchClient;
         $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
 

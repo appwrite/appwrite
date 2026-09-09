@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vercel;
 
 use Appwrite\Auth\OAuth2\Vercel;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
 use Appwrite\SDK\AuthType;
@@ -148,6 +149,18 @@ class Update extends Base
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
+
+        if ($enabled === true) {
+            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId.'Secret'] ?? '';
+            $existing = [];
+            if (! empty($storedRaw)) {
+                $existing = \json_decode($storedRaw, true) ?: [];
+            }
+            $effectiveSlug = $slug ?? ($existing['slug'] ?? '');
+            if (empty(\trim($effectiveSlug))) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Integration Slug is required when enabling Vercel OAuth2.');
+            }
+        }
 
         // The secret is stored as JSON `{"clientSecret": "...", "slug": "..."}`
         // so that the Vercel OAuth2 adapter can extract the slug via getSlug().
