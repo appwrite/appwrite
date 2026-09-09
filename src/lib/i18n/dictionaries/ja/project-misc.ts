@@ -2700,6 +2700,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Sending domain': '送信ドメイン',
+  Sender: '送信者',
   'Disconnect Resend': 'Resend を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
   'Disconnect SendGrid': 'SendGrid を切断',

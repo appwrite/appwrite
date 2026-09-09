@@ -45,10 +45,10 @@ import {
   startProviderAuthorization,
   type ProviderAccessToken,
 } from '@/lib/smtp/quick-setup-oauth'
-import {
-  SmtpQuickSetupDialog,
-  type ProviderApiCall,
-} from './SmtpQuickSetupDialog'
+import { useDebugOverrides } from '@/lib/debug-overrides'
+import { SmtpQuickSetupDialog } from './SmtpQuickSetupDialog'
+import { SmtpQuickSetupWizard } from './SmtpQuickSetupWizard'
+import type { ProviderApiCall } from './use-smtp-quick-setup'
 import { DisconnectSmtpProvider } from './DisconnectSmtpProvider'
 
 interface SmtpQuickSetupCardProps {
@@ -80,6 +80,7 @@ export function SmtpQuickSetupCard({
   const queryClient = useQueryClient()
   const search = useSearch({ strict: false })
   const { account } = useAuth()
+  const { smtpQuickSetupWizard } = useDebugOverrides()
   const accountId =
     (account as Models.User<Models.Preferences> | null | undefined)?.$id ?? null
 
@@ -289,15 +290,29 @@ export function SmtpQuickSetupCard({
       </div>
 
       {activeProvider ? (
-        <SmtpQuickSetupDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          projectId={projectId}
-          project={project}
-          provider={activeProvider}
-          callProvider={callProvider}
-          onReauthorize={() => authorize(activeProvider)}
-        />
+        // Same flow, two presentations: the modal ships today, the fullscreen
+        // wizard is behind debug menu -> Flags -> SMTP quick setup wizard.
+        smtpQuickSetupWizard ? (
+          <SmtpQuickSetupWizard
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            projectId={projectId}
+            project={project}
+            provider={activeProvider}
+            callProvider={callProvider}
+            onReauthorize={() => authorize(activeProvider)}
+          />
+        ) : (
+          <SmtpQuickSetupDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            projectId={projectId}
+            project={project}
+            provider={activeProvider}
+            callProvider={callProvider}
+            onReauthorize={() => authorize(activeProvider)}
+          />
+        )
       ) : null}
 
       {disconnecting && identityByProvider.get(disconnecting.id) ? (

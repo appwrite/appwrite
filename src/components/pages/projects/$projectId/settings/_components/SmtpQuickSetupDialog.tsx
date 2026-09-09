@@ -1,5 +1,3 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -20,40 +18,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { projectQueryOptions, useUpdateSMTP } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
-import {
-  buildCredentialName,
-  defaultSenderEmail,
-  emailBelongsToDomain,
-  pickDefaultQuickSetupDomain,
-  sortQuickSetupDomains,
-  type QuickSetupDomain,
-} from '@/lib/smtp/quick-setup'
-import type {
-  AvailableSmtpQuickSetupProvider,
-  SmtpQuickSetupCredential,
-} from '@/lib/smtp/providers'
-import { QuickSetupReauthorizeRequiredError } from '@/lib/smtp/quick-setup-oauth'
+import { defaultSenderEmail } from '@/lib/smtp/quick-setup'
+import type { AvailableSmtpQuickSetupProvider } from '@/lib/smtp/providers'
+import { useSmtpQuickSetup, type ProviderApiCall } from './use-smtp-quick-setup'
 
-/**
- * Runs a provider API call with a valid access token, refreshing it through the
- * console session when needed. Throws {@link QuickSetupReauthorizeRequiredError}
- * when only a new OAuth2 round trip can help.
- */
-export type ProviderApiCall = <T>(
-  run: (accessToken: string) => Promise<T>,
-) => Promise<T>
-
-type DialogPhase =
-  | 'loading'
-  | 'no-domains'
-  | 'form'
-  | 'submitting'
-  | 'success'
-  | 'reauthorize'
-  | 'error'
+export type { ProviderApiCall }
 
 interface SmtpQuickSetupDialogProps {
   open: boolean
@@ -66,6 +36,7 @@ interface SmtpQuickSetupDialogProps {
   onReauthorize: () => void
 }
 
+/** Default presentation of the quick setup flow: a single modal step. */
 export function SmtpQuickSetupDialog({
   open,
   onOpenChange,
@@ -76,154 +47,19 @@ export function SmtpQuickSetupDialog({
   onReauthorize,
 }: SmtpQuickSetupDialogProps) {
   const t = useT()
-  const queryClient = useQueryClient()
-  const updateSMTPMutation = useUpdateSMTP(projectId)
-
-  const [phase, setPhase] = useState<DialogPhase>('loading')
-  const [domains, setDomains] = useState<QuickSetupDomain[]>([])
-  const [domainId, setDomainId] = useState('')
-  const [senderName, setSenderName] = useState('')
-  const [senderEmail, setSenderEmail] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [validationMessage, setValidationMessage] = useState('')
-
-  const selectedDomain = domains.find((domain) => domain.id === domainId)
-
-  const failWith = useCallback((error: unknown, fallback: string) => {
-    if (error instanceof QuickSetupReauthorizeRequiredError) {
-      setPhase('reauthorize')
-      return
-    }
-    setErrorMessage(getErrorMessage(error, fallback))
-    setPhase('error')
-  }, [])
-
-  const loadDomains = useCallback(async () => {
-    setPhase('loading')
-    setErrorMessage('')
-    setValidationMessage('')
-    try {
-      const list = sortQuickSetupDomains(
-        await callProvider(provider.api.listDomains),
-      )
-      setDomains(list)
-
-      const initial = pickDefaultQuickSetupDomain(
-        list,
-        project?.smtpSenderEmail,
-      )
-      if (!initial) {
-        setPhase('no-domains')
-        return
-      }
-
-      setDomainId(initial.id)
-      setSenderName(project?.smtpSenderName || project?.name || '')
-      setSenderEmail(
-        project?.smtpSenderEmail &&
-          emailBelongsToDomain(project.smtpSenderEmail, initial.name)
-          ? project.smtpSenderEmail
-          : defaultSenderEmail(initial.name),
-      )
-      setPhase('form')
-    } catch (error) {
-      failWith(error, 'Failed to load domains from the email provider')
-    }
-  }, [callProvider, failWith, project, provider])
-
-  useEffect(() => {
-    if (!open) return
-    void loadDomains()
-    // Reload only when the dialog opens; edits in between must not reset the form.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  const setup = useSmtpQuickSetup({
+    active: open,
+    projectId,
+    project,
+    provider,
+    callProvider,
+  })
+  const { phase, selectedDomain } = setup
 
   const handleOpenChange = (next: boolean) => {
     if (phase === 'submitting') return
     onOpenChange(next)
   }
-
-  const handleDomainChange = (nextId: string) => {
-    setDomainId(nextId)
-    setValidationMessage('')
-    const domain = domains.find((item) => item.id === nextId)
-    if (domain && !emailBelongsToDomain(senderEmail, domain.name)) {
-      setSenderEmail(defaultSenderEmail(domain.name))
-    }
-  }
-
-  const handleSubmit = async () => {
-    if (!selectedDomain) return
-
-    const name = senderName.trim()
-    const email = senderEmail.trim()
-    if (!name) {
-      setValidationMessage(t('Enter a sender name.'))
-      return
-    }
-    if (!emailBelongsToDomain(email, selectedDomain.name)) {
-      setValidationMessage(t('Enter a sender email on the selected domain.'))
-      return
-    }
-
-    setValidationMessage('')
-    setErrorMessage('')
-    setPhase('submitting')
-
-    let created: SmtpQuickSetupCredential | null = null
-    try {
-      created = await callProvider((accessToken) =>
-        provider.api.createCredential(accessToken, {
-          name: buildCredentialName(
-            project?.name ?? '',
-            provider.credentialNameMaxLength,
-          ),
-          domainId: selectedDomain.id,
-        }),
-      )
-
-      await updateSMTPMutation.mutateAsync({
-        enabled: true,
-        senderName: name,
-        senderEmail: email,
-        replyTo: project?.smtpReplyToEmail || '',
-        host: provider.smtp.host,
-        port: provider.smtp.port,
-        username: provider.smtp.username(selectedDomain.name),
-        password: created.secret,
-        secure: provider.smtp.secure,
-      })
-
-      // Make sure the SMTP form behind the dialog already shows the saved
-      // values before the user can trigger a test email from here.
-      await queryClient.refetchQueries({
-        queryKey: projectQueryOptions(projectId).queryKey,
-      })
-      setPhase('success')
-    } catch (error) {
-      if (created) {
-        // The credential exists at the provider but the project never stored
-        // it; drop it so retries do not pile up unused credentials.
-        const orphanId = created.id
-        void callProvider((accessToken) =>
-          provider.api.deleteCredential(accessToken, orphanId),
-        ).catch(() => {})
-      }
-      failWith(error, 'Failed to set up SMTP with the email provider')
-    }
-  }
-
-  const isBusy = phase === 'loading' || phase === 'submitting'
-
-  const serverSettings: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Server host', value: provider.smtp.host },
-    { label: 'Server port', value: String(provider.smtp.port) },
-    {
-      label: 'Username',
-      value: provider.smtp.username(selectedDomain?.name ?? ''),
-    },
-    { label: 'Secure protocol', value: provider.smtp.secure.toUpperCase() },
-  ]
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -266,7 +102,10 @@ export function SmtpQuickSetupDialog({
                 >
                   {t('Domain')} <span className="text-destructive">*</span>
                 </Label>
-                <Select value={domainId} onValueChange={handleDomainChange}>
+                <Select
+                  value={setup.domainId}
+                  onValueChange={setup.changeDomain}
+                >
                   <SelectTrigger
                     id="quick-setup-domain"
                     className="h-9 text-[13px]"
@@ -274,7 +113,7 @@ export function SmtpQuickSetupDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain) => (
+                    {setup.domains.map((domain) => (
                       <SelectItem
                         key={domain.id}
                         value={domain.id}
@@ -309,11 +148,10 @@ export function SmtpQuickSetupDialog({
                   </Label>
                   <Input
                     id="quick-setup-sender-name"
-                    value={senderName}
-                    onChange={(event) => {
-                      setSenderName(event.target.value)
-                      setValidationMessage('')
-                    }}
+                    value={setup.senderName}
+                    onChange={(event) =>
+                      setup.changeSenderName(event.target.value)
+                    }
                     placeholder="John Doe"
                     className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   />
@@ -329,11 +167,10 @@ export function SmtpQuickSetupDialog({
                   <Input
                     id="quick-setup-sender-email"
                     type="email"
-                    value={senderEmail}
-                    onChange={(event) => {
-                      setSenderEmail(event.target.value)
-                      setValidationMessage('')
-                    }}
+                    value={setup.senderEmail}
+                    onChange={(event) =>
+                      setup.changeSenderEmail(event.target.value)
+                    }
                     placeholder={
                       selectedDomain
                         ? defaultSenderEmail(selectedDomain.name)
@@ -349,7 +186,7 @@ export function SmtpQuickSetupDialog({
 
               <div className="rounded-lg border border-border bg-background px-4 py-3">
                 <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-[12px]">
-                  {serverSettings.map((setting) => (
+                  {setup.serverSettings.map((setting) => (
                     <div key={setting.label} className="contents">
                       <dt className="text-muted-foreground">
                         {t(setting.label)}
@@ -362,9 +199,9 @@ export function SmtpQuickSetupDialog({
                 </dl>
               </div>
 
-              {validationMessage ? (
+              {setup.validationMessage ? (
                 <p className="text-[12px] text-destructive">
-                  {validationMessage}
+                  {setup.validationMessage}
                 </p>
               ) : null}
             </div>
@@ -388,7 +225,7 @@ export function SmtpQuickSetupDialog({
                 )}
               </p>
               <p className="text-[12px] text-muted-foreground truncate max-w-full">
-                {senderName.trim()} &lt;{senderEmail.trim()}&gt;
+                {setup.senderName.trim()} &lt;{setup.senderEmail.trim()}&gt;
               </p>
             </div>
           ) : null}
@@ -408,13 +245,13 @@ export function SmtpQuickSetupDialog({
             <Alert variant="destructive" className="border-destructive/30">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-[13px]">
-                {errorMessage}
+                {setup.errorMessage}
               </AlertDescription>
             </Alert>
           ) : null}
         </div>
 
-        {!isBusy ? (
+        {!setup.isBusy ? (
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             {phase === 'form' ? (
               <>
@@ -432,7 +269,7 @@ export function SmtpQuickSetupDialog({
                   size="sm"
                   className="h-9 text-[13px]"
                   disabled={!selectedDomain}
-                  onClick={handleSubmit}
+                  onClick={() => void setup.submit()}
                 >
                   {t('Set up')}
                 </Button>
@@ -470,7 +307,7 @@ export function SmtpQuickSetupDialog({
                   type="button"
                   size="sm"
                   className="h-9 text-[13px]"
-                  onClick={() => void loadDomains()}
+                  onClick={() => void setup.reload()}
                 >
                   {t('Check again')}
                 </Button>
@@ -525,7 +362,7 @@ export function SmtpQuickSetupDialog({
                   type="button"
                   size="sm"
                   className="h-9 text-[13px]"
-                  onClick={() => void loadDomains()}
+                  onClick={() => void setup.reload()}
                 >
                   {t('Try again')}
                 </Button>

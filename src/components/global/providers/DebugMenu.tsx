@@ -2327,6 +2327,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
+              createDebugFeatureFlagItem(
+                'SMTP quick setup wizard',
+                'Project settings SMTP quick setup opens a fullscreen wizard instead of the modal.',
+                'smtpQuickSetupWizard',
+                overrides.smtpQuickSetupWizard,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    smtpQuickSetupWizard: checked,
+                  }))
+                  setDebugOverride('smtpQuickSetupWizard', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
               {
                 label: 'Reset all feature flags',
                 description:

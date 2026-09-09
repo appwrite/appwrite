@@ -2704,6 +2704,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Sending domain': 'דומיין שליחה',
+  Sender: 'שולח',
   'Disconnect Resend': 'ניתוק Resend',
   'Disconnect Mailgun': 'ניתוק Mailgun',
   'Disconnect SendGrid': 'ניתוק SendGrid',

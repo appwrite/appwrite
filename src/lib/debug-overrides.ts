@@ -47,6 +47,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   language: 'debug:language',
   /** Pre-launch lock: only Init (and sign-in) is reachable. Default on. */
   preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
+  /** Renders the project SMTP quick setup as a fullscreen wizard. */
+  smtpQuickSetupWizard: 'debug:smtpQuickSetupWizard',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -123,6 +125,11 @@ export type DebugOverrides = {
    * locked. Sign-in stays open and returns to `/init`. Default on.
    */
   preLaunch: boolean
+  /**
+   * When true, project settings SMTP quick setup opens a fullscreen wizard
+   * instead of the modal. Default false.
+   */
+  smtpQuickSetupWizard: boolean
 }
 
 function getStorage(): Storage | null {
@@ -286,6 +293,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.preLaunch,
       getPreLaunchDefault(),
     ),
+    smtpQuickSetupWizard: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.smtpQuickSetupWizard,
+      false,
+    ),
   }
   const storage = getStorage()
   const storedPreLaunch = storage?.getItem(DEBUG_OVERRIDE_KEYS.preLaunch)
@@ -352,6 +363,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'unlockOnboardingLocks',
   'previewOnboardingComplete',
   'previewCommunitySupportWizard',
+  'smtpQuickSetupWizard',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type FeatureFlagsMenuDebugKey =
@@ -371,6 +383,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
   previewCommunitySupportWizard: false,
+  smtpQuickSetupWizard: false,
 }
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
@@ -455,6 +468,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     pageDirection: 'ltr',
     language: 'en',
     preLaunch: getPreLaunchDefault(),
+    smtpQuickSetupWizard: false,
   }
 }
 
