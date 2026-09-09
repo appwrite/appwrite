@@ -6,7 +6,7 @@ date: 2025-05-07
 cover: /images/blog/add-figma-oauth2-appwrite/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Does Appwrite support OAuth2 login with Figma out of the box?"

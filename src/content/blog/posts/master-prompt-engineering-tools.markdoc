@@ -7,7 +7,7 @@ date: 2025-09-03
 timeToRead: 10
 author: laura-du-ry
 unlisted: true
-category: startup
+category: startups
 faqs:
   - question: "What is prompt engineering?"
     answer: "Prompt engineering is the practice of designing inputs to large language models so they produce the outputs you want. It covers things like instruction phrasing, examples, role context, and structured response formats. Good prompts make AI responses more predictable, accurate, and useful for specific tasks."

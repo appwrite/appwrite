@@ -159,7 +159,7 @@ function getDefaultMarketingHeaderNav(
     },
     {
       label: copy.customers,
-      href: '/blog/category/customer-stories',
+      href: '/blog/categories/customer-stories',
     },
     {
       label: copy.blog,
@@ -178,7 +178,7 @@ function getMarketingNavAnalyticsAction(
   if (href === '/docs') return 'marketing-nav-docs'
   if (href === '/pricing') return 'marketing-nav-pricing'
   if (href === '/enterprise') return 'marketing-nav-enterprise'
-  if (href === '/blog/category/customer-stories')
+  if (href === '/blog/categories/customer-stories')
     return 'marketing-nav-customers'
   if (href === '/blog') return 'marketing-nav-blog'
   if (href === '/changelog') return 'marketing-nav-changelog'
@@ -370,10 +370,10 @@ export function ConsoleHeader({
     if (item.href === '/blog') {
       return { ...item, href: getBlogPageUrl('/blog', localMarketing) }
     }
-    if (item.href === '/blog/category/customer-stories') {
+    if (item.href === '/blog/categories/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/category/customer-stories', localMarketing),
+        href: getBlogPageUrl('/blog/categories/customer-stories', localMarketing),
       }
     }
     if (item.href === '/docs') {

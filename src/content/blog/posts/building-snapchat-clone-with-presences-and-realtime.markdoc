@@ -6,7 +6,7 @@ date: 2026-05-27
 cover: /images/blog/building-snapchat-clone-with-presences-and-realtime/cover.avif
 timeToRead: 12
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What does the Appwrite Presences API store?"
     answer: "Each presence is a single row keyed by your user ID, with a status, an expiry, free-form metadata, and standard permissions. You upsert it, the server expires it after the time you set, and the row is broadcast on the realtime `presences` channel so other authenticated users see it the moment it lands."

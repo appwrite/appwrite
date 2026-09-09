@@ -6,7 +6,7 @@ date: 2025-09-18
 cover: /images/blog/build-delivery-store-locator-spatial-columns/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What are spatial columns in Appwrite?"
     answer: "Spatial columns let you store and query real-world geographic data (points, lines, polygons) directly in [Appwrite Databases](/docs/products/databases). They handle the geometric math behind queries like distance, so you don't have to calculate distances between lat/lon pairs in your app code."

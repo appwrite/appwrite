@@ -70,8 +70,8 @@ Protects against distributed denial-of-service attacks, ensuring uninterrupted a
 {% cards_item href="/docs/products/network/tls" title="Transport Layer Security (TLS)" %}
 Encrypts data in transit for secure and private communication.
 {% /cards_item %}
-{% cards_item href="/docs/products/network/waf" title="Web Application Firewall (WAF)" %}
-Shields applications from common web vulnerabilities and attacks on the application layer.
+{% cards_item href="/docs/products/firewall" title="Firewall" %}
+Project rules to deny, rate limit, redirect, or bypass matching API, Functions, and Sites traffic.
 {% /cards_item %}
 {% cards_item href="/docs/products/network/compression" title="Compression" %}
 Reduces data size in transit to improve transfer speed and efficiency.

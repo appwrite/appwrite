@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/init-day2/cover.avif
 timeToRead: 5
 author: luke-silver
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What is a cold start in Appwrite Functions?"

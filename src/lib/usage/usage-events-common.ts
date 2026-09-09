@@ -1054,6 +1054,11 @@ export async function fetchProjectUsageMetricsOverview(
   const resourceType = options?.resourceType
   const logRetentionHours =
     options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+  const { comparisonMode } = resolveOverviewUsagePeriod(
+    dateRange,
+    interval,
+    logRetentionHours,
+  )
 
   const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
     fetchUsageMetricsChartSeriesByMetric(

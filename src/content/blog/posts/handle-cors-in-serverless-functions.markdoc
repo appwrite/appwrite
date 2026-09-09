@@ -6,7 +6,7 @@ date: 2024-07-08
 cover: /images/blog/handle-cors-in-serverless-functions/cover.avif
 timeToRead: 3
 author: ebenezer-don
-category: product
+category: products
 featured: false
 faqs:
   - question: "Why do I get a CORS error when calling my Appwrite Function from the browser?"

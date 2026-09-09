@@ -8,7 +8,7 @@ date: 2025-05-29
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: startup
+category: startups
 faqs:
   - question: "Why should startups care about open source software?"
     answer: "Open source gives you control over your stack, lets you self-host to avoid surprise pricing, and protects you if a vendor shuts down or pivots. For a startup, that flexibility can be the difference between pivoting and rebuilding from scratch."

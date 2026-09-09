@@ -6,7 +6,7 @@ date: 2025-03-06
 cover: /images/blog/bytedance-lynx-vs-react-native/cover.avif
 timeToRead: 10
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is Lynx by ByteDance?"
     answer: "Lynx is an open-source cross-platform UI framework from ByteDance, the company behind TikTok. It targets Android, iOS, and the web from a single codebase using React-like components and CSS. ByteDance already uses Lynx internally to power parts of TikTok, so it has been battle-tested at scale before being released to the public."

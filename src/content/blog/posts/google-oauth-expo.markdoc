@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/google-oauth-expo/cover.avif
 timeToRead: 7
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "Why do I need a bundle ID and package name for Google OAuth in Expo?"
     answer: "Google OAuth uses the bundle ID (iOS) and package name (Android) to verify the deep link back to your app after the user authenticates. Without them, Google cannot route the callback to your native app, so the sign-in flow fails after the browser step. You also need to register these IDs as platforms inside your Appwrite project."

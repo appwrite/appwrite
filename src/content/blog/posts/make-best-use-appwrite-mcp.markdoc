@@ -6,7 +6,7 @@ date: 2025-09-05
 cover: /images/blog/make-best-use-appwrite-mcp/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is the Appwrite MCP server?"
     answer: "The Appwrite MCP server is a Model Context Protocol implementation that lets AI agents interact with your Appwrite project resources. Agents can read your database schemas, create tables, query records, and run other actions through the protocol. It connects tools like Claude Desktop and Cursor directly to your Appwrite backend."

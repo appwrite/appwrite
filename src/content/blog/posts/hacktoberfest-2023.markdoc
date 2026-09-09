@@ -6,7 +6,7 @@ date: 2023-10-01
 cover: /images/blog/hacktoberfest-2023.avif
 timeToRead: 3
 author: eldad-fux
-category: hackathon
+category: hackathons
 faqs:
   - question: "How do I find Appwrite Hacktoberfest issues to work on?"
     answer: "Check the Appwrite repository on GitHub and filter for issues labeled `hacktoberfest`. New issues are added throughout October. If you can't find one that fits, you can open your own issue with a proposed contribution and ask a maintainer to add the label."

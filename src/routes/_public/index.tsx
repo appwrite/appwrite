@@ -12,8 +12,9 @@ import {
   isOAuthLoginMethod,
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { hasLikelyConsoleSession } from '@/lib/console-account-get'
+import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
@@ -27,6 +28,15 @@ export const Route = createFileRoute('/_public/')({
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
+    // No session signal: skip account.get and redirect immediately (in-app nav).
+    // Full-page guest visits are handled by rootGuestRedirectMiddleware (302).
+    if (!hasLikelyConsoleSession()) {
+      throw redirect({
+        to: resolveRootGuestRedirectPathname(),
+        replace: true,
+      })
+    }
+
     const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (!account) {
       const { queryKey } = consoleAccountQueryOptions()
@@ -37,14 +47,10 @@ export const Route = createFileRoute('/_public/')({
       const isAccountBlocked =
         !!queryError && isHttpForbiddenError(queryError)
       if (!isMfaRequired && !isAccountBlocked) {
-        if (isPreLaunchModeEnabled()) {
-          throw redirect({ to: '/init', replace: true })
-        }
-        // Profiles without marketing pages (self-hosted) go straight to sign-in.
-        if (!getActiveProfileFeatures().marketing) {
-          throw redirect({ to: '/sign-in', replace: true })
-        }
-        throw redirect({ to: '/home', replace: true })
+        throw redirect({
+          to: resolveRootGuestRedirectPathname(),
+          replace: true,
+        })
       }
       return
     }
