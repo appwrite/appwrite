@@ -1,3 +1,7 @@
+import {
+  getAcceptedSecuritySchemeNames,
+  getRequiredSecuritySchemeNames,
+} from './security'
 import type { ApiExplorerMethod } from './types'
 
 export const IMPERSONATION_DOCS_HREF = '/docs/products/auth/impersonation'
@@ -14,19 +18,14 @@ function getAuthMap(method: ApiExplorerMethod): Record<string, string[]> {
   return method.xAppwrite?.auth ?? {}
 }
 
-function getSecurityMap(method: ApiExplorerMethod): Record<string, string[]> {
-  return method.security?.[0] ?? {}
-}
-
 function getRequiredSchemeNames(method: ApiExplorerMethod): string[] {
   const auth = getAuthMap(method)
   if (Object.keys(auth).length > 0) {
     return Object.keys(auth)
   }
 
-  const security = getSecurityMap(method)
-  if (Object.keys(security).length > 0) {
-    return Object.keys(security)
+  if (method.security !== undefined) {
+    return getRequiredSecuritySchemeNames(method)
   }
 
   return ['Project']
@@ -34,11 +33,11 @@ function getRequiredSchemeNames(method: ApiExplorerMethod): string[] {
 
 function getUserAuthOptions(method: ApiExplorerMethod): string[] {
   const auth = getAuthMap(method)
-  const security = getSecurityMap(method)
+  const security = getAcceptedSecuritySchemeNames(method)
   const options: string[] = []
   const seen = new Set<string>()
 
-  for (const scheme of [...Object.keys(auth), ...Object.keys(security)]) {
+  for (const scheme of [...Object.keys(auth), ...security]) {
     if (!USER_AUTH_SCHEMES.has(scheme) || seen.has(scheme)) continue
     seen.add(scheme)
     options.push(scheme)
@@ -53,7 +52,7 @@ function getImpersonationSchemes(method: ApiExplorerMethod): string[] {
 
   for (const scheme of [
     ...Object.keys(getAuthMap(method)),
-    ...Object.keys(getSecurityMap(method)),
+    ...getAcceptedSecuritySchemeNames(method),
   ]) {
     if (!IMPERSONATION_SCHEMES.has(scheme) || seen.has(scheme)) continue
     seen.add(scheme)
@@ -64,7 +63,7 @@ function getImpersonationSchemes(method: ApiExplorerMethod): string[] {
 }
 
 function securityHasOnlyProject(method: ApiExplorerMethod): boolean {
-  const schemes = Object.keys(getSecurityMap(method))
+  const schemes = getAcceptedSecuritySchemeNames(method)
   return (
     schemes.length > 0 &&
     schemes.every((scheme) => scheme === 'Project' || scheme === 'ProjectPath')
@@ -85,11 +84,13 @@ function isProjectOnlyGuestEndpoint(method: ApiExplorerMethod): boolean {
   if (path === '/account' && httpMethod === 'post') return true
   if (path.startsWith('/account/recovery')) return true
   if (path.startsWith('/account/tokens/') && httpMethod === 'post') return true
-  if (path.startsWith('/account/sessions/') && httpMethod === 'post') return true
+  if (path.startsWith('/account/sessions/') && httpMethod === 'post')
+    return true
   if (path.startsWith('/account/sessions/oauth2/') && httpMethod === 'get') {
     return true
   }
-  if (path === '/account/sessions/magic-url' && httpMethod === 'put') return true
+  if (path === '/account/sessions/magic-url' && httpMethod === 'put')
+    return true
   if (path === '/account/sessions/phone' && httpMethod === 'put') return true
 
   return false
@@ -100,7 +101,7 @@ function requiresKeyInAuth(method: ApiExplorerMethod): boolean {
 }
 
 function allowsApiKeyInSecurity(method: ApiExplorerMethod): boolean {
-  return 'Key' in getSecurityMap(method)
+  return getAcceptedSecuritySchemeNames(method).includes('Key')
 }
 
 function isClientPlatform(platform?: string): boolean {
@@ -210,7 +211,12 @@ function formatRestSentence(
     return `For direct REST calls, send ${project} and \`X-Appwrite-Key\`.`
   }
 
-  if (requiresProject && requiresUser && allowsApiKeyAlt && userAuthOptions.length > 0) {
+  if (
+    requiresProject &&
+    requiresUser &&
+    allowsApiKeyAlt &&
+    userAuthOptions.length > 0
+  ) {
     return `For direct REST calls, send ${project} with either \`X-Appwrite-Key\` or session/JWT headers.`
   }
 
@@ -218,7 +224,12 @@ function formatRestSentence(
     return `For direct REST calls, send ${project} with session/JWT headers.`
   }
 
-  if (requiresKey && allowsUserWithKey && userAuthOptions.length > 0 && project) {
+  if (
+    requiresKey &&
+    allowsUserWithKey &&
+    userAuthOptions.length > 0 &&
+    project
+  ) {
     return `For direct REST calls, send ${project} with either \`X-Appwrite-Key\` or session/JWT headers.`
   }
 
@@ -287,7 +298,9 @@ function buildAuthSummary(
       'Initialize the Appwrite client with `setProject()`. No signed-in user or server API key is required.',
     )
   } else {
-    sentences.push('See the endpoint security requirements before calling this route.')
+    sentences.push(
+      'See the endpoint security requirements before calling this route.',
+    )
   }
 
   const rest = formatRestSentence(ctx, platform)

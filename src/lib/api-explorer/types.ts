@@ -1,8 +1,16 @@
+export type AppwriteAuth = Record<string, string[]>
+export type AppwritePlatformAuth = Partial<
+  Record<ApiSpecPlatform, AppwriteAuth>
+>
+
 export type AppwriteAdditionalMethod = {
   name: string
   desc?: string
+  summary?: string
+  namespace?: string
+  platforms?: ApiSpecPlatform[]
   weight?: number
-  auth?: Record<string, string[]>
+  auth?: AppwriteAuth | AppwritePlatformAuth
   parameters?: string[]
   required?: string[]
   responses?: Array<{ code: number; model: string }>
@@ -17,7 +25,7 @@ export type AppwriteAdditionalMethod = {
 
 /** Appwrite x-appwrite OpenAPI extension (see appwrite/specs). */
 export type AppwriteOpenApiExtension = {
-  method: string
+  method?: string
   group?: string
   weight?: number
   type?: string
@@ -29,7 +37,7 @@ export type AppwriteOpenApiExtension = {
   platforms?: Array<'console' | 'client' | 'server'>
   packaging?: boolean
   public?: boolean
-  auth?: Record<string, string[]>
+  auth?: AppwriteAuth | AppwritePlatformAuth
   methods?: AppwriteAdditionalMethod[]
   deprecated?: {
     since?: string
@@ -96,6 +104,7 @@ export type OpenApiSchema = {
   required?: string[]
   items?: OpenApiSchema
   $ref?: string
+  nullable?: boolean
   'x-nullable'?: boolean
   /** @deprecated Replaced by schema title. */
   'x-enum-name'?: string
@@ -145,13 +154,21 @@ export type OpenApiSpec = {
     description?: string
   }>
   paths?: Record<string, Record<string, OpenApiOperation>>
+  security?: Array<Record<string, string[]>>
   components?: {
+    securitySchemes?: Record<
+      string,
+      {
+        type?: string
+        'x-appwrite'?: { platforms?: string[] }
+      }
+    >
     schemas?: Record<string, OpenApiSchema>
   }
 }
 
 export type ApiExplorerMethod = {
-  /** SDK method id from x-appwrite.method */
+  /** SDK method name derived from operationId, or an explicit alias name. */
   id: string
   operationId: string
   path: string
@@ -170,7 +187,8 @@ export type ApiExplorerMethod = {
   requestBody?: OpenApiRequestBody
   contentType?: string
   security?: Array<Record<string, string[]>>
-  xAppwrite?: AppwriteOpenApiExtension
+  rawResponses?: OpenApiOperation['responses']
+  xAppwrite?: Omit<AppwriteOpenApiExtension, 'auth'> & { auth?: AppwriteAuth }
   authLabel: string
 }
 

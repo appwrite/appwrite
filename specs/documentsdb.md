@@ -1,6 +1,6 @@
 # DocumentsDB API specifications
 
-Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v16.0.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -16,7 +16,7 @@ Base path prefix: `/v1/documentsdb`
 | --- | --- | --- | --- |
 | [`create`](#documentsdb-create) | POST | `/v1/documentsdb` | `Promise<Models.Database>` |
 | [`createCollection`](#documentsdb-createcollection) | POST | `/v1/documentsdb/{databaseId}/collections` | `Promise<Models.Collection>` |
-| [`createFailover`](#documentsdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#documentsdb-createfailover) | POST | `/v1/documentsdb/{databaseId}/failovers` | `Promise<Models.DedicatedDatabase>` |
 | [`createIndex`](#documentsdb-createindex) | POST | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.Index>` |
 | [`createTransaction`](#documentsdb-createtransaction) | POST | `/v1/documentsdb/transactions` | `Promise<Models.Transaction>` |
 | [`delete`](#documentsdb-delete) | DELETE | `/v1/documentsdb/{databaseId}` | `Promise<{}>` |
@@ -27,13 +27,14 @@ Base path prefix: `/v1/documentsdb`
 | [`get`](#documentsdb-get) | GET | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#documentsdb-getcollection) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |
 | [`getIndex`](#documentsdb-getindex) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
-| [`getReplicas`](#documentsdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#documentsdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
+| [`getReplicas`](#documentsdb-getreplicas) | GET | `/v1/documentsdb/{databaseId}/replicas` | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#documentsdb-getstatus) | GET | `/v1/documentsdb/{databaseId}/status` | `Promise<Models.DatabaseStatus>` |
 | [`getTransaction`](#documentsdb-gettransaction) | GET | `/v1/documentsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#documentsdb-list) | GET | `/v1/documentsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#documentsdb-listcollections) | GET | `/v1/documentsdb/{databaseId}/collections` | `Promise<Models.CollectionList>` |
 | [`listIndexes`](#documentsdb-listindexes) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
-| [`listSpecifications`](#documentsdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listOperations`](#documentsdb-listoperations) | GET | `/v1/documentsdb/{databaseId}/operations` | `Promise<Models.DedicatedDatabaseOperationList>` |
+| [`listSpecifications`](#documentsdb-listspecifications) | GET | `/v1/documentsdb/specifications` | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTransactions`](#documentsdb-listtransactions) | GET | `/v1/documentsdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#documentsdb-update) | PUT | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#documentsdb-updatecollection) | PUT | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |
@@ -66,6 +67,7 @@ Create a new Database.
 | `enabled` | `boolean` | No | Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
 | `specification` | `string` | No | Database specification. Defaults to `serverless`, which creates the database on the shared pool. Any other value provisions a dedicated database on that specification. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Requires a dedicated `specification`; must be 0 for a serverless database. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Requires a dedicated `specification`; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -76,6 +78,7 @@ sdk.forProject(projectId).documentsDB.create({
   enabled?: boolean;
   specification?: string;
   replicas?: number;
+  syncMode?: string;
 })
 ```
 
@@ -103,6 +106,32 @@ sdk.forProject(projectId).documentsDB.list({
   queries?: string[];
   total?: boolean;
 })
+```
+
+<a id="documentsdb-specifications-resource"></a>
+
+### Specifications
+
+REST resource: `/v1/documentsdb/specifications/…`
+
+<a id="documentsdb-listspecifications"></a>
+
+#### `listSpecifications`
+
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, its own prices and overage rates, and whether it is enabled for the organization.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/documentsdb/specifications`
+- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
+
+**Parameters**
+
+_No request parameters._
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).documentsDB.listSpecifications()
 ```
 
 <a id="documentsdb-transactions-resource"></a>
@@ -306,7 +335,9 @@ Update a database by its unique ID.
 | `databaseId` | `string` | Yes | Database ID. |
 | `name` | `string` | Yes | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
+| `specification` | `string` | No | Database specification. Resizing between dedicated specifications changes cpu, memory, storage and the connection ceiling via a rolling cutover with zero downtime. Moving a `serverless` database onto a dedicated specification is a data migration, not a resize. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -315,7 +346,9 @@ sdk.forProject(projectId).documentsDB.update({
   databaseId: string;
   name: string;
   enabled?: boolean;
+  specification?: string;
   replicas?: number;
+  syncMode?: string;
 })
 ```
 
@@ -345,7 +378,7 @@ Create a new Collection. Before using this route, you should create a new databa
 | `permissions` | `string[]` | No | An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions). |
 | `documentSecurity` | `boolean` | No | Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions). |
 | `enabled` | `boolean` | No | Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled. |
-| `attributes` | `object[]` | No | Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options. |
+| `attributes` | `object[]` | No | Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options. |
 | `indexes` | `object[]` | No | Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional). |
 
 **SDK signature**
@@ -633,30 +666,20 @@ sdk.forProject(projectId).documentsDB.updateCollection({
 })
 ```
 
-<a id="documentsdb-listspecifications"></a>
+<a id="documentsdb-failovers-resource"></a>
 
-#### `listSpecifications`
+### Failovers
 
-List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
-
-- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
-
-**Parameters**
-
-_No request parameters._
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).documentsDB.listSpecifications()
-```
+REST resource: `/v1/documentsdb/{databaseId}/…`
 
 <a id="documentsdb-createfailover"></a>
 
 #### `createFailover`
 
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates. A database left mid-operation also accepts this call as a repair once nothing is driving the operation it is stuck in. Repairing a failover that did not finish, a `failed` database, a stranded upgrade or migrate, or a stranded compute resize additionally requires `targetReplicaId` to name the member to promote, because the default target may be the member that operation already promoted.
 
+- **HTTP:** `POST`
+- **Path:** `/v1/documentsdb/{databaseId}/failovers`
 - **Returns:** `Promise<Models.DedicatedDatabase>`
 
 **Parameters**
@@ -675,12 +698,56 @@ sdk.forProject(projectId).documentsDB.createFailover({
 })
 ```
 
+<a id="documentsdb-operations-resource"></a>
+
+### Operations
+
+REST resource: `/v1/documentsdb/{databaseId}/…`
+
+<a id="documentsdb-listoperations"></a>
+
+#### `listOperations`
+
+List the lifecycle operations recorded for a dedicated database, newest first. Every provision, update, restore, backup and replication action is recorded here with its outcome, including an attempt that was abandoned because another worker took over the database.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/documentsdb/{databaseId}/operations`
+- **Returns:** `Promise<Models.DedicatedDatabaseOperationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by operation status. |
+| `limit` | `number` | No | Maximum number of operations to return. |
+| `offset` | `number` | No | Number of operations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).documentsDB.listOperations({
+  databaseId: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
+<a id="documentsdb-replicas-resource"></a>
+
+### Replicas
+
+REST resource: `/v1/documentsdb/{databaseId}/…`
+
 <a id="documentsdb-getreplicas"></a>
 
 #### `getReplicas`
 
 Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
 
+- **HTTP:** `GET`
+- **Path:** `/v1/documentsdb/{databaseId}/replicas`
 - **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
 
 **Parameters**
@@ -697,12 +764,20 @@ sdk.forProject(projectId).documentsDB.getReplicas({
 })
 ```
 
+<a id="documentsdb-status-resource"></a>
+
+### Status
+
+REST resource: `/v1/documentsdb/{databaseId}/…`
+
 <a id="documentsdb-getstatus"></a>
 
 #### `getStatus`
 
 Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
 
+- **HTTP:** `GET`
+- **Path:** `/v1/documentsdb/{databaseId}/status`
 - **Returns:** `Promise<Models.DatabaseStatus>`
 
 **Parameters**

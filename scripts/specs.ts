@@ -3,6 +3,8 @@
  *
  * Run: bun run specs
  */
+import { parseOpenApiSpec } from '../src/lib/api-explorer/parse-spec'
+import type { OpenApiSpec } from '../src/lib/api-explorer/types'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -94,7 +96,12 @@ const SERVICES: ServiceConfig[] = [
 type SdkMethod = {
   name: string
   description: string
-  parameters: { name: string; type: string; required: boolean; description: string }[]
+  parameters: {
+    name: string
+    type: string
+    required: boolean
+    description: string
+  }[]
   returnType: string
 }
 
@@ -111,7 +118,10 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, '')
 }
 
-function parseSdkMethods(dtsContent: string, className: string): Map<string, SdkMethod> {
+function parseSdkMethods(
+  dtsContent: string,
+  className: string,
+): Map<string, SdkMethod> {
   const methods = new Map<string, SdkMethod>()
   const classStart = dtsContent.indexOf(`export declare class ${className}`)
   if (classStart === -1) return methods
@@ -141,7 +151,9 @@ function parseSdkMethods(dtsContent: string, className: string): Map<string, Sdk
       .trim()
 
     const parameters: SdkMethod['parameters'] = []
-    for (const match of jsdoc.matchAll(/@param\s+\{([^}]+)\}\s+params\.(\w+)\s+-\s+(.+)/g)) {
+    for (const match of jsdoc.matchAll(
+      /@param\s+\{([^}]+)\}\s+params\.(\w+)\s+-\s+(.+)/g,
+    )) {
       parameters.push({
         name: match[2],
         type: match[1].trim(),
@@ -207,38 +219,32 @@ function parseSdkBundlePaths(
   return endpoints
 }
 
-type OpenApiSpec = {
-  paths: Record<
-    string,
-    Record<string, { operationId?: string; summary?: string; tags?: string[]; 'x-appwrite'?: { method?: string } }>
-  >
-}
-
-function parseOpenApiEndpoints(spec: OpenApiSpec, tag: string): Map<string, HttpEndpoint[]> {
+function parseOpenApiEndpoints(
+  spec: OpenApiSpec,
+  tag: string,
+): Map<string, HttpEndpoint[]> {
   const endpoints = new Map<string, HttpEndpoint[]>()
 
-  for (const [path, methods] of Object.entries(spec.paths ?? {})) {
-    for (const [method, operation] of Object.entries(methods)) {
-      if (!operation.tags?.includes(tag)) continue
-      const sdkMethod = operation['x-appwrite']?.method
-      if (!sdkMethod) continue
-
-      const entry: HttpEndpoint = {
-        method: method.toUpperCase(),
-        path: `/v1${path}`,
-        sdkMethod,
-      }
-
-      const existing = endpoints.get(sdkMethod) ?? []
-      existing.push(entry)
-      endpoints.set(sdkMethod, existing)
+  const service = parseOpenApiSpec(spec, 'console').services.find(
+    (service) => service.id === tag,
+  )
+  for (const method of service?.methods ?? []) {
+    const entry: HttpEndpoint = {
+      method: method.httpMethod.toUpperCase(),
+      path: `/v1${method.path}`,
+      sdkMethod: method.id,
     }
+    const existing = endpoints.get(method.id) ?? []
+    existing.push(entry)
+    endpoints.set(method.id, existing)
   }
 
   return endpoints
 }
 
-function groupEndpointsByResource(endpoints: HttpEndpoint[]): Map<string, HttpEndpoint[]> {
+function groupEndpointsByResource(
+  endpoints: HttpEndpoint[],
+): Map<string, HttpEndpoint[]> {
   const groups = new Map<string, HttpEndpoint[]>()
 
   for (const endpoint of endpoints) {
@@ -249,7 +255,8 @@ function groupEndpointsByResource(endpoints: HttpEndpoint[]): Map<string, HttpEn
     const key =
       resourceParts.length === 0
         ? 'root'
-        : (staticPart ?? resourceParts[resourceParts.length - 1].replace(/[{}]/g, ''))
+        : (staticPart ??
+          resourceParts[resourceParts.length - 1].replace(/[{}]/g, ''))
 
     const existing = groups.get(key) ?? []
     existing.push(endpoint)
@@ -400,10 +407,14 @@ function renderServiceFile(
 
   lines.push('| SDK method | HTTP | Path | Returns |')
   lines.push('| --- | --- | --- | --- |')
-  for (const [name, method] of [...methods.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [name, method] of [...methods.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
     const eps = httpByMethod.get(name) ?? []
     if (eps.length === 0) {
-      lines.push(`| [\`${name}\`](#${service.id}-${slugify(name)}) | - | - | \`${method.returnType}\` |`)
+      lines.push(
+        `| [\`${name}\`](#${service.id}-${slugify(name)}) | - | - | \`${method.returnType}\` |`,
+      )
       continue
     }
     for (const ep of eps) {
@@ -420,14 +431,18 @@ function renderServiceFile(
   const renderedMethods = new Set<string>()
 
   for (const [resourceKey, resourceEndpoints] of grouped) {
-    const uniqueMethods = [...new Set(resourceEndpoints.map((e) => e.sdkMethod))]
+    const uniqueMethods = [
+      ...new Set(resourceEndpoints.map((e) => e.sdkMethod)),
+    ]
     const resourceAnchor = `${service.id}-${slugify(resourceKey)}-resource`
     lines.push(`<a id="${resourceAnchor}"></a>`)
     lines.push('')
     lines.push(`### ${resourceTitle(resourceKey, service)}`)
     lines.push('')
     const samplePath = resourceEndpoints[0]?.path ?? service.basePath
-    lines.push(`REST resource: \`${samplePath.split('/').slice(0, 4).join('/')}${resourceKey === 'root' ? '' : '/…'}\``)
+    lines.push(
+      `REST resource: \`${samplePath.split('/').slice(0, 4).join('/')}${resourceKey === 'root' ? '' : '/…'}\``,
+    )
     lines.push('')
 
     for (const methodName of uniqueMethods.sort()) {
@@ -446,7 +461,9 @@ function renderServiceFile(
 
   for (const [name, method] of methods) {
     if (renderedMethods.has(name)) continue
-    lines.push(renderMethodSection(service, method, httpByMethod.get(name) ?? []))
+    lines.push(
+      renderMethodSection(service, method, httpByMethod.get(name) ?? []),
+    )
   }
 
   return lines.join('\n')
@@ -459,7 +476,7 @@ async function main() {
 
   const openApi = JSON.parse(
     await readFile(
-      join(SPECS_PKG, 'specs/latest/open-api3-latest-console.json'),
+      join(SPECS_PKG, 'specs/latest/open-api3-latest.json'),
       'utf8',
     ),
   ) as OpenApiSpec

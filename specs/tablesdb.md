@@ -1,6 +1,6 @@
 # TablesDB API specifications
 
-Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v16.0.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -17,10 +17,11 @@ Base path prefix: `/v1/tablesdb`
 | [`create`](#tablesdb-create) | POST | `/v1/tablesdb` | `Promise<Models.Database>` |
 | [`createBigIntColumn`](#tablesdb-createbigintcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/bigint` | `Promise<Models.ColumnBigint>` |
 | [`createBooleanColumn`](#tablesdb-createbooleancolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/boolean` | `Promise<Models.ColumnBoolean>` |
+| [`createCutover`](#tablesdb-createcutover) | POST | `/v1/tablesdb/{databaseId}/migrations/{migrationId}/cutovers` | `Promise<Models.DatabaseMigration>` |
 | [`createDatetimeColumn`](#tablesdb-createdatetimecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/datetime` | `Promise<Models.ColumnDatetime>` |
 | [`createEmailColumn`](#tablesdb-createemailcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/email` | `Promise<Models.ColumnEmail>` |
 | [`createEnumColumn`](#tablesdb-createenumcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/enum` | `Promise<Models.ColumnEnum>` |
-| [`createFailover`](#tablesdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#tablesdb-createfailover) | POST | `/v1/tablesdb/{databaseId}/failovers` | `Promise<Models.DedicatedDatabase>` |
 | [`createFloatColumn`](#tablesdb-createfloatcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/float` | `Promise<Models.ColumnFloat>` |
 | [`createIndex`](#tablesdb-createindex) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndex>` |
 | [`createIntegerColumn`](#tablesdb-createintegercolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/integer` | `Promise<Models.ColumnInteger>` |
@@ -28,7 +29,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createLineColumn`](#tablesdb-createlinecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/line` | `Promise<Models.ColumnLine>` |
 | [`createLongtextColumn`](#tablesdb-createlongtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/longtext` | `Promise<Models.ColumnLongtext>` |
 | [`createMediumtextColumn`](#tablesdb-createmediumtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/mediumtext` | `Promise<Models.ColumnMediumtext>` |
-| [`createMigration`](#tablesdb-createmigration) | - | - | `Promise<Models.DatabaseMigration>` |
+| [`createMigration`](#tablesdb-createmigration) | POST | `/v1/tablesdb/{databaseId}/migrations` | `Promise<Models.DatabaseMigration>` |
 | [`createOperations`](#tablesdb-createoperations) | POST | `/v1/tablesdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createPointColumn`](#tablesdb-createpointcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/point` | `Promise<Models.ColumnPoint>` |
 | [`createPolygonColumn`](#tablesdb-createpolygoncolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/polygon` | `Promise<Models.ColumnPolygon>` |
@@ -41,23 +42,24 @@ Base path prefix: `/v1/tablesdb`
 | [`delete`](#tablesdb-delete) | DELETE | `/v1/tablesdb/{databaseId}` | `Promise<{}>` |
 | [`deleteColumn`](#tablesdb-deletecolumn) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<{}>` |
 | [`deleteIndex`](#tablesdb-deleteindex) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<{}>` |
-| [`deleteMigration`](#tablesdb-deletemigration) | - | - | `Promise<{}>` |
+| [`deleteMigration`](#tablesdb-deletemigration) | DELETE | `/v1/tablesdb/{databaseId}/migrations/{migrationId}` | `Promise<{}>` |
 | [`deleteRow`](#tablesdb-deleterow) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}` | `Promise<{}>` |
 | [`deleteTable`](#tablesdb-deletetable) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<{}>` |
 | [`deleteTransaction`](#tablesdb-deletetransaction) | DELETE | `/v1/tablesdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#tablesdb-get) | GET | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getColumn`](#tablesdb-getcolumn) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<Models.ColumnBoolean | Models.ColumnInteger | Models.ColumnFloat | Models.ColumnEmail | Models.ColumnEnum | Models.ColumnUrl | Models.ColumnIp | Models.ColumnDatetime | Models.ColumnRelationship | Models.ColumnString>` |
 | [`getIndex`](#tablesdb-getindex) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<Models.ColumnIndex>` |
-| [`getMigration`](#tablesdb-getmigration) | - | - | `Promise<Models.DatabaseMigration>` |
-| [`getReplicas`](#tablesdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#tablesdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
+| [`getMigration`](#tablesdb-getmigration) | GET | `/v1/tablesdb/{databaseId}/migrations/{migrationId}` | `Promise<Models.DatabaseMigration>` |
+| [`getReplicas`](#tablesdb-getreplicas) | GET | `/v1/tablesdb/{databaseId}/replicas` | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#tablesdb-getstatus) | GET | `/v1/tablesdb/{databaseId}/status` | `Promise<Models.DatabaseStatus>` |
 | [`getTable`](#tablesdb-gettable) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<Models.Table>` |
 | [`getTransaction`](#tablesdb-gettransaction) | GET | `/v1/tablesdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#tablesdb-list) | GET | `/v1/tablesdb` | `Promise<Models.DatabaseList>` |
 | [`listColumns`](#tablesdb-listcolumns) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns` | `Promise<Models.ColumnList>` |
 | [`listIndexes`](#tablesdb-listindexes) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndexList>` |
-| [`listMigrations`](#tablesdb-listmigrations) | - | - | `Promise<Models.DatabaseMigrationList>` |
-| [`listSpecifications`](#tablesdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listMigrations`](#tablesdb-listmigrations) | GET | `/v1/tablesdb/{databaseId}/migrations` | `Promise<Models.DatabaseMigrationList>` |
+| [`listOperations`](#tablesdb-listoperations) | GET | `/v1/tablesdb/{databaseId}/operations` | `Promise<Models.DedicatedDatabaseOperationList>` |
+| [`listSpecifications`](#tablesdb-listspecifications) | GET | `/v1/tablesdb/specifications` | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTables`](#tablesdb-listtables) | GET | `/v1/tablesdb/{databaseId}/tables` | `Promise<Models.TableList>` |
 | [`listTransactions`](#tablesdb-listtransactions) | GET | `/v1/tablesdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#tablesdb-update) | PUT | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
@@ -108,6 +110,7 @@ Create a new Database.
 | `enabled` | `boolean` | No | Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
 | `specification` | `string` | No | Database specification. Defaults to `serverless`, which creates the database on the shared pool. Any other value provisions a dedicated database on that specification. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Requires a dedicated `specification`; must be 0 for a serverless database. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Requires a dedicated `specification`; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -118,6 +121,7 @@ sdk.forProject(projectId).tablesDB.create({
   enabled?: boolean;
   specification?: string;
   replicas?: number;
+  syncMode?: string;
 })
 ```
 
@@ -147,6 +151,32 @@ sdk.forProject(projectId).tablesDB.list({
   search?: string;
   total?: boolean;
 })
+```
+
+<a id="tablesdb-specifications-resource"></a>
+
+### Specifications
+
+REST resource: `/v1/tablesdb/specifications/…`
+
+<a id="tablesdb-listspecifications"></a>
+
+#### `listSpecifications`
+
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, its own prices and overage rates, and whether it is enabled for the organization.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/specifications`
+- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
+
+**Parameters**
+
+_No request parameters._
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.listSpecifications()
 ```
 
 <a id="tablesdb-transactions-resource"></a>
@@ -376,7 +406,9 @@ Update a database by its unique ID.
 | `databaseId` | `string` | Yes | Database ID. |
 | `name` | `string` | No | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
+| `specification` | `string` | No | Database specification. Resizing between dedicated specifications changes cpu, memory, storage and the connection ceiling via a rolling cutover with zero downtime. Moving a `serverless` database onto a dedicated specification is a data migration, not a resize. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification. High availability is enabled when greater than 0. |
+| `syncMode` | `string` | No | Replication sync mode for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification; the mode is only in force once there is at least one replica. Allowed values: async, sync, quorum. |
 
 **SDK signature**
 
@@ -385,7 +417,273 @@ sdk.forProject(projectId).tablesDB.update({
   databaseId: string;
   name?: string;
   enabled?: boolean;
+  specification?: string;
   replicas?: number;
+  syncMode?: string;
+})
+```
+
+<a id="tablesdb-failovers-resource"></a>
+
+### Failovers
+
+REST resource: `/v1/tablesdb/{databaseId}/…`
+
+<a id="tablesdb-createfailover"></a>
+
+#### `createFailover`
+
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates. A database left mid-operation also accepts this call as a repair once nothing is driving the operation it is stuck in. Repairing a failover that did not finish, a `failed` database, a stranded upgrade or migrate, or a stranded compute resize additionally requires `targetReplicaId` to name the member to promote, because the default target may be the member that operation already promoted.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/tablesdb/{databaseId}/failovers`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.createFailover({
+  databaseId: string;
+  targetReplicaId?: string;
+})
+```
+
+<a id="tablesdb-migrations-resource"></a>
+
+### Migrations
+
+REST resource: `/v1/tablesdb/{databaseId}/…`
+
+<a id="tablesdb-createcutover"></a>
+
+#### `createCutover`
+
+Cut a verified TablesDB migration over to its dedicated compute. Only applies to a migration created with `autoCutover` disabled, which waits at `ready_to_cutover` until this is called. The routing flip happens shortly after this returns, with a brief read-only window. One call buys one attempt: a cutover that fails a check returns the migration to `verifying` and parks it again, so call this once more to retry.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/tablesdb/{databaseId}/migrations/{migrationId}/cutovers`
+- **Returns:** `Promise<Models.DatabaseMigration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `migrationId` | `string` | Yes | Migration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.createCutover({
+  databaseId: string;
+  migrationId: string;
+})
+```
+
+<a id="tablesdb-createmigration"></a>
+
+#### `createMigration`
+
+Start migrating a serverless TablesDB database onto a dedicated MySQL compute. Data is copied to the target while the source stays live, with a brief read-only window during cutover.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/tablesdb/{databaseId}/migrations`
+- **Returns:** `Promise<Models.DatabaseMigration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `specification` | `string` | Yes | Dedicated compute specification to provision as the migration target (e.g. s-2vcpu-4gb). The migration always targets a dedicated compute, so `serverless` is not accepted. |
+| `autoCutover` | `boolean` | No | Whether to cut over automatically once the copy is verified. When disabled the migration parks at ready_to_cutover and holds there until the cutover is performed manually. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.createMigration({
+  databaseId: string;
+  specification: string;
+  autoCutover?: boolean;
+})
+```
+
+<a id="tablesdb-deletemigration"></a>
+
+#### `deleteMigration`
+
+Abort an in-flight TablesDB dedicated migration. Only allowed before cutover; once the migration has cut over it cannot be aborted.
+
+- **HTTP:** `DELETE`
+- **Path:** `/v1/tablesdb/{databaseId}/migrations/{migrationId}`
+- **Returns:** `Promise<{}>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `migrationId` | `string` | Yes | Migration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.deleteMigration({
+  databaseId: string;
+  migrationId: string;
+})
+```
+
+<a id="tablesdb-getmigration"></a>
+
+#### `getMigration`
+
+Get a single dedicated migration for a TablesDB database by its ID.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/migrations/{migrationId}`
+- **Returns:** `Promise<Models.DatabaseMigration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `migrationId` | `string` | Yes | Migration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getMigration({
+  databaseId: string;
+  migrationId: string;
+})
+```
+
+<a id="tablesdb-listmigrations"></a>
+
+#### `listMigrations`
+
+List the dedicated migrations for a TablesDB database. A database has at most one in-flight migration.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/migrations`
+- **Returns:** `Promise<Models.DatabaseMigrationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.listMigrations({
+  databaseId: string;
+})
+```
+
+<a id="tablesdb-operations-resource"></a>
+
+### Operations
+
+REST resource: `/v1/tablesdb/{databaseId}/…`
+
+<a id="tablesdb-listoperations"></a>
+
+#### `listOperations`
+
+List the lifecycle operations recorded for a dedicated database, newest first. Every provision, update, restore, backup and replication action is recorded here with its outcome, including an attempt that was abandoned because another worker took over the database.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/operations`
+- **Returns:** `Promise<Models.DedicatedDatabaseOperationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by operation status. |
+| `limit` | `number` | No | Maximum number of operations to return. |
+| `offset` | `number` | No | Number of operations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.listOperations({
+  databaseId: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
+<a id="tablesdb-replicas-resource"></a>
+
+### Replicas
+
+REST resource: `/v1/tablesdb/{databaseId}/…`
+
+<a id="tablesdb-getreplicas"></a>
+
+#### `getReplicas`
+
+Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/replicas`
+- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getReplicas({
+  databaseId: string;
+})
+```
+
+<a id="tablesdb-status-resource"></a>
+
+### Status
+
+REST resource: `/v1/tablesdb/{databaseId}/…`
+
+<a id="tablesdb-getstatus"></a>
+
+#### `getStatus`
+
+Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/status`
+- **Returns:** `Promise<Models.DatabaseStatus>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getStatus({
+  databaseId: string;
 })
 ```
 
@@ -902,11 +1200,11 @@ Create relationship column. [Learn more about relationship columns](https://appw
 | `databaseId` | `string` | Yes | Database ID. |
 | `tableId` | `string` | Yes | Table ID. |
 | `relatedTableId` | `string` | Yes | Related Table ID. |
-| `type` | `RelationshipType` | Yes | Relation type |
+| `type` | `RelationshipType` | Yes | Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany. |
 | `twoWay` | `boolean` | No | Is Two Way? |
 | `key` | `string` | No | Column Key. |
 | `twoWayKey` | `string` | No | Two Way Column Key. |
-| `onDelete` | `RelationMutate` | No | Constraints option |
+| `onDelete` | `RelationMutate` | No | Delete constraint. Possible values are: cascade, restrict, setNull. |
 
 **SDK signature**
 
@@ -943,7 +1241,7 @@ Create a new Table. Before using this route, you should create a new database re
 | `permissions` | `string[]` | No | An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions). |
 | `rowSecurity` | `boolean` | No | Enables configuring permissions for individual rows. A user needs one of row or table level permissions to access a row. [Learn more about permissions](https://appwrite.io/docs/permissions). |
 | `enabled` | `boolean` | No | Is table enabled? When set to 'disabled', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled. |
-| `columns` | `object[]` | No | Array of column definitions to create. Each column should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options. |
+| `columns` | `object[]` | No | Array of column definitions to create. Each column should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options. |
 | `indexes` | `object[]` | No | Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of column keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional). |
 
 **SDK signature**
@@ -1826,7 +2124,7 @@ Update relationship column. [Learn more about relationship columns](https://appw
 | `databaseId` | `string` | Yes | Database ID. |
 | `tableId` | `string` | Yes | Table ID. |
 | `key` | `string` | Yes | Column Key. |
-| `onDelete` | `RelationMutate` | No | Constraints option |
+| `onDelete` | `RelationMutate` | No | Delete constraint. Possible values are: cascade, restrict, setNull. |
 | `newKey` | `string` | No | New Column Key. |
 
 **SDK signature**
@@ -1978,185 +2276,5 @@ sdk.forProject(projectId).tablesDB.updateVarcharColumn({
   xdefault?: string;
   size?: number;
   newKey?: string;
-})
-```
-
-<a id="tablesdb-listspecifications"></a>
-
-#### `listSpecifications`
-
-List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
-
-- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
-
-**Parameters**
-
-_No request parameters._
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.listSpecifications()
-```
-
-<a id="tablesdb-createfailover"></a>
-
-#### `createFailover`
-
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
-
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.createFailover({
-  databaseId: string;
-  targetReplicaId?: string;
-})
-```
-
-<a id="tablesdb-listmigrations"></a>
-
-#### `listMigrations`
-
-List the dedicated migrations for a TablesDB database. A database has at most one in-flight migration.
-
-- **Returns:** `Promise<Models.DatabaseMigrationList>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.listMigrations({
-  databaseId: string;
-})
-```
-
-<a id="tablesdb-createmigration"></a>
-
-#### `createMigration`
-
-Start migrating a serverless TablesDB database onto a dedicated MySQL compute. Data is copied to the target while the source stays live, with a brief read-only window during cutover.
-
-- **Returns:** `Promise<Models.DatabaseMigration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `specification` | `string` | Yes | Dedicated compute specification to provision as the migration target (e.g. s-2vcpu-4gb). The migration always targets a dedicated compute, so `serverless` is not accepted. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.createMigration({
-  databaseId: string;
-  specification: string;
-})
-```
-
-<a id="tablesdb-getmigration"></a>
-
-#### `getMigration`
-
-Get a single dedicated migration for a TablesDB database by its ID.
-
-- **Returns:** `Promise<Models.DatabaseMigration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `migrationId` | `string` | Yes | Migration ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getMigration({
-  databaseId: string;
-  migrationId: string;
-})
-```
-
-<a id="tablesdb-deletemigration"></a>
-
-#### `deleteMigration`
-
-Abort an in-flight TablesDB dedicated migration. Only allowed before cutover; once the migration has cut over it cannot be aborted.
-
-- **Returns:** `Promise<{}>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `migrationId` | `string` | Yes | Migration ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.deleteMigration({
-  databaseId: string;
-  migrationId: string;
-})
-```
-
-<a id="tablesdb-getreplicas"></a>
-
-#### `getReplicas`
-
-Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
-
-- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getReplicas({
-  databaseId: string;
-})
-```
-
-<a id="tablesdb-getstatus"></a>
-
-#### `getStatus`
-
-Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
-
-- **Returns:** `Promise<Models.DatabaseStatus>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getStatus({
-  databaseId: string;
 })
 ```
