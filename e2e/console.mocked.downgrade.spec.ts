@@ -493,7 +493,7 @@ test.describe('plan downgrade deletions (mocked API)', () => {
     expect(state.mutations).toEqual([])
   })
 
-  test('the project resources step lists kept projects only', async ({
+  test('the project resources step lists only projects that need attention', async ({
     page,
   }) => {
     const state = createMockState()
@@ -502,8 +502,10 @@ test.describe('plan downgrade deletions (mocked API)', () => {
 
     const step = resourceStep(page)
     await expect(step).toBeVisible({ timeout: 30_000 })
+    // Alpha is over limit, Beta the estimation reported compliant, and Gamma
+    // is marked for deletion: only Alpha is worth nine list calls.
     await expect(step.getByRole('button', { name: ALPHA.name })).toBeVisible()
-    await expect(step.getByRole('button', { name: BETA.name })).toBeVisible()
+    await expect(step.getByRole('button', { name: BETA.name })).toHaveCount(0)
     await expect(step.getByRole('button', { name: GAMMA.name })).toHaveCount(0)
 
     await step.getByRole('button', { name: ALPHA.name }).click()
