@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "introducing-autogravity",
+    "href": "/blog/post/introducing-autogravity",
+    "title": "Introducing AutoGravity: Automatic image cropping for Appwrite",
+    "description": "Learn how AutoGravity turns an image into a useful crop coordinate using saliency detection and a small, efficient model pipeline.",
+    "date": "2026-09-09",
+    "lastUpdated": "2026-09-09",
+    "timeToRead": 4,
+    "author": "torsten-dittmann",
+    "category": "announcement",
+    "featured": false,
+    "draft": false,
+    "hasCover": false
+  },
+  {
     "slug": "drizzle-orm-appwrite-postgres",
     "href": "/blog/post/drizzle-orm-appwrite-postgres",
     "title": "Use Drizzle ORM with Appwrite Postgres",
