@@ -38,7 +38,7 @@ class RepositoryPullRequestCleanup
             $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
 
             if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
+                $providerPullRequestIds = \array_values(\array_diff($providerPullRequestIds, [$providerPullRequestId]));
                 $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
             }
         }

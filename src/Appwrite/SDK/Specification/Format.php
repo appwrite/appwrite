@@ -469,12 +469,36 @@ abstract class Format
 
     protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
     {
-        if (isset($schema['enum'])) {
-            return \in_array($default, $schema['enum'], true);
+        if (isset($schema['enum']) && !\in_array($default, $schema['enum'], true)) {
+            return false;
         }
 
-        if (\is_array($schema['items'] ?? null) && isset($schema['items']['enum'])) {
-            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        // Named enums use titled oneOf branches; open enums additionally
+        // accept a free-string branch through anyOf.
+        foreach (['oneOf', 'anyOf'] as $composition) {
+            if (!isset($schema[$composition])) {
+                continue;
+            }
+            $matches = 0;
+            foreach ($schema[$composition] as $branch) {
+                if ($this->shouldEmitDefaultForSchema($default, $branch)) {
+                    $matches++;
+                }
+            }
+            if ($composition === 'oneOf' ? $matches !== 1 : $matches === 0) {
+                return false;
+            }
+        }
+
+        if (\is_array($schema['items'] ?? null)) {
+            if (!\is_array($default)) {
+                return false;
+            }
+            foreach ($default as $item) {
+                if (!$this->shouldEmitDefaultForSchema($item, $schema['items'])) {
+                    return false;
+                }
+            }
         }
 
         return true;

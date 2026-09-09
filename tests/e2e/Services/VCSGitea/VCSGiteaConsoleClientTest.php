@@ -110,6 +110,120 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
     }
 
+    public function testClosePullRequestRemovesAuthorization(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+        $this->createGiteaUserHelper(self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'pull-requests-' . ID::unique(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+        $repositoryPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName;
+
+        $fork = $this->giteaApiHelper(Client::METHOD_POST, $repositoryPath . '/forks', [
+            'name' => $repositoryName,
+        ], username: self::GITEA_USERNAME_SECOND);
+        $this->assertEquals(202, $fork['headers']['status-code'], \json_encode($fork['body']));
+
+        $forkPath = '/api/v1/repos/' . self::GITEA_USERNAME_SECOND . '/' . $repositoryName;
+        $this->assertEventually(function () use ($forkPath) {
+            $branch = $this->giteaApiHelper(Client::METHOD_GET, $forkPath . '/branches/main', username: self::GITEA_USERNAME_SECOND);
+            $this->assertEquals(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+            $this->assertNotEmpty($branch['body']['commit']['id']);
+        }, 30000, 1000);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea pull requests',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+
+        $pullRequestIds = [];
+        $authorizePath = '';
+        foreach (['first', 'second'] as $branch) {
+            $file = $this->giteaApiHelper(Client::METHOD_POST, $forkPath . '/contents/index.js', [
+                'branch' => 'main',
+                'new_branch' => $branch,
+                'content' => \base64_encode("module.exports = async (context) => context.res.send('{$branch}');\n"),
+            ], username: self::GITEA_USERNAME_SECOND);
+            $this->assertEquals(201, $file['headers']['status-code'], \json_encode($file['body']));
+
+            $pullRequest = $this->giteaApiHelper(Client::METHOD_POST, $repositoryPath . '/pulls', [
+                'title' => $branch,
+                'head' => self::GITEA_USERNAME_SECOND . ':' . $branch,
+                'base' => 'main',
+            ], username: self::GITEA_USERNAME_SECOND);
+            $this->assertEquals(201, $pullRequest['headers']['status-code'], \json_encode($pullRequest['body']));
+            $pullRequestId = (string) $pullRequest['body']['number'];
+            $pullRequestIds[] = $pullRequestId;
+
+            // Follow the authorization link Appwrite posts on the external pull request.
+            $this->assertEventually(function () use ($repositoryPath, $pullRequestId, $installationId, &$authorizePath) {
+                $comments = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/issues/' . $pullRequestId . '/comments');
+                $this->assertEquals(200, $comments['headers']['status-code']);
+
+                foreach ($comments['body'] as $comment) {
+                    if (\preg_match('/repositoryId=([^&\s)]+)/', $comment['body'], $matches)) {
+                        $authorizePath = '/vcs/github/installations/' . $installationId . '/repositories/' . $matches[1];
+                        return;
+                    }
+                }
+
+                $this->fail('Appwrite has not posted the authorization link yet.');
+            }, 30000, 1000);
+
+            $authorize = $this->client->call(Client::METHOD_PATCH, $authorizePath, $headers, [
+                'providerPullRequestId' => $pullRequestId,
+            ]);
+            $this->assertEquals(204, $authorize['headers']['status-code'], $authorize['body']['message'] ?? '');
+        }
+
+        // Removing the first of two IDs used to leave a gap and fail database validation.
+        $close = $this->giteaApiHelper(Client::METHOD_PATCH, $repositoryPath . '/pulls/' . $pullRequestIds[0], [
+            'state' => 'closed',
+        ]);
+        $this->assertEquals(201, $close['headers']['status-code'], \json_encode($close['body']));
+
+        $reopen = $this->giteaApiHelper(Client::METHOD_PATCH, $repositoryPath . '/pulls/' . $pullRequestIds[0], [
+            'state' => 'open',
+        ]);
+        $this->assertEquals(201, $reopen['headers']['status-code'], \json_encode($reopen['body']));
+
+        $this->assertEventually(function () use ($authorizePath, $headers, $pullRequestIds) {
+            $authorize = $this->client->call(Client::METHOD_PATCH, $authorizePath, $headers, [
+                'providerPullRequestId' => $pullRequestIds[0],
+            ]);
+            $this->assertEquals(204, $authorize['headers']['status-code'], $authorize['body']['message'] ?? '');
+        }, 30000, 1000);
+
+        /**
+         * Test for FAILURE
+         */
+        // Closing the first pull request must preserve the second one's authorization.
+        $authorize = $this->client->call(Client::METHOD_PATCH, $authorizePath, $headers, [
+            'providerPullRequestId' => $pullRequestIds[1],
+        ]);
+        $this->assertEquals(409, $authorize['headers']['status-code']);
+        $this->assertEquals('provider_contribution_conflict', $authorize['body']['type']);
+    }
+
     /**
      * Walk the full OAuth2 dance against the local Gitea and return the
      * resulting installation, asserting every hop on the way.
@@ -239,14 +353,14 @@ final class VCSGiteaConsoleClientTest extends Scope
         return $response;
     }
 
-    private function giteaApiHelper(string $method, string $path, array $params = []): array
+    private function giteaApiHelper(string $method, string $path, array $params = [], string $username = self::GITEA_USERNAME): array
     {
         $gitea = new Client();
         $gitea->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000'));
 
         return $gitea->call($method, $path, [
             'content-type' => 'application/json',
-            'authorization' => 'Basic ' . \base64_encode(self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD),
+            'authorization' => 'Basic ' . \base64_encode($username . ':' . self::GITEA_PASSWORD),
         ], $params);
     }
 

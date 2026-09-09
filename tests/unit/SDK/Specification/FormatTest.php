@@ -233,6 +233,51 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('x-enum-keys', $kind);
     }
 
+    #[DataProvider('defaultLocations')]
+    public function testAnnotatedEnumDefaultsMatchAllowedValues(string $method): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route($method, '/v1/tests'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('timezone', '', new WhiteList(['utc', 'europe/london']), 'Timezone.', optional: true, enum: new Enum(name: 'TestTimezone'))
+            ->param('validZone', 'utc', new WhiteList(['utc', 'europe/london']), 'Valid timezone.', optional: true, enum: new Enum(name: 'TestValidTimezone'))
+            ->param('zones', ['invalid'], new ArrayList(new WhiteList(['utc', 'europe/london'])), 'Timezones.', optional: true, enum: new Enum(name: 'TestZones'))
+            ->param('validZones', ['utc'], new ArrayList(new WhiteList(['utc', 'europe/london'])), 'Valid timezones.', optional: true, enum: new Enum(name: 'TestValidZones'))
+            ->param('emptyZones', [], new ArrayList(new WhiteList(['utc'])), 'Empty timezones.', optional: true, enum: new Enum(name: 'TestEmptyZones'))
+            ->param('openZone', 'custom', new AnyOf([new WhiteList(['utc']), new Text(64)]), 'Open timezone.', optional: true, enum: new Enum(name: 'TestOpenZone'))
+            ->param('openZones', ['custom'], new AnyOf([new ArrayList(new WhiteList(['utc'])), new ArrayList(new Text(64))]), 'Open timezones.', optional: true, enum: new Enum(name: 'TestOpenZones'));
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $operation = $spec['paths']['/tests'][strtolower($method)];
+        if ($method === 'GET') {
+            $schemas = array_column($operation['parameters'], 'schema', 'name');
+        } else {
+            $schemas = $operation['requestBody']['content']['application/json']['schema']['properties'];
+        }
+
+        $this->assertArrayHasKey('oneOf', $schemas['timezone']);
+        $this->assertArrayNotHasKey('default', $schemas['timezone']);
+        $this->assertSame(['utc', 'europe/london'], array_column(array_column($schemas['timezone']['oneOf'], 'enum'), 0));
+        $this->assertSame('utc', $schemas['validZone']['default']);
+        $this->assertArrayNotHasKey('default', $schemas['zones']);
+        $this->assertSame(['utc'], $schemas['validZones']['default']);
+        $this->assertSame([], $schemas['emptyZones']['default']);
+        $this->assertArrayHasKey('anyOf', $schemas['openZone']);
+        $this->assertSame('custom', $schemas['openZone']['default']);
+        $this->assertArrayHasKey('anyOf', $schemas['openZones']['items']);
+        $this->assertSame(['custom'], $schemas['openZones']['default']);
+    }
+
     public function testEnumNameMustNotOverlapServiceName(): void
     {
         Method::$processed = [];
@@ -354,6 +399,58 @@ final class FormatTest extends TestCase
         $this->assertEqualsWithDelta(2.5, $properties['ratio']['example'], PHP_FLOAT_EPSILON);
         $this->assertTrue($properties['enabled']['example']);
         $this->assertSame('["one","two"]', $properties['text']['example']);
+    }
+
+    public static function defaultLocations(): \Iterator
+    {
+        yield ['GET'];
+        yield ['POST'];
+    }
+
+    #[DataProvider('defaultLocations')]
+    public function testEmptyObjectDefaultsSerializeAsObjects(string $method): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route($method, '/v1/tests'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('headers', [], new Assoc(), 'Headers.', optional: true)
+            ->param('data', [], new JSON(), 'Data.', optional: true)
+            ->param('metadata', ['enabled' => true], new Assoc(), 'Metadata.', optional: true)
+            ->param('labels', [], new ArrayList(new Text(16)), 'Labels.', optional: true)
+            ->param('count', 0, new Range(0, 100), 'Count.', optional: true)
+            ->param('enabled', false, new BooleanValidator(true), 'Enabled.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        // Check serialized JSON, where PHP's empty array and empty object differ.
+        $operation = json_decode(json_encode($spec, JSON_THROW_ON_ERROR), flags: JSON_THROW_ON_ERROR)->paths->{'/tests'}->{strtolower($method)};
+        if ($method === 'GET') {
+            $schemas = [];
+            foreach ($operation->parameters as $parameter) {
+                $schemas[$parameter->name] = $parameter->schema;
+            }
+        } else {
+            $schemas = (array) $operation->requestBody->content->{'application/json'}->schema->properties;
+        }
+
+        foreach (['headers', 'data'] as $name) {
+            $this->assertSame('object', $schemas[$name]->type);
+            $this->assertSame('{}', json_encode($schemas[$name]->default));
+        }
+        $this->assertEquals((object) ['enabled' => true], $schemas['metadata']->default);
+        $this->assertSame('array', $schemas['labels']->type);
+        $this->assertSame([], $schemas['labels']->default);
+        $this->assertSame(0, $schemas['count']->default);
+        $this->assertFalse($schemas['enabled']->default);
     }
 
     public function testArrayListItemTypesAreValidOpenApiTypes(): void
@@ -947,7 +1044,7 @@ final class FormatTest extends TestCase
 
     }
 
-    public function testNoContentMethodsKeepProducesMetadata(): void
+    public function testNoContentMethodsOmitProducesMetadata(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -975,7 +1072,7 @@ final class FormatTest extends TestCase
         $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
 
         $this->assertArrayNotHasKey('content', $openApiMethod['responses']['204']);
-        $this->assertSame(['application/json'], $openApiMethod['x-appwrite']['produces']);
+        $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
 
     public static function binaryResponseTypes(): \Iterator

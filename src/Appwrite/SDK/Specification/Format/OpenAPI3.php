@@ -545,20 +545,6 @@ class OpenAPI3 extends Format
                 }
             }
 
-            // No response declares content (e.g. 204 No content): keep the produced
-            // content type available for SDK generation.
-            $hasResponseContent = false;
-            foreach ($temp['responses'] as $responseData) {
-                if (isset($responseData['content'])) {
-                    $hasResponseContent = true;
-                    break;
-                }
-            }
-
-            if (!$hasResponseContent && $produces !== '') {
-                $temp['x-appwrite']['produces'] = [$produces];
-            }
-
             if (!empty($scope)) {
                 $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
@@ -989,7 +975,11 @@ class OpenAPI3 extends Format
                 }
 
                 if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
-                    $node['schema']['default'] = $param['default'];
+                    // PHP uses [] for empty maps too; preserve the declared
+                    // object type when serializing its default to JSON.
+                    $node['schema']['default'] = $node['schema']['type'] === 'object' && $param['default'] === []
+                        ? new \stdClass()
+                        : $param['default'];
                 }
 
                 $pathAliases = [$name, ...($param['aliases'] ?? [])];

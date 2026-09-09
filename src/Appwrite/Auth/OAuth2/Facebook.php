@@ -140,6 +140,18 @@ class Facebook extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['picture']['data']['url'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -155,7 +167,7 @@ class Facebook extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name&access_token=' . \urlencode($accessToken));
+            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name,picture&access_token=' . \urlencode($accessToken));
 
             $this->user = \json_decode($user, true);
         }

@@ -621,11 +621,29 @@ return function (Container $context): void {
             $projectId = (string) $request->getQuery('project', '');
         }
 
+        $route = $utopia->match($request)?->route;
+
+        // S3 uses the Appwrite project ID as its SigV4 access key. Header-signed
+        // requests carry the credential scope in Authorization; presigned URLs
+        // carry it in the X-Amz-Credential query parameter.
+        if ($projectId === '' && \in_array('s3', $route?->getGroups() ?? [], true)) {
+            $credential = '';
+            $authorizationHeader = $request->getHeaderLine('authorization', '');
+            if (\preg_match('/Credential=([^\s,]+)/', $authorizationHeader, $matches) === 1) {
+                $credential = $matches[1];
+            } else {
+                $credential = $request->getQuery('X-Amz-Credential', '');
+            }
+
+            if (\is_string($credential)) {
+                $projectId = \explode('/', $credential, 2)[0];
+            }
+        }
+
         // Backwards compatibility for new services, originally project resources
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request)?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);

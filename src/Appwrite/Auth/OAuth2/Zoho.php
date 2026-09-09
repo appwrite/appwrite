@@ -152,6 +152,20 @@ class Zoho extends OAuth2
     }
 
     /**
+     * Identity comes from the id_token JWT decoded into $this->user — no getUser() method exists.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     *
+     * @see https://www.zoho.com/developer/oauth/sign-in-using-zoho-oidc.html (picture claim in id_token)
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        return $this->user['picture'] ?? '';
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string

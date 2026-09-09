@@ -905,6 +905,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_AUTOGRAVITY_HOST',
+                'description' => 'The host used by Appwrite to determine automatic image crop gravity.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
