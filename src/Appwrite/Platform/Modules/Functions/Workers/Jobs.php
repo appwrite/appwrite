@@ -297,12 +297,13 @@ class Jobs extends Action
         // callback explicitly because complete is emitted after artifacts but
         // the queue can deliver those callbacks out of order.
         if ($artifact->artifactId === 'output') {
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+                return $deployment;
+            }
             if ($failed) {
-                // Output delivery can fail before the exit callback arrives.
-                // Join the exit first so usage uses the worker's measurement.
-                $cache->save('jobs-output-' . $deployment->getId(), ['error' => 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error')]);
-
-                return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+                // Fail immediately even if exit delivery is lost. Leave duration
+                // unknown until exit arrives, rather than billing callback wait.
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus, awaitDuration: empty($deployment->getAttribute('buildEndedAt')) && $cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) === false);
             }
 
             if ($artifact->status !== 'success') {
@@ -364,6 +365,29 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $duration = $exit->durationSeconds;
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            if ($deployment->getAttribute('status') !== 'failed' || $deployment->getAttribute('buildDuration') !== null) {
+                return $deployment;
+            }
+
+            // An output failure finalized before exit. Complete its accounting
+            // once, without repeating finalization or changing the failed state.
+            $applied = $dbForProject->updateDocuments('deployments', new Document([
+                'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0 ? (int) \ceil($duration) : $this->duration($deployment),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::equal('status', ['failed']),
+                Query::isNull('buildDuration'),
+            ]);
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if ($applied > 0 && $deployment->getAttribute('status') === 'failed' && !$resource->isEmpty()) {
+                BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
+            }
+
+            return $deployment;
+        }
+
         if ($duration !== null && \is_finite($duration) && $duration >= 0) {
             // The worker's measured runtime excludes queue and callback waits.
             // Persist it before joining artifact callbacks, which may arrive later.
@@ -448,20 +472,11 @@ class Jobs extends Action
         $deploymentId = $deployment->getId();
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
-        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        $output = $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL);
-        if (\is_array($output) && isset($output['error'])) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $output['error'], $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
-        }
-
-        if ($cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
-            return $deployment;
-        }
-
-        if ($deviceForBuilds->getType() !== DeviceType::Local && $output === false) {
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
@@ -559,6 +574,7 @@ class Jobs extends Action
         array $platform,
         Bus $bus,
         int $buildSize = 0,
+        bool $awaitDuration = false,
     ): Document {
         // A build finalizes once. A failed artifact fails it with the
         // artifact's own message, and the exit that follows must not overwrite
@@ -579,7 +595,7 @@ class Jobs extends Action
         $update = [
             'status' => $success ? 'ready' : 'failed',
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
-            'buildDuration' => $this->duration($deployment),
+            'buildDuration' => $awaitDuration ? null : $this->duration($deployment),
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
         if ($success) {
@@ -621,7 +637,7 @@ class Jobs extends Action
         // Count the build for usage/billing once it reached a terminal outcome
         // (mirrors the executor Builds worker); never for a concurrently-canceled
         // build (the guard above left it 'canceled').
-        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true) && ! $resource->isEmpty()) {
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true) && $deployment->getAttribute('buildDuration') !== null && ! $resource->isEmpty()) {
             BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
         }
 
@@ -649,7 +665,7 @@ class Jobs extends Action
      */
     private function duration(Document $deployment): int
     {
-        if (!empty($deployment->getAttribute('buildEndedAt'))) {
+        if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
             return (int) $deployment->getAttribute('buildDuration', 0);
         }
 
