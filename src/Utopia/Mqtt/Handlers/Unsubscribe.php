@@ -35,16 +35,15 @@ class Unsubscribe extends Action
         $packetId = substr($body, 0, 2);
         $offset += 2;
 
-        $subId = '';
+        // MQTT 5.0 carries a property block before the filters; skip it to reach them.
         if ($connection->protocol >= 5) {
-            [$properties, $offset] = Properties::parse($body, $offset);
-            $subId = (string) ($properties->user()['subId'] ?? '');
+            $offset = Properties::skip($body, $offset);
         }
 
         $count = 0;
         while ($offset < strlen($body)) {
             [$filter, $offset] = Packet::readString($body, $offset);
-            $mqtt->unsubscribeSubscription($connection->fd, $subId ?: $filter);
+            $mqtt->unsubscribeSubscription($connection->fd, $filter);
             $count++;
         }
 

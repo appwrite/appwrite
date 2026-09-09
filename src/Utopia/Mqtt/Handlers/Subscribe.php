@@ -39,10 +39,9 @@ class Subscribe extends Action
         $packetId = substr($body, 0, 2);
         $offset += 2;
 
-        $subId = '';
+        // MQTT 5.0 carries a property block before the filters; skip it to reach them.
         if ($connection->protocol >= 5) {
-            [$properties, $offset] = Properties::parse($body, $offset);
-            $subId = (string) ($properties->user()['subId'] ?? '');
+            $offset = Properties::skip($body, $offset);
         }
 
         $identity = $connection->identity;
@@ -67,13 +66,13 @@ class Subscribe extends Action
                 continue;
             }
 
-            $mqtt->subscribe($connection->projectId, $connection->fd, $subId ?: $filter, [], [$filter]);
+            $mqtt->subscribe($connection->projectId, $connection->fd, '', [], [$filter]);
             $granted .= chr(Packet::QOS_1); // granted max QoS 1
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
 
             // TODO: if we can save directly in the same cache key only
             $key = 'mqtt:sub:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $filter;
-            getCache()->save($key, ['subId' => $subId, 'qos' => Packet::QOS_1]);
+            getCache()->save($key, ['qos' => Packet::QOS_1]);
             $topics[] = $filter;
         }
 
@@ -97,8 +96,12 @@ class Subscribe extends Action
             $payload = $cache->load($lastMessageCursorKey, 3600);
 
             $topicDocument = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('messages', [Query::containsAny('topics', [$topic]), Query::orderDesc('$sequence'), Query::orderDesc('data')]));
-            if($topicDocument->isEmpty()) continue;
-            if(empty($topicDocument->getAttribute('data'))) continue;
+            if ($topicDocument->isEmpty()) {
+                continue;
+            }
+            if (empty($topicDocument->getAttribute('data'))) {
+                continue;
+            }
 
             $sequence = $topicDocument?->getAttribute('$sequence') ?? -1;
 
@@ -110,7 +113,7 @@ class Subscribe extends Action
 
             $lastSubscriberSequence = max(-1, $payload['sequence'] ?? -1);
 
-            if($lastSubscriberSequence === $sequence){
+            if ($lastSubscriberSequence === $sequence) {
                 continue;
             }
 

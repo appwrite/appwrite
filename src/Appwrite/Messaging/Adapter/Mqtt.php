@@ -76,10 +76,11 @@ class Mqtt extends MessagingAdapter
 
     /**
      * Subscribe a connection to topic filters. $identifier is the fd, $channels the
-     * topic filters; roles and queries have no MQTT meaning and are ignored. The
-     * granted QoS is 1 and the user id comes from the resolved identity so the
-     * subscription store can scale per client.
+     * topic filters; roles, queries and $subscriptionId have no MQTT meaning and are
+     * ignored (the store keys by topic). The granted QoS is 1 and the user id comes
+     * from the resolved identity so the subscription store can scale per client.
      *
+     * @param string $subscriptionId ignored (part of the Messaging adapter contract)
      * @param array<int, string> $roles ignored
      * @param array<int, string> $channels topic filters
      * @param array<int, mixed> $queryGroup ignored
@@ -92,7 +93,6 @@ class Mqtt extends MessagingAdapter
             $this->subscriptions()->subscribe(
                 $projectId,
                 $userId,
-                $subscriptionId ?: $topic,
                 $topic,
                 $identifier,
                 Packet::QOS_1,
@@ -139,10 +139,10 @@ class Mqtt extends MessagingAdapter
         }
     }
 
-    /** Remove a single subscription (MQTT UNSUBSCRIBE). */
-    public function unsubscribeSubscription(int $fd, string $subscriptionId): void
+    /** Remove a single topic subscription (MQTT UNSUBSCRIBE). */
+    public function unsubscribeSubscription(int $fd, string $topic): void
     {
-        $this->subscriptions()->unsubscribe($subscriptionId, $fd);
+        $this->subscriptions()->unsubscribe($topic, $fd);
     }
 
     /**

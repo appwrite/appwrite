@@ -22,9 +22,9 @@ class Node
 class SubscriptionStore
 {
     /**
-     * fd => connection record
+     * fd => connection record.
      *
-     * @var array<int, array{projectId: string, userId: string, subs: array<string, array{topic: string, qos: int}>}>
+     * @var array<int, array{projectId: string, userId: string, subs: array<string, int>}>
      */
     private array $connections = [];
 
@@ -48,10 +48,10 @@ class SubscriptionStore
         $this->root = new Node();
     }
 
-    public function subscribe(string $projectId, string $userId, string $subId, string $topic, int $fd, int $qos = 1)
+    public function subscribe(string $projectId, string $userId, string $topic, int $fd, int $qos = 1)
     {
-        if (isset($this->connections[$fd]['subs'][$subId])) {
-            $this->unsubscribe($subId, $fd);
+        if (isset($this->connections[$fd]['subs'][$topic])) {
+            $this->unsubscribe($topic, $fd);
         }
 
         $nodes = [$projectId, ...explode("/", $topic)];
@@ -73,13 +73,12 @@ class SubscriptionStore
                 'subs' => [],
             ];
         }
-        $this->connections[$fd]['subs'][$subId] = ['topic' => $topic, 'qos' => $qos];
+        $this->connections[$fd]['subs'][$topic] = $qos;
     }
 
-    public function unsubscribe(string $subId, int $fd)
+    public function unsubscribe(string $topic, int $fd)
     {
-        $topic = $this->connections[$fd]['subs'][$subId]['topic'] ?? null;
-        if ($topic === null) {
+        if (!isset($this->connections[$fd]['subs'][$topic])) {
             return;
         }
 
@@ -112,7 +111,7 @@ class SubscriptionStore
             }
         }
 
-        unset($this->connections[$fd]['subs'][$subId]);
+        unset($this->connections[$fd]['subs'][$topic]);
         if (empty($this->connections[$fd]['subs'])) {
             unset($this->connections[$fd]);
         }
@@ -120,14 +119,14 @@ class SubscriptionStore
 
     public function close(int $fd)
     {
-        foreach (array_keys($this->connections[$fd]['subs'] ?? []) as $subId) {
-            $this->unsubscribe($subId, $fd);
+        foreach (array_keys($this->connections[$fd]['subs'] ?? []) as $topic) {
+            $this->unsubscribe($topic, $fd);
         }
         unset($this->connections[$fd]);
     }
 
     /**
-     * @return array{projectId: string, userId: string, subs: array<string, array{topic: string, qos: int}>}|null
+     * @return array{projectId: string, userId: string, subs: array<string, int>}|null
      */
     public function getConnection(int $fd): ?array
     {
