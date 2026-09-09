@@ -394,16 +394,39 @@ abstract class Format
             ];
         }
 
-        // Single-key failed — try compound discriminator
-        return $this->getCompoundDiscriminator($models, $refPrefix);
+        return null;
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>
+     */
+    protected function getUnion(array $models, string $refPrefix, string $composition = 'oneOf'): array
+    {
+        $discriminator = $this->getDiscriminator($models, $refPrefix);
+        if ($discriminator === null) {
+            $compound = $this->getCompoundSchema($models, $refPrefix);
+            if ($compound !== null) {
+                return $compound;
+            }
+        }
+
+        return \array_filter([
+            $composition => \array_map(fn (Model $model) => ['$ref' => $refPrefix . $model->getType()], $models),
+            'discriminator' => $discriminator,
+        ]);
     }
 
     /**
      * @param array<Model> $models
      * @return array<string, mixed>|null
      */
-    private function getCompoundDiscriminator(array $models, string $refPrefix): ?array
+    private function getCompoundSchema(array $models, string $refPrefix): ?array
     {
+        if (\count($models) < 2 || \array_intersect(...\array_map(fn (Model $model) => \array_keys($model->conditions), $models)) === []) {
+            return null;
+        }
+
         $allKeys = [];
         foreach ($models as $model) {
             foreach (\array_keys($model->conditions) as $key) {
@@ -417,9 +440,8 @@ abstract class Format
             return null;
         }
 
-        $primaryKey = $allKeys[0];
-        $primaryMapping = [];
-        $compoundMapping = [];
+        $branches = [];
+        $seen = [];
 
         foreach ($models as $model) {
             $rules = $model->getRules();
@@ -434,37 +456,34 @@ abstract class Format
                     return null;
                 }
 
-                $conditions[$key] = \is_bool($condition) ? ($condition ? 'true' : 'false') : (string) $condition;
+                $conditions[$key] = $condition;
             }
 
             if (empty($conditions)) {
                 return null;
             }
 
-            $ref = $refPrefix . $model->getType();
-            $compoundMapping[$ref] = $conditions;
-
-            // Best-effort single-key mapping — last model with this value wins (fallback)
-            if (isset($conditions[$primaryKey])) {
-                $primaryMapping[$conditions[$primaryKey]] = $ref;
-            }
-        }
-
-        // Verify compound uniqueness
-        $seen = [];
-        foreach ($compoundMapping as $conditions) {
-            $sig = \json_encode($conditions, JSON_THROW_ON_ERROR);
-            if (isset($seen[$sig])) {
+            $signature = $conditions;
+            \ksort($signature);
+            $signature = \json_encode($signature, JSON_THROW_ON_ERROR);
+            if (isset($seen[$signature])) {
                 return null;
             }
-            $seen[$sig] = true;
+            $seen[$signature] = true;
+
+            $branches[] = ['allOf' => [
+                ['$ref' => $refPrefix . $model->getType()],
+                [
+                    'type' => 'object',
+                    'required' => \array_keys($conditions),
+                    'properties' => \array_map(fn (mixed $value) => ['enum' => [$value]], $conditions),
+                ],
+            ]];
         }
 
-        return \array_filter([
-            'propertyName' => $primaryKey,
-            'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
-            'x-mapping' => $compoundMapping,
-        ]);
+        // Broad String overlaps Email/Enum/Url/Ip, so these alternatives are
+        // inclusive. SDK consumers retain their most-specific-first selection.
+        return ['anyOf' => $branches];
     }
 
     protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool

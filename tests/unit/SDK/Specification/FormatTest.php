@@ -128,6 +128,86 @@ final class FormatTest extends TestCase
         $this->format = new TestFormat(new Container(), [], [], [], [], ['console' => 0], 'console');
     }
 
+    public static function compoundModels(): array
+    {
+        return [['Column'], ['Attribute']];
+    }
+
+    #[DataProvider('compoundModels')]
+    public function testCompoundUnionsUseConstrainedReferences(string $kind): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+        $models = [];
+        foreach (['Boolean', 'BigInt', 'Integer', 'Float', 'Email', 'Enum', 'URL', 'IP', 'Datetime', 'Relationship', 'Point', 'Line', 'Polygon', 'Varchar', 'Text', 'Mediumtext', 'Longtext', 'String'] as $suffix) {
+            $class = 'Appwrite\\Utopia\\Response\\Model\\' . $kind . $suffix;
+            $models[] = new $class();
+        }
+        $class = 'Appwrite\\Utopia\\Response\\Model\\' . $kind . 'List';
+        $list = new $class();
+        $references = \array_map(fn (ResponseModel $model) => $model->getType(), $models);
+        $routes = [];
+        foreach (['union' => $references, 'list' => $list->getType()] as $name => $response) {
+            $routes[] = (new Route('GET', '/v1/tests/' . $name))
+                ->desc('Get test')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'get' . ucfirst($name),
+                    description: 'Get test.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: $response)],
+                ));
+        }
+
+        $spec = (new OpenAPI3(new Container(), [], $routes, [...$models, $list], [], ['console' => 0], 'console'))->parse();
+        $unions = [
+            $spec['paths']['/tests/union']['get']['responses']['200']['content']['application/json']['schema'],
+            $spec['components']['schemas'][$list->getType()]['properties'][strtolower($kind) . 's']['items'],
+        ];
+        foreach ($unions as $union) {
+            $this->assertArrayNotHasKey('discriminator', $union);
+            $this->assertArrayNotHasKey('oneOf', $union);
+            $this->assertCount(18, $union['anyOf']);
+            foreach ($union['anyOf'] as $index => $branch) {
+                $this->assertSame('#/components/schemas/' . $models[$index]->getType(), $branch['allOf'][0]['$ref']);
+                $constraints = $branch['allOf'][1];
+                $this->assertSame('object', $constraints['type']);
+                $this->assertSame(array_keys($models[$index]->conditions), $constraints['required']);
+                foreach ($models[$index]->conditions as $property => $value) {
+                    $this->assertSame([$value], $constraints['properties'][$property]['enum']);
+                }
+            }
+        }
+        $this->assertStringNotContainsString('x-mapping', json_encode($spec, JSON_THROW_ON_ERROR));
+    }
+
+    public function testSinglePropertyDiscriminatorsRemainStandard(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+        $models = [new PlatformAndroid(), new PlatformWeb()];
+        $route = (new Route('GET', '/v1/tests/platform'))
+            ->desc('Get platform')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getPlatform',
+                description: 'Get platform.',
+                auth: [AuthType::ADMIN],
+                responses: [new SDKResponse(code: 200, model: array_map(fn (ResponseModel $model) => $model->getType(), $models))],
+            ));
+        $spec = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
+        $union = $spec['paths']['/tests/platform']['get']['responses']['200']['content']['application/json']['schema'];
+        $this->assertCount(2, $union['oneOf']);
+        $this->assertSame('type', $union['discriminator']['propertyName']);
+        $this->assertSame([
+            'android' => '#/components/schemas/platformAndroid',
+            'web' => '#/components/schemas/platformWeb',
+        ], $union['discriminator']['mapping']);
+        $this->assertArrayNotHasKey('anyOf', $union);
+    }
+
     public function testProjectRequestParameterOverrides(): void
     {
         $createWebPlatform = $this->format->requestParameterConfig(true, false, '', 'project.createWebPlatform', 'hostname');
