@@ -63,6 +63,7 @@ final class Database extends UtopiaDatabase
             // carries sub-query filters that would pull in five more collections, so a stub is enough.
             $this->createCollection('projects');
             $this->createAttribute('projects', 'region', self::VAR_STRING, 128, false);
+            $this->createAttribute('projects', 'accessedAt', self::VAR_DATETIME, 0, false, filters: ['datetime']);
         } catch (\Throwable $error) {
             $this->delete();
             throw $error;
