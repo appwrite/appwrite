@@ -154,7 +154,7 @@ OAuth is also just one of several login methods. Appwrite pairs it with [email a
 
 OAuth solves a problem you should not solve with passwords: letting an app act on a user's behalf without holding their credentials. Once you understand the four roles, the token exchange, and the flows, the protocol stops feeling mysterious and starts feeling like the obvious way to handle third-party access.
 
-You do not need to implement OAuth from scratch to use it well. Appwrite gives you production-ready OAuth2 login across 30-plus providers, secure session handling, and the other auth methods your app will eventually need, all behind one set of APIs. Create a project, enable a provider, and you can have "Sign in with Google" working in an afternoon.
+You do not need to implement OAuth from scratch to use it well. Appwrite gives you production-ready OAuth2 login across 30-plus providers when you want users to sign in with services like Google or GitHub. With the Appwrite OAuth2 server, your project can also become an OAuth 2.1 and OpenID Connect provider when you want other apps to sign in with your product and access your APIs.
 
 ## Resources
 
