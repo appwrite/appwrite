@@ -31,6 +31,17 @@ The name stands for "Open Authorization". The version in use almost everywhere t
 
 Here is the core idea. Instead of giving an app your password, you give it a **token**. The token grants limited, revocable access to a specific set of your data, and nothing more. You can hand a photo-printing service permission to read your Google Photos without also giving it the ability to read your email, change your password, or delete your account.
 
+# OAuth vs. authentication: what OAuth is not
+
+OAuth is an **authorization** protocol, not an authentication protocol. This distinction trips up a lot of developers, so it is worth being direct about.
+
+- **Authentication** answers "who are you?"
+- **Authorization** answers "what are you allowed to do?"
+
+OAuth was built to answer the second question. It grants an app access to resources. It does not, on its own, verify identity in a standardized way.
+
+The protocol that adds a proper identity layer on top of OAuth 2.0 is **OpenID Connect (OIDC)**. When you "Sign in with Google" and the app learns who you are, OIDC is doing the identity part while OAuth handles the access. If your goal is user login, you want OAuth 2.0 with OpenID Connect, which is exactly what most providers give you out of the box.
+
 ## Why OAuth exists
 
 Before OAuth, the common pattern was the "password anti-pattern". If a third-party app wanted to access your data on another service, you gave it your username and password for that service, and it logged in as you.
@@ -108,17 +119,6 @@ Two older flows are now discouraged:
 - **Resource owner password credentials flow.** It required the user to give their password to the app, which defeats the entire purpose of OAuth. Avoid it.
 
 The [OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/rfc9700) formalizes this guidance. For new apps, use the authorization code flow with PKCE unless you have a specific reason not to.
-
-# OAuth vs. authentication: what OAuth is not
-
-OAuth is an **authorization** protocol, not an authentication protocol. This distinction trips up a lot of developers, so it is worth being direct about.
-
-- **Authentication** answers "who are you?"
-- **Authorization** answers "what are you allowed to do?"
-
-OAuth was built to answer the second question. It grants an app access to resources. It does not, on its own, verify identity in a standardized way.
-
-The protocol that adds a proper identity layer on top of OAuth 2.0 is **OpenID Connect (OIDC)**. When you "Sign in with Google" and the app learns who you are, OIDC is doing the identity part while OAuth handles the access. If your goal is user login, you want OAuth 2.0 with OpenID Connect, which is exactly what most providers give you out of the box.
 
 # How to add OAuth to your app
 
