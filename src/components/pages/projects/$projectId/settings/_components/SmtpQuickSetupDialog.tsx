@@ -23,7 +23,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { projectQueryOptions, useUpdateSMTP } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import {
   buildCredentialName,
   defaultSenderEmail,
@@ -230,34 +229,11 @@ export function SmtpQuickSetupDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{t('Set up SMTP')}</DialogTitle>
+          <DialogTitle>{t(provider.setupTitle)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t(
-              'Choose the domain to send from. Appwrite creates a sending credential in your provider account and saves it as your SMTP password.',
-            )}
+            {t(provider.setupDescription)}
           </DialogDescription>
         </DialogHeader>
-        <div className="border-t border-border" />
-
-        {/* Provider identity, so the title needs no interpolated brand name. */}
-        <div className="flex items-center gap-3 px-6 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <img
-              src={provider.iconPath}
-              alt=""
-              aria-hidden="true"
-              className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
-            />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[13px] font-medium text-foreground">
-              {provider.name}
-            </p>
-            <p className="text-[12px] text-muted-foreground truncate">
-              {t(provider.tagline)}
-            </p>
-          </div>
-        </div>
         <div className="border-t border-border" />
 
         <div className="px-6 py-4">

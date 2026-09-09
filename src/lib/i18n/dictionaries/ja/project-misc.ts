@@ -2681,9 +2681,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メールプロバイダーへの接続に失敗しました',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
     'プロバイダーは別の Appwrite アカウントに対して認可されました。このアカウントにサインインした状態でもう一度お試しください。',
-  'Set up SMTP': 'SMTP のセットアップ',
-  'Choose the domain to send from. Appwrite creates a sending credential in your provider account and saves it as your SMTP password.':
-    '送信元となるドメインを選択してください。Appwrite がプロバイダーアカウントに送信用の認証情報を作成し、SMTP パスワードとして保存します。',
   'Loading domains…': 'ドメインを読み込み中…',
   'Failed to load domains from the email provider':
     'メールプロバイダーからドメインを読み込めませんでした',
@@ -2703,6 +2700,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
+  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
+  'Choose a verified Resend domain to send from. Appwrite creates a sending-only API key and saves it as your SMTP password.':
+    '送信元となる検証済みの Resend ドメインを選択してください。Appwrite が送信専用の API キーを作成し、SMTP パスワードとして保存します。',
+  'Choose a verified Mailgun domain to send from. Appwrite creates a domain sending key and saves it as your SMTP password.':
+    '送信元となる検証済みの Mailgun ドメインを選択してください。Appwrite がドメイン送信キーを作成し、SMTP パスワードとして保存します。',
+  'Choose an authenticated SendGrid domain to send from. Appwrite creates a restricted API key and saves it as your SMTP password.':
+    '送信元となる認証済みの SendGrid ドメインを選択してください。Appwrite が制限付き API キーを作成し、SMTP パスワードとして保存します。',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':

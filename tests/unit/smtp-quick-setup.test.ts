@@ -236,9 +236,11 @@ describe('provider registry', () => {
     }
   })
 
-  test('connect labels name the provider as one translatable sentence', () => {
+  test('brand copy is whole sentences per provider, never fragments', () => {
     for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
       expect(provider.connectLabel).toBe(`Connect with ${provider.name}`)
+      expect(provider.setupTitle).toBe(`Set up SMTP with ${provider.name}`)
+      expect(provider.setupDescription).toContain(provider.name)
     }
   })
 
