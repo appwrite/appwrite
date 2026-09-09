@@ -112,6 +112,9 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     public function testCreateDeploymentFromNestedRootDirectory(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $projectId = $this->getProject()['$id'];
         $installationId = $this->createInstallationHelper()['$id'];
 
