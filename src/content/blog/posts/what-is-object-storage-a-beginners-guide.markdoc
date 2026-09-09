@@ -131,7 +131,7 @@ With [Appwrite Storage](/docs/products/storage), this takes only a few lines of 
 
 Object storage is the model that lets you store unstructured data as scalable, self-contained objects reachable over an API, and it's the standard way modern apps handle user uploads, media, and backups. If you're building an application that needs to store files, object storage is almost always the right starting point.
 
-[Appwrite Storage](/docs/products/storage) gives you production-ready object storage without provisioning or maintaining any infrastructure. You get buckets, fine-grained permissions, encryption, and [built-in image transformations](/blog/post/image-transformation-with-appwrite-storage), all managed for you and integrated with the rest of your backend. Create a bucket, upload your first file, and wire it into a real app in minutes.
+[Appwrite Storage](/docs/products/storage) gives you production-ready object storage without provisioning or maintaining any infrastructure. You get buckets, fine-grained permissions, encryption, and [built-in image transformations](/blog/post/image-transformation-with-appwrite-storage), all managed for you and integrated with the rest of your backend. Create a bucket, upload your first file, and wire it into a real app in minutes. Appwrite also supports the S3 API, so you can use existing S3-compatible clients, SDKs, and tools with your Appwrite Storage buckets and files. [Learn more about S3 API support](/blog/post/announcing-s3-api). Create a bucket, upload your first file, and wire it into a real app in minutes.
 
 ## Resources
 
