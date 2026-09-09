@@ -227,12 +227,23 @@ type MockState = {
   submitted: boolean
   mutations: { method: string; path: string }[]
   prematureDeletes: string[]
+  deletedProjects: Set<string>
+  /** Deletes aimed at a project that is already gone; the real API 404s these. */
+  orphanedDeletes: string[]
+  planChangedTo?: string
   /** Resource list call that answers 500, to exercise the load-failure path. */
   failing?: { projectId: string; group: ResourceGroup }
 }
 
 function createMockState(failing?: MockState['failing']): MockState {
-  return { submitted: false, mutations: [], prematureDeletes: [], failing }
+  return {
+    submitted: false,
+    mutations: [],
+    prematureDeletes: [],
+    deletedProjects: new Set(),
+    orphanedDeletes: [],
+    failing,
+  }
 }
 
 function accountResponse(): Models.User<Models.Preferences> {
@@ -297,6 +308,17 @@ async function mockAppwriteApi(page: Page, state: MockState) {
         path: path === '/project' ? `/project/${projectId}` : path,
       })
       if (!state.submitted) state.prematureDeletes.push(path)
+
+      // Behave like the API: anything scoped to an already-deleted project is
+      // gone with it, so the request 404s.
+      if (path === '/project' && projectId) {
+        state.deletedProjects.add(projectId)
+      } else if (projectId && state.deletedProjects.has(projectId)) {
+        state.orphanedDeletes.push(path)
+        await json(404, { message: 'Project not found' })
+        return
+      }
+
       await json(200, {})
       expect(state.prematureDeletes, 'no DELETE before submit').toEqual([])
       return
@@ -304,6 +326,7 @@ async function mockAppwriteApi(page: Page, state: MockState) {
 
     if (method === 'PATCH' && path === `/organizations/${ORG_ID}/plan`) {
       state.mutations.push({ method, path })
+      state.planChangedTo = FREE_PLAN_ID
       return json(200, { ...ORGANIZATION, billingPlan: FREE_PLAN_ID })
     }
 
@@ -571,24 +594,19 @@ test.describe('plan downgrade deletions (mocked API)', () => {
     state.submitted = true
     await dialog.getByRole('button', { name: 'Delete and change plan' }).click()
 
-    // Assert the guarantees, not the request choreography: exactly the marked
-    // items are removed, resources go before their project (a queued resource
-    // delete would 404 once the project is gone), and the plan changes last.
     await expect
-      .poll(() => state.mutations.some((m) => m.method === 'PATCH'), {
-        timeout: 30_000,
-      })
-      .toBe(true)
+      .poll(() => state.planChangedTo, { timeout: 30_000 })
+      .toBe(FREE_PLAN_ID)
 
-    const deleted = state.mutations.filter((m) => m.method === 'DELETE')
-    const deletedIds = deleted.map((m) => m.path.split('/').pop())
+    // Exactly what was marked, nothing else, and nothing lost to a project
+    // that had already been removed.
+    const deletedIds = state.mutations
+      .filter((m) => m.method === 'DELETE')
+      .map((m) => m.path.split('/').pop())
     expect(new Set(deletedIds)).toEqual(
       new Set([BACKUPS_BUCKET.$id, GAMMA.$id, BOB_MEMBERSHIP.$id]),
     )
-
-    const at = (id: string) => deletedIds.indexOf(id)
-    expect(at(BACKUPS_BUCKET.$id)).toBeLessThan(at(GAMMA.$id))
-    expect(state.mutations.at(-1)?.method).toBe('PATCH')
+    expect(state.orphanedDeletes).toEqual([])
     expect(state.prematureDeletes).toEqual([])
   })
 

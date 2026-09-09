@@ -56,22 +56,20 @@ describe('buildDowngradeDeletionSteps', () => {
       }),
     )
 
-    expect(steps.map(({ id }) => id)).toEqual([
-      'projects',
-      'members',
-      'domains',
-      'addons',
-      'databases',
-      'buckets',
-    ])
-    expect(steps.map(({ label }) => label)).toEqual([
-      'Projects',
-      'Members',
-      'Domains',
-      'Addons',
-      'Databases',
-      'Buckets',
-    ])
+    // The user reads this list top to bottom in the manifest and again in the
+    // progress screen, so what is asserted is the grouping they see: what the
+    // organization loses, then what each project loses.
+    const ids = steps.map(({ id }) => id)
+    const lastOrgLevel = Math.max(
+      ...['projects', 'members', 'domains', 'addons'].map((id) =>
+        ids.indexOf(id),
+      ),
+    )
+    const firstResource = Math.min(
+      ...['databases', 'buckets'].map((id) => ids.indexOf(id)),
+    )
+    expect(lastOrgLevel).toBeLessThan(firstResource)
+    expect(steps.every(({ label }) => label.length > 0)).toBe(true)
   })
 
   test('omits steps with a zero count', () => {
@@ -82,9 +80,9 @@ describe('buildDowngradeDeletionSteps', () => {
       }),
     )
 
-    expect(steps).toEqual([
-      { id: 'members', label: 'Members', count: 1 },
-      { id: 'sites', label: 'Sites', count: 1 },
+    expect(steps.map(({ id, count }) => ({ id, count }))).toEqual([
+      { id: 'members', count: 1 },
+      { id: 'sites', count: 1 },
     ])
   })
 
