@@ -37,40 +37,21 @@ trait ProjectCustom
      */
     protected function createNewProject(): array
     {
-        // Small delay to ensure session is fully propagated under parallel load
-        usleep(100000); // 100ms
-
         $maxRetries = 5;
-        $team = null;
-        $teamId = ID::unique();
+        $team = $this->createTeamFixture([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Demo Project Team',
+        ]);
 
-        for ($i = 0; $i < $maxRetries; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-                'x-appwrite-project' => 'console',
-            ], [
-                'teamId' => $teamId,
-                'name' => 'Demo Project Team',
-            ]);
-
-            if ($team['headers']['status-code'] === 201 || $team['headers']['status-code'] === 409) {
-                break;
-            }
-
-            if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                \usleep(500000); // 500ms delay before retry
-                continue;
-            }
-        }
-
-        $this->assertContains($team['headers']['status-code'], [201, 409], 'Team creation failed with status: ' . $team['headers']['status-code']);
-        if ($team['headers']['status-code'] === 201) {
-            $this->assertEquals('Demo Project Team', $team['body']['name']);
-            $this->assertNotEmpty($team['body']['$id']);
-            $teamId = $team['body']['$id'];
-        }
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertEquals('Demo Project Team', $team['body']['name']);
+        $this->assertNotEmpty($team['body']['$id']);
+        $teamId = $team['body']['$id'];
 
         $project = null;
         for ($i = 0; $i < $maxRetries; $i++) {
