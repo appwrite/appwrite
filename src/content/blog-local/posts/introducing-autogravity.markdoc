@@ -34,6 +34,16 @@ Today, I am introducing [AutoGravity](https://github.com/appwrite/autogravity), 
 
 To the developer, it feels like a small bit of magic. Behind it is a model pipeline that turns arbitrary image content into one useful coordinate.
 
+The difference is easiest to see when the subject is far from the middle of the source image:
+
+![A golden retriever positioned on the left side of a wide photograph](/images/blog-local/introducing-autogravity/original.jpg)
+
+| `gravity=center`                                                                                                                        | `gravity=auto`                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| ![A center crop that removes the golden retriever and shows only the field](/images/blog-local/introducing-autogravity/center-crop.jpg) | ![An automatic crop that keeps the golden retriever in view](/images/blog-local/introducing-autogravity/automatic-crop.jpg) |
+
+The fixed center crop preserves the middle of the image, which is mostly grass. Automatic gravity finds the dog and keeps it in view.
+
 # What automatic gravity means
 
 AutoGravity does not crop the image itself. It finds a **focal point**, the X/Y coordinate that Appwrite should try to keep visible while cropping.
@@ -74,6 +84,8 @@ AutoGravity instead finds the strongest coherent region:
 A **connected component** is a group of neighboring high-saliency pixels. AutoGravity considers pixels connected horizontally, vertically, and diagonally. This lets it treat the shape of a subject as one region.
 
 The **weighted centroid** is the region's average position, with stronger saliency values contributing more than weaker ones. The resulting point stays near the most visually important part of the strongest subject instead of drifting between unrelated subjects. If the map contains no usable saliency, AutoGravity safely falls back to the image center.
+
+![A comparison showing how an all-saliency centroid falls between two subjects while the strongest connected region selects one subject](/images/blog-local/introducing-autogravity/strongest-connected-region.png)
 
 # A small extra hint for portraits
 
