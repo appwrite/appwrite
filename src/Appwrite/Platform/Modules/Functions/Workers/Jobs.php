@@ -293,7 +293,11 @@ class Jobs extends Action
         // the queue can deliver those callbacks out of order.
         if (($data['artifactId'] ?? '') === 'output') {
             if (($data['status'] ?? '') === 'failed') {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($data['error'] ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                // Output delivery can fail before the exit callback arrives.
+                // Join the exit first so usage uses the worker's measurement.
+                $cache->save('jobs-output-' . $deployment->getId(), ['error' => 'Build output upload failed: ' . ($data['error'] ?? 'unknown error')]);
+
+                return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
             }
 
             if (($data['status'] ?? '') !== 'success') {
@@ -423,11 +427,20 @@ class Jobs extends Action
         $deploymentId = $deployment->getId();
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
-        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        $output = $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL);
+        if (\is_array($output) && isset($output['error'])) {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $output['error'], $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
+        if ($cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+            return $deployment;
+        }
+
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $output === false) {
             return $deployment;
         }
 

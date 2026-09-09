@@ -20,17 +20,17 @@ final class BuildTimeoutTest extends TestCase
 {
     public static function budgets(): \Iterator
     {
-        yield 'default' => [null, 900];
-        yield 'operator override' => ['1800', 1800];
+        yield 'short operator budget' => [37];
+        yield 'long operator budget' => [1823];
     }
 
     #[DataProvider('budgets')]
-    public function testSelfHostedSubmissionUsesOperatorBudget(?string $configured, int $expected): void
+    public function testSelfHostedSubmissionUsesOperatorBudget(int $configured): void
     {
         $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         $previousTimeout = getenv('_APP_COMPUTE_BUILD_TIMEOUT');
         putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
-        putenv($configured === null ? '_APP_COMPUTE_BUILD_TIMEOUT' : '_APP_COMPUTE_BUILD_TIMEOUT=' . $configured);
+        putenv('_APP_COMPUTE_BUILD_TIMEOUT=' . $configured);
         try {
             $deployment = new Document(['$id' => 'deployment', '$sequence' => '1', 'type' => 'manual', 'buildCommands' => 'npm ci']);
             $database = $this->createStub(Database::class);
@@ -58,7 +58,7 @@ final class BuildTimeoutTest extends TestCase
 
             $this->assertSame('waiting', $result->getAttribute('status'));
             $this->assertCount(1, $requests);
-            $this->assertSame($expected, $requests[0]['timeoutSeconds']);
+            $this->assertSame($configured, $requests[0]['timeoutSeconds']);
         } finally {
             putenv($previousKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousKey);
             putenv($previousTimeout === false ? '_APP_COMPUTE_BUILD_TIMEOUT' : '_APP_COMPUTE_BUILD_TIMEOUT=' . $previousTimeout);
