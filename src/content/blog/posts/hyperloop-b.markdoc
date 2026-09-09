@@ -3,7 +3,7 @@ layout: post
 title: "Hyperloop B: the coroutine engine behind Appwrite 2.0"
 description: Hyperloop B is the Swoole coroutine engine behind Appwrite 2.0. Here is what it is, the concurrency problem it solves, and the 7x I/O throughput it buys.
 date: 2026-08-31
-cover: /images/blog-local/hyperloop-b/cover.avif
+cover: /images/blog/hyperloop-b/cover.avif
 timeToRead: 7
 author: luke-silver
 category: architectures, announcements
@@ -42,7 +42,7 @@ Every Appwrite product sits on top of it, which is why it shows up as a foundati
 
 # Why we named it Hyperloop B
 
-![Binyamin Yawitz (1991-2025)](/images/blog-local/hyperloop-b/binyamin.avif)
+![Binyamin Yawitz (1991-2025)](/images/blog/hyperloop-b/binyamin.avif)
 
 > Hyperloop B is named in loving memory of Binyamin Yawitz (1991-2025), aka byawitz, who built the foundational work to bring Coroutines to Appwrite, but tragically passed before he could finish it.
 

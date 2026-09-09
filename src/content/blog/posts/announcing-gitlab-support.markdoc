@@ -3,7 +3,7 @@ layout: post
 title: "Announcing GitLab support for Appwrite Sites and Functions"
 description: Connect a GitLab account to Appwrite and deploy Sites and Functions directly from your GitLab repositories, including projects that live inside GitLab groups.
 date: 2026-09-03
-cover: /images/blog-local/announcing-gitlab-support/cover.avif
+cover: /images/blog/announcing-gitlab-support/cover.avif
 timeToRead: 7
 author: matej-baco
 category: announcements

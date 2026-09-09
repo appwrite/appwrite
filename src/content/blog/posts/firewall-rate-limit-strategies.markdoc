@@ -3,7 +3,7 @@ layout: post
 title: "Fixed window, sliding window, or token bucket? Choosing a rate limit strategy in Appwrite Firewall"
 description: Appwrite Firewall rate limit rules support three strategies. Learn how fixed window, sliding window, and token bucket work, where each one breaks down, and how to pick the right one for your traffic.
 date: 2026-09-04
-cover: /images/blog-local/firewall-rate-limit-strategies/cover.avif
+cover: /images/blog/firewall-rate-limit-strategies/cover.avif
 timeToRead: 9
 author: atharva
 category: security, best-practices

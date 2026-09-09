@@ -1,6 +1,6 @@
 /**
  * Converts non-AVIF raster images under public/images/{blog,docs,changelog} to AVIF
- * and updates matching paths in imported markdoc content.
+ * and updates matching paths in markdoc content.
  *
  * Run: bun run generate:content-images
  */

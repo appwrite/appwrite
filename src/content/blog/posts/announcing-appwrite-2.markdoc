@@ -3,7 +3,7 @@ layout: post
 title: "Announcing Appwrite 2.0: a new foundation for your apps"
 description: Appwrite 2.0 brings a new engine, a rebuilt Console, five database types, an S3 API, an OAuth 2.1 server, and organization-level Domains and Firewall.
 date: 2026-08-31
-cover: /images/blog-local/announcing-appwrite-2/cover.avif
+cover: /images/blog/announcing-appwrite-2/cover.avif
 timeToRead: 7
 author: eldad-fux
 category: products, announcements

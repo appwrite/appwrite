@@ -16,7 +16,6 @@ import type { BlogPostMeta } from '../../src/lib/blog/types.ts'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '../..')
 const BLOG_DIR = join(VIBES_ROOT, 'src', 'content', 'blog', 'posts')
-const BLOG_LOCAL_DIR = join(VIBES_ROOT, 'src', 'content', 'blog-local', 'posts')
 const OUTPUT_DIR = join(VIBES_ROOT, 'src', 'lib', 'blog', 'generated')
 
 function parseBoolean(value: unknown): boolean | undefined {
@@ -80,10 +79,6 @@ async function listMarkdocSlugs(dir: string): Promise<Map<string, string>> {
 
 async function main() {
   const filesBySlug = await listMarkdocSlugs(BLOG_DIR)
-  const localBySlug = await listMarkdocSlugs(BLOG_LOCAL_DIR)
-  for (const [slug, filePath] of localBySlug) {
-    filesBySlug.set(slug, filePath)
-  }
 
   const posts: BlogPostMeta[] = []
   for (const [slug, filePath] of filesBySlug) {

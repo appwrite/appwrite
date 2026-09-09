@@ -2,7 +2,7 @@
 layout: changelog
 title: "Buy domains and host DNS inside your Appwrite organization"
 date: 2026-09-04
-cover: /images/blog-local/announcing-appwrite-domains/cover.avif
+cover: /images/blog/announcing-appwrite-domains/cover.avif
 tags: domains, functions, sites, security
 ---
 

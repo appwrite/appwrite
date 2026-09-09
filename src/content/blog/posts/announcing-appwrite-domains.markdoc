@@ -3,7 +3,7 @@ layout: post
 title: "Announcing Appwrite Domains: your registrar and DNS host"
 description: Appwrite Domains brings registration, DNS, and TLS into your organization. Buy names across 160+ TLDs, host the zone, and connect Sites and Functions.
 date: 2026-09-04
-cover: /images/blog-local/announcing-appwrite-domains/cover.avif
+cover: /images/blog/announcing-appwrite-domains/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: products, announcements

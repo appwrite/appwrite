@@ -3,7 +3,7 @@ layout: post
 title: "Introducing Appwrite Terminal"
 description: Appwrite Terminal runs the Appwrite CLI directly inside the Console. Your session and project context are preconfigured, with keyboard-first controls and multi-tab workflows, so you can inspect resources without leaving the project.
 date: 2026-08-31
-cover: /images/blog-local/announcing-console-terminal/cover.avif
+cover: /images/blog/announcing-console-terminal/cover.avif
 timeToRead: 7
 author: eldad-fux
 category: products, announcements

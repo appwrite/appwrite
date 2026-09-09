@@ -10,10 +10,7 @@ const packageRoot = path.resolve(
   '../../..',
 )
 
-const postsDirectories = [
-  path.join(packageRoot, 'src/content/blog/posts'),
-  path.join(packageRoot, 'src/content/blog-local/posts'),
-]
+const postsDirectory = path.join(packageRoot, 'src/content/blog/posts')
 const categoriesDirectory = path.join(packageRoot, 'src/content/blog/categories')
 const authorsDirectory = path.join(packageRoot, 'src/content/blog/authors')
 
@@ -92,9 +89,7 @@ export function getBlogPrerenderPaths(options?: {
   includePosts?: boolean
 }): string[] {
   const includePosts = options?.includePosts ?? true
-  const postSlugs = postsDirectories.flatMap((directory) =>
-    readPublicPostSlugsFromDirectory(directory),
-  )
+  const postSlugs = readPublicPostSlugsFromDirectory(postsDirectory)
   const uniquePostSlugs = [...new Set(postSlugs)].sort()
   const categorySlugs = readSlugsFromDirectory(categoriesDirectory)
   const authorSlugs = readSlugsFromDirectory(authorsDirectory)

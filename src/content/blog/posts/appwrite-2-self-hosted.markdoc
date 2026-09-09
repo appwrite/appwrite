@@ -3,7 +3,7 @@ layout: post
 title: "Appwrite 2.0 is now available for self-hosting"
 description: Appwrite 2.0 brings a rebuilt Console, PostgreSQL as the default database, and a combined worker topology that runs your instance on 16 containers instead of 33.
 date: 2026-09-07
-cover: /images/blog-local/announcing-appwrite-2/cover.avif
+cover: /images/blog/announcing-appwrite-2/cover.avif
 timeToRead: 6
 author: atharva
 category: products, announcements

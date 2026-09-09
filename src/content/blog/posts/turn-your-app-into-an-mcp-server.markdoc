@@ -3,7 +3,7 @@ layout: post
 title: "Turn your app into an MCP server with the Appwrite OAuth2 server"
 description: Build a remote MCP server for your product, host it on Appwrite Functions, and let AI tools like Claude Code sign in through the OAuth2 server built into your Appwrite project.
 date: 2026-09-04
-cover: /images/blog-local/turn-your-app-into-an-mcp-server/cover.avif
+cover: /images/blog/turn-your-app-into-an-mcp-server/cover.avif
 timeToRead: 14
 author: atharva
 category: tutorials
@@ -40,7 +40,7 @@ The finished result of this tutorial is running in production. To try it before 
 
 # What we are building
 
-![The TaskFlow dashboard with tasks created from Claude Code](/images/blog-local/turn-your-app-into-an-mcp-server/taskflow-tasks.avif)
+![The TaskFlow dashboard with tasks created from Claude Code](/images/blog/turn-your-app-into-an-mcp-server/taskflow-tasks.avif)
 
 TaskFlow is a small task manager built on Appwrite: email sign-in through [Appwrite Auth](/docs/products/auth) and a `tasks` table in [Appwrite Databases](/docs/products/databases). The web app is a TanStack Start project, though nothing in this tutorial depends on the framework.
 
@@ -61,7 +61,7 @@ The flow, end to end:
 
 # Enable the OAuth2 server
 
-![The OAuth2 server settings in the Appwrite Console](/images/blog-local/turn-your-app-into-an-mcp-server/oauth2-server-settings.avif)
+![The OAuth2 server settings in the Appwrite Console](/images/blog/turn-your-app-into-an-mcp-server/oauth2-server-settings.avif)
 
 Create a project in the [Appwrite Console](https://cloud.appwrite.io) and head to **Auth**, then the **OAuth2 server** tab. Turn the server on and set two things:
 
@@ -136,7 +136,7 @@ pnpm provision
 
 # Build the consent screen
 
-![TaskFlow's consent screen showing a request from Claude Code](/images/blog-local/turn-your-app-into-an-mcp-server/taskflow-consent.avif)
+![TaskFlow's consent screen showing a request from Claude Code](/images/blog/turn-your-app-into-an-mcp-server/taskflow-consent.avif)
 
 The OAuth2 server handles the protocol, but the page where a user decides is a page you own, built with your components and your brand. That is a deliberate design choice: your users approve access inside your product, not on an Appwrite page.
 
@@ -329,7 +329,7 @@ For database access, the function uses the dynamic key Appwrite injects into eve
 
 # Deploy to Appwrite Functions
 
-![The deployed MCP function in the Appwrite Console](/images/blog-local/turn-your-app-into-an-mcp-server/function-overview.avif)
+![The deployed MCP function in the Appwrite Console](/images/blog/turn-your-app-into-an-mcp-server/function-overview.avif)
 
 The function and the web app are described in `appwrite.config.json` at the repository root. The `scopes` array is what the dynamic key inside the function can do, which for this server is reading and writing rows and nothing else:
 
@@ -418,7 +418,7 @@ Open the TaskFlow dashboard and the changes are there, created through the same 
 
 # Let users take access back
 
-![TaskFlow's connected apps page showing the Claude Code connection](/images/blog-local/turn-your-app-into-an-mcp-server/taskflow-connections.avif)
+![TaskFlow's connected apps page showing the Claude Code connection](/images/blog/turn-your-app-into-an-mcp-server/taskflow-connections.avif)
 
 Every approval is stored as a consent on the user's account, and the Account API exposes them to your app. TaskFlow's connected apps page is a list and a delete button:
 

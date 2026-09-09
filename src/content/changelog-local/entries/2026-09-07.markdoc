@@ -2,7 +2,7 @@
 layout: changelog
 title: Announcing Appwrite 2.0 for self-hosted deployments
 date: 2026-09-07
-cover: /images/blog-local/announcing-appwrite-2/cover.avif
+cover: /images/blog/announcing-appwrite-2/cover.avif
 tags: infrastructure, databases, console, performance
 ---
 

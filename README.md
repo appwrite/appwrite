@@ -117,7 +117,7 @@ bun run serve
 
 Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a file by replacing `:` with `-` (`generate:sitemap` → `generate-sitemap.ts`). Helpers without a task live in `scripts/lib/`.
 
-**Namespaces:** `import:` pulls content from the sibling [`website`](https://github.com/appwrite/website) repo (`../website`); `generate:` writes derived artifacts. Vibes-native content in `src/content/docs-local/` and `src/content/blog-local/` is never overwritten by imports.
+**Namespaces:** `generate:` writes derived artifacts (manifests, sitemaps, images) from the content in `src/content/`.
 
 | Command                               | Description                                                                                                                       |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -132,14 +132,10 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `lint:content`                        | Fail if blog/docs/changelog/integrations contain NBSP, zero-width, or BOM characters (`--fix` to rewrite)                         |
 | `serve`                               | Preview production build                                                                                                          |
 | `start`                               | Production Bun server                                                                                                             |
-| `import:blog`                         | Import blog from website                                                                                                          |
-| `import:docs`                         | Import docs from website, then `generate:docs`                                                                                    |
-| `import:integrations`                 | Import integrations catalog                                                                                                       |
-| `generate:blog-local-images`          | Blog-local cover images (optional slug)                                                                                           |
+| `generate:blog-images`                | Blog cover images (optional slug)                                                                                                 |
 | `generate:content-images`             | Convert content images to AVIF                                                                                                    |
-| `generate:docs`                       | Docs manifest, nav, LLM exports, sitemap                                                                                          |
+| `generate:docs`                       | Docs manifest, LLM exports, sitemap                                                                                               |
 | `generate:docs-exports`               | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
-| `generate:docs-nav`                   | Docs section navigation only                                                                                                      |
 | `generate:github-stars`               | GitHub star count JSON                                                                                                            |
 | `generate:public-icon-manifest`       | Public icon picker manifest                                                                                                       |
 | `generate:routes`                     | TanStack Router types                                                                                                             |

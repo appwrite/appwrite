@@ -3,7 +3,7 @@ layout: post
 title: "Introducing Appwrite Explorer"
 description: Appwrite Explorer brings the Appwrite REST API into the Console. Browse every endpoint, build requests with guided forms, send live calls against your project, and inspect responses without leaving the browser.
 date: 2026-08-31
-cover: /images/blog-local/announcing-appwrite-explorer/cover.avif
+cover: /images/blog/announcing-appwrite-explorer/cover.avif
 timeToRead: 8
 author: eldad-fux
 category: products, announcements
@@ -31,7 +31,7 @@ That friction adds up when you are debugging a function, validating permissions,
 
 Today we are introducing **Appwrite Explorer**: a built-in API workspace for every project. Browse the full Appwrite REST surface, fill in parameters with guided forms, send live requests, and read the response right next to the Console UI you already use.
 
-![Appwrite Explorer showing the Client API Account endpoints with method details and a Send request action](/images/blog-local/announcing-appwrite-explorer/explorer-screenshot.avif)
+![Appwrite Explorer showing the Client API Account endpoints with method details and a Send request action](/images/blog/announcing-appwrite-explorer/explorer-screenshot.avif)
 
 # Less context switching, faster answers
 
@@ -74,7 +74,7 @@ Required fields are validated before send. **Reset** restores the method default
 
 Method descriptions, rate limits, auth requirements, and deprecation notices appear inline so you know what you are calling before you send it.
 
-![Appwrite Explorer request builder with schema-driven form fields for a PATCH endpoint](/images/blog-local/announcing-appwrite-explorer/explorer-request-form.avif)
+![Appwrite Explorer request builder with schema-driven form fields for a PATCH endpoint](/images/blog/announcing-appwrite-explorer/explorer-request-form.avif)
 
 # Authentication that fits the endpoint
 
@@ -106,7 +106,7 @@ When a response returns, Explorer shows:
 - **Headers** tab with copy support
 - Response size in the footer
 
-![Appwrite Explorer response panel showing status, timing, and formatted JSON output](/images/blog-local/announcing-appwrite-explorer/explorer-response.avif)
+![Appwrite Explorer response panel showing status, timing, and formatted JSON output](/images/blog/announcing-appwrite-explorer/explorer-response.avif)
 
 From the request footer you can **Copy as cURL** to move the exact call into a script or share it in chat. Method headers include **Copy link** (deep link to the method in Explorer) and **Copy page** (markdown export for internal docs).
 
