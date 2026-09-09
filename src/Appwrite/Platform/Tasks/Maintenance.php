@@ -131,9 +131,16 @@ class Maintenance extends Action
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void
     {
         $time = DatabaseDateTime::now();
+        $expired = DatabaseDateTime::format(new DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'));
 
         $documents = $dbForPlatform->iterate('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::or([
+                Query::lessThan('attempts', APP_LIMIT_CERTIFICATE_ATTEMPTS),
+                Query::and([
+                    Query::isNotNull('updated'),
+                    Query::lessThanEqual('updated', $expired),
+                ]),
+            ]),
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::orderAsc('$sequence'),
@@ -157,6 +164,13 @@ class Maintenance extends Action
             if ($rule->isEmpty()
                 || $rule->getAttribute('region') !== $appRegion
                 || $rule->getAttribute('certificateId') !== $certificate->getId()) {
+                continue;
+            }
+
+            // A crashed final renewal still needs reconciliation. Completed
+            // failures at the attempt limit require an explicit retry.
+            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS
+                && $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED) {
                 continue;
             }
 
