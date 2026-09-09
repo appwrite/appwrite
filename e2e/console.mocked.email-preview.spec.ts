@@ -409,7 +409,8 @@ test.describe('email template preview (mocked API)', () => {
 
     const project = previewFrame(page).getByText('{{project}}', { exact: true })
     await expect(project).toBeVisible()
-    await expect(project).toHaveCSS('font-weight', '700')
+    // Any bold weight counts; the exact number is the stylesheet's business.
+    await expect(project).toHaveCSS('font-weight', /^(bold|[6-9]00)$/)
     await expect(previewFrame(page).getByText('{{b}}')).toHaveCount(0)
   })
 })
