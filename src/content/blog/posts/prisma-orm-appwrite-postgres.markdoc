@@ -6,7 +6,7 @@ date: 2026-09-08
 cover: /images/blog/prisma-orm-appwrite-postgres/cover.avif
 timeToRead: 8
 author: atharva
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Can I use Prisma ORM with Appwrite Postgres?"

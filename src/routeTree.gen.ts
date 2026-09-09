@@ -135,7 +135,7 @@ import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/ass
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
-import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_marketing/blog.category.$category'
+import { Route as MarketingBlogCategoriesCategoryRouteImport } from './routes/_marketing/blog.categories.$category'
 import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
 import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
 import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
@@ -1078,10 +1078,10 @@ const MarketingBlogAuthorAuthorRoute =
     path: '/blog/author/$author',
     getParentRoute: () => MarketingRoute,
   } as any)
-const MarketingBlogCategoryCategoryRoute =
-  MarketingBlogCategoryCategoryRouteImport.update({
-    id: '/blog/category/$category',
-    path: '/blog/category/$category',
+const MarketingBlogCategoriesCategoryRoute =
+  MarketingBlogCategoriesCategoryRouteImport.update({
+    id: '/blog/categories/$category',
+    path: '/blog/categories/$category',
     getParentRoute: () => MarketingRoute,
   } as any)
 const MarketingBlogPostSlugRoute = MarketingBlogPostSlugRouteImport.update({
@@ -3193,7 +3193,7 @@ export interface FileRoutesByFullPath {
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -3603,7 +3603,7 @@ export interface FileRoutesByTo {
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -3984,7 +3984,7 @@ export interface FileRoutesById {
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/_marketing/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/_marketing/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/_marketing/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/_marketing/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -4404,7 +4404,7 @@ export interface FileRouteTypes {
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
-    | '/blog/category/$category'
+    | '/blog/categories/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
@@ -4814,7 +4814,7 @@ export interface FileRouteTypes {
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
-    | '/blog/category/$category'
+    | '/blog/categories/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
@@ -5194,7 +5194,7 @@ export interface FileRouteTypes {
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
-    | '/_marketing/blog/category/$category'
+    | '/_marketing/blog/categories/$category'
     | '/_marketing/blog/post/$slug'
     | '/_marketing/changelog/entry/$entry'
     | '/_marketing/threads/authors/$authorId'
@@ -6416,11 +6416,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
       parentRoute: typeof MarketingRoute
     }
-    '/_marketing/blog/category/$category': {
-      id: '/_marketing/blog/category/$category'
-      path: '/blog/category/$category'
-      fullPath: '/blog/category/$category'
-      preLoaderRoute: typeof MarketingBlogCategoryCategoryRouteImport
+    '/_marketing/blog/categories/$category': {
+      id: '/_marketing/blog/categories/$category'
+      path: '/blog/categories/$category'
+      fullPath: '/blog/categories/$category'
+      preLoaderRoute: typeof MarketingBlogCategoriesCategoryRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/blog/post/$slug': {
@@ -8541,7 +8541,7 @@ interface MarketingRouteChildren {
   MarketingIntegrationsIndexRoute: typeof MarketingIntegrationsIndexRoute
   MarketingThreadsIndexRoute: typeof MarketingThreadsIndexRoute
   MarketingBlogAuthorAuthorRoute: typeof MarketingBlogAuthorAuthorRoute
-  MarketingBlogCategoryCategoryRoute: typeof MarketingBlogCategoryCategoryRoute
+  MarketingBlogCategoriesCategoryRoute: typeof MarketingBlogCategoriesCategoryRoute
   MarketingBlogPostSlugRoute: typeof MarketingBlogPostSlugRoute
   MarketingChangelogEntryEntryRoute: typeof MarketingChangelogEntryEntryRoute
   MarketingThreadsAuthorsAuthorIdRoute: typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -8573,7 +8573,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingIntegrationsIndexRoute: MarketingIntegrationsIndexRoute,
   MarketingThreadsIndexRoute: MarketingThreadsIndexRoute,
   MarketingBlogAuthorAuthorRoute: MarketingBlogAuthorAuthorRoute,
-  MarketingBlogCategoryCategoryRoute: MarketingBlogCategoryCategoryRoute,
+  MarketingBlogCategoriesCategoryRoute: MarketingBlogCategoriesCategoryRoute,
   MarketingBlogPostSlugRoute: MarketingBlogPostSlugRoute,
   MarketingChangelogEntryEntryRoute: MarketingChangelogEntryEntryRoute,
   MarketingThreadsAuthorsAuthorIdRoute: MarketingThreadsAuthorsAuthorIdRoute,

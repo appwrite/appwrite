@@ -6,7 +6,7 @@ date: 2024-02-03
 cover: /images/blog/open-source-firebase-alternative/cover.avif
 timeToRead: 7
 author: aditya-oberai
-category: product
+category: products
 callToAction: true
 faqs:
   - question: "Is Appwrite a true open source alternative to Firebase?"

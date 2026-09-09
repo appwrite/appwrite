@@ -6,7 +6,7 @@ date: 2024-01-10
 cover: /images/blog/building-apps-with-bun-and-appwrite/bun-cover.avif
 timeToRead: 9
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is Bun and how is it different from Node.js?"
     answer: "Bun is an all-in-one JavaScript runtime and toolkit that includes a bundler, test runner, and Node.js-compatible package manager. It is written in Zig and aims to be significantly faster than Node.js for installing packages, running scripts, and serving HTTP traffic. Bun is also Node.js-compatible for most APIs, so existing projects can often migrate without major changes."

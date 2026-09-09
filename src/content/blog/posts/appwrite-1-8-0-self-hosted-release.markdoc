@@ -7,7 +7,7 @@ date: 2025-10-31
 lastUpdated: 2026-06-29
 timeToRead: 5
 author: steven
-category: announcement
+category: announcements
 faqs:
   - question: "What is new in Appwrite 1.8.0 for self-hosted users?"
     answer: "Appwrite 1.8.0 introduces TablesDB, a Transactions API, spatial columns, CSV import, a Bulk API, Database Upsert, auto-increment support, opt-in relationship loading, and new time-based and inversion queries for [Databases](/docs/products/databases). It also adds new runtimes and performance improvements across the self-hosted stack."

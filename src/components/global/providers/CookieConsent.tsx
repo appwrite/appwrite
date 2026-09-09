@@ -196,8 +196,9 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   return (
     <CookieConsentContext.Provider value={contextValue}>
       {children}
-      {cookieBannerEnabled && showBanner ? (
+      {cookieBannerEnabled ? (
         <CookieConsentBanner
+          open={showBanner}
           customizeOpen={customizeOpen}
           draftAnalytics={draftAnalytics}
           onAcceptAll={acceptAll}

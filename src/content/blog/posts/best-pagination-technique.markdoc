@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/best-pagination-technique/cover.avif
 timeToRead: 8
 author: matej-baco
-category: tutorial
+category: tutorials
 callToAction: true
 faqs:
   - question: "What's the difference between offset and cursor pagination?"

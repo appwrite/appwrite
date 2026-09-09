@@ -6,7 +6,7 @@ date: 2026-09-07
 cover: /images/blog/appwrite-2-0-postgres-by-default/cover.avif
 timeToRead: 4
 author: atharva
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "Which databases does self-hosted Appwrite 2.0 support?"
     answer: "Self-hosted Appwrite 2.0 supports Postgres, MariaDB, and MongoDB as the database your instance runs on. All three are fully supported. Postgres is the default selection for new installations, and you pick the database in the setup wizard during installation."

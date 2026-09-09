@@ -8,7 +8,7 @@ timeToRead: 06
 author: laura-du-ry
 callToAction: true
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What is OAuth2 in simple terms?"
     answer: "OAuth2 is an authorization standard that lets a user grant an app limited access to their data on another service without handing over their password. Instead, the app receives a scoped access token that it uses to call the resource server on the user's behalf."

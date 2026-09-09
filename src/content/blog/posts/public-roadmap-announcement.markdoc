@@ -6,7 +6,7 @@ date: 2024-06-19
 cover: /images/blog/public-roadmap-announcement/cover.avif
 timeToRead: 5
 author: eldad-fux
-category: open-source, announcement
+category: open-source, announcements
 faqs:
   - question: "Where can I find the Appwrite public roadmap?"
     answer: "The roadmap lives on GitHub at github.com/orgs/appwrite/projects. Each release has its own project board with issues and pull requests tagged for the version they are targeting."

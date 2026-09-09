@@ -6,7 +6,7 @@ date: 2026-05-12
 cover: /images/blog/relationships-are-out-of-beta/cover.avif
 timeToRead: 5
 author: jake-barnby
-category: announcement
+category: announcements
 featured: true
 faqs:
   - question: "What does 'production-ready' mean for database relationships in Appwrite?"

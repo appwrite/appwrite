@@ -6,7 +6,7 @@ date: 2025-01-14
 cover: /images/blog/building-custom-auth-flows/cover.avif
 timeToRead: 11
 author: ebenezer-don
-category: tutorial
+category: tutorials
 lastUpdated: 2026-06-29
 faqs:
   - question: "What exactly are custom authentication flows?"

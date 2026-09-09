@@ -44,7 +44,7 @@ function readPostLastmodBySlug(): Map<string, string> {
 function blogPriority(pathname: string): number {
   if (pathname === '/blog') return 0.8
   if (pathname.startsWith('/blog/post/')) return 0.7
-  if (pathname.startsWith('/blog/category/')) return 0.6
+  if (pathname.startsWith('/blog/categories/')) return 0.6
   if (pathname.startsWith('/blog/author/')) return 0.5
   if (/^\/blog\/\d+$/.test(pathname)) return 0.5
   return 0.6

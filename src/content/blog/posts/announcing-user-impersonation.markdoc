@@ -6,7 +6,7 @@ date: 2026-03-30
 cover: /images/blog/announcing-user-impersonation/cover.avif
 timeToRead: 4
 author: eldad-fux
-category: announcement, product
+category: announcements, products
 featured: false
 faqs:
   - question: "What is user impersonation in Appwrite Auth?"

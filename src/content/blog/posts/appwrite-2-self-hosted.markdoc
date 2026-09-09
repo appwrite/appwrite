@@ -6,7 +6,7 @@ date: 2026-09-07
 cover: /images/blog/announcing-appwrite-2/cover.avif
 timeToRead: 6
 author: atharva
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "What do I need to run self-hosted Appwrite 2.0?"
     answer: "Any operating system that runs Docker with Compose v2. A default install runs 16 containers. See the [installation guide](/docs/advanced/self-hosting/installation) for the current minimum CPU, memory, and swap requirements."

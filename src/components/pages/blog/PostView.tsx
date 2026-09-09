@@ -63,7 +63,7 @@ export function PostView({ post }: PostViewProps) {
               <BreadcrumbItem className="min-w-0">
                 <BreadcrumbLink asChild>
                   <Link
-                    to="/blog/category/$category"
+                    to="/blog/categories/$category"
                     params={{ category: categorySlug }}
                     className="cursor-pointer"
                   >
