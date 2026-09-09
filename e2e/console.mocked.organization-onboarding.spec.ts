@@ -180,7 +180,12 @@ test('membership granted after a denial is rechecked without creating another pr
   // Keep the same page runtime (and its remembered denial). An invitation has
   // now been accepted, so the next console navigation must recheck membership.
   options.member = true
-  await page.locator('a[href="/"]').first().click()
+  // A still-finishing post-auth lookup may already have set the preferred org.
+  // Follow the console logo whether it points at / or that organization.
+  await page
+    .locator('header')
+    .getByRole('link', { name: 'Appwrite', exact: true })
+    .click()
   await expect(page).toHaveURL(/\/organizations\/existing-org\/?$/)
   await expect(
     page.getByText('Existing project', { exact: true }).first(),
