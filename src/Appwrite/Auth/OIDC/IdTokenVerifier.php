@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth\OIDC;
 
+use Appwrite\Extend\Exception;
+
 /**
  * Verifies an OpenID Connect ID token against a provider Profile.
  *
@@ -20,88 +22,87 @@ class IdTokenVerifier
      * @param string[] $allowedAudiences client IDs accepted as the `aud` claim
      * @param ?string $rawNonce raw nonce from the request; the claim may carry it verbatim (Google) or as its SHA-256 hex hash (Apple)
      * @return array<string, mixed> the verified claims
-     * @throws VerificationException
-     * @throws JwksException
+     * @throws Exception
      */
     public function verify(Profile $profile, string $idToken, array $allowedAudiences, ?string $rawNonce): array
     {
         $parts = \explode('.', $idToken);
         if (\count($parts) !== 3) {
-            throw new VerificationException('Malformed token');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
         }
         [$headerEncoded, $payloadEncoded, $signatureEncoded] = $parts;
 
         $header = $this->decodeJson($headerEncoded);
         if (($header['alg'] ?? null) !== 'RS256') {
-            throw new VerificationException('Unsupported algorithm');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Unsupported algorithm');
         }
 
         $kid = $header['kid'] ?? null;
         if (!\is_string($kid) || $kid === '') {
-            throw new VerificationException('Missing key ID');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Missing key ID');
         }
 
         $jwk = $this->jwks->getKey($profile->jwksUrl, $kid);
         if ($jwk === null) {
-            throw new VerificationException('Unknown signing key');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Unknown signing key');
         }
 
         $publicKey = \openssl_pkey_get_public(JwkConverter::rsaToPem($jwk['n'], $jwk['e']));
         if ($publicKey === false) {
-            throw new VerificationException('Invalid signing key');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid signing key');
         }
 
         $signature = $this->decodeBase64Url($signatureEncoded);
         if ($signature === false || $signature === '') {
-            throw new VerificationException('Malformed signature');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed signature');
         }
         if (\openssl_verify($headerEncoded . '.' . $payloadEncoded, $signature, $publicKey, OPENSSL_ALGO_SHA256) !== 1) {
-            throw new VerificationException('Invalid signature');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid signature');
         }
 
         $claims = $this->decodeJson($payloadEncoded);
 
         if (!\in_array($claims['iss'] ?? null, $profile->issuers, true)) {
-            throw new VerificationException('Invalid issuer');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid issuer');
         }
 
         $audiences = $claims['aud'] ?? [];
         $audiences = \is_array($audiences) ? $audiences : [$audiences];
         if (empty(\array_intersect($audiences, $allowedAudiences))) {
-            throw new VerificationException('Audience mismatch. Add the token\'s client ID to the provider configuration.');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Audience mismatch. Add the token\'s client ID to the provider configuration.');
         }
 
         $now = \time();
 
         $exp = $claims['exp'] ?? null;
         if (!\is_numeric($exp) || (int) $exp <= $now - self::CLOCK_SKEW) {
-            throw new VerificationException('Token expired');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token expired');
         }
         foreach (['iat', 'nbf'] as $claim) {
             if (isset($claims[$claim]) && (!\is_numeric($claims[$claim]) || (int) $claims[$claim] >= $now + self::CLOCK_SKEW)) {
-                throw new VerificationException('Token not yet valid');
+                throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token not yet valid');
             }
         }
 
         $nonce = $claims['nonce'] ?? null;
         $hasNonceClaim = \is_string($nonce) && $nonce !== '';
         if ($profile->nonceRequired && !$hasNonceClaim) {
-            throw new VerificationException('Nonce required');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce required');
         }
         if ($hasNonceClaim) {
             if ($rawNonce === null || $rawNonce === '') {
-                throw new VerificationException('Nonce required');
+                throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce required');
             }
             if (!\hash_equals($nonce, $rawNonce) && !\hash_equals($nonce, \hash('sha256', $rawNonce))) {
-                throw new VerificationException('Nonce mismatch');
+                throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce mismatch');
             }
         } elseif ($rawNonce !== null && $rawNonce !== '') {
-            throw new VerificationException('Token carries no nonce');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token carries no nonce');
         }
 
         $sub = $claims['sub'] ?? null;
         if (!\is_string($sub) || $sub === '') {
-            throw new VerificationException('Missing subject');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Missing subject');
         }
 
         return $claims;
@@ -109,18 +110,18 @@ class IdTokenVerifier
 
     /**
      * @return array<string, mixed>
-     * @throws VerificationException
+     * @throws Exception
      */
     private function decodeJson(string $encoded): array
     {
         $decoded = $this->decodeBase64Url($encoded);
         if ($decoded === false) {
-            throw new VerificationException('Malformed token');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
         }
 
         $data = \json_decode($decoded, true);
         if (!\is_array($data)) {
-            throw new VerificationException('Malformed token');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
         }
 
         return $data;

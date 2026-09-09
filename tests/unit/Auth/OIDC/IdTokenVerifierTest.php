@@ -7,7 +7,7 @@ namespace Tests\Unit\Auth\OIDC;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Auth\OIDC\Profile;
-use Appwrite\Auth\OIDC\VerificationException;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory;
@@ -118,7 +118,7 @@ final class IdTokenVerifierTest extends TestCase
     #[DataProvider('rejections')]
     public function testClaimRejections(array $claims, ?string $rawNonce, string $message): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage($message);
 
         $this->verifier()->verify($this->profile(), $this->mint($claims), [self::AUDIENCE], $rawNonce);
@@ -131,7 +131,7 @@ final class IdTokenVerifierTest extends TestCase
      */
     public function testNonceRequiredProfileRejectsTokenWithoutNonceClaim(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Nonce required');
 
         $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], null);
@@ -139,7 +139,7 @@ final class IdTokenVerifierTest extends TestCase
 
     public function testNonceRequiredProfileRejectsTokenWithoutNonceClaimEvenWithRequestNonce(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Nonce required');
 
         $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], 'raw-nonce');
@@ -166,7 +166,7 @@ final class IdTokenVerifierTest extends TestCase
             \array_merge(self::claims([]), ['sub' => 'attacker'])
         ));
 
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Invalid signature');
 
         $this->verifier()->verify($this->profile(), \implode('.', $parts), [self::AUDIENCE], null);
@@ -174,7 +174,7 @@ final class IdTokenVerifierTest extends TestCase
 
     public function testUnknownKidIsRejected(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unknown signing key');
 
         $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => 'rotated-away']), [self::AUDIENCE], null);
@@ -191,7 +191,7 @@ final class IdTokenVerifierTest extends TestCase
         $publicPem = \openssl_pkey_get_details(self::$key)['key'];
         $signature = self::base64UrlEncode(\hash_hmac('sha256', $header . '.' . $payload, $publicPem, true));
 
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unsupported algorithm');
 
         $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.' . $signature, [self::AUDIENCE], null);
@@ -202,7 +202,7 @@ final class IdTokenVerifierTest extends TestCase
         $header = self::base64UrlEncode(\json_encode(['alg' => 'none', 'kid' => self::KID, 'typ' => 'JWT']));
         $payload = self::base64UrlEncode(\json_encode(self::claims([])));
 
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unsupported algorithm');
 
         $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.', [self::AUDIENCE], null);
@@ -210,7 +210,7 @@ final class IdTokenVerifierTest extends TestCase
 
     public function testMalformedTokenIsRejected(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Malformed token');
 
         $this->verifier()->verify($this->profile(), 'only.twoparts', [self::AUDIENCE], null);
@@ -218,7 +218,7 @@ final class IdTokenVerifierTest extends TestCase
 
     public function testMissingKidIsRejected(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Missing key ID');
 
         $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => null]), [self::AUDIENCE], null);

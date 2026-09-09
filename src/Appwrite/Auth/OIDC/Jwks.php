@@ -2,6 +2,7 @@
 
 namespace Appwrite\Auth\OIDC;
 
+use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
 
 /**
@@ -27,7 +28,7 @@ class Jwks
 
     /**
      * @return array{n: string, e: string}|null RSA key material for `$kid`, or null when unknown
-     * @throws JwksException when the JWKS document cannot be fetched or parsed
+     * @throws Exception when the JWKS document cannot be fetched or parsed
      */
     public function getKey(string $jwksUrl, string $kid): ?array
     {
@@ -57,7 +58,7 @@ class Jwks
 
     /**
      * @return array<string, array{n: string, e: string}> signature-capable RSA keys, indexed by kid
-     * @throws JwksException
+     * @throws Exception
      */
     private function fetch(string $jwksUrl): array
     {
@@ -67,7 +68,7 @@ class Jwks
 
         $document = \json_decode($body, true);
         if (!\is_array($document) || !\is_array($document['keys'] ?? null)) {
-            throw new JwksException('Invalid JWKS document');
+            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'The provider returned an invalid signing key document. Please try again.');
         }
 
         $keys = [];
@@ -91,7 +92,7 @@ class Jwks
     }
 
     /**
-     * @throws JwksException
+     * @throws Exception
      */
     private function fetchHttp(string $jwksUrl): string
     {
@@ -109,7 +110,7 @@ class Jwks
         \curl_close($ch);
 
         if (!\is_string($body) || $code >= 400 || $code === 0) {
-            throw new JwksException('Failed to fetch JWKS');
+            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
         }
 
         return $body;

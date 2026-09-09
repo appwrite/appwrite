@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth\OIDC;
 
 use Appwrite\Auth\OIDC\JwkConverter;
-use Appwrite\Auth\OIDC\VerificationException;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 
 final class JwkConverterTest extends TestCase
@@ -62,14 +62,14 @@ final class JwkConverterTest extends TestCase
 
     public function testInvalidBase64UrlIsRejected(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
 
         JwkConverter::rsaToPem('not base64url!!', 'AQAB');
     }
 
     public function testEmptyModulusIsRejected(): void
     {
-        $this->expectException(VerificationException::class);
+        $this->expectException(Exception::class);
 
         JwkConverter::rsaToPem('', 'AQAB');
     }

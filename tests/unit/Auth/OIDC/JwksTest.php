@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth\OIDC;
 
 use Appwrite\Auth\OIDC\Jwks;
-use Appwrite\Auth\OIDC\JwksException;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
@@ -84,9 +84,12 @@ final class JwksTest extends TestCase
     {
         $jwks = new Jwks(new Cache(new Memory()), fn (): string => 'not json');
 
-        $this->expectException(JwksException::class);
-
-        $jwks->getKey(self::URL, 'kid-1');
+        try {
+            $jwks->getKey(self::URL, 'kid-1');
+            $this->fail('An unparsable JWKS document must be rejected');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::USER_OAUTH2_PROVIDER_ERROR, $exception->getType());
+        }
     }
 
     private function document(array $kids): string

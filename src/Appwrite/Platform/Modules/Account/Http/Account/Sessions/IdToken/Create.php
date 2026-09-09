@@ -5,9 +5,7 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
-use Appwrite\Auth\OIDC\JwksException;
 use Appwrite\Auth\OIDC\Profiles;
-use Appwrite\Auth\OIDC\VerificationException;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -170,14 +168,8 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'Configure a client ID or native client IDs for this provider to accept ID tokens.');
         }
 
-        try {
-            $claims = (new IdTokenVerifier(new Jwks($cache)))
-                ->verify($profile, $idToken, $allowedAudiences, $nonce !== '' ? $nonce : null);
-        } catch (VerificationException $error) {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, $error->getMessage());
-        } catch (JwksException) {
-            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
-        }
+        $claims = (new IdTokenVerifier(new Jwks($cache)))
+            ->verify($profile, $idToken, $allowedAudiences, $nonce !== '' ? $nonce : null);
 
         $sub = $claims['sub'];
         $providerEmail = \is_string($claims['email'] ?? null) ? $claims['email'] : '';

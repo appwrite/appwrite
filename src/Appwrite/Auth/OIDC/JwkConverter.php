@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth\OIDC;
 
+use Appwrite\Extend\Exception;
+
 /**
  * Converts an RSA JSON Web Key to the PEM SubjectPublicKeyInfo encoding that
  * openssl_pkey_get_public() accepts.
@@ -13,7 +15,7 @@ class JwkConverter
     /**
      * @param string $n base64url-encoded modulus
      * @param string $e base64url-encoded public exponent
-     * @throws VerificationException when the key material is not valid base64url
+     * @throws Exception when the key material is not valid base64url
      */
     public static function rsaToPem(string $n, string $e): string
     {
@@ -21,7 +23,7 @@ class JwkConverter
         $exponent = self::decodeBase64Url($e);
 
         if ($modulus === false || $exponent === false || $modulus === '' || $exponent === '') {
-            throw new VerificationException('Invalid signing key material');
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid signing key material');
         }
 
         $publicKey = self::sequence(self::integer($modulus) . self::integer($exponent));
