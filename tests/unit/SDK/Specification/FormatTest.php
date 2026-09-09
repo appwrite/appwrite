@@ -128,9 +128,10 @@ final class FormatTest extends TestCase
         $this->format = new TestFormat(new Container(), [], [], [], [], ['console' => 0], 'console');
     }
 
-    public static function compoundModels(): array
+    public static function compoundModels(): \Iterator
     {
-        return [['Column'], ['Attribute']];
+        yield ['Column'];
+        yield ['Attribute'];
     }
 
     #[DataProvider('compoundModels')]
