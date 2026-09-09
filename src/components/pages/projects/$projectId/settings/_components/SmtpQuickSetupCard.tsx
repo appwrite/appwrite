@@ -2,9 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import {
   Tooltip,
   TooltipContent,
@@ -336,28 +345,9 @@ function ProviderTile({
   const t = useT()
   const comingSoon = !isProviderAvailable(provider)
 
-  const action = connected ? (
-    <>
-      <ActionButton
-        label={t('Quick setup')}
-        onClick={onSelect}
-        disabled={disabled}
-        planTooltip={planTooltip}
-        analyticsAction={provider.analyticsAction}
-      />
-      <Button
-        type="button"
-        variant="destructive"
-        size="sm"
-        className="h-8 text-[12px]"
-        onClick={onDisconnect}
-      >
-        {t('Disconnect')}
-      </Button>
-    </>
-  ) : (
+  const action = (
     <ActionButton
-      label={t(provider.connectLabel)}
+      label={connected ? t('Quick setup') : t(provider.connectLabel)}
       onClick={onSelect}
       disabled={disabled}
       planTooltip={comingSoon ? undefined : planTooltip}
@@ -387,6 +377,26 @@ function ProviderTile({
           <Badge variant="success" className="text-[10px] shrink-0">
             {t('Connected')}
           </Badge>
+        ) : null}
+        {connected && !comingSoon ? (
+          // Disconnect lives in the row actions menu: per AGENTS.md, red
+          // styling on a card-level remove control is not allowed, and the
+          // confirm dialog carries the destructive button instead.
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <RowActionsMenuTrigger
+                className="ml-auto"
+                aria-label={t('Provider actions')}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={onDisconnect} className="text-[13px]">
+                <MenuItemContent icon={Trash2}>
+                  {t('Disconnect')}
+                </MenuItemContent>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : null}
       </div>
       <span className="text-[12px] text-muted-foreground">
