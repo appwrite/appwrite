@@ -62,6 +62,7 @@ export interface SmtpQuickSetupProvider {
   connectLabel: string
   setupTitle: string
   setupDescription: string
+  disconnectTitle: string
   smtp: {
     host: string
     port: number
@@ -92,6 +93,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     setupTitle: 'Set up SMTP with Resend',
     setupDescription:
       'Choose a verified Resend domain to send from. Appwrite creates a sending-only API key and saves it as your SMTP password.',
+    disconnectTitle: 'Disconnect Resend',
     smtp: {
       host: RESEND_SMTP_HOST,
       port: RESEND_SMTP_PORT,
@@ -118,6 +120,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     setupTitle: 'Set up SMTP with Mailgun',
     setupDescription:
       'Choose a verified Mailgun domain to send from. Appwrite creates a domain sending key and saves it as your SMTP password.',
+    disconnectTitle: 'Disconnect Mailgun',
     smtp: {
       host: 'smtp.mailgun.org',
       port: 587,
@@ -138,6 +141,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     setupTitle: 'Set up SMTP with SendGrid',
     setupDescription:
       'Choose an authenticated SendGrid domain to send from. Appwrite creates a restricted API key and saves it as your SMTP password.',
+    disconnectTitle: 'Disconnect SendGrid',
     smtp: {
       host: 'smtp.sendgrid.net',
       port: 587,

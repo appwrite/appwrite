@@ -2700,6 +2700,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Disconnect Resend': 'Resend を切断',
+  'Disconnect Mailgun': 'Mailgun を切断',
+  'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
@@ -2717,7 +2720,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Connect with Resend': 'Resend に接続',
   'Connect with Mailgun': 'Mailgun に接続',
   'Connect with SendGrid': 'SendGrid に接続',
-  'Disconnect provider': 'プロバイダーを切断',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
   'Provider disconnected': 'プロバイダーを切断しました',

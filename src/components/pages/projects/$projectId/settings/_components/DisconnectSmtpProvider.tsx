@@ -74,32 +74,27 @@ export function DisconnectSmtpProvider({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{t('Disconnect provider')}</DialogTitle>
+          <DialogTitle>{t(provider.disconnectTitle)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
               'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.',
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="border-t border-border" />
-
-        <div className="px-6 py-4">
-          <dl className="rounded-lg border border-border bg-background px-4 py-3 text-[12px]">
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">{t('Provider')}</dt>
-              <dd className="text-foreground">{provider.name}</dd>
+        {/* Nothing to confirm beyond the title, so the body only carries errors. */}
+        {error ? (
+          <>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <Alert variant="destructive" className="border-destructive/30">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-[13px]">
+                  {error}
+                </AlertDescription>
+              </Alert>
             </div>
-          </dl>
-
-          {error ? (
-            <Alert variant="destructive" className="mt-4 border-destructive/30">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-[13px]">
-                {error}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-        </div>
+          </>
+        ) : null}
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button

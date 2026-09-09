@@ -2704,6 +2704,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Mailgun': 'ניתוק Mailgun',
+  'Disconnect SendGrid': 'ניתוק SendGrid',
   'Provider actions': 'פעולות ספק',
   'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
   'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
@@ -2721,7 +2724,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Connect with Resend': 'התחברות עם Resend',
   'Connect with Mailgun': 'התחברות עם Mailgun',
   'Connect with SendGrid': 'התחברות עם SendGrid',
-  'Disconnect provider': 'ניתוק הספק',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
   'Provider disconnected': 'הספק נותק',

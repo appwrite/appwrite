@@ -240,6 +240,7 @@ describe('provider registry', () => {
     for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
       expect(provider.connectLabel).toBe(`Connect with ${provider.name}`)
       expect(provider.setupTitle).toBe(`Set up SMTP with ${provider.name}`)
+      expect(provider.disconnectTitle).toBe(`Disconnect ${provider.name}`)
       expect(provider.setupDescription).toContain(provider.name)
     }
   })
