@@ -37,7 +37,7 @@ import {
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { GbHoursUnitInfo } from '../../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './ComputeMetricBentoCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 export type ComputeUsageScope = 'combined' | 'functions' | 'sites'
 
@@ -152,6 +152,12 @@ export function ComputeUsageSection({
     ? []
     : (gbHoursQuery.data?.chartPoints ?? [])
 
+  const executionsLoading = getUsageChartLoadingProps(
+    executionsQuery,
+    executionsPoints,
+  )
+  const gbHoursLoading = getUsageChartLoadingProps(gbHoursQuery, gbHoursPoints)
+
   const executionsTitle =
     scope === 'functions'
       ? 'Function executions'
@@ -194,11 +200,8 @@ export function ComputeUsageSection({
         chartPoints={executionsPoints}
         total={sumUsageChartPoints(executionsPoints)}
         changePercent={executionsQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          executionsQuery.isError,
-          executionsQuery.isLoading,
-          executionsQuery.isPlaceholderData,
-        )}
+        isLoading={executionsLoading.isLoading}
+        isRefreshing={executionsLoading.isRefreshing}
         isError={executionsQuery.isError}
         queryError={executionsQuery.error}
         formatTotal={formatExecutionsTotal}
@@ -228,11 +231,8 @@ export function ComputeUsageSection({
         chartPoints={gbHoursPoints}
         total={sumUsageChartPoints(gbHoursPoints)}
         changePercent={gbHoursQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          gbHoursQuery.isError,
-          gbHoursQuery.isLoading,
-          gbHoursQuery.isPlaceholderData,
-        )}
+        isLoading={gbHoursLoading.isLoading}
+        isRefreshing={gbHoursLoading.isRefreshing}
         isError={gbHoursQuery.isError}
         queryError={gbHoursQuery.error}
         formatTotal={formatGbHoursTotal}
