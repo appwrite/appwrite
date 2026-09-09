@@ -2698,15 +2698,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Enter a sender name.': '送信者名を入力してください。',
   'Enter a sender email on the selected domain.':
     '選択したドメインの送信者メールアドレスを入力してください。',
-  'Creating credential and saving SMTP settings…':
-    '認証情報を作成して SMTP 設定を保存中…',
-  'Custom SMTP is enabled and your project now sends emails through this provider.':
-    'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Authorization expired': '認可の有効期限が切れました',
   'Reconnect your provider account to continue.':
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Creating the sending credential…': '送信用の認証情報を作成中…',
+  'Your SMTP settings are filled in below. Review them and select Update to save.':
+    'SMTP 設定を以下に入力しました。内容を確認し、「更新」を選択して保存してください。',
+  'A new sending credential was created in your provider account. It starts working once you save.':
+    'プロバイダーアカウントに新しい送信用の認証情報を作成しました。保存すると有効になります。',
+  'Review settings': '設定を確認',
+  'Disconnect provider': 'プロバイダーを切断',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
+  'Provider disconnected': 'プロバイダーを切断しました',
+  'Failed to disconnect the provider': 'プロバイダーの切断に失敗しました',
   'Confirm setup': 'セットアップの確認',
   'This browser has no record of starting this authorization, so we will not sign you in automatically.':
     'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
@@ -2715,8 +2722,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
     'この認可リンクは既に使用されたか、有効期限が切れています。SMTP 設定からもう一度セットアップを開始してください。',
   'Back to SMTP settings': 'SMTP 設定に戻る',
-  'Reconnect to create a new sending credential.':
-    '再接続すると、新しい送信用の認証情報を作成します。',
   'Unable to finish setup': 'セットアップを完了できません',
   'Finishing setup': 'セットアップを完了しています',
   'Restoring your session and returning to SMTP settings.':

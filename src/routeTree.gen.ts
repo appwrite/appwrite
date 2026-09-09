@@ -126,7 +126,6 @@ import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/gener
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
-import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
 import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
@@ -1027,12 +1026,6 @@ const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   path: '/init/ticket/$eventSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiResendApiKeysApiKeyIdRoute =
-  ApiResendApiKeysApiKeyIdRouteImport.update({
-    id: '/$apiKeyId',
-    path: '/$apiKeyId',
-    getParentRoute: () => ApiResendApiKeysRoute,
-  } as any)
 const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
   id: '/agent/mcp/callback',
   path: '/agent/mcp/callback',
@@ -3124,7 +3117,7 @@ export interface FileRoutesByFullPath {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
-  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/api-keys': typeof ApiResendApiKeysRoute
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
@@ -3171,7 +3164,6 @@ export interface FileRoutesByFullPath {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
-  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3536,7 +3528,7 @@ export interface FileRoutesByTo {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
-  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/api-keys': typeof ApiResendApiKeysRoute
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
@@ -3579,7 +3571,6 @@ export interface FileRoutesByTo {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
-  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3911,7 +3902,7 @@ export interface FileRoutesById {
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/r/e': typeof ApiRERoute
   '/_api/r/v.js': typeof ApiRVDotjsRoute
-  '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/_api/resend/api-keys': typeof ApiResendApiKeysRoute
   '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
@@ -3958,7 +3949,6 @@ export interface FileRoutesById {
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
-  '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -4376,7 +4366,6 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
-    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4784,7 +4773,6 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
-    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -5162,7 +5150,6 @@ export interface FileRouteTypes {
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
-    | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
@@ -5497,7 +5484,7 @@ export interface RootRouteChildren {
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiRERoute: typeof ApiRERoute
   ApiRVDotjsRoute: typeof ApiRVDotjsRoute
-  ApiResendApiKeysRoute: typeof ApiResendApiKeysRouteWithChildren
+  ApiResendApiKeysRoute: typeof ApiResendApiKeysRoute
   ApiResendDomainsRoute: typeof ApiResendDomainsRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
@@ -6325,13 +6312,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/init/ticket/$eventSlug'
       preLoaderRoute: typeof ApiInitTicketEventSlugRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_api/resend/api-keys/$apiKeyId': {
-      id: '/_api/resend/api-keys/$apiKeyId'
-      path: '/$apiKeyId'
-      fullPath: '/resend/api-keys/$apiKeyId'
-      preLoaderRoute: typeof ApiResendApiKeysApiKeyIdRouteImport
-      parentRoute: typeof ApiResendApiKeysRoute
     }
     '/_auth/agent/mcp/callback': {
       id: '/_auth/agent/mcp/callback'
@@ -10257,17 +10237,6 @@ const ApiGeneratorCoverRouteChildren: ApiGeneratorCoverRouteChildren = {
 const ApiGeneratorCoverRouteWithChildren =
   ApiGeneratorCoverRoute._addFileChildren(ApiGeneratorCoverRouteChildren)
 
-interface ApiResendApiKeysRouteChildren {
-  ApiResendApiKeysApiKeyIdRoute: typeof ApiResendApiKeysApiKeyIdRoute
-}
-
-const ApiResendApiKeysRouteChildren: ApiResendApiKeysRouteChildren = {
-  ApiResendApiKeysApiKeyIdRoute: ApiResendApiKeysApiKeyIdRoute,
-}
-
-const ApiResendApiKeysRouteWithChildren =
-  ApiResendApiKeysRoute._addFileChildren(ApiResendApiKeysRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
@@ -10300,7 +10269,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiRERoute: ApiRERoute,
   ApiRVDotjsRoute: ApiRVDotjsRoute,
-  ApiResendApiKeysRoute: ApiResendApiKeysRouteWithChildren,
+  ApiResendApiKeysRoute: ApiResendApiKeysRoute,
   ApiResendDomainsRoute: ApiResendDomainsRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,

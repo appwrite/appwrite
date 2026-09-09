@@ -2702,15 +2702,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Enter a sender name.': 'הזינו שם שולח.',
   'Enter a sender email on the selected domain.':
     'הזינו אימייל שולח בדומיין שנבחר.',
-  'Creating credential and saving SMTP settings…':
-    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
-  'Custom SMTP is enabled and your project now sends emails through this provider.':
-    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
   'Authorization expired': 'ההרשאה פגה',
   'Reconnect your provider account to continue.':
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
+  'Your SMTP settings are filled in below. Review them and select Update to save.':
+    'הגדרות ה-SMTP שלכם מולאו למטה. בדקו אותן ובחרו עדכון כדי לשמור.',
+  'A new sending credential was created in your provider account. It starts working once you save.':
+    'פרטי גישה חדשים לשליחה נוצרו בחשבון הספק שלכם. הם יתחילו לפעול לאחר השמירה.',
+  'Review settings': 'בדיקת ההגדרות',
+  'Disconnect provider': 'ניתוק הספק',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
+  'Provider disconnected': 'הספק נותק',
+  'Failed to disconnect the provider': 'ניתוק הספק נכשל',
   'Confirm setup': 'אישור ההגדרה',
   'This browser has no record of starting this authorization, so we will not sign you in automatically.':
     'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
@@ -2719,8 +2726,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
     'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהגדרות ה-SMTP.',
   'Back to SMTP settings': 'חזרה להגדרות ה-SMTP',
-  'Reconnect to create a new sending credential.':
-    'התחברו מחדש כדי ליצור פרטי גישה חדשים לשליחה.',
   'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
   'Finishing setup': 'משלים את ההגדרה',
   'Restoring your session and returning to SMTP settings.':

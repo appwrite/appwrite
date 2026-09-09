@@ -285,6 +285,22 @@ export function pickDefaultQuickSetupDomain<T extends QuickSetupDomain>(
   return verified[0]
 }
 
+/**
+ * What quick setup produces. The dialog fills these into the SMTP form rather
+ * than saving them, so the user reviews the values (and the freshly minted
+ * credential) before writing them to the project.
+ */
+export interface SmtpQuickSetupResult {
+  senderName: string
+  senderEmail: string
+  host: string
+  port: number
+  username: string
+  /** Sending credential created at the provider; becomes the SMTP password. */
+  password: string
+  secure: 'tls' | 'ssl'
+}
+
 /** Credential name written at the provider, trimmed to that provider's limit. */
 export function buildCredentialName(
   projectName: string,

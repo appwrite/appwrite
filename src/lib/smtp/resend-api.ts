@@ -159,15 +159,3 @@ export async function createResendCredential(
   }
   return { id: result.id, secret: result.token }
 }
-
-/** Best-effort cleanup when a freshly minted key could not be saved to the project. */
-export async function deleteResendCredential(
-  accessToken: string,
-  credentialId: string,
-): Promise<void> {
-  await resendFetch<unknown>(
-    `/api-keys/${encodeURIComponent(credentialId)}`,
-    accessToken,
-    { method: 'DELETE' },
-  )
-}

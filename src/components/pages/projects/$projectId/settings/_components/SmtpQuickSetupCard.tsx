@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +21,7 @@ import {
   isProviderTokenExpired,
   parseQuickSetupReturn,
   stripQuickSetupReturn,
+  type SmtpQuickSetupResult,
 } from '@/lib/smtp/quick-setup'
 import {
   SMTP_QUICK_SETUP_PROVIDERS,
@@ -39,14 +41,15 @@ import {
   SmtpQuickSetupDialog,
   type ProviderApiCall,
 } from './SmtpQuickSetupDialog'
+import { DisconnectSmtpProvider } from './DisconnectSmtpProvider'
 
 interface SmtpQuickSetupCardProps {
   projectId: string
   project: Models.Project | undefined
   /** Custom SMTP is a paid feature; the tiles are disabled (with a tooltip) below that plan. */
   supportsCustomSmtp: boolean
-  /** Open the "Send test email" dialog after a successful setup. */
-  onSendTestEmail?: () => void
+  /** Fills the SMTP form on this page. Quick setup never saves by itself. */
+  onApply: (result: SmtpQuickSetupResult) => void
 }
 
 /**
@@ -64,7 +67,7 @@ export function SmtpQuickSetupCard({
   projectId,
   project,
   supportsCustomSmtp,
-  onSendTestEmail,
+  onApply,
 }: SmtpQuickSetupCardProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -77,11 +80,13 @@ export function SmtpQuickSetupCard({
   // Identities already linked to this console account, so a provider that was
   // connected earlier reads as connected here too (matches account settings).
   const { data: identitiesData } = useQuery(accountIdentitiesQueryOptions())
-  const connectedProviderIds = useMemo(
-    () =>
-      new Set((identitiesData?.identities ?? []).map((item) => item.provider)),
-    [identitiesData],
-  )
+  const identityByProvider = useMemo(() => {
+    const map = new Map<string, Models.Identity>()
+    for (const identity of identitiesData?.identities ?? []) {
+      if (!map.has(identity.provider)) map.set(identity.provider, identity)
+    }
+    return map
+  }, [identitiesData])
 
   /** Access token per provider id; in memory only, dropped on reload. */
   const tokensRef = useRef(new Map<string, ProviderAccessToken>())
@@ -89,6 +94,8 @@ export function SmtpQuickSetupCard({
   const [activeProvider, setActiveProvider] =
     useState<AvailableSmtpQuickSetupProvider | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [disconnecting, setDisconnecting] =
+    useState<SmtpQuickSetupProvider | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
 
   const returnState = useMemo(() => parseQuickSetupReturn(search), [search])
@@ -240,7 +247,7 @@ export function SmtpQuickSetupCard({
               <ProviderTile
                 key={provider.id}
                 provider={provider}
-                connected={connectedProviderIds.has(provider.id)}
+                connected={identityByProvider.has(provider.id)}
                 disabled={
                   !supportsCustomSmtp ||
                   !isProviderAvailable(provider) ||
@@ -249,6 +256,7 @@ export function SmtpQuickSetupCard({
                 }
                 planTooltip={planTooltip}
                 onSelect={() => void handleSetup(provider)}
+                onDisconnect={() => setDisconnecting(provider)}
               />
             ))}
           </div>
@@ -259,12 +267,27 @@ export function SmtpQuickSetupCard({
         <SmtpQuickSetupDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          projectId={projectId}
           project={project}
           provider={activeProvider}
           callProvider={callProvider}
           onReauthorize={() => authorize(activeProvider)}
-          onSendTestEmail={onSendTestEmail}
+          onApply={onApply}
+        />
+      ) : null}
+
+      {disconnecting && identityByProvider.get(disconnecting.id) ? (
+        <DisconnectSmtpProvider
+          open
+          onOpenChange={(next) => {
+            if (!next) setDisconnecting(null)
+          }}
+          provider={disconnecting}
+          identityId={identityByProvider.get(disconnecting.id)!.$id}
+          onDisconnected={() => {
+            // The cached token belonged to the identity that just went away.
+            tokensRef.current.delete(disconnecting.id)
+            setDisconnecting(null)
+          }}
         />
       ) : null}
     </>
@@ -279,7 +302,11 @@ interface ProviderTileProps {
   /** Shown only for the plan gate; the badges already explain the other states. */
   planTooltip?: string
   onSelect: () => void
+  onDisconnect: () => void
 }
+
+const TILE_CLASSES =
+  'flex h-full w-full flex-col gap-2 rounded-xl border border-border bg-card/50 p-4 text-start transition-all'
 
 function ProviderTile({
   provider,
@@ -287,23 +314,13 @@ function ProviderTile({
   disabled,
   planTooltip,
   onSelect,
+  onDisconnect,
 }: ProviderTileProps) {
   const t = useT()
   const comingSoon = !isProviderAvailable(provider)
 
-  const tile = (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={disabled}
-      className={cn(
-        'group flex h-full w-full flex-col gap-2 rounded-xl border border-border bg-card/50 p-4 text-start transition-all',
-        disabled
-          ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer hover:border-border/80 hover:bg-card/60',
-      )}
-      {...analyticsAttrs(provider.analyticsAction)}
-    >
+  const content = (
+    <>
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <img
@@ -327,10 +344,68 @@ function ProviderTile({
         ) : null}
       </div>
       <span className="text-[12px] text-muted-foreground">
-        {connected && !comingSoon
-          ? t('Reconnect to create a new sending credential.')
-          : t(provider.tagline)}
+        {t(provider.tagline)}
       </span>
+    </>
+  )
+
+  // Connected providers offer two actions, so the tile cannot be one button.
+  if (connected && !comingSoon) {
+    return (
+      <div className={TILE_CLASSES}>
+        {content}
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-[12px]"
+                  onClick={onSelect}
+                  disabled={disabled}
+                  {...analyticsAttrs(provider.analyticsAction)}
+                >
+                  {t('Quick setup')}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {planTooltip ? (
+              <TooltipContent className="max-w-xs text-[13px]">
+                {planTooltip}
+              </TooltipContent>
+            ) : null}
+          </Tooltip>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={onDisconnect}
+          >
+            {t('Disconnect')}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const tile = (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={disabled}
+      className={cn(
+        'group',
+        TILE_CLASSES,
+        disabled
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer hover:border-border/80 hover:bg-card/60',
+      )}
+      {...analyticsAttrs(provider.analyticsAction)}
+    >
+      {content}
     </button>
   )
 

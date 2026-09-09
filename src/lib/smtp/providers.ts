@@ -20,7 +20,6 @@ import {
 } from './resend'
 import {
   createResendCredential,
-  deleteResendCredential,
   isResendUnauthorizedError,
   listResendDomains,
 } from './resend-api'
@@ -41,8 +40,6 @@ export interface SmtpQuickSetupApi {
     accessToken: string,
     input: { name: string; domainId?: string },
   ): Promise<SmtpQuickSetupCredential>
-  /** Best-effort cleanup when a minted credential could not be saved. */
-  deleteCredential(accessToken: string, credentialId: string): Promise<void>
   /** True when the provider rejected the access token (triggers one refresh + retry). */
   isUnauthorizedError(error: unknown): boolean
 }
@@ -97,7 +94,6 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     api: {
       listDomains: listResendDomains,
       createCredential: createResendCredential,
-      deleteCredential: deleteResendCredential,
       isUnauthorizedError: isResendUnauthorizedError,
     },
   },
