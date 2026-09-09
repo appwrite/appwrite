@@ -362,6 +362,19 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        foreach ([true, false] as $includeTotal) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [Query::search('name', 'Arsenal')->toString()],
+                'total' => $includeTotal,
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_query_invalid', $response['body']['type']);
+        }
+
         /**
          * Test for SUCCESS with total=false
          */
