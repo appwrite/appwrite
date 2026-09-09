@@ -61,6 +61,51 @@ final class MaintenanceTest extends TestCase
         $this->assertSame([], array_filter($domains, static fn (string $domain) => !str_starts_with($domain, 'renewal')));
     }
 
+    public function testExpiredLeaseIsQueuedForReconciliation(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $due = '2020-01-01T00:00:00.000+00:00';
+        $expired = '2020-01-01T00:00:00.000+00:00';
+        $active = DateTime::now();
+        $future = DateTime::formatTz(DateTime::format(new \DateTime('+1 day')));
+        // Exhausted certificates are only revisited when a worker died holding the lease.
+        $this->seed('expired', $due, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS, updated: $expired);
+        $this->seed('failed', $due, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS, status: RULE_STATUS_CERTIFICATE_GENERATION_FAILED, updated: $expired);
+        $this->seed('active', $due, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS, updated: $active);
+        $this->seed('complete', $due, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS);
+        $this->seed('future', $future, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS, updated: $expired);
+        $this->seed('renewal', $due);
+
+        $this->runTask();
+
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertSame(['expired.example.com', 'renewal.example.com'], $domains);
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->database->getDocument('certificates', 'expired')->getAttribute('attempts'));
+        $this->assertSame(RULE_STATUS_VERIFIED, $this->database->getDocument('rules', md5('expired.example.com'))->getAttribute('status'));
+    }
+
+    public function testExhaustedFailuresDoNotConsumeTheRenewalBudget(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $due = '2020-01-01T00:00:00.000+00:00';
+        for ($i = 0; $i < 201; $i++) {
+            $this->seed('failed' . $i, $due, attempts: APP_LIMIT_CERTIFICATE_ATTEMPTS, status: RULE_STATUS_CERTIFICATE_GENERATION_FAILED, updated: $due);
+        }
+        for ($i = 0; $i < 201; $i++) {
+            $this->seed('renewal' . $i, $due);
+        }
+
+        $this->runTask();
+
+        $domains = array_column(array_column($this->publisher->getEvents('certificates') ?? [], 'domain'), 'domain');
+        $this->assertCount(200, $domains);
+        $this->assertSame([], array_filter($domains, static fn (string $domain) => !str_starts_with($domain, 'renewal')));
+    }
+
     public function testCertificateTheRuleNoLongerUsesIsNotRenewed(): void
     {
         /**
@@ -79,13 +124,14 @@ final class MaintenanceTest extends TestCase
         $this->assertNull($this->publisher->getEvents('certificates'));
     }
 
-    private function seed(string $id, string $renewDate, string $region = 'default'): void
+    private function seed(string $id, string $renewDate, string $region = 'default', int $attempts = 0, string $status = RULE_STATUS_VERIFIED, ?string $updated = null): void
     {
         $domain = $id . '.example.com';
         $this->database->createDocument('certificates', new Document([
             '$id' => $id,
             'domain' => $domain,
-            'attempts' => 0,
+            'attempts' => $attempts,
+            'updated' => $updated,
             'renewDate' => $renewDate,
         ]));
         $this->database->createDocument('rules', new Document([
@@ -96,7 +142,7 @@ final class MaintenanceTest extends TestCase
             'projectId' => 'project',
             'projectInternalId' => '7',
             'certificateId' => $id,
-            'status' => RULE_STATUS_VERIFIED,
+            'status' => $status,
         ]));
     }
 

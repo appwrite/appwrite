@@ -3,7 +3,11 @@
 namespace Tests\E2E\Services\Proxy;
 
 use Tests\E2E\Client;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 trait ProxyBase
@@ -928,36 +932,174 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
     }
 
+    public function testUpdateRuleStatusRetry(): void
+    {
+        $error = null;
+        \Swoole\Coroutine\run(function () use (&$error): void {
+            try {
+                global $container;
+
+                $container->set('pools', static fn ($register) => $register->get('pools'), ['register']);
+                /** @var Database $database */
+                $database = clone $container->get('dbForPlatform');
+                $authorization = new Authorization();
+                $authorization->disable();
+                $database->setAuthorization($authorization);
+                $project = $database->getDocument('projects', $this->getProject()['$id']);
+                $foreignProject = $this->getProject(true);
+                $domain = ID::unique() . '.stage.webapp.com';
+                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                $certificateId = ID::unique();
+
+                // Seed a previous failure without queuing a new issuance during setup.
+                $database->createDocument('certificates', new Document([
+                    '$id' => $certificateId,
+                    'domain' => $domain,
+                    'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+                    'updated' => '2099-01-01T00:00:00.000+00:00',
+                    'logs' => 'Previous issuance failed',
+                ]));
+                $database->createDocument('rules', new Document([
+                    '$id' => $ruleId,
+                    'domain' => $domain,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'region' => $project->getAttribute('region'),
+                    'type' => 'api',
+                    'trigger' => 'manual',
+                    'certificateId' => $certificateId,
+                    'status' => RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
+                    'logs' => 'Previous issuance failed',
+                    'search' => $ruleId . ' ' . $domain,
+                ]));
+
+                try {
+                    /** Test for FAILURE */
+                    $foreign = $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/status', [
+                        'content-type' => 'application/json',
+                        'x-appwrite-project' => $foreignProject['$id'],
+                        'x-appwrite-key' => $foreignProject['apiKey'],
+                    ]);
+                    $this->assertEquals(404, $foreign['headers']['status-code']);
+                    $this->assertSame('rule_not_found', $foreign['body']['type']);
+                    $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $database->getDocument('certificates', $certificateId)->getAttribute('attempts'));
+
+                    $missing = $this->updateRuleStatus(ID::unique());
+                    $this->assertEquals(404, $missing['headers']['status-code']);
+                    $this->assertSame('rule_not_found', $missing['body']['type']);
+
+                    /** Test for SUCCESS */
+                    $rule = $this->updateRuleStatus($ruleId);
+                    $this->assertEquals(200, $rule['headers']['status-code']);
+                    $this->assertSame($ruleId, $rule['body']['$id']);
+                    $this->assertSame($domain, $rule['body']['domain']);
+                    $this->assertSame('verifying', $rule['body']['status']);
+                    $this->assertSame('', $rule['body']['logs']);
+                    $certificate = $database->getDocument('certificates', $certificateId);
+                    // A running certificate worker may already have consumed the new attempt.
+                    $this->assertLessThan(APP_LIMIT_CERTIFICATE_ATTEMPTS, $certificate->getAttribute('attempts'));
+                    $this->assertNotSame('2099-01-01T00:00:00.000+00:00', $certificate->getAttribute('updated'));
+
+                    $database->withTransaction(function () use ($database, $ruleId, $certificateId): void {
+                        $database->getDocument('rules', $ruleId, forUpdate: true);
+                        $database->getDocument('certificates', $certificateId, forUpdate: true);
+                        $database->updateDocument('certificates', $certificateId, new Document([
+                            'attempts' => 1,
+                            'updated' => '2099-01-01T00:00:00.000+00:00',
+                        ]));
+                        $database->updateDocument('rules', $ruleId, new Document(['status' => RULE_STATUS_CERTIFICATE_GENERATING]));
+                    });
+                    $rule = $this->updateRuleStatus($ruleId);
+                    $this->assertEquals(200, $rule['headers']['status-code']);
+                    $this->assertSame('verifying', $rule['body']['status']);
+                    $certificate = $database->getDocument('certificates', $certificateId);
+                    $this->assertSame(1, $certificate->getAttribute('attempts'));
+                    $this->assertSame('2099-01-01T00:00:00.000+00:00', $certificate->getAttribute('updated'));
+                } finally {
+                    $this->cleanupRule($ruleId);
+                    $database->deleteDocument('certificates', $certificateId);
+                    $deleted = $this->client->call(Client::METHOD_DELETE, '/projects/' . $foreignProject['$id'], [
+                        'content-type' => 'application/json',
+                        'x-appwrite-project' => $foreignProject['$id'],
+                        'x-appwrite-key' => $foreignProject['apiKey'],
+                    ]);
+                    $this->assertEquals(204, $deleted['headers']['status-code']);
+                }
+            } catch (\Throwable $caught) {
+                $error = $caught;
+            }
+        });
+        if ($error !== null) {
+            throw $error;
+        }
+    }
+
     public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
     {
-        $domain = \uniqid() . '-timestamp-test.webapp.com';
-        $rule = $this->createAPIRule($domain);
+        $error = null;
+        \Swoole\Coroutine\run(function () use (&$error): void {
+            try {
+                global $container;
 
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->assertEquals('unverified', $rule['body']['status']);
-        $this->assertNotEmpty($rule['body']['logs']);
+                $container->set('pools', static fn ($register) => $register->get('pools'), ['register']);
+                /** @var Database $database */
+                $database = clone $container->get('dbForPlatform');
+                $authorization = new Authorization();
+                $authorization->disable();
+                $database->setAuthorization($authorization);
+                $domain = \uniqid() . '-timestamp-test.webapp.com';
+                $rule = $this->createAPIRule($domain);
 
-        $ruleId = $rule['body']['$id'];
-        $initialUpdatedAt = $rule['body']['$updatedAt'];
-        $initiallogs = $rule['body']['logs'];
+                $this->assertEquals(201, $rule['headers']['status-code']);
+                $this->assertEquals('unverified', $rule['body']['status']);
+                $this->assertNotEmpty($rule['body']['logs']);
 
-        sleep(1);
+                $ruleId = $rule['body']['$id'];
+                $dnsError = $rule['body']['logs'];
+                $certificateId = ID::unique();
+                $database->createDocument('certificates', new Document([
+                    '$id' => $certificateId,
+                    'domain' => $domain,
+                    'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS,
+                    'logs' => 'Previous issuance failed',
+                ]));
+                $database->updateDocument('rules', $ruleId, new Document(['certificateId' => $certificateId]));
+                $rule = $this->getRule($ruleId);
+                $this->assertEquals(200, $rule['headers']['status-code']);
+                $initialUpdatedAt = $rule['body']['$updatedAt'];
+                $initialLogs = $rule['body']['logs'];
 
-        $updatedRule = $this->updateRuleStatus($ruleId);
+                try {
+                    sleep(1);
 
-        $this->assertEquals(400, $updatedRule['headers']['status-code']);
-        $this->assertStringContainsString($initiallogs, $updatedRule['body']['message']);
+                    /** Test for FAILURE */
+                    $updatedRule = $this->updateRuleStatus($ruleId);
 
-        $ruleAfterUpdate = $this->getRule($ruleId);
-        $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
-        $this->assertEquals('unverified', $ruleAfterUpdate['body']['status']);
-        $this->assertEquals($initiallogs, $ruleAfterUpdate['body']['logs']);
-        $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
+                    $this->assertEquals(400, $updatedRule['headers']['status-code']);
+                    $this->assertStringContainsString($dnsError, $updatedRule['body']['message']);
+                    $certificate = $database->getDocument('certificates', $certificateId);
+                    $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $certificate->getAttribute('attempts'));
+                    $this->assertSame('Previous issuance failed', $certificate->getAttribute('logs'));
 
-        $initialTime = new \DateTime($initialUpdatedAt);
-        $updatedTime = new \DateTime($ruleAfterUpdate['body']['$updatedAt']);
-        $this->assertGreaterThan($initialTime, $updatedTime);
+                    $ruleAfterUpdate = $this->getRule($ruleId);
+                    $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
+                    $this->assertEquals('unverified', $ruleAfterUpdate['body']['status']);
+                    $this->assertEquals($initialLogs, $ruleAfterUpdate['body']['logs']);
+                    $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
 
-        $this->cleanupRule($ruleId);
+                    $initialTime = new \DateTime($initialUpdatedAt);
+                    $updatedTime = new \DateTime($ruleAfterUpdate['body']['$updatedAt']);
+                    $this->assertGreaterThan($initialTime, $updatedTime);
+                } finally {
+                    $this->cleanupRule($ruleId);
+                    $database->deleteDocument('certificates', $certificateId);
+                }
+            } catch (\Throwable $caught) {
+                $error = $caught;
+            }
+        });
+        if ($error !== null) {
+            throw $error;
+        }
     }
 }
