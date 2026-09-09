@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
-use Appwrite\Auth\OIDC\Profiles;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -54,7 +53,7 @@ class Create extends Action
     public function __construct()
     {
         $providers = Config::getParam('oAuthProviders', []);
-        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => ($node['idToken'] ?? false) && !($node['mock'] ?? false)));
+        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => !empty($node['idToken']) && empty($node['mock'])));
 
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
@@ -148,8 +147,8 @@ class Create extends Action
         Cache $cache,
         Bus $bus,
     ): void {
-        $profile = Profiles::get($provider);
-        if ($profile->isEmpty() || !(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? false)) {
+        $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
+        if ($profile->isEmpty()) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED, 'This provider does not support ID token sign-in.');
         }
 

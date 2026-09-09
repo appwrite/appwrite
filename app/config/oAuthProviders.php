@@ -22,7 +22,14 @@ return [
         'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
-        'idToken' => true,
+        // Native ID token sign-in. `issuers` are accepted `iss` values, matched exactly.
+        'idToken' => [
+            'issuers' => ['https://appleid.apple.com'],
+            'jwksUrl' => 'https://appleid.apple.com/auth/keys',
+            // ASAuthorizationController always supports request.nonce, and a
+            // nonce-less Apple token is replayable for its full lifetime
+            'nonceRequired' => true,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
     ],
     'appwrite' => [
@@ -232,7 +239,12 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'idToken' => true,
+        'idToken' => [
+            // Google issued tokens without the scheme historically; both remain valid.
+            'issuers' => ['https://accounts.google.com', 'accounts.google.com'],
+            'jwksUrl' => 'https://www.googleapis.com/oauth2/v3/certs',
+            'nonceRequired' => false,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Google',
     ],
     'huggingface' => [
@@ -550,7 +562,11 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
-        'idToken' => true,
+        'idToken' => [
+            'issuers' => ['https://localhost/v1/mock'],
+            'jwksUrl' => 'http://localhost/v1/mock/tests/general/oauth2/jwks',
+            'nonceRequired' => false,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
     ],
     'mock-unverified' => [

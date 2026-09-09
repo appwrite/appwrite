@@ -6,7 +6,8 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 
 /**
- * Verifies an OpenID Connect ID token against a provider profile from Profiles.
+ * Verifies an OpenID Connect ID token against the provider's `idToken`
+ * profile from the oAuthProviders config.
  *
  * The algorithm is pinned to RS256 — the token header is never trusted to
  * choose it — and the signature is checked before any claim is read.
@@ -20,7 +21,7 @@ class IdTokenVerifier
     }
 
     /**
-     * @param Document $profile provider profile from Profiles
+     * @param Document $profile `issuers`, `jwksUrl` and `nonceRequired` for the provider
      * @param string[] $allowedAudiences client IDs accepted as the `aud` claim
      * @param ?string $rawNonce raw nonce from the request; the claim may carry it verbatim (Google) or as its SHA-256 hex hash (Apple)
      * @return array<string, mixed> the verified claims
