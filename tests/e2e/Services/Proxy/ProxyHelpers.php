@@ -310,32 +310,51 @@ trait ProxyHelpers
 
         $bucketId = $bucket['body']['$id'];
 
-        // Public file
+        // Public file at the bucket root, addressed by key "logo.png"
+        $file = $this->setupFile($bucketId, 'logo.png', [Permission::read(Role::any())]);
+
+        // Public file in a folder, addressed by key "photos/2026/pink.png"
+        $folderFile = $this->setupFile($bucketId, 'pink.png', [Permission::read(Role::any())], 'photos/2026');
+
+        // Private file, readable only through a file token
+        $privateFile = $this->setupFile($bucketId, 'private.png', []);
+
+        // Two files sharing one key, so that key is ambiguous and must be refused
+        $twinA = $this->setupFile($bucketId, 'twin.png', [Permission::read(Role::any())]);
+        $twinB = $this->setupFile($bucketId, 'twin.png', [Permission::read(Role::any())]);
+
+        return [
+            'bucketId' => $bucketId,
+            'fileId' => $file['$id'],
+            'folderFileId' => $folderFile['$id'],
+            'privateFileId' => $privateFile['$id'],
+            'twinIds' => [$twinA['$id'], $twinB['$id']],
+        ];
+    }
+
+    protected function setupFile(string $bucketId, string $name, array $permissions, string $folder = ''): array
+    {
+        $params = [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', $name),
+        ];
+
+        if (!empty($permissions)) {
+            $params['permissions'] = $permissions;
+        }
+
+        if ($folder !== '') {
+            $params['folder'] = $folder;
+        }
+
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
+        ], $this->getHeaders()), $params);
 
         $this->assertEquals($file['headers']['status-code'], 201, 'Setup file failed with status code: ' . $file['headers']['status-code'] . ' and response: ' . json_encode($file['body'], JSON_PRETTY_PRINT));
 
-        // Private file
-        $privateFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-        ]);
-
-        $this->assertEquals($privateFile['headers']['status-code'], 201, 'Setup private file failed with status code: ' . $privateFile['headers']['status-code'] . ' and response: ' . json_encode($privateFile['body'], JSON_PRETTY_PRINT));
-
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'], 'privateFileId' => $privateFile['body']['$id']];
+        return $file['body'];
     }
 
     private function packageSite(string $site): CURLFile

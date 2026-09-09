@@ -21,6 +21,7 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\ObjectKey;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Usage\Context;
@@ -807,15 +808,42 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         return true;
     } elseif ($type === 'bucket') {
-        // The domain serves files of one bucket only. Root paths were already
-        // rewritten onto the file view route before routing.
-        $prefix = '/v1/storage/buckets/' . $rule->getAttribute('deploymentResourceId', '') . '/files/';
-        if (!\str_starts_with($request->getURI(), $prefix)) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, 'This domain serves files of a storage bucket by ID at the root path, for example /{fileId}.', view: $errorView);
+        // The domain serves files of one bucket only. Keys were already
+        // resolved onto the file view route before routing.
+        $bucketId = $rule->getAttribute('deploymentResourceId', '');
+        if (\str_starts_with($request->getURI(), '/v1/storage/buckets/' . $bucketId . '/files/')) {
+            // Act as API for the file routes of the bucket
+            return false;
         }
 
-        // Act as API for the file routes of the bucket
-        return false;
+        // Re-resolve to say why the path was not served.
+        $path = \parse_url($request->getURI(), PHP_URL_PATH);
+        $key = \ltrim(\rawurldecode(\is_string($path) ? $path : ''), '/');
+        $dbForProject = $getProjectDB($project);
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $addressesFile = false;
+        if ($key !== '' && !\str_starts_with($key, 'v1/') && !$bucket->isEmpty()) {
+            try {
+                ObjectKey::parse($key);
+                $addressesFile = true;
+            } catch (AppwriteException) {
+                // Not a key at all: a folder path, or characters a key cannot
+                // hold. Reported as a miss rather than as a malformed request.
+            }
+        }
+
+        if ($addressesFile) {
+            try {
+                ObjectKey::find($dbForProject, $bucket, $key);
+            } catch (AppwriteException $err) {
+                // The key parsed, so only an ambiguous match reaches this. That
+                // is worth naming: the fix is to rename one of the files.
+                throw new AppwriteException($err->getType(), $err->getMessage(), view: $errorView);
+            }
+        }
+
+        throw new AppwriteException(AppwriteException::STORAGE_FILE_NOT_FOUND, 'No file of this bucket matches this URL. Files are served by their key, for example /report.pdf, or by their ID.', view: $errorView);
     } elseif ($type === 'api') {
         return false;
     } elseif ($type === 'redirect') {
@@ -891,27 +919,64 @@ Http::init()
     });
 
 /**
- * Bucket domains serve files by ID at the root of the domain, for example
- * https://files.example.com/{fileId}. Rewrite such paths onto the file view
- * route before routing, so the regular API action with its hooks, permissions,
- * usage, and audits handles the request. Other paths stay as they are and are
- * refused by the router.
+ * Bucket domains serve files at the root of the domain by their key, the
+ * folder and name that S3-style clients address them with, for example
+ * https://files.example.com/photos/2026/pink.png. A file whose name is not a
+ * usable URL is still reachable by its ID. Rewrite such paths onto the file
+ * view route before routing, so the regular API action with its hooks,
+ * permissions, usage, and audits handles the request.
+ *
+ * This runs before the route is matched, which is why it cannot live in the
+ * router. It stays side effect free: a path it cannot resolve is left alone
+ * for the router to refuse, where throwing is handled by the error hooks.
  */
 Http::onRequest()
+    ->inject('utopia')
     ->inject('request')
     ->inject('ruleForHost')
-    ->action(function (Request $request, Document $ruleForHost) {
+    ->action(function (Http $utopia, Request $request, Document $ruleForHost) {
         if ($ruleForHost->getAttribute('type', '') !== 'bucket') {
             return;
         }
 
-        $segments = \array_values(\array_filter(\explode('/', $request->getURI()), fn (string $segment) => $segment !== ''));
-        $fileId = $segments[0] ?? '';
-        if (\count($segments) !== 1 || !(new UID())->isValid($fileId)) {
+        // Paths under /v1 belong to the API router, which serves this
+        // bucket's own file routes and refuses the rest.
+        $path = \parse_url($request->getURI(), PHP_URL_PATH);
+        $key = \ltrim(\rawurldecode(\is_string($path) ? $path : ''), '/');
+
+        if ($key === '' || \str_starts_with($key, 'v1/')) {
             return;
         }
 
-        $request->setURI('/v1/storage/buckets/' . $ruleForHost->getAttribute('deploymentResourceId', '') . '/files/' . $fileId . '/view');
+        $bucketId = $ruleForHost->getAttribute('deploymentResourceId', '');
+
+        try {
+            // Resolved from the container rather than injected: injecting the
+            // project database would open one for every request on every domain.
+            $dbForProject = $utopia->context()->get('dbForProject');
+            $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+            if ($bucket->isEmpty()) {
+                return;
+            }
+
+            $fileId = ObjectKey::find($dbForProject, $bucket, $key)?->getId();
+        } catch (\Throwable) {
+            // Nothing is reported from here. A request hook that throws still
+            // falls through to the matched route, so failures are left to the
+            // router, which refuses the request and explains why.
+            return;
+        }
+
+        if ($fileId === null) {
+            // Fall back to addressing by file ID.
+            if (\str_contains($key, '/') || !(new UID())->isValid($key)) {
+                return;
+            }
+            $fileId = $key;
+        }
+
+        $request->setURI('/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view');
     });
 
 Http::init()

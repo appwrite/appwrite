@@ -47,7 +47,7 @@ class Create extends Action
                 group: 'rules',
                 name: 'createBucketRule',
                 description: <<<EOT
-                Create a new proxy rule for serving files of a storage bucket on custom domain. Files are served by their ID at the root of the domain, for example https://files.example.com/[FILE_ID]. Bucket and file permissions apply the same way as on the file view endpoint, so only files readable by guests are public. Use file tokens to share other files.
+                Create a new proxy rule for serving files of a storage bucket on custom domain. Files are served at the root of the domain by their key, the folder and name they were uploaded with, for example https://files.example.com/photos/2026/pink.png. A file whose name is not a usable URL can be addressed by its ID instead. A key matching more than one file is refused. Bucket and file permissions apply the same way as on the file view endpoint, so only files readable by guests are public. Use file tokens to share other files.
 
                 Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
                 EOT,

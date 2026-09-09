@@ -293,14 +293,14 @@ trait ProxyBase
         $setup = $this->setupBucket();
         $bucketId = $setup['bucketId'];
         $fileId = $setup['fileId'];
+        $folderFileId = $setup['folderFileId'];
         $privateFileId = $setup['privateFileId'];
 
         $this->assertNotEmpty($bucketId);
         $this->assertNotEmpty($fileId);
-        $this->assertNotEmpty($privateFileId);
 
         // Domain is not connected yet
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $response = $proxyClient->call(Client::METHOD_GET, '/logo.png');
         $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
@@ -318,19 +318,35 @@ trait ProxyBase
         $this->assertEquals($bucketId, $rule['body']['deploymentResourceId']);
         $this->assertEquals('unverified', $rule['body']['status']);
 
-        // Public file is served by ID at the root path, without project header
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        // Public file is served by its key, without a project header
+        $response = $proxyClient->call(Client::METHOD_GET, '/logo.png');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
         $this->assertStringContainsString('inline', $response['headers']['content-disposition']);
         $this->assertEquals(\filesize(__DIR__ . '/../../../resources/logo.png'), \strlen($response['body']));
+
+        // A key with folders keeps its path
+        $response = $proxyClient->call(Client::METHOD_GET, '/photos/2026/pink.png');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
+
+        // File ID still addresses a file, for names that are not usable URLs
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . $folderFileId);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         // File routes of the bucket work on the domain too
         $response = $proxyClient->call(Client::METHOD_GET, '/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
 
-        // Permissions still apply, so file without read permission is not served
+        // Permissions still apply, by key and by ID alike
+        $response = $proxyClient->call(Client::METHOD_GET, '/private.png');
+        $this->assertEquals(404, $response['headers']['status-code']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/' . $privateFileId);
         $this->assertEquals(404, $response['headers']['status-code']);
 
@@ -341,18 +357,25 @@ trait ProxyBase
         ], $this->getHeaders()), []);
         $this->assertEquals(201, $token['headers']['status-code']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . $privateFileId, [], ['token' => $token['body']['secret']]);
+        $response = $proxyClient->call(Client::METHOD_GET, '/private.png', [], ['token' => $token['body']['secret']]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringStartsWith('image/png', $response['headers']['content-type']);
 
-        // Only files of the bucket are served
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . \uniqid());
+        /**
+         * Test for FAILURE
+         */
+        // A key matching more than one file is refused rather than guessed
+        $response = $proxyClient->call(Client::METHOD_GET, '/twin.png');
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Only files of this bucket are served
+        $response = $proxyClient->call(Client::METHOD_GET, '/' . \uniqid() . '.png');
         $this->assertEquals(404, $response['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId . '/extra');
+        $response = $proxyClient->call(Client::METHOD_GET, '/photos/2026/');
         $this->assertEquals(404, $response['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/v1/storage/buckets/' . $bucketId . '/files');
@@ -382,9 +405,6 @@ trait ProxyBase
         $this->assertEquals('verified', $rule['body']['status']);
         $this->cleanupRule($wildcardRuleId);
 
-        /**
-         * Test for FAILURE
-         */
         $rule = $this->createBucketRule($domain, $bucketId);
         $this->assertEquals(409, $rule['headers']['status-code']);
 
@@ -411,7 +431,7 @@ trait ProxyBase
         // Deleting the rule disconnects the domain
         $this->cleanupRule($ruleId);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/' . $fileId);
+        $response = $proxyClient->call(Client::METHOD_GET, '/logo.png');
         $this->assertEquals(401, $response['headers']['status-code']);
 
         // Deleting the bucket removes its rules

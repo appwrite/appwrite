@@ -14,8 +14,8 @@ use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\S3\Auth\SignatureV4;
 use Appwrite\Platform\Modules\S3\Requests\AwsChunked;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
+use Appwrite\Storage\ObjectKey;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -24,7 +24,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -153,19 +152,7 @@ abstract class Base extends Action
      */
     protected function objectPath(string $key): array
     {
-        $slash = \strrpos($key, '/');
-        $folder = $slash === false ? '' : \substr($key, 0, $slash + 1);
-        $name = $slash === false ? $key : \substr($key, $slash + 1);
-        $validator = new Folder();
-
-        if ($name === '' || !$validator->isValid($folder)) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
-        }
-
-        return [
-            'folder' => Folder::normalize($folder),
-            'name' => $name,
-        ];
+        return ObjectKey::parse($key);
     }
 
     protected function isFolderMarker(string $key): bool
@@ -778,19 +765,7 @@ abstract class Base extends Action
 
     protected function findObject(Database $dbForProject, Document $bucket, string $key): ?Document
     {
-        $collection = 'bucket_' . $bucket->getSequence();
-        $object = $this->objectPath($key);
-        $files = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find($collection, [
-            Query::equal('folder', [$object['folder']]),
-            Query::equal('name', [$object['name']]),
-            Query::limit(2),
-        ]));
-
-        if (\count($files) > 1) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Multiple files match S3 object key '{$key}'.");
-        }
-
-        return $files[0] ?? null;
+        return ObjectKey::find($dbForProject, $bucket, $key);
     }
 
     /**
