@@ -6,6 +6,7 @@ namespace Utopia\Queue\Broker;
 
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\Exception\JetStreamException;
+use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\JetStream\AckPolicy;
 use Utopia\NATS\JetStream\Consumer as NatsConsumer;
 use Utopia\NATS\JetStream\ConsumerConfig;
@@ -56,6 +57,12 @@ class Nats implements Synchronous, Consumer
     // which queue identity owns a stream (the cross-instance collision guard).
     private const int MAX_STREAM_NAME = 255;
     private const string METADATA_IDENTITY = 'utopia_queue_identity';
+
+    // Retry budget for first-time provisioning of a replicated stream. The window
+    // doubles per attempt because a fixed one re-synchronises the losers: every process
+    // that lost the first race waits the same interval and collides again. See ensure().
+    private const int PROVISION_ATTEMPTS = 5;
+    private const int PROVISION_BACKOFF_US = 500_000;
 
     /** @var array<string, bool> queues whose streams/consumers have been provisioned */
     private array $provisioned = [];
@@ -616,7 +623,31 @@ class Nats implements Synchronous, Consumer
         return null;
     }
 
-    /** Idempotently provision the work + dead streams and the durable consumers. */
+    /**
+     * Idempotently provision the work + dead streams and the durable consumers.
+     *
+     * Retried, because concurrent *first* provisioning of a replicated stream does not
+     * degrade gracefully. Measured against a 3-node JetStream cluster, creating a fresh
+     * R3 stream and its two durable consumers takes ~290ms from a single process and
+     * succeeds every time; two processes doing it at once both exceed the client's 5s
+     * request timeout and neither completes. It is a cliff rather than a slope -- eight
+     * concurrent cold starts landed 0-1 successes. The server logs show why: the
+     * competing CREATEs drive the stream and consumer RAFT groups into repeated leader
+     * elections, which continue for minutes after the callers have given up.
+     *
+     * The retry works because the state that makes an attempt expensive does not survive
+     * it. Once any one process wins, the stream and consumers exist, and JetStream
+     * answers a repeat CREATE for an identical config without another election -- eight
+     * concurrent processes against an existing stream provision in 19-34ms with no
+     * election at all. So a later attempt is not a rerun of the same race.
+     *
+     * This path is the first pod that ever touches a queue, not a scale-up: a KEDA 0->N
+     * expansion runs against a stream that already exists and is the cheap case above.
+     *
+     * Reading the current config first, to skip a no-op write, was tried and made this
+     * worse: the extra round trips spend the same 5s budget, taking 8 concurrent cold
+     * starts from 8/8 down to 7/8.
+     */
     private function ensure(Queue $queue): void
     {
         $key = $this->identity($queue);
@@ -624,6 +655,27 @@ class Nats implements Synchronous, Consumer
             return;
         }
 
+        $attempt = 0;
+        while (true) {
+            try {
+                $this->provision($queue, $key);
+
+                return;
+            } catch (TimeoutException $e) {
+                if (++$attempt >= self::PROVISION_ATTEMPTS) {
+                    throw $e;
+                }
+
+                // Full jitter over an exponentially growing window, so processes that
+                // collided once are not released together to collide again.
+                usleep(random_int(0, self::PROVISION_BACKOFF_US << ($attempt - 1)));
+            }
+        }
+    }
+
+    /** One provisioning attempt. See ensure() for why this is retried. */
+    private function provision(Queue $queue, string $key): void
+    {
         $this->guardStreamName($queue, $key);
 
         $maxAge = $queue->jobTtl > 0 ? (float) $queue->jobTtl : null;
