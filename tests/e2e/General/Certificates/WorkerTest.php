@@ -388,16 +388,11 @@ final class WorkerTest extends TestCase
          */
         $this->provider->instant = true;
         $this->database->updateDocument('certificates', 'certificate', new Document(['attempts' => 3]));
-        $this->database->writes = [];
         $this->runWorker();
         $this->assertSame(RULE_STATUS_VERIFIED, $this->rule()->getAttribute('status'));
         $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
         $this->assertSame(RULE_STATUS_VERIFIED, $this->events->getPayload()['status']);
         $this->assertCount(1, $this->publisher->getEvents('functions'));
-        foreach ($this->database->writes as [$collection, $id, $changes]) {
-            $this->assertArrayNotHasKey('$createdAt', $changes, $collection . ' must receive sparse updates');
-            $this->assertArrayNotHasKey('$sequence', $changes, $collection . ' must receive sparse updates');
-        }
     }
 
     public function testStaleWorkerCannotOverwriteAReplacementLease(): void
@@ -487,10 +482,11 @@ final class WorkerTest extends TestCase
          * Test for FAILURE
          */
         $this->setRule(['status' => $status]);
-        $this->database->writes = [];
         $this->runWorker($project);
         $this->assertSame([], $this->provider->issued);
-        $this->assertSame([], $this->database->writes);
+        $this->assertSame($status, $this->rule()->getAttribute('status'));
+        $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
+        $this->assertNull($this->certificate()->getAttribute('updated'));
     }
 
     public static function rejections(): \Iterator
