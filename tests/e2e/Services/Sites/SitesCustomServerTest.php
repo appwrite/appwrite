@@ -2263,6 +2263,8 @@ final class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
+            // Keep the measured build longer than Kubernetes timestamp precision.
+            'buildCommand' => 'sleep 2',
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',

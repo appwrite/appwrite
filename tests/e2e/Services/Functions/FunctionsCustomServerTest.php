@@ -1945,7 +1945,10 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testGetDeployment(): void
     {
-        $data = $this->setupTestDeployment();
+        // Keep the measured build longer than Kubernetes timestamp precision.
+        $functionId = $this->setupDeployedFunction('Measured build', overrides: ['commands' => 'sleep 2']);
+        $function = $this->getFunction($functionId);
+        $data = ['functionId' => $functionId, 'deploymentId' => $function['body']['deploymentId']];
 
         /**
          * Test for SUCCESS
