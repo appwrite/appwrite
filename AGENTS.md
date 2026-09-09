@@ -1104,6 +1104,43 @@ Profiles control which features are available based on deployment type (cloud vs
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
 - **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off). Usage stats follow `_APP_USAGE_STATS` (on by default)
 
+### Browser flag API for agents
+
+`window.__vibes` is always available after hydration in development. In production,
+set `VITE_CONSOLE_BROWSER_API=true` in the server environment to expose it. Unset,
+false, and unrecognized values leave the global absent. This uses shared runtime
+config, so changing production exposure requires a server restart and page reload,
+but no rebuild. The API is available to all scripts on an enabled page.
+
+Run these calls in the target browser page, using browser JavaScript evaluation:
+
+```js
+window.__vibes.flags.list()
+window.__vibes.flags.set({ agent: true, showActivityChart: true })
+window.__vibes.flags.set({ agent: false })
+window.__vibes.flags.reset('agent')
+window.__vibes.flags.resetAll()
+
+window.__vibes.screenshotMode.enable()
+window.__vibes.screenshotMode.disable()
+window.__vibes.screenshotMode.isEnabled()
+```
+
+Screenshot mode is separate from feature flags and uses the same API exposure
+setting. Its methods return the current enabled boolean. Enable and disable use
+the existing screenshot-mode storage and events, updating the UI and persisting
+across reloads. `flags.resetAll()` leaves screenshot mode unchanged.
+
+`list()` and flag mutations return a record keyed by flag name, with `default`,
+`override` (`null` when unset), and `effective` boolean values. All keys and values
+are validated before a set request changes anything. Profile restrictions still
+apply, so inspect `effective` to verify a change. Calls use the debug menu setters
+and persist browser-local overrides across reloads. Reset restores configured
+defaults, while setting false explicitly disables a flag. `resetAll()` clears only
+feature flag overrides, preserving the selected profile and other debug settings.
+Wait for the resulting UI render before interacting with an enabled feature.
+These flags do not grant backend permissions. Curl cannot call this browser API.
+
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
 **Per-feature env overrides** (optional; unset = profile default):
