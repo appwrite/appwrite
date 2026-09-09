@@ -1489,4 +1489,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
   'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
     'המחיקות מתבצעות עכשיו. הארגון שלכם יעבור לתוכנית {plan} בתאריך {date}, בתום מחזור החיוב הנוכחי.',
+  'Could not load which backup policies stop running when your plan changes.':
+    'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
 }

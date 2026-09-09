@@ -168,9 +168,18 @@ export function DowngradePlanLossWarning({
     [dedicatedQuery.data, targetPlan],
   )
 
+  const backupsFailed = backupsApply && !!backupsQuery.error
+  const dedicatedFailed = dedicatedApply && !!dedicatedQuery.error
+
   if (backupsQuery.isLoading || dedicatedQuery.isLoading) return null
-  if (backupsQuery.error || dedicatedQuery.error) return null
-  if (backupRows.length === 0 && dedicatedRows.length === 0) return null
+  if (
+    backupRows.length === 0 &&
+    dedicatedRows.length === 0 &&
+    !backupsFailed &&
+    !dedicatedFailed
+  ) {
+    return null
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -188,7 +197,13 @@ export function DowngradePlanLossWarning({
       <div className="border-t border-border" />
 
       <div className="px-6 py-4 space-y-4">
-        {backupRows.length > 0 ? (
+        {backupsFailed ? (
+          <p className="text-[13px] text-muted-foreground">
+            {t(
+              'Could not load which backup policies stop running when your plan changes.',
+            )}
+          </p>
+        ) : backupRows.length > 0 ? (
           <LossSection
             title={t('Backups stop running')}
             note={t(
@@ -198,7 +213,13 @@ export function DowngradePlanLossWarning({
           />
         ) : null}
 
-        {dedicatedRows.length > 0 ? (
+        {dedicatedFailed ? (
+          <p className="text-[13px] text-muted-foreground">
+            {t(
+              'Could not load which dedicated databases are spun down when your plan changes.',
+            )}
+          </p>
+        ) : dedicatedRows.length > 0 ? (
           <LossSection
             title={t('Dedicated databases are spun down')}
             // Spinning down is one-directional server-side: there is no resume.

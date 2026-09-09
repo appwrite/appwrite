@@ -422,12 +422,13 @@ export function DowngradeResourceValidation({
     () =>
       projects.some((project) => {
         const resources = resourcesByProjectId.get(project.$id)
-        return (
-          !!resources &&
-          DOWNGRADE_RESOURCE_TYPES.some(({ id }) => resources[id].failed)
+        if (!resources) return false
+        const projectLimits = limitsForProject(project.$id)
+        return DOWNGRADE_RESOURCE_TYPES.some(
+          ({ id }) => resources[id].failed && projectLimits[id] !== null,
         )
       }),
-    [projects, resourcesByProjectId],
+    [projects, resourcesByProjectId, limitsForProject],
   )
 
   const isValid = remainingWithinLimits && !resourcesLoading && !hasLoadFailures

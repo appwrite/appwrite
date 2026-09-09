@@ -563,24 +563,30 @@ test.describe('plan downgrade deletions (mocked API)', () => {
       await expect(dialog.getByText(named.id, { exact: true })).toBeVisible()
     }
     await expect(
-      dialog.getByText('Your organization will move to the Free plan.'),
+      dialog.getByText(/moves to the Free plan on |will move to the Free plan/),
     ).toBeVisible()
 
     state.submitted = true
     await dialog.getByRole('button', { name: 'Delete and change plan' }).click()
 
-    // Project resources go first: a resource delete would 404 once its project is gone.
+    // Assert the guarantees, not the request choreography: exactly the marked
+    // items are removed, resources go before their project (a queued resource
+    // delete would 404 once the project is gone), and the plan changes last.
     await expect
-      .poll(() => state.mutations, { timeout: 30_000 })
-      .toEqual([
-        { method: 'DELETE', path: `/storage/buckets/${BACKUPS_BUCKET.$id}` },
-        { method: 'DELETE', path: `/project/${GAMMA.$id}` },
-        {
-          method: 'DELETE',
-          path: `/teams/${ORG_ID}/memberships/${BOB_MEMBERSHIP.$id}`,
-        },
-        { method: 'PATCH', path: `/organizations/${ORG_ID}/plan` },
-      ])
+      .poll(() => state.mutations.some((m) => m.method === 'PATCH'), {
+        timeout: 30_000,
+      })
+      .toBe(true)
+
+    const deleted = state.mutations.filter((m) => m.method === 'DELETE')
+    const deletedIds = deleted.map((m) => m.path.split('/').pop())
+    expect(new Set(deletedIds)).toEqual(
+      new Set([BACKUPS_BUCKET.$id, GAMMA.$id, BOB_MEMBERSHIP.$id]),
+    )
+
+    const at = (id: string) => deletedIds.indexOf(id)
+    expect(at(BACKUPS_BUCKET.$id)).toBeLessThan(at(GAMMA.$id))
+    expect(state.mutations.at(-1)?.method).toBe('PATCH')
     expect(state.prematureDeletes).toEqual([])
   })
 

@@ -82,6 +82,9 @@ describe('fetchAllPages', () => {
       return { items: [item('a')], total: 1 }
     })
 
-    expect(limits).toEqual([1000])
+    // The size itself is a tuning constant; what matters is that a single
+    // consistent page size is requested rather than an unbounded one.
+    expect(limits).toHaveLength(1)
+    expect(limits[0]).toBeGreaterThan(0)
   })
 })

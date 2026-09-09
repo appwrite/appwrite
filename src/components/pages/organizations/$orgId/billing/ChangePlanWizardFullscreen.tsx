@@ -231,15 +231,19 @@ async function runDowngradeDeletionStep(
 const ORG_DELETION_STEP_IDS = new Set(['projects', 'members', 'domains'])
 
 /**
- * Post-deletion gate. Still fails closed on anything the run cannot account
- * for, but an addon it just disabled is not a real block: the server reads
+ * Compliance gate. Still fails closed on anything the run cannot account for,
+ * but an addon it just disabled is not a real block: the server reads
  * `currentValue` and ignores the `nextValue = 0` that schedules the removal.
+ *
+ * `strict` is false once the deletions have run: they cannot be given back, so
+ * only an explicit block may abort the plan update.
  */
 async function isPlanChangeStillBlocked(
   organizationId: string,
   limits: PlanChangeLimits | null | undefined,
+  { strict }: { strict: boolean },
 ): Promise<boolean> {
-  if (!limits) return true
+  if (!limits) return strict
   if (limits.canChangePlan === true) return false
 
   const reportedAddons = limits.unsupportedAddons ?? []
@@ -252,11 +256,17 @@ async function isPlanChangeStillBlocked(
     return true
   }
 
-  const unresolved = await getUnresolvedUnsupportedAddons(
-    organizationId,
-    reportedAddons,
-  )
-  return unresolved.length > 0
+  try {
+    const unresolved = await getUnresolvedUnsupportedAddons(
+      organizationId,
+      reportedAddons,
+    )
+    return unresolved.length > 0
+  } catch {
+    // Same asymmetry as the caller: this read failing must not strand a run
+    // whose deletions already happened.
+    return strict
+  }
 }
 
 async function runDowngradeDeletions(
@@ -1357,11 +1367,14 @@ export function ChangePlanWizardFullscreen() {
       deletedOrganizationName: orgToDelete?.name,
     })
 
+    let deletionsRan = false
+
     try {
       if (pendingDeletions && hasStagedDeletions) {
         setSetupProgress((prev) =>
           prev ? { ...prev, phase: 'deleting-resources' } : prev,
         )
+        deletionsRan = true
         await runDowngradeDeletions(
           orgId,
           pendingDeletions,
@@ -1385,12 +1398,19 @@ export function ChangePlanWizardFullscreen() {
 
       if (needsDowngradeValidation) {
         const estimationResult = await updateEstimation.refetch()
-        // Fail closed: the query does not retry, so an errored refetch leaves
-        // the previous cached value behind and it would read as compliant.
-        if (
-          estimationResult.isError ||
-          (await isPlanChangeStillBlocked(orgId, estimationResult.data?.limits))
-        ) {
+        // Fail closed before the deletions: the query does not retry, so an
+        // errored refetch leaves the previous cached value behind and it would
+        // read as compliant. Afterwards the deletions are already irreversible
+        // and `PATCH /plan` does not enforce `canChangePlan`, so only an
+        // explicit block aborts - a failed refetch must not strand them.
+        const blocked = estimationResult.isError
+          ? !deletionsRan
+          : await isPlanChangeStillBlocked(
+              orgId,
+              estimationResult.data?.limits,
+              { strict: !deletionsRan },
+            )
+        if (blocked) {
           setSetupProgress(null)
           toast.error(
             t(

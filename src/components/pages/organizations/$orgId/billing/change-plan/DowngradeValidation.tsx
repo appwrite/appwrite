@@ -383,12 +383,20 @@ export function DowngradeValidation({
 
   // Deferred until the user has settled which projects survive, so the nine
   // list calls per project are not spent on projects about to be deleted.
-  // Deliberately not narrowed by the estimation's per-project compliance flag:
-  // a project it does not report on would be skipped, and its overage would
-  // then be impossible to resolve because the step never appears.
   const projectSelectionSettled =
     !needsProjectSelection || confirmedProjectIds.size > 0
-  const projectsToInspect = keptProjects
+  const projectsToInspect = useMemo(() => {
+    const compliance = planChangeLimits?.projectCompliance
+    if (!compliance || compliance.length === 0) return keptProjects
+    // A project the server did not report on cannot be assumed compliant, or its
+    // overage becomes impossible to resolve because the step never appears.
+    const compliantIds = new Set(
+      compliance
+        .filter((project) => project.isCompliant === true)
+        .map((project) => project.$id),
+    )
+    return keptProjects.filter((project) => !compliantIds.has(project.$id))
+  }, [keptProjects, planChangeLimits])
   const resourceValidationApplies =
     projectSelectionSettled && projectsToInspect.length > 0
   const projectResourceStepPending =
