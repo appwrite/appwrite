@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Auth\OIDC;
 
-use Appwrite\Auth\OIDC\Profile;
 use Appwrite\Auth\OIDC\Profiles;
 use PHPUnit\Framework\TestCase;
 
@@ -18,12 +17,12 @@ final class ProfilesTest extends TestCase
      */
     public function testAppleRequiresNonce(): void
     {
-        $this->assertTrue(Profiles::get('apple')->nonceRequired);
-        $this->assertFalse(Profiles::get('google')->nonceRequired);
+        $this->assertTrue(Profiles::get('apple')->getAttribute('nonceRequired'));
+        $this->assertFalse(Profiles::get('google')->getAttribute('nonceRequired'));
     }
 
     public function testUnknownProviderHasNoProfile(): void
     {
-        $this->assertNotInstanceOf(Profile::class, Profiles::get('github'));
+        $this->assertTrue(Profiles::get('github')->isEmpty());
     }
 }

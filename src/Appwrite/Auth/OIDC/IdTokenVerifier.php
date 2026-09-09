@@ -3,9 +3,10 @@
 namespace Appwrite\Auth\OIDC;
 
 use Appwrite\Extend\Exception;
+use Utopia\Database\Document;
 
 /**
- * Verifies an OpenID Connect ID token against a provider Profile.
+ * Verifies an OpenID Connect ID token against a provider profile from Profiles.
  *
  * The algorithm is pinned to RS256 — the token header is never trusted to
  * choose it — and the signature is checked before any claim is read.
@@ -19,12 +20,13 @@ class IdTokenVerifier
     }
 
     /**
+     * @param Document $profile provider profile from Profiles
      * @param string[] $allowedAudiences client IDs accepted as the `aud` claim
      * @param ?string $rawNonce raw nonce from the request; the claim may carry it verbatim (Google) or as its SHA-256 hex hash (Apple)
      * @return array<string, mixed> the verified claims
      * @throws Exception
      */
-    public function verify(Profile $profile, string $idToken, array $allowedAudiences, ?string $rawNonce): array
+    public function verify(Document $profile, string $idToken, array $allowedAudiences, ?string $rawNonce): array
     {
         $parts = \explode('.', $idToken);
         if (\count($parts) !== 3) {
@@ -42,7 +44,7 @@ class IdTokenVerifier
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Missing key ID');
         }
 
-        $jwk = $this->jwks->getKey($profile->jwksUrl, $kid);
+        $jwk = $this->jwks->getKey($profile->getAttribute('jwksUrl', ''), $kid);
         if ($jwk === null) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Unknown signing key');
         }
@@ -62,7 +64,7 @@ class IdTokenVerifier
 
         $claims = $this->decodeJson($payloadEncoded);
 
-        if (!\in_array($claims['iss'] ?? null, $profile->issuers, true)) {
+        if (!\in_array($claims['iss'] ?? null, $profile->getAttribute('issuers', []), true)) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid issuer');
         }
 
@@ -86,7 +88,7 @@ class IdTokenVerifier
 
         $nonce = $claims['nonce'] ?? null;
         $hasNonceClaim = \is_string($nonce) && $nonce !== '';
-        if ($profile->nonceRequired && !$hasNonceClaim) {
+        if ($profile->getAttribute('nonceRequired', false) && !$hasNonceClaim) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce required');
         }
         if ($hasNonceClaim) {

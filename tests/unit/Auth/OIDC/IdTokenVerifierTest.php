@@ -6,12 +6,12 @@ namespace Tests\Unit\Auth\OIDC;
 
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
-use Appwrite\Auth\OIDC\Profile;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
+use Utopia\Database\Document;
 
 final class IdTokenVerifierTest extends TestCase
 {
@@ -231,9 +231,9 @@ final class IdTokenVerifierTest extends TestCase
         return new IdTokenVerifier($jwks);
     }
 
-    private function profile(bool $nonceRequired = false): Profile
+    private function profile(bool $nonceRequired = false): Document
     {
-        return new Profile('test', [self::ISSUER], 'https://issuer.test/jwks', $nonceRequired);
+        return new Document(['$id' => 'test', 'issuers' => [self::ISSUER], 'jwksUrl' => 'https://issuer.test/jwks', 'nonceRequired' => $nonceRequired]);
     }
 
     /**

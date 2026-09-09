@@ -149,7 +149,7 @@ class Create extends Action
         Bus $bus,
     ): void {
         $profile = Profiles::get($provider);
-        if ($profile === null || !(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? false)) {
+        if ($profile->isEmpty() || !(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? false)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED, 'This provider does not support ID token sign-in.');
         }
 
