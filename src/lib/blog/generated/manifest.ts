@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "appwrite-init-2026-recap",
+    "href": "/blog/post/appwrite-init-2026-recap",
+    "title": "Appwrite Init 2026 recap: Everything we shipped",
+    "description": "An Appwrite Init 2026 recap of all five days of launches, from Appwrite 2.0 and native PostgreSQL to VectorsDB, S3 support, Firewall, OAuth2, and Domains.",
+    "date": "2026-09-09",
+    "lastUpdated": "2026-09-09",
+    "timeToRead": 8,
+    "author": "aishwari",
+    "category": "init",
+    "featured": false,
+    "cover": "/images/blog-local/appwrite-init-2026-recap/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
