@@ -3,6 +3,7 @@
 namespace Utopia\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Utopia\Database\Query;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
@@ -85,20 +86,41 @@ class Subscribe extends Action
 
         // session replay
         // TODO: update the ttl + bulk fetch + bulk upload to the cache to reduce the network calls
+        // same for the database below
+        $consoleDatabase = getConsoleDB();
+        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
+        $projectDB = getProjectDB($project);
+
+        $cache = getCache();
         foreach ($topics as $topic) {
             $lastMessageCursorKey =  'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $topic;
-            $payload = getCache()->load($lastMessageCursorKey, 3600);
-            $sequence = $payload['sequence'] ?? null;
-            var_dump($payload);
-            if ($sequence !== null) {
-                // TODO: fetch the last global message cursor then calculate the depth and send
-                $packetId = $connection->nextPacketId();
-                $publish = $connection->protocol >= 5
-                    ? V5::publish($topic, json_encode($payload), Packet::QOS_1, $packetId, dup: true)
-                    : V3::publish($topic, json_encode($payload), Packet::QOS_1, $packetId, dup: true);
-                $reply($publish, false);
-                $connection->track($packetId, $topic, $sequence);
+            $payload = $cache->load($lastMessageCursorKey, 3600);
+
+            $topicDocument = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('messages', [Query::containsAny('topics', [$topic]), Query::orderDesc('$sequence'), Query::orderDesc('data')]));
+            if($topicDocument->isEmpty()) continue;
+            if(empty($topicDocument->getAttribute('data'))) continue;
+
+            $sequence = $topicDocument?->getAttribute('$sequence') ?? -1;
+
+            if ($payload === false) {
+                // Newly connected device: register at the current tail so it starts from now.
+                $cache->save($lastMessageCursorKey, ['sequence' => $sequence]);
+                continue;
             }
+
+            $lastSubscriberSequence = max(-1, $payload['sequence'] ?? -1);
+
+            if($lastSubscriberSequence === $sequence){
+                continue;
+            }
+
+            // TODO: fetch the last global message cursor then calculate the depth and send
+            $packetId = $connection->nextPacketId();
+            $publish = $connection->protocol >= 5
+                ? V5::publish($topic, json_encode($topicDocument->getAttribute('data')), Packet::QOS_1, $packetId, dup: true)
+                : V3::publish($topic, json_encode($topicDocument->getAttribute('data')), Packet::QOS_1, $packetId, dup: true);
+            $reply($publish, false);
+            $connection->track($packetId, $topic, $sequence);
         }
     }
 }

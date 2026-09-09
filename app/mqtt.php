@@ -326,11 +326,22 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     $sequence = (int) ($event['payload']['sequence'] ?? 0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
+                    // The broker is the sender on this hop (fan-out to subscribers), so the
+                    // span is marked is_broker to separate it from client-originated packets.
+                    $span = Span::init('mqtt.deliver');
+                    $span->set('project.id', $projectId);
+                    $span->set('mqtt.topic', $topic);
+                    $span->set('mqtt.qos', $qos);
+                    $span->set('mqtt.is_broker', true);
+
                     $subscribers = $mqtt->getSubscribers($projectId, $topic);
+                    $span->set('mqtt.subscribers', count($subscribers));
+
                     if ($subscribers === []) {
                         // No local subscriber on this worker; with multiple workers this
                         // counts per-worker rather than as a global drop.
                         $mqtt->metrics->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+                        $span->finish();
                         return;
                     }
 
@@ -351,6 +362,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                             $subscriber->track($packetId, $topic, $sequence);
                         }
                     }
+
+                    $span->finish();
                 });
             } catch (\Throwable $error) {
                 $attempts++;
@@ -379,6 +392,7 @@ $server->onReceive(function (int $fd, string $data) use (
     $span->set('project.id', $connection->projectId);
     $span->set('user.id', $connection->identity['userId'] ?? '');
     $span->set('mqtt.clean_start', $connection->cleanStart);
+    $span->set('mqtt.is_broker', false); // an inbound packet from a client
 
     $reply = function (string $packet = '', bool $close = false) use ($server, $fd): void {
         if ($packet !== '') {

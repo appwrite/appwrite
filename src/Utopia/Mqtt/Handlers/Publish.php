@@ -2,7 +2,9 @@
 
 namespace Utopia\Mqtt\Handlers;
 
+use Appwrite\ID;
 use Appwrite\Messaging\Adapter\Mqtt;
+use Utopia\Database\Document;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
@@ -54,6 +56,18 @@ class Publish extends Action
         if ($qos === 1) {
             // PUBACK is a bare packet id in both versions (reason/properties omitted).
             $reply($connection->protocol >= 5 ? V5::puback($packetId) : V3::puback($packetId), false);
+
+            // TODO: remove it from here. It shall be in the messaging worker
+            $consoleDatabase = getConsoleDB();
+            $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
+            $projectDB = getProjectDB($project);
+            $message = new Document([
+                '$id' => ID::unique(),
+                'providerType' => MESSAGE_TYPE_PUSH,
+                'topics' => [$topic],
+                'data' => ['payload' => $payload, 'qos' => $qos],
+            ]);
+            $projectDB->createDocument('messages', $message);
         }
     }
 }
