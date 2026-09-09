@@ -86,7 +86,26 @@ const EMAIL_HTML = `<!doctype html>
   </body>
 </html>`
 
-function emailMessage(status: 'draft' | 'sent'): Models.Message {
+const HOSTILE_HTML = `<!doctype html>
+<html>
+  <body>
+    <script>
+      window.parent.document.body.setAttribute('data-escaped', 'script')
+    </script>
+    <img src="broken.png" onerror="window.top.document.body.setAttribute('data-escaped', 'onerror')">
+    <a id="popup" href="https://example.com/popup" target="_blank">popup</a>
+    <a id="top" href="https://example.com/top" target="_top">top</a>
+    <form id="form" action="https://example.com/steal" method="post">
+      <button id="submit" type="submit">submit</button>
+    </form>
+    <p id="marker">hostile body rendered</p>
+  </body>
+</html>`
+
+function emailMessage(
+  status: 'draft' | 'sent',
+  content: string = EMAIL_HTML,
+): Models.Message {
   return {
     $id: MESSAGE_ID,
     $createdAt: NOW,
@@ -100,7 +119,7 @@ function emailMessage(status: 'draft' | 'sent'): Models.Message {
     deliveredTotal: status === 'sent' ? 1 : 0,
     data: {
       subject: 'Your Acme Docs files expire in two days',
-      content: EMAIL_HTML,
+      content,
       html: true,
     },
     status,
@@ -231,14 +250,35 @@ test.describe('email body preview (mocked API)', () => {
     ).toBeVisible()
   })
 
-  test('the preview frame is fully sandboxed', async ({ page }) => {
-    await mockAppwriteApi(page, emailMessage('sent'))
+  test('a hostile body renders but cannot reach the console', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, emailMessage('sent', HOSTILE_HTML))
     await openMessage(page)
 
-    await expect(page.locator('iframe[title="Email preview"]')).toHaveAttribute(
-      'sandbox',
-      '',
-    )
+    const consoleUrl = page.url()
+    const popups: string[] = []
+    page.on('popup', (popup) => popups.push(popup.url()))
+    const smuggled = page
+      .waitForRequest((r) => r.url().startsWith('https://example.com/'), {
+        timeout: 4_000,
+      })
+      .catch(() => null)
+
+    // The body is on screen, so anything below fails on containment, not on rendering.
+    await expect(previewFrame(page).locator('#marker')).toBeVisible()
+
+    for (const id of ['popup', 'top', 'submit']) {
+      await previewFrame(page)
+        .locator(`#${id}`)
+        .click({ timeout: 5_000 })
+        .catch(() => undefined)
+    }
+
+    expect(await page.locator('body').getAttribute('data-escaped')).toBeNull()
+    expect(page.url()).toBe(consoleUrl)
+    expect(popups).toEqual([])
+    expect(await smuggled).toBeNull()
   })
 
   test('source shows the HTML that was sent, read-only', async ({ page }) => {
