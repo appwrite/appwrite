@@ -6,7 +6,11 @@ import {
   inferResumableUploadIdPropertyName,
 } from '@/lib/api-explorer/openapi-schema'
 import { parameterToFormField } from '@/lib/api-explorer/request-form'
-import { formatSchemaType } from '@/lib/docs/references/schema-utils'
+import {
+  formatSchemaType,
+  resolveResponseModels,
+} from '@/lib/docs/references/schema-utils'
+import { parseModelPropertiesFromSchema } from '@/lib/docs/references/parse-model'
 import type { OpenApiSchema, OpenApiSpec } from '@/lib/api-explorer/types'
 
 const closedStatus: OpenApiSchema = {
@@ -173,6 +177,158 @@ describe('discriminator helpers', () => {
       'columnEmail',
       'columnUrl',
     ])
+  })
+})
+
+describe('standard compound unions', () => {
+  function branch(
+    name: string,
+    conditions: Record<string, string | number | boolean>,
+  ): OpenApiSchema {
+    return {
+      allOf: [
+        { $ref: `#/components/schemas/${name}` },
+        {
+          type: 'object',
+          required: Object.keys(conditions),
+          properties: Object.fromEntries(
+            Object.entries(conditions).map(([key, value]) => [
+              key,
+              { enum: [value] },
+            ]),
+          ),
+        },
+      ],
+    }
+  }
+
+  const union: OpenApiSchema = {
+    anyOf: [
+      branch('columnString', { type: 'string' }),
+      branch('columnEmail', { type: 'string', format: 'email' }),
+      branch('columnUrl', { type: 'string', format: 'url' }),
+    ],
+  }
+
+  test('preserves broad and specialized model identities without a discriminator', () => {
+    expect(getPolymorphicModelRefs(union)).toEqual([
+      'columnString',
+      'columnEmail',
+      'columnUrl',
+    ])
+    expect(getDiscriminatorPropertyNames(union)).toEqual(['type', 'format'])
+    expect(getOpenApiEnumInfo(union)).toBeNull()
+  })
+
+  test('prefers standard branches over stale legacy mappings and property names', () => {
+    const schema: OpenApiSchema = {
+      ...union,
+      discriminator: {
+        propertyName: 'legacy',
+        'x-propertyNames': ['legacy'],
+        mapping: { legacy: '#/components/schemas/wrong' },
+        'x-mapping': { '#/components/schemas/wrong': { legacy: 'wrong' } },
+      },
+    }
+    expect(getPolymorphicModelRefs(schema)).toEqual([
+      'columnString',
+      'columnEmail',
+      'columnUrl',
+    ])
+    expect(getDiscriminatorPropertyNames(schema)).toEqual(['type', 'format'])
+  })
+
+  test('reads nested conjunctions and numeric and boolean conditions', () => {
+    const schema: OpenApiSchema = {
+      oneOf: [{ allOf: [branch('entry', { enabled: false, version: 2 })] }],
+    }
+    expect(getPolymorphicModelRefs(schema)).toEqual(['entry'])
+    expect(getDiscriminatorPropertyNames(schema)).toEqual([
+      'enabled',
+      'version',
+    ])
+  })
+
+  test('reads scalar const conditions but not a const on the whole member', () => {
+    const member = branch('entry', { enabled: false })
+    member.allOf![1]!.properties!.enabled = { type: 'boolean', const: false }
+    expect(getDiscriminatorPropertyNames({ anyOf: [member] })).toEqual([
+      'enabled',
+    ])
+    expect(getPolymorphicModelRefs({ anyOf: [member] })).toEqual(['entry'])
+    member.const = { enabled: false }
+    expect(getPolymorphicModelRefs({ anyOf: [member] })).toEqual([])
+  })
+
+  test('does not advertise optional, nullable, conflicting or ambiguous conditions', () => {
+    const optional = branch('entry', { kind: 'entry' })
+    optional.allOf![1]!.required = []
+    const nullable = branch('entry', { kind: 'entry' })
+    nullable.allOf![1]!.properties!.kind!.nullable = true
+    const conflicting = branch('entry', { kind: 'entry' })
+    conflicting.allOf!.push(branch('other', { kind: 'other' }).allOf![1]!)
+    const multiple = branch('entry', { kind: 'entry' })
+    multiple.allOf!.push({ $ref: '#/components/schemas/other' })
+    for (const invalid of [optional, nullable, conflicting, multiple]) {
+      const schema = { anyOf: [invalid] }
+      expect(getDiscriminatorPropertyNames(schema)).toEqual([])
+      expect(getPolymorphicModelRefs(schema)).toEqual([])
+    }
+    expect(
+      getPolymorphicModelRefs({
+        anyOf: [union.anyOf![0]!, { type: 'object' }],
+      }),
+    ).toEqual([])
+  })
+
+  test('keeps response alternatives, array variants and model links', () => {
+    const spec = {
+      components: {
+        schemas: {
+          columnString: {
+            description: 'String',
+            properties: { type: { type: 'string' } },
+          },
+          columnEmail: {
+            description: 'Email',
+            properties: { format: { type: 'string' } },
+          },
+          columnUrl: {
+            description: 'URL',
+            properties: { format: { type: 'string' } },
+          },
+        },
+      },
+    } as OpenApiSpec
+    expect(resolveResponseModels(union, spec)).toEqual([
+      { id: 'columnString', name: 'String' },
+      { id: 'columnEmail', name: 'Email' },
+      { id: 'columnUrl', name: 'URL' },
+    ])
+    const properties = parseModelPropertiesFromSchema(
+      {
+        properties: { columns: { type: 'array', items: union } },
+      },
+      spec,
+      { version: 'cloud' },
+    )
+    expect(properties[0]?.typeKind).toBe('array')
+    expect(properties[0]?.variantCount).toBe(3)
+    expect(properties[0]?.variants?.map((model) => model.id)).toEqual([
+      'columnString',
+      'columnEmail',
+      'columnUrl',
+    ])
+    const linked = parseModelPropertiesFromSchema(
+      {
+        properties: { column: { anyOf: [union.anyOf![1]!] } },
+      },
+      spec,
+      { version: 'cloud', linkRelatedModels: true },
+    )
+    expect(linked[0]?.relatedModels).toBe(
+      '[columnEmail](/docs/references/cloud/models/columnEmail)',
+    )
   })
 })
 

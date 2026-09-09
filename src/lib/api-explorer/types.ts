@@ -85,9 +85,9 @@ export type OpenApiParameter = {
 export type OpenApiDiscriminator = {
   propertyName?: string
   mapping?: Record<string, string>
-  /** Compound type+format mapping; property names are the condition keys. */
+  /** Legacy compound mapping; prefer required enum conditions on union branches. */
   'x-mapping'?: Record<string, Record<string, string>>
-  /** @deprecated Removed from specs; derive names from x-mapping keys. */
+  /** @deprecated Derive names from standard conditions or legacy x-mapping keys. */
   'x-propertyNames'?: string[]
 }
 
@@ -116,6 +116,10 @@ export type OpenApiSchema = {
   oneOf?: OpenApiSchema[]
   allOf?: OpenApiSchema[]
   anyOf?: OpenApiSchema[]
+  not?: OpenApiSchema
+  additionalProperties?: boolean | OpenApiSchema
+  minProperties?: number
+  maxProperties?: number
   discriminator?: OpenApiDiscriminator
 }
 
