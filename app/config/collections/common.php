@@ -2239,6 +2239,28 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('messageId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('messageInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             // The per-topic sequence, copied from the topic counter at insert time. qos and
             // expiry are topic settings now (see the topics collection), not per message.
             [
@@ -2260,6 +2282,13 @@ return [
                 'attributes' => ['topic', 'sequence'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_messageInternalId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['messageInternalId'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
             ],
         ],
     ],
