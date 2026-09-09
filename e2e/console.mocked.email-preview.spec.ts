@@ -1,5 +1,7 @@
 import type { Page, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
+import { ProjectServiceId } from '@appwrite.io/console'
+import { DEFAULT_ROLES, DEFAULT_SCOPES } from '../src/lib/console-roles'
 import { expect, test } from './fixtures'
 
 /**
@@ -56,11 +58,11 @@ const PROJECT = {
   teamId: ORGANIZATION.$id,
   region: 'default',
   status: 'active',
-  services: [
-    { $id: 'messaging', enabled: true },
-    { $id: 'storage', enabled: true },
-    { $id: 'users', enabled: true },
-  ] as Models.Project['services'],
+  // Every service on, so console navigation gates nothing the specs open.
+  services: Object.values(ProjectServiceId).map(($id) => ({
+    $id,
+    enabled: true,
+  })),
 } satisfies Partial<Models.Project>
 
 const TARGET = {
@@ -76,6 +78,14 @@ const TARGET = {
 } satisfies Models.Target
 
 const MESSAGE_ID = 'msg00000000000000000001'
+
+const TEMPLATE_HTML = `<!doctype html>
+<html>
+  <body style="font-family:Arial,sans-serif;">
+    <p>Hello {{user}},</p>
+    <p><a href="{{redirect}}">Verify email</a></p>
+  </body>
+</html>`
 
 const EMAIL_HTML = `<!doctype html>
 <html>
@@ -141,7 +151,11 @@ function corsHeaders(route: Route): Record<string, string> {
 }
 
 /** Every `/v1` call, on any region host, is answered here; the app itself is served live. */
-async function mockAppwriteApi(page: Page, message: Models.Message) {
+async function mockAppwriteApi(
+  page: Page,
+  message: Models.Message,
+  options: { smtpEnabled?: boolean } = {},
+) {
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
 
   await page.route('**/*', async (route) => {
@@ -181,7 +195,7 @@ async function mockAppwriteApi(page: Page, message: Models.Message) {
       apiPath === '/console/scopes/project' ||
       apiPath === `/organizations/${ORGANIZATION.$id}/roles`
     )
-      return json(200, { roles: ['owner'], scopes: ['messages.write'] })
+      return json(200, { roles: DEFAULT_ROLES, scopes: DEFAULT_SCOPES })
     if (apiPath === '/organizations' || apiPath === '/teams')
       return json(200, { total: 1, teams: [ORGANIZATION] })
     if (
@@ -198,7 +212,22 @@ async function mockAppwriteApi(page: Page, message: Models.Message) {
       apiPath === `/projects/${PROJECT.$id}` ||
       apiPath === `/projects/${PROJECT.$id}/console-access`
     )
-      return json(200, PROJECT)
+      return json(200, {
+        ...PROJECT,
+        smtpEnabled: options.smtpEnabled ?? false,
+      })
+    if (apiPath === '/locale/codes')
+      return json(200, { total: 0, localeCodes: [] })
+    if (apiPath.startsWith('/project/templates/email/'))
+      return json(200, {
+        type: apiPath.split('/').pop(),
+        locale: 'en',
+        message: TEMPLATE_HTML,
+        senderName: 'Acme Docs',
+        senderEmail: 'noreply@acme.example',
+        replyTo: '',
+        subject: 'Verify your email',
+      })
     if (apiPath === `/messaging/messages/${MESSAGE_ID}`)
       return json(200, message)
     if (apiPath === `/messaging/messages/${MESSAGE_ID}/targets`)
@@ -236,15 +265,19 @@ function viewOption(page: Page, name: 'Source' | 'Preview') {
   return page.getByRole('radio', { name })
 }
 
+async function openTemplates(page: Page) {
+  await page.goto(`/projects/${PROJECT.$id}/auth/templates`, {
+    waitUntil: 'domcontentloaded',
+  })
+  await expect(viewOption(page, 'Preview')).toBeVisible({ timeout: 30_000 })
+}
+
 test.describe('email body preview (mocked API)', () => {
   test('a sent HTML email opens on its rendered preview', async ({ page }) => {
     await mockAppwriteApi(page, emailMessage('sent'))
     await openMessage(page)
 
-    await expect(viewOption(page, 'Preview')).toHaveAttribute(
-      'data-state',
-      'on',
-    )
+    await expect(viewOption(page, 'Preview')).toBeChecked()
     await expect(
       previewFrame(page).getByRole('link', { name: 'Open my workspace' }),
     ).toBeVisible()
@@ -317,13 +350,33 @@ test.describe('email body preview (mocked API)', () => {
     await mockAppwriteApi(page, emailMessage('draft'))
     await openMessage(page)
 
-    await expect(viewOption(page, 'Source')).toHaveAttribute('data-state', 'on')
+    await expect(viewOption(page, 'Source')).toBeChecked()
 
     await page.locator('#email-content').fill('<h1>Hello from the draft</h1>')
     await viewOption(page, 'Preview').click()
 
     await expect(
       previewFrame(page).getByRole('heading', { name: 'Hello from the draft' }),
+    ).toBeVisible()
+  })
+})
+
+test.describe('email template preview (mocked API)', () => {
+  test('an editable template opens on the source', async ({ page }) => {
+    await mockAppwriteApi(page, emailMessage('sent'), { smtpEnabled: true })
+    await openTemplates(page)
+
+    await expect(viewOption(page, 'Source')).toBeChecked()
+    await expect(page.locator('#message')).toHaveValue(TEMPLATE_HTML)
+  })
+
+  test('a read-only template opens on the rendered mail', async ({ page }) => {
+    await mockAppwriteApi(page, emailMessage('sent'), { smtpEnabled: false })
+    await openTemplates(page)
+
+    await expect(viewOption(page, 'Preview')).toBeChecked()
+    await expect(
+      previewFrame(page).getByRole('link', { name: 'Verify email' }),
     ).toBeVisible()
   })
 })

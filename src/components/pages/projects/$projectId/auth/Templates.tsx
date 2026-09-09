@@ -685,10 +685,7 @@ function TemplateEditor({
                 "HTTP header. Templates are automatically selected based on the user's locale.",
               )}
             </p>
-            <DocsRouteLink
-              className="link-neutral inline-flex items-center gap-1 text-xs"
-              href="/docs/advanced/platform/message-templates"
-            >
+            <DocsRouteLink className="link-neutral inline-flex items-center gap-1 text-xs" href="/docs/advanced/platform/message-templates">
               {t('Learn more about message templates')}
               <ExternalLink className="h-3 w-3" />
             </DocsRouteLink>
@@ -983,10 +980,7 @@ function TemplateTypeSelector({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
-        align="start"
-      >
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
           <CommandInput placeholder={t('Search templates...')} />
           <CommandList>
