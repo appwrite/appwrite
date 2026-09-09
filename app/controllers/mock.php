@@ -2,7 +2,6 @@
 
 global $utopia, $request, $response;
 
-use Appwrite\Auth\OIDC\MockKeys;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -206,8 +205,35 @@ Http::get('/v1/mock/tests/general/oauth2/jwks')
     ->inject('response')
     ->inject('cache')
     ->action(function (Response $response, Cache $cache) {
+        // The signing key pair is generated on first use and shared between
+        // workers through the cache, so no private key lives in the repository.
+        $key = false;
+        $cached = $cache->load('oidc-mock-signing-key', 86400);
+        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
+            $key = \openssl_pkey_get_private($cached['pem']);
+        }
+        if ($key === false) {
+            $key = \openssl_pkey_new([
+                'private_key_bits' => 2048,
+                'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            ]);
+            \openssl_pkey_export($key, $pem);
+            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
+        }
+
+        $details = \openssl_pkey_get_details($key);
+
         $response->json([
-            'keys' => [MockKeys::jwk($cache)],
+            'keys' => [[
+                'kty' => 'RSA',
+                'use' => 'sig',
+                'alg' => 'RS256',
+                // Derived from the modulus, so a regenerated key gets a new kid and
+                // verifiers holding a stale JWKS refresh instead of failing
+                'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+                'n' => \rtrim(\strtr(\base64_encode($details['rsa']['n']), '+/', '-_'), '='),
+                'e' => \rtrim(\strtr(\base64_encode($details['rsa']['e']), '+/', '-_'), '='),
+            ]],
         ]);
     });
 
@@ -229,8 +255,35 @@ Http::get('/v1/mock/tests/general/oauth2/id-token')
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid claims or header');
         }
 
+        // Same cache-shared key pair the JWKS route publishes
+        $key = false;
+        $cached = $cache->load('oidc-mock-signing-key', 86400);
+        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
+            $key = \openssl_pkey_get_private($cached['pem']);
+        }
+        if ($key === false) {
+            $key = \openssl_pkey_new([
+                'private_key_bits' => 2048,
+                'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            ]);
+            \openssl_pkey_export($key, $pem);
+            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
+        }
+
+        // Header overrides let tests mint deliberately broken tokens (unknown kid, unsupported alg, ...)
+        $details = \openssl_pkey_get_details($key);
+        $header = \array_merge([
+            'alg' => 'RS256',
+            'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+            'typ' => 'JWT',
+        ], $header);
+
+        $headerEncoded = \rtrim(\strtr(\base64_encode(\json_encode($header)), '+/', '-_'), '=');
+        $payloadEncoded = \rtrim(\strtr(\base64_encode(\json_encode($claims)), '+/', '-_'), '=');
+        \openssl_sign($headerEncoded . '.' . $payloadEncoded, $signature, $key, OPENSSL_ALGO_SHA256);
+
         $response->json([
-            'token' => MockKeys::sign($cache, $claims, $header),
+            'token' => $headerEncoded . '.' . $payloadEncoded . '.' . \rtrim(\strtr(\base64_encode($signature), '+/', '-_'), '='),
         ]);
     });
 
