@@ -8,7 +8,6 @@ import {
 import { SendSMTPTestDialog } from './_components/SendSMTPTestDialog'
 import { SmtpQuickSetupCard } from './_components/SmtpQuickSetupCard'
 import { isCloudProfile } from '@/lib/console-profiles'
-import type { SmtpQuickSetupResult } from '@/lib/smtp/quick-setup'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -143,21 +142,6 @@ export function SMTP({ projectId }: SMTPProps) {
     }
   }
 
-  /**
-   * Quick setup fills the form and stops there: the user reviews the values,
-   * including the freshly created sending credential, and saves with Update.
-   */
-  const applyQuickSetup = (result: SmtpQuickSetupResult) => {
-    setEnabled(true)
-    setSenderName(result.senderName)
-    setSenderEmail(result.senderEmail)
-    setHost(result.host)
-    setPort(result.port)
-    setUsername(result.username)
-    setPassword(result.password)
-    setSecure(result.secure)
-  }
-
   const hasSavedSmtpPassword = Boolean(project?.smtpHost)
   const isFormReadyForTest =
     enabled &&
@@ -194,7 +178,6 @@ export function SMTP({ projectId }: SMTPProps) {
           projectId={projectId}
           project={project}
           supportsCustomSmtp={supportsCustomSmtp}
-          onApply={applyQuickSetup}
         />
       ) : null}
 

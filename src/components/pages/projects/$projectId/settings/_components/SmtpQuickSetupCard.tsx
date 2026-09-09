@@ -21,7 +21,6 @@ import {
   isProviderTokenExpired,
   parseQuickSetupReturn,
   stripQuickSetupReturn,
-  type SmtpQuickSetupResult,
 } from '@/lib/smtp/quick-setup'
 import {
   SMTP_QUICK_SETUP_PROVIDERS,
@@ -48,8 +47,6 @@ interface SmtpQuickSetupCardProps {
   project: Models.Project | undefined
   /** Custom SMTP is a paid feature; the tiles are disabled (with a tooltip) below that plan. */
   supportsCustomSmtp: boolean
-  /** Fills the SMTP form on this page. Quick setup never saves by itself. */
-  onApply: (result: SmtpQuickSetupResult) => void
 }
 
 /**
@@ -68,7 +65,6 @@ export function SmtpQuickSetupCard({
   projectId,
   project,
   supportsCustomSmtp,
-  onApply,
 }: SmtpQuickSetupCardProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -287,11 +283,11 @@ export function SmtpQuickSetupCard({
         <SmtpQuickSetupDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
+          projectId={projectId}
           project={project}
           provider={activeProvider}
           callProvider={callProvider}
           onReauthorize={() => authorize(activeProvider)}
-          onApply={onApply}
         />
       ) : null}
 

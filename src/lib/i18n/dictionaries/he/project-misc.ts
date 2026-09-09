@@ -2707,15 +2707,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Creating credential and saving SMTP settings…':
+    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
   'Connect with Resend': 'התחברות עם Resend',
   'Connect with Mailgun': 'התחברות עם Mailgun',
   'Connect with SendGrid': 'התחברות עם SendGrid',
-  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
-  'Your SMTP settings are filled in below. Review them and select Update to save.':
-    'הגדרות ה-SMTP שלכם מולאו למטה. בדקו אותן ובחרו עדכון כדי לשמור.',
-  'A new sending credential was created in your provider account. It starts working once you save.':
-    'פרטי גישה חדשים לשליחה נוצרו בחשבון הספק שלכם. הם יתחילו לפעול לאחר השמירה.',
-  'Review settings': 'בדיקת ההגדרות',
   'Disconnect provider': 'ניתוק הספק',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',

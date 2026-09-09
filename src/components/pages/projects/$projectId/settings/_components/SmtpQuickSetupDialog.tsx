@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { projectQueryOptions, useUpdateSMTP } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -29,9 +31,11 @@ import {
   pickDefaultQuickSetupDomain,
   sortQuickSetupDomains,
   type QuickSetupDomain,
-  type SmtpQuickSetupResult,
 } from '@/lib/smtp/quick-setup'
-import type { AvailableSmtpQuickSetupProvider } from '@/lib/smtp/providers'
+import type {
+  AvailableSmtpQuickSetupProvider,
+  SmtpQuickSetupCredential,
+} from '@/lib/smtp/providers'
 import { QuickSetupReauthorizeRequiredError } from '@/lib/smtp/quick-setup-oauth'
 
 /**
@@ -55,25 +59,26 @@ type DialogPhase =
 interface SmtpQuickSetupDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  projectId: string
   project: Models.Project | undefined
   provider: AvailableSmtpQuickSetupProvider
   callProvider: ProviderApiCall
   /** Start a fresh `createOAuth2Token` round trip (token refresh is no longer possible). */
   onReauthorize: () => void
-  /** Fills the SMTP form on the settings page. Nothing is saved here. */
-  onApply: (result: SmtpQuickSetupResult) => void
 }
 
 export function SmtpQuickSetupDialog({
   open,
   onOpenChange,
+  projectId,
   project,
   provider,
   callProvider,
   onReauthorize,
-  onApply,
 }: SmtpQuickSetupDialogProps) {
   const t = useT()
+  const queryClient = useQueryClient()
+  const updateSMTPMutation = useUpdateSMTP(projectId)
 
   const [phase, setPhase] = useState<DialogPhase>('loading')
   const [domains, setDomains] = useState<QuickSetupDomain[]>([])
@@ -166,8 +171,9 @@ export function SmtpQuickSetupDialog({
     setErrorMessage('')
     setPhase('submitting')
 
+    let created: SmtpQuickSetupCredential | null = null
     try {
-      const credential = await callProvider((accessToken) =>
+      created = await callProvider((accessToken) =>
         provider.api.createCredential(accessToken, {
           name: buildCredentialName(
             project?.name ?? '',
@@ -177,19 +183,33 @@ export function SmtpQuickSetupDialog({
         }),
       )
 
-      // Filled in, not saved: the user reviews the values (and the new
-      // credential) on the settings form before writing them to the project.
-      onApply({
+      await updateSMTPMutation.mutateAsync({
+        enabled: true,
         senderName: name,
         senderEmail: email,
+        replyTo: project?.smtpReplyToEmail || '',
         host: provider.smtp.host,
         port: provider.smtp.port,
         username: provider.smtp.username(selectedDomain.name),
-        password: credential.secret,
+        password: created.secret,
         secure: provider.smtp.secure,
+      })
+
+      // Make sure the SMTP form behind the dialog already shows the saved
+      // values before the user can trigger a test email from here.
+      await queryClient.refetchQueries({
+        queryKey: projectQueryOptions(projectId).queryKey,
       })
       setPhase('success')
     } catch (error) {
+      if (created) {
+        // The credential exists at the provider but the project never stored
+        // it; drop it so retries do not pile up unused credentials.
+        const orphanId = created.id
+        void callProvider((accessToken) =>
+          provider.api.deleteCredential(accessToken, orphanId),
+        ).catch(() => {})
+      }
       failWith(error, 'Failed to set up SMTP with the email provider')
     }
   }
@@ -378,7 +398,7 @@ export function SmtpQuickSetupDialog({
             <div className="flex flex-col items-center justify-center gap-3 py-4">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               <p className="text-[13px] text-muted-foreground text-center">
-                {t('Creating the sending credential…')}
+                {t('Creating credential and saving SMTP settings…')}
               </p>
             </div>
           ) : null}
@@ -388,16 +408,11 @@ export function SmtpQuickSetupDialog({
               <CheckCircle2 className="h-10 w-10 text-green-600" />
               <p className="text-[13px] text-foreground">
                 {t(
-                  'Your SMTP settings are filled in below. Review them and select Update to save.',
+                  'Custom SMTP is enabled and your project now sends emails through this provider.',
                 )}
               </p>
               <p className="text-[12px] text-muted-foreground truncate max-w-full">
                 {senderName.trim()} &lt;{senderEmail.trim()}&gt;
-              </p>
-              <p className="text-[12px] text-muted-foreground">
-                {t(
-                  'A new sending credential was created in your provider account. It starts working once you save.',
-                )}
               </p>
             </div>
           ) : null}
@@ -493,7 +508,7 @@ export function SmtpQuickSetupDialog({
                 className="h-9 text-[13px]"
                 onClick={() => handleOpenChange(false)}
               >
-                {t('Review settings')}
+                {t('Close')}
               </Button>
             ) : null}
 

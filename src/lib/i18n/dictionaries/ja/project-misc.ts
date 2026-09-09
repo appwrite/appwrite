@@ -2703,15 +2703,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Creating credential and saving SMTP settings…':
+    '認証情報を作成して SMTP 設定を保存中…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Connect with Resend': 'Resend に接続',
   'Connect with Mailgun': 'Mailgun に接続',
   'Connect with SendGrid': 'SendGrid に接続',
-  'Creating the sending credential…': '送信用の認証情報を作成中…',
-  'Your SMTP settings are filled in below. Review them and select Update to save.':
-    'SMTP 設定を以下に入力しました。内容を確認し、「更新」を選択して保存してください。',
-  'A new sending credential was created in your provider account. It starts working once you save.':
-    'プロバイダーアカウントに新しい送信用の認証情報を作成しました。保存すると有効になります。',
-  'Review settings': '設定を確認',
   'Disconnect provider': 'プロバイダーを切断',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
