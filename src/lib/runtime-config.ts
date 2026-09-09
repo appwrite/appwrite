@@ -41,6 +41,7 @@ const EMPTY_CONFIG: RuntimeConfig = {
   cookieBanner: '',
   browserAlerts: '',
   blogDrafts: '',
+  screenshotMode: '',
   databasePitrRestore: '',
   extraVcsOAuth: '',
   usageStats: '',
