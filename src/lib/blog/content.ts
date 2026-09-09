@@ -9,6 +9,7 @@ import {
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
 import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
+import { normalizeCategorySlug, resolveCategorySlug } from './category-slugs'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -72,7 +73,16 @@ function slugFromModulePath(modulePath: string, segment: string): string {
 }
 
 export function normalizeCategory(value: string): string {
-  return value.replace(/\s+/g, '-').toLowerCase()
+  return normalizeCategorySlug(value)
+}
+
+export { resolveCategorySlug } from './category-slugs'
+
+function getPostCategorySlugs(post: BlogPostMeta): string[] {
+  return post.category
+    .split(',')
+    .map((part) => resolveCategorySlug(part.trim()))
+    .filter(Boolean)
 }
 
 function parseBoolean(value: unknown): boolean | undefined {
@@ -153,7 +163,7 @@ function buildBlogCategory(modulePath: string, raw: string): BlogCategory {
     slug,
     name: getFrontmatterString(frontmatter, 'name') ?? slug,
     description: getFrontmatterString(frontmatter, 'description') ?? '',
-    href: `/blog/category/${slug}`,
+    href: `/blog/categories/${slug}`,
   }
 }
 
@@ -238,7 +248,8 @@ export function getBlogAuthor(slug: string): BlogAuthor | null {
 }
 
 export function getBlogCategory(slug: string): BlogCategory | null {
-  return allCategories.find((category) => category.slug === slug) ?? null
+  const resolvedSlug = resolveCategorySlug(slug)
+  return allCategories.find((category) => category.slug === resolvedSlug) ?? null
 }
 
 export function getAllBlogAuthors(): BlogAuthor[] {
@@ -277,12 +288,13 @@ export function toBlogPostMeta(post: BlogPost | BlogPostMeta): BlogPostMeta {
 }
 
 export function postMatchesCategory(post: BlogPostMeta, categorySlug: string): boolean {
-  return normalizeCategory(post.category).includes(categorySlug)
+  const resolvedSlug = resolveCategorySlug(categorySlug)
+  return getPostCategorySlugs(post).some((slug) => slug === resolvedSlug)
 }
 
 export function getPrimaryPostCategorySlug(post: BlogPostMeta): string {
   const firstCategory = post.category.split(',')[0]?.trim() ?? ''
-  return normalizeCategory(firstCategory)
+  return resolveCategorySlug(firstCategory)
 }
 
 export function getPostCategoryLabel(post: BlogPostMeta): string {

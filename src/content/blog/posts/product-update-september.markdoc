@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/product-update-september/cover.avif
 timeToRead: 5
 author: dennis-ivy
-category: product
+category: products
 faqs:
   - question: "What roles are available in the Appwrite Console?"
     answer: "In addition to the owner role, you can assign Developer, Editor, Analyst, and Billing roles to team members on the Pro and Enterprise plans. Each role limits what a member can see and change inside the Console, so you can grant access without handing over full control."

@@ -85,7 +85,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
             { name: 'Blog', path: '/blog' },
             {
               name: getPostCategoryLabel(loaderData.post),
-              path: `/blog/category/${getPrimaryPostCategorySlug(loaderData.post)}`,
+              path: `/blog/categories/${getPrimaryPostCategorySlug(loaderData.post)}`,
             },
             { name: loaderData.post.title, path: loaderData.post.href },
           ]),

@@ -6,7 +6,7 @@ date: 2025-10-01
 cover: /images/blog/claude-code-tips-tricks/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is Claude Code?"
     answer: "Claude Code is Anthropic's official CLI for using Claude as a coding assistant directly in your terminal. It can read and edit files, run commands, and orchestrate multi-step tasks across a codebase. It works with either the Anthropic API (priced per token) or a Claude Max plan (fixed monthly usage)."

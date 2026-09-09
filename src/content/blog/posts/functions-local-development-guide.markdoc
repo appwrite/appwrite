@@ -6,7 +6,7 @@ date: 2024-08-19
 cover: /images/blog/local-development-guide/localdev-cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 featured: false
 faqs:
   - question: "Can I develop Appwrite Functions locally without deploying first?"

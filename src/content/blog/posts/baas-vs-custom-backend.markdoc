@@ -6,7 +6,7 @@ cover: /images/blog/baas-vs-custom-backend/cover.avif
 timeToRead: 6
 date: 2024-06-20
 author: aditya-oberai
-category: product
+category: products
 faqs:
   - question: "What is a BaaS (Backend-as-a-Service)?"
     answer: "A BaaS is a third-party platform that handles common backend operations like authentication, databases, file storage, push notifications, and hosting. You skip building these from scratch and focus on the app-specific logic that actually differentiates your project."

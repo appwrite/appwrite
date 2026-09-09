@@ -79,7 +79,7 @@ function getBlogPostPathsFromSlugs(slugs: string[]): string[] {
 }
 
 function getBlogCategoryPathsFromSlugs(slugs: string[]): string[] {
-  return slugs.map((slug) => `/blog/category/${slug}`)
+  return slugs.map((slug) => `/blog/categories/${slug}`)
 }
 
 function getBlogAuthorPathsFromSlugs(slugs: string[]): string[] {
@@ -109,7 +109,7 @@ export function getBlogPrerenderPaths(options?: {
 /** Runtime paths from prerendered client HTML output. */
 export function getBlogPrerenderPathsFromClient(clientDirectory: string): string[] {
   const postSlugs = readBlogPathsFromClientDirectory(clientDirectory, 'post')
-  const categorySlugs = readBlogPathsFromClientDirectory(clientDirectory, 'category')
+  const categorySlugs = readBlogPathsFromClientDirectory(clientDirectory, 'categories')
   const authorSlugs = readBlogPathsFromClientDirectory(clientDirectory, 'author')
 
   const paginationPaths = fs.existsSync(path.join(clientDirectory, 'blog'))
@@ -134,7 +134,7 @@ export function isBlogPrerenderPath(pathname: string): boolean {
   if (normalized === '/blog') return true
   if (/^\/blog\/\d+$/.test(normalized)) return true
   if (normalized.startsWith('/blog/post/')) return true
-  if (normalized.startsWith('/blog/category/')) return true
+  if (normalized.startsWith('/blog/categories/')) return true
   if (normalized.startsWith('/blog/author/')) return true
   return false
 }

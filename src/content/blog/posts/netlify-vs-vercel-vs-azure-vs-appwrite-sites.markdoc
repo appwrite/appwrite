@@ -7,7 +7,7 @@ date: 2025-09-26
 timeToRead: 10
 author: veeresh-mulge
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What makes Appwrite Sites different from Netlify or Vercel?"
     answer: "Unlike Netlify or Vercel, which mainly focus on static hosting, Appwrite Sites is part of an all-in-one platform. It combines hosting with backend features like authentication, databases, storage, and serverless functions. This means you can deploy your frontend and backend in one place without relying on multiple services."

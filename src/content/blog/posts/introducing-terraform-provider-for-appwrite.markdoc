@@ -6,7 +6,7 @@ date: 2026-04-24
 cover: /images/blog/terraform-provider-appwrite/cover.avif
 timeToRead: 10
 author: levi-van-noort
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What is the Appwrite Terraform provider?"

@@ -6,7 +6,7 @@ date: 2024-04-04
 cover: /images/blog/function-chat-fictional-character/cover.avif
 timeToRead: 6
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is an Appwrite Function?"
     answer: "An Appwrite Function is a serverless function that runs on Appwrite's infrastructure, triggered by HTTP requests, events, schedules, or the SDKs. They are useful for backend logic you do not want in your client app, like calling external APIs with secrets. See [Appwrite Functions](/docs/products/functions) for details."

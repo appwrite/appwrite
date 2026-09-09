@@ -6,7 +6,7 @@ date: 2025-10-31
 cover: /images/blog/deploy-tanstack-start-app-to-appwrite-sites/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Does Appwrite Sites support TanStack Start with SSR?"

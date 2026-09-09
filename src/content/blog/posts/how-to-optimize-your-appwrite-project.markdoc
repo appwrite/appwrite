@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/how-to-optimize-your-appwrite-project/cover.avif
 timeToRead: 12
 author: ebenezer-don
-category: product
+category: products
 featured: false
 faqs:
   - question: "How can I reduce API request usage in Appwrite?"

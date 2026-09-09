@@ -6,7 +6,7 @@ date: 2025-10-30
 cover: /images/blog/everything-new-in-nextjs16/cover.avif
 timeToRead: 5
 author: matej-baco
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is new in Next.js 16?"
     answer: "Next.js 16 ships Cache Components for explicit caching, Turbopack as the default bundler, a renamed `proxy.ts` (previously `middleware.ts`), better build and dev logs, stable React Compiler support, smarter routing and prefetching, refined caching APIs, React 19.2, and the new Next.js DevTools MCP. The release focuses on fundamentals over big rewrites."
