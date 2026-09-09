@@ -125,13 +125,19 @@ A **connected component** is a group of neighboring high-saliency pixels. AutoGr
 
 The **weighted centroid** is the region's average position, with stronger saliency values contributing more than weaker ones. The resulting point stays near the most visually important part of the strongest subject instead of drifting between unrelated subjects. If the map contains no usable saliency, AutoGravity safely falls back to the image center.
 
-![A comparison showing how an all-saliency centroid falls between two subjects while the strongest connected region selects one subject](/images/blog/introducing-autogravity/strongest-connected-region.avif)
+| All-saliency centroid `(0.47, 0.48)` | Strongest connected region `(0.08, 0.48)` |
+| ------------------------------------- | ------------------------------------------ |
+| ![Two dogs on a mountain ridge with the focal point marked in the empty sky between them](/images/blog/introducing-autogravity/saliency-centroid.avif) | ![The same two dogs with the focal point marked on the golden retriever at the left edge](/images/blog/introducing-autogravity/strongest-region.avif) |
+
+Averaging every salient pixel places the focal point in the sky between the two dogs. Selecting the strongest connected region lands it on one subject.
 
 # Face detection for portrait crops
 
 Saliency works across many types of images, but the center of a person's full silhouette often falls around their torso. For a portrait crop, the face is usually a better focal point.
 
-![A portrait comparison showing the saliency focal point on the torso and the face-priority focal point centered on the face](/images/blog/introducing-autogravity/portrait-saliency-face.avif)
+| Saliency only `(0.48, 0.61)` | Face priority `(0.48, 0.27)` |
+| ----------------------------- | ----------------------------- |
+| ![A portrait with the saliency focal point marked on the torso](/images/blog/introducing-autogravity/portrait-saliency.avif) | ![The same portrait with a detected face bounding box and the focal point centered on the face](/images/blog/introducing-autogravity/portrait-face.avif) |
 
 AutoGravity uses [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), a lightweight face detector, as an additional signal. A face detector returns rectangular face locations, called **bounding boxes**, and a confidence score for each detection. It finds where a face is but does not identify the person.
 
