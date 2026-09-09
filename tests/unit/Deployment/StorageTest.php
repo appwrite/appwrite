@@ -30,10 +30,10 @@ final class StorageTest extends TestCase
         }
 
         try {
-            $this->assertSame($prefix . APP_STORAGE_BUILDS . '/app-project/deployment/code.tar.gz', Deployments::buildPath('project', 'deployment'));
-            $this->assertSame($prefix . APP_STORAGE_BUILDS . '/app-project/cache/cache-key.sqfs', Deployments::cachePath('project', 'cache-key'));
+            $this->assertSame($prefix . '/storage/builds/app-project/deployment/code.tar.gz', Deployments::buildPath('project', 'deployment'));
+            $this->assertSame($prefix . '/storage/builds/app-project/cache/cache-key.sqfs', Deployments::cachePath('project', 'cache-key'));
             if ($device === 's3') {
-                $this->assertSame('s3://compatibility' . APP_STORAGE_BUILDS . '/app-project/deployment/code.tar.gz', Storage::output('project', 'deployment'));
+                $this->assertSame('s3://compatibility/storage/builds/app-project/deployment/code.tar.gz', Storage::output('project', 'deployment'));
             }
         } finally {
             foreach ($previous as $name => $value) {
