@@ -59,6 +59,10 @@ final class Database extends UtopiaDatabase
                     array_map(fn (array $index) => new Document($index), $collections[$id]['indexes']),
                 );
             }
+            // The worker only reads a project to publish events. The canonical collection
+            // carries sub-query filters that would pull in five more collections, so a stub is enough.
+            $this->createCollection('projects');
+            $this->createAttribute('projects', 'region', self::VAR_STRING, 128, false);
         } catch (\Throwable $error) {
             $this->delete();
             throw $error;
