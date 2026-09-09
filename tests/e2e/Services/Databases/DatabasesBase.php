@@ -12663,6 +12663,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::equal('$id', $data['documentIds'])->toString(),
                 Query::min('releaseYear', 'earliest')->toString(),
                 Query::max('releaseYear', 'latest')->toString(),
             ],
