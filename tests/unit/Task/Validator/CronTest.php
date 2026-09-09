@@ -43,17 +43,15 @@ final class CronTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function invalidRanges(): array
+    public static function invalidRanges(): \Iterator
     {
-        return [
-            'minutes' => ['22-3,5 * * * *'],
-            'hours' => ['0 22-3,5 * * *'],
-            'days' => ['0 0 22-3,5 * *'],
-            'months' => ['0 0 1 12-3,5 *'],
-            'weekdays' => ['0 0 * * 5-3,1'],
-        ];
+        yield 'minutes' => ['22-3,5 * * * *'];
+        yield 'hours' => ['0 22-3,5 * * *'];
+        yield 'days' => ['0 0 22-3,5 * *'];
+        yield 'months' => ['0 0 1 12-3,5 *'];
+        yield 'weekdays' => ['0 0 * * 5-3,1'];
     }
 
     #[DataProvider('invalidRanges')]
