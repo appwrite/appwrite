@@ -113,7 +113,7 @@
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
-        "utopia-php/client": "^0.3.0",
+        "utopia-php/client": "^0.4",
         "open-runtimes/sdk-for-php": "0.13.*",
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.15.0",
