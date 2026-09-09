@@ -422,6 +422,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_REALTIME_SOCKET_BUFFER_SIZE',
+                'description' => 'Maximum bytes the Realtime server will hold per connection for a client that is not keeping up. A connection that exceeds it is disconnected and expected to reconnect. Swoole\'s own default is 8MB per connection, which a few thousand stalled connections can turn into more memory than the container has. Defaults to 512KB.',
+                'introduction' => '1.9.0',
+                'default' => 524288,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
