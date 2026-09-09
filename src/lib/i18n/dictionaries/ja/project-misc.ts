@@ -1942,7 +1942,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Draft updated': '下書きを更新しました',
   'EU region': 'EU リージョン',
   'Email content': 'メールコンテンツ',
-  'Email preview': 'メールのプレビュー',
+  'Email preview': 'メールプレビュー',
   'Email subject': 'メール件名',
   'Enable for development builds, disable for production.':
     '開発ビルドでは有効、本番では無効にしてください。',

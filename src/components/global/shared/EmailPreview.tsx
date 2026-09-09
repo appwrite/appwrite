@@ -1,12 +1,11 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { emailPreviewDocument } from '@/lib/messaging/email-preview'
+import { emailPreviewDocument } from '@/lib/email-preview'
 
 type EmailPreviewProps = {
   content: string
   html: boolean
-  title: string
   className?: string
 }
 
@@ -14,12 +13,7 @@ type EmailPreviewProps = {
  * Renders an email body the way a mail client would, inside a fully sandboxed
  * frame: no scripts, no same-origin access, no popups, no top navigation.
  */
-export function EmailPreview({
-  content,
-  html,
-  title,
-  className,
-}: EmailPreviewProps) {
+export function EmailPreview({ content, html, className }: EmailPreviewProps) {
   const t = useT()
   const srcDoc = useMemo(
     () => emailPreviewDocument(content, html),
@@ -41,7 +35,7 @@ export function EmailPreview({
 
   return (
     <iframe
-      title={title}
+      title={t('Email preview')}
       srcDoc={srcDoc}
       sandbox=""
       referrerPolicy="no-referrer"

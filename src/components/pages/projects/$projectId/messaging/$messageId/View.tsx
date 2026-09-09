@@ -50,7 +50,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -60,6 +60,7 @@ import { ID, MessagePriority } from '@appwrite.io/console'
 import { formatDateTime } from '@/lib/date-utils'
 import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { EmailPreview } from '@/components/global/shared/EmailPreview'
 import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
 
 type EmailBodyView = 'source' | 'preview'
@@ -111,7 +112,6 @@ import {
 import { MessagingTargetsModal } from '../_components/MessagingTargetsModal'
 import { MessagingRecipientUsersModal } from '../_components/MessagingRecipientUsersModal'
 import { EmailAttachmentRow } from '../_components/EmailAttachmentRow'
-import { EmailPreview } from '../_components/EmailPreview'
 import {
   Select,
   SelectContent,
@@ -1104,33 +1104,36 @@ export function View({
                         >
                           {t('Body')}
                         </Label>
-                        <Tabs
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          size="sm"
                           value={emailBodyView}
-                          onValueChange={(value) =>
-                            setEmailBodyViewChoice(value as EmailBodyView)
-                          }
+                          onValueChange={(value) => {
+                            if (value === 'source' || value === 'preview') {
+                              setEmailBodyViewChoice(value)
+                            }
+                          }}
+                          className="shrink-0"
                         >
-                          <TabsList className="h-8">
-                            <TabsTrigger
-                              value="source"
-                              className="px-2.5 text-[12px]"
-                            >
-                              {t('Source')}
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="preview"
-                              className="px-2.5 text-[12px]"
-                            >
-                              {t('Preview')}
-                            </TabsTrigger>
-                          </TabsList>
-                        </Tabs>
+                          <ToggleGroupItem
+                            value="source"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Source')}
+                          </ToggleGroupItem>
+                          <ToggleGroupItem
+                            value="preview"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Preview')}
+                          </ToggleGroupItem>
+                        </ToggleGroup>
                       </div>
                       {emailBodyView === 'preview' ? (
                         <EmailPreview
                           content={emailContent}
                           html={emailHtml}
-                          title={t('Email preview')}
                           className="mt-1.5 h-[28rem]"
                         />
                       ) : (
@@ -1140,7 +1143,7 @@ export function View({
                           onChange={(e) => setEmailContent(e.target.value)}
                           disabled={!isDraft}
                           placeholder={t('Email content')}
-                          className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          className="mt-1.5 h-[28rem] resize-none field-sizing-fixed border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         />
                       )}
                     </div>

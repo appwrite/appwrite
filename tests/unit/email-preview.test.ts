@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { emailPreviewDocument } from '@/lib/messaging/email-preview'
+import { emailPreviewDocument } from '@/lib/email-preview'
 
 describe('emailPreviewDocument', () => {
   test('renders an HTML body as sent', () => {

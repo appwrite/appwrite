@@ -1,13 +1,13 @@
 import type { Page, Route } from '@playwright/test'
+import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Email message body: rendered preview next to the source.
+ * Email body: rendered preview next to the source.
  *
- * Sent messages cannot be created on demand and the console API is the same
- * for every provider, so the Appwrite API is mocked at the network layer and
- * the real page is asserted: which view a message opens on, what the sandboxed
- * frame renders, and that draft edits reach the preview.
+ * Sent messages cannot be created on demand, so the Appwrite API is mocked at
+ * the network layer and the real page is asserted: which view a message opens
+ * on, what the sandboxed frame renders, and that draft edits reach the preview.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
@@ -29,49 +29,7 @@ const ACCOUNT = {
   prefs: {},
   targets: [],
   accessedAt: NOW,
-}
-
-const ORGANIZATION = {
-  $id: 'org00000000000000000001',
-  $createdAt: NOW,
-  $updatedAt: NOW,
-  name: 'Acme Docs',
-  total: 1,
-  prefs: {},
-  billingPlan: 'tier-0',
-  billingEmail: ACCOUNT.email,
-  billingBudget: 0,
-  budgetAlerts: [],
-  status: 'active',
-}
-
-const PROJECT = {
-  $id: 'proj0000000000000000001',
-  $createdAt: NOW,
-  $updatedAt: NOW,
-  name: 'Acme Docs',
-  description: '',
-  teamId: ORGANIZATION.$id,
-  logo: '',
-  url: '',
-  region: 'default',
-  devKeys: [],
-  oAuthProviders: [],
-  platforms: [],
-  webhooks: [],
-  keys: [],
-  smtpEnabled: false,
-  pingCount: 1,
-  pingedAt: NOW,
-  labels: [],
-  status: 'active',
-  onboarding: false,
-  authMethods: {},
-  services: { messaging: true, storage: true, users: true },
-  protocols: {},
-  blocks: [],
-  consoleAccessedAt: NOW,
-}
+} satisfies Partial<Models.User<Models.Preferences>>
 
 const RECIPIENT = {
   ...ACCOUNT,
@@ -79,6 +37,31 @@ const RECIPIENT = {
   name: 'Jordan Reader',
   email: 'jordan@example.com',
 }
+
+const ORGANIZATION = {
+  $id: 'org00000000000000000001',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  name: 'Acme Docs',
+  billingPlan: 'tier-0',
+  billingEmail: ACCOUNT.email,
+  status: 'active',
+} satisfies Partial<Models.Organization<Models.Preferences>>
+
+const PROJECT = {
+  $id: 'proj0000000000000000001',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  name: 'Acme Docs',
+  teamId: ORGANIZATION.$id,
+  region: 'default',
+  status: 'active',
+  services: [
+    { $id: 'messaging', enabled: true },
+    { $id: 'storage', enabled: true },
+    { $id: 'users', enabled: true },
+  ] as Models.Project['services'],
+} satisfies Partial<Models.Project>
 
 const TARGET = {
   $id: 'target00000000000000001',
@@ -90,7 +73,7 @@ const TARGET = {
   providerType: 'email',
   identifier: RECIPIENT.email,
   expired: false,
-}
+} satisfies Models.Target
 
 const MESSAGE_ID = 'msg00000000000000000001'
 
@@ -103,22 +86,7 @@ const EMAIL_HTML = `<!doctype html>
   </body>
 </html>`
 
-type EmailMessage = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  providerType: 'email'
-  topics: string[]
-  users: string[]
-  targets: string[]
-  deliveredAt?: string
-  deliveryErrors: string[]
-  deliveredTotal: number
-  data: { subject: string; content: string; html: boolean }
-  status: 'draft' | 'sent'
-}
-
-function emailMessage(status: EmailMessage['status']): EmailMessage {
+function emailMessage(status: 'draft' | 'sent'): Models.Message {
   return {
     $id: MESSAGE_ID,
     $createdAt: NOW,
@@ -136,7 +104,7 @@ function emailMessage(status: EmailMessage['status']): EmailMessage {
       html: true,
     },
     status,
-  }
+  } as Models.Message
 }
 
 function corsHeaders(route: Route): Record<string, string> {
@@ -154,7 +122,7 @@ function corsHeaders(route: Route): Record<string, string> {
 }
 
 /** Every `/v1` call, on any region host, is answered here; the app itself is served live. */
-async function mockAppwriteApi(page: Page, message: EmailMessage) {
+async function mockAppwriteApi(page: Page, message: Models.Message) {
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
 
   await page.route('**/*', async (route) => {
@@ -238,20 +206,25 @@ async function openMessage(page: Page) {
   })
   await expect(
     page.getByRole('heading', { name: 'Content', exact: true }),
-  ).toBeVisible({ timeout: 45_000 })
+  ).toBeVisible({ timeout: 30_000 })
 }
 
-const previewFrame = (page: Page) =>
-  page.frameLocator('iframe[title="Email preview"]')
+function previewFrame(page: Page) {
+  return page.frameLocator('iframe[title="Email preview"]')
+}
 
-test.describe('email message preview (mocked API)', () => {
+function viewOption(page: Page, name: 'Source' | 'Preview') {
+  return page.getByRole('radio', { name })
+}
+
+test.describe('email body preview (mocked API)', () => {
   test('a sent HTML email opens on its rendered preview', async ({ page }) => {
     await mockAppwriteApi(page, emailMessage('sent'))
     await openMessage(page)
 
-    await expect(page.getByRole('tab', { name: 'Preview' })).toHaveAttribute(
-      'aria-selected',
-      'true',
+    await expect(viewOption(page, 'Preview')).toHaveAttribute(
+      'data-state',
+      'on',
     )
     await expect(
       previewFrame(page).getByRole('link', { name: 'Open my workspace' }),
@@ -272,11 +245,30 @@ test.describe('email message preview (mocked API)', () => {
     await mockAppwriteApi(page, emailMessage('sent'))
     await openMessage(page)
 
-    await page.getByRole('tab', { name: 'Source' }).click()
+    await viewOption(page, 'Source').click()
 
     const source = page.locator('#email-content')
     await expect(source).toHaveValue(EMAIL_HTML)
     await expect(source).toBeDisabled()
+  })
+
+  test('switching views does not move the rest of the card', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, emailMessage('sent'))
+    await openMessage(page)
+
+    // Document-absolute so the click's scroll-into-view cannot be read as a shift.
+    const offsetFromTop = () =>
+      page
+        .locator('#email-html')
+        .evaluate((el) => el.getBoundingClientRect().top + window.scrollY)
+
+    const before = await offsetFromTop()
+    await viewOption(page, 'Source').click()
+    await expect(page.locator('#email-content')).toBeVisible()
+
+    expect(await offsetFromTop()).toBe(before)
   })
 
   test('a draft opens on the source and previews unsaved edits', async ({
@@ -285,13 +277,10 @@ test.describe('email message preview (mocked API)', () => {
     await mockAppwriteApi(page, emailMessage('draft'))
     await openMessage(page)
 
-    await expect(page.getByRole('tab', { name: 'Source' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
+    await expect(viewOption(page, 'Source')).toHaveAttribute('data-state', 'on')
 
     await page.locator('#email-content').fill('<h1>Hello from the draft</h1>')
-    await page.getByRole('tab', { name: 'Preview' }).click()
+    await viewOption(page, 'Preview').click()
 
     await expect(
       previewFrame(page).getByRole('heading', { name: 'Hello from the draft' }),
