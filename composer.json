@@ -133,11 +133,12 @@
         "open-runtimes/sdk-for-php": "0.13.*",
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.15.0",
-        "utopia-php/query": "0.6.*"
+        "utopia-php/query": "0.6.*",
+        "utopia-php/openapi": "^0.2.4"
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "^4.0",
+        "appwrite/sdk-generator": "^5.0",
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",

@@ -1584,7 +1584,7 @@ services:
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.7
+    image: ghcr.io/appwrite/autogravity:0.0.8
     restart: unless-stopped
     networks:
       - appwrite
