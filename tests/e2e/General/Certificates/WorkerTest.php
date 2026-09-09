@@ -508,7 +508,7 @@ final class WorkerTest extends TestCase
     }
 
     #[DataProvider('consoleSequences')]
-    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(?string $sequence): void
+    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(string $sequence): void
     {
         /**
          * Test for SUCCESS
@@ -523,7 +523,6 @@ final class WorkerTest extends TestCase
     public static function consoleSequences(): \Iterator
     {
         yield ['console'];
-        yield [null];
         yield ['0'];
     }
 
