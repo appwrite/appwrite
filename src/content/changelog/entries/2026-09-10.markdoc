@@ -16,6 +16,8 @@ Automatic gravity is powered by [AutoGravity](https://github.com/appwrite/autogr
 
 Existing gravity values are unchanged. Automatic cropping only runs when a request sets `gravity` to `auto`, and transformed previews are cached as before.
 
+Automatic gravity is available today on Appwrite Cloud and self-hosted support will arrive in the near future.
+
 {% arrow_link href="/blog/post/introducing-autogravity" %}
 Read the announcement
 {% /arrow_link %}

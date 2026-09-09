@@ -165,7 +165,7 @@ The public interface remains one query parameter, `gravity=auto`. The saliency m
 
 Add `gravity=auto` to any file preview request and the crop follows the subject instead of the frame. Fixed gravity values keep working exactly as before, so nothing changes until you opt in.
 
-Automatic gravity reaches Appwrite through the [automatic gravity integration](https://github.com/appwrite/appwrite/pull/13501). Once your [Appwrite Cloud](https://cloud.appwrite.io) project or self-hosted release includes it, the option is available on every existing bucket with no configuration. The service itself is open source, so you can read how every focal point is chosen or run it on your own infrastructure.
+Automatic gravity is available today on [Appwrite Cloud](https://cloud.appwrite.io) for every existing bucket with no configuration, with self-hosted support arriving in an upcoming release. The service itself is open source, so you can read how every focal point is chosen or run it on your own infrastructure.
 
 - [Image preview options](/docs/products/storage/images)
 - [Appwrite Storage](/docs/products/storage)
