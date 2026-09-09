@@ -4,6 +4,7 @@ import {
   useRef,
   useCallback,
   useEffect,
+  useState,
   forwardRef,
   useImperativeHandle,
 } from 'react'
@@ -21,6 +22,7 @@ import {
   monacoAppThemeId,
 } from '@/lib/monaco-app-theme'
 import { getMonacoOverflowWidgetsRoot } from '@/lib/monaco-overflow-widgets'
+import { configureBundledMonaco } from '@/lib/monaco-bundle'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 
 export type CodeEditorLanguage =
@@ -59,6 +61,8 @@ export interface CodeEditorProps {
   className?: string
   readOnly?: boolean
   minimap?: boolean
+  /** Accessible name for the editing surface, in place of a label's htmlFor. */
+  ariaLabel?: string
   lineNumbers?: 'on' | 'off'
   /** Entrypoint filename for deployment (e.g. "index.js"). Used when building the gzip package. */
   entrypoint?: string
@@ -83,6 +87,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       height = 400,
       className,
       readOnly = false,
+      ariaLabel,
       minimap = false,
       lineNumbers = 'on',
       onEditorMount,
@@ -110,6 +115,19 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
     useEffect(() => {
       valueRef.current = value
     }, [value])
+
+    // Monaco has to come from the bundle before the editor mounts, or
+    // @monaco-editor/react starts fetching it from a CDN instead.
+    const [monacoConfigured, setMonacoConfigured] = useState(false)
+    useEffect(() => {
+      let active = true
+      configureBundledMonaco().then(() => {
+        if (active) setMonacoConfigured(true)
+      })
+      return () => {
+        active = false
+      }
+    }, [])
 
     const handleBeforeMount = useCallback(
       (monaco: typeof import('monaco-editor')) => {
@@ -171,38 +189,41 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
           className,
         )}
       >
-        <Editor
-          key={`monaco-${monacoMountKey}`}
-          height={typeof height === 'number' ? `${height}px` : height}
-          defaultLanguage={language}
-          language={language}
-          path={modelPath}
-          value={value}
-          keepCurrentModel={Boolean(modelPath)}
-          onChange={handleChange}
-          beforeMount={handleBeforeMount}
-          onMount={handleEditorMount}
-          theme={monacoAppThemeId(resolvedTheme, isDarkChrome)}
-          loading={null}
-          options={{
-            readOnly,
-            minimap: { enabled: minimap },
-            lineNumbers,
-            renderLineHighlight: 'none',
-            scrollBeyondLastLine: false,
-            fontSize: 13,
-            fontFamily:
-              "source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace",
-            padding: { top: 12, bottom: 12 },
-            tabSize: 2,
-            wordWrap: 'on',
-            automaticLayout: true,
-            fixedOverflowWidgets: true,
-            overflowWidgetsDomNode: overflowWidgetsDomNodeRef.current,
-            suggestFontSize: 13,
-            suggestLineHeight: 28,
-          }}
-        />
+        {monacoConfigured && (
+          <Editor
+            key={`monaco-${monacoMountKey}`}
+            height={typeof height === 'number' ? `${height}px` : height}
+            defaultLanguage={language}
+            language={language}
+            path={modelPath}
+            value={value}
+            keepCurrentModel={Boolean(modelPath)}
+            onChange={handleChange}
+            beforeMount={handleBeforeMount}
+            onMount={handleEditorMount}
+            theme={monacoAppThemeId(resolvedTheme, isDarkChrome)}
+            loading={null}
+            options={{
+              readOnly,
+              ariaLabel,
+              minimap: { enabled: minimap },
+              lineNumbers,
+              renderLineHighlight: 'none',
+              scrollBeyondLastLine: false,
+              fontSize: 13,
+              fontFamily:
+                "source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace",
+              padding: { top: 12, bottom: 12 },
+              tabSize: 2,
+              wordWrap: 'on',
+              automaticLayout: true,
+              fixedOverflowWidgets: true,
+              overflowWidgetsDomNode: overflowWidgetsDomNodeRef.current,
+              suggestFontSize: 13,
+              suggestLineHeight: 28,
+            }}
+          />
+        )}
       </div>
     )
   },
