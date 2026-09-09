@@ -1,3 +1,4 @@
+import { installBrowserApi } from '@/lib/browser-api'
 import interRegularUrl from '../assets/fonts/inter/inter-v8-latin-regular.woff2?url'
 import interSemiboldUrl from '../assets/fonts/inter/inter-v8-latin-600.woff2?url'
 import aeonikRegularUrl from '../assets/fonts/aeonik-pro/AeonikPro-Regular.woff2?url'
@@ -428,6 +429,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setClientMounted(true)
+    return installBrowserApi()
   }, [])
 
   useEffect(() => {
