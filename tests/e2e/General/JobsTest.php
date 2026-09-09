@@ -36,16 +36,16 @@ use Utopia\Storage\Device\Local;
 final class JobsTest extends TestCase
 {
     #[DataProvider('callbacks')]
-    public function testUpdateDuringDeletion(string $event, bool $extension, bool $delete): void
+    public function testUpdate(string $event, bool $extension, bool $delete, string $log = 'build output', string $expectedLogs = "build output\n"): void
     {
         if (! \extension_loaded('swoole')) {
             $this->markTestSkipped('Swoole extension required');
         }
 
         $error = null;
-        \Swoole\Coroutine\run(function () use ($event, $extension, $delete, &$error): void {
+        \Swoole\Coroutine\run(function () use ($event, $extension, $delete, $log, $expectedLogs, &$error): void {
             try {
-                $this->update($event, $extension, $delete);
+                $this->update($event, $extension, $delete, $log, $expectedLogs);
             } catch (\Throwable $e) {
                 $error = $e;
             }
@@ -56,7 +56,7 @@ final class JobsTest extends TestCase
         }
     }
 
-    private function update(string $event, bool $extension, bool $delete): void
+    private function update(string $event, bool $extension, bool $delete, string $log, string $expectedLogs): void
     {
         global $register;
 
@@ -78,7 +78,7 @@ final class JobsTest extends TestCase
                 $attributes[] = new Document([
                     '$id' => $name,
                     'type' => Database::VAR_STRING,
-                    'size' => 512,
+                    'size' => $name === 'buildLogs' ? APP_LOG_LENGTH_LIMIT : 512,
                     'required' => false,
                     'array' => false,
                 ]);
@@ -126,7 +126,7 @@ final class JobsTest extends TestCase
                     project: $project,
                     id: ID::unique(),
                     event: $event,
-                    data: ['meta' => ['deploymentId' => $deploymentId], 'lines' => ['build output'], 'exitCode' => 1],
+                    data: ['meta' => ['deploymentId' => $deploymentId], 'lines' => [$log], 'exitCode' => 1],
                 ))->toArray()),
                 project: $project,
                 dbForProject: $db,
@@ -155,10 +155,13 @@ final class JobsTest extends TestCase
                 // Test for SUCCESS: a surviving deployment still streams logs.
                 $deployment = $db->getDocument('deployments', $deploymentId);
                 $this->assertSame('building', $deployment->getAttribute('status'));
-                $this->assertSame("build output\n", $deployment->getAttribute('buildLogs'));
+                $this->assertSame(\strlen($expectedLogs), \strlen($deployment->getAttribute('buildLogs')));
+                $this->assertSame($expectedLogs, $deployment->getAttribute('buildLogs'));
+                $this->assertTrue(\mb_check_encoding($deployment->getAttribute('buildLogs'), 'UTF-8'));
+                $this->assertLessThanOrEqual(APP_LOG_LENGTH_LIMIT, \strlen($deployment->getAttribute('buildLogs')));
                 $this->assertCount(1, $pubsub->messages);
                 $this->assertSame($deploymentId, $pubsub->messages[0]['data']['payload']['$id']);
-                $this->assertSame("build output\n", $pubsub->messages[0]['data']['payload']['buildLogs']);
+                $this->assertSame($expectedLogs, $pubsub->messages[0]['data']['payload']['buildLogs']);
             }
 
             $this->assertSame(0, $publisher->getQueueSize($queue));
@@ -176,6 +179,23 @@ final class JobsTest extends TestCase
         yield 'deleted while finalizing' => ['orchestrator.job.exit', false, true];
         yield 'deleted by a downstream finalizer' => ['orchestrator.job.exit', true, true];
         yield 'surviving deployment' => ['orchestrator.job.log', false, false];
+        yield 'short Unicode logs' => ['orchestrator.job.log', false, false, 'Build complete ✅ café', "Build complete ✅ café\n"];
+
+        $tail = 'é' . \str_repeat('x', APP_LOG_LENGTH_LIMIT - \strlen("é\n"));
+        yield 'truncation at Unicode character boundary' => ['orchestrator.job.log', false, false, 'discarded ' . $tail, $tail . "\n"];
+
+        $prefix = 'retained ';
+        $suffix = ' completed';
+        foreach (['é', '€', '🚀'] as $character) {
+            for ($bytes = 1; $bytes < \strlen($character); $bytes++) {
+                $tail = $prefix . \str_repeat('x', APP_LOG_LENGTH_LIMIT - $bytes - \strlen($prefix . $suffix . "\n")) . $suffix;
+                yield "truncation within {$character} retaining {$bytes} bytes" => [
+                    'orchestrator.job.log', false, false,
+                    'discarded ' . $character . $tail,
+                    $tail . "\n",
+                ];
+            }
+        }
     }
 }
 

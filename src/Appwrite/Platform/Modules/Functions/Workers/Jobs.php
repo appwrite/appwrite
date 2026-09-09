@@ -800,6 +800,7 @@ class Jobs extends Action
             return $logs;
         }
 
-        return \substr($logs, -$limit);
+        // Drop UTF-8 continuation bytes orphaned at the start of the retained tail.
+        return \ltrim(\substr($logs, -$limit), "\x80..\xBF");
     }
 }
