@@ -3,6 +3,7 @@ import { WafRuleAction, type Models } from '@appwrite.io/console'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NumberInput } from '@/components/ui/number-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -216,12 +217,11 @@ export function UpdateRule({
           <Label htmlFor="update-firewall-limit" className="text-[12px]">
             {t('Request limit')}
           </Label>
-          <Input
+          <NumberInput
             id="update-firewall-limit"
-            type="number"
             min={1}
             value={limit}
-            onChange={(e) => setLimit(Number(e.target.value) || 1)}
+            onValueChange={setLimit}
             disabled={updateMutation.isPending}
           />
         </div>
@@ -229,12 +229,11 @@ export function UpdateRule({
           <Label htmlFor="update-firewall-interval" className="text-[12px]">
             {t('Interval (seconds)')}
           </Label>
-          <Input
+          <NumberInput
             id="update-firewall-interval"
-            type="number"
             min={1}
             value={interval}
-            onChange={(e) => setInterval(Number(e.target.value) || 1)}
+            onValueChange={setInterval}
             disabled={updateMutation.isPending}
           />
         </div>
@@ -246,15 +245,12 @@ export function UpdateRule({
             >
               {t('Max bucket size')}
             </Label>
-            <Input
+            <NumberInput
               id="update-firewall-max-bucket-size"
-              type="number"
               min={MAX_BUCKET_SIZE_MIN}
               max={MAX_BUCKET_SIZE_MAX}
               value={maxBucketSize}
-              onChange={(e) =>
-                setMaxBucketSize(Number(e.target.value) || MAX_BUCKET_SIZE_MIN)
-              }
+              onValueChange={setMaxBucketSize}
               disabled={updateMutation.isPending}
             />
             <p className="text-[12px] text-muted-foreground">
@@ -271,15 +267,12 @@ export function UpdateRule({
           <Label htmlFor="update-firewall-difficulty" className="text-[12px]">
             {t('Difficulty')}
           </Label>
-          <Input
+          <NumberInput
             id="update-firewall-difficulty"
-            type="number"
             min={CHALLENGE_DIFFICULTY_MIN}
             max={CHALLENGE_DIFFICULTY_MAX}
             value={difficulty}
-            onChange={(e) =>
-              setDifficulty(Number(e.target.value) || CHALLENGE_DIFFICULTY_MIN)
-            }
+            onValueChange={setDifficulty}
             disabled={updateMutation.isPending}
           />
           <p className="text-[12px] text-muted-foreground">
@@ -290,15 +283,12 @@ export function UpdateRule({
           <Label htmlFor="update-firewall-ttl" className="text-[12px]">
             {t('TTL (seconds)')}
           </Label>
-          <Input
+          <NumberInput
             id="update-firewall-ttl"
-            type="number"
             min={CHALLENGE_TTL_MIN}
             max={CHALLENGE_TTL_MAX}
             value={ttl}
-            onChange={(e) =>
-              setTtl(Number(e.target.value) || CHALLENGE_TTL_MIN)
-            }
+            onValueChange={setTtl}
             disabled={updateMutation.isPending}
           />
           <p className="text-[12px] text-muted-foreground">
@@ -323,13 +313,12 @@ export function UpdateRule({
           <Label htmlFor="update-firewall-status-code" className="text-[12px]">
             {t('Status code')}
           </Label>
-          <Input
+          <NumberInput
             id="update-firewall-status-code"
-            type="number"
             min={300}
             max={399}
             value={statusCode}
-            onChange={(e) => setStatusCode(Number(e.target.value) || 302)}
+            onValueChange={setStatusCode}
             disabled={updateMutation.isPending}
           />
         </div>
@@ -446,12 +435,11 @@ export function UpdateRule({
                   {t('Priority')}
                   <PriorityHint />
                 </Label>
-                <Input
+                <NumberInput
                   id="update-firewall-priority"
-                  type="number"
                   min={0}
                   value={priority}
-                  onChange={(e) => setPriority(Number(e.target.value) || 0)}
+                  onValueChange={setPriority}
                   disabled={updateMutation.isPending}
                 />
               </div>
