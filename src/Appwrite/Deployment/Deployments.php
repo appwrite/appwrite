@@ -294,21 +294,10 @@ readonly class Deployments
     }
 
     /**
-     * Canonicalize a root directory into the subdirectory path an artifact can
-     * match against a tree: no leading `./`, no surrounding slashes, `''` for
-     * the repository root.
-     *
-     * The console's directory picker and every shipped site template write the
-     * path with a `./` prefix (`./astro/starter`), while a hand-typed one is
-     * usually bare (`docs`) and sometimes trailing-slashed (`docs/`). All three
-     * name the same directory, so all three must produce the same subdir.
-     *
-     * Dropping whole `.` segments rather than trimming the character keeps a
-     * hidden directory intact — `ltrim('.github', '.')` would deploy `github`.
-     *
-     * `..` is left alone. Dropping it would silently build `docs/x` for a
-     * `docs/../x` that names `x`, and resolving it here would duplicate what
-     * the extractor already does with the path it is handed.
+     * Resolve the path forms a caller may store - '', '.', './docs', 'docs/' -
+     * to the plain subdirectory an artifact matches against a tree. Whole '.'
+     * segments go, not the character: ltrim('.github', '.') would deploy
+     * 'github'. '..' is left for the extractor to resolve.
      */
     public static function rootDirectory(string $rootDirectory): string
     {

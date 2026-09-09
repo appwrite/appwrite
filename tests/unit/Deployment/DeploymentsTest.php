@@ -51,7 +51,6 @@ final class DeploymentsTest extends TestCase
         yield 'shipped site template' => ['./astro/starter', 'astro/starter'];
         yield 'hidden directory' => ['.github', '.github'];
         yield 'dot-prefixed name' => ['..foo', '..foo'];
-        // Left for the extractor to resolve; dropping it would build 'docs/x'.
         yield 'parent' => ['docs/../x', 'docs/../x'];
         yield 'parent with prefix' => ['./docs/../x', 'docs/../x'];
         yield 'nested hidden directory' => ['./.github/actions', '.github/actions'];

@@ -134,8 +134,6 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git add docs && git commit -m "Add nested function"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
-        // The console's directory picker writes the path in this form; it names
-        // the same directory as 'docs/nested'.
         $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -175,10 +173,8 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
 
-        // A duplicate reads the root directory back off the deployment it
-        // copies, so this only builds if the push-created deployment persisted
-        // one. Building from the repository root instead fails outright: the
-        // root holds only the auto-init README, no entrypoint.
+        // A duplicate reads the root directory off the deployment it copies, so
+        // this only builds if the push persisted one.
         $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
