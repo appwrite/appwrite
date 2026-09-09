@@ -5,17 +5,8 @@ import type { ChangelogEntry, ChangelogEntryMeta, ChangelogTag } from './types'
 
 const PER_PAGE = 5
 
-const importedLoaders = import.meta.glob(
+const entryLoaders = import.meta.glob(
   '/src/content/changelog/entries/*.markdoc',
-  {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  },
-) as Record<string, string>
-
-const localLoaders = import.meta.glob(
-  '/src/content/changelog-local/entries/*.markdoc',
   {
     query: '?raw',
     import: 'default',
@@ -25,7 +16,7 @@ const localLoaders = import.meta.glob(
 
 function slugFromModulePath(modulePath: string): string {
   const match = modulePath.match(
-    /\/src\/content\/changelog(?:-local)?\/entries\/(.+)\.markdoc$/,
+    /\/src\/content\/changelog\/entries\/(.+)\.markdoc$/,
   )
   return match?.[1] ?? ''
 }
@@ -56,21 +47,9 @@ function buildChangelogEntry(modulePath: string, raw: string): ChangelogEntry {
 }
 
 function collectChangelogEntries(): ChangelogEntry[] {
-  const entriesBySlug = new Map<string, ChangelogEntry>()
-
-  for (const [modulePath, raw] of Object.entries(importedLoaders)) {
-    const entry = buildChangelogEntry(modulePath, raw)
-    entriesBySlug.set(entry.slug, entry)
-  }
-
-  for (const [modulePath, raw] of Object.entries(localLoaders)) {
-    const entry = buildChangelogEntry(modulePath, raw)
-    entriesBySlug.set(entry.slug, entry)
-  }
-
-  return [...entriesBySlug.values()].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  )
+  return Object.entries(entryLoaders)
+    .map(([modulePath, raw]) => buildChangelogEntry(modulePath, raw))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
 const allChangelogEntries = collectChangelogEntries()
@@ -86,17 +65,10 @@ export function getChangelogEntry(slug: string): ChangelogEntry | null {
 }
 
 function getRawForSlug(slug: string): string | null {
-  const localPath = Object.keys(localLoaders).find(
+  const modulePath = Object.keys(entryLoaders).find(
     (path) => slugFromModulePath(path) === slug,
   )
-  if (localPath) return localLoaders[localPath] ?? null
-
-  const importedPath = Object.keys(importedLoaders).find(
-    (path) => slugFromModulePath(path) === slug,
-  )
-  if (importedPath) return importedLoaders[importedPath] ?? null
-
-  return null
+  return modulePath ? (entryLoaders[modulePath] ?? null) : null
 }
 
 /** Plain-markdown source (including frontmatter) for the .md export endpoint. */
