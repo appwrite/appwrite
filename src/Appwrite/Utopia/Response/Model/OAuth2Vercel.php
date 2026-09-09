@@ -30,6 +30,18 @@ class OAuth2Vercel extends OAuth2Base
         return 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     }
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->addRule('slug', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Vercel integration slug. The URL slug of your integration from the Vercel Integration Console.',
+            'default' => '',
+            'example' => 'my-vercel-integration',
+        ]);
+    }
+
     public function getName(): string
     {
         return 'OAuth2Vercel';
