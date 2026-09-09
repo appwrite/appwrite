@@ -41,6 +41,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\GitHub\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Gitlab\Update as UpdateOAuth2Gitlab;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Google\Update as UpdateOAuth2Google;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as UpdateOAuth2HuggingFace;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as UpdateOAuth2Kakao;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
@@ -56,6 +57,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as U
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
@@ -234,6 +236,8 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
         $this->addAction(UpdateOAuth2HuggingFace::getName(), new UpdateOAuth2HuggingFace());
         $this->addAction(UpdateOAuth2Resend::getName(), new UpdateOAuth2Resend());
+        $this->addAction(UpdateOAuth2TikTok::getName(), new UpdateOAuth2TikTok());
+        $this->addAction(UpdateOAuth2Kakao::getName(), new UpdateOAuth2Kakao());
         $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
     }
 }

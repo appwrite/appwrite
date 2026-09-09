@@ -137,6 +137,7 @@ class Get extends Action
         $operations = 1;
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
 

@@ -1807,6 +1807,57 @@ trait TransactionsBase
         $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
+    public function testCommitEventPayloadCarriesSurfaceIds(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $recordId = ID::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['name' => 'Event payload'],
+            'transactionId' => $transaction['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transaction['body']['$id']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $committed['headers']['status-code']);
+
+        // The commit handler builds this payload by hand rather than going through
+        // processDocument(), so it has to add the same keys: the synthetic $databaseId,
+        // and only the container id belonging to the surface that was called.
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            probe: function (array $request) use ($recordId) {
+                $this->assertStringContainsString($recordId, $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+            }
+        );
+
+        $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
+        $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
+        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+    }
+
     /**
      * Test updateDocument with transactionId via normal route
      */

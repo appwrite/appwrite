@@ -76,6 +76,7 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
+      - appwrite-autogravity
     environment:
       - _APP_ENV
       - _APP_USAGE_STATS
@@ -163,6 +164,7 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
+      - _APP_AUTOGRAVITY_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -1580,6 +1582,13 @@ services:
     networks:
       - appwrite
 
+  appwrite-autogravity:
+    container_name: appwrite-autogravity
+    image: ghcr.io/appwrite/autogravity:0.0.7
+    restart: unless-stopped
+    networks:
+      - appwrite
+
   clickhouse:
     image: clickhouse/clickhouse-server:26.4.3-alpine
     restart: unless-stopped
@@ -1680,7 +1689,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.1.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.1.1
     restart: unless-stopped
     user: root
     networks:

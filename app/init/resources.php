@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Autogravity\Client as AutogravityClient;
+use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
@@ -101,6 +103,17 @@ $container->set('screenshots', function () {
 
     return new ScreenshotsClient($client);
 }, []);
+
+$container->set('autogravity', function (Cache $cache) {
+    $host = System::getEnv('_APP_AUTOGRAVITY_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
+}, ['cache']);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 

@@ -421,6 +421,7 @@ class Create extends Action
         $operations = \count($isBulk ? $created : $documents);
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
 

@@ -1505,8 +1505,12 @@ trait Base
                             status
                             email
                             emailVerification
+                            targets {
+                                providerType
+                                identifier
+                            }
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){

@@ -2155,6 +2155,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
         $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
+
+        $row = $row['body']['data']['tablesDBGetRow'];
+        $this->assertSame($data['row']['_permissions'], $row['_permissions']);
+        $this->assertArrayNotHasKey('$permissions', json_decode($row['data'], true));
     }
 
     //    /**

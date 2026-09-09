@@ -153,6 +153,18 @@ class X extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['data']['profile_image_url'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -170,7 +182,7 @@ class X extends OAuth2
         if (empty($this->user)) {
             $this->user = $this->decodeJsonObject($this->request(
                 'GET',
-                'https://api.x.com/2/users/me?user.fields=confirmed_email',
+                'https://api.x.com/2/users/me?user.fields=confirmed_email,profile_image_url',
                 ['Authorization: Bearer ' . $accessToken]
             ));
         }

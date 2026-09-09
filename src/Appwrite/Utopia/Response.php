@@ -334,6 +334,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
+    public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
+    public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
