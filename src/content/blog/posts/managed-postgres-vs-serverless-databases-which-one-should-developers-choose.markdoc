@@ -5,7 +5,7 @@ description: Compare dedicated Postgres and serverless databases across scaling,
 date: 2026-07-20
 cover: /images/blog/managed-postgres-vs-serverless-databases-which-one-should-developers-choose/cover.avif
 timeToRead: 5
-author: aishwari
+author: atharva
 category: comparisons
 featured: false
 unlisted: true
