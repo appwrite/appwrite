@@ -2212,6 +2212,76 @@ return [
         ],
     ],
 
+    'messages_appwrite' => [
+        '$collection' => ID::custom(DATABASE::METADATA),
+        '$id' => ID::custom('messages_appwrite'),
+        'name' => 'MQTT Messages',
+        'attributes' => [
+            [
+                '$id' => ID::custom('topic'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('data'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            // default null means client choose their qos level and no restriction
+            [
+                '$id' => ID::custom('qos'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            // expiry for offline persistence
+            [
+                '$id' => ID::custom('expireAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_key_topic'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['topic'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_expireAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expireAt'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+        ],
+    ],
+
     'topics' => [
         '$collection' => ID::custom(DATABASE::METADATA),
         '$id' => ID::custom('topics'),
