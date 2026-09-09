@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\FunctionsSchedule;
 
 use Appwrite\ID;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -17,6 +18,71 @@ final class FunctionsScheduleTest extends Scope
     use FunctionsBase;
     use ProjectCustom;
     use SideServer;
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function invalidSchedules(): \Iterator
+    {
+        yield 'plain descending range' => ['0 22-3 * * *'];
+        yield 'descending range in a list' => ['0 22-3,5 * * *'];
+    }
+
+    #[DataProvider('invalidSchedules')]
+    public function testCreateScheduleValidation(string $schedule): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Invalid schedule',
+            'runtime' => 'node-22',
+            'schedule' => $schedule,
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+    }
+
+    #[DataProvider('invalidSchedules')]
+    public function testUpdateScheduleValidation(string $invalidSchedule): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $schedule = '0 22-23,0-3 * * *';
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Overnight schedule',
+            'runtime' => 'node-22',
+            'schedule' => $schedule,
+        ]);
+
+        try {
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+
+            /**
+             * Test for FAILURE
+             */
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Invalid schedule',
+                'runtime' => 'node-22',
+                'schedule' => $invalidSchedule,
+            ]);
+
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
 
     public function testCreateScheduledExecution()
     {

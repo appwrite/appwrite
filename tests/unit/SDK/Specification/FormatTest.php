@@ -5,6 +5,7 @@ namespace Tests\Unit\SDK\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Format;
@@ -1401,16 +1402,63 @@ final class FormatTest extends TestCase
             'server' => ['Project' => [], 'Session' => []],
             'console' => ['Project' => []],
         ], $operation['x-appwrite']['auth']);
-        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $operation['security'][0]);
+        $this->assertSame([['Project' => [], 'Session' => [], 'Key' => []]], $operation['security']);
 
         $this->assertSame(['Project' => [], 'Session' => []], $server['paths']['/account']['get']['x-appwrite']['auth']);
-        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $server['paths']['/account']['get']['security'][0]);
+        $this->assertSame([['Project' => [], 'Session' => [], 'Key' => []]], $server['paths']['/account']['get']['security']);
 
         $this->assertSame(['Project', 'Session', 'Key'], \array_keys($canonical['components']['securitySchemes']));
         $this->assertSame(['client', 'server', 'console'], $canonical['components']['securitySchemes']['Project']['x-appwrite']['platforms']);
         $this->assertSame(['server'], $canonical['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
         $this->assertSame(['Project', 'Key', 'Session'], \array_keys($server['components']['securitySchemes']));
         $this->assertSame(['server'], $server['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
+    }
+
+    public function testLocationAuthUsesSecurityAlternatives(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/avatars/browser'))
+            ->desc('Get browser')
+            ->label('scope', 'public')
+            ->label('sdk', new Method(
+                namespace: 'avatars',
+                group: null,
+                name: 'getBrowser',
+                description: 'Get browser.',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::ADMIN],
+                responses: [],
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
+            ));
+
+        $keys = $this->platformKeys();
+        foreach ($keys as &$schemes) {
+            $schemes['ImpersonateUserId'] = [
+                'type' => 'apiKey',
+                'name' => 'X-Appwrite-Impersonate-User-Id',
+                'in' => 'header',
+            ];
+        }
+        unset($schemes);
+        $authCounts = ['client' => 1, 'server' => 2, 'console' => 1];
+
+        foreach ([null, 'client', 'server', 'console'] as $platform) {
+            $spec = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, $platform))->parse();
+            $operation = $spec['paths']['/avatars/browser']['get'];
+            $required = ['Project' => []];
+            if ($platform !== 'console') {
+                $required['Session'] = [];
+            }
+            if ($platform === null || $platform === 'server') {
+                $required['Key'] = [];
+            }
+            $this->assertSame([$required, [...$required, 'ImpersonateUserId' => []]], $operation['security']);
+            $auth = $platform === null ? $operation['x-appwrite']['auth']['server'] : $operation['x-appwrite']['auth'];
+            $this->assertArrayHasKey('ImpersonateUserId', $auth);
+            $this->assertArrayNotHasKey('optional', $spec['components']['securitySchemes']['ImpersonateUserId']['x-appwrite']);
+        }
     }
 
     public function testCanonicalDocumentListsEveryAliasVariant(): void
