@@ -4,25 +4,14 @@ import { View } from '@/components/pages/projects/$projectId/settings/View'
 import { pageTitle } from '@/lib/utils/page-title'
 
 /**
- * Search values are JSON-parsed by the router, so an all-digit user id would
- * arrive as a number; accept both and normalize to a string.
- */
-const looseString = z
-  .union([z.string(), z.number()])
-  .transform((value) => String(value))
-  .optional()
-  .catch(undefined)
-
-/**
- * Params appended by the SMTP quick setup OAuth2 round trip
- * (see `src/lib/smtp/quick-setup.ts`).
+ * Outcome of the SMTP quick setup OAuth2 round trip, set by
+ * `/auth/smtp/callback` (see `src/lib/smtp/quick-setup.ts`). The one-time
+ * token never reaches this route; the callback consumes it.
  */
 const smtpSearchSchema = z.object({
   smtpSetup: z.enum(['connected', 'failed']).optional().catch(undefined),
-  smtpProvider: looseString,
-  userId: looseString,
-  secret: looseString,
-  error: looseString,
+  smtpProvider: z.string().optional().catch(undefined),
+  error: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute(

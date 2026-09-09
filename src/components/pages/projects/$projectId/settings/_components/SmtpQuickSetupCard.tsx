@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -28,13 +29,10 @@ import {
   type SmtpQuickSetupProvider,
 } from '@/lib/smtp/providers'
 import {
-  QuickSetupAccountMismatchError,
   QuickSetupReauthorizeRequiredError,
-  claimProviderIdentity,
   refreshProviderAccessToken,
   resolveProviderAccessToken,
   startProviderAuthorization,
-  tokenFromSession,
   type ProviderAccessToken,
 } from '@/lib/smtp/quick-setup-oauth'
 import {
@@ -54,11 +52,13 @@ interface SmtpQuickSetupCardProps {
 /**
  * One-click SMTP setup for any provider in `lib/smtp/providers.ts`.
  *
- * Owns the whole round trip: starts `createOAuth2Token`, claims the identity
- * with `createSession` when the tab is reopened with `userId` + `secret`,
- * keeps provider access tokens in memory (never persisted), refreshes them
- * through `updateSession`, and falls back to a fresh authorization when the
- * refresh is impossible.
+ * Authorization leaves for the provider and comes back through
+ * `/auth/smtp/callback`, which restores the console session (Appwrite drops it
+ * when the OAuth2 flow starts) and returns here with `smtpSetup=connected`.
+ * From there this card resolves the provider access token from the current
+ * session, refreshing it through `updateSession` while the dialog is open and
+ * asking for a new authorization when the refresh is no longer possible.
+ * Tokens are kept in memory only.
  */
 export function SmtpQuickSetupCard({
   projectId,
@@ -73,6 +73,15 @@ export function SmtpQuickSetupCard({
   const { account } = useAuth()
   const accountId =
     (account as Models.User<Models.Preferences> | null | undefined)?.$id ?? null
+
+  // Identities already linked to this console account, so a provider that was
+  // connected earlier reads as connected here too (matches account settings).
+  const { data: identitiesData } = useQuery(accountIdentitiesQueryOptions())
+  const connectedProviderIds = useMemo(
+    () =>
+      new Set((identitiesData?.identities ?? []).map((item) => item.provider)),
+    [identitiesData],
+  )
 
   /** Access token per provider id; in memory only, dropped on reload. */
   const tokensRef = useRef(new Map<string, ProviderAccessToken>())
@@ -93,9 +102,10 @@ export function SmtpQuickSetupCard({
 
   const authorize = useCallback(
     (provider: AvailableSmtpQuickSetupProvider) => {
+      if (!accountId) return
       setIsConnecting(true)
       try {
-        startProviderAuthorization(provider, projectId)
+        startProviderAuthorization(provider, projectId, accountId)
       } catch (error) {
         setIsConnecting(false)
         toast.error(
@@ -103,7 +113,7 @@ export function SmtpQuickSetupCard({
         )
       }
     },
-    [projectId, t],
+    [accountId, projectId, t],
   )
 
   /**
@@ -133,18 +143,26 @@ export function SmtpQuickSetupCard({
     [activeProvider],
   )
 
-  // Finish the OAuth2 round trip when Appwrite sends the user back here.
+  const openDialogFor = useCallback(
+    async (provider: AvailableSmtpQuickSetupProvider) => {
+      const token = await resolveProviderAccessToken(provider.id)
+      if (!token) return false
+      tokensRef.current.set(provider.id, token)
+      setActiveProvider(provider)
+      setDialogOpen(true)
+      return true
+    },
+    [],
+  )
+
+  // Pick the flow back up after `/auth/smtp/callback` restored the session.
   useEffect(() => {
     if (!returnState) {
       handledReturnRef.current = false
       return
     }
     if (handledReturnRef.current) return
-    // Wait for the signed-in account so the claim can be checked against it.
-    if (returnState.status === 'connected' && !accountId) return
     handledReturnRef.current = true
-
-    // The secret is single-use; drop it from the address bar right away.
     stripReturnParams()
 
     const provider = getAvailableSmtpQuickSetupProvider(returnState.providerId)
@@ -155,65 +173,40 @@ export function SmtpQuickSetupCard({
       return
     }
 
-    const { userId, secret } = returnState
+    // The identity is new; account settings and the tile badge should show it.
+    void queryClient.invalidateQueries({ queryKey: ['identities', 'account'] })
+    void queryClient.invalidateQueries({ queryKey: ['sessions', 'account'] })
+
     setIsConnecting(true)
     void (async () => {
       try {
-        const session = await claimProviderIdentity({
-          userId,
-          secret,
-          expectedUserId: accountId,
-        })
-        void queryClient.invalidateQueries({
-          queryKey: ['sessions', 'account'],
-        })
-        void queryClient.invalidateQueries({
-          queryKey: ['identities', 'account'],
-        })
-
-        const token =
-          tokenFromSession(session, provider.id) ??
-          (await resolveProviderAccessToken(provider.id))
-        if (!token) throw new QuickSetupReauthorizeRequiredError()
-        tokensRef.current.set(provider.id, token)
-        setActiveProvider(provider)
-        setDialogOpen(true)
-      } catch (error) {
-        if (error instanceof QuickSetupAccountMismatchError) {
-          toast.error(
-            t(
-              'The provider was authorized for a different Appwrite account. Try again while signed in to this account.',
-            ),
-          )
-        } else if (error instanceof QuickSetupReauthorizeRequiredError) {
+        if (!(await openDialogFor(provider))) {
           toast.error(t('Authorization failed'))
-        } else {
-          toast.error(
-            getErrorMessage(error, t('Failed to connect the email provider')),
-          )
         }
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, t('Failed to connect the email provider')),
+        )
       } finally {
         setIsConnecting(false)
       }
     })()
-  }, [returnState, accountId, queryClient, stripReturnParams, t])
+  }, [returnState, queryClient, stripReturnParams, openDialogFor, t])
 
   const handleSetup = async (provider: SmtpQuickSetupProvider) => {
-    if (!isProviderAvailable(provider)) return
+    if (!isProviderAvailable(provider) || !accountId) return
 
     setIsConnecting(true)
     try {
-      const token = await resolveProviderAccessToken(provider.id)
-      if (token) {
-        tokensRef.current.set(provider.id, token)
-        setActiveProvider(provider)
-        setDialogOpen(true)
+      // A live token means the provider is still connected from this session;
+      // skip the round trip. Otherwise re-authorize, which Appwrite only lets
+      // us do by replacing the current session.
+      if (await openDialogFor(provider)) {
         setIsConnecting(false)
         return
       }
-      // No usable token: leave for the provider. The page unloads, so the
-      // tile intentionally stays disabled until then.
-      startProviderAuthorization(provider, projectId)
+      // The page unloads on redirect, so the tile stays disabled until then.
+      startProviderAuthorization(provider, projectId, accountId)
     } catch (error) {
       setIsConnecting(false)
       toast.error(
@@ -247,9 +240,11 @@ export function SmtpQuickSetupCard({
               <ProviderTile
                 key={provider.id}
                 provider={provider}
+                connected={connectedProviderIds.has(provider.id)}
                 disabled={
                   !supportsCustomSmtp ||
                   !isProviderAvailable(provider) ||
+                  !accountId ||
                   isConnecting
                 }
                 planTooltip={planTooltip}
@@ -278,14 +273,17 @@ export function SmtpQuickSetupCard({
 
 interface ProviderTileProps {
   provider: SmtpQuickSetupProvider
+  /** This console account already has an identity for the provider. */
+  connected: boolean
   disabled: boolean
-  /** Shown only for the plan gate; "Coming soon" is already visible as a badge. */
+  /** Shown only for the plan gate; the badges already explain the other states. */
   planTooltip?: string
   onSelect: () => void
 }
 
 function ProviderTile({
   provider,
+  connected,
   disabled,
   planTooltip,
   onSelect,
@@ -322,10 +320,16 @@ function ProviderTile({
           <Badge variant="info" className="text-[10px] shrink-0">
             {t('Coming soon')}
           </Badge>
+        ) : connected ? (
+          <Badge variant="success" className="text-[10px] shrink-0">
+            {t('Connected')}
+          </Badge>
         ) : null}
       </div>
       <span className="text-[12px] text-muted-foreground">
-        {t(provider.tagline)}
+        {connected && !comingSoon
+          ? t('Reconnect to create a new sending credential.')
+          : t(provider.tagline)}
       </span>
     </button>
   )

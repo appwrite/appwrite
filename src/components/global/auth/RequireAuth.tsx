@@ -21,6 +21,7 @@ import {
   applyScreenshotModeAccount,
   subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
+import { QUICK_SETUP_CALLBACK_PATH } from '@/lib/smtp/quick-setup'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -32,7 +33,10 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/join' ||
     pathname === '/mfa' ||
     pathname === '/verify-email' ||
-    pathname === '/auth/magic-url'
+    pathname === '/auth/magic-url' ||
+    // Restores the console session Appwrite drops when an SMTP quick setup
+    // OAuth2 flow starts; bouncing it to /sign-in would strand the token.
+    pathname === QUICK_SETUP_CALLBACK_PATH
   )
 }
 

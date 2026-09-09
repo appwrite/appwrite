@@ -17,7 +17,11 @@
 
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { isProviderTokenExpired, buildQuickSetupOAuthUrls } from './quick-setup'
+import {
+  buildQuickSetupOAuthUrls,
+  isProviderTokenExpired,
+  rememberQuickSetupPending,
+} from './quick-setup'
 import type { AvailableSmtpQuickSetupProvider } from './providers'
 
 export type ProviderCredentialSource = 'session' | 'identity'
@@ -37,14 +41,6 @@ export class QuickSetupReauthorizeRequiredError extends Error {
   ) {
     super(message, options)
     this.name = 'QuickSetupReauthorizeRequiredError'
-  }
-}
-
-/** The OAuth2 callback returned a token for a different console account. */
-export class QuickSetupAccountMismatchError extends Error {
-  constructor() {
-    super('The provider account was linked to a different Appwrite account')
-    this.name = 'QuickSetupAccountMismatchError'
   }
 }
 
@@ -171,16 +167,27 @@ export async function resolveProviderAccessToken(
 }
 
 /**
- * Leave for the provider's consent screen. Appwrite redirects back to the SMTP
- * tab with `userId` + `secret` (success) or `error` (failure) query params.
+ * Leave for the provider's consent screen.
+ *
+ * Appwrite deletes the current session the moment this flow starts, so the
+ * redirect targets `/auth/smtp/callback`, which restores the session from the
+ * returned `userId` + `secret` before sending the user back to the SMTP tab.
+ * The pending record lets that route verify the callback belongs to this
+ * browser and this account.
  */
 export function startProviderAuthorization(
   provider: AvailableSmtpQuickSetupProvider,
   projectId: string,
+  accountId: string,
 ): void {
   if (typeof window === 'undefined') {
     throw new Error('Provider authorization requires a browser')
   }
+  rememberQuickSetupPending({
+    providerId: provider.id,
+    projectId,
+    accountId,
+  })
   const { success, failure } = buildQuickSetupOAuthUrls(
     window.location.origin,
     projectId,
@@ -199,18 +206,14 @@ export function startProviderAuthorization(
 }
 
 /**
- * Finish the identity claim. Refuses to create the session when the token
- * belongs to another account (the callback ran without the console session),
- * because that would silently switch the signed-in user.
+ * Exchange the one-time OAuth2 token for a session, restoring the console
+ * login that Appwrite dropped when the flow started. Callers must first check
+ * the claim against the pending record (`isExpectedQuickSetupClaim`).
  */
 export async function claimProviderIdentity(params: {
   userId: string
   secret: string
-  expectedUserId?: string | null
 }): Promise<Models.Session> {
-  if (params.expectedUserId && params.userId !== params.expectedUserId) {
-    throw new QuickSetupAccountMismatchError()
-  }
   return await sdk.forConsole.account.createSession({
     userId: params.userId,
     secret: params.secret,

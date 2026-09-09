@@ -3,10 +3,13 @@ import { OAuthProvider } from '@appwrite.io/console'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import {
+  QUICK_SETUP_CALLBACK_PATH,
   buildCredentialName,
   buildQuickSetupOAuthUrls,
+  buildQuickSetupReturnPath,
   defaultSenderEmail,
   emailBelongsToDomain,
+  isExpectedQuickSetupClaim,
   isProviderTokenExpired,
   parseOAuthErrorMessage,
   parseQuickSetupReturn,
@@ -48,46 +51,59 @@ describe('isProviderTokenExpired', () => {
   })
 })
 
-describe('OAuth2 round trip search params', () => {
-  test('parses a successful return with the one-time credentials', () => {
+describe('OAuth2 round trip', () => {
+  test('sends the provider to the callback route, not the settings tab', () => {
+    const urls = buildQuickSetupOAuthUrls(
+      'https://cloud.appwrite.io',
+      'my project',
+      'resend',
+    )
+    // Appwrite deletes the current session when the flow starts, so the
+    // landing route must tolerate guests and restore it.
+    expect(urls.success).toBe(
+      `https://cloud.appwrite.io${QUICK_SETUP_CALLBACK_PATH}?smtpSetup=connected&smtpProvider=resend&projectId=my%20project`,
+    )
+    expect(urls.failure).toBe(
+      `https://cloud.appwrite.io${QUICK_SETUP_CALLBACK_PATH}?smtpSetup=failed&smtpProvider=resend&projectId=my%20project`,
+    )
+    expect(urls.success).not.toContain('/settings/smtp')
+  })
+
+  test('returns the user to the SMTP tab with the outcome', () => {
     expect(
-      parseQuickSetupReturn({
-        smtpSetup: 'connected',
-        smtpProvider: 'resend',
-        userId: 'user_1',
-        secret: 'jwt.secret.value',
+      buildQuickSetupReturnPath({
+        projectId: 'my project',
+        providerId: 'resend',
+        status: 'connected',
       }),
-    ).toEqual({
-      status: 'connected',
+    ).toBe(
+      '/projects/my%20project/settings/smtp?smtpSetup=connected&smtpProvider=resend',
+    )
+
+    const failed = buildQuickSetupReturnPath({
+      projectId: 'proj',
       providerId: 'resend',
-      userId: 'user_1',
-      secret: 'jwt.secret.value',
+      status: 'failed',
+      error: JSON.stringify({ message: 'Scope not allowed' }),
+    })
+    expect(
+      parseQuickSetupReturn(
+        Object.fromEntries(
+          new URL(`https://console.test${failed}`).searchParams,
+        ),
+      ),
+    ).toEqual({
+      status: 'failed',
+      providerId: 'resend',
+      message: 'Scope not allowed',
     })
   })
 
-  test('accepts numeric ids the router JSON-parsed', () => {
-    expect(
-      parseQuickSetupReturn({
-        smtpSetup: 'connected',
-        smtpProvider: 'resend',
-        userId: 123456,
-        secret: 'abc',
-      }),
-    ).toEqual({
-      status: 'connected',
-      providerId: 'resend',
-      userId: '123456',
-      secret: 'abc',
-    })
-  })
-
-  test('downgrades a connected return without credentials to a failure', () => {
+  test('parses the outcome on the settings tab', () => {
     expect(
       parseQuickSetupReturn({ smtpSetup: 'connected', smtpProvider: 'resend' }),
-    ).toEqual({ status: 'failed', providerId: 'resend' })
-  })
+    ).toEqual({ status: 'connected', providerId: 'resend' })
 
-  test('reads the Appwrite error JSON on failure', () => {
     const error = JSON.stringify({
       message: 'Provider disabled',
       type: 'project_provider_disabled',
@@ -119,8 +135,6 @@ describe('OAuth2 round trip search params', () => {
       stripQuickSetupReturn({
         smtpSetup: 'connected',
         smtpProvider: 'resend',
-        userId: 'u',
-        secret: 's',
         error: 'e',
         alert: 'keep-me',
       }),
@@ -128,36 +142,29 @@ describe('OAuth2 round trip search params', () => {
     expect(stripQuickSetupReturn(null)).toEqual({})
   })
 
-  test('builds success and failure URLs carrying the provider id', () => {
-    expect(
-      buildQuickSetupOAuthUrls(
-        'https://cloud.appwrite.io',
-        'my project',
-        'resend',
-      ),
-    ).toEqual({
-      success:
-        'https://cloud.appwrite.io/projects/my%20project/settings/smtp?smtpSetup=connected&smtpProvider=resend',
-      failure:
-        'https://cloud.appwrite.io/projects/my%20project/settings/smtp?smtpSetup=failed&smtpProvider=resend',
-    })
-  })
-
-  test('round trips through the parser', () => {
-    const { success } = buildQuickSetupOAuthUrls(
-      'https://cloud.appwrite.io',
-      'proj',
-      'resend',
-    )
-    const params = Object.fromEntries(new URL(success).searchParams)
-    expect(
-      parseQuickSetupReturn({ ...params, userId: 'u', secret: 's' }),
-    ).toEqual({
-      status: 'connected',
+  test('claims only callbacks this browser started for this account', () => {
+    const pending = {
       providerId: 'resend',
-      userId: 'u',
-      secret: 's',
-    })
+      projectId: 'proj',
+      accountId: 'user_1',
+    }
+    const claim = {
+      providerId: 'resend',
+      projectId: 'proj',
+      userId: 'user_1',
+    }
+    expect(isExpectedQuickSetupClaim(pending, claim)).toBe(true)
+    // No pending record: a crafted callback URL must not create a session.
+    expect(isExpectedQuickSetupClaim(null, claim)).toBe(false)
+    expect(
+      isExpectedQuickSetupClaim(pending, { ...claim, userId: 'attacker' }),
+    ).toBe(false)
+    expect(
+      isExpectedQuickSetupClaim(pending, { ...claim, projectId: 'other' }),
+    ).toBe(false)
+    expect(
+      isExpectedQuickSetupClaim(pending, { ...claim, providerId: 'mailgun' }),
+    ).toBe(false)
   })
 })
 

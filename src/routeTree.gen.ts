@@ -131,6 +131,7 @@ import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.m
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
+import { Route as AuthAuthSmtpCallbackRouteImport } from './routes/_auth/auth.smtp.callback'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
 import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_marketing/blog.category.$category'
 import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
@@ -1051,6 +1052,11 @@ const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
 const AuthAuthOauth2SuccessRoute = AuthAuthOauth2SuccessRouteImport.update({
   id: '/auth/oauth2/success',
   path: '/auth/oauth2/success',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAuthSmtpCallbackRoute = AuthAuthSmtpCallbackRouteImport.update({
+  id: '/auth/smtp/callback',
+  path: '/auth/smtp/callback',
   getParentRoute: () => AuthRoute,
 } as any)
 const MarketingBlogAuthorAuthorRoute =
@@ -3170,6 +3176,7 @@ export interface FileRoutesByFullPath {
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
+  '/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -3577,6 +3584,7 @@ export interface FileRoutesByTo {
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
+  '/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -3955,6 +3963,7 @@ export interface FileRoutesById {
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
+  '/_auth/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/_marketing/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -4372,6 +4381,7 @@ export interface FileRouteTypes {
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
+    | '/auth/smtp/callback'
     | '/blog/author/$author'
     | '/blog/category/$category'
     | '/blog/post/$slug'
@@ -4779,6 +4789,7 @@ export interface FileRouteTypes {
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
+    | '/auth/smtp/callback'
     | '/blog/author/$author'
     | '/blog/category/$category'
     | '/blog/post/$slug'
@@ -5156,6 +5167,7 @@ export interface FileRouteTypes {
     | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
+    | '/_auth/auth/smtp/callback'
     | '/_marketing/blog/author/$author'
     | '/_marketing/blog/category/$category'
     | '/_marketing/blog/post/$slug'
@@ -6347,6 +6359,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/oauth2/success'
       fullPath: '/auth/oauth2/success'
       preLoaderRoute: typeof AuthAuthOauth2SuccessRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/smtp/callback': {
+      id: '/_auth/auth/smtp/callback'
+      path: '/auth/smtp/callback'
+      fullPath: '/auth/smtp/callback'
+      preLoaderRoute: typeof AuthAuthSmtpCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_marketing/blog/author/$author': {
@@ -8432,6 +8451,7 @@ interface AuthRouteChildren {
   AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
   AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
+  AuthAuthSmtpCallbackRoute: typeof AuthAuthSmtpCallbackRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -8449,6 +8469,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
   AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
+  AuthAuthSmtpCallbackRoute: AuthAuthSmtpCallbackRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

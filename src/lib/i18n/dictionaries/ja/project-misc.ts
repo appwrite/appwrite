@@ -2707,6 +2707,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Reconnect to create a new sending credential.':
+    '再接続すると、新しい送信用の認証情報を作成します。',
+  'Unable to finish setup': 'セットアップを完了できません',
+  'Finishing setup': 'セットアップを完了しています',
+  'Restoring your session and returning to SMTP settings.':
+    'セッションを復元して SMTP 設定に戻ります。',
+  'This link is missing required parameters.':
+    'このリンクには必要なパラメーターがありません。',
+  'This authorization does not match the account that started it.':
+    'この認可は、開始したアカウントと一致しません。',
+  'We could not finish connecting your email provider. Sign in and try again.':
+    'メールプロバイダーの接続を完了できませんでした。サインインしてもう一度お試しください。',
   // Usage log retention
   'Usage history limit reached': '利用履歴の上限に達しました',
   'Your plan includes': 'ご利用中のプランには',

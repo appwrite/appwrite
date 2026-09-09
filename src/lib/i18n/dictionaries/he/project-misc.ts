@@ -2711,6 +2711,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Reconnect to create a new sending credential.':
+    'התחברו מחדש כדי ליצור פרטי גישה חדשים לשליחה.',
+  'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
+  'Finishing setup': 'משלים את ההגדרה',
+  'Restoring your session and returning to SMTP settings.':
+    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרות ה-SMTP.',
+  'This link is missing required parameters.':
+    'בקישור הזה חסרים פרמטרים נדרשים.',
+  'This authorization does not match the account that started it.':
+    'ההרשאה הזו אינה תואמת לחשבון שהתחיל אותה.',
+  'We could not finish connecting your email provider. Sign in and try again.':
+    'לא הצלחנו להשלים את החיבור לספק האימייל שלכם. התחברו ונסו שוב.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',
