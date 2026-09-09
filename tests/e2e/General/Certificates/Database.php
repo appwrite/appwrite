@@ -15,9 +15,6 @@ use Utopia\Database\Validator\Authorization;
 
 final class Database extends UtopiaDatabase
 {
-    /** @var array<array{string, string, array<string, mixed>}> */
-    public array $writes = [];
-
     public function __construct()
     {
         if (getenv('_APP_DB_ADAPTER') !== 'postgresql' || getenv('_APP_DB_USER') === false) {
@@ -55,11 +52,5 @@ final class Database extends UtopiaDatabase
             $this->delete();
             throw $error;
         }
-    }
-
-    public function updateDocument(string $collection, string $id, Document $document): Document
-    {
-        $this->writes[] = [$collection, $id, $document->getArrayCopy()];
-        return parent::updateDocument($collection, $id, $document);
     }
 }

@@ -44,23 +44,20 @@ final class CertificatesTest extends TestCase
         $this->schema = 'certificate_test_' . bin2hex(random_bytes(6));
         $this->database = $this->connect();
         $this->database->create();
-        $this->database->createCollection('rules');
-        $this->database->createCollection('certificates');
-        foreach (['domain', 'projectId', 'certificateId', 'status', 'type'] as $attribute) {
-            $this->database->createAttribute('rules', $attribute, Database::VAR_STRING, 255, false);
-        }
-        $this->database->createAttribute('rules', 'logs', Database::VAR_STRING, 500000, false);
-        $this->database->createAttribute('certificates', 'domain', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('certificates', 'logs', Database::VAR_STRING, 500000, false);
-        $this->database->createAttribute('certificates', 'attempts', Database::VAR_INTEGER, 4, false, 0);
-        foreach (['updated', 'issueDate', 'renewDate'] as $attribute) {
-            $this->database->createAttribute('certificates', $attribute, Database::VAR_DATETIME, 0, false);
+        $collections = require __DIR__ . '/../../../app/config/collections/platform.php';
+        foreach (['rules', 'certificates'] as $id) {
+            $this->database->createCollection(
+                $id,
+                array_map(fn (array $attribute) => new Document($attribute), $collections[$id]['attributes']),
+                array_map(fn (array $index) => new Document($index), $collections[$id]['indexes']),
+            );
         }
         $this->database->createDocument('certificates', new Document([
             '$id' => 'certificate', 'domain' => 'example.com', 'attempts' => 0, 'updated' => null,
         ]));
         $this->database->createDocument('rules', new Document([
-            '$id' => md5('example.com'), 'domain' => 'example.com', 'projectId' => 'console',
+            '$id' => md5('example.com'), 'domain' => 'example.com', 'region' => 'default',
+            'projectId' => 'console', 'projectInternalId' => 'console',
             'certificateId' => 'certificate', 'type' => 'api', 'status' => RULE_STATUS_CERTIFICATE_GENERATING,
         ]));
     }

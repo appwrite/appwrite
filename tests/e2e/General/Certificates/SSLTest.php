@@ -26,7 +26,6 @@ final class SSLTest extends TestCase
         $this->format = getenv('_APP_RULES_FORMAT');
         putenv('_APP_RULES_FORMAT=md5');
         $this->database = new Database();
-        $this->database->writes = [];
         $this->publisher = new MockPublisher();
     }
 
@@ -79,8 +78,10 @@ final class SSLTest extends TestCase
         $this->seed(DateTime::now());
         $this->runTask();
 
-        $this->assertSame([], $this->database->writes);
-        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->database->getDocument('certificates', 'certificate')->getAttribute('attempts'));
+        $certificate = $this->database->getDocument('certificates', 'certificate');
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $certificate->getAttribute('attempts'));
+        $this->assertNotNull($certificate->getAttribute('updated'));
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $this->database->getDocument('rules', md5(self::DOMAIN))->getAttribute('status'));
         $this->assertNull($this->publisher->getEvents('certificates'));
     }
 
@@ -113,7 +114,7 @@ final class SSLTest extends TestCase
         $this->runTask();
 
         $this->assertTrue($this->database->getDocument('rules', md5(self::DOMAIN))->isEmpty());
-        $this->assertSame([], $this->database->writes);
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->database->getDocument('certificates', 'certificate')->getAttribute('attempts'));
         $this->assertNull($this->publisher->getEvents('certificates'));
     }
 
@@ -126,7 +127,7 @@ final class SSLTest extends TestCase
         $this->onRuleRead(function (): void {
             $this->database->deleteDocument('rules', md5(self::DOMAIN));
             $this->database->createDocument('rules', new Document([
-                '$id' => md5(self::DOMAIN), 'domain' => self::DOMAIN,
+                '$id' => md5(self::DOMAIN), 'domain' => self::DOMAIN, 'region' => 'default',
                 'projectId' => 'replacement', 'projectInternalId' => '8',
                 'status' => RULE_STATUS_CREATED,
             ]));
@@ -134,7 +135,7 @@ final class SSLTest extends TestCase
         $this->runTask();
 
         $this->assertSame(RULE_STATUS_CREATED, $this->database->getDocument('rules', md5(self::DOMAIN))->getAttribute('status'));
-        $this->assertSame([], $this->database->writes);
+        $this->assertSame(APP_LIMIT_CERTIFICATE_ATTEMPTS, $this->database->getDocument('certificates', 'certificate')->getAttribute('attempts'));
         $this->assertNull($this->publisher->getEvents('certificates'));
     }
 
@@ -145,7 +146,7 @@ final class SSLTest extends TestCase
             'attempts' => APP_LIMIT_CERTIFICATE_ATTEMPTS, 'updated' => $updated,
         ]));
         $this->database->createDocument('rules', new Document([
-            '$id' => md5(self::DOMAIN), 'domain' => self::DOMAIN,
+            '$id' => md5(self::DOMAIN), 'domain' => self::DOMAIN, 'region' => 'default',
             'projectId' => 'customer', 'projectInternalId' => '7',
             'certificateId' => 'certificate', 'type' => 'deployment',
             'deploymentResourceType' => 'site', 'status' => RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
