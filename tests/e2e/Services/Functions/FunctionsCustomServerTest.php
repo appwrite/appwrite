@@ -1982,6 +1982,7 @@ final class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
         ]);
         $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
         ]);
