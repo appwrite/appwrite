@@ -482,6 +482,68 @@ trait UsersBase
         self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
+    public function testCreateScryptModified(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $options = [
+            'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==', // appwrite
+            'passwordSalt' => 'UxLMreBr6tYyjQ==',
+            'passwordSaltSeparator' => 'Bw==',
+            'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $userId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
+            'userId' => $userId,
+            'email' => $userId . '@example.com',
+        ]));
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame($userId, $response['body']['$id']);
+        $this->assertSame('scryptMod', $response['body']['hash']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $headers);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($options['password'], $response['body']['password']);
+        $this->assertSame($options['passwordSalt'], $response['body']['hashOptions']['salt']);
+        $this->assertSame($options['passwordSaltSeparator'], $response['body']['hashOptions']['saltSeparator']);
+        $this->assertSame($options['passwordSignerKey'], $response['body']['hashOptions']['signerKey']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([
+            ['passwordSalt', 'not-base64!'],
+            ['passwordSaltSeparator', 'not-base64!'],
+            ['passwordSignerKey', 'not-base64!'],
+            ['passwordSalt', '0'],
+            ['passwordSignerKey', '0'],
+        ] as [$parameter, $value]) {
+            $userId = ID::unique();
+            $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
+                'userId' => $userId,
+                'email' => $userId . '@example.com',
+                $parameter => $value,
+            ]));
+
+            $this->assertSame(400, $response['headers']['status-code'], $parameter . ': ' . $value);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertNotEmpty($response['body']['message']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $headers);
+
+            $this->assertSame(404, $response['headers']['status-code']);
+            $this->assertSame('user_not_found', $response['body']['type']);
+        }
+    }
+
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
      */
