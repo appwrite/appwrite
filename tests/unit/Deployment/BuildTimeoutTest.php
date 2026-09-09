@@ -18,9 +18,10 @@ use Utopia\Psr7\Stream;
 
 final class BuildTimeoutTest extends TestCase
 {
-    public static function budgets(): array
+    public static function budgets(): \Iterator
     {
-        return ['default' => [null, 900], 'operator override' => ['1800', 1800]];
+        yield 'default' => [null, 900];
+        yield 'operator override' => ['1800', 1800];
     }
 
     #[DataProvider('budgets')]
