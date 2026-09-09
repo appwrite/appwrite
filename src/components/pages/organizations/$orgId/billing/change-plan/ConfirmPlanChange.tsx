@@ -105,58 +105,52 @@ export function ConfirmPlanChange({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        {showBody ? (
-          // Only the manifest scrolls, so the confirm button never moves.
+        {deletedOrganizationName ? (
+          // Losing a whole organization must never scroll out of view.
+          <>
+            <p className="px-6 py-4 text-[13px] leading-normal text-red-600 dark:text-red-400">
+              {deletedOrganizationName} {t('and all its resources')}
+            </p>
+            {hasManifest ? <div className="border-t border-border" /> : null}
+          </>
+        ) : null}
+        {hasManifest && deletions ? (
+          // Only the item list scrolls; every other part of the dialog stays put.
           <div className="max-h-[50vh] overflow-y-auto px-6 py-4">
-            {deletedOrganizationName ? (
-              <p className="text-[13px] leading-normal text-red-600 dark:text-red-400">
-                {deletedOrganizationName} {t('and all its resources')}
-              </p>
-            ) : null}
-            {hasManifest && deletions ? (
-              <div
-                className={cn(
-                  'space-y-4',
-                  deletedOrganizationName && 'mt-4 border-t border-border pt-4',
-                )}
-              >
-                <DeletionGroup
-                  title={t('Projects')}
-                  items={deletions.projects}
-                />
-                <DeletionGroup
-                  title={t('Members')}
-                  items={deletions.memberships}
-                />
-                <DeletionGroup title={t('Domains')} items={deletions.domains} />
-                <DeletionGroup title={t('Addons')} items={deletions.addons} />
-                {deletions.projectResources.map((project) => (
-                  <div
-                    key={project.projectId}
-                    className="space-y-3 rounded-lg border border-border bg-card/50 p-3"
-                  >
-                    <div className="min-w-0">
-                      <p
-                        className="truncate text-[13px] font-medium leading-normal text-foreground"
-                        title={project.projectName}
-                      >
-                        {project.projectName}
-                      </p>
-                      <p className="break-all font-mono text-[12px] leading-normal text-muted-foreground">
-                        {project.projectId}
-                      </p>
-                    </div>
-                    {project.types.map((group) => (
-                      <DeletionGroup
-                        key={group.type}
-                        title={t(group.label)}
-                        items={group.items}
-                      />
-                    ))}
+            <div className="space-y-4">
+              <DeletionGroup title={t('Projects')} items={deletions.projects} />
+              <DeletionGroup
+                title={t('Members')}
+                items={deletions.memberships}
+              />
+              <DeletionGroup title={t('Domains')} items={deletions.domains} />
+              <DeletionGroup title={t('Addons')} items={deletions.addons} />
+              {deletions.projectResources.map((project) => (
+                <div
+                  key={project.projectId}
+                  className="space-y-3 rounded-lg border border-border bg-card/50 p-3"
+                >
+                  <div className="min-w-0">
+                    <p
+                      className="truncate text-[13px] font-medium leading-normal text-foreground"
+                      title={project.projectName}
+                    >
+                      {project.projectName}
+                    </p>
+                    <p className="break-all font-mono text-[12px] leading-normal text-muted-foreground">
+                      {project.projectId}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : null}
+                  {project.types.map((group) => (
+                    <DeletionGroup
+                      key={group.type}
+                      title={t(group.label)}
+                      items={group.items}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
         {planLabel ? (
