@@ -19,11 +19,14 @@ use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Index;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
@@ -515,8 +518,9 @@ abstract class Base extends Action
 
         $attributes = [];
         foreach ($files['attributes'] as $attribute) {
-            $attributes[] = new Document([
+            $attributes[] = Attribute::fromArray([
                 '$id' => $attribute['$id'],
+                'key' => $attribute['$id'],
                 'type' => $attribute['type'],
                 'size' => $attribute['size'],
                 'required' => $attribute['required'],
@@ -530,8 +534,9 @@ abstract class Base extends Action
 
         $indexes = [];
         foreach ($files['indexes'] as $index) {
-            $indexes[] = new Document([
+            $indexes[] = Index::fromArray([
                 '$id' => $index['$id'],
+                'key' => $index['$id'],
                 'type' => $index['type'],
                 'attributes' => $index['attributes'],
                 'lengths' => $index['lengths'] ?? [],
@@ -563,7 +568,13 @@ abstract class Base extends Action
 
         try {
             $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: false));
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection(new Collection(
+                id: 'bucket_' . $bucket->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+                permissions: $permissions,
+                documentSecurity: false,
+            )));
         } catch (\Throwable $error) {
             // Roll back the bucket document so a failed collection creation does
             // not leave an unusable bucket with no backing collection.
