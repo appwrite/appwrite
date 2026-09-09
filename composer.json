@@ -85,7 +85,7 @@
         "utopia-php/emails": "0.8.*",
         "utopia-php/dns": "^3.0",
         "utopia-php/dsn": "0.2.1",
-        "utopia-php/http": "^2.0.0-rc30@RC",
+        "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
         "utopia-php/validators": "^0.6",
         "utopia-php/image": "0.8.*",
