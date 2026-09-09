@@ -7,6 +7,7 @@ namespace Tests\E2E\General;
 use Appwrite\Database\Factory;
 use Appwrite\Event\Message\Delete;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use PHPUnit\Framework\AssertionFailedError;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -39,7 +40,7 @@ final class DeletesTest extends Scope
         $output = tmpfile();
         $this->assertIsResource($output);
         $worker = proc_open(
-            [PHP_BINARY, 'app/worker.php', 'deletes'],
+            ['setsid', PHP_BINARY, 'app/worker.php', 'deletes'],
             [0 => ['pipe', 'r'], 1 => $output, 2 => $output],
             $pipes,
             dirname(__DIR__, 3),
@@ -51,6 +52,7 @@ final class DeletesTest extends Scope
             ]),
         );
         $this->assertIsResource($worker);
+        $pid = proc_get_status($worker)['pid'];
         fclose($pipes[0]);
         $error = null;
 
@@ -132,15 +134,31 @@ final class DeletesTest extends Scope
                 $this->fail($error->getMessage() . "\n" . stream_get_contents($output));
             }
         } finally {
-            proc_terminate($worker);
-            proc_close($worker);
-            fclose($output);
-            $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            ]);
+            try {
+                proc_terminate($worker);
+                try {
+                    $this->assertEventually(function () use ($worker): void {
+                        $this->assertFalse(proc_get_status($worker)['running']);
+                    }, timeoutMs: 5_000, waitMs: 100);
+                } catch (AssertionFailedError) {
+                    // The worker owns a session, so escalation also stops its Swoole children.
+                    posix_kill(-$pid, SIGKILL);
+                    $this->assertEventually(function () use ($worker): void {
+                        $this->assertFalse(proc_get_status($worker)['running']);
+                    }, timeoutMs: 5_000, waitMs: 100);
+                }
+            } finally {
+                if (!proc_get_status($worker)['running']) {
+                    proc_close($worker);
+                }
+                fclose($output);
+                $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => 'console',
+                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                ]);
+            }
         }
     }
 }
