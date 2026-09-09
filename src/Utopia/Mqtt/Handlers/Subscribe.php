@@ -70,9 +70,6 @@ class Subscribe extends Action
             $granted .= chr(Packet::QOS_1); // granted max QoS 1
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
 
-            // TODO: if we can save directly in the same cache key only
-            $key = 'mqtt:sub:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $filter;
-            getCache()->save($key, ['qos' => Packet::QOS_1]);
             $topics[] = $filter;
         }
 

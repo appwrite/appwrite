@@ -22,7 +22,7 @@ class Node
 class SubscriptionStore
 {
     /**
-     * fd => connection record.
+     * fd => connection record. subs are the topic details and in future if required we can use subIds here as well similar to the realtime
      *
      * @var array<int, array{projectId: string, userId: string, subs: array<string, int>}>
      */
