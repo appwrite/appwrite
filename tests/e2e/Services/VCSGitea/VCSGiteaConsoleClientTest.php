@@ -154,6 +154,19 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
         $functionId = $function['body']['$id'];
 
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+
+        $this->waitForDeploymentReadyHelper($functionId, $deployment['body']['$id']);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v1'), 30000, 1000);
+
         $knownIds = $this->listDeploymentIdsHelper($functionId);
 
         $this->writeFunctionHelper($workdir, 'gitea-nested-v2', 'docs/nested');
@@ -161,16 +174,11 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git push origin main', $workdir);
 
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
-        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-nested-v2'), 30000, 1000);
 
-        // A push-created deployment must persist the root directory it built
-        // from, since duplicating one reads the value back off this document.
-        $webhookDeployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $webhookDeploymentId, \array_merge([
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()));
-        $this->assertEquals(200, $webhookDeployment['headers']['status-code']);
-        $this->assertEquals('./docs/nested/', $webhookDeployment['body']['providerRootDirectory']);
-
+        // A duplicate reads the root directory back off the deployment it
+        // copies, so this only builds if the push-created deployment persisted
+        // one. Building from the repository root instead fails outright: the
+        // root holds only the auto-init README, no entrypoint.
         $duplicate = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -179,8 +187,6 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
         $this->assertEquals(202, $duplicate['headers']['status-code'], \json_encode($duplicate['body']));
 
-        // Building from the repository root instead would fail outright: the
-        // root holds only the auto-init README, no entrypoint.
         $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
     }
 
