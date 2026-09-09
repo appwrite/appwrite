@@ -1,7 +1,5 @@
 import type { Page, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
-import { ProjectServiceId } from '@appwrite.io/console'
-import { DEFAULT_ROLES, DEFAULT_SCOPES } from '../src/lib/console-roles'
 import { expect, test } from './fixtures'
 
 /**
@@ -13,6 +11,67 @@ import { expect, test } from './fixtures'
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
+
+// The scenario is an owner with every console permission and every service
+// on, so nothing about navigation or gating stands between the specs and the
+// two pages they open. Spelled out here rather than imported, so a change to
+// the console's defaults shows up as a failure instead of rewriting the mock.
+const OWNER_ROLES = ['owner'] satisfies Models.Roles['roles']
+const OWNER_SCOPES = [
+  'projects.read',
+  'projects.write',
+  'databases.read',
+  'databases.write',
+  'tables.write',
+  'collections.write',
+  'rows.write',
+  'documents.write',
+  'functions.read',
+  'functions.write',
+  'buckets.read',
+  'buckets.write',
+  'keys.write',
+  'platforms.write',
+  'webhooks.write',
+  'users.write',
+  'teams.read',
+  'teams.write',
+  'messages.read',
+  'messages.write',
+  'topics.write',
+  'providers.write',
+  'subscribers.write',
+  'sites.read',
+  'sites.write',
+  'domains.write',
+  'executions.write',
+  'migrations.write',
+  'vcs.write',
+  'rules.write',
+  'events.read',
+  'billing.read',
+] satisfies Models.Roles['scopes']
+const ALL_SERVICES = [
+  'account',
+  'avatars',
+  'databases',
+  'tablesdb',
+  'locale',
+  'health',
+  'project',
+  'storage',
+  'teams',
+  'users',
+  'vcs',
+  'sites',
+  'functions',
+  'proxy',
+  'graphql',
+  'migrations',
+  'messaging',
+  'advisor',
+  'oauth2',
+] as const
 
 const ACCOUNT = {
   $id: 'user000000000000000001',
@@ -58,11 +117,11 @@ const PROJECT = {
   teamId: ORGANIZATION.$id,
   region: 'default',
   status: 'active',
-  // Every service on, so console navigation gates nothing the specs open.
-  services: Object.values(ProjectServiceId).map(($id) => ({
+  // The SDK types service ids as an enum, so the literals need the cast.
+  services: ALL_SERVICES.map(($id) => ({
     $id,
     enabled: true,
-  })),
+  })) as Models.Project['services'],
 } satisfies Partial<Models.Project>
 
 const TARGET = {
@@ -196,7 +255,7 @@ async function mockAppwriteApi(
       apiPath === '/console/scopes/project' ||
       apiPath === `/organizations/${ORGANIZATION.$id}/roles`
     )
-      return json(200, { roles: DEFAULT_ROLES, scopes: DEFAULT_SCOPES })
+      return json(200, { roles: OWNER_ROLES, scopes: OWNER_SCOPES })
     if (apiPath === '/organizations' || apiPath === '/teams')
       return json(200, { total: 1, teams: [ORGANIZATION] })
     if (
