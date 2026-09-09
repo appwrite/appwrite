@@ -252,7 +252,14 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                // Pass the DSN credentials through: without them every
+                                // publish fails with NOAUTH on password-protected Redis.
+                                $connection = new Queue\Connection\Redis(
+                                    $dsn->getHost(),
+                                    $dsn->getPort(),
+                                    $dsn->getUser() ?: null,
+                                    $dsn->getPassword() ?: null,
+                                );
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
