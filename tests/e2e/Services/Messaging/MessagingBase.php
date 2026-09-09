@@ -872,6 +872,8 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'Appwrite1',
             'enabled' => true,
+            'qos' => 1,
+            'expiry' => 3600,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
@@ -879,6 +881,8 @@ trait MessagingBase
         $this->assertEquals('appwrite', $provider['body']['provider']);
         $this->assertEquals('push', $provider['body']['type']);
         $this->assertTrue($provider['body']['enabled']);
+        $this->assertEquals(1, $provider['body']['options']['qos']);
+        $this->assertEquals(3600, $provider['body']['options']['expiry']);
     }
 
     public function testUpdateAppwriteProvider(): void
@@ -902,11 +906,15 @@ trait MessagingBase
         ], [
             'name' => 'Appwrite-after',
             'enabled' => false,
+            'qos' => 0,
+            'expiry' => 7200,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Appwrite-after', $response['body']['name']);
         $this->assertFalse($response['body']['enabled']);
+        $this->assertEquals(0, $response['body']['options']['qos']);
+        $this->assertEquals(7200, $response['body']['options']['expiry']);
 
         // Test for FAILURE: an unknown provider id is not found.
         $missing = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . ID::unique(), [
@@ -918,6 +926,39 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
+    public function testCreateTopicWithMqttSettings(): void
+    {
+        // Test for SUCCESS: a topic carries its MQTT qos and expiry settings.
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'mqtt-settings-topic',
+            'qos' => 1,
+            'expiry' => 3600,
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertEquals(1, $topic['body']['qos']);
+        $this->assertEquals(3600, $topic['body']['expiry']);
+
+        // Test for SUCCESS: the settings update.
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topic['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'qos' => 0,
+            'expiry' => 7200,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['qos']);
+        $this->assertEquals(7200, $response['body']['expiry']);
     }
 
     public function testUpdateProviders(): void
