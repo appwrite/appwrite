@@ -6,6 +6,7 @@ use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\OpenAPI\Model\Composition;
 
 abstract class Format
 {
@@ -401,7 +402,7 @@ abstract class Format
      * @param array<Model> $models
      * @return array<string, mixed>
      */
-    protected function getUnion(array $models, string $refPrefix, string $composition = 'oneOf'): array
+    protected function getUnion(array $models, string $refPrefix, Composition $composition = Composition::ONE_OF): array
     {
         $discriminator = $this->getDiscriminator($models, $refPrefix);
         if ($discriminator === null) {
@@ -412,7 +413,7 @@ abstract class Format
         }
 
         return \array_filter([
-            $composition => \array_map(fn (Model $model) => ['$ref' => $refPrefix . $model->getType()], $models),
+            $composition->value => \array_map(fn (Model $model) => ['$ref' => $refPrefix . $model->getType()], $models),
             'discriminator' => $discriminator,
         ]);
     }
@@ -471,7 +472,7 @@ abstract class Format
             }
             $seen[$signature] = true;
 
-            $branches[] = ['allOf' => [
+            $branches[] = [Composition::ALL_OF->value => [
                 ['$ref' => $refPrefix . $model->getType()],
                 [
                     'type' => 'object',
@@ -483,7 +484,7 @@ abstract class Format
 
         // Broad String overlaps Email/Enum/Url/Ip, so these alternatives are
         // inclusive. SDK consumers retain their most-specific-first selection.
-        return ['anyOf' => $branches];
+        return [Composition::ANY_OF->value => $branches];
     }
 
     protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
@@ -494,17 +495,17 @@ abstract class Format
 
         // Named enums use titled oneOf branches; open enums additionally
         // accept a free-string branch through anyOf.
-        foreach (['oneOf', 'anyOf'] as $composition) {
-            if (!isset($schema[$composition])) {
+        foreach ([Composition::ONE_OF, Composition::ANY_OF] as $composition) {
+            if (!isset($schema[$composition->value])) {
                 continue;
             }
             $matches = 0;
-            foreach ($schema[$composition] as $branch) {
+            foreach ($schema[$composition->value] as $branch) {
                 if ($this->shouldEmitDefaultForSchema($default, $branch)) {
                     $matches++;
                 }
             }
-            if ($composition === 'oneOf' ? $matches !== 1 : $matches === 0) {
+            if ($composition === Composition::ONE_OF ? $matches !== 1 : $matches === 0) {
                 return false;
             }
         }

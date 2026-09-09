@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "526e32916ce68a221c4bd47a86bf3d22",
+    "content-hash": "2e378c11104aafa142b2bcb92fb61f3a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4260,6 +4260,41 @@
             "time": "2026-09-09T05:42:37+00:00"
         },
         {
+            "name": "utopia-php/openapi",
+            "version": "0.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/openapi.git",
+                "reference": "a988ff180b973743339509d040a774ffe48aa906"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/openapi/zipball/a988ff180b973743339509d040a774ffe48aa906",
+                "reference": "a988ff180b973743339509d040a774ffe48aa906",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=8.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\OpenAPI\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Framework-independent OpenAPI 2.0, 3.0, and 3.1 parser with an immutable canonical model",
+            "support": {
+                "issues": "https://github.com/utopia-php/openapi/issues",
+                "source": "https://github.com/utopia-php/openapi/tree/0.2.4"
+            },
+            "time": "2026-09-09T11:17:58+00:00"
+        },
+        {
             "name": "utopia-php/platform",
             "version": "1.0.0-rc20",
             "source": {
@@ -8465,41 +8500,6 @@
                 }
             ],
             "time": "2026-07-03T20:44:34+00:00"
-        },
-        {
-            "name": "utopia-php/openapi",
-            "version": "0.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/openapi.git",
-                "reference": "a988ff180b973743339509d040a774ffe48aa906"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/openapi/zipball/a988ff180b973743339509d040a774ffe48aa906",
-                "reference": "a988ff180b973743339509d040a774ffe48aa906",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=8.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\OpenAPI\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Framework-independent OpenAPI 2.0, 3.0, and 3.1 parser with an immutable canonical model",
-            "support": {
-                "issues": "https://github.com/utopia-php/openapi/issues",
-                "source": "https://github.com/utopia-php/openapi/tree/0.2.4"
-            },
-            "time": "2026-09-09T11:17:58+00:00"
         }
     ],
     "aliases": [],

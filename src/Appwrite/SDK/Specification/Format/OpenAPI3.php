@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
+use Utopia\OpenAPI\Model\Composition;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -1207,7 +1208,7 @@ class OpenAPI3 extends Format
                                 throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
                             }, $rule['type']);
 
-                            $items = $this->getUnion($resolvedModels, '#/components/schemas/', $rule['array'] ? 'anyOf' : 'oneOf');
+                            $items = $this->getUnion($resolvedModels, '#/components/schemas/', $rule['array'] ? Composition::ANY_OF : Composition::ONE_OF);
                         } else {
                             $items = [
                                 '$ref' => '#/components/schemas/' . $rule['type'],

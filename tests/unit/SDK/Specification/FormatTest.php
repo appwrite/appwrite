@@ -23,6 +23,8 @@ use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
+use Appwrite\Utopia\Response\Model\ColumnEmail;
+use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\FrameworkAdapter;
@@ -56,6 +58,10 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\OpenAPI\Model\CompositeSchema;
+use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\Discriminator;
+use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
@@ -128,85 +134,36 @@ final class FormatTest extends TestCase
         $this->format = new TestFormat(new Container(), [], [], [], [], ['console' => 0], 'console');
     }
 
-    public static function compoundModels(): \Iterator
-    {
-        yield ['Column'];
-        yield ['Attribute'];
-    }
-
-    #[DataProvider('compoundModels')]
-    public function testCompoundUnionsUseConstrainedReferences(string $kind): void
+    public function testCompoundResponsePreservesOverlappingModelConditions(): void
     {
         Method::$processed = [];
         Method::$errors = [];
-        $models = [];
-        foreach (['Boolean', 'BigInt', 'Integer', 'Float', 'Email', 'Enum', 'URL', 'IP', 'Datetime', 'Relationship', 'Point', 'Line', 'Polygon', 'Varchar', 'Text', 'Mediumtext', 'Longtext', 'String'] as $suffix) {
-            $class = 'Appwrite\\Utopia\\Response\\Model\\' . $kind . $suffix;
-            $models[] = new $class();
-        }
-        $class = 'Appwrite\\Utopia\\Response\\Model\\' . $kind . 'List';
-        $list = new $class();
-        $references = \array_map(fn (ResponseModel $model) => $model->getType(), $models);
-        $routes = [];
-        foreach (['union' => $references, 'list' => $list->getType()] as $name => $response) {
-            $routes[] = (new Route('GET', '/v1/tests/' . $name))
-                ->desc('Get test')
-                ->label('sdk', new Method(
-                    namespace: 'test',
-                    group: null,
-                    name: 'get' . ucfirst($name),
-                    description: 'Get test.',
-                    auth: [AuthType::ADMIN],
-                    responses: [new SDKResponse(code: 200, model: $response)],
-                ));
-        }
-
-        $spec = (new OpenAPI3(new Container(), [], $routes, [...$models, $list], [], ['console' => 0], 'console'))->parse();
-        $unions = [
-            $spec['paths']['/tests/union']['get']['responses']['200']['content']['application/json']['schema'],
-            $spec['components']['schemas'][$list->getType()]['properties'][strtolower($kind) . 's']['items'],
-        ];
-        foreach ($unions as $union) {
-            $this->assertArrayNotHasKey('discriminator', $union);
-            $this->assertArrayNotHasKey('oneOf', $union);
-            $this->assertCount(18, $union['anyOf']);
-            foreach ($union['anyOf'] as $index => $branch) {
-                $this->assertSame('#/components/schemas/' . $models[$index]->getType(), $branch['allOf'][0]['$ref']);
-                $constraints = $branch['allOf'][1];
-                $this->assertSame('object', $constraints['type']);
-                $this->assertSame(array_keys($models[$index]->conditions), $constraints['required']);
-                foreach ($models[$index]->conditions as $property => $value) {
-                    $this->assertSame([$value], $constraints['properties'][$property]['enum']);
-                }
-            }
-        }
-        $this->assertStringNotContainsString('x-mapping', json_encode($spec, JSON_THROW_ON_ERROR));
-    }
-
-    public function testSinglePropertyDiscriminatorsRemainStandard(): void
-    {
-        Method::$processed = [];
-        Method::$errors = [];
-        $models = [new PlatformAndroid(), new PlatformWeb()];
-        $route = (new Route('GET', '/v1/tests/platform'))
-            ->desc('Get platform')
+        $route = (new Route('GET', '/v1/tests/column'))
+            ->desc('Get column')
             ->label('sdk', new Method(
                 namespace: 'test',
                 group: null,
-                name: 'getPlatform',
-                description: 'Get platform.',
+                name: 'getColumn',
+                description: 'Get column.',
                 auth: [AuthType::ADMIN],
-                responses: [new SDKResponse(code: 200, model: array_map(fn (ResponseModel $model) => $model->getType(), $models))],
+                responses: [new SDKResponse(code: 200, model: [Response::MODEL_COLUMN_STRING, Response::MODEL_COLUMN_EMAIL])],
             ));
-        $spec = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
-        $union = $spec['paths']['/tests/platform']['get']['responses']['200']['content']['application/json']['schema'];
-        $this->assertCount(2, $union['oneOf']);
-        $this->assertSame('type', $union['discriminator']['propertyName']);
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new ColumnString(), new ColumnEmail()], [], ['console' => 0], 'console'))->parse();
+        $document = Parser::parse(json_encode($spec, JSON_THROW_ON_ERROR));
+        $union = $document->paths['/tests/column']->operations['get']->responses['200']->content['application/json']->schema;
+
+        $this->assertInstanceOf(CompositeSchema::class, $union);
+        $this->assertSame(Composition::ANY_OF, $union->composition);
+        $this->assertNotInstanceOf(Discriminator::class, $union->discriminator);
         $this->assertSame([
-            'android' => '#/components/schemas/platformAndroid',
-            'web' => '#/components/schemas/platformWeb',
-        ], $union['discriminator']['mapping']);
-        $this->assertArrayNotHasKey('anyOf', $union);
+            ['reference' => '#/components/schemas/columnString', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+            ]],
+            ['reference' => '#/components/schemas/columnEmail', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+                ['propertyName' => 'format', 'value' => 'email'],
+            ]],
+        ], $union->conditionalReferences());
     }
 
     public function testProjectRequestParameterOverrides(): void
