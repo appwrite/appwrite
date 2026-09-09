@@ -51,7 +51,7 @@ final class DeletesTest extends TestCase
 
     public static function types(): \Iterator
     {
-        yield 'API' => [['type' => 'api'], 'api'];
+        yield 'API' => [['type' => 'api', 'deploymentResourceType' => ''], 'api']; // Persisted default for API rules
         yield 'function' => [['type' => 'deployment', 'deploymentResourceType' => 'function'], 'function'];
         yield 'site' => [['type' => 'deployment', 'deploymentResourceType' => 'site'], 'site'];
         yield 'redirect' => [['type' => 'redirect', 'deploymentResourceType' => 'site'], 'site'];
@@ -65,7 +65,10 @@ final class DeletesTest extends TestCase
         $database = $this->database;
         $provider = new Provider();
         $database->createDocument('certificates', new Document(['$id' => 'certificate']));
-        $database->createDocument('rules', new Document(['$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => 'certificate']));
+        $database->createDocument('rules', new Document([
+            '$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => 'certificate',
+            'projectId' => 'project', 'projectInternalId' => '7', 'region' => 'default',
+        ]));
         $this->runWorker($database, $provider, ['type' => 'api']);
         $this->assertSame([], $provider->deleted);
         $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
@@ -85,6 +88,7 @@ final class DeletesTest extends TestCase
         }
         $database->createDocument('rules', new Document([
             '$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => $certificateId,
+            'projectId' => 'project', 'projectInternalId' => '7', 'region' => 'default',
         ]));
         $bus = $this->createMock(Bus::class);
         $bus->expects($this->never())->method('dispatch');
@@ -113,8 +117,14 @@ final class DeletesTest extends TestCase
         $database = $this->database;
         $provider = new Provider();
         $database->createDocument('certificates', new Document(['$id' => 'certificate']));
-        $database->createDocument('rules', new Document(['$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => '']));
-        $database->createDocument('rules', new Document(['$id' => 'other', 'domain' => 'other.example.com', 'certificateId' => 'certificate']));
+        $database->createDocument('rules', new Document([
+            '$id' => 'replacement', 'domain' => 'example.com', 'certificateId' => '',
+            'projectId' => 'project', 'projectInternalId' => '7', 'region' => 'default',
+        ]));
+        $database->createDocument('rules', new Document([
+            '$id' => 'other', 'domain' => 'other.example.com', 'certificateId' => 'certificate',
+            'projectId' => 'project', 'projectInternalId' => '7', 'region' => 'default',
+        ]));
 
         $this->runWorker($database, $provider, ['type' => 'api']);
 
