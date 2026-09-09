@@ -27,7 +27,9 @@ Neither model is inherently better. The right choice depends on how your applica
 
 **A dedicated Postgres database gives your application dedicated database capacity that is provisioned for you rather than dynamically scaled per request.** The database can still be hosted and maintained by a cloud provider, which handles tasks such as backups, patching, replication, and failover, while you control the provisioned capacity and configuration.
 
-Services like [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/), [Google Cloud SQL](https://cloud.google.com/sql), and Azure Database for PostgreSQL are common examples. You get a Postgres server with a fixed amount of CPU, memory, and storage that runs continuously.
+Services like [Appwrite native PostgreSQL](/blog/post/appwrite-now-speaks-postgresql), [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/), [Google Cloud SQL](https://cloud.google.com/sql), and Azure Database for PostgreSQL are common examples.
+
+With Appwrite, you choose a compute specification and get direct access to a managed PostgreSQL engine, while Appwrite handles the underlying infrastructure. In each case, you get provisioned database capacity that remains available continuously.
 
 The model is predictable. You know exactly how much compute you have, connection pooling behaves the way you expect, and there are no cold starts. The trade-off is that you provision for peak load, so capacity can sit idle during quiet periods while you continue paying for the provisioned capacity.
 
