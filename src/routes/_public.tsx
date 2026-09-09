@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
-import { hasLikelyConsoleSession } from '@/lib/console-account-get'
+import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { kickoffDefaultOrganizationPrefetch } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import {
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_public')({
       const accountQuery = consoleAccountQueryOptions()
 
       // Guest `/` must not wait on account.get (localhost cookieFallback hop).
-      if (location.pathname === '/' && !hasLikelyConsoleSession()) {
+      if (location.pathname === '/' && shouldSkipRootAccountProbe()) {
         return { currentUser: null }
       }
 
@@ -48,7 +48,7 @@ export const Route = createFileRoute('/_public')({
       // as soon as we know the preferred org from prefs.
       if (
         account &&
-        location.pathname === '/' &&
+        (location.pathname === '/' || location.pathname === '/app') &&
         !requiresConsoleEmailVerification(account)
       ) {
         kickoffDefaultOrganizationPrefetch(queryClient, account)

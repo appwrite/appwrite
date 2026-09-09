@@ -6,10 +6,10 @@ import {
 import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
 /**
- * SSR redirect for `/` on production hosts: always go to the marketing home
- * (or /init / sign-in per profile) before the SPA shell loads. Console entry
- * is `/app` (client `account.get`). Localhost skips this middleware path and
- * uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
+ * SSR redirect for `/` on production hosts: guests 301 to `/home` (or /init /
+ * sign-in). A console session cookie 302s to `/app`, which calls `account.get`
+ * on the client (HttpOnly cookies are not visible to JS). Localhost skips this
+ * and uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
  *
  * `/home` uses 301 so crawlers index the marketing homepage. Pre-launch `/init`
  * stays 302. Any HTML that still renders `/` is noindexed.
@@ -19,7 +19,12 @@ export const rootGuestRedirectMiddleware = createMiddleware({
 }).server(async ({ request, pathname, next }) => {
   const redirect = resolveRootGuestRedirect(request, pathname)
   if (redirect) {
-    throw Response.redirect(redirect.url, redirect.status)
+    const headers = new Headers({
+      Location: redirect.url.toString(),
+      Vary: 'Cookie',
+      'Cache-Control': 'private, no-store',
+    })
+    throw new Response(null, { status: redirect.status, headers })
   }
 
   const result = await next()

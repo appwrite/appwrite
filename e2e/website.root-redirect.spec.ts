@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-// Production `/` always 301s to `/home`. A stale cookie never keeps `/`.
+// A session cookie on `/` 302s to `/app`; a 401 there sends guests to `/home`.
 test('expired session reaches the homepage from the root', async ({
   context,
   page,

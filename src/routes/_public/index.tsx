@@ -12,7 +12,7 @@ import {
   setLastLoginMethod,
 } from '@/lib/utils/auth-storage'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
-import { hasLikelyConsoleSession } from '@/lib/console-account-get'
+import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
@@ -32,10 +32,8 @@ export const Route = createFileRoute('/_public/')({
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    // No readable session: skip account.get and go to /home (or /sign-in).
-    // Production document visits never reach this loader (SSR 301). Localhost
-    // uses cookieFallback / document.cookie. Console entry is `/app`.
-    if (!hasLikelyConsoleSession()) {
+    // Localhost guests: skip account.get. Production `/` 302s to `/app`.
+    if (shouldSkipRootAccountProbe()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
         replace: true,
