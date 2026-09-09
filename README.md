@@ -146,6 +146,17 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `generate:sitemap`                    | Sitemap files                                                                                                                     |
 | `generate:specs`                      | API reference versions; `--copy` after build for `dist/specs/`                                                                    |
 
+## API specification source
+
+Use the pinned `@appwrite.io/specs` dependency directly, rather than maintaining local Markdown snapshots:
+
+- OpenAPI definitions: `node_modules/@appwrite.io/specs/specs/` (latest and versioned specs).
+- API Explorer loader: `src/lib/api-explorer/load-spec.ts`.
+- API reference loaders: `src/server/api-reference/`.
+- SDK method signatures and response types: `node_modules/@appwrite.io/console/src/services/` and `src/models.ts` within that package. Use these for SDK-specific arguments and `Models.*` types.
+
+`bun run generate:specs` generates reference version metadata. After the build, `bun run generate:specs --copy` copies the dependency's specs and examples into `dist/specs/` for production rendering. Keep both build steps; no root-level `specs/*.md` files are needed.
+
 ## Project Structure
 
 ```
