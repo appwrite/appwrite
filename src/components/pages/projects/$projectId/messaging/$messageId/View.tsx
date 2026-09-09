@@ -385,7 +385,8 @@ export function View({
 
   /** Message body / options from API - only re-hydrate when id, channel, or payload changes. */
   const messagePayloadSyncKey = useMemo(
-    () => (message?.data != null ? JSON.stringify(message.data) : ''),
+    () =>
+      message?.data != null ? JSON.stringify(message.data) : '',
     [message?.data],
   )
 
@@ -624,9 +625,7 @@ export function View({
         message?.status === 'draft'
           ? t('The draft message has been deleted')
           : message?.status === 'scheduled'
-            ? t(
-                'The scheduled message has been deleted, and its delivery was cancelled',
-              )
+            ? t('The scheduled message has been deleted, and its delivery was cancelled')
             : t('The message has been deleted')
       toast.success(statusMessage)
       navigate({
@@ -729,7 +728,9 @@ export function View({
 
   const hasSMSChanges = useMemo(() => {
     if (!message || message.providerType !== 'sms') return false
-    return smsContent !== (message.data?.content || '') || hasUsersChanged
+    return (
+      smsContent !== (message.data?.content || '') || hasUsersChanged
+    )
   }, [message, smsContent, hasUsersChanged])
 
   const hasPushChanges = useMemo(() => {
@@ -883,10 +884,7 @@ export function View({
     if (message?.providerType === 'email') {
       const full = emailSubject.trim()
       if (!full) {
-        return {
-          label: t('Message'),
-          nativeTitle: undefined as string | undefined,
-        }
+        return { label: t('Message'), nativeTitle: undefined as string | undefined }
       }
       const label = trimForPageTitle(full)
       return {
@@ -908,10 +906,7 @@ export function View({
     if (message?.providerType === 'push') {
       const full = pushTitle.trim()
       if (!full) {
-        return {
-          label: t('Push'),
-          nativeTitle: undefined as string | undefined,
-        }
+        return { label: t('Push'), nativeTitle: undefined as string | undefined }
       }
       const label = trimForPageTitle(full)
       return {
@@ -934,9 +929,7 @@ export function View({
         <EmptyState
           icon={AlertCircle}
           title={t('Message not found')}
-          description={t(
-            'This message may have been deleted or the link is incorrect.',
-          )}
+          description={t('This message may have been deleted or the link is incorrect.')}
           variant="card"
           iconSize="md"
         />
@@ -1090,269 +1083,264 @@ export function View({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="w-full min-w-0 space-y-4">
+                    <div>
+                      <Label
+                        htmlFor="email-subject"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        {t('Subject')}
+                      </Label>
+                      <Input
+                        id="email-subject"
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        disabled={!isDraft}
+                        placeholder={t('Email subject')}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('Body')}
+                        </Label>
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          size="sm"
+                          value={emailBodyView}
+                          onValueChange={(value) => {
+                            if (value === 'source' || value === 'preview') {
+                              setEmailBodyViewChoice(value)
+                            }
+                          }}
+                          className="shrink-0"
+                        >
+                          <ToggleGroupItem
+                            value="source"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Source')}
+                          </ToggleGroupItem>
+                          <ToggleGroupItem
+                            value="preview"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Preview')}
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                      {emailBodyView === 'preview' ? (
+                        <EmailPreview
+                          content={emailContent}
+                          html={emailHtml}
+                          className="mt-1.5 h-[28rem]"
+                        />
+                      ) : (
+                        <div
+                          role="group"
+                          aria-label={t('Body')}
+                          className="mt-1.5 h-[28rem]"
+                          style={EDITOR_SURFACE}
+                        >
+                          <CodeEditor
+                            value={emailContent}
+                            onChange={setEmailContent}
+                            language="html"
+                            ariaLabel={t('Body')}
+                            height="28rem"
+                            readOnly={!isDraft}
+                            minimap={false}
+                            lineNumbers="off"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
                       <div>
                         <Label
-                          htmlFor="email-subject"
+                          htmlFor="email-html"
                           className="text-[13px] font-medium text-foreground"
                         >
-                          {t('Subject')}
+                          {t('HTML mode')}
                         </Label>
-                        <Input
-                          id="email-subject"
-                          value={emailSubject}
-                          onChange={(e) => setEmailSubject(e.target.value)}
-                          disabled={!isDraft}
-                          placeholder={t('Email subject')}
-                          className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {t(
+                            'Enable the HTML mode if your message contains HTML tags.',
+                          )}
+                        </p>
                       </div>
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <Label
-                            htmlFor={
-                              emailBodyView === 'source'
-                                ? 'email-content'
-                                : undefined
-                            }
-                            className="text-[13px] font-medium text-foreground"
-                          >
-                            {t('Body')}
-                          </Label>
-                          <ToggleGroup
-                            type="single"
-                            variant="outline"
+                      <Switch
+                        id="email-html"
+                        checked={emailHtml}
+                        onCheckedChange={setEmailHtml}
+                        disabled={!isDraft}
+                      />
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('CC targets')}
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
                             size="sm"
-                            value={emailBodyView}
-                            onValueChange={(value) => {
-                              if (value === 'source' || value === 'preview') {
-                                setEmailBodyViewChoice(value)
-                              }
-                            }}
-                            className="shrink-0"
+                            className="h-8 text-[12px]"
+                            onClick={() => setTargetPickerFor('cc')}
                           >
-                            <ToggleGroupItem
-                              value="source"
-                              className="h-8 px-3 text-[12px]"
-                            >
-                              {t('Source')}
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                              value="preview"
-                              className="h-8 px-3 text-[12px]"
-                            >
-                              {t('Preview')}
-                            </ToggleGroupItem>
-                          </ToggleGroup>
-                        </div>
-                        {emailBodyView === 'preview' ? (
-                          <EmailPreview
-                            content={emailContent}
-                            html={emailHtml}
-                            className="mt-1.5 h-[28rem]"
-                          />
-                        ) : (
-                          <div
-                            data-testid="email-content"
-                            className="mt-1.5 h-[28rem]"
-                            style={EDITOR_SURFACE}
-                          >
-                            <CodeEditor
-                              value={emailContent}
-                              onChange={setEmailContent}
-                              language="html"
-                              height="28rem"
-                              readOnly={!isDraft}
-                              minimap={false}
-                              lineNumbers="off"
-                            />
-                          </div>
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
+                            {t('Add')}
+                          </Button>
                         )}
                       </div>
-                      <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
-                        <div>
-                          <Label
-                            htmlFor="email-html"
-                            className="text-[13px] font-medium text-foreground"
+                      {ccTargetIds.size > 0 ? (
+                        <ul className="space-y-1 text-[13px] text-muted-foreground">
+                          {[...ccTargetIds].map((id) => (
+                            <li
+                              key={id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span className="font-mono text-[12px] break-all">
+                                {displayTargetById[id]?.identifier || id}
+                              </span>
+                              {isDraft && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => {
+                                    const n = new Set(ccTargetIds)
+                                    n.delete(id)
+                                    setCcTargetIds(n)
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[12px] text-muted-foreground">
+                          {t('No CC targets')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('BCC targets')}
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setTargetPickerFor('bcc')}
                           >
-                            {t('HTML mode')}
-                          </Label>
-                          <p className="text-[12px] text-muted-foreground mt-0.5">
-                            {t(
-                              'Enable the HTML mode if your message contains HTML tags.',
-                            )}
-                          </p>
-                        </div>
-                        <Switch
-                          id="email-html"
-                          checked={emailHtml}
-                          onCheckedChange={setEmailHtml}
-                          disabled={!isDraft}
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
+                            {t('Add')}
+                          </Button>
+                        )}
+                      </div>
+                      {bccTargetIds.size > 0 ? (
+                        <ul className="space-y-1 text-[13px] text-muted-foreground">
+                          {[...bccTargetIds].map((id) => (
+                            <li
+                              key={id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span className="font-mono text-[12px] break-all">
+                                {displayTargetById[id]?.identifier || id}
+                              </span>
+                              {isDraft && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => {
+                                    const n = new Set(bccTargetIds)
+                                    n.delete(id)
+                                    setBccTargetIds(n)
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[12px] text-muted-foreground">
+                          {t('No BCC targets')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('Attachments')}
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setAttachmentExplorerOpen(true)}
+                          >
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
+                            {t('Add')}
+                          </Button>
+                        )}
+                      </div>
+                      {attachmentCompoundIds.length === 0 ? (
+                        <EmptyState
+                          icon={Paperclip}
+                          title={t('No attachments')}
+                          description={t(
+                            "Add files from your project's Storage buckets.",
+                          )}
+                          variant="card"
+                          iconSize="md"
                         />
-                      </div>
-                      <div className="space-y-3 border-t border-border pt-4 mt-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <Label className="text-[13px] font-medium text-foreground">
-                            {t('CC targets')}
-                          </Label>
-                          {isDraft && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-[12px]"
-                              onClick={() => setTargetPickerFor('cc')}
+                      ) : projectId ? (
+                        <ul className="space-y-2">
+                          {attachmentCompoundIds.map((val, idx) => (
+                            <EmailAttachmentRow
+                              key={`${val}-${idx}`}
+                              projectId={projectId}
+                              compoundId={val}
+                              buckets={buckets}
+                              isDraft={isDraft}
+                              onRemove={() =>
+                                setAttachmentCompoundIds((rows) =>
+                                  rows.filter((_, i) => i !== idx),
+                                )
+                              }
+                            />
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="space-y-2">
+                          {attachmentCompoundIds.map((val, idx) => (
+                            <li
+                              key={`${val}-${idx}`}
+                              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
                             >
-                              <Plus className="me-1.5 h-3.5 w-3.5" />
-                              {t('Add')}
-                            </Button>
-                          )}
-                        </div>
-                        {ccTargetIds.size > 0 ? (
-                          <ul className="space-y-1 text-[13px] text-muted-foreground">
-                            {[...ccTargetIds].map((id) => (
-                              <li
-                                key={id}
-                                className="flex items-center justify-between gap-2"
-                              >
-                                <span className="font-mono text-[12px] break-all">
-                                  {displayTargetById[id]?.identifier || id}
-                                </span>
-                                {isDraft && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() => {
-                                      const n = new Set(ccTargetIds)
-                                      n.delete(id)
-                                      setCcTargetIds(n)
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-[12px] text-muted-foreground">
-                            {t('No CC targets')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-3 border-t border-border pt-4 mt-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <Label className="text-[13px] font-medium text-foreground">
-                            {t('BCC targets')}
-                          </Label>
-                          {isDraft && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-[12px]"
-                              onClick={() => setTargetPickerFor('bcc')}
-                            >
-                              <Plus className="me-1.5 h-3.5 w-3.5" />
-                              {t('Add')}
-                            </Button>
-                          )}
-                        </div>
-                        {bccTargetIds.size > 0 ? (
-                          <ul className="space-y-1 text-[13px] text-muted-foreground">
-                            {[...bccTargetIds].map((id) => (
-                              <li
-                                key={id}
-                                className="flex items-center justify-between gap-2"
-                              >
-                                <span className="font-mono text-[12px] break-all">
-                                  {displayTargetById[id]?.identifier || id}
-                                </span>
-                                {isDraft && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() => {
-                                      const n = new Set(bccTargetIds)
-                                      n.delete(id)
-                                      setBccTargetIds(n)
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-[12px] text-muted-foreground">
-                            {t('No BCC targets')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-3 border-t border-border pt-4 mt-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <Label className="text-[13px] font-medium text-foreground">
-                            {t('Attachments')}
-                          </Label>
-                          {isDraft && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-[12px]"
-                              onClick={() => setAttachmentExplorerOpen(true)}
-                            >
-                              <Plus className="me-1.5 h-3.5 w-3.5" />
-                              {t('Add')}
-                            </Button>
-                          )}
-                        </div>
-                        {attachmentCompoundIds.length === 0 ? (
-                          <EmptyState
-                            icon={Paperclip}
-                            title={t('No attachments')}
-                            description={t(
-                              "Add files from your project's Storage buckets.",
-                            )}
-                            variant="card"
-                            iconSize="md"
-                          />
-                        ) : projectId ? (
-                          <ul className="space-y-2">
-                            {attachmentCompoundIds.map((val, idx) => (
-                              <EmailAttachmentRow
-                                key={`${val}-${idx}`}
-                                projectId={projectId}
-                                compoundId={val}
-                                buckets={buckets}
-                                isDraft={isDraft}
-                                onRemove={() =>
-                                  setAttachmentCompoundIds((rows) =>
-                                    rows.filter((_, i) => i !== idx),
-                                  )
-                                }
-                              />
-                            ))}
-                          </ul>
-                        ) : (
-                          <ul className="space-y-2">
-                            {attachmentCompoundIds.map((val, idx) => (
-                              <li
-                                key={`${val}-${idx}`}
-                                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
-                              >
-                                <span className="min-w-0 flex-1 font-mono text-[12px] text-foreground break-all">
-                                  {val}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                              <span className="min-w-0 flex-1 font-mono text-[12px] text-foreground break-all">
+                                {val}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                     </div>
                   </div>
                 </div>
@@ -1447,316 +1435,301 @@ export function View({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="w-full min-w-0 space-y-4">
-                      <div>
-                        <Label
-                          htmlFor="push-title"
-                          className="text-[13px] font-medium text-foreground"
-                        >
-                          {t('Title')}
-                        </Label>
-                        <Input
-                          id="push-title"
-                          value={pushTitle}
-                          onChange={(e) => setPushTitle(e.target.value)}
+                    <div>
+                      <Label
+                        htmlFor="push-title"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        {t('Title')}
+                      </Label>
+                      <Input
+                        id="push-title"
+                        value={pushTitle}
+                        onChange={(e) => setPushTitle(e.target.value)}
+                        disabled={!isDraft}
+                        placeholder={t('Notification title')}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="push-body"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Body
+                      </Label>
+                      <Textarea
+                        id="push-body"
+                        value={pushBody}
+                        onChange={(e) => setPushBody(e.target.value)}
+                        disabled={!isDraft}
+                        placeholder={t('Notification body')}
+                        className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[13px] font-medium text-foreground">
+                        {t('Media (Optional)')}
+                      </Label>
+                      <div className="mt-1.5">
+                        <input
+                          type="file"
+                          accept="image/*"
                           disabled={!isDraft}
-                          placeholder={t('Notification title')}
-                          className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor="push-body"
-                          className="text-[13px] font-medium text-foreground"
-                        >
-                          Body
-                        </Label>
-                        <Textarea
-                          id="push-body"
-                          value={pushBody}
-                          onChange={(e) => setPushBody(e.target.value)}
-                          disabled={!isDraft}
-                          placeholder={t('Notification body')}
-                          className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-[13px] font-medium text-foreground">
-                          {t('Media (Optional)')}
-                        </Label>
-                        <div className="mt-1.5">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            disabled={!isDraft}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                setPushImage(file)
-                              }
-                            }}
-                            className="text-[13px]"
-                          />
-                          {pushImage && (
-                            <p className="mt-1.5 text-[12px] text-muted-foreground">
-                              {t('Selected:')} {pushImage.name}
-                            </p>
-                          )}
-                          {!pushImage && message.data?.image && (
-                            <p className="mt-1.5 text-[12px] text-muted-foreground">
-                              {t('Current image:')} {message.data.image}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {isDraft && buckets.length > 0 && (
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="push-bucket"
-                            className="text-[13px] font-medium text-foreground"
-                          >
-                            {t('Upload bucket')}
-                          </Label>
-                          <Select
-                            value={pushBucketId || undefined}
-                            onValueChange={setPushBucketId}
-                          >
-                            <SelectTrigger id="push-bucket" className="h-9">
-                              <SelectValue
-                                placeholder={t(
-                                  'Select bucket for image upload',
-                                )}
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {buckets.map((b) => (
-                                <SelectItem key={b.$id} value={b.$id}>
-                                  {b.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <p className="text-[12px] text-muted-foreground">
-                            {t(
-                              'Uploading replaces the push image with a Storage file reference (bucket:file).',
-                            )}
-                          </p>
-                        </div>
-                      )}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-[13px] font-medium text-foreground">
-                            {t('Custom Data')}
-                          </Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-[12px]"
-                            onClick={handleAddCustomData}
-                            disabled={
-                              !isDraft ||
-                              !pushCustomData[pushCustomData.length - 1]?.key
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              setPushImage(file)
                             }
-                          >
-                            <Plus className="me-1 h-3.5 w-3.5" />
-                            {t('Add')}
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          {pushCustomData.map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2"
-                            >
-                              <Input
-                                placeholder={t('Enter key')}
-                                value={item.key}
-                                onChange={(e) =>
-                                  handleCustomDataKeyChange(
-                                    index,
-                                    e.target.value,
-                                  )
-                                }
-                                disabled={!isDraft}
-                                className="h-9 text-[13px]"
-                              />
-                              <Input
-                                placeholder={t('Enter value')}
-                                value={item.value}
-                                onChange={(e) =>
-                                  handleCustomDataValueChange(
-                                    index,
-                                    e.target.value,
-                                  )
-                                }
-                                disabled={!isDraft}
-                                className="h-9 text-[13px]"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 w-9 p-0"
-                                onClick={() => handleRemoveCustomData(index)}
-                                disabled={
-                                  !isDraft ||
-                                  (pushCustomData.length === 1 &&
-                                    !item.key &&
-                                    !item.value)
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
+                          }}
+                          className="text-[13px]"
+                        />
+                        {pushImage && (
+                          <p className="mt-1.5 text-[12px] text-muted-foreground">
+                            {t('Selected:')} {pushImage.name}
+                          </p>
+                        )}
+                        {!pushImage && message.data?.image && (
+                          <p className="mt-1.5 text-[12px] text-muted-foreground">
+                            {t('Current image:')} {message.data.image}
+                          </p>
+                        )}
                       </div>
-                      <div className="border-t border-border pt-4 space-y-3">
-                        <h4 className="text-[13px] font-semibold text-foreground">
-                          {t('Advanced')}
-                        </h4>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div>
-                            <Label
-                              htmlFor="push-action"
-                              className="text-[12px]"
+                    </div>
+                    {isDraft && buckets.length > 0 && (
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="push-bucket"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          {t('Upload bucket')}
+                        </Label>
+                        <Select
+                          value={pushBucketId || undefined}
+                          onValueChange={setPushBucketId}
+                        >
+                          <SelectTrigger id="push-bucket" className="h-9">
+                            <SelectValue placeholder={t('Select bucket for image upload')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {buckets.map((b) => (
+                              <SelectItem key={b.$id} value={b.$id}>
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[12px] text-muted-foreground">
+                          {t(
+                            'Uploading replaces the push image with a Storage file reference (bucket:file).',
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('Custom Data')}
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[12px]"
+                          onClick={handleAddCustomData}
+                          disabled={
+                            !isDraft ||
+                            !pushCustomData[pushCustomData.length - 1]?.key
+                          }
+                        >
+                          <Plus className="me-1 h-3.5 w-3.5" />
+                          {t('Add')}
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {pushCustomData.map((item, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder={t('Enter key')}
+                              value={item.key}
+                              onChange={(e) =>
+                                handleCustomDataKeyChange(index, e.target.value)
+                              }
+                              disabled={!isDraft}
+                              className="h-9 text-[13px]"
+                            />
+                            <Input
+                              placeholder={t('Enter value')}
+                              value={item.value}
+                              onChange={(e) =>
+                                handleCustomDataValueChange(
+                                  index,
+                                  e.target.value,
+                                )
+                              }
+                              disabled={!isDraft}
+                              className="h-9 text-[13px]"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 p-0"
+                              onClick={() => handleRemoveCustomData(index)}
+                              disabled={
+                                !isDraft ||
+                                (pushCustomData.length === 1 &&
+                                  !item.key &&
+                                  !item.value)
+                              }
                             >
-                              {t('Action')}
-                            </Label>
-                            <Input
-                              id="push-action"
-                              value={pushAction}
-                              onChange={(e) => setPushAction(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <div>
-                            <Label htmlFor="push-icon" className="text-[12px]">
-                              {t('Icon')}
-                            </Label>
-                            <Input
-                              id="push-icon"
-                              value={pushIcon}
-                              onChange={(e) => setPushIcon(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="push-sound" className="text-[12px]">
-                              {t('Sound')}
-                            </Label>
-                            <Input
-                              id="push-sound"
-                              value={pushSound}
-                              onChange={(e) => setPushSound(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="push-color" className="text-[12px]">
-                              {t('Color')}
-                            </Label>
-                            <Input
-                              id="push-color"
-                              value={pushColor}
-                              onChange={(e) => setPushColor(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="push-tag" className="text-[12px]">
-                              {t('Tag')}
-                            </Label>
-                            <Input
-                              id="push-tag"
-                              value={pushTag}
-                              onChange={(e) => setPushTag(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="push-badge" className="text-[12px]">
-                              {t('Badge (iOS)')}
-                            </Label>
-                            <Input
-                              id="push-badge"
-                              value={pushBadge}
-                              onChange={(e) => setPushBadge(e.target.value)}
-                              disabled={!isDraft}
-                              className="mt-1 h-9 text-[13px]"
-                            />
-                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <h4 className="text-[13px] font-semibold text-foreground">
+                        {t('Advanced')}
+                      </h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="push-action" className="text-[12px]">
+                            {t('Action')}
+                          </Label>
+                          <Input
+                            id="push-action"
+                            value={pushAction}
+                            onChange={(e) => setPushAction(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
                         </div>
                         <div>
-                          <Label className="text-[12px]">{t('Priority')}</Label>
-                          <Select
-                            value={pushPriority}
-                            onValueChange={(v) =>
-                              setPushPriority(v as MessagePriority)
-                            }
+                          <Label htmlFor="push-icon" className="text-[12px]">
+                            {t('Icon')}
+                          </Label>
+                          <Input
+                            id="push-icon"
+                            value={pushIcon}
+                            onChange={(e) => setPushIcon(e.target.value)}
                             disabled={!isDraft}
-                          >
-                            <SelectTrigger className="mt-1 h-9">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={MessagePriority.Normal}>
-                                {t('Normal')}
-                              </SelectItem>
-                              <SelectItem value={MessagePriority.High}>
-                                {t('High')}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                            className="mt-1 h-9 text-[13px]"
+                          />
                         </div>
-                        <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label
-                                htmlFor="push-bg"
-                                className="text-[13px] font-medium"
-                              >
-                                {t('Content available (iOS)')}
-                              </Label>
-                              <p className="text-[12px] text-muted-foreground mt-0.5">
-                                {t('Deliver in the background when possible.')}
-                              </p>
-                            </div>
-                            <Switch
-                              id="push-bg"
-                              checked={pushContentAvailable}
-                              onCheckedChange={setPushContentAvailable}
-                              disabled={!isDraft}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label
-                                htmlFor="push-critical"
-                                className="text-[13px] font-medium"
-                              >
-                                {t('Critical (iOS)')}
-                              </Label>
-                              <p className="text-[12px] text-muted-foreground mt-0.5">
-                                {t(
-                                  'Requires critical notification entitlement.',
-                                )}
-                              </p>
-                            </div>
-                            <Switch
-                              id="push-critical"
-                              checked={pushCritical}
-                              onCheckedChange={setPushCritical}
-                              disabled={!isDraft}
-                            />
-                          </div>
+                        <div>
+                          <Label htmlFor="push-sound" className="text-[12px]">
+                            {t('Sound')}
+                          </Label>
+                          <Input
+                            id="push-sound"
+                            value={pushSound}
+                            onChange={(e) => setPushSound(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-color" className="text-[12px]">
+                            {t('Color')}
+                          </Label>
+                          <Input
+                            id="push-color"
+                            value={pushColor}
+                            onChange={(e) => setPushColor(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-tag" className="text-[12px]">
+                            {t('Tag')}
+                          </Label>
+                          <Input
+                            id="push-tag"
+                            value={pushTag}
+                            onChange={(e) => setPushTag(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-badge" className="text-[12px]">
+                            {t('Badge (iOS)')}
+                          </Label>
+                          <Input
+                            id="push-badge"
+                            value={pushBadge}
+                            onChange={(e) => setPushBadge(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
                         </div>
                       </div>
+                      <div>
+                        <Label className="text-[12px]">{t('Priority')}</Label>
+                        <Select
+                          value={pushPriority}
+                          onValueChange={(v) =>
+                            setPushPriority(v as MessagePriority)
+                          }
+                          disabled={!isDraft}
+                        >
+                          <SelectTrigger className="mt-1 h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={MessagePriority.Normal}>
+                              {t('Normal')}
+                            </SelectItem>
+                            <SelectItem value={MessagePriority.High}>
+                              {t('High')}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label
+                              htmlFor="push-bg"
+                              className="text-[13px] font-medium"
+                            >
+                              {t('Content available (iOS)')}
+                            </Label>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              {t('Deliver in the background when possible.')}
+                            </p>
+                          </div>
+                          <Switch
+                            id="push-bg"
+                            checked={pushContentAvailable}
+                            onCheckedChange={setPushContentAvailable}
+                            disabled={!isDraft}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label
+                              htmlFor="push-critical"
+                              className="text-[13px] font-medium"
+                            >
+                              {t('Critical (iOS)')}
+                            </Label>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              {t('Requires critical notification entitlement.')}
+                            </p>
+                          </div>
+                          <Switch
+                            id="push-critical"
+                            checked={pushCritical}
+                            onCheckedChange={setPushCritical}
+                            disabled={!isDraft}
+                          />
+                        </div>
+                      </div>
+                    </div>
                     </div>
                   </div>
                 </div>
@@ -1775,440 +1748,428 @@ export function View({
           )}
 
           {showMessageMain && (
-            <>
-              {/* Update Topics Card */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Topics')}
-                    </h3>
-                    {isDraft && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 text-[12px]"
-                        onClick={() => setTopicsModalOpen(true)}
-                      >
-                        <Plus className="me-1.5 h-3.5 w-3.5" />
-                        {t('Add')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4 @container">
-                  <div className="flex flex-col gap-6 @[600px]:flex-row">
-                    <div className="@[600px]:w-64 shrink-0">
-                      <p className="text-[13px] text-muted-foreground">
-                        {t(
-                          'Link topics so this message reaches their subscribers when you send. Subscriber counts reflect targets registered on each topic.',
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {selectedTopicIds.size > 0 ? (
-                        <div className="rounded-lg border border-border bg-card overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-b border-border">
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {t('Topic name')}
-                                </TableHead>
-                                {isDraft && (
-                                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
-                                )}
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Array.from(selectedTopicIds).map((topicId) => {
-                                const topic = topicsById[topicId]
-                                const totalSubscribers = topic
-                                  ? (topic.emailTotal || 0) +
-                                    (topic.smsTotal || 0) +
-                                    (topic.pushTotal || 0)
-                                  : 0
-                                return (
-                                  <TableRow
-                                    key={topicId}
-                                    className="border-b border-border/50"
-                                  >
-                                    <TableCell className="px-4 py-3">
-                                      {topic ? (
-                                        <div>
-                                          <p className="text-[13px] font-medium text-foreground">
-                                            {topic.name} ({totalSubscribers}{' '}
-                                            {t('targets')})
-                                          </p>
-                                          <CopyableId
-                                            id={topic.$id}
-                                            size="xs"
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div>
-                                          <p className="text-[13px] text-muted-foreground">
-                                            {t('Topic not found')}
-                                          </p>
-                                          <CopyableId id={topicId} size="xs" />
-                                        </div>
-                                      )}
-                                    </TableCell>
-                                    {isDraft && (
-                                      <TableCell className="px-4 py-3 text-end">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          onClick={() => {
-                                            const newSelected = new Set(
-                                              selectedTopicIds,
-                                            )
-                                            newSelected.delete(topicId)
-                                            setSelectedTopicIds(newSelected)
-                                          }}
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
-                                      </TableCell>
-                                    )}
-                                  </TableRow>
-                                )
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : isDraft ? (
-                        <EmptyState
-                          icon={Hash}
-                          title={t('No topics yet')}
-                          description={t(
-                            'Select topics using Add to reach their subscribers when you send.',
-                          )}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      ) : (
-                        <EmptyState
-                          icon={Hash}
-                          title={t('No topics')}
-                          description={t('This message has no linked topics.')}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
+          <>
+          {/* Update Topics Card */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  {t('Topics')}
+                </h3>
                 {isDraft && (
-                  <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !hasTopicsChanged ||
-                        updateEmailMutation.isPending ||
-                        updateSMSMutation.isPending ||
-                        updatePushMutation.isPending
-                      }
-                      onClick={handleUpdateMessage}
-                    >
-                      {t('Update')}
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setTopicsModalOpen(true)}
+                  >
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
+                    {t('Add')}
+                  </Button>
                 )}
               </div>
-
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Users')}
-                    </h3>
-                    {isDraft && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 text-[12px]"
-                        onClick={() => setRecipientUsersModalOpen(true)}
-                      >
-                        <Plus className="me-1.5 h-3.5 w-3.5" />
-                        {t('Add')}
-                      </Button>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    {t(
+                      'Link topics so this message reaches their subscribers when you send. Subscriber counts reflect targets registered on each topic.',
                     )}
-                  </div>
+                  </p>
                 </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4 @container">
-                  <div className="flex flex-col gap-6 @[600px]:flex-row">
-                    <div className="@[600px]:w-64 shrink-0">
-                      <p className="text-[13px] text-muted-foreground">
-                        {t(
-                          'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.',
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {selectedUserIds.size > 0 ? (
-                        <div className="rounded-lg border border-border bg-card overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-b border-border">
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {t('User')}
-                                </TableHead>
-                                {isDraft && (
-                                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
-                                )}
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {[...selectedUserIds].map((uid) => {
-                                const u = usersById[uid]
-                                return (
-                                  <TableRow
-                                    key={uid}
-                                    className="border-b border-border/50"
-                                  >
-                                    <TableCell className="px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  {selectedTopicIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('Topic name')}
+                            </TableHead>
+                            {isDraft && (
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
+                            )}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Array.from(selectedTopicIds).map((topicId) => {
+                            const topic = topicsById[topicId]
+                            const totalSubscribers = topic
+                              ? (topic.emailTotal || 0) +
+                                (topic.smsTotal || 0) +
+                                (topic.pushTotal || 0)
+                              : 0
+                            return (
+                              <TableRow
+                                key={topicId}
+                                className="border-b border-border/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  {topic ? (
+                                    <div>
                                       <p className="text-[13px] font-medium text-foreground">
-                                        {u?.name || u?.email || uid}
+                                        {topic.name} ({totalSubscribers} {t('targets')})
                                       </p>
-                                      <CopyableId id={uid} size="xs" />
-                                    </TableCell>
-                                    {isDraft && (
-                                      <TableCell className="px-4 py-3 text-end">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          onClick={() => {
-                                            const n = new Set(selectedUserIds)
-                                            n.delete(uid)
-                                            setSelectedUserIds(n)
-                                          }}
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
-                                      </TableCell>
-                                    )}
-                                  </TableRow>
-                                )
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : isDraft ? (
-                        <EmptyState
-                          icon={Users}
-                          title={t('No users yet')}
-                          description={t(
-                            'Choose users using Add to target every matching channel target for each user.',
-                          )}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      ) : (
-                        <EmptyState
-                          icon={Users}
-                          title={t('No users')}
-                          description={t('This message has no selected users.')}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {isDraft && (
-                  <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !hasUsersChanged ||
-                        updateEmailMutation.isPending ||
-                        updateSMSMutation.isPending ||
-                        updatePushMutation.isPending
-                      }
-                      onClick={handleUpdateMessage}
-                    >
-                      {t('Update')}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Update Targets Card */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Targets')}
-                    </h3>
-                    {isDraft && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 text-[12px]"
-                        onClick={() => setTargetPickerFor('primary')}
-                      >
-                        <Plus className="me-1.5 h-3.5 w-3.5" />
-                        {t('Add')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4 @container">
-                  <div className="flex flex-col gap-6 @[600px]:flex-row">
-                    <div className="@[600px]:w-64 shrink-0">
-                      <p className="text-[13px] text-muted-foreground">
-                        {t(
-                          'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).',
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {selectedTargetIds.size > 0 ? (
-                        <div className="rounded-lg border border-border bg-card overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-b border-border">
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {t('Target')}
-                                </TableHead>
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {t('User')}
-                                </TableHead>
+                                      <CopyableId id={topic.$id} size="xs" />
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <p className="text-[13px] text-muted-foreground">
+                                        {t('Topic not found')}
+                                      </p>
+                                      <CopyableId id={topicId} size="xs" />
+                                    </div>
+                                  )}
+                                </TableCell>
                                 {isDraft && (
-                                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
+                                  <TableCell className="px-4 py-3 text-end">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const newSelected = new Set(
+                                          selectedTopicIds,
+                                        )
+                                        newSelected.delete(topicId)
+                                        setSelectedTopicIds(newSelected)
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
                                 )}
                               </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Array.from(selectedTargetIds).map((targetId) => {
-                                const target = displayTargetById[targetId]
-                                const user = target?.userId
-                                  ? usersById[target.userId]
-                                  : null
-                                return (
-                                  <TableRow
-                                    key={targetId}
-                                    className="border-b border-border/50"
-                                  >
-                                    <TableCell className="px-4 py-3">
-                                      {target ? (
-                                        target.providerType === 'push' ? (
-                                          <span className="text-[13px] text-foreground">
-                                            {target.name || target.identifier}
-                                          </span>
-                                        ) : (
-                                          <span className="text-[13px] text-foreground">
-                                            {target.identifier}
-                                          </span>
-                                        )
-                                      ) : (
-                                        <div className="space-y-1">
-                                          <CopyableId id={targetId} size="xs" />
-                                          <p className="text-[12px] text-muted-foreground">
-                                            {t('Loading target details…')}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3">
-                                      {user ? (
-                                        <span className="text-[13px] text-muted-foreground">
-                                          {user.name || user.email}
-                                        </span>
-                                      ) : (
-                                        <span className="text-[13px] text-muted-foreground">
-                                          {target?.userId ? (
-                                            <CopyableId
-                                              id={target.userId}
-                                              size="xs"
-                                            />
-                                          ) : (
-                                            '-'
-                                          )}
-                                        </span>
-                                      )}
-                                    </TableCell>
-                                    {isDraft && (
-                                      <TableCell className="px-4 py-3 text-end">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          onClick={() => {
-                                            const newSelected = new Set(
-                                              selectedTargetIds,
-                                            )
-                                            newSelected.delete(targetId)
-                                            setSelectedTargetIds(newSelected)
-                                            setDraftTargetDetailsById(
-                                              (prev) => {
-                                                const next = { ...prev }
-                                                delete next[targetId]
-                                                return next
-                                              },
-                                            )
-                                          }}
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
-                                      </TableCell>
-                                    )}
-                                  </TableRow>
-                                )
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : isDraft ? (
-                        <EmptyState
-                          icon={Target}
-                          title={t('No targets yet')}
-                          description={t(
-                            'Select targets using Add to deliver this message on the matching channel.',
-                          )}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      ) : (
-                        <EmptyState
-                          icon={Target}
-                          title={t('No targets')}
-                          description={t(
-                            'No targets have been selected for this message.',
-                          )}
-                          variant="card"
-                          iconSize="md"
-                        />
-                      )}
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
                     </div>
-                  </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Hash}
+                      title={t('No topics yet')}
+                      description={t(
+                        'Select topics using Add to reach their subscribers when you send.',
+                      )}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Hash}
+                      title={t('No topics')}
+                      description={t('This message has no linked topics.')}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
                 </div>
+              </div>
+            </div>
+            {isDraft && (
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={
+                    !hasTopicsChanged ||
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
+                  onClick={handleUpdateMessage}
+                >
+                  {t('Update')}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  {t('Users')}
+                </h3>
                 {isDraft && (
-                  <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !hasTargetsChanged ||
-                        updateEmailMutation.isPending ||
-                        updateSMSMutation.isPending ||
-                        updatePushMutation.isPending
-                      }
-                      onClick={handleUpdateMessage}
-                    >
-                      {t('Update')}
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setRecipientUsersModalOpen(true)}
+                  >
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
+                    {t('Add')}
+                  </Button>
                 )}
               </div>
-            </>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    {t(
+                      'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.',
+                    )}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {selectedUserIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('User')}
+                            </TableHead>
+                            {isDraft && (
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
+                            )}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {[...selectedUserIds].map((uid) => {
+                            const u = usersById[uid]
+                            return (
+                              <TableRow key={uid} className="border-b border-border/50">
+                                <TableCell className="px-4 py-3">
+                                  <p className="text-[13px] font-medium text-foreground">
+                                    {u?.name || u?.email || uid}
+                                  </p>
+                                  <CopyableId id={uid} size="xs" />
+                                </TableCell>
+                                {isDraft && (
+                                  <TableCell className="px-4 py-3 text-end">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const n = new Set(selectedUserIds)
+                                        n.delete(uid)
+                                        setSelectedUserIds(n)
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Users}
+                      title={t('No users yet')}
+                      description={t(
+                        'Choose users using Add to target every matching channel target for each user.',
+                      )}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Users}
+                      title={t('No users')}
+                      description={t('This message has no selected users.')}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+            {isDraft && (
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={
+                    !hasUsersChanged ||
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
+                  onClick={handleUpdateMessage}
+                >
+                  {t('Update')}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Update Targets Card */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  {t('Targets')}
+                </h3>
+                {isDraft && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setTargetPickerFor('primary')}
+                  >
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
+                    {t('Add')}
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    {t(
+                      'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).',
+                    )}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {selectedTargetIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('Target')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('User')}
+                            </TableHead>
+                            {isDraft && (
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
+                            )}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Array.from(selectedTargetIds).map((targetId) => {
+                            const target = displayTargetById[targetId]
+                            const user = target?.userId
+                              ? usersById[target.userId]
+                              : null
+                            return (
+                              <TableRow
+                                key={targetId}
+                                className="border-b border-border/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  {target ? (
+                                    target.providerType === 'push' ? (
+                                      <span className="text-[13px] text-foreground">
+                                        {target.name || target.identifier}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[13px] text-foreground">
+                                        {target.identifier}
+                                      </span>
+                                    )
+                                  ) : (
+                                    <div className="space-y-1">
+                                      <CopyableId id={targetId} size="xs" />
+                                      <p className="text-[12px] text-muted-foreground">
+                                        {t('Loading target details…')}
+                                      </p>
+                                    </div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {user ? (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {user.name || user.email}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {target?.userId ? (
+                                        <CopyableId id={target.userId} size="xs" />
+                                      ) : (
+                                        '-'
+                                      )}
+                                    </span>
+                                  )}
+                                </TableCell>
+                                {isDraft && (
+                                  <TableCell className="px-4 py-3 text-end">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const newSelected = new Set(
+                                          selectedTargetIds,
+                                        )
+                                        newSelected.delete(targetId)
+                                        setSelectedTargetIds(newSelected)
+                                        setDraftTargetDetailsById((prev) => {
+                                          const next = { ...prev }
+                                          delete next[targetId]
+                                          return next
+                                        })
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Target}
+                      title={t('No targets yet')}
+                      description={t(
+                        'Select targets using Add to deliver this message on the matching channel.',
+                      )}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Target}
+                      title={t('No targets')}
+                      description={t(
+                        'No targets have been selected for this message.',
+                      )}
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+            {isDraft && (
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={
+                    !hasTargetsChanged ||
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
+                  onClick={handleUpdateMessage}
+                >
+                  {t('Update')}
+                </Button>
+              </div>
+            )}
+          </div>
+          </>
           )}
 
           {showMessageSettings && (
@@ -2223,9 +2184,7 @@ export function View({
                       {t('Message ID and delivery timestamps.')}
                     </p>
                   </div>
-                  <div className="shrink-0 pt-0.5">
-                    {getMessageStatusBadge()}
-                  </div>
+                  <div className="shrink-0 pt-0.5">{getMessageStatusBadge()}</div>
                 </div>
               </div>
               <div className="border-t border-border" />
@@ -2330,8 +2289,7 @@ export function View({
                     </p>
                     {message.$updatedAt && (
                       <p className="text-[12px] text-muted-foreground">
-                        {t('Last updated:')}{' '}
-                        {formatDateTime(message.$updatedAt)}
+                        {t('Last updated:')} {formatDateTime(message.$updatedAt)}
                       </p>
                     )}
                   </div>
@@ -2400,10 +2358,7 @@ export function View({
             else if (targetPickerFor === 'bcc') setBccTargetIds(ids)
             else {
               setSelectedTargetIds(ids)
-              setDraftTargetDetailsById((prev) => ({
-                ...prev,
-                ...selectedById,
-              }))
+              setDraftTargetDetailsById((prev) => ({ ...prev, ...selectedById }))
             }
             setTargetPickerFor(null)
           }}

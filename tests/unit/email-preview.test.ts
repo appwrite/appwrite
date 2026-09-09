@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { emailPreviewDocument } from '@/lib/email-preview'
+import {
+  emailPreviewDocument,
+  emailTemplatePreviewDocument,
+} from '@/lib/email-preview'
 
 describe('emailPreviewDocument', () => {
   test('renders an HTML body as sent', () => {
@@ -11,5 +14,12 @@ describe('emailPreviewDocument', () => {
     const doc = emailPreviewDocument('Use <b> & </b> for bold', false)
     expect(doc).toContain('Use &lt;b&gt; &amp; &lt;/b&gt; for bold')
     expect(doc).not.toContain('<b>')
+  })
+})
+
+describe('emailTemplatePreviewDocument', () => {
+  test('renders the bold tokens the mail worker substitutes', () => {
+    const doc = emailTemplatePreviewDocument('Hi {{b}}{{project}}{{/b}} team')
+    expect(doc).toContain('Hi <strong>{{project}}</strong> team')
   })
 })

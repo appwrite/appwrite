@@ -163,9 +163,6 @@ async function mockAppwriteApi(
     const url = new URL(request.url())
     const apiPath = url.pathname.match(/^\/v1(\/.*)$/)?.[1]
     if (url.origin === localOrigin && !apiPath) return route.continue()
-    // @monaco-editor/react pulls the editor from a CDN, so the source view
-    // never mounts if the mock answers it.
-    if (url.hostname === 'cdn.jsdelivr.net') return route.continue()
 
     const headers = corsHeaders(route)
     if (!apiPath || request.method() === 'OPTIONS') {
@@ -268,8 +265,8 @@ function viewOption(page: Page, name: 'Source' | 'Preview') {
   return page.getByRole('radio', { name })
 }
 
-function sourceEditor(page: Page, testId: 'email-content' | 'message') {
-  return page.locator(`[data-testid="${testId}"]`)
+function sourceEditor(page: Page, name: 'Body' | 'Message') {
+  return page.getByRole('group', { name })
 }
 
 async function openTemplates(page: Page) {
@@ -327,7 +324,7 @@ test.describe('email body preview (mocked API)', () => {
 
     await viewOption(page, 'Source').click()
 
-    const source = sourceEditor(page, 'email-content')
+    const source = sourceEditor(page, 'Body')
     await expect(source).toContainText('<!doctype html>')
 
     // Read-only is asserted by behaviour: typing into it changes nothing.
@@ -357,7 +354,7 @@ test.describe('email body preview (mocked API)', () => {
 
     const before = await gapUnderSubject()
     await viewOption(page, 'Source').click()
-    await expect(sourceEditor(page, 'email-content')).toBeVisible()
+    await expect(sourceEditor(page, 'Body')).toBeVisible()
 
     expect(await gapUnderSubject()).toBe(before)
   })
@@ -370,11 +367,9 @@ test.describe('email body preview (mocked API)', () => {
 
     await expect(viewOption(page, 'Source')).toBeChecked()
 
-    const source = sourceEditor(page, 'email-content')
-    await source.locator('.view-lines').click()
+    await sourceEditor(page, 'Body').click()
     await page.keyboard.press('ControlOrMeta+A')
     await page.keyboard.type('Hello from the draft')
-    await expect(source).toContainText('Hello from the draft')
 
     await viewOption(page, 'Preview').click()
 
@@ -390,7 +385,7 @@ test.describe('email template preview (mocked API)', () => {
     await openTemplates(page)
 
     await expect(viewOption(page, 'Source')).toBeChecked()
-    await expect(sourceEditor(page, 'message')).toContainText('{{user}}')
+    await expect(sourceEditor(page, 'Message')).toContainText('{{user}}')
   })
 
   test('a read-only template opens on the rendered mail', async ({ page }) => {

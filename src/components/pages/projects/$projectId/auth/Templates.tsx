@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { emailTemplatePreviewDocument } from '@/lib/email-preview'
 import {
   Dialog,
   DialogContent,
@@ -768,9 +769,7 @@ function TemplateEditor({
           {/* Message */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor={messageView === 'source' ? 'message' : undefined}>
-                {t('Message')}
-              </Label>
+              <Label>{t('Message')}</Label>
               <div className="flex items-center gap-3">
                 {!isSmtpEnabled && (
                   <TooltipProvider>
@@ -878,13 +877,14 @@ function TemplateEditor({
 
             {messageView === 'preview' ? (
               <EmailPreview
-                content={localFormData.message}
+                content={emailTemplatePreviewDocument(localFormData.message)}
                 html
                 className="h-[28rem]"
               />
             ) : (
               <div
-                data-testid="message"
+                role="group"
+                aria-label={t('Message')}
                 className={cn('h-[28rem]', !isSmtpEnabled && 'opacity-60')}
                 style={EDITOR_SURFACE}
               >
@@ -892,6 +892,7 @@ function TemplateEditor({
                   value={localFormData.message}
                   onChange={(value) => handleLocalFieldChange('message', value)}
                   language="html"
+                  ariaLabel={t('Message')}
                   height="28rem"
                   readOnly={!isSmtpEnabled}
                   minimap={false}
