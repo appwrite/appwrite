@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import type { SupportedLanguage } from '@/lib/i18n/active-language'
 
 export type ConfirmDialogRequest = {
   title: string
@@ -20,6 +21,7 @@ export type DialogLayerOptions = {
   contentClassName?: string
   /** Extra classes for the backdrop. */
   overlayClassName?: string
+  language?: SupportedLanguage
 }
 
 /**
@@ -41,6 +43,7 @@ export function useConfirmDialog(options: DialogLayerOptions = {}) {
   const [request, setRequest] = useState<ConfirmDialogRequest | null>(null)
   const [open, setOpen] = useState(false)
   const resolveRef = useRef<((confirmed: boolean) => void) | null>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
 
   const settle = useCallback((confirmed: boolean) => {
     resolveRef.current?.(confirmed)
@@ -51,6 +54,12 @@ export function useConfirmDialog(options: DialogLayerOptions = {}) {
   const confirm = useCallback(
     (next: ConfirmDialogRequest) =>
       new Promise<boolean>((resolve) => {
+        if (!returnFocusRef.current) {
+          returnFocusRef.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null
+        }
         resolveRef.current?.(false)
         resolveRef.current = resolve
         setRequest(next)
@@ -78,6 +87,12 @@ export function useConfirmDialog(options: DialogLayerOptions = {}) {
         onConfirm={() => settle(true)}
         contentClassName={options.contentClassName}
         overlayClassName={options.overlayClassName}
+        language={options.language}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          returnFocusRef.current?.focus({ preventScroll: true })
+          returnFocusRef.current = null
+        }}
       />
     </div>
   )

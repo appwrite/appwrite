@@ -11,7 +11,7 @@ const NATIVE_DIALOG_HOSTS = ['window', 'globalThis', 'self']
  * Bans `alert()`, `confirm()` and `prompt()` (bare or via window/globalThis/self).
  * CI enforces these two rules on their own via scripts/lint-native-dialogs.ts.
  */
-const nativeDialogRules = {
+export const nativeDialogRules = {
   'no-restricted-globals': [
     'error',
     ...NATIVE_DIALOG_FUNCTIONS.map((name) => ({

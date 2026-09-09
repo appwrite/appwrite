@@ -7,8 +7,8 @@
  * Native dialogs cannot be styled or translated and block the page.
  *
  * The rules live in eslint.config.js so editors flag violations too. This
- * script runs only those rules, so CI can enforce them independently of the
- * wider ESLint baseline.
+ * script runs only those rules, including in shared UI components excluded
+ * from the wider ESLint baseline.
  *
  * Usage:
  *   bun run lint:native-dialogs
@@ -20,21 +20,19 @@ import { ESLint } from 'eslint'
 
 const ROOT = join(import.meta.dirname, '..')
 const TARGETS = ['src', 'e2e', 'tests', '*.ts', '*.js', '*.cjs', '*.mjs']
-const NATIVE_DIALOG_RULES = new Set([
-  'no-restricted-globals',
-  'no-restricted-properties',
-])
+
+export function createNativeDialogLinter() {
+  return new ESLint({
+    cwd: ROOT,
+    // Ignore directives for unrelated rules and enforce the native-dialog ban.
+    allowInlineConfig: false,
+    errorOnUnmatchedPattern: false,
+    overrideConfigFile: join(ROOT, 'eslint.native-dialogs.config.js'),
+  })
+}
 
 async function main() {
-  const eslint = new ESLint({
-    cwd: ROOT,
-    errorOnUnmatchedPattern: false,
-    ruleFilter: ({ ruleId }) => NATIVE_DIALOG_RULES.has(ruleId),
-    overrideConfig: [
-      { linterOptions: { reportUnusedDisableDirectives: 'off' } },
-    ],
-  })
-
+  const eslint = createNativeDialogLinter()
   const results = await eslint.lintFiles(TARGETS)
   const failing = results.filter((result) => result.errorCount > 0)
 

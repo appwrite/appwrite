@@ -5,7 +5,9 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
-import { useT } from '@/lib/i18n/translate'
+import { translateText, useT } from '@/lib/i18n/translate'
+import type { SupportedLanguage } from '@/lib/i18n/active-language'
+import { resolveEffectivePageDirection } from '@/lib/layout/page-direction'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -44,6 +46,8 @@ type PromptDialogProps = {
   contentClassName?: string
   /** Extra classes for the backdrop. */
   overlayClassName?: string
+  language?: SupportedLanguage
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 /**
@@ -61,12 +65,23 @@ export function PromptDialog({
   isSubmitting = false,
   contentClassName,
   overlayClassName,
+  language,
+  onCloseAutoFocus,
 }: PromptDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isSubmitting) onOpenChange(nextOpen)
+      }}
+    >
       <DialogContent
         className={cn('sm:max-w-md p-0', contentClassName)}
         overlayClassName={overlayClassName}
+        {...(language
+          ? { lang: language, dir: resolveEffectivePageDirection(language) }
+          : {})}
+        onCloseAutoFocus={onCloseAutoFocus}
         {...(description ? {} : { 'aria-describedby': undefined })}
       >
         {/* Mounted per open, so field state resets without effects. */}
@@ -77,6 +92,7 @@ export function PromptDialog({
           confirmLabel={confirmLabel}
           onSubmit={onSubmit}
           isSubmitting={isSubmitting}
+          language={language}
           onCancel={() => onOpenChange(false)}
         />
       </DialogContent>
@@ -87,7 +103,7 @@ export function PromptDialog({
 type PromptDialogFormProps = Required<
   Pick<PromptDialogProps, 'title' | 'fields' | 'confirmLabel' | 'onSubmit'>
 > &
-  Pick<PromptDialogProps, 'description' | 'isSubmitting'> & {
+  Pick<PromptDialogProps, 'description' | 'isSubmitting' | 'language'> & {
     onCancel: () => void
   }
 
@@ -98,9 +114,13 @@ function PromptDialogForm({
   confirmLabel,
   onSubmit,
   isSubmitting,
+  language,
   onCancel,
 }: PromptDialogFormProps) {
-  const t = useT()
+  const defaultT = useT()
+  const t = language
+    ? (text: string) => translateText(text, language)
+    : defaultT
   const idPrefix = useId()
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(

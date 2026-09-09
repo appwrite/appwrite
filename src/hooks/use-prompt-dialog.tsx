@@ -29,6 +29,7 @@ export function usePromptDialog(options: DialogLayerOptions = {}) {
   const resolveRef = useRef<
     ((values: Record<string, string> | null) => void) | null
   >(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
 
   const settle = useCallback((values: Record<string, string> | null) => {
     resolveRef.current?.(values)
@@ -39,6 +40,12 @@ export function usePromptDialog(options: DialogLayerOptions = {}) {
   const prompt = useCallback(
     (next: PromptDialogRequest) =>
       new Promise<Record<string, string> | null>((resolve) => {
+        if (!returnFocusRef.current) {
+          returnFocusRef.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null
+        }
         resolveRef.current?.(null)
         resolveRef.current = resolve
         setRequest(next)
@@ -66,6 +73,12 @@ export function usePromptDialog(options: DialogLayerOptions = {}) {
         onSubmit={settle}
         contentClassName={options.contentClassName}
         overlayClassName={options.overlayClassName}
+        language={options.language}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          returnFocusRef.current?.focus({ preventScroll: true })
+          returnFocusRef.current = null
+        }}
       />
     </div>
   )
