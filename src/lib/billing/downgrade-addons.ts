@@ -68,6 +68,15 @@ function readSupportedAddons(
  * `premiumGeoDB` is project-scoped and never appears in the organization list
  * nor in the estimation's `unsupportedAddons`, so projects are diffed too.
  */
+/**
+ * An addon this flow can actually turn off now. A pending one is still
+ * settling its payment and the API rejects the delete with a 400, and one
+ * already scheduled for removal needs nothing further.
+ */
+function isRemovableNow(addon: Models.Addon): boolean {
+  return addon.status === 'active' && !isAddonScheduledForRemoval(addon)
+}
+
 export function getUnsupportedAddonRemovals(
   snapshot: DowngradeAddonSnapshot | null | undefined,
   targetPlan: Record<string, unknown> | null | undefined,
@@ -87,7 +96,7 @@ export function getUnsupportedAddonRemovals(
       snapshot.organizationAddons,
       key,
     )
-    if (organizationAddon && !isAddonScheduledForRemoval(organizationAddon)) {
+    if (organizationAddon && isRemovableNow(organizationAddon)) {
       removals.push({
         key,
         label,
@@ -99,7 +108,7 @@ export function getUnsupportedAddonRemovals(
 
     for (const project of snapshot.projects) {
       const addon = findActiveOrPendingAddon(project.addons, key)
-      if (!addon || isAddonScheduledForRemoval(addon)) continue
+      if (!addon || !isRemovableNow(addon)) continue
       removals.push({
         key,
         label,

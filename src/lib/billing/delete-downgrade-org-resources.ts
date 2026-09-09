@@ -33,7 +33,10 @@ export async function deleteDowngradeDomains(
 export async function deleteDowngradeAddons(
   addons: DowngradeAddonRemoval[],
 ): Promise<void> {
-  await Promise.all(
+  // Best effort: the server removes addons the new plan does not support at
+  // cycle close anyway, so one refusing to disable must not abort a run whose
+  // deletions have already happened.
+  await Promise.allSettled(
     addons.map((addon) =>
       addon.scope === 'organization'
         ? sdk.forConsole.organizations.deleteAddon({

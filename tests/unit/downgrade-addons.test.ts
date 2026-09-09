@@ -94,6 +94,20 @@ describe('getUnsupportedAddonRemovals', () => {
     expect(removals).toEqual([])
   })
 
+  test('excludes a pending addon, which the API refuses to delete', () => {
+    const removals = getUnsupportedAddonRemovals(
+      snapshot({
+        organizationAddons: [
+          addon({ $id: 'a-pending', key: 'baa', status: 'pending' }),
+          addon({ $id: 'a-active', key: 'premiumGeoDBOrg', status: 'active' }),
+        ],
+      }),
+      freePlan,
+    )
+
+    expect(removals.map(({ addonId }) => addonId)).toEqual(['a-active'])
+  })
+
   test('excludes addons already scheduled for removal', () => {
     const removals = getUnsupportedAddonRemovals(
       snapshot({
