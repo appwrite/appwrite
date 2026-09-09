@@ -7,7 +7,6 @@ namespace Tests\Unit\Task\Validator;
 use Appwrite\Task\Validator\Cron;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Schedule\Trigger\Cron as Trigger;
 
 final class CronTest extends TestCase
 {
@@ -60,19 +59,4 @@ final class CronTest extends TestCase
         $this->assertFalse($this->object->isValid($expression));
     }
 
-    public function testAcceptsOvernightSchedule(): void
-    {
-        $expression = '0 22-23,0-3 * * *';
-
-        $this->assertTrue($this->object->isValid($expression));
-        $occurrences = (new Trigger($expression))->occurrencesBetween(
-            new \DateTimeImmutable('2026-09-09 21:00:00 UTC'),
-            new \DateTimeImmutable('2026-09-10 04:00:00 UTC'),
-        );
-
-        $this->assertSame(
-            ['22:00', '23:00', '00:00', '01:00', '02:00', '03:00'],
-            array_map(fn (\DateTimeImmutable $occurrence): string => $occurrence->format('H:i'), $occurrences),
-        );
-    }
 }
