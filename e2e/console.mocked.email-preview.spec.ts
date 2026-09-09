@@ -163,6 +163,9 @@ async function mockAppwriteApi(
     const url = new URL(request.url())
     const apiPath = url.pathname.match(/^\/v1(\/.*)$/)?.[1]
     if (url.origin === localOrigin && !apiPath) return route.continue()
+    // @monaco-editor/react pulls the editor from a CDN, so the source view
+    // never mounts if the mock answers it.
+    if (url.hostname === 'cdn.jsdelivr.net') return route.continue()
 
     const headers = corsHeaders(route)
     if (!apiPath || request.method() === 'OPTIONS') {
@@ -265,6 +268,10 @@ function viewOption(page: Page, name: 'Source' | 'Preview') {
   return page.getByRole('radio', { name })
 }
 
+function sourceEditor(page: Page, testId: 'email-content' | 'message') {
+  return page.locator(`[data-testid="${testId}"]`)
+}
+
 async function openTemplates(page: Page) {
   await page.goto(`/projects/${PROJECT.$id}/auth/templates`, {
     waitUntil: 'domcontentloaded',
@@ -320,9 +327,13 @@ test.describe('email body preview (mocked API)', () => {
 
     await viewOption(page, 'Source').click()
 
-    const source = page.locator('#email-content')
-    await expect(source).toHaveValue(EMAIL_HTML)
-    await expect(source).toBeDisabled()
+    const source = sourceEditor(page, 'email-content')
+    await expect(source).toContainText('<!doctype html>')
+
+    // Read-only is asserted by behaviour: typing into it changes nothing.
+    await source.click()
+    await page.keyboard.type('BREAK')
+    await expect(source).not.toContainText('BREAK')
   })
 
   test('switching views does not move the rest of the card', async ({
@@ -331,17 +342,24 @@ test.describe('email body preview (mocked API)', () => {
     await mockAppwriteApi(page, emailMessage('sent'))
     await openMessage(page)
 
-    // Document-absolute so the click's scroll-into-view cannot be read as a shift.
-    const offsetFromTop = () =>
-      page
-        .locator('#email-html')
-        .evaluate((el) => el.getBoundingClientRect().top + window.scrollY)
+    // Gap between the subject field and the row under the body, so neither the
+    // page nor an inner container scrolling can be read as a layout shift.
+    const gapUnderSubject = () =>
+      page.evaluate(() => {
+        const subject = document.querySelector('#email-subject')
+        const row = document.querySelector('#email-html')
+        if (!subject || !row) throw new Error('layout probes missing')
+        return Math.round(
+          row.getBoundingClientRect().top -
+            subject.getBoundingClientRect().bottom,
+        )
+      })
 
-    const before = await offsetFromTop()
+    const before = await gapUnderSubject()
     await viewOption(page, 'Source').click()
-    await expect(page.locator('#email-content')).toBeVisible()
+    await expect(sourceEditor(page, 'email-content')).toBeVisible()
 
-    expect(await offsetFromTop()).toBe(before)
+    expect(await gapUnderSubject()).toBe(before)
   })
 
   test('a draft opens on the source and previews unsaved edits', async ({
@@ -352,11 +370,16 @@ test.describe('email body preview (mocked API)', () => {
 
     await expect(viewOption(page, 'Source')).toBeChecked()
 
-    await page.locator('#email-content').fill('<h1>Hello from the draft</h1>')
+    const source = sourceEditor(page, 'email-content')
+    await source.locator('.view-lines').click()
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.type('Hello from the draft')
+    await expect(source).toContainText('Hello from the draft')
+
     await viewOption(page, 'Preview').click()
 
     await expect(
-      previewFrame(page).getByRole('heading', { name: 'Hello from the draft' }),
+      previewFrame(page).getByText('Hello from the draft'),
     ).toBeVisible()
   })
 })
@@ -367,7 +390,7 @@ test.describe('email template preview (mocked API)', () => {
     await openTemplates(page)
 
     await expect(viewOption(page, 'Source')).toBeChecked()
-    await expect(page.locator('#message')).toHaveValue(TEMPLATE_HTML)
+    await expect(sourceEditor(page, 'message')).toContainText('{{user}}')
   })
 
   test('a read-only template opens on the rendered mail', async ({ page }) => {

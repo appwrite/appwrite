@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import type { CSSProperties } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -17,9 +18,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
 import {
   Dialog,
   DialogContent,
@@ -559,6 +560,11 @@ interface TemplateEditorProps {
 }
 
 // Helper function to detect RTL languages based on locale code
+/** Keeps the editor on the field's own surface instead of the darker code-editor one. */
+const EDITOR_SURFACE = {
+  '--editor-bg': 'var(--background)',
+} as CSSProperties
+
 function isRTLLocale(locale: string): boolean {
   // RTL language codes: Arabic, Hebrew, Urdu, Persian/Farsi, Yiddish, etc.
   const rtlLanguageCodes = ['ar', 'he', 'iw', 'ur', 'fa', 'yi']
@@ -685,7 +691,10 @@ function TemplateEditor({
                 "HTTP header. Templates are automatically selected based on the user's locale.",
               )}
             </p>
-            <DocsRouteLink className="link-neutral inline-flex items-center gap-1 text-xs" href="/docs/advanced/platform/message-templates">
+            <DocsRouteLink
+              className="link-neutral inline-flex items-center gap-1 text-xs"
+              href="/docs/advanced/platform/message-templates"
+            >
               {t('Learn more about message templates')}
               <ExternalLink className="h-3 w-3" />
             </DocsRouteLink>
@@ -874,20 +883,21 @@ function TemplateEditor({
                 className="h-[28rem]"
               />
             ) : (
-              <Textarea
-                id="message"
-                placeholder={t('Enter your message')}
-                value={localFormData.message}
-                onChange={(e) =>
-                  handleLocalFieldChange('message', e.target.value)
-                }
-                readOnly={!isSmtpEnabled}
-                className={cn(
-                  'h-[28rem] resize-none field-sizing-fixed',
-                  !isSmtpEnabled && 'cursor-not-allowed opacity-60',
-                )}
-                dir="ltr"
-              />
+              <div
+                data-testid="message"
+                className={cn('h-[28rem]', !isSmtpEnabled && 'opacity-60')}
+                style={EDITOR_SURFACE}
+              >
+                <CodeEditor
+                  value={localFormData.message}
+                  onChange={(value) => handleLocalFieldChange('message', value)}
+                  language="html"
+                  height="28rem"
+                  readOnly={!isSmtpEnabled}
+                  minimap={false}
+                  lineNumbers="off"
+                />
+              </div>
             )}
           </div>
         </div>
@@ -980,7 +990,10 @@ function TemplateTypeSelector({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={t('Search templates...')} />
           <CommandList>
