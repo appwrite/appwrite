@@ -71,9 +71,9 @@ Connection handling also differs. Traditional Postgres has a finite connection l
 
 ## Operational overhead
 
-**Dedicated Postgres removes most, but not all, of the operations work.** The provider can handle patching, backups, and failover, but you still own capacity planning, connection pooling strategy, replica configuration, and deciding when to scale up.
+**Dedicated Postgres uses provisioned capacity that you scale deliberately.** You can scale vertically by moving to a larger compute specification, or horizontally by adding read replicas, sharding, or distributing workloads across multiple instances.
 
-**Serverless databases push more of that to the platform.** Capacity planning largely disappears, and scaling decisions are automatic. You give up some low-level tuning knobs in exchange, which is usually a fair trade for teams that would rather ship features than manage infrastructure.
+**Serverless databases automate much of that scaling.** Depending on the implementation, the platform may scale vertically, horizontally, or use a combination of both as demand changes. The key difference is that those scaling decisions are handled automatically rather than requiring you to resize capacity yourself.
 
 # Dedicated Postgres vs. serverless databases at a glance
 
