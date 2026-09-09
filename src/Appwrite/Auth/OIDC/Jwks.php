@@ -71,9 +71,26 @@ class Jwks
      */
     private function fetch(string $jwksUrl): array
     {
-        $body = $this->fetcher !== null
-            ? ($this->fetcher)($jwksUrl)
-            : $this->fetchHttp($jwksUrl);
+        if ($this->fetcher !== null) {
+            $body = ($this->fetcher)($jwksUrl);
+        } else {
+            try {
+                $response = (new Client())
+                    ->setConnectTimeout(self::CONNECT_TIMEOUT)
+                    ->setTimeout(self::REQUEST_TIMEOUT)
+                    ->setAllowRedirects(false)
+                    ->setUserAgent('Appwrite')
+                    ->fetch($jwksUrl);
+            } catch (\Throwable) {
+                $response = null;
+            }
+
+            if ($response === null || $response->getStatusCode() !== 200) {
+                throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
+            }
+
+            $body = $response->text();
+        }
 
         $document = \json_decode($body, true);
         if (!\is_array($document) || !\is_array($document['keys'] ?? null)) {
@@ -94,33 +111,18 @@ class Jwks
             if (!\is_string($kid) || $kid === '' || $modulus === false || $modulus === '' || $exponent === false || $exponent === '') {
                 continue;
             }
-            $keys[$kid] = $this->pem($modulus, $exponent);
+            // PEM SubjectPublicKeyInfo, the encoding openssl_pkey_get_public() accepts
+            $publicKey = $this->sequence($this->integer($modulus) . $this->integer($exponent));
+            $algorithm = $this->sequence(self::RSA_ENCRYPTION_OID . "\x05\x00"); // NULL parameters
+            $bitString = "\x00" . $publicKey; // zero unused bits
+            $subjectPublicKeyInfo = $this->sequence($algorithm . "\x03" . $this->length(\strlen($bitString)) . $bitString);
+
+            $keys[$kid] = "-----BEGIN PUBLIC KEY-----\n"
+                . \chunk_split(\base64_encode($subjectPublicKeyInfo), 64, "\n")
+                . "-----END PUBLIC KEY-----\n";
         }
 
         return $keys;
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function fetchHttp(string $jwksUrl): string
-    {
-        try {
-            $response = (new Client())
-                ->setConnectTimeout(self::CONNECT_TIMEOUT)
-                ->setTimeout(self::REQUEST_TIMEOUT)
-                ->setAllowRedirects(false)
-                ->setUserAgent('Appwrite')
-                ->fetch($jwksUrl);
-        } catch (\Throwable) {
-            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
-        }
-
-        if ($response->getStatusCode() !== 200) {
-            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
-        }
-
-        return $response->text();
     }
 
     private function decodeBase64Url(mixed $data): string|false
@@ -137,21 +139,6 @@ class Jwks
         return \base64_decode(\strtr($data, '-_', '+/'), true);
     }
 
-    /**
-     * Encode RSA public key material as the PEM SubjectPublicKeyInfo that
-     * openssl_pkey_get_public() accepts.
-     */
-    private function pem(string $modulus, string $exponent): string
-    {
-        $publicKey = $this->sequence($this->integer($modulus) . $this->integer($exponent));
-        $algorithm = $this->sequence(self::RSA_ENCRYPTION_OID . "\x05\x00"); // NULL parameters
-        $subjectPublicKeyInfo = $this->sequence($algorithm . $this->bitString($publicKey));
-
-        return "-----BEGIN PUBLIC KEY-----\n"
-            . \chunk_split(\base64_encode($subjectPublicKeyInfo), 64, "\n")
-            . "-----END PUBLIC KEY-----\n";
-    }
-
     private function integer(string $bytes): string
     {
         // DER INTEGERs are signed; prepend a zero byte when the high bit is set
@@ -166,13 +153,6 @@ class Jwks
     private function sequence(string $bytes): string
     {
         return "\x30" . $this->length(\strlen($bytes)) . $bytes;
-    }
-
-    private function bitString(string $bytes): string
-    {
-        $bytes = "\x00" . $bytes; // zero unused bits
-
-        return "\x03" . $this->length(\strlen($bytes)) . $bytes;
     }
 
     private function length(int $length): string
