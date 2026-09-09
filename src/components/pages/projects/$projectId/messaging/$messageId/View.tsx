@@ -50,6 +50,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -60,6 +61,8 @@ import { formatDateTime } from '@/lib/date-utils'
 import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
+
+type EmailBodyView = 'source' | 'preview'
 
 function parseIdArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
@@ -108,6 +111,7 @@ import {
 import { MessagingTargetsModal } from '../_components/MessagingTargetsModal'
 import { MessagingRecipientUsersModal } from '../_components/MessagingRecipientUsersModal'
 import { EmailAttachmentRow } from '../_components/EmailAttachmentRow'
+import { EmailPreview } from '../_components/EmailPreview'
 import {
   Select,
   SelectContent,
@@ -295,6 +299,11 @@ export function View({
   const [emailSubject, setEmailSubject] = useState('')
   const [emailContent, setEmailContent] = useState('')
   const [emailHtml, setEmailHtml] = useState(false)
+  const [emailBodyViewChoice, setEmailBodyViewChoice] =
+    useState<EmailBodyView | null>(null)
+  // Drafts open on the editor; everything else opens on what the recipient sees.
+  const emailBodyView: EmailBodyView =
+    emailBodyViewChoice ?? (isDraft ? 'source' : 'preview')
   const [smsContent, setSmsContent] = useState('')
   const [pushTitle, setPushTitle] = useState('')
   const [pushBody, setPushBody] = useState('')
@@ -1084,20 +1093,56 @@ export function View({
                       />
                     </div>
                     <div>
-                      <Label
-                        htmlFor="email-content"
-                        className="text-[13px] font-medium text-foreground"
-                      >
-                        {t('Body')}
-                      </Label>
-                      <Textarea
-                        id="email-content"
-                        value={emailContent}
-                        onChange={(e) => setEmailContent(e.target.value)}
-                        disabled={!isDraft}
-                        placeholder={t('Email content')}
-                        className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <Label
+                          htmlFor={
+                            emailBodyView === 'source'
+                              ? 'email-content'
+                              : undefined
+                          }
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          {t('Body')}
+                        </Label>
+                        <Tabs
+                          value={emailBodyView}
+                          onValueChange={(value) =>
+                            setEmailBodyViewChoice(value as EmailBodyView)
+                          }
+                        >
+                          <TabsList className="h-8">
+                            <TabsTrigger
+                              value="source"
+                              className="px-2.5 text-[12px]"
+                            >
+                              {t('Source')}
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="preview"
+                              className="px-2.5 text-[12px]"
+                            >
+                              {t('Preview')}
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      </div>
+                      {emailBodyView === 'preview' ? (
+                        <EmailPreview
+                          content={emailContent}
+                          html={emailHtml}
+                          title={t('Email preview')}
+                          className="mt-1.5 h-[28rem]"
+                        />
+                      ) : (
+                        <Textarea
+                          id="email-content"
+                          value={emailContent}
+                          onChange={(e) => setEmailContent(e.target.value)}
+                          disabled={!isDraft}
+                          placeholder={t('Email content')}
+                          className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        />
+                      )}
                     </div>
                     <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
                       <div>
