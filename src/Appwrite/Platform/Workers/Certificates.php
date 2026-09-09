@@ -302,7 +302,8 @@ class Certificates extends Action
         $claimedStatus = $rule->getAttribute('status');
         // The persisted rule is authoritative; stale queue payloads cannot
         // route issuance to a different provider after a domain changes type.
-        $domainType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type'));
+        // API rules persist the attribute as '', so fall back on empty rather than on absent.
+        $domainType = $rule->getAttribute('deploymentResourceType') ?: $rule->getAttribute('type');
         $error = null;
         $issuanceStarted = false;
         $exhausted = $certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS;
