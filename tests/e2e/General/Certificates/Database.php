@@ -53,6 +53,7 @@ final class Database extends UtopiaDatabase
             foreach (['updated', 'issueDate', 'renewDate'] as $attribute) {
                 $this->createAttribute('certificates', $attribute, self::VAR_DATETIME, 0, false);
             }
+            $this->createAttribute('projects', 'accessedAt', self::VAR_DATETIME, 0, false);
             $this->createIndex('rules', 'domain', self::INDEX_UNIQUE, ['domain']);
             $this->createIndex('certificates', 'domain', self::INDEX_KEY, ['domain']);
         } catch (\Throwable $error) {
