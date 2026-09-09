@@ -1120,9 +1120,18 @@ window.__vibes.flags.set({ agent: true, showActivityChart: true })
 window.__vibes.flags.set({ agent: false })
 window.__vibes.flags.reset('agent')
 window.__vibes.flags.resetAll()
+
+window.__vibes.screenshotMode.enable()
+window.__vibes.screenshotMode.disable()
+window.__vibes.screenshotMode.isEnabled()
 ```
 
-`list()` and mutations return a record keyed by flag name, with `default`,
+Screenshot mode is separate from feature flags and uses the same API exposure
+setting. Its methods return the current enabled boolean. Enable and disable use
+the existing screenshot-mode storage and events, updating the UI and persisting
+across reloads. `flags.resetAll()` leaves screenshot mode unchanged.
+
+`list()` and flag mutations return a record keyed by flag name, with `default`,
 `override` (`null` when unset), and `effective` boolean values. All keys and values
 are validated before a set request changes anything. Profile restrictions still
 apply, so inspect `effective` to verify a change. Calls use the debug menu setters

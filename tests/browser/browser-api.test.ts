@@ -135,6 +135,39 @@ test('set, persist, validate, reset and preserve unrelated settings', async () =
   }
 })
 
+test('screenshot mode persists independently of feature flags', async () => {
+  const page = await browser.newPage()
+  try {
+    await page.goto(`${server.url}?exposure=true`)
+    await page.waitForFunction(() => !!window.__vibes)
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.isEnabled()),
+    ).toBe(false)
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.enable()),
+    ).toBe(true)
+    await page.evaluate(() => window.__vibes!.flags.resetAll())
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.isEnabled()),
+    ).toBe(true)
+    await page.reload()
+    await page.waitForFunction(() => !!window.__vibes)
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.isEnabled()),
+    ).toBe(true)
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.disable()),
+    ).toBe(false)
+    await page.reload()
+    await page.waitForFunction(() => !!window.__vibes)
+    expect(
+      await page.evaluate(() => window.__vibes!.screenshotMode.isEnabled()),
+    ).toBe(false)
+  } finally {
+    await page.close()
+  }
+})
+
 const devUrl = process.env.BROWSER_API_DEV_URL
 test.skipIf(!devUrl)(
   'running app updates its UI and keeps overrides after reload',
@@ -147,6 +180,20 @@ test.skipIf(!devUrl)(
       await page.evaluate(() =>
         window.__vibes!.flags.set({ showConstruction: true, agent: true }),
       )
+      await stripe.waitFor({ state: 'visible' })
+      expect(
+        await page.evaluate(() => window.__vibes!.screenshotMode.enable()),
+      ).toBe(true)
+      await stripe.waitFor({ state: 'detached' })
+      await page.reload()
+      await page.waitForFunction(() => !!window.__vibes)
+      expect(
+        await page.evaluate(() => window.__vibes!.screenshotMode.isEnabled()),
+      ).toBe(true)
+      await stripe.waitFor({ state: 'detached' })
+      expect(
+        await page.evaluate(() => window.__vibes!.screenshotMode.disable()),
+      ).toBe(false)
       await stripe.waitFor({ state: 'visible' })
       await page.evaluate(() =>
         window.__vibes!.flags.set({ showConstruction: false, agent: false }),

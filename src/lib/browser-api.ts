@@ -19,6 +19,10 @@ import {
   type FeatureFlagsMenuDebugKey,
 } from '@/lib/debug-overrides'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import {
+  isScreenshotModeActive,
+  writeScreenshotModeOpen,
+} from '@/lib/screenshot-mode'
 
 type FlagKey = keyof ConsoleProfileFeatures | FeatureFlagsMenuDebugKey
 export type FlagState = {
@@ -102,7 +106,22 @@ function resetAll(): FlagSnapshot {
   return list()
 }
 
+function enableScreenshotMode(): boolean {
+  writeScreenshotModeOpen(true)
+  return isScreenshotModeActive()
+}
+
+function disableScreenshotMode(): boolean {
+  writeScreenshotModeOpen(false)
+  return isScreenshotModeActive()
+}
+
 export type VibesBrowserApi = {
+  screenshotMode: {
+    enable: typeof enableScreenshotMode
+    disable: typeof disableScreenshotMode
+    isEnabled: typeof isScreenshotModeActive
+  }
   flags: {
     list: typeof list
     set: typeof set
@@ -128,6 +147,11 @@ export function installBrowserApi(): (() => void) | undefined {
   }
   const api: VibesBrowserApi = Object.freeze({
     flags: Object.freeze({ list, set, reset, resetAll }),
+    screenshotMode: Object.freeze({
+      enable: enableScreenshotMode,
+      disable: disableScreenshotMode,
+      isEnabled: isScreenshotModeActive,
+    }),
   })
   window.__vibes = api
   return () => {
