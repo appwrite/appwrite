@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth\OIDC;
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 
@@ -9,12 +11,21 @@ use Utopia\Database\Document;
  * Verifies an OpenID Connect ID token against the provider's `idToken`
  * profile from the oAuthProviders config.
  *
- * The algorithm is pinned to RS256 — the token header is never trusted to
- * choose it — and the signature is checked before any claim is read.
+ * The JWT layer (signature, expiry, not-before) is the same library that
+ * signs Appwrite's own JWTs. It verifies with the pinned RS256 whatever the
+ * token header claims, which defeats algorithm confusion. The OpenID claims
+ * (issuer, audience, nonce, subject) are checked here.
  */
 class IdTokenVerifier
 {
     public const CLOCK_SKEW = 60; // seconds
+
+    /**
+     * Upper bound on token age since `iat`. Providers set `exp` minutes after
+     * `iat`, so expiry governs; this only stops a token with no `exp` from
+     * living forever.
+     */
+    private const MAX_AGE = 86400;
 
     public function __construct(private Jwks $jwks)
     {
@@ -33,11 +44,11 @@ class IdTokenVerifier
         if (\count($parts) !== 3) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
         }
-        [$headerEncoded, $payloadEncoded, $signatureEncoded] = $parts;
 
-        $header = $this->decodeJson($headerEncoded);
-        if (($header['alg'] ?? null) !== 'RS256') {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Unsupported algorithm');
+        // The signing key is looked up by kid before the token can be verified
+        $header = \json_decode(\base64_decode(\strtr($parts[0], '-_', '+/')), true);
+        if (!\is_array($header)) {
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
         }
 
         $kid = $header['kid'] ?? null;
@@ -45,25 +56,27 @@ class IdTokenVerifier
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Missing key ID');
         }
 
-        $jwk = $this->jwks->getKey($profile->getAttribute('jwksUrl', ''), $kid);
-        if ($jwk === null) {
+        $pem = $this->jwks->getKey($profile->getAttribute('jwksUrl', ''), $kid);
+        if ($pem === null) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Unknown signing key');
         }
 
-        $publicKey = \openssl_pkey_get_public(JwkConverter::rsaToPem($jwk['n'], $jwk['e']));
+        $publicKey = \openssl_pkey_get_public($pem);
         if ($publicKey === false) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid signing key');
         }
 
-        $signature = $this->decodeBase64Url($signatureEncoded);
-        if ($signature === false || $signature === '') {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed signature');
-        }
-        if (\openssl_verify($headerEncoded . '.' . $payloadEncoded, $signature, $publicKey, OPENSSL_ALGO_SHA256) !== 1) {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid signature');
+        try {
+            $claims = (new JWT($publicKey, 'RS256', self::MAX_AGE, self::CLOCK_SKEW))
+                ->registerKeys([$kid => $publicKey])
+                ->decode($idToken);
+        } catch (JWTException $error) {
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, $error->getMessage());
         }
 
-        $claims = $this->decodeJson($payloadEncoded);
+        if (!\is_numeric($claims['exp'] ?? null)) {
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token expired');
+        }
 
         if (!\in_array($claims['iss'] ?? null, $profile->getAttribute('issuers', []), true)) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Invalid issuer');
@@ -73,18 +86,6 @@ class IdTokenVerifier
         $audiences = \is_array($audiences) ? $audiences : [$audiences];
         if (empty(\array_intersect($audiences, $allowedAudiences))) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Audience mismatch. Add the token\'s client ID to the provider configuration.');
-        }
-
-        $now = \time();
-
-        $exp = $claims['exp'] ?? null;
-        if (!\is_numeric($exp) || (int) $exp <= $now - self::CLOCK_SKEW) {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token expired');
-        }
-        foreach (['iat', 'nbf'] as $claim) {
-            if (isset($claims[$claim]) && (!\is_numeric($claims[$claim]) || (int) $claims[$claim] >= $now + self::CLOCK_SKEW)) {
-                throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token not yet valid');
-            }
         }
 
         $nonce = $claims['nonce'] ?? null;
@@ -109,34 +110,5 @@ class IdTokenVerifier
         }
 
         return $claims;
-    }
-
-    /**
-     * @return array<string, mixed>
-     * @throws Exception
-     */
-    private function decodeJson(string $encoded): array
-    {
-        $decoded = $this->decodeBase64Url($encoded);
-        if ($decoded === false) {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
-        }
-
-        $data = \json_decode($decoded, true);
-        if (!\is_array($data)) {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Malformed token');
-        }
-
-        return $data;
-    }
-
-    private function decodeBase64Url(string $data): string|false
-    {
-        $remainder = \strlen($data) % 4;
-        if ($remainder > 0) {
-            $data .= \str_repeat('=', 4 - $remainder);
-        }
-
-        return \base64_decode(\strtr($data, '-_', '+/'), true);
     }
 }
