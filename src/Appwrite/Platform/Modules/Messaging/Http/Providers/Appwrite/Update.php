@@ -14,6 +14,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -53,13 +54,15 @@ class Update extends Action
             ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+            ->param('qos', null, new Nullable(new Range(0, 1)), 'Default QoS for topics on this provider (0 or 1). Null lets the subscriber choose.', true)
+            ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Default message retention in seconds for offline delivery. Max 7 days (604800).', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $providerId, string $name, ?bool $enabled, ?int $qos, ?int $expiry, Event $queueForEvents, Database $dbForProject, Response $response)
     {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
@@ -77,6 +80,17 @@ class Update extends Action
 
         if (!\is_null($enabled)) {
             $provider->setAttribute('enabled', $enabled);
+        }
+
+        if (!\is_null($qos) || !\is_null($expiry)) {
+            $options = $provider->getAttribute('options', []);
+            if (!\is_null($qos)) {
+                $options['qos'] = $qos;
+            }
+            if (!\is_null($expiry)) {
+                $options['expiry'] = $expiry;
+            }
+            $provider->setAttribute('options', $options);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);

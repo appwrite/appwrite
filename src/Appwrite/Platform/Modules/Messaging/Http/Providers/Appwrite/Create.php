@@ -17,6 +17,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -56,13 +57,15 @@ class Create extends Action
             ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.')
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+            ->param('qos', null, new Nullable(new Range(0, 1)), 'Default QoS for topics on this provider (0 or 1). Null lets the subscriber choose.', true)
+            ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Default message retention in seconds for offline delivery. Max 7 days (604800).', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $providerId, string $name, ?bool $enabled, ?int $qos, ?int $expiry, Event $queueForEvents, Database $dbForProject, Response $response)
     {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
@@ -73,6 +76,10 @@ class Create extends Action
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled ?? true,
             'credentials' => [],
+            'options' => [
+                'qos' => $qos,
+                'expiry' => $expiry,
+            ],
         ]);
 
         try {
