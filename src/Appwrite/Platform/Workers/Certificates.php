@@ -258,7 +258,7 @@ class Certificates extends Action
         $lease = DateTime::formatTz(DateTime::now());
         $date = \date('H:i:s');
         $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
-        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $project, $domain, $lease, $logs): ?array {
+        $claimed = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $rule, $project, $domain, $lease): ?array {
             $current = $dbForPlatform->getDocument('rules', $rule->getId(), forUpdate: true);
             if ($current->isEmpty()
                 || $current->getSequence() !== $rule->getSequence()
@@ -279,7 +279,8 @@ class Certificates extends Action
             }
 
             // `updated` holds the lease until completion or expiry after a crash.
-            $updates = new Document(['updated' => $lease, 'logs' => $logs]);
+            // Logs are written on completion so an in-flight rule reads unchanged.
+            $updates = new Document(['updated' => $lease]);
             if ($certificate->isEmpty()) {
                 $updates->setAttributes(['$id' => ID::unique(), 'domain' => $domain->get(), 'attempts' => 0]);
                 $certificate = $dbForPlatform->createDocument('certificates', $updates);
@@ -290,7 +291,6 @@ class Certificates extends Action
                 'certificateId' => $certificate->getId(),
                 'status' => $current->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED
                     ? RULE_STATUS_CERTIFICATE_GENERATING : $current->getAttribute('status'),
-                'logs' => $logs,
             ]));
 
             return [$current, $certificate];

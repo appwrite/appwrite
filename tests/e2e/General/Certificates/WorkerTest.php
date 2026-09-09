@@ -482,7 +482,7 @@ final class WorkerTest extends TestCase
          * Test for FAILURE
          */
         $this->setRule(['status' => $status]);
-        $this->runWorker($project);
+        $this->runWorker(new Document(['$id' => $project, '$sequence' => $this->project->getSequence()]));
         $this->assertSame([], $this->provider->issued);
         $this->assertSame($status, $this->rule()->getAttribute('status'));
         $this->assertSame(0, $this->certificate()->getAttribute('attempts'));
@@ -508,13 +508,13 @@ final class WorkerTest extends TestCase
     }
 
     #[DataProvider('consoleSequences')]
-    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(string $sequence): void
+    public function testConsoleDomainsAcceptCurrentAndLegacyProjectSequence(string $rule, ?string $message): void
     {
         /**
          * Test for SUCCESS
          */
-        $this->setRule(['projectId' => 'console', 'projectInternalId' => $sequence]);
-        $this->runWorker('console', 'console');
+        $this->setRule(['projectId' => 'console', 'projectInternalId' => $rule]);
+        $this->runWorker(new Document(['$id' => 'console', '$sequence' => $message]));
         $this->assertCount(1, $this->provider->issued);
         $this->assertSame(1, $this->certificate()->getAttribute('attempts'));
         $this->assertNull($this->certificate()->getAttribute('updated'));
@@ -522,11 +522,12 @@ final class WorkerTest extends TestCase
 
     public static function consoleSequences(): \Iterator
     {
-        yield ['console'];
-        yield ['0'];
+        yield 'current' => ['console', 'console'];
+        yield 'legacy rule' => ['0', 'console'];
+        yield 'legacy message without sequence' => ['console', null];
     }
 
-    private function runWorker(string $project = 'project', ?string $sequence = null, bool $skipRenewCheck = false): void
+    private function runWorker(?Document $project = null, bool $skipRenewCheck = false): void
     {
         $webhooks = $this->createStub(Webhook::class);
         $webhooks->method('from')->willReturnSelf();
@@ -534,7 +535,7 @@ final class WorkerTest extends TestCase
         $realtime->method('setSubscribers')->willReturnSelf();
         $realtime->method('from')->willReturnSelf();
         $message = new CertificateMessage(
-            project: new Document(['$id' => $project, '$sequence' => $sequence ?? $this->project->getSequence()]),
+            project: $project ?? $this->project,
             domain: new Document(['domain' => 'example.com', 'domainType' => 'api']),
             validationDomain: 'example.com',
             skipRenewCheck: $skipRenewCheck,
