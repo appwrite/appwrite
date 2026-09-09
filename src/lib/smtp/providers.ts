@@ -51,6 +51,11 @@ export interface SmtpQuickSetupProvider {
   iconPath: string
   /** One line shown next to the provider name. */
   tagline: string
+  /**
+   * Label of the connect button. A whole sentence per provider, so languages
+   * that put the brand first still read correctly.
+   */
+  connectLabel: string
   /** Full sentence shown when the layout has room for it. */
   description: string
   smtp: {
@@ -79,6 +84,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     name: 'Resend',
     iconPath: '/icons/resend.svg',
     tagline: 'Creates a sending-only API key for a verified domain.',
+    connectLabel: 'Connect with Resend',
     description:
       'Connect your Resend account and Appwrite generates a sending-only API key, then fills in the SMTP settings for you. You need a verified domain in Resend.',
     smtp: {
@@ -102,6 +108,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     name: 'Mailgun',
     iconPath: '/icons/mailgun.svg',
     tagline: 'Creates a domain sending key for a verified domain.',
+    connectLabel: 'Connect with Mailgun',
     description:
       'Connect your Mailgun account and Appwrite generates a domain sending key, then fills in the SMTP settings for you.',
     smtp: {
@@ -120,6 +127,7 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     name: 'SendGrid',
     iconPath: '/icons/sendgrid.svg',
     tagline: 'Creates a restricted API key with mail send access.',
+    connectLabel: 'Connect with SendGrid',
     description:
       'Connect your SendGrid account and Appwrite generates a restricted API key with mail send access, then fills in the SMTP settings for you.',
     smtp: {

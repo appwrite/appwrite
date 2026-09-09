@@ -236,6 +236,12 @@ describe('provider registry', () => {
     }
   })
 
+  test('connect labels name the provider as one translatable sentence', () => {
+    for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
+      expect(provider.connectLabel).toBe(`Connect with ${provider.name}`)
+    }
+  })
+
   test('only providers with OAuth and an API adapter are runnable', () => {
     for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
       expect(isProviderAvailable(provider)).toBe(

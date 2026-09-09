@@ -325,9 +325,10 @@ interface ProviderTileProps {
   onDisconnect: () => void
 }
 
-const TILE_CLASSES =
-  'flex h-full w-full flex-col gap-2 rounded-xl border border-border bg-card/50 p-4 text-start transition-all'
-
+/**
+ * Provider card. The tile itself is never clickable: every state names its
+ * action on a button, so nothing happens by clicking near a label.
+ */
 function ProviderTile({
   provider,
   connected,
@@ -339,8 +340,37 @@ function ProviderTile({
   const t = useT()
   const comingSoon = !isProviderAvailable(provider)
 
-  const content = (
+  const action = connected ? (
     <>
+      <ActionButton
+        label={t('Quick setup')}
+        onClick={onSelect}
+        disabled={disabled}
+        planTooltip={planTooltip}
+        analyticsAction={provider.analyticsAction}
+      />
+      <Button
+        type="button"
+        variant="destructive"
+        size="sm"
+        className="h-8 text-[12px]"
+        onClick={onDisconnect}
+      >
+        {t('Disconnect')}
+      </Button>
+    </>
+  ) : (
+    <ActionButton
+      label={t(provider.connectLabel)}
+      onClick={onSelect}
+      disabled={disabled}
+      planTooltip={comingSoon ? undefined : planTooltip}
+      analyticsAction={provider.analyticsAction}
+    />
+  )
+
+  return (
+    <div className="flex h-full w-full flex-col gap-2 rounded-xl border border-border bg-card/50 p-4">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <img
@@ -366,75 +396,46 @@ function ProviderTile({
       <span className="text-[12px] text-muted-foreground">
         {t(provider.tagline)}
       </span>
-    </>
-  )
-
-  // Connected providers offer two actions, so the tile cannot be one button.
-  if (connected && !comingSoon) {
-    return (
-      <div className={TILE_CLASSES}>
-        {content}
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  onClick={onSelect}
-                  disabled={disabled}
-                  {...analyticsAttrs(provider.analyticsAction)}
-                >
-                  {t('Quick setup')}
-                </Button>
-              </span>
-            </TooltipTrigger>
-            {planTooltip ? (
-              <TooltipContent className="max-w-xs text-[13px]">
-                {planTooltip}
-              </TooltipContent>
-            ) : null}
-          </Tooltip>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            className="h-8 text-[12px]"
-            onClick={onDisconnect}
-          >
-            {t('Disconnect')}
-          </Button>
-        </div>
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+        {action}
       </div>
-    )
-  }
+    </div>
+  )
+}
 
-  const tile = (
-    <button
+function ActionButton({
+  label,
+  onClick,
+  disabled,
+  planTooltip,
+  analyticsAction,
+}: {
+  label: string
+  onClick: () => void
+  disabled: boolean
+  planTooltip?: string
+  analyticsAction: SmtpQuickSetupProvider['analyticsAction']
+}) {
+  const button = (
+    <Button
       type="button"
-      onClick={onSelect}
+      variant="outline"
+      size="sm"
+      className="h-8 text-[12px]"
+      onClick={onClick}
       disabled={disabled}
-      className={cn(
-        'group',
-        TILE_CLASSES,
-        disabled
-          ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer hover:border-border/80 hover:bg-card/60',
-      )}
-      {...analyticsAttrs(provider.analyticsAction)}
+      {...analyticsAttrs(analyticsAction)}
     >
-      {content}
-    </button>
+      {label}
+    </Button>
   )
 
-  if (!planTooltip || comingSoon) return tile
+  if (!planTooltip) return button
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex">{tile}</span>
+        <span className="inline-flex">{button}</span>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-[13px]">
         {planTooltip}

@@ -129,6 +129,13 @@ async function findRefreshableProviderSession(
 export async function refreshProviderAccessToken(
   providerId: string,
 ): Promise<ProviderAccessToken> {
+  // The identity is the source of truth for "this account is connected".
+  // Sessions outlive it: deleting an identity leaves the OAuth session in
+  // place, and its refresh token would otherwise still mint provider tokens.
+  if (!(await findProviderIdentity(providerId))) {
+    throw new QuickSetupReauthorizeRequiredError()
+  }
+
   const session = await getCurrentSession()
   if (sessionCanRefreshProvider(session, providerId)) {
     return await refreshSessionById('current', providerId)
@@ -154,14 +161,22 @@ export async function findProviderIdentity(
  * Best available provider access token without user interaction, or `null`
  * when only a new authorization can help.
  *
- * Tries, in order: the current session's live token, a refresh of the current
- * session, the identity's token (fresh right after a claim), then a refresh of
- * any other session this account holds for the provider. Appwrite has no
- * endpoint to refresh an identity, which is why the sessions carry the flow.
+ * Requires an identity for the provider: that is what "connected" means, and
+ * deleting one has to disconnect even though the OAuth session survives it.
+ * With the identity present, tries the current session's live token, a refresh
+ * of the current session, the identity's own token (fresh right after a
+ * claim), then a refresh of any other session this account holds for the
+ * provider. Appwrite has no endpoint to refresh an identity, which is why the
+ * sessions do the refreshing.
  */
 export async function resolveProviderAccessToken(
   providerId: string,
 ): Promise<ProviderAccessToken | null> {
+  // No identity means the account is not connected, whatever old sessions
+  // still carry. Read it first so a deleted identity really disconnects.
+  const identity = await findProviderIdentity(providerId)
+  if (!identity) return null
+
   const session = await getCurrentSession()
 
   const fromSession = tokenFromSession(session, providerId)
@@ -177,9 +192,8 @@ export async function resolveProviderAccessToken(
     }
   }
 
-  const identity = await findProviderIdentity(providerId)
   if (
-    identity?.providerAccessToken &&
+    identity.providerAccessToken &&
     !isProviderTokenExpired(identity.providerAccessTokenExpiry)
   ) {
     return {
