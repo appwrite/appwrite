@@ -59,6 +59,8 @@ If your load is steady and well understood, manual scaling is rarely a burden. I
 
 **Serverless databases bill for actual usage,** typically some combination of compute units consumed, storage, and data transfer. For spiky or low-average traffic this can be dramatically cheaper, since idle time costs little or nothing. For sustained high traffic, usage-based pricing can end up more expensive than a right-sized dedicated database.
 
+From a budgeting perspective, managed cloud databases are typically treated as **Operating Expenditure (OpEx)**, while **Capital Expenditure (CapEx)** is more relevant when you purchase and operate your own database infrastructure.
+
 The honest summary: serverless wins on variable and bursty workloads, while dedicated Postgres wins on steady, predictable ones. Model your real traffic before assuming either is cheaper.
 
 ## Performance and cold starts
