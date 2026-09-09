@@ -353,7 +353,9 @@ class Jobs extends Action
                 'buildEndedAt' => DateTime::now(),
             ]), [
                 Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', ['canceled', 'ready', 'failed']),
+                Query::notEqual('status', 'canceled'),
+                Query::notEqual('status', 'ready'),
+                Query::notEqual('status', 'failed'),
             ]);
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
             if (\in_array($deployment->getAttribute('status'), ['canceled', 'ready', 'failed'], true)) {
