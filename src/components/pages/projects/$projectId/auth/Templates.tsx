@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import type { CSSProperties } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -17,9 +18,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { emailTemplatePreviewDocument } from '@/lib/email-preview'
 import {
   Dialog,
   DialogContent,
@@ -559,6 +561,11 @@ interface TemplateEditorProps {
 }
 
 // Helper function to detect RTL languages based on locale code
+/** Keeps the editor on the field's own surface instead of the darker code-editor one. */
+const EDITOR_SURFACE = {
+  '--editor-bg': 'var(--background)',
+} as CSSProperties
+
 function isRTLLocale(locale: string): boolean {
   // RTL language codes: Arabic, Hebrew, Urdu, Persian/Farsi, Yiddish, etc.
   const rtlLanguageCodes = ['ar', 'he', 'iw', 'ur', 'fa', 'yi']
@@ -762,9 +769,7 @@ function TemplateEditor({
           {/* Message */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor={messageView === 'source' ? 'message' : undefined}>
-                {t('Message')}
-              </Label>
+              <Label>{t('Message')}</Label>
               <div className="flex items-center gap-3">
                 {!isSmtpEnabled && (
                   <TooltipProvider>
@@ -872,25 +877,28 @@ function TemplateEditor({
 
             {messageView === 'preview' ? (
               <EmailPreview
-                content={localFormData.message}
+                content={emailTemplatePreviewDocument(localFormData.message)}
                 html
                 className="h-[28rem]"
               />
             ) : (
-              <Textarea
-                id="message"
-                placeholder={t('Enter your message')}
-                value={localFormData.message}
-                onChange={(e) =>
-                  handleLocalFieldChange('message', e.target.value)
-                }
-                readOnly={!isSmtpEnabled}
-                className={cn(
-                  'h-[28rem] resize-none field-sizing-fixed',
-                  !isSmtpEnabled && 'cursor-not-allowed opacity-60',
-                )}
-                dir="ltr"
-              />
+              <div
+                role="group"
+                aria-label={t('Message')}
+                className={cn('h-[28rem]', !isSmtpEnabled && 'opacity-60')}
+                style={EDITOR_SURFACE}
+              >
+                <CodeEditor
+                  value={localFormData.message}
+                  onChange={(value) => handleLocalFieldChange('message', value)}
+                  language="html"
+                  ariaLabel={t('Message')}
+                  height="28rem"
+                  readOnly={!isSmtpEnabled}
+                  minimap={false}
+                  lineNumbers="off"
+                />
+              </div>
             )}
           </div>
         </div>

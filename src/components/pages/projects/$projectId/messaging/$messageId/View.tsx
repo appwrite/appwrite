@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -61,9 +62,15 @@ import { formatDateTime } from '@/lib/date-utils'
 import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { EmailPreview } from '@/components/global/shared/EmailPreview'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
 import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
 
 type EmailBodyView = 'source' | 'preview'
+
+/** Keeps the editor on the field's own surface instead of the darker code-editor one. */
+const EDITOR_SURFACE = {
+  '--editor-bg': 'var(--background)',
+} as CSSProperties
 
 function parseIdArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
@@ -1094,14 +1101,7 @@ export function View({
                     </div>
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <Label
-                          htmlFor={
-                            emailBodyView === 'source'
-                              ? 'email-content'
-                              : undefined
-                          }
-                          className="text-[13px] font-medium text-foreground"
-                        >
+                        <Label className="text-[13px] font-medium text-foreground">
                           {t('Body')}
                         </Label>
                         <ToggleGroup
@@ -1137,14 +1137,23 @@ export function View({
                           className="mt-1.5 h-[28rem]"
                         />
                       ) : (
-                        <Textarea
-                          id="email-content"
-                          value={emailContent}
-                          onChange={(e) => setEmailContent(e.target.value)}
-                          disabled={!isDraft}
-                          placeholder={t('Email content')}
-                          className="mt-1.5 h-[28rem] resize-none field-sizing-fixed border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
+                        <div
+                          role="group"
+                          aria-label={t('Body')}
+                          className="mt-1.5 h-[28rem]"
+                          style={EDITOR_SURFACE}
+                        >
+                          <CodeEditor
+                            value={emailContent}
+                            onChange={setEmailContent}
+                            language="html"
+                            ariaLabel={t('Body')}
+                            height="28rem"
+                            readOnly={!isDraft}
+                            minimap={false}
+                            lineNumbers="off"
+                          />
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
