@@ -565,6 +565,13 @@ jobs:
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
             appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
+      - name: Run certificate deletion worker tests
+        if: matrix.service.name == 'Proxy'
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/General/Certificates/DeletesTest.php
+
       - name: Failure Logs
         if: failure()
         run: |
