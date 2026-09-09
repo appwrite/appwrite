@@ -243,7 +243,8 @@ async function isPlanChangeStillBlocked(
   limits: PlanChangeLimits | null | undefined,
   { strict }: { strict: boolean },
 ): Promise<boolean> {
-  if (!limits) return strict
+  // A response we could read but that carries no limits is not permission.
+  if (!limits) return true
   if (limits.canChangePlan === true) return false
 
   const reportedAddons = limits.unsupportedAddons ?? []
@@ -1397,12 +1398,18 @@ export function ChangePlanWizardFullscreen() {
       }
 
       if (needsDowngradeValidation) {
-        const estimationResult = await updateEstimation.refetch()
-        // Fail closed before the deletions: the query does not retry, so an
-        // errored refetch leaves the previous cached value behind and it would
-        // read as compliant. Afterwards the deletions are already irreversible
-        // and `PATCH /plan` does not enforce `canChangePlan`, so only an
-        // explicit block aborts - a failed refetch must not strand them.
+        // The query does not retry itself, so one more attempt separates a
+        // blip from an outage before either verdict is acted on.
+        let estimationResult = await updateEstimation.refetch()
+        if (estimationResult.isError) {
+          estimationResult = await updateEstimation.refetch()
+        }
+
+        // Only an unreachable estimation is treated permissively, and only
+        // once the deletions are irreversible: aborting then would strand the
+        // user without their resources and still on the old plan, and
+        // `PATCH /plan` does not enforce `canChangePlan` anyway. Any response
+        // we can actually read still decides, in both phases.
         const blocked = estimationResult.isError
           ? !deletionsRan
           : await isPlanChangeStillBlocked(
