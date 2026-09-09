@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveCategorySlug } from './category-slugs'
 import { BLOG_POSTS_PER_PAGE } from './constants'
 import { parseBlogFrontmatter } from './frontmatter'
 
@@ -79,7 +80,7 @@ function getBlogPostPathsFromSlugs(slugs: string[]): string[] {
 }
 
 function getBlogCategoryPathsFromSlugs(slugs: string[]): string[] {
-  return slugs.map((slug) => `/blog/categories/${slug}`)
+  return slugs.map((slug) => `/blog/categories/${resolveCategorySlug(slug)}`)
 }
 
 function getBlogAuthorPathsFromSlugs(slugs: string[]): string[] {

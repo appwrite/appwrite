@@ -5,10 +5,7 @@ import {
   getBlogCategory,
   getPostsForCategory,
 } from '@/lib/blog/content'
-import {
-  normalizeCategorySlug,
-  resolveCategorySlug,
-} from '@/lib/blog/category-slugs'
+import { resolveCategorySlug } from '@/lib/blog/category-slugs'
 import { getBlogCategoryRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
@@ -18,7 +15,10 @@ export const Route = createFileRoute('/_marketing/blog/categories/$category')({
   ssr: true,
   beforeLoad: ({ params }) => {
     const resolved = resolveCategorySlug(params.category)
-    if (resolved !== normalizeCategorySlug(params.category)) {
+    if (
+      process.env.TSS_PRERENDERING !== 'true' &&
+      resolved !== params.category
+    ) {
       throw redirect({
         to: '/blog/categories/$category',
         params: { category: resolved },

@@ -156,7 +156,7 @@ function buildBlogPost(slug: string, raw: string): BlogPost {
 }
 
 function buildBlogCategory(modulePath: string, raw: string): BlogCategory {
-  const slug = slugFromModulePath(modulePath, 'categories')
+  const slug = resolveCategorySlug(slugFromModulePath(modulePath, 'categories'))
   const { frontmatter } = parseBlogFrontmatter(raw)
 
   return {
