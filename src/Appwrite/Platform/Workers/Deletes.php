@@ -1844,9 +1844,9 @@ class Deletes extends Action
         if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
             $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
-            // Route cleanup to the provider that issued it; without the type the proxy
-            // falls back to custom-domain providers, which skip Network-owned domains.
-            $domainType = $document->getAttribute('deploymentResourceType', $document->getAttribute('type'));
+            // Route cleanup to the provider that issued it. API rules persist the
+            // attribute as '', so fall back on empty rather than on absent.
+            $domainType = $document->getAttribute('deploymentResourceType') ?: $document->getAttribute('type');
             $certificates->deleteCertificate($domain, $domainType);
         }
 
