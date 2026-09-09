@@ -428,6 +428,66 @@ final class NatsBrokerTest extends TestCase
      * second one — a duplicate nothing could detect, on a queue that may be
      * billing someone.
      */
+    public function testEnqueueManyStoresEveryPayloadInOrder(): void
+    {
+        $payloads = [];
+        for ($i = 0; $i < 40; $i++) {
+            $payloads[] = ['task' => "job-{$i}"];
+        }
+
+        $this->assertTrue($this->broker->enqueueMany($this->queue, $payloads));
+        $this->assertSame(40, $this->broker->getQueueSize($this->queue));
+
+        // The batch is written before any acknowledgment is read, so this also
+        // asserts the writes reached the stream in the order they were given.
+        for ($i = 0; $i < 40; $i++) {
+            $message = $this->broker->receive($this->queue, 2);
+            $this->assertInstanceOf(Message::class, $message);
+            $this->assertSame("job-{$i}", $message->getPayload()['task']);
+            $this->broker->commit($this->queue, $message);
+        }
+
+        $this->assertSame(0, $this->broker->getQueueSize($this->queue));
+    }
+
+    public function testEnqueueManyUnderStableIdsCollapsesTheRepublish(): void
+    {
+        $broker = $this->brokerWithStableIds();
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $payloads = [
+            ['id' => 'invoice-1', 'task' => 'charge'],
+            ['id' => 'invoice-2', 'task' => 'charge'],
+        ];
+
+        $broker->enqueueMany($queue, $payloads);
+        $this->assertSame(2, $broker->getQueueSize($queue));
+        $this->assertSame(0, $broker->duplicates());
+
+        // The retry a caller makes after an ambiguous timeout on the batch.
+        $broker->enqueueMany($queue, $payloads);
+        $this->assertSame(2, $broker->getQueueSize($queue), 'a retried batch must not become four messages');
+        $this->assertSame(2, $broker->duplicates(), 'the collapsed publishes must be counted, not discarded');
+
+        $broker->close();
+    }
+
+    public function testEnqueueManyHonoursThePriorityFlag(): void
+    {
+        $this->broker->enqueueMany($this->queue, [['task' => 'normal']]);
+        $this->broker->enqueueMany($this->queue, [['task' => 'urgent']], priority: true);
+
+        $message = $this->broker->receive($this->queue, 2);
+        $this->assertInstanceOf(Message::class, $message);
+        $this->assertSame('urgent', $message->getPayload()['task']);
+    }
+
+    public function testEnqueueManyStoresNothingForAnEmptyBatch(): void
+    {
+        $this->assertTrue($this->broker->enqueueMany($this->queue, []));
+        $this->assertSame(0, $this->broker->getQueueSize($this->queue));
+    }
+
     public function testRetriedEnqueueUnderAStableIdStoresOneMessage(): void
     {
         $broker = $this->brokerWithStableIds();

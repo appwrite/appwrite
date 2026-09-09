@@ -101,7 +101,7 @@ class Nats implements Synchronous, Consumer
      * connection (e.g. `job('…', 1)`) or lease one connection
      * per coroutine from a pool.
      *
-     * commit()/reject() correlate the JetStream acknowledgement to a message through an
+     * commit()/reject() correlate the JetStream acknowledgment to a message through an
      * in-instance map keyed by pid, so a message must be committed/rejected on the SAME
      * instance that received it: use one consumer instance (Broker\Pool is for the
      * publisher side).
@@ -223,11 +223,32 @@ class Nats implements Synchronous, Consumer
 
         $this->ensure($queue);
 
-        // JetStream publishes one subject at a time, so the saving here is the
-        // stream check and the connection checkout rather than the round trips.
+        // One round trip per window rather than one per payload: the whole batch is
+        // written before any acknowledgment is read. Each payload still carries its
+        // own message id, so deduplication works exactly as it does on the single
+        // enqueue, and a payload the server rejects still throws.
         $subject = $priority ? $this->prioritySubject($queue) : $this->workSubject($queue);
+
+        $messages = [];
         foreach ($payloads as $payload) {
-            $this->publishEnvelope($subject, $this->envelope($queue, $payload));
+            $envelope = $this->envelope($queue, $payload);
+            /** @var string $id */
+            $id = $envelope['pid'];
+
+            $messages[] = [
+                'subject' => $subject,
+                'data' => (string) json_encode($envelope),
+                'msgId' => $id,
+            ];
+        }
+
+        foreach ($this->js()->publishMany($messages) as $ack) {
+            // Not discarded, for the same reason publishEnvelope() counts it: a
+            // duplicate acknowledgment is the only signal that deduplication did
+            // anything, and a quiet success reads the same as nothing collapsing.
+            if ($ack->duplicate) {
+                ++$this->duplicates;
+            }
         }
 
         return true;

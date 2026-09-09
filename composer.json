@@ -45,7 +45,7 @@
     "require-dev": {
         "ext-redis": "*",
         "swoole/ide-helper": "4.8.8",
-        "utopia-php/nats": "^1.2",
+        "utopia-php/nats": "^1.3",
         "workerman/workerman": "^4.0"
     },
     "suggest": {
