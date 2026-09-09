@@ -202,13 +202,10 @@ describe('getUnsupportedAddonRemovals', () => {
 })
 
 describe('isDisableableDowngradeAddon', () => {
-  test('covers every addon key a plan can declare support for', () => {
-    expect(isDisableableDowngradeAddon('baa')).toBe(true)
-    expect(isDisableableDowngradeAddon('premiumGeoDB')).toBe(true)
-    expect(isDisableableDowngradeAddon('premiumGeoDBOrg')).toBe(true)
-  })
-
-  test('leaves keys with no disable path alone', () => {
+  // Which keys are disableable is covered through getUnsupportedAddonRemovals
+  // above. What matters here is the boundary: a key the flow cannot disable
+  // must stay a hard blocker rather than be silently treated as resolved.
+  test('an addon with no disable path is never treated as resolved', () => {
     expect(isDisableableDowngradeAddon('backup_recovery')).toBe(false)
     expect(isDisableableDowngradeAddon('')).toBe(false)
   })
