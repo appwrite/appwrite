@@ -618,7 +618,6 @@ final class ClaimTest extends TestCase
     public static function staleIdentities(): \Iterator
     {
         yield 'prior version with identical timestamp' => ['$version', 0];
-        yield 'missing version' => ['$version', null];
         yield 'different immutable sequence' => ['$sequence', 'replacement'];
     }
 
@@ -643,6 +642,32 @@ final class ClaimTest extends TestCase
         $this->assertSame('processing', $stored->getAttribute('status'));
         $this->assertSame($active->getVersion(), $stored->getVersion());
         $this->assertSame($active->getSequence(), $stored->getSequence());
+    }
+
+    public function testWorkerPersistenceRefusesAGenerationItCannotCompare(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-unversioned',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $unversioned = new Document($active->getArrayCopy());
+        $unversioned->removeAttribute('$version');
+        $unversioned->setAttribute('status', 'completed');
+        $unversioned->setAttribute('stage', 'finished');
+
+        try {
+            (new Claim($this->database))->persist($unversioned);
+            $this->fail('A generation that cannot be compared must be refused, not treated as superseded');
+        } catch (\LogicException) {
+        }
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+        $this->assertSame($active->getVersion(), $stored->getVersion());
     }
 
     public function testWorkerPersistenceLosesStorageRaceAfterGenerationRead(): void

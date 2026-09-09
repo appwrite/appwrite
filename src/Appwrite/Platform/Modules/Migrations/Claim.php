@@ -367,23 +367,36 @@ final readonly class Claim
     }
 
     /**
-     * Turn one exact stale processing generation into a retryable terminal.
+     * Turn one observed stale processing generation into a retryable terminal.
+     *
+     * The maintenance sweep reads its candidates through Query::select, and no
+     * projection can carry $version: the query layer has no column for it, so
+     * selecting it is a hard SQL error and leaving it out yields null. A swept
+     * row therefore pins its generation on the observation, not on the update
+     * counter, and the write still commits under the version read under lock.
      */
     public function expire(Document $migration): ?Document
     {
-        return $this->withGeneration($migration, function (Document $live): ?Document {
-            if (
-                $live->getAttribute('status') !== self::STATUS_PROCESSING
-                || !\in_array($live->getAttribute('stage'), [self::STAGE_PROCESSING, self::STAGE_MIGRATING], true)
-            ) {
-                return null;
-            }
+        try {
+            return $this->database->withTransaction(function () use ($migration): ?Document {
+                $live = $this->database->getDocument('migrations', $migration->getId(), forUpdate: true);
 
-            return $this->required($this->database->updateDocument('migrations', $live->getId(), new Document([
-                'status' => self::STATUS_FAILED,
-                'stage' => self::STAGE_FINISHED,
-            ]), expectedVersion: $this->version($live)));
-        });
+                if (
+                    !$this->sameObservation($live, $migration)
+                    || $live->getAttribute('status') !== self::STATUS_PROCESSING
+                    || !\in_array($live->getAttribute('stage'), [self::STAGE_PROCESSING, self::STAGE_MIGRATING], true)
+                ) {
+                    return null;
+                }
+
+                return $this->required($this->database->updateDocument('migrations', $live->getId(), new Document([
+                    'status' => self::STATUS_FAILED,
+                    'stage' => self::STAGE_FINISHED,
+                ]), expectedVersion: $this->version($live)));
+            });
+        } catch (Conflict) {
+            return null;
+        }
     }
 
     /**
@@ -448,6 +461,10 @@ final readonly class Claim
 
     private function withGeneration(Document $migration, callable $callback): mixed
     {
+        if ($migration->getVersion() === null) {
+            throw new \LogicException('Migration generation cannot be compared without a version');
+        }
+
         try {
             return $this->database->withTransaction(function () use ($callback, $migration): mixed {
                 $live = $this->database->getDocument('migrations', $migration->getId(), forUpdate: true);
@@ -483,14 +500,19 @@ final readonly class Claim
 
     private function sameGeneration(Document $live, Document $queued): bool
     {
+        return $this->sameObservation($live, $queued)
+            && $live->getVersion() !== null
+            && $live->getVersion() === $queued->getVersion();
+    }
+
+    private function sameObservation(Document $live, Document $queued): bool
+    {
         return !$live->isEmpty()
             && $live->getId() !== ''
             && $live->getId() === $queued->getId()
             && $live->getAttribute('attemptId') === $queued->getAttribute('attemptId')
             && $live->getUpdatedAt() !== null
             && $live->getUpdatedAt() === $queued->getUpdatedAt()
-            && $live->getVersion() !== null
-            && $live->getVersion() === $queued->getVersion()
             && $live->getSequence() !== ''
             && $live->getSequence() === $queued->getSequence();
     }

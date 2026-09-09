@@ -13,13 +13,14 @@ use Appwrite\Execution\Store;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Workers\Deletes;
 use Executor\Executor;
+use PDO;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
@@ -39,7 +40,12 @@ final class DeletesTest extends TestCase
 {
     public function testMaintenanceMakesStaleProcessingAttemptRetryable(): void
     {
-        $database = new Database(new Memory(), new Cache(new NoCache()));
+        // A SQL projection cannot return $version; the in-memory adapter hands it
+        // back regardless, which is what hid this sweep expiring nothing at all.
+        $database = new Database(
+            new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])),
+            new Cache(new NoCache()),
+        );
         $database
             ->setAuthorization(new Authorization())
             ->setDatabase('migrationMaintenanceRecovery')
