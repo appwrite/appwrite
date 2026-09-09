@@ -10,13 +10,6 @@
  * Safe to import from both the browser and the `_api` server routes.
  */
 
-/** Card layouts available while the design is being reviewed (debug menu → Flags). */
-export const SMTP_QUICK_SETUP_LAYOUTS = ['rows', 'tiles', 'dropdown'] as const
-
-export type SmtpQuickSetupLayout = (typeof SMTP_QUICK_SETUP_LAYOUTS)[number]
-
-export const DEFAULT_SMTP_QUICK_SETUP_LAYOUT: SmtpQuickSetupLayout = 'rows'
-
 /**
  * Provider access tokens are short lived (Resend issues 15 minutes). Anything
  * expiring inside this window counts as expired so a request never races the

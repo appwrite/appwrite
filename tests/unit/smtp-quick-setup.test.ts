@@ -3,8 +3,6 @@ import { OAuthProvider } from '@appwrite.io/console'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import {
-  DEFAULT_SMTP_QUICK_SETUP_LAYOUT,
-  SMTP_QUICK_SETUP_LAYOUTS,
   buildCredentialName,
   buildQuickSetupOAuthUrls,
   defaultSenderEmail,
@@ -33,14 +31,6 @@ import {
 import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 
 const REPO_ROOT = join(import.meta.dir, '../..')
-
-describe('quick setup card layouts', () => {
-  test('offers every reviewed layout and defaults to rows', () => {
-    expect(SMTP_QUICK_SETUP_LAYOUTS).toEqual(['rows', 'tiles', 'dropdown'])
-    expect(SMTP_QUICK_SETUP_LAYOUTS).toContain(DEFAULT_SMTP_QUICK_SETUP_LAYOUT)
-    expect(DEFAULT_SMTP_QUICK_SETUP_LAYOUT).toBe('rows')
-  })
-})
 
 describe('isProviderTokenExpired', () => {
   const now = Date.parse('2026-09-08T12:00:00.000Z')

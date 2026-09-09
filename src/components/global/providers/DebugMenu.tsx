@@ -74,10 +74,6 @@ import {
   type FeatureFlagsMenuDebugKey,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
-import {
-  SMTP_QUICK_SETUP_LAYOUTS,
-  type SmtpQuickSetupLayout,
-} from '@/lib/smtp/quick-setup'
 import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
   detectUserOs,
@@ -340,26 +336,6 @@ function DebugMenuItemDescription({
       ) : null}
     </div>
   )
-}
-
-/** Debug-only labels for the SMTP quick setup card layouts (English, see AGENTS.md). */
-const SMTP_QUICK_SETUP_LAYOUT_COPY: Record<
-  SmtpQuickSetupLayout,
-  { label: string; description: string }
-> = {
-  rows: {
-    label: 'Provider rows',
-    description: 'One card, a row per provider with its own Set up button.',
-  },
-  tiles: {
-    label: 'Provider tiles',
-    description:
-      'Clickable tiles in a grid, like the messaging provider wizard.',
-  },
-  dropdown: {
-    label: 'Single row + dropdown',
-    description: 'Compact row; providers live behind a Set up dropdown.',
-  },
 }
 
 function formatFeatureFlagDefaultLabel(defaultValue: boolean): string {
@@ -2351,25 +2327,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              {
-                label: 'SMTP quick setup layout',
-                description: `Card design on project settings → SMTP. Current: ${SMTP_QUICK_SETUP_LAYOUT_COPY[overrides.smtpQuickSetupLayout].label}.`,
-                icon: <Mail className="h-3 w-3" />,
-                category: 'UI & tools',
-                submenu: SMTP_QUICK_SETUP_LAYOUTS.map((value) => ({
-                  label: SMTP_QUICK_SETUP_LAYOUT_COPY[value].label,
-                  description: SMTP_QUICK_SETUP_LAYOUT_COPY[value].description,
-                  active: overrides.smtpQuickSetupLayout === value,
-                  icon: <Mail className="h-3 w-3" />,
-                  onClick: () => {
-                    setOverrides((prev) => ({
-                      ...prev,
-                      smtpQuickSetupLayout: value,
-                    }))
-                    setDebugOverride('smtpQuickSetupLayout', value)
-                  },
-                })),
-              },
               {
                 label: 'Reset all feature flags',
                 description:

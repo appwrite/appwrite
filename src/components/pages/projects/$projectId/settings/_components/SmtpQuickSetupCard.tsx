@@ -2,16 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ChevronDown, Mail } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
@@ -23,7 +15,6 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   isProviderTokenExpired,
   parseQuickSetupReturn,
@@ -54,7 +45,7 @@ import {
 interface SmtpQuickSetupCardProps {
   projectId: string
   project: Models.Project | undefined
-  /** Custom SMTP is a paid feature; the CTAs are disabled (with a tooltip) below that plan. */
+  /** Custom SMTP is a paid feature; the tiles are disabled (with a tooltip) below that plan. */
   supportsCustomSmtp: boolean
   /** Open the "Send test email" dialog after a successful setup. */
   onSendTestEmail?: () => void
@@ -68,9 +59,6 @@ interface SmtpQuickSetupCardProps {
  * keeps provider access tokens in memory (never persisted), refreshes them
  * through `updateSession`, and falls back to a fresh authorization when the
  * refresh is impossible.
- *
- * Three layouts are under review; pick one from debug menu → Flags → SMTP
- * quick setup layout.
  */
 export function SmtpQuickSetupCard({
   projectId,
@@ -83,7 +71,6 @@ export function SmtpQuickSetupCard({
   const queryClient = useQueryClient()
   const search = useSearch({ strict: false })
   const { account } = useAuth()
-  const { smtpQuickSetupLayout: layout } = useDebugOverrides()
   const accountId =
     (account as Models.User<Models.Preferences> | null | undefined)?.$id ?? null
 
@@ -225,7 +212,7 @@ export function SmtpQuickSetupCard({
         return
       }
       // No usable token: leave for the provider. The page unloads, so the
-      // button intentionally stays disabled until then.
+      // tile intentionally stays disabled until then.
       startProviderAuthorization(provider, projectId)
     } catch (error) {
       setIsConnecting(false)
@@ -239,124 +226,38 @@ export function SmtpQuickSetupCard({
     ? t('Custom SMTP is available on Appwrite Cloud Pro and higher plans.') // pragma: allowlist secret
     : undefined
 
-  const isDisabled = (provider: SmtpQuickSetupProvider) =>
-    !supportsCustomSmtp || !isProviderAvailable(provider) || isConnecting
-
-  const cardTitle = t('Quick setup')
-  const cardDescription = t(
-    'Connect an email provider and Appwrite fills in your SMTP settings automatically.',
-  )
-
   return (
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        {layout === 'dropdown' ? (
-          <div className="px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <Mail className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  {cardTitle}
-                </h3>
-                <p className="text-[13px] text-muted-foreground mt-1">
-                  {cardDescription}
-                </p>
-              </div>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex shrink-0">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        disabled={!supportsCustomSmtp || isConnecting}
-                      >
-                        {t('Set up')}
-                        <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      {SMTP_QUICK_SETUP_PROVIDERS.map((provider) => (
-                        <DropdownMenuItem
-                          key={provider.id}
-                          disabled={isDisabled(provider)}
-                          onSelect={() => void handleSetup(provider)}
-                          {...analyticsAttrs(provider.analyticsAction)}
-                        >
-                          <img
-                            src={provider.iconPath}
-                            alt=""
-                            aria-hidden="true"
-                            className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                          />
-                          <span className="flex-1">{provider.name}</span>
-                          {!isProviderAvailable(provider) ? (
-                            <span className="text-[11px] text-muted-foreground">
-                              {t('Coming soon')}
-                            </span>
-                          ) : null}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </span>
-              </TooltipTrigger>
-              {planTooltip ? (
-                <TooltipContent className="max-w-xs text-[13px]">
-                  {planTooltip}
-                </TooltipContent>
-              ) : null}
-            </Tooltip>
-          </div>
-        ) : (
-          <>
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {cardTitle}
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-2">
-                {cardDescription}
-              </p>
-            </div>
-            <div className="border-t border-border" />
-
-            {layout === 'tiles' ? (
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {SMTP_QUICK_SETUP_PROVIDERS.map((provider) => (
-                    <ProviderTile
-                      key={provider.id}
-                      provider={provider}
-                      disabled={isDisabled(provider)}
-                      planTooltip={planTooltip}
-                      onSelect={() => void handleSetup(provider)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              SMTP_QUICK_SETUP_PROVIDERS.map((provider, index) => (
-                <div key={provider.id}>
-                  {index > 0 ? (
-                    <div className="border-t border-border" />
-                  ) : null}
-                  <ProviderRow
-                    provider={provider}
-                    disabled={isDisabled(provider)}
-                    planTooltip={planTooltip}
-                    onSelect={() => void handleSetup(provider)}
-                  />
-                </div>
-              ))
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Quick setup')}
+          </h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            {t(
+              'Connect an email provider and Appwrite fills in your SMTP settings automatically.',
             )}
-          </>
-        )}
+          </p>
+        </div>
+        <div className="border-t border-border" />
+
+        <div className="px-6 py-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {SMTP_QUICK_SETUP_PROVIDERS.map((provider) => (
+              <ProviderTile
+                key={provider.id}
+                provider={provider}
+                disabled={
+                  !supportsCustomSmtp ||
+                  !isProviderAvailable(provider) ||
+                  isConnecting
+                }
+                planTooltip={planTooltip}
+                onSelect={() => void handleSetup(provider)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {activeProvider ? (
@@ -375,7 +276,7 @@ export function SmtpQuickSetupCard({
   )
 }
 
-interface ProviderPresentationProps {
+interface ProviderTileProps {
   provider: SmtpQuickSetupProvider
   disabled: boolean
   /** Shown only for the plan gate; "Coming soon" is already visible as a badge. */
@@ -383,91 +284,12 @@ interface ProviderPresentationProps {
   onSelect: () => void
 }
 
-function ComingSoonBadge() {
-  const t = useT()
-  return (
-    <Badge variant="info" className="text-[10px] shrink-0">
-      {t('Coming soon')}
-    </Badge>
-  )
-}
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider: SmtpQuickSetupProvider
-  className: string
-}) {
-  return (
-    <img
-      src={provider.iconPath}
-      alt=""
-      aria-hidden="true"
-      className={cn(PUBLIC_ICON_MUTED_CLASSES, className)}
-    />
-  )
-}
-
-function ProviderRow({
-  provider,
-  disabled,
-  planTooltip,
-  onSelect,
-}: ProviderPresentationProps) {
-  const t = useT()
-  const comingSoon = !isProviderAvailable(provider)
-
-  return (
-    <div className="px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <ProviderIcon provider={provider} className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[13px] font-medium text-foreground">
-              {provider.name}
-            </p>
-            {comingSoon ? <ComingSoonBadge /> : null}
-          </div>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
-            {t(provider.tagline)}
-          </p>
-        </div>
-      </div>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={onSelect}
-              disabled={disabled}
-              {...analyticsAttrs(provider.analyticsAction)}
-            >
-              {t('Set up')}
-            </Button>
-          </span>
-        </TooltipTrigger>
-        {planTooltip && !comingSoon ? (
-          <TooltipContent className="max-w-xs text-[13px]">
-            {planTooltip}
-          </TooltipContent>
-        ) : null}
-      </Tooltip>
-    </div>
-  )
-}
-
 function ProviderTile({
   provider,
   disabled,
   planTooltip,
   onSelect,
-}: ProviderPresentationProps) {
+}: ProviderTileProps) {
   const t = useT()
   const comingSoon = !isProviderAvailable(provider)
 
@@ -486,12 +308,21 @@ function ProviderTile({
     >
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <ProviderIcon provider={provider} className="h-4 w-4" />
+          <img
+            src={provider.iconPath}
+            alt=""
+            aria-hidden="true"
+            className={cn('h-4 w-4', PUBLIC_ICON_MUTED_CLASSES)}
+          />
         </div>
         <span className="text-[13px] font-medium text-foreground">
           {provider.name}
         </span>
-        {comingSoon ? <ComingSoonBadge /> : null}
+        {comingSoon ? (
+          <Badge variant="info" className="text-[10px] shrink-0">
+            {t('Coming soon')}
+          </Badge>
+        ) : null}
       </div>
       <span className="text-[12px] text-muted-foreground">
         {t(provider.tagline)}

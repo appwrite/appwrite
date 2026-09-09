@@ -7,17 +7,15 @@ import {
   type InitTicketTypeId,
   isInitTicketTypeId,
 } from '@/lib/init/ticket-types'
-import { USER_OS_VALUES, type UserOsOverride } from '@/lib/user-os'
+import {
+  USER_OS_VALUES,
+  type UserOsOverride,
+} from '@/lib/user-os'
 import {
   getPreLaunchDefault,
   PRE_LAUNCH_DEBUG_STORAGE_KEY,
   syncPreLaunchCookie,
 } from '@/lib/pre-launch'
-import {
-  DEFAULT_SMTP_QUICK_SETUP_LAYOUT,
-  SMTP_QUICK_SETUP_LAYOUTS,
-  type SmtpQuickSetupLayout,
-} from '@/lib/smtp/quick-setup'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
@@ -49,8 +47,6 @@ export const DEBUG_OVERRIDE_KEYS = {
   language: 'debug:language',
   /** Pre-launch lock: only Init (and sign-in) is reachable. Default on. */
   preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
-  /** Which layout the project SMTP quick setup card renders. */
-  smtpQuickSetupLayout: 'debug:smtpQuickSetupLayout',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -61,7 +57,11 @@ const EPHEMERAL_OVERRIDE_KEYS = new Set<keyof DebugOverrides>([
 const ephemeralOverrides: Partial<DebugOverrides> = {}
 
 export type MockCloudStatusAlert =
-  'live' | 'operational' | 'degraded' | 'downtime' | 'maintenance'
+  | 'live'
+  | 'operational'
+  | 'degraded'
+  | 'downtime'
+  | 'maintenance'
 
 export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 
@@ -123,11 +123,6 @@ export type DebugOverrides = {
    * locked. Sign-in stays open and returns to `/init`. Default on.
    */
   preLaunch: boolean
-  /**
-   * Layout of the SMTP quick setup card on project settings (design review:
-   * provider rows, provider tiles, or a single row with a provider dropdown).
-   */
-  smtpQuickSetupLayout: SmtpQuickSetupLayout
 }
 
 function getStorage(): Storage | null {
@@ -183,9 +178,7 @@ function readInitDayFromStorage(key: string): number {
   return parsed
 }
 
-function readNullableInitTicketTypeFromStorage(
-  key: string,
-): InitTicketTypeId | null {
+function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | null {
   const storage = getStorage()
   if (!storage) return null
   const raw = storage.getItem(key)
@@ -293,11 +286,6 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.preLaunch,
       getPreLaunchDefault(),
     ),
-    smtpQuickSetupLayout: readStringFromStorage(
-      DEBUG_OVERRIDE_KEYS.smtpQuickSetupLayout,
-      SMTP_QUICK_SETUP_LAYOUTS,
-      DEFAULT_SMTP_QUICK_SETUP_LAYOUT,
-    ),
   }
   const storage = getStorage()
   const storedPreLaunch = storage?.getItem(DEBUG_OVERRIDE_KEYS.preLaunch)
@@ -385,22 +373,11 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   previewCommunitySupportWizard: false,
 }
 
-/**
- * Flags submenu entries that pick one of several values instead of on/off, so
- * they are not switches but still reset with the rest of the submenu.
- */
-export const FEATURE_FLAGS_MENU_CHOICE_KEYS = [
-  'smtpQuickSetupLayout',
-] as const satisfies readonly (keyof DebugOverrides)[]
-
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
 export function resetFeatureFlagsMenuDebugOverrides() {
   const storage = getStorage()
   if (!storage) return
   FEATURE_FLAGS_MENU_DEBUG_KEYS.forEach((key) => {
-    storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
-  })
-  FEATURE_FLAGS_MENU_CHOICE_KEYS.forEach((key) => {
     storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   })
   syncPreLaunchCookie(null)
@@ -428,9 +405,7 @@ export function resetInitMenuDebugOverrides() {
 }
 
 /** Reset a single debug override from the Feature flags submenu to its default. */
-export function resetFeatureFlagsMenuDebugOverride(
-  key: FeatureFlagsMenuDebugKey,
-) {
+export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
   const storage = getStorage()
   if (!storage) return
   storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
@@ -480,7 +455,6 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     pageDirection: 'ltr',
     language: 'en',
     preLaunch: getPreLaunchDefault(),
-    smtpQuickSetupLayout: DEFAULT_SMTP_QUICK_SETUP_LAYOUT,
   }
 }
 
