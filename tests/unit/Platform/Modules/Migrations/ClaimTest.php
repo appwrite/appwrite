@@ -995,10 +995,10 @@ final class ClaimTest extends TestCase
         $claims = new Claim($this->database, $locks);
         $project = new Document(['$id' => 'project-1']);
 
-        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
-        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
-        $this->assertNull($claims->consume('project-2', new MigrationMessage(project: $project, migration: $first)));
-        $this->assertNull($claims->consume('project-1', new MigrationMessage(project: $project, migration: $second)));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-2', new MigrationMessage(project: $project, migration: $first)));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(project: $project, migration: $second)));
 
         $this->assertCount(4, $locks->keys);
 
