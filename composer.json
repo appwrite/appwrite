@@ -47,7 +47,7 @@
         "psr/http-message": "^2.0",
         "utopia-php/client": "^0.4.3",
         "utopia-php/psr7": "^0.2.2",
-        "utopia-php/validators": "^0.6",
+        "utopia-php/validators": "^1.0",
         "utopia-php/cache": "^4.0 || ^5.0"
     },
     "minimum-stability": "stable",
