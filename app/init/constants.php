@@ -585,6 +585,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_VECTORSDB
 ];
 
+const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
+
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
 ];
