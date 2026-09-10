@@ -1,0 +1,164 @@
+---
+layout: article
+title: TypeORM
+description: Use TypeORM with an Appwrite native PostgreSQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [TypeORM](https://typeorm.io/) works against it with no Appwrite-specific configuration. Point TypeORM's `pg` driver at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use entities, the query builder, and migrations as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Install and configure TypeORM {% #driver %}
+
+Install TypeORM and the PostgreSQL driver:
+
+```bash
+npm install typeorm pg reflect-metadata
+npm install -D @types/node typescript ts-node
+```
+
+Enable decorator metadata in `tsconfig.json` if you use entity decorators (`"emitDecoratorMetadata": true` and `"experimentalDecorators": true`).
+
+Create a `DataSource` with `type: 'postgres'`. Prefer the connection URL for Appwrite; set `ssl` when your driver does not infer TLS from `sslmode=require`:
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export const AppDataSource = new DataSource({
+  type: 'postgres',
+  url: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  synchronize: false,
+  logging: false,
+  entities: [User],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: []
+});
+```
+
+Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port.
+
+Define an entity:
+
+```ts
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column({ type: 'text', unique: true })
+  email!: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
+}
+```
+
+# Run migrations {% #migrate %}
+
+Initialize the data source, then generate and run migrations with the TypeORM CLI. Point the CLI and any migration runner at the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection:
+
+```env
+# Migrations & introspection: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Use `DIRECT_URL` in the DataSource (or a dedicated `data-source.migrations.ts`) when you run the CLI:
+
+```bash
+npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.ts
+npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts
+```
+
+The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+
+You can also run pending migrations from application startup after `initialize()`:
+
+```ts
+await AppDataSource.initialize();
+await AppDataSource.runMigrations();
+```
+
+# Query with TypeORM {% #query %}
+
+Once the schema is migrated, use the repository API or the query builder:
+
+```ts
+import { AppDataSource } from './data-source';
+import { User } from './entities/User';
+
+await AppDataSource.initialize();
+
+const users = AppDataSource.getRepository(User);
+
+const user = await users.save({ email: 'ada@example.com' });
+
+const recent = await users.find({
+  order: { createdAt: 'DESC' },
+  take: 10
+});
+```
+
+On long-running servers, initialize the `DataSource` once at module scope and reuse it. On serverless, keep a single initialized instance per module scope so warm invocations reuse it, and rely on the pooler to absorb cold-start connection churn. Always call `destroy()` during graceful shutdown on long-running processes.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so server-side prepared statements and session-scoped state are unreliable. Keep migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+
+```env
+# Runtime: pooled, transaction mode
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Migrations & introspection: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Wire the runtime DataSource to `DATABASE_URL` and a separate migrations DataSource (or CLI `-d` file) to `DIRECT_URL`. Cap `extra.max` / pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
+
+If your application relies on advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or `SET LOCAL`, switch the pooler to **session mode** or use the direct port. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run TypeORM migrations and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
