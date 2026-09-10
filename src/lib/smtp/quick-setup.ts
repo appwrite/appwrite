@@ -48,6 +48,17 @@ export const QUICK_SETUP_STATUS_PARAM = 'smtpSetup'
 export const QUICK_SETUP_PROVIDER_PARAM = 'smtpProvider'
 /** Query param carrying the project to return to. */
 export const QUICK_SETUP_PROJECT_PARAM = 'projectId'
+/** Query param carrying the console path the flow started from. */
+export const QUICK_SETUP_RETURN_PARAM = 'returnTo'
+
+/**
+ * Guards the return path against open redirects. Same rule as
+ * `isValidRelativeRedirect`, inlined because this module stays dependency-free
+ * for the server routes and the auth guard that import it.
+ */
+export function isSafeQuickSetupReturnPath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://')
+}
 
 export type QuickSetupStatus = 'connected' | 'failed'
 
@@ -91,31 +102,46 @@ export function buildQuickSetupOAuthUrls(
   origin: string,
   projectId: string,
   providerId: string,
+  /** Console path to come back to. Defaults to the project's SMTP settings. */
+  returnPath?: string,
 ): { success: string; failure: string } {
   const base = `${origin}${QUICK_SETUP_CALLBACK_PATH}`
-  const shared =
+  let shared =
     `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}` +
     `&${QUICK_SETUP_PROJECT_PARAM}=${encodeURIComponent(projectId)}`
+  if (returnPath && isSafeQuickSetupReturnPath(returnPath)) {
+    shared += `&${QUICK_SETUP_RETURN_PARAM}=${encodeURIComponent(returnPath)}`
+  }
   return {
     success: `${base}?${QUICK_SETUP_STATUS_PARAM}=connected&${shared}`,
     failure: `${base}?${QUICK_SETUP_STATUS_PARAM}=failed&${shared}`,
   }
 }
 
-/** Where the callback sends the user once the console session is restored. */
+/**
+ * Where the callback sends the user once the console session is restored:
+ * the page that started the flow, or the project's SMTP settings by default.
+ */
 export function buildQuickSetupReturnPath(options: {
   projectId: string
   providerId: string
   status: QuickSetupStatus
-  /** Raw `error` value from Appwrite, forwarded so the tab can show it. */
+  /** Raw `error` value from Appwrite, forwarded so the page can show it. */
   error?: string
+  /** Console path the flow started from; ignored when it is not relative. */
+  returnPath?: string
 }): string {
   const params = new URLSearchParams({
     [QUICK_SETUP_STATUS_PARAM]: options.status,
     [QUICK_SETUP_PROVIDER_PARAM]: options.providerId,
   })
   if (options.error) params.set('error', options.error)
-  return `/projects/${encodeURIComponent(options.projectId)}/settings/smtp?${params.toString()}`
+
+  const base =
+    options.returnPath && isSafeQuickSetupReturnPath(options.returnPath)
+      ? options.returnPath
+      : `/projects/${encodeURIComponent(options.projectId)}/settings/smtp`
+  return `${base}${base.includes('?') ? '&' : '?'}${params.toString()}`
 }
 
 /**

@@ -2704,6 +2704,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
+  'Generate API key': 'יצירת מפתח API',
+  'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
+  'Failed to create the API key with the email provider':
+    'יצירת מפתח ה-API מול ספק האימייל נכשלה',
+  'API key created and filled in below. Review and create the provider.':
+    'מפתח ה-API נוצר ומולא למטה. בדקו ויצרו את הספק.',
   'One-click setup': 'הגדרה בקליק אחד',
   'Notify me': 'עדכנו אותי',
   'You will be notified': 'נודיע לכם',
@@ -2737,13 +2746,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
   'Continuing signs you in to the Appwrite account that authorized this provider.':
     'המשך יחבר אתכם לחשבון Appwrite שאישר את הספק הזה.',
-  'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
-    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהגדרות ה-SMTP.',
-  'Back to SMTP settings': 'חזרה להגדרות ה-SMTP',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהקונסולה.',
+  'Back to setup': 'חזרה להגדרה',
   'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
   'Finishing setup': 'משלים את ההגדרה',
-  'Restoring your session and returning to SMTP settings.':
-    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרות ה-SMTP.',
+  'Restoring your session and returning to the setup.':
+    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרה.',
   'This link is missing required parameters.':
     'בקישור הזה חסרים פרמטרים נדרשים.',
   // Project selector

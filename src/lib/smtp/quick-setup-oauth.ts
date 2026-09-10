@@ -228,6 +228,8 @@ export function startProviderAuthorization(
   provider: AvailableSmtpQuickSetupProvider,
   projectId: string,
   accountId: string,
+  /** Console path to return to; defaults to the project's SMTP settings. */
+  returnPath?: string,
 ): void {
   if (typeof window === 'undefined') {
     throw new Error('Provider authorization requires a browser')
@@ -241,6 +243,7 @@ export function startProviderAuthorization(
     window.location.origin,
     projectId,
     provider.id,
+    returnPath,
   )
   const result = sdk.forConsole.account.createOAuth2Token({
     provider: provider.oauth.provider,

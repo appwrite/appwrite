@@ -31,7 +31,6 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import {
-  isProviderTokenExpired,
   parseQuickSetupReturn,
   providerInterestFeatureId,
   stripQuickSetupReturn,
@@ -45,11 +44,9 @@ import {
 } from '@/lib/smtp/providers'
 import {
   QuickSetupReauthorizeRequiredError,
-  refreshProviderAccessToken,
-  resolveProviderAccessToken,
   startProviderAuthorization,
-  type ProviderAccessToken,
 } from '@/lib/smtp/quick-setup-oauth'
+import { useProviderTokens } from '@/lib/smtp/use-provider-tokens'
 import { SmtpQuickSetupWizard } from './SmtpQuickSetupWizard'
 import type { ProviderApiCall } from './use-smtp-quick-setup'
 import { DisconnectSmtpProvider } from './DisconnectSmtpProvider'
@@ -106,8 +103,7 @@ export function SmtpQuickSetupCard({
     return map
   }, [identitiesData])
 
-  /** Access token per provider id; in memory only, dropped on reload. */
-  const tokensRef = useRef(new Map<string, ProviderAccessToken>())
+  const { callWith, prime, forget } = useProviderTokens()
   const handledReturnRef = useRef(false)
   const [activeProvider, setActiveProvider] =
     useState<AvailableSmtpQuickSetupProvider | null>(null)
@@ -141,43 +137,22 @@ export function SmtpQuickSetupCard({
     [accountId, projectId, t],
   )
 
-  /**
-   * Runs a provider API call with the cached token. Expired tokens and 401
-   * responses trigger one `updateSession` refresh; when the current session
-   * cannot refresh the token, the wizard asks to reconnect.
-   */
   const callProvider = useCallback<ProviderApiCall>(
     async (run) => {
-      const provider = activeProvider
-      if (!provider) throw new QuickSetupReauthorizeRequiredError()
-
-      let current = tokensRef.current.get(provider.id)
-      if (!current || isProviderTokenExpired(current.expiry)) {
-        current = await refreshProviderAccessToken(provider.id)
-        tokensRef.current.set(provider.id, current)
-      }
-      try {
-        return await run(current.token)
-      } catch (error) {
-        if (!provider.api.isUnauthorizedError(error)) throw error
-        const refreshed = await refreshProviderAccessToken(provider.id)
-        tokensRef.current.set(provider.id, refreshed)
-        return await run(refreshed.token)
-      }
+      if (!activeProvider) throw new QuickSetupReauthorizeRequiredError()
+      return await callWith(activeProvider, run)
     },
-    [activeProvider],
+    [activeProvider, callWith],
   )
 
   const openWizardFor = useCallback(
     async (provider: AvailableSmtpQuickSetupProvider) => {
-      const token = await resolveProviderAccessToken(provider.id)
-      if (!token) return false
-      tokensRef.current.set(provider.id, token)
+      if (!(await prime(provider))) return false
       setActiveProvider(provider)
       setWizardOpen(true)
       return true
     },
-    [],
+    [prime],
   )
 
   // Pick the flow back up after `/auth/smtp/callback` restored the session.
@@ -344,7 +319,7 @@ export function SmtpQuickSetupCard({
           identityId={identityByProvider.get(disconnecting.id)!.$id}
           onDisconnected={() => {
             // The cached token belonged to the identity that just went away.
-            tokensRef.current.delete(disconnecting.id)
+            forget(disconnecting.id)
             setDisconnecting(null)
           }}
         />

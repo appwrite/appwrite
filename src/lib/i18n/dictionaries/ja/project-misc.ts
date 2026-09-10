@@ -2700,6 +2700,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '続行するにはプロバイダーアカウントを再接続してください。',
   'Failed to set up SMTP with the email provider':
     'メールプロバイダーでの SMTP セットアップに失敗しました',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
+  'Generate API key': 'API キーを生成',
+  'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'Creating the sending credential…': '送信用の認証情報を作成中…',
+  'Failed to create the API key with the email provider':
+    'メールプロバイダーでの API キーの作成に失敗しました',
+  'API key created and filled in below. Review and create the provider.':
+    'API キーを作成し、以下に入力しました。内容を確認してプロバイダーを作成してください。',
   'One-click setup': 'ワンクリックセットアップ',
   'Notify me': '通知を受け取る',
   'You will be notified': '通知されます',
@@ -2733,13 +2742,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このブラウザーにはこの認可を開始した記録がないため、自動的にはサインインしません。',
   'Continuing signs you in to the Appwrite account that authorized this provider.':
     '続行すると、このプロバイダーを認可した Appwrite アカウントにサインインします。',
-  'This authorization link was already used or has expired. Start the setup again from SMTP settings.':
-    'この認可リンクは既に使用されたか、有効期限が切れています。SMTP 設定からもう一度セットアップを開始してください。',
-  'Back to SMTP settings': 'SMTP 設定に戻る',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'この認可リンクは既に使用されたか、有効期限が切れています。コンソールからもう一度セットアップを開始してください。',
+  'Back to setup': 'セットアップに戻る',
   'Unable to finish setup': 'セットアップを完了できません',
   'Finishing setup': 'セットアップを完了しています',
-  'Restoring your session and returning to SMTP settings.':
-    'セッションを復元して SMTP 設定に戻ります。',
+  'Restoring your session and returning to the setup.':
+    'セッションを復元してセットアップに戻ります。',
   'This link is missing required parameters.':
     'このリンクには必要なパラメーターがありません。',
   // Usage log retention

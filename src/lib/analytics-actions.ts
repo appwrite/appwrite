@@ -198,6 +198,9 @@ export const ANALYTICS_ACTIONS = {
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
   'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
+  // Messaging
+  'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+
   // Resource creation
   'create-project': 'Create Project Clicked',
   'create-organization': 'Create Organization Clicked',

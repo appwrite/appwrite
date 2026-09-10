@@ -9,6 +9,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 import {
   QUICK_SETUP_PROJECT_PARAM,
   QUICK_SETUP_PROVIDER_PARAM,
+  QUICK_SETUP_RETURN_PARAM,
   QUICK_SETUP_STATUS_PARAM,
   buildQuickSetupReturnPath,
   clearQuickSetupPending,
@@ -19,14 +20,15 @@ import { getSmtpQuickSetupProvider } from '@/lib/smtp/providers'
 import { claimProviderIdentity } from '@/lib/smtp/quick-setup-oauth'
 
 /**
- * OAuth2 landing page for the project SMTP quick setup.
+ * OAuth2 landing page for the email provider one-click setup (project SMTP
+ * settings and the messaging provider wizard).
  *
  * Appwrite deletes the caller's session as soon as an OAuth2 flow starts for a
  * signed-in user, so the browser arrives here signed out with a one-time token
  * in the URL. This route lives under `_auth` (guests allowed), turns the token
- * back into a console session, and only then sends the user to the SMTP tab.
- * Landing on the tab directly would bounce through /sign-in and strand the
- * secret in the redirect URL.
+ * back into a console session, and only then sends the user back to the page
+ * that started the flow (the SMTP tab by default). Landing there directly
+ * would bounce through /sign-in and strand the secret in the redirect URL.
  *
  * The claim runs automatically only when it matches the record this browser
  * wrote before leaving. Otherwise the user confirms it by hand: a crafted link
@@ -46,6 +48,7 @@ interface CallbackParams {
   userId: string
   secret: string
   error: string
+  returnPath: string
 }
 
 /** Read params off the raw URL so the long JWT secret is never re-encoded. */
@@ -59,6 +62,7 @@ function readCallbackParams(): CallbackParams | null {
     userId: params.get('userId')?.trim() ?? '',
     secret: params.get('secret') ?? '',
     error: params.get('error') ?? '',
+    returnPath: params.get(QUICK_SETUP_RETURN_PARAM)?.trim() ?? '',
   }
 }
 
@@ -86,13 +90,14 @@ function SmtpQuickSetupCallbackPage() {
             projectId: callback.projectId,
             providerId: callback.providerId,
             status: 'connected',
+            returnPath: callback.returnPath || undefined,
           }),
         )
       } catch {
         clearQuickSetupPending()
         setErrorMessage(
           t(
-            'This authorization link was already used or has expired. Start the setup again from SMTP settings.',
+            'This authorization link was already used or has expired. Start the setup again from the console.',
           ),
         )
         setPhase('error')
@@ -114,7 +119,7 @@ function SmtpQuickSetupCallbackPage() {
       return
     }
 
-    // Provider or Appwrite refused; the SMTP tab shows why.
+    // Provider or Appwrite refused; the page that started the flow shows why.
     if (
       callback.status !== 'connected' ||
       !callback.userId ||
@@ -127,6 +132,7 @@ function SmtpQuickSetupCallbackPage() {
           providerId: callback.providerId,
           status: 'failed',
           error: callback.error || undefined,
+          returnPath: callback.returnPath || undefined,
         }),
       )
       return
@@ -153,12 +159,13 @@ function SmtpQuickSetupCallbackPage() {
     ? (getSmtpQuickSetupProvider(params.providerId)?.name ?? params.providerId)
     : ''
 
-  const settingsPath =
+  const returnPath =
     params?.projectId && params.providerId
       ? buildQuickSetupReturnPath({
           projectId: params.projectId,
           providerId: params.providerId,
           status: 'failed',
+          returnPath: params.returnPath || undefined,
         })
       : null
 
@@ -174,7 +181,7 @@ function SmtpQuickSetupCallbackPage() {
                 </h1>
                 <p className="text-muted-foreground text-[13px] flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t('Restoring your session and returning to SMTP settings.')}
+                  {t('Restoring your session and returning to the setup.')}
                 </p>
               </div>
             ) : null}
@@ -235,17 +242,17 @@ function SmtpQuickSetupCallbackPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {settingsPath ? (
+                  {returnPath ? (
                     <Button
                       className="w-full"
-                      onClick={() => window.location.assign(settingsPath)}
+                      onClick={() => window.location.assign(returnPath)}
                     >
-                      {t('Back to SMTP settings')}
+                      {t('Back to setup')}
                     </Button>
                   ) : null}
                   <Link to="/sign-in">
                     <Button
-                      variant={settingsPath ? 'outline' : 'default'}
+                      variant={returnPath ? 'outline' : 'default'}
                       className="w-full"
                     >
                       {t('Go to sign in')}

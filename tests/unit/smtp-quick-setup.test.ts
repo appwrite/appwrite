@@ -11,6 +11,7 @@ import {
   emailBelongsToDomain,
   isExpectedQuickSetupClaim,
   isProviderTokenExpired,
+  isSafeQuickSetupReturnPath,
   parseOAuthErrorMessage,
   parseQuickSetupReturn,
   pickDefaultQuickSetupDomain,
@@ -98,6 +99,71 @@ describe('OAuth2 round trip', () => {
       providerId: 'resend',
       message: 'Scope not allowed',
     })
+  })
+
+  test('carries the starting page through the round trip', () => {
+    const returnPath = '/projects/proj/messaging/providers/create'
+    const urls = buildQuickSetupOAuthUrls(
+      'https://cloud.appwrite.io',
+      'proj',
+      'resend',
+      returnPath,
+    )
+    expect(urls.success).toContain(
+      `&returnTo=${encodeURIComponent(returnPath)}`,
+    )
+
+    expect(
+      buildQuickSetupReturnPath({
+        projectId: 'proj',
+        providerId: 'resend',
+        status: 'connected',
+        returnPath,
+      }),
+    ).toBe(`${returnPath}?smtpSetup=connected&smtpProvider=resend`)
+
+    // A return path that already carries search state gets the outcome appended.
+    expect(
+      buildQuickSetupReturnPath({
+        projectId: 'proj',
+        providerId: 'resend',
+        status: 'connected',
+        returnPath: '/projects/proj/settings/smtp?tab=custom',
+      }),
+    ).toBe(
+      '/projects/proj/settings/smtp?tab=custom&smtpSetup=connected&smtpProvider=resend',
+    )
+  })
+
+  test('refuses open redirects and falls back to the SMTP tab', () => {
+    expect(isSafeQuickSetupReturnPath('/projects/proj/settings/smtp')).toBe(
+      true,
+    )
+    expect(isSafeQuickSetupReturnPath('https://evil.example')).toBe(false)
+    expect(isSafeQuickSetupReturnPath('//evil.example')).toBe(false)
+    expect(isSafeQuickSetupReturnPath('/x?next=https://evil.example')).toBe(
+      false,
+    )
+    expect(isSafeQuickSetupReturnPath('projects/proj')).toBe(false)
+
+    const urls = buildQuickSetupOAuthUrls(
+      'https://cloud.appwrite.io',
+      'proj',
+      'resend',
+      '//evil.example',
+    )
+    expect(urls.success).not.toContain('returnTo')
+
+    expect(
+      buildQuickSetupReturnPath({
+        projectId: 'proj',
+        providerId: 'resend',
+        status: 'connected',
+        returnPath: 'https://evil.example/',
+      }),
+    ).toBe(
+      '/projects/proj/settings/smtp?smtpSetup=connected&smtpProvider=resend',
+    )
   })
 
   test('parses the outcome on the settings tab', () => {
