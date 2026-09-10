@@ -67,7 +67,7 @@ iPhone Duo changes the shape of the canvas at runtime. Three things follow from 
 
 The closest existing analogue is Android's foldable line, which has had fold-state APIs for years. The difference is that Apple is shipping a single foldable with a single geometry, so you are targeting one device, not a fragmented category.
 
-## Do existing apps need changes for iPhone Duo?
+# Do existing apps need changes for iPhone Duo?
 
 No, existing apps launch and run on iPhone Duo without changes. But apps built with fixed layouts, hardcoded dimensions, or view controllers that reload on size change will look stretched, letterboxed, or lose state when the device folds. Those need work.
 
