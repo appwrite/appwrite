@@ -1,32 +1,12 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 
-const NOW = '2026-09-08T00:00:00.000Z'
 const ORGANIZATION = {
   $id: 'existing-org',
   name: 'Existing organization',
   total: 1,
   prefs: {},
 }
-const ACCOUNT = {
-  $id: 'uninvited-user',
-  $createdAt: NOW,
-  $updatedAt: NOW,
-  name: 'New member',
-  email: 'member@example.com',
-  registration: NOW,
-  status: true,
-  labels: [],
-  passwordUpdate: NOW,
-  phone: '',
-  emailVerification: true,
-  phoneVerification: false,
-  mfa: false,
-  prefs: {},
-  targets: [],
-  accessedAt: NOW,
-}
-
 async function mockApi(
   page: Page,
   options: {
@@ -43,8 +23,17 @@ async function mockApi(
     )
   }, options.profile ?? 'self-hosted')
 
-  const state = {
-    authenticated: true,
+  const origin = new URL(String(test.info().project.use.baseURL)).origin
+  await page
+    .context()
+    .addCookies([
+      { name: 'a_session_console', value: 'mock-session', url: origin },
+    ])
+  const account = {
+    $id: 'uninvited-user',
+    name: 'New member',
+    email: 'member@example.com',
+    emailVerification: true,
     prefs: {} as Record<string, unknown>,
   }
   const projects = [
@@ -58,7 +47,6 @@ async function mockApi(
   await page.route('**/*', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
-    const origin = new URL(String(test.info().project.use.baseURL)).origin
     const path = url.pathname.match(/^\/v1(\/.*)$/)?.[1]
     if (url.origin === origin && !path) return route.continue()
 
@@ -82,26 +70,13 @@ async function mockApi(
     if (!path || request.method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers })
     }
-    if (path === '/account/sessions/email' && request.method() === 'POST') {
-      state.authenticated = true
-      await page
-        .context()
-        .addCookies([
-          { name: 'a_session_console', value: 'mock-session', url: origin },
-        ])
-      return json(201, { $id: 'session', userId: ACCOUNT.$id })
-    }
-    if (path === '/account') {
-      return state.authenticated
-        ? json(200, { ...ACCOUNT, prefs: state.prefs })
-        : failure(401, 'user_unauthorized')
-    }
+    if (path === '/account') return json(200, account)
     if (path === '/account/prefs') {
       if (request.method() === 'PATCH') {
-        state.prefs = request.postDataJSON().prefs
-        return json(200, { ...ACCOUNT, prefs: state.prefs })
+        account.prefs = request.postDataJSON().prefs
+        return json(200, account)
       }
-      return json(200, state.prefs)
+      return json(200, account.prefs)
     }
     if (path === '/teams' || path === '/organizations') {
       if (request.method() === 'POST') {
@@ -138,23 +113,14 @@ async function mockApi(
     }
     return failure(404, 'general_route_not_found')
   })
-  return state
-}
-
-async function signIn(page: Page) {
-  await page.goto('/sign-in')
-  await page.locator('input[type="email"]').fill(ACCOUNT.email)
-  await page.locator('input[type="password"]').fill('Example-password-123!')
-  await page.getByRole('button', { name: 'Login', exact: true }).click()
-  await expect(page).toHaveURL(/\/account\/?$/)
 }
 
 test('invitation guidance after a policy denial survives reload', async ({
   page,
 }) => {
-  const state = await mockApi(page)
-  state.authenticated = false
-  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/account\/?$/)
   const guidance = page
     .getByRole('status')
     .filter({ hasText: 'Join an organization' })
@@ -169,31 +135,25 @@ test('membership granted after a denial is rechecked without creating another pr
   page,
 }) => {
   const options = { member: false }
-  const state = await mockApi(page, options)
-  state.authenticated = false
-  await signIn(page)
+  await mockApi(page, options)
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/account\/?$/)
   await expect(
     page.getByRole('heading', { name: 'Join an organization' }),
   ).toBeVisible()
 
-  // Keep the same page runtime (and its remembered denial). An invitation has
-  // now been accepted, so the next console navigation must recheck membership.
+  // Accept an invitation without clearing the page's remembered denial.
   options.member = true
-  // A still-finishing post-auth lookup may already have set the preferred org.
-  // Follow the console logo whether it points at / or that organization.
   await page
     .locator('header')
     .getByRole('link', { name: 'Appwrite', exact: true })
     .click()
   await expect(page).toHaveURL(/\/organizations\/existing-org\/?$/)
-  await expect(
-    page.getByText('Existing project', { exact: true }).first(),
-  ).toBeVisible()
+  const project = page.getByText('Existing project', { exact: true }).first()
+  await expect(project).toBeVisible()
   // Reload so cached list data cannot hide an accidentally created project.
   await page.reload()
-  await expect(
-    page.getByText('Existing project', { exact: true }).first(),
-  ).toBeVisible()
+  await expect(project).toBeVisible()
   await expect(page.getByText('My first project', { exact: true })).toHaveCount(
     0,
   )
