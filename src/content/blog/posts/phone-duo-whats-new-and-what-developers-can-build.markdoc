@@ -84,7 +84,7 @@ Use this to decide how much:
 
 The honest test is not whether your app opens. It is whether a user can fold the device mid-task and continue without losing anything.
 
-## How iPhone Duo changes iOS app design
+# How iPhone Duo changes iOS app design
 
 Design for iPhone Duo is adaptive design with a stricter deadline. Four rules cover most of it.
 
