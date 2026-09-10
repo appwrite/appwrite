@@ -903,7 +903,11 @@ Http::patch('/v1/account/sessions/:sessionId')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if ($className !== null && \class_exists($className)) {
+        // Only flows that request offline access come back with a refresh token;
+        // native ID token sign-ins never do. Without one there is nothing to
+        // exchange, and posting an empty refresh_token makes the provider fail
+        // the request, so leave the stored credentials untouched.
+        if (!empty($refreshToken) && $className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -1476,6 +1480,7 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
+    ->label('session.allowActive', true)
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')

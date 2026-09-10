@@ -34,11 +34,12 @@ Http::patch('/v1/projects/:projectId/oauth2')
     ->param('appId', null, new Nullable(new Text(256)), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', null, new Nullable(new text(512)), 'Provider secret key. Max length: 512 chars.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Provider status. Set to \'false\' to disable new session creation.', true)
+    ->param('nativeEnabled', null, new Nullable(new Boolean()), 'Native ID token sign-in status. Set to \'false\' to stop accepting ID tokens obtained on device.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, ?bool $nativeEnabled, Response $response, Database $dbForPlatform) {
 
-        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $projectId, $provider, $appId, $secret, $enabled) {
+        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $projectId, $provider, $appId, $secret, $enabled, $nativeEnabled) {
             $project = $dbForPlatform->getDocument('projects', $projectId, forUpdate: true);
 
             if ($project->isEmpty()) {
@@ -57,6 +58,10 @@ Http::patch('/v1/projects/:projectId/oauth2')
 
             if ($enabled !== null) {
                 $providers[$provider . 'Enabled'] = $enabled;
+            }
+
+            if ($nativeEnabled !== null) {
+                $providers[$provider . 'NativeEnabled'] = $nativeEnabled;
             }
 
             return $dbForPlatform->updateDocument('projects', $project->getId(), new Document([

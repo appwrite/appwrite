@@ -37,6 +37,21 @@ class OAuth2Google extends OAuth2Base
             'array' => true,
             'enum' => ['none', 'consent', 'select_account'],
         ]);
+
+        $this->addRule('nativeEnabled', [
+            'type' => self::TYPE_BOOLEAN,
+            'description' => 'Native Google sign-in is active and can be used to create sessions from an ID token.',
+            'default' => false,
+            'example' => false,
+        ]);
+
+        $this->addRule('nativeClientIds', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in.',
+            'default' => [],
+            'example' => ['YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com'],
+            'array' => true,
+        ]);
     }
 
     /**
