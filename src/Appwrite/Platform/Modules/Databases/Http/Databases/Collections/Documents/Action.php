@@ -387,10 +387,13 @@ abstract class Action extends DatabasesAction
             }
 
             $externalId = $query->getAttribute();
-            if ($externalId !== '' && !\str_starts_with($externalId, $prefix)) {
-                $related = $authorization->skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $externalId)
-                );
+            if ($externalId !== '') {
+                // A name already in physical form is still caller-supplied: both entry points
+                // resolve freshly parsed queries exactly once, so nothing legitimately arrives
+                // pre-resolved. Passing it through skipped the enabled and permission checks
+                // below, which let a caller join a disabled collection by its sequence.
+                $related = $this->joinCollection($dbForProject, $database, $externalId, $prefix, $authorization);
+
                 if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$privileged)) {
                     throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
                 }
@@ -406,6 +409,36 @@ abstract class Action extends DatabasesAction
         }
 
         return $queries;
+    }
+
+    private function joinCollection(
+        Database $dbForProject,
+        Document $database,
+        string $externalId,
+        string $prefix,
+        Authorization $authorization,
+    ): Document {
+        $registry = 'database_' . $database->getSequence();
+
+        if (!\str_starts_with($externalId, $prefix)) {
+            return $authorization->skip(
+                fn () => $dbForProject->getDocument($registry, $externalId)
+            );
+        }
+
+        $sequence = \substr($externalId, \strlen($prefix));
+        if ($sequence === '' || !\ctype_digit($sequence)) {
+            return new Document();
+        }
+
+        $found = $authorization->skip(
+            fn () => $dbForProject->find($registry, [
+                Query::equal('$sequence', [$sequence]),
+                Query::limit(1),
+            ])
+        );
+
+        return $found[0] ?? new Document();
     }
 
     /**
