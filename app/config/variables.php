@@ -405,7 +405,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
+                'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Sentry is the only supported provider; other DSN schemes are rejected at startup and disable reporting. The same DSN is used by the API, workers, CLI tasks and the realtime server. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -906,8 +906,8 @@ return [
             ],
             [
                 'name' => '_APP_AUTOGRAVITY_HOST',
-                'description' => 'The host used by Appwrite to determine automatic image crop gravity.',
-                'introduction' => '2.0.0',
+                'description' => 'The host of the Autogravity service (for example `http://appwrite-autogravity:8080`) used to detect the focal point when a file preview requests `gravity=auto`. Leave empty to disable automatic gravity; the other gravity values keep working.',
+                'introduction' => '2.1.0',
                 'default' => '',
                 'required' => false,
                 'overwrite' => true,
