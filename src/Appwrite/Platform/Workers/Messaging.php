@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Config\Config;
@@ -40,6 +42,7 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
+use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -224,7 +227,7 @@ class Messaging extends Action
 
                 $adapter = match ($resolvedProviderType) {
                     MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
+                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
                     MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
@@ -908,7 +911,7 @@ class Messaging extends Action
         return $adapter;
     }
 
-    protected function getPushAdapter(Document $provider): ?PushAdapter
+    protected function getPushAdapter(Document $provider, Database $dbForProject, Document $project, Document $message): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
         $options = $provider->getAttribute('options');
@@ -923,6 +926,17 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
+            // The built-in broker: no third-party socket, no auth session. The adapter is
+            // the single server-side publish path, writing the ledger and fanning out over
+            // internal pub/sub, so publishing stays impossible from outside the worker.
+            'appwrite' => new AppwritePush(
+                new Mqtt($this->telemetry),
+                $dbForProject,
+                $project->getId(),
+                $message->getId(),
+                $message->getSequence(),
+                $options['qos'] ?? Packet::QOS_1,
+            ),
             default => null
         };
 
