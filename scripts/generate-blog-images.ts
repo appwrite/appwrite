@@ -210,6 +210,8 @@ async function generateAnnouncingBitbucketSupportCover(
  */
 async function generateMultiTenantAppwriteTeamsCover(outputDir: string): Promise<void> {
   mkdirSync(outputDir, { recursive: true })
+  // Inline screenshots first; the landing shot is re-encoded at full size below.
+  await convertScreenshotSources(outputDir)
   const { existsSync, readFileSync } = await import('node:fs')
   const sourcePng = join(outputDir, 'formwrite-landing-source.png')
   const shotAvif = join(outputDir, 'formwrite-landing.avif')

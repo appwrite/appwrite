@@ -44,6 +44,8 @@ Formwrite is a forms product with the features you would expect from one:
 - A responses view with triage states, filtering, cursor pagination, and CSV export
 - Passwordless sign-in with email one-time passwords
 
+![The Formwrite builder with a field palette, question cards, and an inspector for a single choice question](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/form-builder.avif)
+
 The whole thing is a [SvelteKit](https://svelte.dev/docs/kit) app rendered on the server. There is no client-side Appwrite SDK at all. Every Appwrite call happens in a `load` function, a form action, or a request handler on the server, which is what makes the two-client model below possible.
 
 > Note: The code in this post focuses on the tenancy and data model. The form builder UI, theming, and validation are in the repository linked at the end.
@@ -305,6 +307,8 @@ Three details in the permissions are worth pausing on.
 
 The submissions collection grants no `create` or `update` to anyone. Respondents are anonymous, so the server writes their submissions with the API key. Members can read and delete, and that is all.
 
+![Appwrite Console showing the Security tab of a tenant forms collection with read for all team members and create, update, and delete for owners and editors](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/collection-permissions.avif)
+
 ## Why a collection per tenant instead of a tenant field
 
 The alternative design is one `forms` collection for all tenants, each document tagged with a `teamId`, and document-level permissions granting `Role.team(teamId)` on each one. Appwrite's [multi-tenancy guide](https://appwrite.io/docs/products/auth/multi-tenancy) shows that pattern and it works well.
@@ -406,6 +410,8 @@ export interface SubmissionData {
 In a relational schema this becomes a `forms` table, a `fields` table with a nullable column for every type-specific property, a `submissions` table, and an `answers` table with one row per field per submission and a polymorphic value column. Reading one form with its responses is four joins. Adding a field type is a migration.
 
 In DocumentsDB the form is one document and the submission is one document. The `fields` array and the `answers` map are stored as the JSON the app already works with. When I added the `theme` object and later the `status` triage field to submissions, existing documents simply did not have them, and the code treats a missing value as the default. There was nothing to migrate.
+
+![Appwrite Console database visualizer showing the forms and submissions collections for one workspace](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/database-visualizer.avif)
 
 ## Creating and updating forms
 
@@ -561,6 +567,8 @@ This is the pattern for any admin-client call in a multi-tenant app: prove membe
 ## Adding members
 
 Owners add members by email from the workspace settings page. Formwrite uses the server-side flow from the [team invites](https://appwrite.io/docs/products/auth/team-invites) docs, where creating a membership with the API key joins the member immediately with no invitation email to accept. The new member signs in with the same email OTP flow and the workspace is already in their list.
+
+![Formwrite workspace settings showing an owner, an editor, and a viewer, plus the add member form](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/workspace-members.avif)
 
 Because the membership is created with the API key, the action has to prove the caller is an owner first. The same `loadWorkspace` check from the triage action does that, and the accepted role is constrained so an owner cannot be minted through this path.
 
