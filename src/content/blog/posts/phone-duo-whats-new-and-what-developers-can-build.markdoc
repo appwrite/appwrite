@@ -149,7 +149,7 @@ Start with the layout audit, because it blocks everything else. Then decide what
 
 If you are adding a backend to an iOS app, [Appwrite](/docs/quick-starts) gives you Auth, Databases, Storage, Functions, and Realtime in one project, with an Apple SDK you can drop into an existing Xcode target. The free tier covers building and testing an iPhone Duo update before launch day.
 
-## Resources
+# Resources
 
 * [Appwrite quick starts](/docs/quick-starts)
 * [Appwrite Auth documentation](/docs/products/auth)
