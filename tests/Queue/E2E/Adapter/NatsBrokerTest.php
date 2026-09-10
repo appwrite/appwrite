@@ -7,6 +7,7 @@ namespace Tests\E2E\Adapter;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\JetStream\StorageType;
+use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
@@ -320,8 +321,9 @@ final class NatsBrokerTest extends TestCase
     public function testGetQueueSizeIsSafeDuringConcurrentReceive(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        // Closure factory: each broker owns its consume connection AND opens a distinct
-        // control connection — the isolation getQueueSize relies on under coroutines.
+        // Closure factory: the broker opens a receive connection for the consume loop
+        // and a lock-guarded commands connection, which is what carries the depth read
+        // safely while the loop is mid-fetch.
         $broker = new Nats(fn(): Connection => Connection::connect($url), ackWait: 2.0, maxDeliver: 3);
         $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
 
@@ -776,5 +778,185 @@ final class NatsBrokerTest extends TestCase
         $broker->commit($queue, $message);
         $this->assertSame(0, $broker->getQueueSize($queue));
         $broker->close();
+    }
+
+    /**
+     * The point of the two-connection split: an ack must not wait for a parked fetch.
+     *
+     * The consume loop holds the receive connection for the whole receive timeout, so
+     * on a single shared socket a handler acknowledging in that window either crashed
+     * the worker (before any lock) or queued behind the fetch for its full duration.
+     * Acks ride the commands connection instead, so this is a round trip rather than a
+     * wait: the threshold is well under the 3s fetch it runs against, and generous
+     * enough not to turn CI scheduling noise into a failure.
+     */
+    public function testAnAckDoesNotWaitForAParkedFetch(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(fn(): Connection => Connection::connect($url), maxDeliver: 3);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $ackSeconds = null;
+        $fetchSeconds = null;
+        $depth = null;
+        $error = null;
+
+        // Every call on this broker stays inside the coroutine context, including the
+        // depth read: the commands connection is opened by the first acknowledgment, so
+        // reading it after Coroutine\run() has returned would touch a socket whose
+        // coroutine no longer exists.
+        \Swoole\Coroutine\run(function () use ($broker, $queue, &$ackSeconds, &$fetchSeconds, &$depth, &$error): void {
+            $broker->publish($queue, ['task' => 'first']);
+
+            // Take the only message, so the fetch below has nothing to return and
+            // parks for its whole timeout.
+            $message = $broker->receive($queue, 2);
+            if (!$message instanceof Message) {
+                $error ??= new \RuntimeException('the published message was not delivered');
+
+                return;
+            }
+
+            $wg = new \Swoole\Coroutine\WaitGroup();
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $wg, &$fetchSeconds, &$error): void {
+                $started = microtime(true);
+                try {
+                    $broker->receive($queue, 3);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $fetchSeconds = microtime(true) - $started;
+                $wg->done();
+            });
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $message, $wg, &$ackSeconds, &$error): void {
+                \Swoole\Coroutine::sleep(0.3); // let the fetch above park first
+
+                $started = microtime(true);
+                try {
+                    $broker->commit($queue, $message);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $ackSeconds = microtime(true) - $started;
+
+                $wg->done();
+            });
+
+            $wg->wait();
+
+            $depth = $broker->getQueueSize($queue);
+        });
+
+        $broker->close();
+
+        $this->assertNotInstanceOf(\Throwable::class, $error, 'the ack collided with the fetch: ' . ($error?->getMessage() ?? ''));
+
+        // Without this the test could pass for the wrong reason: an ack that happened to
+        // run before the fetch parked was never contended, so its latency proves nothing.
+        // The queue is empty, so a fetch that really parked returns only on its timeout.
+        $this->assertNotNull($fetchSeconds, 'the fetch never ran');
+        $this->assertGreaterThan(
+            2.0,
+            $fetchSeconds,
+            'the fetch returned early, so the ack was never raised against a parked one',
+        );
+
+        $this->assertNotNull($ackSeconds, 'the ack never ran');
+        $this->assertLessThan(
+            1.0,
+            $ackSeconds,
+            'the ack waited for the parked fetch, so it is still sharing the receive connection',
+        );
+        $this->assertSame(0, $depth, 'the ack must have landed');
+    }
+
+    /**
+     * The overlap that used to end the worker, driven through the real consume loop.
+     *
+     * Above one coroutine the loop is parked in a fetch on the connection while the
+     * handlers that are still running acknowledge earlier messages on that same
+     * socket, and Swoole refuses it outright -- "Socket#N has already been bound to
+     * another coroutine". One coroutine drained the batch; two died on the first
+     * message. The connection lock serialises the two, so the batch drains with the
+     * handlers genuinely overlapping.
+     */
+    public function testConcurrentHandlersDrainTheQueueOnOneConnection(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(fn(): Connection => Connection::connect($url), maxDeliver: 3);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $total = 15;
+        $cap = 3;
+
+        $handled = 0;
+        $active = 0;
+        $overlap = 0;
+        $depth = null;
+        $failure = null;
+        $timedOut = false;
+
+        // Depth is read inside the coroutine for the same reason as the test above: the
+        // commands connection belongs to the coroutine that first acknowledged on it.
+        \Swoole\Coroutine\run(function () use ($broker, $queue, $total, $cap, &$handled, &$active, &$overlap, &$depth, &$failure, &$timedOut): void {
+            for ($n = 0; $n < $total; $n++) {
+                $broker->publish($queue, ['n' => $n]);
+            }
+
+            $adapter = new Swoole($broker, 1, $queue->namespace);
+
+            // The loop only stops itself once every message is handled, and neither a
+            // receive failure nor a handler failure ends it. The regression under test
+            // is a dead worker, and an unreachable server looks the same from in here,
+            // so both need a way out or this waits forever instead of reporting.
+            $finished = new \Swoole\Coroutine\Channel(1);
+            \Swoole\Coroutine::create(function () use ($adapter, $finished, &$timedOut): void {
+                if ($finished->pop(30.0) === false) {
+                    $timedOut = true;
+                    $adapter->stop();
+                }
+            });
+
+            $adapter->consume(
+                function () use ($adapter, $total, &$handled, &$active, &$overlap): void {
+                    $overlap = max($overlap, ++$active);
+
+                    // Stay in the handler long enough that the loop is back in a
+                    // fetch when this commits: that is the interleaving that used
+                    // to take the worker down.
+                    \Swoole\Coroutine::sleep(0.1);
+                    --$active;
+
+                    if (++$handled === $total) {
+                        $adapter->stop();
+                    }
+                },
+                fn(): null => null,
+                function (?Message $message, \Throwable $error) use ($adapter, &$failure): void {
+                    $failure ??= $error;
+                    $adapter->stop();
+                },
+                [
+                    ['queue' => $queue, 'maxCoroutines' => $cap],
+                ],
+            );
+
+            $finished->push(true);
+
+            $depth = $broker->getQueueSize($queue);
+        });
+
+        $broker->close();
+
+        $this->assertNotInstanceOf(\Throwable::class, $failure, 'the consume loop failed: ' . ($failure?->getMessage() ?? ''));
+        $this->assertFalse($timedOut, 'the consume loop had to be stopped by the watchdog');
+        $this->assertSame($total, $handled, 'every message must be handled');
+        $this->assertGreaterThan(1, $overlap, 'the handlers must have actually overlapped');
+        $this->assertLessThanOrEqual($cap, $overlap, 'concurrency stays bounded by maxCoroutines');
+        $this->assertSame(0, $depth, 'every message must be acknowledged');
     }
 }

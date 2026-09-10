@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\NATS\Connection as NatsConnection;
 use Utopia\Queue\Adapter;
+use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Consumer\Exclusive;
 use Utopia\Queue\Job;
@@ -170,6 +172,31 @@ final class ServerJobsTest extends TestCase
         $server->start();
 
         $this->assertSame([['queue' => 'v1-functions', 'maxCoroutines' => 1]], $adapter->consumed);
+    }
+
+    /**
+     * Broker\Nats serialises its own connection behind a lock rather than claiming
+     * the socket exclusively, so the guard must not fire for it: the cap a NATS job
+     * is registered with has to reach the consume loop intact. The factory throws if
+     * it is called, because the guard runs before any connection is opened.
+     *
+     * This is also what guards the marker itself. Asserting the broker does not
+     * implement Consumer\Exclusive is a tautology PHPStan reads straight off the
+     * class declaration; refusing the cap is the consequence worth pinning, and it
+     * fails here the moment the marker comes back.
+     */
+    public function testStartKeepsConcurrencyOnTheNatsBroker(): void
+    {
+        $adapter = new RecordingAdapter();
+        $server = new Server($adapter);
+        $server->consumer(static fn(): Consumer => new Nats(
+            static fn(): NatsConnection => throw new \LogicException('the guard must not connect'),
+        ));
+        $server->job('v1-functions', 8);
+
+        $server->start();
+
+        $this->assertSame([['queue' => 'v1-functions', 'maxCoroutines' => 8]], $adapter->consumed);
     }
 
     /**

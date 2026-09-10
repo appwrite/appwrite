@@ -15,8 +15,8 @@ use Utopia\Queue\Queue;
 
 /**
  * The NATS broker used through Broker\Pool — the pooled wiring cloud uses. The pool
- * leases one broker (and therefore one single-owner connection) per caller, which is
- * the recommended way to use Broker\Nats concurrently.
+ * leases one broker (and so one connection) per caller, which is how concurrent
+ * publishers get parallel sockets rather than taking turns on the broker's lock.
  */
 final class NatsPoolTest extends Base
 {

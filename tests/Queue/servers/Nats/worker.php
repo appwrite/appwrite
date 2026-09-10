@@ -10,9 +10,9 @@ use Utopia\Queue\Server;
 use Utopia\Validator\Text;
 
 // A Closure factory so each forked worker process resolves its OWN NATS connection
-// (the socket is single-owner and must not be shared across a fork). job(..., 1)
-// keeps one message in flight per connection, avoiding concurrent use of the shared
-// read pump.
+// (a socket cannot survive a fork). job(..., 1) is this suite's choice, not a broker
+// limit -- the shared tests assert per-message ordering. Concurrency above one is
+// covered by NatsBrokerTest::testConcurrentHandlersDrainTheQueueOnOneConnection().
 $consumer = new Nats(
     fn(): Connection => Connection::connect('nats://127.0.0.1:14225'),
     maxDeliver: 3,

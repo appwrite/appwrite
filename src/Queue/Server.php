@@ -439,12 +439,13 @@ class Server
                         ? ($this->consumer)($queueName)
                         : $this->adapter->createConsumer($queueName);
 
-                    // An exclusive consumer owns a single socket. Above one coroutine the
-                    // receive loop is parked in a read on it while the handlers that are
-                    // still running commit, reject or extend on the same socket, and
-                    // Swoole aborts the worker on the first overlap. Refuse here so a
-                    // concurrency that a Redis worker carries safely cannot reach
-                    // production as a crash loop after the transport is switched.
+                    // An exclusive consumer owns a single socket and does not serialise
+                    // access to it. Above one coroutine the receive loop is parked in a
+                    // read on it while the handlers that are still running commit, reject
+                    // or extend on the same socket, and Swoole aborts the worker on the
+                    // first overlap. Refuse here so a concurrency that a serialising
+                    // consumer -- Broker\Redis and Broker\Nats both are -- carries safely
+                    // cannot reach production as a crash loop on one that is not.
                     if ($maxCoroutines > 1 && $consumer instanceof Exclusive) {
                         throw new Exception(\sprintf(
                             "Queue '%s' is registered with job('%s', %d), but its consumer %s drives a single socket that only one coroutine may read at a time. Register it as job('%s', 1) and add replicas for throughput.",

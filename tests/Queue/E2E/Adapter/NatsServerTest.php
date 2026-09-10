@@ -18,8 +18,9 @@ final class NatsServerTest extends Base
 {
     protected function getPublisher(): Synchronous
     {
-        // A fresh connection per publisher (Base publishes from multiple coroutines;
-        // a NATS connection is single-owner, so never share one).
+        // A fresh connection per publisher. The broker serialises a shared one, so
+        // this is for parallelism, not safety: Base publishes from several coroutines
+        // and one socket would make them take turns.
         return new Nats(fn(): Connection => Connection::connect('nats://127.0.0.1:14225'), maxDeliver: 3);
     }
 

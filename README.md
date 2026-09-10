@@ -83,8 +83,8 @@ use Utopia\NATS\Connection;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Queue;
 
-// Pass a Closure so each forked worker / pooled lease resolves its own connection —
-// a NATS connection is single-owner and must not be shared across coroutines.
+// Pass a Closure so each forked worker / pooled lease resolves its own connection:
+// a socket cannot survive a fork, and a pooled lease needs one of its own.
 $broker = new Nats(
     fn (): Connection => Connection::connect('nats://127.0.0.1:4222'),
     ackWait: 30.0,   // redelivery window if a worker dies before commit()
@@ -96,16 +96,47 @@ $broker->publish(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123
 
 Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters, `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
-> A NATS connection is single-owner. Run one message at a time per connection (`job('…', 1)`) or lease one connection per coroutine via `Broker\Pool` / `Utopia\Pools`.
+### Concurrency
 
-`Broker\Nats` carries `Consumer\Exclusive` to say so. `Server::start()` refuses a job registered above one coroutine on a consumer with that marker, because the receive loop parks inside a read on the socket while the handlers still running commit on it, and Swoole ends the worker on the first overlap:
+`Broker\Nats` is wired the way `Broker\Redis` is: a connection dedicated to the blocking receive, plus a second, lock-guarded connection carrying the commands. One NATS connection is one socket behind one shared read pump, and driving it from two coroutines does not degrade — Swoole ends the worker on the first overlap:
 
 ```
 Swoole\Error: Socket#5 has already been bound to another coroutine#2,
 reading of the same socket in coroutine#3 at the same time is not allowed
 ```
 
-Scale an exclusive consumer with replicas rather than coroutines. Consumers without the marker, `Broker\Redis` among them, keep their concurrency: `Connection\Locking` serialises the coroutines that share one connection.
+| Connection | Carries | Driven by |
+|---|---|---|
+| receive | fetch, provisioning, the dead-letter advisory, publishing | the consume loop |
+| commands | `commit()`, `reject()`, `extend()`, `getQueueSize()` | the handler and telemetry coroutines |
+
+A JetStream acknowledgment is a message published to the delivery's reply subject, so it does not have to leave on the connection that fetched the message. Rebinding it moves the whole per-message acknowledgment path off the receive socket, so an acknowledgment raised while the loop is parked in a fetch is a round trip rather than a wait. Each connection has one lock and the two are never nested, so they cannot deadlock.
+
+So `job('…', N)` above one is safe on NATS, and handlers scale without the socket becoming the serialisation point. Drain rate over 1 → 8 coroutines, measured with `benchmarks/coroutines.php` against a NATS 2.12 cluster and Redis on one host, median of five runs:
+
+| coroutines | `Broker\Redis` | `Broker\Nats` |
+|---|---|---|
+| 1 | 1,468 | 2,087 |
+| 2 | 2,389 | 2,856 |
+| 8 | 2,499 | 2,831 |
+
+Rates are host-bound and only meaningful against each other. The shape is the point: both scale, where a single shared socket is flat regardless of the cap, because a fetch-then-ack cost that cannot overlap is fixed per message.
+
+The commands connection is opened lazily on the first acknowledgment, so a publisher-only broker never pays for a socket it will not use — and a broker built from a live connection rather than a Closure factory serves both roles from that one socket, sharing one lock.
+
+Still pass a Closure factory rather than a live connection when the worker forks or reconnects per worker, and do not hand the same connection to anything outside the broker.
+
+`Consumer\Exclusive` stays for consumers built outside this package that drive one socket without serialising it. `Server::start()` refuses a job registered above one coroutine on a consumer carrying that marker, because it would crash exactly as above; scale one of those with replicas rather than coroutines.
+
+The marker is readable by callers too, which matters when concurrency comes from configuration rather than code — there, a refusal at `start()` is a worker that will not boot:
+
+```php
+if ($coroutines > 1 && $consumer instanceof Consumer\Exclusive) {
+    $coroutines = 1; // and log why
+}
+```
+
+Clamping on the marker rather than on a transport name or a version also means the cap starts applying by itself once the consumer stops carrying it.
 
 ## Background publishing
 
