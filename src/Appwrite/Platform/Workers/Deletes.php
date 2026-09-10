@@ -1358,7 +1358,7 @@ class Deletes extends Action
             return;
         }
 
-        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7); // 1 week
+        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * DATA_EXPORT_RETENTION);
 
         Console::info("Deleting CSV export files older than " . $oneWeekAgo);
 
