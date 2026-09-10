@@ -21,7 +21,7 @@ use Utopia\Usage\UsageQuery;
  * The window bounds that error to one window after a restart and needs no
  * state, at the price of not seeing connections older than the window.
  *
- * Shared by the self-hosted and Cloud `stats-resources` tasks so both editions
+ * Shared by the self-hosted and Cloud `stats-calculations` tasks so both editions
  * fold the same way; the two differ in how they schedule it and how they report
  * failures, not in the arithmetic.
  */

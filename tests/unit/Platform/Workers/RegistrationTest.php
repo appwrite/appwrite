@@ -50,5 +50,11 @@ final class RegistrationTest extends TestCase
         $this->assertSame($expected, $registered);
         $this->assertSame(1, Config::getParam('workers')['databases']['maxCoroutines']);
         $this->assertSame(8, Config::getParam('workers')['stats-usage']['maxCoroutines']);
+        $this->assertSame('v1-stats-calculations', Config::getParam('workers')['stats-calculations']['queue']);
+        $this->assertSame('v1-stats-events', Config::getParam('workers')['stats-events']['queue']);
+        $this->assertNotSame(
+            Config::getParam('workers')['stats-calculations']['queue'],
+            Config::getParam('workers')['stats-events']['queue'],
+        );
     }
 }
