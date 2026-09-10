@@ -697,7 +697,21 @@ jobs:
               $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
               $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
               $av = new Appwrite\ClamAV\Network($host, $port);
-              exit(@$av->ping() ? 0 : 1);
+              // ping() answers PONG from a daemon that cannot classify anything
+              // yet, so scan something known-clean and require a clean verdict.
+              // fileScanInStream() is true only for an OK reply, so a daemon
+              // that refuses or errors keeps this waiting instead of releasing
+              // the suite against a scanner that rejects every upload.
+              $probe = tempnam(sys_get_temp_dir(), "clamav-ready");
+              file_put_contents($probe, str_repeat("appwrite readiness probe\n", 64));
+              try {
+                  exit($av->fileScanInStream($probe) ? 0 : 1);
+              } catch (Throwable $e) {
+                  // Not up yet, or up and unable to answer. Either way, wait.
+                  exit(1);
+              } finally {
+                  @unlink($probe);
+              }
             '; then
               echo "ClamAV is ready"
               exit 0
