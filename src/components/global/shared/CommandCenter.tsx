@@ -835,11 +835,14 @@ export function CommandCenter({
     }
   }, [open])
 
-  useEffect(() => {
+  const onInitialSubPageConsumedRef = useRef(onInitialSubPageConsumed)
+  onInitialSubPageConsumedRef.current = onInitialSubPageConsumed
+
+  useLayoutEffect(() => {
     if (!open || !initialSubPage) return
     setPages([initialSubPage])
-    onInitialSubPageConsumed?.()
-  }, [open, initialSubPage, onInitialSubPageConsumed])
+    onInitialSubPageConsumedRef.current?.()
+  }, [open, initialSubPage])
 
   const isScopeLoading = useMemo(() => {
     if (!searchScope) return false

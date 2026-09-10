@@ -8,12 +8,12 @@ import {
   CommandGroup,
   CommandInput,
   CommandList,
-  CommandItem,
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 import { CommandCenterListFooter } from '@/components/global/shared/CommandCenterListFooter'
+import { BlogSearchIdle } from './BlogSearchIdle'
+import { BlogSearchResultItem } from './BlogSearchResultItem'
 import { searchBlogPosts } from '@/lib/blog/search-client'
-import { formatDate } from '@/lib/date-utils'
 import { useNavigate } from '@tanstack/react-router'
 
 type BlogSearchViewProps = {
@@ -107,29 +107,15 @@ export function BlogSearchView({
         )}
       >
         {!hasQuery ? (
-          <div className="py-10 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Search for blog posts by title, topic, or description
-            </p>
-          </div>
+          <BlogSearchIdle onSuggest={setQuery} onSelect={handleSelect} />
         ) : results.length > 0 ? (
           <CommandGroup heading="Articles">
             {results.map((result) => (
-              <CommandItem
+              <BlogSearchResultItem
                 key={result.slug}
-                value={result.slug}
-                onSelect={() => handleSelect(result.slug)}
-                className="flex cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2.5 data-[selected=true]:bg-accent"
-              >
-                <p className="line-clamp-2 text-[13px] font-medium text-foreground">
-                  {result.title}
-                </p>
-                <p className="line-clamp-1 text-[11px] text-muted-foreground">
-                  {formatDate(result.date)}
-                  {result.timeToRead > 0 ? ` · ${result.timeToRead} min read` : ''}
-                  {result.category ? ` · ${result.category}` : ''}
-                </p>
-              </CommandItem>
+                post={result}
+                onSelect={handleSelect}
+              />
             ))}
           </CommandGroup>
         ) : (

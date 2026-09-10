@@ -5,12 +5,34 @@ export type BlogSearchResult = BlogPostMeta & {
   score: number
 }
 
+function getVisibleBlogPosts(): BlogPostMeta[] {
+  return BLOG_POSTS.filter((post) => !post.draft && !post.unlisted)
+}
+
+export const BLOG_SEARCH_SUGGESTIONS = [
+  'Authentication',
+  'Databases',
+  'Functions',
+  'Self-hosting',
+  'Tutorial',
+] as const
+
+export const BLOG_SEARCH_POST_COUNT = getVisibleBlogPosts().length
+
+export function getBlogSearchPopularPosts(limit = 6): BlogPostMeta[] {
+  return [...getVisibleBlogPosts()]
+    .sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )
+    .slice(0, limit)
+}
+
 /**
  * Search blog posts by title, description, and category
  */
 export function searchBlogPosts(query: string): BlogSearchResult[] {
   const trimmedQuery = query.trim()
-  
+
   if (!trimmedQuery) {
     return []
   }
@@ -18,11 +40,7 @@ export function searchBlogPosts(query: string): BlogSearchResult[] {
   const lowerQuery = trimmedQuery.toLowerCase()
   const results: BlogSearchResult[] = []
 
-  for (const post of BLOG_POSTS) {
-    // Skip draft and unlisted posts
-    if (post.draft || post.unlisted) {
-      continue
-    }
+  for (const post of getVisibleBlogPosts()) {
 
     let score = 0
     const titleLower = post.title.toLowerCase()

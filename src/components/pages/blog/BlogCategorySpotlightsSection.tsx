@@ -24,7 +24,7 @@ function BlogCategorySpotlightPostLink({
       to="/blog/post/$slug"
       params={{ slug: post.slug }}
       className={cn(
-        'group relative block rounded-md px-3 py-2.5 pe-9 transition-colors hover:bg-muted/40',
+        'group relative block py-2.5 pe-5',
         className,
       )}
     >
@@ -51,12 +51,12 @@ export function BlogCategorySpotlightsSection({
   return (
     <section className="relative isolate border-b border-border py-10 sm:py-14">
       <SectionDottedBackground />
-      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="relative z-[1] mx-auto max-w-7xl">
+        <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:px-6">
           Explore by topic
         </p>
 
-        <div className="mt-8 grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {spotlights.map(({ category, posts }) => (
             <article
               key={category.slug}
@@ -80,9 +80,6 @@ export function BlogCategorySpotlightsSection({
                   </Link>
                   <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
                     {category.description}
-                  </p>
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    {posts.length} {posts.length === 1 ? 'article' : 'articles'}
                   </p>
                 </div>
 

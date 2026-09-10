@@ -6,6 +6,7 @@ import {
   BLOG_FEATURED_SLUG_ORDER,
   BLOG_POSTS_PER_PAGE,
   BLOG_SECONDARY_FEATURED_COUNT,
+  BLOG_SECONDARY_LATEST_COUNT,
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
 import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
@@ -397,6 +398,15 @@ function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
       excludedSlugs.add(post.slug)
       secondaryFeatured.push(post)
     }
+  }
+
+  const latestSecondary = posts
+    .filter((post) => !excludedSlugs.has(post.slug))
+    .slice(0, BLOG_SECONDARY_LATEST_COUNT)
+
+  for (const post of latestSecondary) {
+    excludedSlugs.add(post.slug)
+    secondaryFeatured.push(post)
   }
 
   const categorySpotlights: BlogCategorySpotlight[] = []

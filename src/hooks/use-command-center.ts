@@ -9,6 +9,7 @@ export function useCommandCenter() {
   return {
     openCommandCenter: context.openCommandCenter,
     openCommandCenterPage: context.openCommandCenterPage,
+    openBlogSearch: context.openBlogSearch,
     closeCommandCenter: context.closeCommandCenter,
     isCommandCenterOpen: context.isCommandCenterOpen,
   }
