@@ -6,7 +6,7 @@ import {
   pageHasDocsPrompt,
   resolveDocsPagePrompt,
 } from '@/lib/docs/route-prompts'
-import { useEffect, useRef, useState } from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import { DocsLayout } from './DocsLayout'
 import { DocsMarkdown } from './DocsMarkdown'
 import { DocsPageHeaderActions } from './DocsPageHeaderActions'
@@ -50,7 +50,9 @@ export function View({ page: initialPage }: ViewProps) {
 
   useEffect(() => {
     if (isSameDocsPage(pageRef.current, initialPage)) return
-    setPage(initialPage)
+    startTransition(() => {
+      setPage(initialPage)
+    })
   }, [initialPage])
 
   useEffect(() => {
@@ -93,7 +95,9 @@ export function View({ page: initialPage }: ViewProps) {
       void getDocsPage(initialPage.meta.slug).then((next) => {
         if (cancelled || !next) return
         if (isSameDocsPage(pageRef.current, next)) return
-        setPage(next)
+        startTransition(() => {
+          setPage(next)
+        })
         // Restore scroll after layout so content swap does not jump to the bottom.
         requestAnimationFrame(() => {
           writeDocsScrollTop(scrollTop)
