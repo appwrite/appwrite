@@ -2706,7 +2706,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
   'One-click setup': 'הגדרה בקליק אחד',
   'Notify me': 'עדכנו אותי',
-  Notifying: 'נודיע לכם',
+  'You will be notified': 'נודיע לכם',
   "You'll no longer be notified about this provider.":
     'לא נודיע לכם יותר על הספק הזה.',
   'Failed to update notification preferences': 'עדכון העדפות ההתראות נכשל',

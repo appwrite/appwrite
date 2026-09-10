@@ -2702,7 +2702,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メールプロバイダーでの SMTP セットアップに失敗しました',
   'One-click setup': 'ワンクリックセットアップ',
   'Notify me': '通知を受け取る',
-  Notifying: '通知を設定済み',
+  'You will be notified': '通知されます',
   "You'll no longer be notified about this provider.":
     'このプロバイダーについては今後通知しません。',
   'Failed to update notification preferences': '通知設定を更新できませんでした',

@@ -403,7 +403,7 @@ function ProviderTile({
       {interested ? (
         <>
           <Check className="h-3.5 w-3.5" />
-          {t('Notifying')}
+          {t('You will be notified')}
         </>
       ) : (
         t('Notify me')
