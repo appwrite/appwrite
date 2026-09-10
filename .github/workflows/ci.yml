@@ -37,10 +37,25 @@ jobs:
       security-events: write
       contents: read
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@c51854704019a247608d928f370c98740469d4b5" # v2.3.5
+    with:
+      upload-sarif: false
+      fail-on-vuln: true
+
+  dependencies-main:
+    name: Security / Dependencies
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@c51854704019a247608d928f370c98740469d4b5" # v2.3.5
+    with:
+      upload-sarif: true
+      fail-on-vuln: true
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -53,6 +68,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Build the Docker image
+        id: image-build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -68,8 +84,11 @@ jobs:
           format: 'sarif'
           output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH'
+          limit-severities-for-sarif: true
+          exit-code: '1'
 
       - name: Run Trivy vulnerability scanner on source code
+        if: ${{ !cancelled() && steps.image-build.outcome == 'success' }}
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
@@ -77,18 +96,32 @@ jobs:
           format: 'sarif'
           output: 'trivy-fs-results.sarif'
           severity: 'CRITICAL,HIGH'
+          limit-severities-for-sarif: true
+          exit-code: '1'
           skip-setup-trivy: true
 
+      - name: Upload scan artifacts
+        if: ${{ !cancelled() && steps.image-build.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-results
+          path: |
+            trivy-image-results.sarif
+            trivy-fs-results.sarif
+          retention-days: 5
+          if-no-files-found: error
+
+      # Dashboard publishing runs only on main, so API outages cannot block PR scans.
       - name: Upload image scan results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
-        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && hashFiles('trivy-image-results.sarif') != '' }}
         with:
           sarif_file: 'trivy-image-results.sarif'
           category: 'trivy-image'
 
       - name: Upload source code scan results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
-        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && hashFiles('trivy-fs-results.sarif') != '' }}
         with:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
