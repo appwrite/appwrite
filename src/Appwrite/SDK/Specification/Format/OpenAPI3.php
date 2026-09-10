@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
+use Utopia\OpenAPI\Model\Composition;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -513,10 +514,7 @@ class OpenAPI3 extends Format
                             'description' => $modelDescription,
                             'content' => [
                                 $produces => [
-                                    'schema' => \array_filter([
-                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model),
-                                        'discriminator' => $this->getDiscriminator($model, '#/components/schemas/'),
-                                    ]),
+                                    'schema' => $this->getUnion($model, '#/components/schemas/'),
                                 ],
                             ],
                         ];
@@ -545,20 +543,6 @@ class OpenAPI3 extends Format
                 }
             }
 
-            // No response declares content (e.g. 204 No content): keep the produced
-            // content type available for SDK generation.
-            $hasResponseContent = false;
-            foreach ($temp['responses'] as $responseData) {
-                if (isset($responseData['content'])) {
-                    $hasResponseContent = true;
-                    break;
-                }
-            }
-
-            if (!$hasResponseContent && $produces !== '') {
-                $temp['x-appwrite']['produces'] = [$produces];
-            }
-
             if (!empty($scope)) {
                 $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
@@ -574,11 +558,17 @@ class OpenAPI3 extends Format
                     : [];
                 $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
 
-                foreach ($locationKeys as $key) {
-                    $securities[$key] = [];
-                }
-
                 $temp['security'][] = $securities;
+                // Location credentials supplement the base authentication. The
+                // first location key (project binding) is already required;
+                // impersonation can be supplied without making it mandatory.
+                $withLocationAuth = $securities;
+                foreach ($locationKeys as $key) {
+                    $withLocationAuth[$key] = [];
+                }
+                if ($withLocationAuth !== $securities) {
+                    $temp['security'][] = $withLocationAuth;
+                }
             }
 
             $parameterNodes = [];
@@ -989,7 +979,11 @@ class OpenAPI3 extends Format
                 }
 
                 if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
-                    $node['schema']['default'] = $param['default'];
+                    // PHP uses [] for empty maps too; preserve the declared
+                    // object type when serializing its default to JSON.
+                    $node['schema']['default'] = $node['schema']['type'] === 'object' && $param['default'] === []
+                        ? new \stdClass()
+                        : $param['default'];
                 }
 
                 $pathAliases = [$name, ...($param['aliases'] ?? [])];
@@ -1214,21 +1208,7 @@ class OpenAPI3 extends Format
                                 throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
                             }, $rule['type']);
 
-                            if ($rule['array']) {
-                                $items = \array_filter([
-                                    'anyOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            } else {
-                                $items = \array_filter([
-                                    'oneOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            }
+                            $items = $this->getUnion($resolvedModels, '#/components/schemas/', $rule['array'] ? Composition::ANY_OF : Composition::ONE_OF);
                         } else {
                             $items = [
                                 '$ref' => '#/components/schemas/' . $rule['type'],

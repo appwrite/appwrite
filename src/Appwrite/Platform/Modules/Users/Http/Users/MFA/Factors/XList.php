@@ -82,6 +82,9 @@ class XList extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
+
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
@@ -90,6 +93,7 @@ class XList extends Action
             Type::TOTP => ($mfaFactors['totp'] ?? true) && $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => ($mfaFactors['email'] ?? true) && $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             Type::PHONE => ($mfaFactors['phone'] ?? true) && $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::RECOVERY_CODE => $recoveryCodeEnabled,
             Type::CUSTOM => $mfaFactors['custom'] ?? false
         ]);
 

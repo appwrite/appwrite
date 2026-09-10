@@ -163,6 +163,18 @@ class Etsy extends OAuth2
     }
 
     /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['image_url_75x75'] ?? '';
+    }
+
+    /**
      * @param $accessToken
      *
      * @return string

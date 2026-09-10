@@ -121,7 +121,7 @@ class Create extends Action
                 throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$operation['databaseId']]);
             }
 
-            $collection = $collections[$operation[$this->getGroupId()]] ??=
+            $collection = $collections[$database->getId()][$operation[$this->getGroupId()]] ??=
                 $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
 
             if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {

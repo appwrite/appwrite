@@ -482,6 +482,68 @@ trait UsersBase
         self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
+    public function testCreateScryptModified(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $options = [
+            'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==', // appwrite
+            'passwordSalt' => 'UxLMreBr6tYyjQ==',
+            'passwordSaltSeparator' => 'Bw==',
+            'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $userId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
+            'userId' => $userId,
+            'email' => $userId . '@example.com',
+        ]));
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame($userId, $response['body']['$id']);
+        $this->assertSame('scryptMod', $response['body']['hash']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $headers);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($options['password'], $response['body']['password']);
+        $this->assertSame($options['passwordSalt'], $response['body']['hashOptions']['salt']);
+        $this->assertSame($options['passwordSaltSeparator'], $response['body']['hashOptions']['saltSeparator']);
+        $this->assertSame($options['passwordSignerKey'], $response['body']['hashOptions']['signerKey']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([
+            ['passwordSalt', 'not-base64!'],
+            ['passwordSaltSeparator', 'not-base64!'],
+            ['passwordSignerKey', 'not-base64!'],
+            ['passwordSalt', '0'],
+            ['passwordSignerKey', '0'],
+        ] as [$parameter, $value]) {
+            $userId = ID::unique();
+            $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
+                'userId' => $userId,
+                'email' => $userId . '@example.com',
+                $parameter => $value,
+            ]));
+
+            $this->assertSame(400, $response['headers']['status-code'], $parameter . ': ' . $value);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertNotEmpty($response['body']['message']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $headers);
+
+            $this->assertSame(404, $response['headers']['status-code']);
+            $this->assertSame('user_not_found', $response['body']['type']);
+        }
+    }
+
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
      */
@@ -3009,5 +3071,64 @@ trait UsersBase
             'impersonator' => true,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testListMFAFactorsRecoveryCode(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'MFA Recovery Code User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        /**
+         * Test for SUCCESS: both endpoints report no recovery codes before any are generated
+         */
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/factors', $headers);
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertFalse($factors['body']['recoveryCode']);
+
+        $accountFactors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $sessionHeaders);
+
+        $this->assertEquals(200, $accountFactors['headers']['status-code']);
+        $this->assertFalse($accountFactors['body']['recoveryCode']);
+
+        $recoveryCodes = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
+
+        /**
+         * Test for SUCCESS: both endpoints agree once recovery codes exist
+         */
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/factors', $headers);
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertTrue($factors['body']['recoveryCode']);
+
+        $accountFactors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $sessionHeaders);
+
+        $this->assertEquals(200, $accountFactors['headers']['status-code']);
+        $this->assertTrue($accountFactors['body']['recoveryCode']);
     }
 }
