@@ -5245,7 +5245,7 @@ final class AccountCustomClientTest extends Scope
      * Helper to enable or disable the mock OAuth2 provider used for
      * ID token sign-in tests.
      */
-    private function updateMockProvider(bool $enabled): void
+    private function updateMockProvider(bool $enabled, bool $nativeEnabled = true): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
             'origin' => 'http://localhost',
@@ -5257,6 +5257,7 @@ final class AccountCustomClientTest extends Scope
             'appId' => '1',
             'secret' => '123456',
             'enabled' => $enabled,
+            'nativeEnabled' => $nativeEnabled,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -5710,23 +5711,91 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('user_session_already_exists', $response['body']['type']);
     }
 
-    public function testCreateIdTokenSessionProviderDisabled(): void
+    /**
+     * The two sign-in methods are switched on independently: the browser flow
+     * cannot run without a client secret, this one needs no secret at all.
+     */
+    public function testCreateIdTokenSessionIsIndependentOfBrowserSignIn(): void
     {
-        $this->updateMockProvider(false);
+        $this->updateMockProvider(enabled: false, nativeEnabled: true);
 
-        $response = $this->createIdTokenSession([
-            'provider' => 'mock',
-            'idToken' => $this->mintIdToken([
-                'sub' => 'idtoken-' . \uniqid('', true),
-                'email' => 'idtoken.disabled.' . \uniqid('', true) . '@localhost.test',
-                'email_verified' => true,
-            ]),
+        try {
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => 'idtoken.disabled.' . \uniqid('', true) . '@localhost.test',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals('mock', $response['body']['provider']);
+        } finally {
+            $this->updateMockProvider(true);
+        }
+    }
+
+    /**
+     * Turning native sign-in off must stop it, even while the browser flow
+     * stays on and the audience stays configured.
+     */
+    public function testCreateIdTokenSessionNativeDisabled(): void
+    {
+        $this->updateMockProvider(enabled: true, nativeEnabled: false);
+
+        try {
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => 'idtoken.nativeoff.' . \uniqid('', true) . '@localhost.test',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(412, $response['headers']['status-code']);
+            $this->assertEquals('project_provider_disabled', $response['body']['type']);
+            $this->assertStringContainsString('Native sign-in is disabled', $response['body']['message']);
+        } finally {
+            $this->updateMockProvider(true);
+        }
+    }
+
+    /**
+     * Native sign-in needs an audience to match tokens against, so switching it
+     * on without one is refused at configuration time rather than at sign-in.
+     */
+    public function testEnablingNativeSignInRequiresAnAudience(): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Clear both audience sources in the same call, so the refusal cannot
+        // depend on what another test left behind.
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/apple', $headers, [
+            'serviceId' => '',
+            'nativeClientIds' => [],
+            'nativeEnabled' => true,
         ]);
 
-        $this->assertEquals(412, $response['headers']['status-code']);
-        $this->assertEquals('project_provider_disabled', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('native client ID', $response['body']['message']);
 
-        $this->updateMockProvider(true);
+        // With an audience it is accepted, and reports the new switch back.
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/apple', $headers, [
+            'nativeClientIds' => ['com.example.app'],
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['nativeEnabled']);
+        $this->assertFalse($response['body']['enabled']);
+        $this->assertEquals(['com.example.app'], $response['body']['nativeClientIds']);
     }
 
     public function testCreateIdTokenSessionUnsupportedProvider(): void

@@ -375,6 +375,13 @@ abstract class Base extends Action
      * `$clientIds` are the additional client IDs accepted as ID token
      * audiences by providers that support native ID token sign-in. Null
      * leaves the stored list untouched; an empty array clears it.
+     *
+     * The two sign-in methods are switched on independently, because they need
+     * different things. The browser flow redeems an authorization code, so it
+     * cannot work without a client secret. Native ID token sign-in verifies a
+     * signature instead, so it needs no secret, only an audience to accept.
+     * Every credential param is optional; what a value is required for is
+     * decided by which method is being enabled.
      */
     protected function persistCredentials(
         Document $project,
@@ -383,7 +390,8 @@ abstract class Base extends Action
         ?string $clientId,
         ?string $clientSecret,
         ?bool $enabled,
-        ?array $clientIds = null
+        ?array $clientIds = null,
+        ?bool $nativeEnabled = null
     ): Document {
         $providerId = static::getProviderId();
         if (!(\in_array($providerId, \array_keys(Config::getParam('oAuthProviders'))))) {
@@ -395,6 +403,7 @@ abstract class Base extends Action
         $appIdKey = $providerId . 'Appid';
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
+        $nativeEnabledKey = $providerId . 'NativeEnabled';
 
         if (!\is_null($clientId)) {
             $oAuthProviders[$appIdKey] = $clientId;
@@ -410,6 +419,22 @@ abstract class Base extends Action
 
         if (!\is_null($enabled)) {
             $oAuthProviders[$enabledKey] = $enabled;
+        }
+
+        if (!\is_null($nativeEnabled)) {
+            $oAuthProviders[$nativeEnabledKey] = $nativeEnabled;
+        }
+
+        // Only ever validated on an explicit switch-on, so callers that touch
+        // other fields cannot trip over it.
+        if ($nativeEnabled === true) {
+            $audiences = \array_filter(\array_merge(
+                [$oAuthProviders[$appIdKey] ?? ''],
+                $oAuthProviders[$providerId . 'ClientIds'] ?? [],
+            ));
+            if (empty($audiences)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'A client ID or at least one native client ID is required when enabling native sign-in, so tokens can be matched to your app.');
+            }
         }
 
         if ($enabled === true || \is_null($enabled)) {

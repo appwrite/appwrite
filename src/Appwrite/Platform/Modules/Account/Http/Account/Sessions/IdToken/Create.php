@@ -74,7 +74,7 @@ class Create extends Action
                 description: <<<EOT
                 Allow the user to login to their account using an OpenID Connect ID token obtained natively from the OAuth2 provider, for example via Google Credential Manager on Android or Sign in with Apple on iOS. No browser or redirect is involved: the ID token is verified against the provider's published signing keys and a session is created in a single request.
 
-                The provider must be enabled in the Appwrite console, and the token's audience must match the provider's configured client ID or one of its native client IDs. For Sign in with Apple, register your app's bundle ID as a native client ID. For Google, the web client ID used by Credential Manager is usually the configured client ID; add your Android and iOS client IDs as native client IDs if your app requests tokens for them.
+                The token's audience must match the provider's configured client ID or one of its native client IDs. That configuration is what enables this flow: unlike the browser-based flow, it does not redeem an authorization code, so it needs no client secret and does not require the provider to be enabled. Clearing the client ID and native client IDs is what turns it off. For Sign in with Apple, register your app's bundle ID as a native client ID. For Google, the web client ID used by Credential Manager is usually the configured client ID; add your Android and iOS client IDs as native client IDs if your app requests tokens for them.
 
                 Pass the raw nonce used when requesting the ID token so it can be validated against the token's nonce claim. When signing in with Apple, the nonce is required: hash it with SHA-256 before passing it to the Apple SDK, and send the raw value here - Apple tokens requested without a nonce are rejected. Apple only returns the user's name on the first authorization, and never inside the ID token - capture it on the client and pass it via the name parameter.
 
@@ -154,11 +154,13 @@ class Create extends Action
 
         $oAuthProviders = $project->getAttribute('oAuthProviders', []);
 
-        $providerEnabled = $oAuthProviders[$provider . 'Enabled'] ?? false;
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        // Its own switch, separate from the browser flow's `enabled`: the two
+        // need different credentials, so they are enabled independently.
+        if (!($oAuthProviders[$provider . 'NativeEnabled'] ?? false)) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'Native sign-in is disabled for this provider. Enable it from your ' . APP_NAME . ' console to continue.');
         }
 
+        // Enabling validates this too; re-checked in case the list was cleared afterwards.
         $allowedAudiences = \array_values(\array_filter(\array_merge(
             [$oAuthProviders[$provider . 'Appid'] ?? ''],
             $oAuthProviders[$provider . 'ClientIds'] ?? [],

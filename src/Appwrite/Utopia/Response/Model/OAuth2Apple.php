@@ -79,6 +79,12 @@ class OAuth2Apple extends OAuth2Base
                 'default' => '',
                 'example' => '-----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----',
             ])
+            ->addRule('nativeEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Native Sign in with Apple is active and can be used to create sessions from an ID token.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('nativeClientIds', [
                 'type' => self::TYPE_STRING,
                 'description' => 'App bundle IDs accepted as ID token audiences for native Sign in with Apple.',

@@ -141,7 +141,8 @@ class Update extends Base
             ->param('teamId', null, new Nullable(new Text(256, 0)), '\'Team ID\' of Apple OAuth2 app. For example: D4000000R6', optional: true)
             ->param('p8File', null, new Nullable(new Text(4096, 0)), 'Contents of the Apple OAuth2 app .p8 private key file. The secret key wrapped by the PEM markers is 200 characters long. For example: -----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----', optional: true)
             ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'App bundle IDs accepted as ID token audiences for native Sign in with Apple. For example: com.example.app. Pass an empty array to clear the list.', optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'Browser-based OAuth2 sign-in status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param('nativeEnabled', null, new Nullable(new Boolean()), 'Native Sign in with Apple status. Set to true to accept ID tokens obtained on device. Needs a client ID or at least one native client ID, but no key or team ID: this method verifies a signature rather than redeeming an authorization code.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -164,6 +165,7 @@ class Update extends Base
             'teamId' => $storedSecret['teamID'] ?? '',
             'p8File' => '',
             'nativeClientIds' => $oAuthProviders[$providerId . 'ClientIds'] ?? [],
+            'nativeEnabled' => $oAuthProviders[$providerId . 'NativeEnabled'] ?? false,
         ]);
     }
 
@@ -181,6 +183,7 @@ class Update extends Base
         ?string $p8File,
         ?array $nativeClientIds,
         ?bool $enabled,
+        ?bool $nativeEnabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -208,7 +211,7 @@ class Update extends Base
             ]);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled, $nativeClientIds);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee keyId/teamId/p8File are write-only on every response path.

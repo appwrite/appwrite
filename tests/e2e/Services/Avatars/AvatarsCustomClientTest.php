@@ -351,6 +351,7 @@ final class AvatarsCustomClientTest extends Scope
             'appId' => '1',
             'secret' => '123456',
             'enabled' => true,
+            'nativeEnabled' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
