@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import {
   MarketingCtaSection,
   MarketingCtaSignupButtons,
@@ -11,7 +11,6 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getDraftBlogPosts, normalizeCategory } from '@/lib/blog/content'
 import type { BlogPostsPage } from '@/lib/blog/types'
 import { cn } from '@/lib/utils'
-import { useCommandCenter } from '@/hooks/use-command-center'
 import { BlogCategorySpotlightsSection } from './BlogCategorySpotlightsSection'
 import { BlogDraftsSection } from './BlogDraftsSection'
 import { BlogFeaturedSection } from './BlogFeaturedSection'
@@ -41,10 +40,32 @@ export function View({
   search,
 }: ViewProps) {
   const { features } = useConsoleProfile()
-  const { openCommandCenter } = useCommandCenter()
   const selectedCategory = search?.category ?? 'Latest'
 
+  // Client-side only: open command center when search button is clicked
+  useEffect(() => {
+    const handleSearchClick = () => {
+      // Trigger Cmd+K to open command center if user clicks search
+      const event = new KeyboardEvent('keydown', {
+        key: 'k',
+        code: 'KeyK',
+        metaKey: true,
+        ctrlKey: true,
+        bubbles: true,
+      })
+      document.dispatchEvent(event)
+    }
+
+    const button = document.getElementById('blog-search-button')
+    if (button) {
+      button.addEventListener('click', handleSearchClick)
+      return () => button.removeEventListener('click', handleSearchClick)
+    }
+  }, [])
+
   const handleCategoryChange = (category: string) => {
+    if (typeof window === 'undefined') return
+    
     const url = new URL(window.location.href)
     url.searchParams.delete('search')
     if (category !== 'Latest') {
@@ -110,10 +131,11 @@ export function View({
 
           <div className={cn(showSpotlights ? 'mt-8' : undefined, 'flex items-center justify-end')}>
             <Button
+              id="blog-search-button"
               size="sm"
               variant="outline"
               className="h-10 gap-2 text-[13px]"
-              onClick={openCommandCenter}
+              type="button"
             >
               <Search className="h-4 w-4" />
               Search articles
