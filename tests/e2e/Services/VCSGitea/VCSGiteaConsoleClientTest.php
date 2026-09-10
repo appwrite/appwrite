@@ -312,7 +312,15 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], true, false);
 
         $this->assertEquals(301, $callback['headers']['status-code']);
-        $this->assertEquals($consoleUrl, $callback['headers']['location'] ?? '');
+        $location = (string) ($callback['headers']['location'] ?? '');
+
+        if ($redirects) {
+            $this->assertSame($consoleUrl, $location);
+        } else {
+            // Nothing was signed into state, so the callback falls back to its own
+            // console URL, whose shape follows _APP_CONSOLE_URL_SCHEME.
+            $this->assertStringContainsString($projectId, $location);
+        }
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', \array_merge([
             'x-appwrite-project' => $projectId,
@@ -529,7 +537,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($this->gitInstallationsUrl($projectId) . '?error=', (string) $response['headers']['location']);
+        $location = (string) $response['headers']['location'];
+        $this->assertStringContainsString($projectId, $location);
+        $this->assertStringContainsString('?error=', $location);
     }
 
     public function testCreateInstallationWithInvalidState(): void
@@ -580,9 +590,9 @@ final class VCSGiteaConsoleClientTest extends Scope
     }
 
     /**
-     * The callback builds its fallback redirect from the project's region, so the
-     * expected URL follows the region the scope's project was created in: Cloud
-     * CI creates projects in a region other than default.
+     * A console git-installations URL of the shape the console signs into state.
+     * It carries the project's region, which Cloud CI sets to something other
+     * than default.
      */
     private function gitInstallationsUrl(string $projectId): string
     {

@@ -102,9 +102,13 @@ class Get extends Action
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
 
+        $defaultRedirect = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+            ? $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations"
+            : $protocol . '://' . $hostname . "/projects/$projectId/settings";
+
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => $defaultRedirect,
+            'failure' => $defaultRedirect,
         ];
 
         $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
