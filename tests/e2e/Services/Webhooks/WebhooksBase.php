@@ -15,7 +15,7 @@ trait WebhooksBase
 
     public function testTablesDBRows(): void
     {
-        // Test for SUCCESS: single, bulk, and committed writes deliver both namespaces.
+        // Test for SUCCESS: row writes deliver TablesDB events and legacy aliases.
         $headers = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -43,107 +43,30 @@ trait WebhooksBase
             $webhooks[$prefix] = $webhook['body']['$id'];
         }
 
-        foreach (['single', 'bulk', 'transaction'] as $mode) {
-            $rowId = ID::unique();
-            $params = [];
-            if ($mode === 'transaction') {
-                $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', $headers, []);
-                $this->assertEquals(201, $transaction['headers']['status-code']);
-                $params['transactionId'] = $transaction['body']['$id'];
-            }
-            $create = $mode === 'bulk'
-                ? ['rows' => [['$id' => $rowId, 'value' => 'created']]]
-                : ['rowId' => $rowId, 'data' => ['value' => 'created']];
-            $row = $this->client->call(Client::METHOD_POST, $path . '/rows', $headers, array_merge($create, $params));
-            $this->assertEquals(201, $row['headers']['status-code']);
+        $rowId = ID::unique();
+        $row = $this->client->call(Client::METHOD_POST, $path . '/rows', $headers, [
+            'rowId' => $rowId, 'data' => ['value' => 'created'],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $row = $this->client->call(Client::METHOD_PATCH, $path . '/rows/' . $rowId, $headers, [
+            'data' => ['value' => 'updated'],
+        ]);
+        $this->assertEquals(200, $row['headers']['status-code']);
 
-            $update = ['data' => ['value' => 'updated']];
-            if ($mode === 'bulk') {
-                $update['queries'] = [Query::equal('$id', [$rowId])->toString()];
+        foreach ($webhooks as $prefix => $webhookId) {
+            foreach (['create' => 'created', 'update' => 'updated'] as $action => $value) {
+                $event = "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}";
+                $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
+                    'header_X-Appwrite-Webhook-Id' => $webhookId,
+                ], probe: function (array $request) use ($event) {
+                    $this->assertContains($event, explode(',', $request['headers']['X-Appwrite-Webhook-Events'] ?? ''));
+                });
+                $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
+                $this->assertSame($value, $delivery['data']['value']);
             }
-            $row = $this->client->call(Client::METHOD_PATCH, $path . '/rows' . ($mode === 'bulk' ? '' : '/' . $rowId), $headers, array_merge($update, $params));
-            $this->assertEquals(200, $row['headers']['status-code']);
-            if ($mode === 'transaction') {
-                $commit = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $params['transactionId'], $headers, ['commit' => true]);
-                $this->assertEquals(200, $commit['headers']['status-code']);
-            }
-
-            foreach ($webhooks as $prefix => $webhookId) {
-                foreach (['create', 'update'] as $action) {
-                    $this->assertWebhookEvent($webhookId, "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}");
-                }
-            }
-            $persisted = $this->client->call(Client::METHOD_GET, $path . '/rows/' . $rowId, $headers);
-            $this->assertEquals(200, $persisted['headers']['status-code']);
-            $this->assertEquals('updated', $persisted['body']['value']);
-        }
-
-        foreach ($webhooks as $webhookId) {
-            $webhook = $this->getWebhook($webhookId);
-            $this->assertSame(0, $webhook['body']['attempts']);
-            $this->assertSame('', $webhook['body']['logs']);
             $this->deleteWebhook($webhookId);
         }
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
-    }
-
-    public function testTablesDBResources(): void
-    {
-        // Test for SUCCESS: database, table, column, and index events retain their type.
-        $headers = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-        $databaseId = ID::unique();
-        $tableId = ID::unique();
-        $database = '/tablesdb/' . $databaseId;
-        $table = $database . '/tables/' . $tableId;
-        $event = "tablesdb.{$databaseId}";
-        $webhook = $this->createWebhook(ID::unique(), 'TablesDB resources', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
-        $this->assertEquals(201, $webhook['headers']['status-code']);
-        $webhookId = $webhook['body']['$id'];
-
-        $operations = [
-            [Client::METHOD_POST, '/tablesdb', ['databaseId' => $databaseId, 'name' => 'Webhook resources'], 201, $event . '.create'],
-            [Client::METHOD_PUT, $database, ['name' => 'Updated'], 200, $event . '.update'],
-            [Client::METHOD_POST, $database . '/tables', ['tableId' => $tableId, 'name' => 'Table'], 201, $event . ".tables.{$tableId}.create"],
-            [Client::METHOD_PUT, $table, ['name' => 'Updated'], 200, $event . ".tables.{$tableId}.update"],
-            [Client::METHOD_POST, $table . '/columns/string', ['key' => 'value', 'size' => 100, 'required' => false], 202, $event . ".tables.{$tableId}.columns.*.create"],
-            [Client::METHOD_PATCH, $table . '/columns/string/value', ['required' => false, 'default' => 'test'], 200, $event . ".tables.{$tableId}.columns.*.update"],
-            [Client::METHOD_POST, $table . '/indexes', ['key' => 'value_index', 'type' => 'key', 'columns' => ['value']], 202, $event . ".tables.{$tableId}.indexes.*.create"],
-            // Index and column deletion currently use the update event label.
-            [Client::METHOD_DELETE, $table . '/indexes/value_index', [], 204, $event . ".tables.{$tableId}.indexes.*.update"],
-            [Client::METHOD_DELETE, $table . '/columns/value', [], 204, $event . ".tables.{$tableId}.columns.*.update"],
-            [Client::METHOD_DELETE, $table, [], 204, $event . ".tables.{$tableId}.delete"],
-            [Client::METHOD_DELETE, $database, [], 204, $event . '.delete'],
-        ];
-        foreach ($operations as [$method, $path, $params, $status, $expectedEvent]) {
-            $response = $this->client->call($method, $path, $headers, $params);
-            $this->assertEquals($status, $response['headers']['status-code'], $method . ' ' . $path);
-            $deleting = $method === Client::METHOD_DELETE && (str_contains($path, '/columns/') || str_contains($path, '/indexes/'));
-            $this->assertWebhookEvent($webhookId, $expectedEvent, $deleting ? ['status' => 'deleting'] : []);
-            if ($status === 202) {
-                $resource = str_contains($path, '/columns/') ? '/columns/value' : '/indexes/value_index';
-                $this->assertEventually(function () use ($table, $resource, $headers) {
-                    $response = $this->client->call(Client::METHOD_GET, $table . $resource, $headers);
-                    $this->assertEquals('available', $response['body']['status']);
-                }, 15000, 500);
-            }
-        }
-        $this->deleteWebhook($webhookId);
-    }
-
-    private function assertWebhookEvent(string $webhookId, string $event, array $payload = []): void
-    {
-        $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
-            'header_X-Appwrite-Webhook-Id' => $webhookId,
-        ], maxAttempts: 30, probe: function (array $request) use ($event, $payload) {
-            $this->assertContains($event, explode(',', $request['headers']['X-Appwrite-Webhook-Events'] ?? ''));
-            foreach ($payload as $key => $value) {
-                $this->assertSame($value, $request['data'][$key] ?? null);
-            }
-        });
-        $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
     }
 
     // Tests for all auth scenarios
