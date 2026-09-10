@@ -17,9 +17,12 @@ class Swoole extends SwooleAdapter
         parent::__construct($host, $port);
 
         // The exit hook only fires on an asynchronous exit; the wait is how long
-        // Swoole lets the loop drain before it kills the worker anyway.
+        // Swoole lets the loop drain before it kills the worker anyway. Whoever
+        // stops the process caps it well before this -- a Cloud pod leaves ~10s
+        // after its preStop -- so keep it high enough not to be the tighter limit,
+        // since a worker holding thousands of connections needs every second.
         $this->config['reload_async'] = true;
-        $this->config['max_wait_time'] = 5;
+        $this->config['max_wait_time'] = 15;
     }
 
     public function onWorkerExit(callable $callback): self
