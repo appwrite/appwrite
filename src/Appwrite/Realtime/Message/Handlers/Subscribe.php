@@ -127,7 +127,7 @@ class Subscribe extends Action
                     );
                 }
 
-                $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
+                $compiled ??= RuntimeQuery::prepare($parsedPayload['queries']);
                 // Carry the authorizing role so the tail can be revoked if the viewer
                 // later loses team membership (or the project is transferred).
                 $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $requiredRole];

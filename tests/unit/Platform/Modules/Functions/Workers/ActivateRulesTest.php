@@ -10,6 +10,7 @@ use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 final class ActivateRulesTest extends TestCase
 {
@@ -121,7 +122,7 @@ final class ActivateRulesTest extends TestCase
     private function queryFor(array $queries, string $attribute): ?Query
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === $attribute) {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === $attribute) {
                 return $query;
             }
         }

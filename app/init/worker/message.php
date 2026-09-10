@@ -9,6 +9,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Hooks\Usage;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
@@ -19,6 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Span\Span;
@@ -49,8 +51,8 @@ return function (Container $container): void {
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
-    $container->set('projectContext', function ($message) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('projectContext', function (Message $message): ProjectContext {
+        $payload = $message->getPayload();
         $project = $payload['project'] ?? [];
 
         return ProjectContext::fromArray(\is_array($project) ? $project : []);
@@ -91,8 +93,8 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
-        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Context $usage) {
+        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project, $usage): Database {
             $projectDocument ??= $project;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
@@ -101,13 +103,17 @@ return function (Container $container): void {
                 ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
                 : $database;
 
-            return $databaseFactory->tenant(
+            $dbForDatabases = $databaseFactory->tenant(
                 $databaseConfig,
                 $projectDocument,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
+
+            $dbForDatabases->addHook(new Usage($usage, $databaseConfig->getAttribute('type', '')));
+
+            return $dbForDatabases;
         };
-    }, ['databaseFactory', 'project']);
+    }, ['databaseFactory', 'project', 'usage']);
 
     $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
         $database = null;

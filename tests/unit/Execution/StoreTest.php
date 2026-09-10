@@ -304,28 +304,3 @@ final class StoreTest extends TestCase
         return new Response(200, body: new Stream(\json_encode(['data' => $rows], JSON_THROW_ON_ERROR)));
     }
 }
-
-final class CapturingClient implements ClientInterface
-{
-    /** @var list<RequestInterface> */
-    public array $requests = [];
-
-    /** @param list<ResponseInterface> $responses */
-    public function __construct(private array $responses = [])
-    {
-    }
-
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        $this->requests[] = $request;
-        return \array_shift($this->responses) ?? new Response(200);
-    }
-}
-
-final class FailingClient implements ClientInterface
-{
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        throw new \RuntimeException('ClickHouse unavailable');
-    }
-}

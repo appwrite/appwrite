@@ -4,10 +4,14 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction
 {
@@ -19,6 +23,36 @@ class Action extends AppwriteAction
     public function getDatabaseType(): string
     {
         return $this->context;
+    }
+
+    /**
+     * Pool implements every Feature interface as a proxy, so instanceof is
+     * always true. Capability checks are delegated to the pooled adapter.
+     */
+    protected function supportsDefinedAttributes(Adapter $adapter): bool
+    {
+        return $adapter->supports(Capability::DefinedAttributes);
+    }
+
+    /**
+     * Spatial types are advertised through several adapter-specific capabilities.
+     * Pool's Spatial interface is not a reliable signal.
+     */
+    protected function supportsSpatial(Adapter $adapter): bool
+    {
+        return $adapter->supports(Capability::SpatialIndexNull)
+            || $adapter->supports(Capability::SpatialIndexOrder)
+            || $adapter->supports(Capability::OptionalSpatial)
+            || $adapter->supports(Capability::SpatialAxisOrder);
+    }
+
+    /**
+     * Pool is a proxy and does not implement Feature interfaces, so instanceof
+     * is always false. Ask the inner adapter via hasFeature().
+     */
+    protected function supportsRelationships(Adapter $adapter): bool
+    {
+        return $adapter->hasFeature(FeatureRelationships::class);
     }
 
     /**
@@ -84,7 +118,7 @@ class Action extends AppwriteAction
     {
         $relationshipKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
             }
         }

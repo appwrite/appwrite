@@ -24,6 +24,7 @@ use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -106,7 +107,7 @@ class Upsert extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         if ($hasRelationships) {
@@ -119,6 +120,7 @@ class Upsert extends Action
                 $document = $this->parseOperators($document, $collection);
             }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
+            $this->validateTimestamps($document);
             $documents[$key] = new Document($document);
         }
 

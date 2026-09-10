@@ -224,8 +224,16 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
+            // A lock lease is held for as long as the work it guards, so every
+            // concurrent request that takes a lock needs its own connection. The
+            // size above is derived from the MySQL connection budget and floored by
+            // a worker-only setting, which leaves the API server with one: the
+            // second concurrent lock taker then fails to get a connection to wait
+            // with and 500s, instead of queueing on the lock it was willing to wait
+            // out. The pool creates connections on demand, so this is a ceiling.
             $connectionPoolSize = match ($type) {
                 'pubsub' => max(2, $poolSize),
+                'lock' => max(32, $poolSize),
                 default => $poolSize,
             };
 

@@ -13,11 +13,14 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -68,18 +71,18 @@ class Create extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('relatedCollectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Collection ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
-                Database::RELATION_ONE_TO_ONE,
-                Database::RELATION_MANY_TO_ONE,
-                Database::RELATION_MANY_TO_MANY,
-                Database::RELATION_ONE_TO_MANY
+                RelationType::OneToOne->value,
+                RelationType::ManyToOne->value,
+                RelationType::ManyToMany->value,
+                RelationType::OneToMany->value
             ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
-            ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
-                Database::RELATION_MUTATE_CASCADE,
-                Database::RELATION_MUTATE_RESTRICT,
-                Database::RELATION_MUTATE_SET_NULL
+            ->param('onDelete', ForeignKeyAction::Restrict->value, new WhiteList([
+                ForeignKeyAction::Cascade->value,
+                ForeignKeyAction::Restrict->value,
+                ForeignKeyAction::SetNull->value
             ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
@@ -91,7 +94,7 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+        if (!$this->supportsRelationships($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
         }
 
@@ -118,7 +121,7 @@ class Create extends Action
 
         $attributes = $collection->getAttribute('attributes', []);
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
+            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
                 continue;
             }
 
@@ -137,8 +140,8 @@ class Create extends Action
             }
 
             if (
-                $type === Database::RELATION_MANY_TO_MANY &&
-                $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
+                $type === RelationType::ManyToMany->value &&
+                $attribute->getAttribute('options')['relationType'] === RelationType::ManyToMany->value &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
                 $parentType = $this->isCollectionsAPI() ? 'collection' : 'table';
@@ -148,7 +151,7 @@ class Create extends Action
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
-            'type' => Database::VAR_RELATIONSHIP,
+            'type' => ColumnType::Relationship->value,
             'size' => 0,
             'required' => false,
             'default' => null,

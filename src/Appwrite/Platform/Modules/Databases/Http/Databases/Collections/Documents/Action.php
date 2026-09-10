@@ -11,7 +11,13 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Query;
+use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Query\Schema\ColumnType;
 
 abstract class Action extends DatabasesAction
 {
@@ -205,6 +211,22 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * @param array<string, mixed> $data
+     */
+    protected function validateTimestamps(array $data): void
+    {
+        $validator = new DatetimeValidator();
+        foreach (['$createdAt', '$updatedAt'] as $attribute) {
+            if (!isset($data[$attribute]) || $data[$attribute] === '') {
+                continue;
+            }
+            if (!\is_string($data[$attribute]) || !$validator->isValid($data[$attribute])) {
+                throw new Exception($this->getStructureException(), $validator->getDescription());
+            }
+        }
+    }
+
+    /**
      * Get the appropriate missing data exception.
      */
     protected function getMissingDataException(): string
@@ -322,7 +344,148 @@ abstract class Action extends DatabasesAction
                 unset($document[$attribute]);
             }
         }
+
+        foreach ($document as $key => $value) {
+            if ($value instanceof Document || (\is_array($value) && !\array_is_list($value) && isset($value['$id']))) {
+                $document[$key] = $this->removeReadonlyAttributes($value, $privileged);
+            } elseif (\is_array($value) && \array_is_list($value)) {
+                foreach ($value as $index => $child) {
+                    if ($child instanceof Document || (\is_array($child) && isset($child['$id']))) {
+                        $value[$index] = $this->removeReadonlyAttributes($child, $privileged);
+                    }
+                }
+                $document[$key] = $value;
+            }
+        }
+
         return $document;
+    }
+
+    protected function mapQueryFailure(\Throwable $error): never
+    {
+        throw new Exception(Exception::GENERAL_QUERY_INVALID, $error->getMessage());
+    }
+
+    /**
+     * @param array<Query> $queries
+     * @return array<Query>
+     */
+    protected function resolveJoinCollections(
+        array $queries,
+        Database $dbForProject,
+        Document $database,
+        Document $collection,
+        Authorization $authorization,
+        bool $privileged = false,
+    ): array {
+        $prefix = 'database_' . $database->getSequence() . '_collection_';
+        $relationships = $this->relationshipAttributes($collection);
+
+        foreach ($queries as $query) {
+            if (!$query->getMethod()->isJoin()) {
+                continue;
+            }
+
+            $externalId = $query->getAttribute();
+            if ($externalId !== '') {
+                // A name already in physical form is still caller-supplied: both entry points
+                // resolve freshly parsed queries exactly once, so nothing legitimately arrives
+                // pre-resolved. Passing it through skipped the enabled and permission checks
+                // below, which let a caller join a disabled collection by its sequence.
+                $related = $this->joinCollection($dbForProject, $database, $externalId, $prefix, $authorization);
+
+                if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$privileged)) {
+                    throw new Exception($this->getParentNotFoundException(), params: [$externalId]);
+                }
+
+                if (!$privileged && !$authorization->isValid(new Input(PermissionType::Read, $related->getRead()))) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                $query->setAttribute($prefix . $related->getSequence());
+            }
+
+            $this->resolveJoinColumns($query, $relationships);
+        }
+
+        return $queries;
+    }
+
+    private function joinCollection(
+        Database $dbForProject,
+        Document $database,
+        string $externalId,
+        string $prefix,
+        Authorization $authorization,
+    ): Document {
+        $registry = 'database_' . $database->getSequence();
+
+        if (!\str_starts_with($externalId, $prefix)) {
+            return $authorization->skip(
+                fn () => $dbForProject->getDocument($registry, $externalId)
+            );
+        }
+
+        $sequence = \substr($externalId, \strlen($prefix));
+        if ($sequence === '' || !\ctype_digit($sequence)) {
+            return new Document();
+        }
+
+        $found = $authorization->skip(
+            fn () => $dbForProject->find($registry, [
+                Query::equal('$sequence', [$sequence]),
+                Query::limit(1),
+            ])
+        );
+
+        return $found[0] ?? new Document();
+    }
+
+    /**
+     * @return array<string, Document>
+     */
+    private function relationshipAttributes(Document $collection): array
+    {
+        $relationships = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (!$attribute instanceof Document) {
+                continue;
+            }
+            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
+                continue;
+            }
+            $relationships[$attribute->getAttribute('key')] = $attribute;
+        }
+
+        return $relationships;
+    }
+
+    /**
+     * @param array<string, Document> $relationships
+     */
+    private function resolveJoinColumns(Query $query, array $relationships): void
+    {
+        $values = $query->getValues();
+        if (\count($values) < 3 || !\is_string($values[0]) || !isset($relationships[$values[0]])) {
+            return;
+        }
+
+        $relationship = $relationships[$values[0]];
+        $options = $relationship->getAttribute('options', []);
+        $relationType = $options['relationType'] ?? $relationship->getAttribute('relationType');
+        $twoWayKey = $options['twoWayKey'] ?? $relationship->getAttribute('twoWayKey');
+
+        if ($relationType !== RelationType::OneToMany->value) {
+            return;
+        }
+
+        if (!\is_string($twoWayKey) || $twoWayKey === '') {
+            return;
+        }
+
+        $values[0] = Document::ID;
+        $values[2] = $twoWayKey;
+        $query->setValues($values);
     }
 
     /**
@@ -352,100 +515,6 @@ abstract class Action extends DatabasesAction
                 throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
             }
         }
-    }
-
-    /**
-     * Resolves relationships in a document and attaches metadata.
-     */
-    protected function processDocument(
-        /* database */
-        Document $database,
-        Document $collection,
-        Document $document,
-        Database $dbForProject,
-        /* options */
-        array &$collectionsCache,
-        Authorization $authorization,
-        ?int &$operations = null,
-        int $depth = 0,
-    ): bool {
-        if ($operations !== null && $document->isEmpty()) {
-            return false;
-        }
-
-        if ($operations !== null) {
-            $operations++;
-        }
-
-        $collectionId = $collection->getId();
-        $document->removeAttribute('$collection');
-        $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
-
-        // Stop processing relationships if max depth reached
-        if ($depth >= Database::RELATION_MAX_DEPTH) {
-            return true;
-        }
-
-        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            $key = $relationship->getAttribute('key');
-            $related = $document->getAttribute($key);
-
-            if (empty($related)) {
-                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
-                    $operations++;
-                }
-                continue;
-            }
-
-            $relations = \is_array($related) ? $related : [$related];
-            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-
-            if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = $authorization->skip(
-                    fn () => $dbForProject->getDocument(
-                        'database_' . $database->getSequence(),
-                        $relatedCollectionId
-                    )
-                );
-
-                $collectionsCache[$relatedCollectionId] = \array_filter(
-                    $relatedCollectionDoc->getAttribute('attributes', []),
-                    fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-                );
-            }
-
-            foreach ($relations as $relation) {
-                if ($relation instanceof Document) {
-                    $relatedCollection = new Document([
-                        '$id' => $relatedCollectionId,
-                        'attributes' => $collectionsCache[$relatedCollectionId],
-                    ]);
-
-                    $this->processDocument(
-                        database: $database,
-                        collection: $relatedCollection,
-                        document: $relation,
-                        dbForProject: $dbForProject,
-                        collectionsCache: $collectionsCache,
-                        authorization: $authorization,
-                        operations: $operations,
-                        depth: $depth + 1
-                    );
-                }
-            }
-
-            if (\is_array($related)) {
-                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -539,4 +608,5 @@ abstract class Action extends DatabasesAction
         $queueForRealtime->reset();
         $queueForWebhooks->reset();
     }
+
 }

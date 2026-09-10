@@ -8,6 +8,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -113,14 +115,20 @@ class Get extends Action
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
-            'supportForRelationships' => $adapter->getSupportForRelationships(),
-            'supportForOperators' => $adapter->getSupportForOperators(),
-            'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
-            'supportForSpatialIndexNull' => $adapter->getSupportForSpatialIndexNull(),
-            'supportForFulltextWildcard' => $adapter->getSupportForFulltextWildcardIndex(),
-            'supportForMultipleFulltextIndexes' => $adapter->getSupportForMultipleFulltextIndexes(),
-            'supportForAttributeResizing' => $adapter->getSupportForAttributeResizing(),
-            'supportForSchemas' => $adapter->getSupportForSchemas(),
+            'supportForAttributes' => $adapter->supports(Capability::DefinedAttributes),
+            'supportForRelationships' => $adapter->hasFeature(FeatureRelationships::class),
+            'supportForOperators' => $adapter->supports(Capability::Operators),
+            'supportForSpatials' => $adapter->supports(Capability::SpatialIndexNull)
+                || $adapter->supports(Capability::SpatialIndexOrder)
+                || $adapter->supports(Capability::OptionalSpatial)
+                || $adapter->supports(Capability::SpatialAxisOrder),
+            'supportForAggregations' => $adapter->supports(Capability::Aggregations),
+            'supportForJoins' => $adapter->supports(Capability::Joins),
+            'supportForSpatialIndexNull' => $adapter->supports(Capability::SpatialIndexNull),
+            'supportForFulltextWildcard' => $adapter->supports(Capability::FulltextWildcard),
+            'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::MultipleFulltextIndexes),
+            'supportForAttributeResizing' => $adapter->supports(Capability::AttributeResizing),
+            'supportForSchemas' => $adapter->supports(Capability::Schemas),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
             'supportForIntegerIds' => $adapter->getIdAttributeType() === 'integer',
         ]);

@@ -56,7 +56,7 @@ final class EventTailRegistryTest extends TestCase
     /** @param array<int,\Utopia\Database\Query> $queries */
     private function compile(array $queries): array
     {
-        return RuntimeQuery::compile($queries);
+        return RuntimeQuery::prepare($queries);
     }
 
     // ---- Realtime::toTailMetadata ----

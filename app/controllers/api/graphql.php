@@ -2,6 +2,7 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\GraphQL\Formatter;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
 use Appwrite\SDK\AuthType;
@@ -13,6 +14,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\Error\SyntaxError;
+use GraphQL\Executor\ExecutionResult;
 use GraphQL\GraphQL;
 use GraphQL\Language\Parser;
 use GraphQL\Language\Source;
@@ -357,12 +359,14 @@ function parseMultipart(array $query, Request $request): array
 /**
  * Process an array of results for output.
  *
- * @param $result
- * @param $debugFlags
- * @return array
+ * @param list<ExecutionResult> $result
  */
-function processResult($result, $debugFlags): array
+function processResult(array $result, int $debugFlags): array
 {
+    foreach ($result as $item) {
+        $item->setErrorsHandler(Formatter::errors(...));
+    }
+
     // Only one query, return the result
     if (!isset($result[1])) {
         return $result[0]->toArray($debugFlags);
@@ -370,7 +374,7 @@ function processResult($result, $debugFlags): array
 
     // Batched queries, return an array of results
     return \array_map(
-        static function ($item) use ($debugFlags) {
+        static function (ExecutionResult $item) use ($debugFlags): array {
             return $item->toArray($debugFlags);
         },
         $result

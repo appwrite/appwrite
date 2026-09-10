@@ -5,6 +5,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\System\System;
 
 Database::addFilter(
@@ -31,8 +32,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['elements'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
 
@@ -53,8 +57,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && (isset($formatOptions['min']) || isset($formatOptions['max']))) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
                 ->setAttribute('max', $formatOptions['max']);
@@ -80,7 +87,7 @@ Database::addFilter(
             $attributeType = $attribute->getAttribute('type');
 
             switch ($attributeType) {
-                case Database::VAR_RELATIONSHIP:
+                case ColumnType::Relationship->value:
                     $options = $attribute->getAttribute('options');
                     foreach ($options as $key => $value) {
                         $attribute->setAttribute($key, $value);
@@ -88,11 +95,11 @@ Database::addFilter(
                     $attribute->removeAttribute('options');
                     break;
 
-                case Database::VAR_STRING:
-                case Database::VAR_VARCHAR:
-                case Database::VAR_TEXT:
-                case Database::VAR_MEDIUMTEXT:
-                case Database::VAR_LONGTEXT:
+                case ColumnType::String->value:
+                case ColumnType::Varchar->value:
+                case ColumnType::Text->value:
+                case ColumnType::MediumText->value:
+                case ColumnType::LongText->value:
                     $filters = $attribute->getAttribute('filters', []);
                     $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
                     break;

@@ -52,8 +52,10 @@ class Authentication extends Action
             $database->purgeCachedDocument('users', $userId);
         }
 
-        /** @var User $user */
-        $user = $database->getDocument('users', $userId);
+        $fetched = $database->getAuthorization()->skip(
+            fn () => $database->getDocument('users', $userId)
+        );
+        $user = $fetched instanceof User ? $fetched : new User($fetched->getArrayCopy());
 
         // TODO: move proof construction to the DI container so there's one source of truth.
         $proofForToken = new Token();

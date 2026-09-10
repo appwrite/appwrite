@@ -1156,10 +1156,18 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        // CursorAfter should return results, count varies in parallel mode
-        $this->assertGreaterThanOrEqual(1, count($response['body']['users']));
-        // First result after cursor should be user1 (created right after setupUser)
-        $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
+
+        $after = array_column($response['body']['users'], '$id');
+        $order = $this->listUserIdsInDefaultOrder();
+        $cursorAt = array_search($data['userId'], $order, true);
+        $this->assertNotFalse($cursorAt, 'cursor user missing from the unpaginated listing');
+        $this->assertNotContains($data['userId'], $after, 'cursorAfter returned the cursor itself');
+
+        foreach ($after as $id) {
+            $at = array_search($id, $order, true);
+            $this->assertNotFalse($at, "cursorAfter returned {$id}, absent from the listing");
+            $this->assertGreaterThan($cursorAt, $at, "cursorAfter returned {$id}, which sorts before the cursor");
+        }
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
@@ -1172,9 +1180,19 @@ trait UsersBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(1, $response['body']['users']);
 
-        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+        $before = array_column($response['body']['users'], '$id');
+        $order = $this->listUserIdsInDefaultOrder();
+        $cursorAt = array_search('user1', $order, true);
+        $this->assertNotFalse($cursorAt, 'cursor user missing from the unpaginated listing');
+        $this->assertNotContains('user1', $before, 'cursorBefore returned the cursor itself');
+        $this->assertContains($data['userId'], $before, 'cursorBefore dropped a user created before the cursor');
+
+        foreach ($before as $id) {
+            $at = array_search($id, $order, true);
+            $this->assertNotFalse($at, "cursorBefore returned {$id}, absent from the listing");
+            $this->assertLessThan($cursorAt, $at, "cursorBefore returned {$id}, which sorts after the cursor");
+        }
 
         /**
          * Test for SUCCESS searchUsers
@@ -3130,5 +3148,24 @@ trait UsersBase
 
         $this->assertEquals(200, $accountFactors['headers']['status-code']);
         $this->assertTrue($accountFactors['body']['recoveryCode']);
+    }
+
+    /**
+     * @return array<string>
+     */
+    protected function listUserIdsInDefaultOrder(): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return array_column($response['body']['users'], '$id');
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations;
 
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -54,6 +55,7 @@ class Update extends Action
             ->inject('project')
             ->inject('platform')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -63,28 +65,25 @@ class Update extends Action
         Database $dbForProject,
         Document $project,
         array $platform,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
-        $migration = $dbForProject->getDocument('migrations', $migrationId);
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
 
-        if ($migration->isEmpty()) {
-            throw new Exception(Exception::MIGRATION_NOT_FOUND);
+        try {
+            $migration = $claim->retry(
+                project: $project,
+                migrationId: $migrationId,
+                platform: $platform,
+                publisher: $publisherForMigrations,
+            );
+        } catch (Contention) {
+            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration retry is already being claimed');
         }
 
-        if ($migration->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
-        }
-
-        $migration
-            ->setAttribute('status', 'pending')
-            ->setAttribute('dateUpdated', \time());
-
-        $publisherForMigrations->enqueue(new MigrationMessage(
-            project: $project,
-            migration: $migration,
-            platform: $platform,
-        ));
-
-        $response->noContent();
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
     }
 }

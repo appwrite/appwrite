@@ -810,11 +810,12 @@ final class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Env variable is Appwrite", (string) $response['body']);
-        $this->assertStringNotContainsString("Variable not found", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Env variable is Appwrite', (string) $response['body']);
+            $this->assertStringNotContainsString('Variable not found', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -3046,8 +3047,10 @@ final class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId1);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Customized 404 page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Customized 404 page', (string) $response['body']);
+        }, 30000, 500);
 
         $site = $this->updateSite([
             '$id' => $siteId,
@@ -3106,8 +3109,10 @@ final class SitesCustomServerTest extends Scope
         $this->waitDeploymentReady($siteId, $manualDeploymentId);
         $this->waitDeploymentActivated($siteId, $manualDeploymentId);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Index page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Index page', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);

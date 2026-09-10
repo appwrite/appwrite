@@ -101,4 +101,14 @@ trait ApiDocumentsDB
         return false;
     }
 
+    protected function getSupportForAggregations(): bool
+    {
+        return false;
+    }
+
+    protected function getSupportForJoins(): bool
+    {
+        return false;
+    }
+
 }

@@ -391,10 +391,7 @@ class Resolvers
         }
 
         if ($statusCode < 200 || $statusCode >= 400) {
-            $reject(new GQLException(
-                message: $payload['message'],
-                code: $statusCode
-            ));
+            $reject(GQLException::fromResponse($payload, $statusCode));
             return;
         }
 

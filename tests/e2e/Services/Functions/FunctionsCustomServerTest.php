@@ -1049,42 +1049,44 @@ final class FunctionsCustomServerTest extends Scope
             'execute' => [Role::any()->toString()],
         ]);
 
-        $deployment = $this->createDeployment($functionId, [
-            'code' => $this->packageFunction('basic'),
-            'activate' => true,
-        ]);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-        $deploymentId = $deployment['body']['$id'];
+        try {
+            $deployment = $this->createDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $this->assertSame(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
 
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+                $this->assertSame('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
+            }, 100000, 500);
+
+            /**
+             * Test for SUCCESS
+             */
             $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
-        }, 100000, 500);
+            $this->assertGreaterThan(0, $deployment['body']['buildSize']);
 
-        /**
-         * Test for SUCCESS
-         */
-        $deployment = $this->getDeployment($functionId, $deploymentId);
-        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+            // The executor fetches the artifact through its own storage connection.
+            $execution = $this->createExecution($functionId);
+            $this->assertSame(201, $execution['headers']['status-code']);
+            $this->assertSame('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
+            $this->assertSame(200, $execution['body']['responseStatusCode']);
+            $this->assertSame($deploymentId, $this->executionOutput($execution)['APPWRITE_FUNCTION_DEPLOYMENT']);
 
-        // The executor fetches the artifact through its own storage connection.
-        $execution = $this->createExecution($functionId);
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertSame($deploymentId, \json_decode($execution['body']['responseBody'], true)['APPWRITE_FUNCTION_DEPLOYMENT']);
+            // The download endpoint reads buildPath through the builds device. The
+            // artifact format depends on the storage strategy, so compare sizes.
+            $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
+            $this->assertSame(200, $output['headers']['status-code']);
+            $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
 
-        // The download endpoint reads buildPath through the builds device. The
-        // artifact format depends on the storage strategy, so compare sizes.
-        $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
-        $this->assertEquals(200, $output['headers']['status-code']);
-        $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
-
-        $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
-        $this->assertEquals(200, $source['headers']['status-code']);
-        $this->assertStringStartsWith("\x1f\x8b", $source['body']);
-
-        $this->cleanupFunction($functionId);
+            $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
+            $this->assertSame(200, $source['headers']['status-code']);
+            $this->assertStringStartsWith("\x1f\x8b", $source['body']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     #[Retry(count: 3)]
@@ -1641,7 +1643,27 @@ final class FunctionsCustomServerTest extends Scope
         $response = $this->createDuplicateDeployment($functionId, $deploymentId);
 
         $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
+        $duplicateId = $response['body']['$id'] ?? '';
+        $this->assertNotEmpty($duplicateId);
+
+        $this->assertEventually(function () use ($functionId, $duplicateId) {
+            $deployment = $this->getDeployment($functionId, $duplicateId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        // Duplicates activate when their build completes. Restore the shared
+        // fixture before later execution tests reuse its cached deployment ID.
+        $response = $this->updateFunctionDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $duplicateId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $this->cleanupFunction($otherFunctionId);
     }
@@ -2117,7 +2139,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2151,7 +2173,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2396,7 +2418,6 @@ final class FunctionsCustomServerTest extends Scope
             'async' => 'false'
         ]);
 
-        $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('OK', $execution['body']['responseBody']);
@@ -2967,7 +2988,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $executionResponse = $this->executionOutput($execution);
         $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
         $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 

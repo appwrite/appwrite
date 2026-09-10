@@ -134,7 +134,7 @@ final class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             'async' => 'false'
         ]);
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertNotEmpty($execution['body']['responseHeaders']);
@@ -255,7 +255,7 @@ final class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             // Testing default value, should be 'async' => 'false'
         ]);
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
@@ -304,7 +304,7 @@ final class FunctionsCustomClientTest extends Scope
             'x-appwrite-user-jwt' => "OVERRIDDEN",
         ]);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);

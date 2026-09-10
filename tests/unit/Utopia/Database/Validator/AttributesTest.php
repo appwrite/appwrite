@@ -8,6 +8,7 @@ use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\Attributes;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Query\Schema\ColumnType;
 
 final class AttributesTest extends TestCase
 {
@@ -21,33 +22,33 @@ final class AttributesTest extends TestCase
     public function testStringTypes(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'title', 'type' => Database::VAR_STRING, 'size' => 128],
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 128],
-            ['key' => 'body', 'type' => Database::VAR_TEXT],
-            ['key' => 'summary', 'type' => Database::VAR_MEDIUMTEXT],
-            ['key' => 'archive', 'type' => Database::VAR_LONGTEXT],
+            ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 128],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 128],
+            ['key' => 'body', 'type' => ColumnType::Text->value],
+            ['key' => 'summary', 'type' => ColumnType::MediumText->value],
+            ['key' => 'archive', 'type' => ColumnType::LongText->value],
         ]), $this->object->getDescription());
     }
 
     public function testStringTypeDefaults(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'body', 'type' => Database::VAR_TEXT, 'default' => 'hello'],
+            ['key' => 'body', 'type' => ColumnType::Text->value, 'default' => 'hello'],
         ]), $this->object->getDescription());
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'body', 'type' => Database::VAR_TEXT, 'default' => 1],
+            ['key' => 'body', 'type' => ColumnType::Text->value, 'default' => 1],
         ]));
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 4, 'default' => 'toolong'],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 4, 'default' => 'toolong'],
         ]));
     }
 
     public function testVarcharRequiresSize(): void
     {
         $this->assertFalse($this->object->isValid([
-            ['key' => 'slug', 'type' => Database::VAR_VARCHAR],
+            ['key' => 'slug', 'type' => ColumnType::Varchar->value],
         ]));
     }
 
@@ -72,129 +73,138 @@ final class AttributesTest extends TestCase
     public function testEmailWithoutSize(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'email', 'type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL],
+            ['key' => 'email', 'type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL],
+        ]), $this->object->getDescription());
+    }
+
+    public function testPublicNumericTypeIsDouble(): void
+    {
+        $this->assertContains(ColumnType::Double->value, Attribute::types());
+        $this->assertNotContains(ColumnType::Float->value, Attribute::types());
+        $this->assertTrue($this->object->isValid([
+            ['key' => 'score', 'type' => ColumnType::Double->value, 'default' => 1.5],
         ]), $this->object->getDescription());
     }
 
     public function testUnsupportedType(): void
     {
         $this->assertFalse($this->object->isValid([
-            ['key' => 'rel', 'type' => Database::VAR_RELATIONSHIP],
+            ['key' => 'rel', 'type' => ColumnType::Relationship->value],
         ]));
         $this->assertSame("Invalid type for attribute 'rel': relationship", $this->object->getDescription());
     }
 
     public function testResolveMatchesDedicatedEndpoints(): void
     {
-        $this->assertEquals(
-            ['type' => Database::VAR_TEXT, 'format' => '', 'size' => 65535],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_TEXT])
+        $this->assertSame(
+            ['type' => ColumnType::Text->value, 'format' => '', 'size' => 65535],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::Text->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_MEDIUMTEXT, 'format' => '', 'size' => 16777215],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_MEDIUMTEXT])
+        $this->assertSame(
+            ['type' => ColumnType::MediumText->value, 'format' => '', 'size' => 16777215],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::MediumText->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_LONGTEXT, 'format' => '', 'size' => 2147483647],
-            Attribute::resolve(['key' => 'body', 'type' => Database::VAR_LONGTEXT])
+        $this->assertSame(
+            ['type' => ColumnType::LongText->value, 'format' => '', 'size' => 2147483647],
+            Attribute::resolve(['key' => 'body', 'type' => ColumnType::LongText->value])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 254],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 254],
             Attribute::resolve(['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_IP, 'size' => 39],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_IP, 'size' => 39],
             Attribute::resolve(['key' => 'ip', 'type' => APP_DATABASE_ATTRIBUTE_IP])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_URL, 'size' => 2000],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_URL, 'size' => 2000],
             Attribute::resolve(['key' => 'url', 'type' => APP_DATABASE_ATTRIBUTE_URL])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_ENUM, 'size' => Database::LENGTH_KEY],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_ENUM, 'size' => Database::LENGTH_KEY],
             Attribute::resolve(['key' => 'enum', 'type' => APP_DATABASE_ATTRIBUTE_ENUM])
         );
 
         // createIntegerColumn sizes the column off max, defaulting to the int64
         // range, and createBigIntColumn is always 8 bytes
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 3000000000])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => 3000000000])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => 0, 'max' => 100])
         );
 
         // Both edges of the declared range have to be storable. A max on its own
         // leaves min at PHP_INT_MIN, and a min below INT32 needs the wide column
         // however small max is.
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 100])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => 100])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -5000000000, 'max' => 100])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => -5000000000, 'max' => 100])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -2147483648, 'max' => 2147483647])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => -2147483648, 'max' => 2147483647])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT])
+            ['type' => 'bigint', 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'total', 'type' => ColumnType::BigInteger->value])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
-            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT])
+            ['type' => ColumnType::Float->value, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Float->value])
         );
 
         // None of the numeric endpoints takes a size. A size sent inline must not
         // narrow the column below the range the same definition declares.
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 4])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'size' => 4])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_INTEGER, 'format' => '', 'size' => 4],
-            Attribute::resolve(['key' => 'counter', 'type' => Database::VAR_INTEGER, 'size' => 8, 'min' => 0, 'max' => 100])
+            ['type' => ColumnType::Integer->value, 'format' => '', 'size' => 4],
+            Attribute::resolve(['key' => 'counter', 'type' => ColumnType::Integer->value, 'size' => 8, 'min' => 0, 'max' => 100])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_BIGINT, 'format' => '', 'size' => 8],
-            Attribute::resolve(['key' => 'total', 'type' => Database::VAR_BIGINT, 'size' => 4])
+            ['type' => 'bigint', 'format' => '', 'size' => 8],
+            Attribute::resolve(['key' => 'total', 'type' => ColumnType::BigInteger->value, 'size' => 4])
         );
 
         $this->assertEquals(
-            ['type' => Database::VAR_FLOAT, 'format' => '', 'size' => 0],
-            Attribute::resolve(['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'size' => 4])
+            ['type' => ColumnType::Float->value, 'format' => '', 'size' => 0],
+            Attribute::resolve(['key' => 'ratio', 'type' => ColumnType::Float->value, 'size' => 4])
         );
     }
 
     public function testNumericBoundsMustFitTheType(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
-            ['key' => 'total', 'type' => Database::VAR_BIGINT, 'min' => \PHP_INT_MIN, 'max' => \PHP_INT_MAX],
-            ['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'min' => -1.5, 'max' => 1.5],
+            ['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => 0, 'max' => 100],
+            ['key' => 'total', 'type' => ColumnType::BigInteger->value, 'min' => \PHP_INT_MIN, 'max' => \PHP_INT_MAX],
+            ['key' => 'ratio', 'type' => ColumnType::Double->value, 'min' => -1.5, 'max' => 1.5],
         ]), $this->object->getDescription());
 
         // 9223372036854776000 is what a client that rounds an int64 to a double
@@ -202,43 +212,43 @@ final class AttributesTest extends TestCase
         // decodes it as a float, and storing it leaves an integer column bounded
         // by 9.223372036854776e+18.
         $this->assertFalse($this->object->isValid([
-            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
+            ['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
         ]));
         $this->assertStringContainsString("Attribute 'counter': min is invalid", $this->object->getDescription());
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 9223372036854776000],
+            ['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => 9223372036854776000],
         ]));
         $this->assertStringContainsString("Attribute 'counter': max is invalid", $this->object->getDescription());
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'total', 'type' => Database::VAR_BIGINT, 'max' => 9223372036854776000],
+            ['key' => 'total', 'type' => ColumnType::BigInteger->value, 'max' => 9223372036854776000],
         ]));
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => 1.5],
+            ['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => 1.5],
         ]));
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => '100'],
+            ['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => '100'],
         ]));
 
         // A float column carries the same bound as a double, which is what it is
         $this->assertTrue($this->object->isValid([
-            ['key' => 'ratio', 'type' => Database::VAR_FLOAT, 'max' => 9223372036854776000],
+            ['key' => 'ratio', 'type' => ColumnType::Double->value, 'max' => 9223372036854776000],
         ]), $this->object->getDescription());
     }
 
     public function testResolveKeepsExplicitSize(): void
     {
-        $this->assertEquals(
-            ['type' => Database::VAR_STRING, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512],
+        $this->assertSame(
+            ['type' => ColumnType::String->value, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512],
             Attribute::resolve(['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 512])
         );
 
-        $this->assertEquals(
-            ['type' => Database::VAR_VARCHAR, 'format' => '', 'size' => 128],
-            Attribute::resolve(['key' => 'slug', 'type' => Database::VAR_VARCHAR, 'size' => 128])
+        $this->assertSame(
+            ['type' => ColumnType::Varchar->value, 'format' => '', 'size' => 128],
+            Attribute::resolve(['key' => 'slug', 'type' => ColumnType::Varchar->value, 'size' => 128])
         );
     }
 }

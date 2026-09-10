@@ -2,13 +2,16 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Utopia\Database\Adapter\Pool as DatabasePool;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Hook\Tenancy;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
@@ -40,6 +43,7 @@ class Factory
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
+        $this->applyHooks($database);
 
         return $database;
     }
@@ -64,7 +68,7 @@ class Factory
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
 
-        return $this->configureProject($database, $project, $dsn);
+        return $this->applyHooks($this->configureProject($database, $project, $dsn));
     }
 
     public function logs(
@@ -93,7 +97,7 @@ class Factory
 
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
 
-        return $database;
+        return $this->applyHooks($database);
     }
 
     /**
@@ -138,31 +142,43 @@ class Factory
             };
 
             if (\in_array($databaseHost, $dbTypeSharedTables, true)) {
-                return $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($globalCollections)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($databaseDsn->getParam('namespace'));
+                return $this->applyHooks(
+                    $database
+                        ->setSharedTables(true)
+                        ->setGlobalCollections($globalCollections)
+                        ->setTenant($project->getSequence())
+                        ->setNamespace($databaseDsn->getParam('namespace')),
+                    relationships: true,
+                );
             }
 
-            return $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+            return $this->applyHooks(
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getSequence()),
+                relationships: true,
+            );
         }
 
         if (\in_array($projectDsn->getHost(), $sharedTables, true)) {
-            return $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($globalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($projectDsn->getParam('namespace'));
+            return $this->applyHooks(
+                $database
+                    ->setSharedTables(true)
+                    ->setGlobalCollections($globalCollections)
+                    ->setTenant($project->getSequence())
+                    ->setNamespace($projectDsn->getParam('namespace')),
+                relationships: true,
+            );
         }
 
-        return $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
+        return $this->applyHooks(
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence()),
+            relationships: true,
+        );
     }
 
     protected function newDatabase(Adapter $adapter, ?Database $destination = null): Database
@@ -172,7 +188,7 @@ class Factory
 
     protected function adapter(string $name): DatabasePool
     {
-        return new DatabasePool($this->pools->get($name));
+        return (new DatabasePool($this->pools->get($name)))->setHostname($name);
     }
 
     protected function configureDocumentTypes(Database $database): Database
@@ -201,6 +217,21 @@ class Factory
             ->setSharedTables(false)
             ->setTenant(null)
             ->setNamespace('_' . $project->getSequence());
+    }
+
+    private function applyHooks(Database $database, bool $relationships = false): Database
+    {
+        $database->addHook(new Permissions());
+
+        if ($relationships) {
+            $database->addHook(new Relationships($database));
+        }
+
+        if ($database->getSharedTables() && $database->getTenant() !== null) {
+            $database->addHook(new Tenancy($database->getTenant()));
+        }
+
+        return $database;
     }
 
     private function configureOptions(Database $database, int $timeout, int $maxQueryValues, array $metadata): void

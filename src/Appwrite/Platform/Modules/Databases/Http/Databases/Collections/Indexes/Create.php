@@ -12,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -23,6 +24,8 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
@@ -74,9 +77,9 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
             ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
-            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
+            ->param('type', null, new WhiteList([IndexType::Key->value, IndexType::Fulltext->value, IndexType::Unique->value, IndexType::Spatial->value]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
             ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'])
-            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
+            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
@@ -107,7 +110,7 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $dbForDatabases = $getDatabasesDB($db);
+        $dbForDatabases = $getDatabasesDB($db, $collection);
 
         $limit = $dbForDatabases->getLimitForIndexes();
 
@@ -122,7 +125,7 @@ class Create extends Action
 
         $oldAttributes[] = [
             'key' => '$id',
-            'type' => Database::VAR_STRING,
+            'type' => ColumnType::String->value,
             'status' => 'available',
             'required' => true,
             'array' => false,
@@ -131,7 +134,7 @@ class Create extends Action
         ];
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => Database::VAR_DATETIME,
+            'type' => ColumnType::Datetime->value,
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -141,7 +144,7 @@ class Create extends Action
         ];
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => Database::VAR_DATETIME,
+            'type' => ColumnType::Datetime->value,
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -151,7 +154,7 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+        if ($this->supportsDefinedAttributes($dbForDatabases->getAdapter())) {
             foreach ($attributes as $i => $attribute) {
                 // find attribute metadata in collection document
                 $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -164,7 +167,7 @@ class Create extends Action
                 $attributeType = $oldAttributes[$attributeIndex]['type'];
                 $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
-                if ($attributeType === Database::VAR_RELATIONSHIP) {
+                if ($attributeType === ColumnType::Relationship->value) {
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
@@ -202,21 +205,21 @@ class Create extends Action
             $collection->getAttribute('indexes'),
             $dbForDatabases->getAdapter()->getMaxIndexLength(),
             $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForDatabases->getAdapter()->getSupportForVectors(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObjectIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForTrigramIndex(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForIndex(),
-            $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
-            $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
-            $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject()
+            $dbForDatabases->getAdapter()->supports(Capability::IndexArray),
+            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
+            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
+            $dbForDatabases->getAdapter()->supports(Capability::Vectors),
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
+            $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
+            $dbForDatabases->getAdapter()->supports(Capability::Index),
+            $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
+            $dbForDatabases->getAdapter()->supports(Capability::Fulltext),
+            $dbForDatabases->getAdapter()->supports(Capability::TTLIndexes),
+            $dbForDatabases->getAdapter()->supports(Capability::Objects)
         );
 
         if (!$validator->isValid($index)) {

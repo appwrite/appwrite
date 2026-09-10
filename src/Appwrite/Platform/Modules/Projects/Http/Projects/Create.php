@@ -13,6 +13,7 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -215,11 +216,15 @@ class Create extends Action
                         continue;
                     }
 
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                    $attributes = $collection['attributes'];
+                    $indexes = $collection['indexes'];
 
                     try {
-                        $dbForProject->createCollection($key, $attributes, $indexes);
+                        $dbForProject->createCollection(new Collection(
+                            id: $key,
+                            attributes: $attributes,
+                            indexes: $indexes,
+                        ));
                     } catch (Duplicate) {
                         // Collection already exists
                     }

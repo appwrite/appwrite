@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Query;
 
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Base;
+use Utopia\Query\Method;
 use Utopia\Validator\Text;
 
 class BranchCursor extends Base
@@ -16,8 +17,8 @@ class BranchCursor extends Base
 
         $method = $value->getMethod();
 
-        if (!\in_array($method, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE], true)) {
-            $this->message = 'Invalid query method: ' . $method;
+        if (!\in_array($method, [Method::CursorAfter, Method::CursorBefore], true)) {
+            $this->message = 'Invalid query method: ' . $method->value;
             return false;
         }
 

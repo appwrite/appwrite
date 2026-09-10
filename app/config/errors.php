@@ -1313,10 +1313,20 @@ return [
         'description' => 'Migration with the requested ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::MIGRATION_CLAIM_DISABLED => [
+        'name' => Exception::MIGRATION_CLAIM_DISABLED,
+        'description' => 'Migration attempts are temporarily disabled while the claim protocol is being rolled out.',
+        'code' => 503,
+    ],
     Exception::MIGRATION_IN_PROGRESS => [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+    Exception::MIGRATION_SCHEMA_NOT_READY => [
+        'name' => Exception::MIGRATION_SCHEMA_NOT_READY,
+        'description' => 'Migration ownership schema is not ready. Run the database migration before accepting migration attempts.',
+        'code' => 503,
     ],
     Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
         'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
