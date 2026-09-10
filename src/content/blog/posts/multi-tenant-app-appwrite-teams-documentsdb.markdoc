@@ -1,0 +1,601 @@
+---
+layout: post
+title: "How I built a multi-tenant forms app with Appwrite Teams"
+description: A tutorial on building Formwrite, a multi-tenant forms app, using Appwrite Teams for tenant isolation, DocumentsDB for schemaless form data, and SvelteKit.
+date: 2026-09-10
+cover: /images/blog/multi-tenant-app-appwrite-teams-documentsdb/cover.avif
+timeToRead: 15
+author: aditya-oberai
+category: tutorials
+featured: false
+unlisted: true
+faqs:
+  - question: "How do you implement multi-tenancy with Appwrite Teams?"
+    answer: "Create one [Appwrite Team](/docs/products/auth/teams) per tenant, then grant every tenant resource to `Role.team(teamId)` instead of to individual users. Make all dashboard requests with a client bound to the signed-in user's session, so Appwrite's permission engine refuses any request that touches another tenant's data. Application code never needs to filter by tenant ID."
+  - question: "Should each tenant get its own collection or its own database in Appwrite?"
+    answer: "Formwrite gives each tenant its own collections inside one shared DocumentsDB database. A collection carries its own permissions, so it is a complete isolation boundary, and it costs nothing extra to create. A database per tenant works too but means paying for and managing one database per customer."
+  - question: "Why use DocumentsDB instead of TablesDB for a forms app?"
+    answer: "A form definition is a list of fields whose shape depends on the field type, and each submission is a set of answers keyed by those fields. That structure changes with every form, so it does not fit fixed columns. [DocumentsDB](/docs/products/databases/documentsdb) stores the form and its submissions as JSON documents and still supports permissions, indexes, queries, and cursor pagination."
+  - question: "When should a multi-tenant Appwrite app use an API key instead of the user's session?"
+    answer: "Only for operations Appwrite cannot authorize on the user's behalf: sending one-time codes, creating collections and buckets when a tenant signs up, accepting anonymous form submissions, and adding members by email. Every API key call must be addressed by the tenant's team ID, and the caller's role must be checked in application code first because the key bypasses permissions."
+  - question: "How do team roles map to permissions in Appwrite?"
+    answer: "Team roles are strings you choose when creating a team or membership. `Role.team(teamId)` grants access to every member, and `Role.team(teamId, 'editor')` grants access only to members holding that role. Formwrite uses `owner`, `editor`, and `viewer`, and sets collection permissions so viewers can read while only owners and editors can create, update, or delete forms."
+  - question: "How do you verify a user belongs to a tenant in a server-rendered Appwrite app?"
+    answer: "Call `teams.get` with a client bound to the user's session. Appwrite only returns the team to its members, so a non-member gets an error you can turn into a 404. To read the member's roles, list their memberships with an API key and pick the one matching the team ID."
+---
+
+Every multi-tenant SaaS product has the same scary bug waiting in it. Somewhere in the codebase there is a query that forgot the `WHERE tenant_id = ?` clause, and one customer sees another customer's data. The usual defence is discipline: a tenant column on every table, middleware that injects the filter, code review that catches the misses. It works until it does not.
+
+I wanted to see what happens when the database refuses cross-tenant requests instead of the application remembering to filter them. So I built [Formwrite](https://formwrite.appwrite.network), a multi-tenant forms builder in the style of Typeform or Google Forms, where every workspace is an [Appwrite Team](https://appwrite.io/docs/products/auth/teams), every workspace's data lives in its own [DocumentsDB](https://appwrite.io/docs/products/databases/documentsdb) collections, and no application code ever filters by tenant. The app is live, the [source is on GitHub](https://github.com/adityaoberai/formwrite), and this post walks through how it is put together.
+
+# Multi-tenancy with Appwrite Teams in one paragraph
+
+A tenant is a team. When a user creates a workspace, the app creates an Appwrite Team with that user as its `owner`, then provisions a forms collection, a submissions collection, and a storage bucket whose permissions are granted to `Role.team(teamId)` and nothing else. Every dashboard request runs through an Appwrite client bound to the signed-in user's session, so Appwrite's permission engine decides what that user can read or change. A session from one workspace that touches another workspace's collection gets a 401 from Appwrite, not an empty result from a forgotten filter.
+
+The rest of this post is the detail: how the two Appwrite clients are set up, how provisioning and role checks work, and why a document database was the right fit for the data.
+
+# What Formwrite does
+
+Formwrite is a forms product with the features you would expect from one:
+
+- Workspaces with owners, editors, and viewers, each with their own forms, responses, and uploads
+- A form builder with thirteen question types, sections, multi-step layouts, and per-form theming with a logo
+- Public form pages that respondents fill out without signing in, with file uploads and an embed mode
+- A responses view with triage states, filtering, cursor pagination, and CSV export
+- Passwordless sign-in with email one-time passwords
+
+The whole thing is a [SvelteKit](https://svelte.dev/docs/kit) app rendered on the server. There is no client-side Appwrite SDK at all. Every Appwrite call happens in a `load` function, a form action, or a request handler on the server, which is what makes the two-client model below possible.
+
+> Note: The code in this post focuses on the tenancy and data model. The form builder UI, theming, and validation are in the repository linked at the end.
+
+# Prerequisites
+
+You need an [Appwrite Cloud](https://cloud.appwrite.io) project with three things configured.
+
+**Email OTP.** In the project's **Auth** settings, enable the **Email OTP** sign-in method. Formwrite uses no other auth method.
+
+**A DocumentsDB database.** On the **Databases** page, create a database, choose **DocumentsDB** as the type, and pick a compute specification. Give it the ID `formwrite`. Every tenant's collections will live inside this one database.
+
+**An API key.** Under **Overview**, create an API key with these scopes: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, the `documentsdb` scopes for databases, collections, documents, and indexes, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. The key is used only on the server.
+
+# Project setup
+
+Create a SvelteKit project with TypeScript and install the Node server SDK:
+
+```bash
+npx sv create formwrite
+cd formwrite
+npm i node-appwrite
+```
+
+Add a `.env` file at the root of the project:
+
+```bash
+APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=<YOUR_PROJECT_ID>
+APPWRITE_API_KEY=<YOUR_API_KEY>
+APPWRITE_DATABASE_ID=formwrite
+```
+
+None of these are prefixed with `PUBLIC_`, so SvelteKit refuses to ship them to the browser.
+
+## Two Appwrite clients
+
+The most important file in the project is `src/lib/server/appwrite.ts`. It exports two factories: an admin client that carries the API key, and a session client that carries a user's session secret.
+
+```ts
+import { env } from '$env/dynamic/private';
+import { Account, Client, DocumentsDB, Storage, Teams, Users } from 'node-appwrite';
+
+export const DATABASE_ID = env.APPWRITE_DATABASE_ID || 'formwrite';
+export const SESSION_COOKIE = `a_session_${env.APPWRITE_PROJECT_ID}`;
+
+function baseClient(): Client {
+    return new Client()
+        .setEndpoint(env.APPWRITE_ENDPOINT)
+        .setProject(env.APPWRITE_PROJECT_ID);
+}
+
+export function createAdminClient() {
+    const client = baseClient().setKey(env.APPWRITE_API_KEY);
+    return {
+        account: new Account(client),
+        teams: new Teams(client),
+        users: new Users(client),
+        db: new DocumentsDB(client),
+        storage: new Storage(client)
+    };
+}
+
+export function createSessionClient(session: string) {
+    const client = baseClient().setSession(session);
+    return {
+        account: new Account(client),
+        teams: new Teams(client),
+        db: new DocumentsDB(client),
+        storage: new Storage(client)
+    };
+}
+
+export type AdminServices = ReturnType<typeof createAdminClient>;
+export type SessionServices = ReturnType<typeof createSessionClient>;
+```
+
+The rule for the rest of the codebase is simple. Anything a user does in the dashboard goes through the session client. The admin client is reserved for the handful of operations Appwrite cannot authorize on a user's behalf, and I will call those out as they come up. Appwrite's own [SSR guide](https://appwrite.io/docs/products/auth/server-side-rendering) describes this same split.
+
+## Attaching the session to every request
+
+SvelteKit's `hooks.server.ts` runs before every request. It reads the session cookie, builds a session client, and stores both the user and the client on `event.locals` so `load` functions and actions can use them.
+
+```ts
+import type { Handle } from '@sveltejs/kit';
+import { SESSION_COOKIE, createSessionClient } from '$lib/server/appwrite';
+
+export const handle: Handle = async ({ event, resolve }) => {
+    event.locals.user = null;
+    event.locals.appwrite = null;
+
+    const session = event.cookies.get(SESSION_COOKIE);
+    if (session) {
+        const services = createSessionClient(session);
+        try {
+            event.locals.user = await services.account.get();
+            event.locals.appwrite = services;
+        } catch {
+            event.cookies.delete(SESSION_COOKIE, { path: '/' });
+        }
+    }
+
+    return resolve(event);
+};
+```
+
+A small helper turns "no user" into a redirect, so protected routes stay one line long:
+
+```ts
+export function requireUser(event: RequestEvent) {
+    const { user, appwrite } = event.locals;
+    if (!user || !appwrite) {
+        redirect(303, `/login?next=${encodeURIComponent(event.url.pathname)}`);
+    }
+    return { user, appwrite };
+}
+```
+
+# Signing in with email OTP
+
+Sending a one-time code and exchanging it for a session are the first two admin-client operations. There is no user session yet, so there is nothing else to use.
+
+The login action creates an [email token](https://appwrite.io/docs/products/auth/email-otp). If the address has never been seen, Appwrite creates the account; otherwise the `userId` is ignored. The returned `userId` is stashed in a short-lived cookie so the verify step can find it.
+
+```ts
+export const actions: Actions = {
+    default: async ({ request, cookies }) => {
+        const email = String((await request.formData()).get('email') ?? '').trim().toLowerCase();
+        const { account } = createAdminClient();
+        const token = await account.createEmailToken({ userId: ID.unique(), email, phrase: true });
+        setPendingOtp(cookies, { userId: token.userId, email, phrase: token.phrase, expire: token.expire });
+        redirect(303, '/login/verify');
+    }
+};
+```
+
+The `phrase: true` option makes Appwrite include a security phrase in the email. The app shows the same phrase on the verify page so the user can confirm the email is the one they requested.
+
+The verify action exchanges the code for a session and writes the session secret into the `a_session_<PROJECT_ID>` cookie:
+
+```ts
+export const actions: Actions = {
+    default: async ({ request, cookies }) => {
+        const pending = readPendingOtp(cookies);
+        const code = String((await request.formData()).get('code') ?? '');
+        const { account } = createAdminClient();
+        const session = await account.createSession({ userId: pending.userId, secret: code });
+        cookies.set(SESSION_COOKIE, session.secret, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: true,
+            expires: new Date(session.expire)
+        });
+        clearPendingOtp(cookies);
+        redirect(303, '/app');
+    }
+};
+```
+
+From here on, every request carries a session, and `hooks.server.ts` builds a session client for it.
+
+# Modelling a tenant as a team
+
+This is the core of the post. A workspace in Formwrite is an Appwrite Team plus three resources whose IDs are derived from the team ID:
+
+| Resource | ID | Read | Create, update, delete |
+| --- | --- | --- | --- |
+| Forms collection | `forms_<teamId>` | team members | owners and editors |
+| Submissions collection | `submissions_<teamId>` | team members | server only (delete: owners and editors) |
+| Uploads bucket | `<teamId>` | team members | server only (delete: owners and editors) |
+
+Deriving the IDs from the team ID means there is no lookup table mapping tenants to resources. Given a `teamId`, the app knows exactly where that tenant's data lives:
+
+```ts
+export const formsCollection = (teamId: string) => `forms_${teamId}`;
+export const submissionsCollection = (teamId: string) => `submissions_${teamId}`;
+export const bucketId = (teamId: string) => teamId;
+```
+
+## Provisioning a workspace
+
+Creating a workspace is a two-step operation, and the split between clients matters.
+
+The team is created with the **session** client, because the user who creates a team through their own session becomes its `owner` automatically. The collections and bucket are then created with the **admin** client, because creating collections and buckets is a server operation. If any step fails, everything is rolled back so a half-provisioned tenant never exists.
+
+```ts
+import { DocumentsDBIndexType, ID, Permission, Role } from 'node-appwrite';
+
+export async function provisionWorkspace(
+    session: SessionServices,
+    admin: AdminServices,
+    name: string
+) {
+    const team = await session.teams.create({ teamId: ID.unique(), name, roles: ['owner'] });
+    const teamId = team.$id;
+
+    const members = Role.team(teamId);
+    const owners = Role.team(teamId, 'owner');
+    const editors = Role.team(teamId, 'editor');
+
+    try {
+        await admin.db.createCollection({
+            databaseId: DATABASE_ID,
+            collectionId: formsCollection(teamId),
+            name: `Forms - ${name}`,
+            documentSecurity: false,
+            permissions: [
+                Permission.read(members),
+                Permission.create(owners),
+                Permission.update(owners),
+                Permission.delete(owners),
+                Permission.create(editors),
+                Permission.update(editors),
+                Permission.delete(editors)
+            ]
+        });
+
+        await admin.db.createCollection({
+            databaseId: DATABASE_ID,
+            collectionId: submissionsCollection(teamId),
+            name: `Submissions - ${name}`,
+            documentSecurity: false,
+            // Submissions are written only by the server on behalf of anonymous respondents.
+            permissions: [Permission.read(members), Permission.delete(owners), Permission.delete(editors)]
+        });
+
+        await admin.db.createIndex({
+            databaseId: DATABASE_ID,
+            collectionId: submissionsCollection(teamId),
+            key: 'idx_form',
+            type: DocumentsDBIndexType.Key,
+            attributes: ['formId']
+        });
+
+        await admin.storage.createBucket({
+            bucketId: bucketId(teamId),
+            name: `Uploads - ${name}`,
+            fileSecurity: false,
+            permissions: [Permission.read(members), Permission.delete(owners), Permission.delete(editors)],
+            maximumFileSize: 10 * 1024 * 1024,
+            encryption: true,
+            antivirus: true
+        });
+    } catch (err) {
+        await destroyWorkspace(admin, teamId).catch(() => undefined);
+        throw err;
+    }
+
+    return team;
+}
+```
+
+Three details in the permissions are worth pausing on.
+
+`Role.team(teamId)` with no role grants access to every member, whatever their role. `Role.team(teamId, 'editor')` grants access only to members who hold that role. Viewers are simply members with no extra grants, so they can read and nothing else. Appwrite's [permissions reference](https://appwrite.io/docs/advanced/security/permissions) covers the full set of roles.
+
+`documentSecurity: false` means permissions are set once, at the collection level, and apply to every document. There is no per-document permission list to get wrong when a form is created. Since the collection itself belongs to a single tenant, collection-level permissions are exactly the right granularity.
+
+The submissions collection grants no `create` or `update` to anyone. Respondents are anonymous, so the server writes their submissions with the API key. Members can read and delete, and that is all.
+
+## Why a collection per tenant instead of a tenant field
+
+The alternative design is one `forms` collection for all tenants, each document tagged with a `teamId`, and document-level permissions granting `Role.team(teamId)` on each one. Appwrite's [multi-tenancy guide](https://appwrite.io/docs/products/auth/multi-tenancy) shows that pattern and it works well.
+
+I chose a collection per tenant for two reasons. First, the isolation boundary is a resource Appwrite manages rather than a field the app has to set correctly on every write. A bug in the app cannot put a form in the wrong tenant because the collection ID comes from the URL and the permissions came from provisioning. Second, deleting a tenant is a `deleteCollection` call rather than a paginated sweep of documents.
+
+Why not a database per tenant? A [DocumentsDB database](https://appwrite.io/docs/products/databases/documentsdb/databases) runs on its own compute specification, so a database per workspace would mean paying for and managing one database per customer. A collection has its own permissions but no cost of its own, so all tenants share one database and each gets its own collections.
+
+## Resolving the current workspace
+
+Every route under `/app/[team]` needs to know two things: is this user a member of this team, and what is their role. The membership check uses the session client, because `teams.get` only succeeds for members. The role lookup uses the admin client, because membership listings made through a user session can hide user IDs depending on the project's membership privacy settings.
+
+```ts
+export async function loadWorkspace(
+    session: SessionServices,
+    admin: AdminServices,
+    userId: string,
+    teamId: string
+) {
+    const team = await session.teams.get({ teamId });
+    const memberships = await admin.users.listMemberships({
+        userId,
+        queries: [Query.equal('teamId', teamId), Query.limit(1)]
+    });
+    const membership = memberships.memberships.find((m) => m.teamId === teamId);
+    if (!membership || !membership.confirm) throw new Error('Not a member of this workspace');
+    return { team, membership, role: roleOf(membership) };
+}
+
+export function roleOf(membership: Models.Membership): WorkspaceRole {
+    if (membership.roles.includes('owner')) return 'owner';
+    if (membership.roles.includes('editor')) return 'editor';
+    return 'viewer';
+}
+```
+
+The layout for `/app/[team]` calls this once and turns any failure into a 404, so a non-member cannot even confirm the workspace exists:
+
+```ts
+export const load: LayoutServerLoad = async (event) => {
+    const { user, appwrite } = requireUser(event);
+    try {
+        const { team, role } = await loadWorkspace(appwrite, createAdminClient(), user.$id, event.params.team);
+        return {
+            workspace: { id: team.$id, name: team.name },
+            role,
+            canEdit: role === 'owner' || role === 'editor',
+            canManage: role === 'owner'
+        };
+    } catch {
+        error(404, 'Workspace not found');
+    }
+};
+```
+
+The `canEdit` and `canManage` flags only decide what buttons to render. They are not the security boundary. If a viewer forges a request to create a form, the session client sends it to Appwrite, and Appwrite refuses it because the viewer has no `create` permission on the collection.
+
+# Where DocumentsDB fits
+
+Now the second question: why a document database?
+
+Look at what a form actually is. It has a title, a status, a theme, and a list of fields. Each field has a type, and the type decides what else it carries. A dropdown has `options`. A rating has `max`. A section has neither and never collects an answer. Thirteen field types, each with a different shape, all in one ordered list.
+
+```ts
+export interface FormField {
+    id: string;
+    type: FieldType;
+    label: string;
+    required: boolean;
+    placeholder?: string;
+    helpText?: string;
+    options?: string[];
+    max?: number;
+}
+
+export interface FormData {
+    title: string;
+    description: string;
+    status: 'draft' | 'published';
+    fields: FormField[];
+    successMessage: string;
+    createdBy: string;
+    theme?: FormTheme;
+}
+```
+
+A submission is even less regular. It is a map from field IDs to answers, and an answer is a string, an array of strings, an uploaded file reference, or null, depending on the field.
+
+```ts
+export interface SubmissionData {
+    formId: string;
+    answers: Record<string, string | string[] | UploadedFile | null>;
+    userAgent: string;
+    status?: 'new' | 'read' | 'flagged';
+    embed?: boolean;
+}
+```
+
+In a relational schema this becomes a `forms` table, a `fields` table with a nullable column for every type-specific property, a `submissions` table, and an `answers` table with one row per field per submission and a polymorphic value column. Reading one form with its responses is four joins. Adding a field type is a migration.
+
+In DocumentsDB the form is one document and the submission is one document. The `fields` array and the `answers` map are stored as the JSON the app already works with. When I added the `theme` object and later the `status` triage field to submissions, existing documents simply did not have them, and the code treats a missing value as the default. There was nothing to migrate.
+
+## Creating and updating forms
+
+With the session client, creating a form is one call. The collection ID comes from the route parameter, and Appwrite checks that the caller holds `create` on that collection, which only owners and editors do.
+
+```ts
+create: async (event) => {
+    const { user, appwrite } = requireUser(event);
+    const teamId = event.params.team;
+
+    const created = await appwrite.db.createDocument<FormDocument>({
+        databaseId: DATABASE_ID,
+        collectionId: formsCollection(teamId),
+        documentId: ID.unique(),
+        data: {
+            title: 'Untitled form',
+            description: '',
+            status: 'draft',
+            fields: [
+                { id: 'q_name', type: 'text', label: 'Your name', required: true },
+                { id: 'q_email', type: 'email', label: 'Email address', required: true }
+            ],
+            successMessage: 'Thanks! Your response has been recorded.',
+            createdBy: user.$id
+        }
+    });
+    redirect(303, `/app/${teamId}/forms/${created.$id}`);
+}
+```
+
+Saving the builder replaces the whole `fields` array in one `updateDocument` call. The server parses and sanitizes the posted JSON first, capping the number of fields, the label lengths, and the option counts, because schemaless storage does not mean unvalidated storage.
+
+```ts
+await appwrite.db.updateDocument<FormDocument>({
+    databaseId: DATABASE_ID,
+    collectionId: formsCollection(teamId),
+    documentId: formId,
+    data: { title, description, fields: parseFields(raw) }
+});
+```
+
+## Querying responses
+
+Listing a form's responses is a filtered, ordered, paginated query against the tenant's submissions collection. The `formId` index created during provisioning is what makes the `Query.equal` fast.
+
+```ts
+const queries = [
+    Query.equal('formId', formId),
+    Query.orderDesc('$createdAt'),
+    Query.limit(50)
+];
+if (status) queries.push(Query.equal('status', status));
+if (after) queries.push(Query.cursorAfter(after));
+
+const page = await appwrite.db.listDocuments<SubmissionDocument>({
+    databaseId: DATABASE_ID,
+    collectionId: submissionsCollection(teamId),
+    queries
+});
+```
+
+[Cursor pagination](https://appwrite.io/docs/products/databases/documentsdb/pagination) with `Query.cursorAfter` is stable even as new submissions arrive at the top, which matters for a responses view that refreshes itself. The dashboard also uses `Query.select(['$id'])` with `Query.limit(1)` when it only needs a count, so it does not pull full documents to read the `total` field.
+
+# Accepting anonymous submissions
+
+Public form pages live at `/f/[team]/[formId]`. Respondents have no session, so this is the third place the admin client appears, and it is the one that needs the most care. The API key bypasses permissions, so the app has to be the one guaranteeing that a request for one tenant cannot touch another.
+
+The guarantee comes from addressing. The form is always loaded from `formsCollection(teamId)` using both IDs from the URL. A form ID on its own never resolves to anything, so guessing a form ID from another workspace returns a 404 from the wrong collection.
+
+```ts
+async function loadPublishedForm(teamId: string, formId: string) {
+    const admin = createAdminClient();
+    const form = await admin.db.getDocument<FormDocument>({
+        databaseId: DATABASE_ID,
+        collectionId: formsCollection(teamId),
+        documentId: formId
+    });
+    if (form.status !== 'published') error(404, 'This form is not accepting responses');
+    return { admin, form };
+}
+```
+
+The submission action validates the posted answers against that form's field definitions, uploads any files into the tenant's bucket, and writes one submission document into the tenant's submissions collection. If the document write fails, the uploaded files are deleted so nothing is orphaned.
+
+```ts
+const submission: SubmissionData = {
+    formId: form.$id,
+    answers: stored,
+    userAgent: (request.headers.get('user-agent') ?? '').slice(0, 300),
+    status: 'new'
+};
+await admin.db.createDocument<SubmissionDocument>({
+    databaseId: DATABASE_ID,
+    collectionId: submissionsCollection(params.team),
+    documentId: ID.unique(),
+    data: submission
+});
+```
+
+The submissions collection grants `read` to team members, so once the document exists, the workspace's owners, editors, and viewers can see it through their own sessions with no further work.
+
+# Roles in practice
+
+Formwrite has three roles, and the enforcement for each is split between Appwrite and the app.
+
+**Appwrite enforces the data permissions.** Viewers can read forms and responses. Editors and owners can create, update, and delete forms, and delete responses. Every one of these is a collection or bucket permission checked by Appwrite on the session client. The app does not check the role before these calls.
+
+**Appwrite enforces team management.** Only owners can rename a team, change a member's roles, or remove a member. These run on the session client and Appwrite rejects them for non-owners.
+
+```ts
+// Only succeeds for owners; Appwrite enforces it.
+await appwrite.teams.updateMembership({ teamId, membershipId, roles: [role] });
+await appwrite.teams.deleteMembership({ teamId, membershipId });
+```
+
+**The app enforces role checks before admin-client calls.** Two owner-only operations need the API key: adding a member by email, and destroying a workspace. Marking a response as read or flagged also needs the key, because members hold no `update` permission on submissions. Before each of these, the action calls `loadWorkspace` and checks the role itself.
+
+```ts
+status: async (event) => {
+    const { user, appwrite } = requireUser(event);
+    const { team: teamId, formId } = event.params;
+    const admin = createAdminClient();
+
+    const workspace = await loadWorkspace(appwrite, admin, user.$id, teamId);
+    if (workspace.role === 'viewer') return fail(403, { message: 'Your role cannot update responses' });
+
+    const sub = await admin.db.getDocument<SubmissionDocument>({
+        databaseId: DATABASE_ID,
+        collectionId: submissionsCollection(teamId),
+        documentId: submissionId
+    });
+    if (sub.formId !== formId) return fail(404, { message: 'Response not found' });
+
+    await admin.db.updateDocument({
+        databaseId: DATABASE_ID,
+        collectionId: submissionsCollection(teamId),
+        documentId: submissionId,
+        data: { status }
+    });
+    return { updated: submissionId };
+}
+```
+
+This is the pattern for any admin-client call in a multi-tenant app: prove membership with the session, check the role in code, then address the resource by the tenant's team ID.
+
+## Adding members
+
+Owners add members by email from the workspace settings page. Formwrite uses the server-side flow from the [team invites](https://appwrite.io/docs/products/auth/team-invites) docs, where creating a membership with the API key joins the member immediately with no invitation email to accept. The new member signs in with the same email OTP flow and the workspace is already in their list.
+
+```ts
+await createAdminClient().teams.createMembership({
+    teamId: event.params.team,
+    email,
+    roles: [role] // 'editor' or 'viewer'
+});
+```
+
+If you would rather have an accept step, use the client-side invite flow through the session client instead, and Appwrite will send the invitation email for you.
+
+# Verifying isolation
+
+A tenancy model is only as good as its tests. The repository includes an end-to-end script that mints two users with the API key, drives every route as a browser would, and then checks the boundaries:
+
+- A non-member requesting `/app/<teamId>` gets a 404
+- A non-member requesting a tenant's responses or files gets a 404
+- After being added as a viewer, that user sees the forms but no create button
+- A viewer posting to the create action gets a 400, because Appwrite refused the write
+- A viewer posting to the triage action gets a 403, because the app's role check refused it
+- A viewer trying to add a member gets a 403
+
+The first two checks are the ones that matter most, and neither depends on any filtering code in the app. The session client sends the request, and Appwrite says no.
+
+# Trade-offs in this design
+
+Nothing here is free, so here is what I would flag before copying the model.
+
+Provisioning is a multi-step operation, and each step can fail independently. The rollback in `provisionWorkspace` and the tolerant `destroyWorkspace` exist because of this. If you add a fourth resource per tenant, add it to both.
+
+Every admin-client code path is a place where isolation depends on the developer. There are exactly six such paths in Formwrite, and each takes `teamId` from the URL and uses it to build the collection or bucket ID. Keep that list short and keep it in one file.
+
+Collection-per-tenant makes cross-tenant analytics harder. If you ever need "total submissions across all workspaces", you iterate collections rather than run one query. For a forms product that is fine. For a product whose value is cross-tenant aggregation, tag documents with a tenant field in a shared collection instead.
+
+# Building your own multi-tenant app on Appwrite
+
+The pieces that made Formwrite work are all general. One team per tenant, resources granted to `Role.team`, a session client for every user action, and an admin client used only where Appwrite cannot act on the user's behalf, with the tenant ID always taken from the request and checked against membership first. DocumentsDB fits wherever the data's shape is decided by the user rather than by you, which describes forms, surveys, CMS content, and most user-generated structures.
+
+Try the live app at [formwrite.appwrite.network](https://formwrite.appwrite.network) and read the full source, including the builder, theming, and the end-to-end isolation test, in the [Formwrite repository](https://github.com/adityaoberai/formwrite). To build your own, start with these docs:
+
+- [Multi-tenancy with Teams](https://appwrite.io/docs/products/auth/multi-tenancy)
+- [Teams and roles](https://appwrite.io/docs/products/auth/teams)
+- [DocumentsDB collections and permissions](https://appwrite.io/docs/products/databases/documentsdb/collections)
+- [Server-side rendering with Appwrite Auth](https://appwrite.io/docs/products/auth/server-side-rendering)
+- [Create an Appwrite Cloud project](https://cloud.appwrite.io)
