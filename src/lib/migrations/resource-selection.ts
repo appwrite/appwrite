@@ -18,11 +18,10 @@ import {
  * request, and on being named before it; each is noted where it is emitted.
  */
 
-export type MigrationResource =
+type MigrationResource =
   | AppwriteMigrationResource
   | SupabaseMigrationResource
   | FirebaseMigrationResource
-  | NHostMigrationResource
 
 /** Provider families, which differ in the resources they can carry. */
 export type MigrationProviderKind = 'appwrite' | 'firebase' | 'supabase'
