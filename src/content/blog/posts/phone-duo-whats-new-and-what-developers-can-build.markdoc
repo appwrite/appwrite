@@ -117,7 +117,7 @@ Appwrite ships an [Apple SDK for Swift](/docs/sdks), so this is the same client 
 
 To be fair about the tradeoff: none of this is unique to Appwrite. You can build the same continuity with CloudKit, Firebase, or your own API. The argument for a single backend platform is that session, data, files, and background jobs stay in one project instead of four, which matters more when you are shipping against a six-week launch window.
 
-## New app experiences you can build for iPhone Duo
+# New app experiences you can build for iPhone Duo
 
 The interesting part is not fixing layouts. It is the experiences that need two displays or a hinge to exist at all.
 
