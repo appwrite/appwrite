@@ -60,6 +60,8 @@ export function View({
         align="left"
       />
 
+      <BlogSearchSection />
+
       {showFeatured ? (
         <BlogFeaturedSection post={featured} authors={authors} />
       ) : null}
@@ -71,8 +73,6 @@ export function View({
       {showSpotlights && features.blogDrafts ? (
         <BlogDraftsSection posts={drafts} authors={authors} />
       ) : null}
-
-      <BlogSearchSection />
 
       {showSpotlights && categorySpotlights.length > 0 ? (
         <BlogCategorySpotlightsSection spotlights={categorySpotlights} />
