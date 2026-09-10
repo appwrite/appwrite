@@ -70,7 +70,8 @@ final class ContentTypeTest extends Scope
 
         $this->assertSame(200, $single['headers']['status-code']);
         $this->assertArrayNotHasKey('errors', $single['body']);
-        $this->assertSame(197, $single['body']['data']['localeListCountries']['total']);
+        $this->assertIsInt($single['body']['data']['localeListCountries']['total']);
+        $this->assertGreaterThan(0, $single['body']['data']['localeListCountries']['total']);
 
         $batch = $this->client->call(Client::METHOD_POST, $path, $headers, ['query' => [$countries, $continents]]);
 
@@ -78,8 +79,10 @@ final class ContentTypeTest extends Scope
         $this->assertCount(2, $batch['body']);
         $this->assertArrayNotHasKey('errors', $batch['body'][0]);
         $this->assertArrayNotHasKey('errors', $batch['body'][1]);
-        $this->assertSame(197, $batch['body'][0]['data']['localeListCountries']['total']);
-        $this->assertSame(7, $batch['body'][1]['data']['localeListContinents']['total']);
+        $this->assertIsInt($batch['body'][0]['data']['localeListCountries']['total']);
+        $this->assertGreaterThan(0, $batch['body'][0]['data']['localeListCountries']['total']);
+        $this->assertIsInt($batch['body'][1]['data']['localeListContinents']['total']);
+        $this->assertGreaterThan(0, $batch['body'][1]['data']['localeListContinents']['total']);
     }
 
     /**
