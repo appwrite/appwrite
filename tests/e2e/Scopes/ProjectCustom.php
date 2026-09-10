@@ -225,6 +225,8 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
+                'documentsdb.*',
+                'vectorsdb.*',
                 'functions.*',
                 'buckets.*',
                 'teams.*',
