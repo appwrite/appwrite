@@ -194,9 +194,9 @@ export const ANALYTICS_ACTIONS = {
   'docs-nav-partners': 'Docs Partners Nav Clicked',
 
   // Project settings
-  'smtp-quick-setup-resend': 'SMTP Quick Setup Resend Clicked',
-  'smtp-quick-setup-mailgun': 'SMTP Quick Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP Quick Setup SendGrid Clicked',
+  'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
+  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',

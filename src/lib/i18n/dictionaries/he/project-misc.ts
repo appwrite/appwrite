@@ -2704,12 +2704,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
   'Failed to set up SMTP with the email provider':
     'הגדרת ה-SMTP מול ספק האימייל נכשלה',
-  'Register interest': 'רישום התעניינות',
-  'Interest registered': 'ההתעניינות נרשמה',
+  'One-click setup': 'הגדרה בקליק אחד',
+  'Notify me': 'עדכנו אותי',
+  Notifying: 'נודיע לכם',
+  "You'll no longer be notified about this provider.":
+    'לא נודיע לכם יותר על הספק הזה.',
+  'Failed to update notification preferences': 'עדכון העדפות ההתראות נכשל',
   "You'll be notified when this provider is available.":
     'נודיע לכם כשהספק הזה יהיה זמין.',
-  'Interest removed.': 'ההתעניינות הוסרה.',
-  'Failed to update your interest': 'עדכון ההתעניינות נכשל',
   'Sending domain': 'דומיין שליחה',
   Sender: 'שולח',
   'Disconnect Resend': 'ניתוק Resend',

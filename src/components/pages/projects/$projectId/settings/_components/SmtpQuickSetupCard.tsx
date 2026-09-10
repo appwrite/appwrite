@@ -87,7 +87,7 @@ export function SmtpQuickSetupCard({
     Models.User<Models.Preferences> | null | undefined
   const accountId = consoleAccount?.$id ?? null
 
-  // "Register interest" on coming-soon providers reuses the account's
+  // "Notify me" on coming-soon providers reuses the account's
   // featureNotifications pref, the same list the coming-soon curtains use.
   const toggleInterest = useToggleFeatureNotification()
   const interestIds = useMemo(
@@ -261,11 +261,13 @@ export function SmtpQuickSetupCard({
       await toggleInterest.mutateAsync(featureId)
       toast.success(
         wasInterested
-          ? t('Interest removed.')
+          ? t("You'll no longer be notified about this provider.")
           : t("You'll be notified when this provider is available."),
       )
     } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to update your interest')))
+      toast.error(
+        getErrorMessage(error, t('Failed to update notification preferences')),
+      )
     }
   }
 
@@ -278,7 +280,7 @@ export function SmtpQuickSetupCard({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Quick setup')}
+            {t('One-click setup')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             {t(
@@ -401,15 +403,15 @@ function ProviderTile({
       {interested ? (
         <>
           <Check className="h-3.5 w-3.5" />
-          {t('Interest registered')}
+          {t('Notifying')}
         </>
       ) : (
-        t('Register interest')
+        t('Notify me')
       )}
     </Button>
   ) : (
     <ActionButton
-      label={connected ? t('Quick setup') : t(provider.connectLabel)}
+      label={connected ? t('One-click setup') : t(provider.connectLabel)}
       onClick={onSelect}
       disabled={disabled}
       planTooltip={planTooltip}
