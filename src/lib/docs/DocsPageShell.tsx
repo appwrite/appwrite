@@ -9,6 +9,7 @@ import {
   useDocsSearchContext,
 } from '@/components/pages/docs/DocsSearchProvider'
 import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
+import { shouldResetDocsScrollOnPathChange } from '@/lib/docs/docs-scroll'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
 import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
@@ -31,11 +32,15 @@ function scrollDocsContentToTop() {
 
 function DocsScrollToTop() {
   const { pathname } = useLocation()
-  const previousPathnameRef = useRef(pathname)
+  const previousNormalizedPathRef = useRef<string | null>(null)
 
   useLayoutEffect(() => {
-    if (previousPathnameRef.current === pathname) return
-    previousPathnameRef.current = pathname
+    const { nextNormalizedPath, shouldScroll } = shouldResetDocsScrollOnPathChange(
+      previousNormalizedPathRef.current,
+      pathname,
+    )
+    previousNormalizedPathRef.current = nextNormalizedPath
+    if (!shouldScroll) return
     // The persistent shell owns cross-page resets, even when an article remounts.
     // Run before article passive effects resolve a valid destination hash.
     scrollDocsContentToTop()
