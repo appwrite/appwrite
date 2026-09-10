@@ -527,8 +527,15 @@ await appwrite.teams.deleteMembership({ teamId, membershipId });
 status: async (event) => {
     const { user, appwrite } = requireUser(event);
     const { team: teamId, formId } = event.params;
-    const admin = createAdminClient();
+    const data = await event.request.formData();
+    const submissionId = String(data.get('id') ?? '');
+    const status = data.get('status');
+    // isSubmissionStatus narrows to 'new' | 'read' | 'flagged'
+    if (!submissionId || !isSubmissionStatus(status)) {
+        return fail(400, { message: 'Invalid request' });
+    }
 
+    const admin = createAdminClient();
     const workspace = await loadWorkspace(appwrite, admin, user.$id, teamId);
     if (workspace.role === 'viewer') return fail(403, { message: 'Your role cannot update responses' });
 
@@ -555,12 +562,29 @@ This is the pattern for any admin-client call in a multi-tenant app: prove membe
 
 Owners add members by email from the workspace settings page. Formwrite uses the server-side flow from the [team invites](https://appwrite.io/docs/products/auth/team-invites) docs, where creating a membership with the API key joins the member immediately with no invitation email to accept. The new member signs in with the same email OTP flow and the workspace is already in their list.
 
+Because the membership is created with the API key, the action has to prove the caller is an owner first. The same `loadWorkspace` check from the triage action does that, and the accepted role is constrained so an owner cannot be minted through this path.
+
 ```ts
-await createAdminClient().teams.createMembership({
-    teamId: event.params.team,
-    email,
-    roles: [role] // 'editor' or 'viewer'
-});
+invite: async (event) => {
+    const { user, appwrite } = requireUser(event);
+    const teamId = event.params.team;
+    const admin = createAdminClient();
+
+    const workspace = await loadWorkspace(appwrite, admin, user.$id, teamId).catch(() => null);
+    if (!workspace || workspace.role !== 'owner') {
+        return fail(403, { invite: 'Only owners can add members' });
+    }
+
+    const data = await event.request.formData();
+    const email = String(data.get('email') ?? '').trim().toLowerCase();
+    const role = data.get('role');
+    if (role !== 'editor' && role !== 'viewer') {
+        return fail(400, { invite: 'Choose a role of editor or viewer', email });
+    }
+
+    await admin.teams.createMembership({ teamId, email, roles: [role] });
+    return { invited: email };
+}
 ```
 
 If you would rather have an accept step, use the client-side invite flow through the session client instead, and Appwrite will send the invitation email for you.
