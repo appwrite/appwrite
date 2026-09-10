@@ -376,11 +376,9 @@ class Create extends Action
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }
 
-                    // A scan that did not happen says nothing about the file.
-                    // Deleting it here would destroy someone's upload because
-                    // the scanner was unavailable, and tell them it was theirs
-                    // that was at fault.
                     if ($scan->hasFailed()) {
+                        // The finalized upload has no completed file record yet.
+                        $deviceForFiles->delete($path);
                         throw new Exception(
                             Exception::GENERAL_SERVER_ERROR,
                             'Unable to scan the uploaded file: ' . $scan->getReply()
