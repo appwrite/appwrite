@@ -98,7 +98,7 @@ Design for iPhone Duo is adaptive design with a stricter deadline. Four rules co
 
 Apple has published six technical talks on the [iPhone Duo developer page](https://developer.apple.com/iphone-duo/), including "Strike a pose with adaptive layouts on iPhone Duo" and "Leverage multiple displays and scenes on iPhone Duo," plus a "Designing for iPhone Duo" section in the Human Interface Guidelines. A "Preparing your app for iPhone Duo" guide and Xcode 27.1 beta land later in September, along with SwiftUI, UIKit, and Camera Q\&A sessions on September 23.
 
-## What iPhone Duo app development means for your backend
+# What iPhone Duo app development means for your backend
 
 Adaptive layout is the visible half of the work. The other half is state, and state lives on a server.
 
