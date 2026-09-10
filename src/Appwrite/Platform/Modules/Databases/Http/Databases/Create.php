@@ -113,7 +113,9 @@ class Create extends Action
 
         $this->createMetadataCollection($dbForProject, $database);
 
-        $queueForEvents->setParam('databaseId', $database->getId());
+        $queueForEvents
+            ->setParam('databaseId', $database->getId())
+            ->setContext('database', $database);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
