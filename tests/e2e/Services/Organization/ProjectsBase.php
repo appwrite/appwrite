@@ -24,21 +24,14 @@ trait ProjectsBase
         }
 
         $teamId = ID::unique();
-        $team = null;
-        for ($i = 0; $i < 3; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'teamId' => $teamId,
-                'name' => 'Organization Test',
-            ]);
-            if (\in_array($team['headers']['status-code'], [201, 409])) {
-                break;
-            }
-            \usleep(500000);
-        }
-        $this->assertContains($team['headers']['status-code'], [201, 409], 'Setup organization (team) failed');
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamId,
+            'name' => 'Organization Test',
+        ]);
+        $this->assertEquals(200, $team['headers']['status-code'], 'Setup organization (team) failed');
 
         self::$cachedOrganization = [
             'teamId' => $team['body']['$id'] ?? $teamId,
@@ -213,14 +206,14 @@ trait ProjectsBase
         /**
          * Test for FAILURE - project from different organization
          */
-        $otherTeam = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $otherTeam = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => ID::unique(),
             'name' => 'Other Organization',
         ]);
-        $this->assertContains($otherTeam['headers']['status-code'], [201, 409]);
+        $this->assertContains($otherTeam['headers']['status-code'], [200]);
         $otherTeamId = $otherTeam['body']['$id'] ?? $otherTeam['body']['teamId'];
 
         $otherProject = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([

@@ -27,21 +27,14 @@ trait ProjectsBase
         }
 
         $teamId = ID::unique();
-        $team = null;
-        for ($i = 0; $i < 3; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'teamId' => $teamId,
-                'name' => 'Project Test',
-            ]);
-            if (\in_array($team['headers']['status-code'], [201, 409])) {
-                break;
-            }
-            \usleep(500000);
-        }
-        $this->assertContains($team['headers']['status-code'], [201, 409]);
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamId,
+            'name' => 'Project Test',
+        ]);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $team['headers']['status-code']);
 
         $project = null;
         for ($i = 0; $i < 3; $i++) {
@@ -352,7 +345,7 @@ trait ProjectsBase
             return self::$cachedProjectWithServicesDisabled;
         }
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -360,7 +353,7 @@ trait ProjectsBase
             'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $team['headers']['status-code']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -425,22 +418,15 @@ trait ProjectsBase
     {
         if ($newTeam) {
             $generatedTeamId = $teamId ?? ID::unique();
-            $team = null;
-            for ($i = 0; $i < 3; $i++) {
-                $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                ], $this->getHeaders()), [
-                    'teamId' => $generatedTeamId,
-                    'name' => 'Project Test',
-                ]);
-                if (\in_array($team['headers']['status-code'], [201, 409])) {
-                    break;
-                }
-                \usleep(500000);
-            }
+            $team = $this->createTeamFixture(array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'teamId' => $generatedTeamId,
+                'name' => 'Project Test',
+            ]);
 
-            $this->assertContains($team['headers']['status-code'], [201, 409], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
+            $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $team['headers']['status-code'], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
 
             $teamId = $team['body']['$id'] ?? $generatedTeamId;
         }

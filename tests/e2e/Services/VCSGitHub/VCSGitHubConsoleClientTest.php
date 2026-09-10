@@ -801,11 +801,11 @@ final class VCSGitHubConsoleClientTest extends Scope
             'x-appwrite-project' => 'console',
         ];
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+        $team = $this->createTeamFixture($consoleHeaders, [
             'teamId' => ID::unique(),
             'name' => 'Cross Project Team',
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
             'projectId' => ID::unique(),
