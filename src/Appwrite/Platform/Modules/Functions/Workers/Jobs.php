@@ -127,8 +127,11 @@ class Jobs extends Action
                 $cache->save($key, true);
             }
 
+            // A build finalizes once. A failed artifact fails it with the
+            // artifact's own message, and the exit that follows must not
+            // overwrite that with a bare exit code.
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+            if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
                 return;
             }
 
@@ -137,7 +140,7 @@ class Jobs extends Action
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
@@ -305,6 +308,16 @@ class Jobs extends Action
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
 
+        // Any other artifact failing dooms the build — the orchestrator aborts
+        // the job on a pre-job failure, and a lost output has nothing to serve
+        // — so fail it now with the artifact's own message (which file, which
+        // status) rather than waiting for the bare exit code. The build cache
+        // upload is the one best-effort artifact: losing it costs the next
+        // build time, not this one.
+        if (($data['status'] ?? '') === 'failed' && ($data['artifactId'] ?? '') !== 'cache') {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, self::failureMessage($data, 'Build failed.'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
             return $deployment;
         }
@@ -333,7 +346,7 @@ class Jobs extends Action
         Database $dbForPlatform,
         Document $project,
         Document $deployment,
-        int $exitCode,
+        array $data,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
@@ -344,13 +357,29 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
+        $exitCode = (int) ($data['exitCode'] ?? 0);
         if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            // The build command's own exit stays an exit code; anything else
+            // (out of memory, failed before it could start) is explained.
+            $message = ($data['error']['code'] ?? '') === 'job_exit_nonzero' ? '' : self::failureMessage($data, '');
+
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message !== '' ? $message : "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+    }
+
+    /**
+     * The message of a callback's `error`, or the fallback. Tolerates the bare
+     * string an orchestrator older than 2.2 sends in its place.
+     */
+    protected static function failureMessage(array $data, string $fallback): string
+    {
+        $message = $data['error']['message'] ?? '';
+
+        return \is_string($message) && $message !== '' ? $message : $fallback;
     }
 
     /**
