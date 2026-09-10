@@ -128,7 +128,7 @@ The interesting part is not fixing layouts. It is the experiences that need two 
 * **Progressive disclosure by posture.** Show a summary folded, the full dashboard unfolded. Same data, two levels of density, no separate iPad app.
 * **On-device AI features.** The dual 16-core Neural Engine doubles AI compute versus A19 Pro. Local inference on the device paired with server-side orchestration in Functions is a reasonable split.
 
-## An iPhone Duo readiness checklist
+# An iPhone Duo readiness checklist
 
 Work through this in order:
 
