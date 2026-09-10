@@ -135,6 +135,12 @@ class Create extends Action
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
             'startCommand' => $function->getAttribute('startCommand', ''),
+            // Same treatment as entrypoint/commands above: a redeploy rebuilds
+            // with the function's current configuration. Deployments created
+            // before this attribute was persisted carry NULL, which the VCS
+            // clone path turns into a '*' wildcard - the build then runs at
+            // the repository root and monorepo functions fail.
+            'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
             'buildStartedAt' => null,
             'buildEndedAt' => null,
             'buildDuration' => null,

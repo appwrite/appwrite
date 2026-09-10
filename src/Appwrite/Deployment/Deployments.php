@@ -182,6 +182,13 @@ readonly class Deployments
 
     private function submit(Document $resource, Document $deployment, ?array $source): Document
     {
+        // Snapshot the source root onto the deployment: the Duplicate
+        // endpoint and the APPWRITE_VCS_ROOT_DIRECTORY runtime variable read
+        // it back from here, and nothing else writes it for VCS sources.
+        if (is_array($source) && array_key_exists('subdir', $source)) {
+            $deployment->setAttribute('providerRootDirectory', $source['subdir'] ?? '');
+        }
+
         // The caller may have been holding this deployment for a while (the
         // Builds worker pushes a template commit first), so its status is stale
         // by now — dropping it keeps upload() from writing a cancel away, and
