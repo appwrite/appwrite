@@ -21,6 +21,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\WebSocket\Adapter\Swoole as SwooleAdapter;
 use Swoole\Coroutine;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -54,7 +55,6 @@ use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 require_once __DIR__ . '/init.php';
@@ -400,7 +400,7 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
-$adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
+$adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
     ->setWorkerNumber($workerNumber);
@@ -859,6 +859,32 @@ $server->onWorkerStop(function (int $workerId) use ($register) {
         $register->get('telemetry.workerCounter')->add(-1);
     } catch (\Throwable $th) {
         Console::error('Realtime onWorkerStop telemetry error: ' . $th->getMessage());
+    }
+});
+
+// Swoole re-runs this until the worker's loop is empty, so the sweep happens
+// once and the later calls just let the closes it started drain.
+$exitSwept = false;
+
+$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitSwept) {
+    if ($exitSwept) {
+        return;
+    }
+
+    $exitSwept = true;
+
+    // Connections still open here outlive this worker, and no later worker knows
+    // them, so their closes never reach onClose and the concurrency level only
+    // ratchets up. Close them while the loop still runs; clients reconnect.
+    $connections = \array_keys($realtime->connections);
+    Console::warning('Worker ' . $workerId . ' exiting, closing ' . \count($connections) . ' open connections');
+
+    foreach ($connections as $connection) {
+        try {
+            $server->close($connection, SWOOLE_WEBSOCKET_CLOSE_GOING_AWAY);
+        } catch (\Throwable $th) {
+            Console::error('Realtime onWorkerExit close error: ' . $th->getMessage());
+        }
     }
 });
 
