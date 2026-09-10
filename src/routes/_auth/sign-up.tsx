@@ -51,6 +51,8 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
+  // Keep the visible header stable while this link is hovered or focused.
+  preload: false,
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
