@@ -134,7 +134,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Choose existing card': '既存のカードを選択',
   'Choose members to keep': '保持するメンバーを選択',
   'Choose projects to keep': '保持するプロジェクトを選択',
-  'Choose which organization to keep': '保持する組織を選択',
   'Clear search': '検索をクリア',
   'Click to upload or drag and drop': 'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client type': 'クライアントタイプ',
@@ -393,7 +392,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name is required': '名前は必須です',
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?': '24時間365日またはエンタープライズサポートが必要ですか?',
-  'New organization': '新しい組織',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -761,7 +759,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Can modify most resources but not critical backend.': 'ほとんどのリソースを変更できますが、重要なバックエンドは変更できません。',
   'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.': '未払いの請求書が支払われるまで、プロジェクトとサービスへの変更は制限されます。支払いを完了すると、フルアクセスが復元されます。',
   'Choose a PNG from the app assets bucket or upload a new one.': 'app assets バケットから PNG を選択するか、新しいファイルをアップロードしてください。',
-  'Choose a paid plan for the new organization instead.': '代わりに新しい組織用の有料プランを選択してください。',
   'Choose the plan that best fits your needs.': 'ニーズに最も合ったプランを選択してください。',
   'Choose whether this domain should renew automatically before it expires.': 'このドメインの有効期限が切れる前に自動更新するかどうかを選択してください。',
   'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': 'Appwrite トークンを集めて雷の危険を避けましょう。デバッグセッション用の持久力ミニゲームです。',
@@ -1081,7 +1078,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Primary: '主要',
   Priority: '優先度',
   Project: 'プロジェクト',
-  Projects: 'プロジェクト',
   Public: '公開',
   Realtime: 'Realtime',
   Recap: 'まとめ',
@@ -1156,7 +1152,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   page: 'ページ',
   plan: 'プラン',
   project: 'プロジェクト',
-  projects: 'プロジェクト',
   record: 'レコード',
   records: 'レコード',
   removed: '削除済み',
@@ -1203,4 +1198,89 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Addons: 'アドオン',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': '専用 DB コンピュートクレジット',
+  'Organization resources': '組織のリソース',
+  'Project resources': 'プロジェクトのリソース',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '組織の使用量を選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '残っている各プロジェクトを選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    '削除したい超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'The selected plan allows': '選択したプランで利用できるのは',
+  'Still over the plan limit.': 'まだプラン上限を超えています。',
+  'Delete at least': '少なくとも次を削除してください:',
+  'to fit the selected plan.': '選択したプランに合わせるために必要です。',
+  'Delete selected projects': '選択したプロジェクトを削除',
+  'Delete selected members': '選択したメンバーを削除',
+  'Delete selected domains': '選択したドメインを削除',
+  'Only the selected items will be deleted.': '選択した項目だけが削除されます。',
+  'Finish deleting project resources that exceed the selected plan.':
+    '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
+  'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    '選択したプランをまだ超えている超過分です。それ以外は削除されません。',
+  'Usage fits the selected plan. No further deletions are required.':
+    '使用量は選択したプランに収まっています。これ以上の削除は不要です。',
+  'Calculating remaining extras...': '残っている超過分を計算しています...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    '選択したプランをまだ超えている超過分です。マークした項目だけを削除します。',
+  'still over limit': 'まだ上限超過',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    '各プロジェクトで削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Over limit': '上限超過',
+  Marked: 'マーク済み',
+  'This resource type fits the selected plan.':
+    'このリソースタイプは選択したプランに収まっています。',
+  'Confirm selection': '選択を確定',
+  'marked for deletion': '削除対象としてマーク済み',
+  'Edit selection': '選択を編集',
+  'Will be deleted': '削除される項目',
+  'and all its resources': 'とそのすべてのリソース',
+  'Removing the items you marked for deletion.':
+    '削除対象としてマークした項目を削除しています。',
+  'Choose which organization to delete': '削除する組織を選択してください',
+  'Choose which organization to delete.': '削除する組織を選択してください。',
+  'You may hit limits on the selected plan':
+    '選択したプランの上限に達する可能性があります',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    '過去 30 日間の使用量がこれらの上限を超えていました。これは請求サイクルではなく、直近 30 日間の移動ウィンドウです。',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'プランの上限を超えると、影響を受けるプロジェクトが次の請求サイクルまでブロックされる可能性があります。',
+  '1 organization marked for deletion': '1 件の組織を削除対象としてマーク済み',
+  'Confirm which organization to delete.': '削除する組織を確定してください。',
+  'Confirm plan change': 'プラン変更の確認',
+  'Confirm organization deletion': '組織削除の確認',
+  'Your organization will move to the {plan} plan.':
+    '組織は {plan} プランに移行します。',
+  'Delete and change plan': '削除してプランを変更',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'まず削除するプロジェクトを確定してください。残したプロジェクトは、その後で選択したプランと照合されます。',
+  'Could not load': '読み込めませんでした:',
+  'for this project.': '(このプロジェクト)',
+  'Some project resources could not be loaded. Reload and try again.':
+    '一部のプロジェクトリソースを読み込めませんでした。再読み込みしてやり直してください。',
+  'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    '現在の請求サイクルの終了までは有効なままで、その後に削除されます。',
+  'What changes in the projects you are keeping': '残すプロジェクトで変わること',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
+  'Backups stop running': 'バックアップが停止します',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    '現在の請求サイクルの終了時に、これらのバックアップポリシーは無効化され、バックアップの作成を停止します。ポリシー自体は削除されませんが、選択したプランにはバックアップ画面がないため、確認も管理もできなくなります。',
+  'Dedicated databases are spun down': '専用データベースが停止されます',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
+  'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    '削除はただちに実行されます。組織は現在の請求サイクルが終了する {date} に {plan} プランへ移行します。',
+  'Deleted data cannot be recovered.': '削除されたデータは復元できません。',
+  'Could not load which backup policies stop running when your plan changes.':
+    'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
 }

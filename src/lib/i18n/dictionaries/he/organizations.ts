@@ -229,8 +229,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Choose File': 'בחירת קובץ',
   'Choose a PNG from the app assets bucket or upload a new one.':
     'בחרו קובץ PNG מבאקט נכסי האפליקציה או העלו קובץ חדש.',
-  'Choose a paid plan for the new organization instead.':
-    'בחרו תוכנית בתשלום עבור הארגון החדש במקום זאת.',
   'Choose domains to keep': 'בחרו דומיינים לשמירה',
   'Choose exactly': 'בחרו בדיוק',
   'Choose existing address': 'בחירת כתובת קיימת',
@@ -241,7 +239,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'בחרו את התוכנית המתאימה ביותר לצרכים שלכם.',
   'Choose whether this domain should renew automatically before it expires.':
     'בחרו אם הדומיין הזה יתחדש אוטומטית לפני שתוקפו יפוג.',
-  'Choose which organization to keep': 'בחרו איזה ארגון לשמור',
   City: 'עיר',
   'Clear search': 'ניקוי חיפוש',
   'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
@@ -695,7 +692,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Network: 'רשת',
   'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
     'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או ב-repos ציבוריים. השתמשו במשתני סביבה כגון',
-  'New organization': 'ארגון חדש',
   Next: 'הבא',
   'Next page': 'הדף הבא',
   'Next payment of': 'התשלום הבא בסך',
@@ -888,7 +884,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
-  Projects: 'פרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -1337,7 +1332,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.":
     'מעבדת נתונים אישיים בשמכם. הוא נדרש לציות ל-GDPR בעת טיפול בנתוני תושבי האיחוד האירופי.',
   project: 'פרויקט',
-  projects: 'פרויקטים',
   'projects, but the selected plan allows only':
     'פרויקטים, אך התוכנית שנבחרה מאפשרת רק',
   record: 'רשומה',
@@ -1426,4 +1420,89 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Addons: 'תוספים',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': 'זיכוי חישוב למסד נתונים ייעודי',
+  'Organization resources': 'משאבי הארגון',
+  'Project resources': 'משאבי פרויקט',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו את השימוש בארגון לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו כל פרויקט שנותר לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    'סמנו את העודפים שברצונכם להסיר. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'The selected plan allows': 'התוכנית שנבחרה מאפשרת',
+  'Still over the plan limit.': 'עדיין מעל מגבלת התוכנית.',
+  'Delete at least': 'מחקו לפחות',
+  'to fit the selected plan.': 'כדי להתאים לתוכנית שנבחרה.',
+  'Delete selected projects': 'מחיקת הפרויקטים שנבחרו',
+  'Delete selected members': 'מחיקת החברים שנבחרו',
+  'Delete selected domains': 'מחיקת הדומיינים שנבחרו',
+  'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
+  'Finish deleting project resources that exceed the selected plan.':
+    'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
+  'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    'עודפים שנותרו וחורגים מהתוכנית שנבחרה. שום דבר אחר לא יימחק.',
+  'Usage fits the selected plan. No further deletions are required.':
+    'השימוש מתאים לתוכנית שנבחרה. אין צורך במחיקות נוספות.',
+  'Calculating remaining extras...': 'מחשבים עודפים שנותרו...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    'עודפים שעדיין מעל התוכנית שנבחרה. מחקו רק את הפריטים שסימנתם.',
+  'still over limit': 'עדיין מעל המגבלה',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    'סמנו עודפים למחיקה בכל פרויקט. רק הפריטים שנבחרו יוסרו אחרי האישור.',
+  'Over limit': 'מעל המגבלה',
+  Marked: 'מסומן',
+  'This resource type fits the selected plan.':
+    'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
+  'Confirm selection': 'אישור הבחירה',
+  'marked for deletion': 'מסומנים למחיקה',
+  'Edit selection': 'עריכת הבחירה',
+  'Will be deleted': 'פריטים שיימחקו',
+  'and all its resources': 'וכל המשאבים שלו',
+  'Removing the items you marked for deletion.':
+    'מוחקים את הפריטים שסימנתם למחיקה.',
+  'Choose which organization to delete': 'בחרו איזה ארגון למחוק',
+  'Choose which organization to delete.': 'בחרו איזה ארגון למחוק.',
+  'You may hit limits on the selected plan':
+    'ייתכן שתגיעו למגבלות בתוכנית שנבחרה',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    'השימוש שלכם ב-30 הימים האחרונים היה מעל המגבלות האלה. זהו חלון מתגלגל, לא מחזור החיוב שלכם.',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
+  '1 organization marked for deletion': 'ארגון אחד מסומן למחיקה',
+  'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
+  'Confirm plan change': 'אישור שינוי התוכנית',
+  'Confirm organization deletion': 'אישור מחיקת הארגון',
+  'Your organization will move to the {plan} plan.':
+    'הארגון שלכם יעבור לתוכנית {plan}.',
+  'Delete and change plan': 'מחיקה ושינוי תוכנית',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
+  'Could not load': 'לא ניתן לטעון',
+  'for this project.': 'עבור הפרויקט הזה.',
+  'Some project resources could not be loaded. Reload and try again.':
+    'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
+  'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    'הם יישארו פעילים עד סוף מחזור החיוב הנוכחי, ואז יוסרו.',
+  'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
+  'Backups stop running': 'הגיבויים מפסיקים לפעול',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'בסוף מחזור החיוב הנוכחי מדיניות הגיבוי הזו תכובה ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
+  'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
+  'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    'המחיקות מתבצעות עכשיו. הארגון שלכם יעבור לתוכנית {plan} בתאריך {date}, בתום מחזור החיוב הנוכחי.',
+  'Deleted data cannot be recovered.': 'לא ניתן לשחזר נתונים שנמחקו.',
+  'Could not load which backup policies stop running when your plan changes.':
+    'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
 }

@@ -199,21 +199,6 @@ export function isFreePlanRef(
   return getPlanCanonicalFromRecord(planRef, plans) === 'free'
 }
 
-/**
- * Paid-to-Free downgrades are temporarily unavailable in this console while
- * that flow is refined. Create-organization Free selection is unchanged.
- */
-export function isPaidToFreeDowngradeBlocked(
-  currentPlanRef: string | null | undefined,
-  targetPlanRef: string | null | undefined,
-  plans: Record<string, BillingPlanRecord> | null | undefined,
-  options?: { isCreateMode?: boolean },
-): boolean {
-  if (options?.isCreateMode) return false
-  if (!isFreePlanRef(targetPlanRef, plans)) return false
-  return !isFreePlanRef(currentPlanRef, plans)
-}
-
 export function compareBillingPlanRefs(
   currentRef: string | null | undefined,
   selectedRef: string | null | undefined,

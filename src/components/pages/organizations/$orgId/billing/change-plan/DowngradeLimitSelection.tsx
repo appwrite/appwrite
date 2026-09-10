@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { DowngradeConfirmedSelection } from './DowngradeConfirmedSelection'
 
 const SELECTION_PAGE_SIZE = 5
 const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
@@ -27,7 +28,11 @@ interface DowngradeLimitSelectionProps {
   total: number
   page: number
   selectedIds: Set<string>
+  confirmedIds: Set<string>
+  confirmedLabels: string[]
   onToggle: (id: string) => void
+  onConfirmSelection: () => void
+  onEditSelection: () => void
   onPageChange: (page: number) => void
   loading?: boolean
   paginationDisabled?: boolean
@@ -42,13 +47,19 @@ export function DowngradeLimitSelection({
   total,
   page,
   selectedIds,
+  confirmedIds,
+  confirmedLabels,
   onToggle,
+  onConfirmSelection,
+  onEditSelection,
   onPageChange,
   loading = false,
   paginationDisabled = false,
 }: DowngradeLimitSelectionProps) {
   const t = useT()
-  const selectionValid = selectedIds.size === limit
+  const locked = confirmedIds.size > 0
+  const overage = Math.max(0, total - confirmedIds.size - limit)
+  const stillOver = overage > 0
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
   const pageStart = (safePage - 1) * SELECTION_PAGE_SIZE
@@ -67,7 +78,7 @@ export function DowngradeLimitSelection({
             </p>
           </div>
           <p className="text-[13px] font-medium leading-normal text-foreground shrink-0">
-            {selectedIds.size} / {limit}
+            {total}/{limit}
           </p>
         </div>
       </div>
@@ -75,111 +86,139 @@ export function DowngradeLimitSelection({
       <div className="border-t border-border" />
 
       <div className="px-6 py-4 space-y-4">
-        {!selectionValid ? (
-          <WarningAlert title={`${t('Select')} ${t(resourceLabel)} ${t('to keep')}`}>
-            {t('Choose exactly')} {limit} {t(resourceLabel)}{' '}
-            {t('to continue.')}
+        {stillOver ? (
+          <WarningAlert title={t('Still over the plan limit.')}>
+            {t('Delete at least')} {overage} {t(resourceLabel)}{' '}
+            {t('to fit the selected plan.')}
           </WarningAlert>
         ) : null}
 
-        <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
-          {loading ? (
-            <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
-          ) : (
-            <>
-              {items.map((item) => {
-                const selected = selectedIds.has(item.id)
-                const disabled =
-                  item.locked || (!selected && selectedIds.size >= limit)
+        {locked ? (
+          <DowngradeConfirmedSelection
+            className={SELECTION_LIST_MIN_HEIGHT_CLASS}
+            title={`${confirmedIds.size} ${t(resourceLabel)} ${t('marked for deletion')}`}
+            labels={confirmedLabels}
+            onEditSelection={onEditSelection}
+          />
+        ) : (
+          <>
+            <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
+              {loading ? (
+                <p className="text-[13px] text-muted-foreground">
+                  {t('Loading...')}
+                </p>
+              ) : (
+                <>
+                  {items.map((item) => {
+                    const selected = selectedIds.has(item.id)
 
-                return (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                      SELECTION_ROW_HEIGHT_CLASS,
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-background/60',
-                      disabled && !item.locked && 'opacity-50',
-                    )}
-                  >
-                    <Checkbox
-                      id={`keep-${resourceLabel}-${item.id}`}
-                      checked={selected}
-                      disabled={disabled}
-                      onCheckedChange={() => onToggle(item.id)}
-                      className="mt-0.5 shrink-0"
-                    />
-                    <Label
-                      htmlFor={`keep-${resourceLabel}-${item.id}`}
-                      className={cn(
-                        'min-w-0 flex-1',
-                        disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
-                          {item.label}
-                        </p>
-                        {item.locked ? (
-                          <Badge
-                            variant="info"
-                            className="text-[10px] shrink-0"
-                          >
-                            {t('You')}
-                          </Badge>
-                        ) : null}
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                          SELECTION_ROW_HEIGHT_CLASS,
+                          selected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-background/60',
+                          item.locked && 'opacity-50',
+                        )}
+                      >
+                        <Checkbox
+                          id={`delete-${resourceLabel}-${item.id}`}
+                          checked={selected}
+                          disabled={item.locked}
+                          onCheckedChange={() => onToggle(item.id)}
+                          className="mt-0.5 shrink-0"
+                        />
+                        <Label
+                          htmlFor={`delete-${resourceLabel}-${item.id}`}
+                          className={cn(
+                            'min-w-0 flex-1',
+                            item.locked
+                              ? 'cursor-not-allowed'
+                              : 'cursor-pointer',
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
+                              {item.label}
+                            </p>
+                            {item.locked ? (
+                              <Badge
+                                variant="info"
+                                className="text-[10px] shrink-0"
+                              >
+                                {t('You')}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </Label>
                       </div>
-                    </Label>
-                  </div>
-                )
-              })}
-              {Array.from({
-                length: Math.max(0, SELECTION_PAGE_SIZE - items.length),
-              }).map((_, index) => (
-                <div
-                  key={`limit-selection-spacer-${index}`}
-                  className={SELECTION_ROW_HEIGHT_CLASS}
-                  aria-hidden
-                />
-              ))}
-            </>
-          )}
-        </div>
+                    )
+                  })}
+                  {Array.from({
+                    length: Math.max(0, SELECTION_PAGE_SIZE - items.length),
+                  }).map((_, index) => (
+                    <div
+                      key={`limit-selection-spacer-${index}`}
+                      className={SELECTION_ROW_HEIGHT_CLASS}
+                      aria-hidden
+                    />
+                  ))}
+                </>
+              )}
+            </div>
 
-        {total > SELECTION_PAGE_SIZE ? (
-          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-            <p className="text-[12px] text-muted-foreground">
-              {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
-              {t(resourceLabel)}
-            </p>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+              {total > SELECTION_PAGE_SIZE ? (
+                <>
+                  <p className="text-[12px] text-muted-foreground">
+                    {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+                    {t(resourceLabel)}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage - 1)}
+                      disabled={safePage <= 1 || loading || paginationDisabled}
+                      aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPageChange(safePage + 1)}
+                      disabled={
+                        safePage >= totalPages || loading || paginationDisabled
+                      }
+                      aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <span />
+              )}
               <Button
                 type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage - 1)}
-                disabled={safePage <= 1 || loading || paginationDisabled}
-                aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
+                size="sm"
+                className="h-8 text-[13px]"
+                disabled={selectedIds.size === 0}
+                onClick={onConfirmSelection}
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPageChange(safePage + 1)}
-                disabled={safePage >= totalPages || loading || paginationDisabled}
-                aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
+                {t('Confirm selection')}
               </Button>
             </div>
-          </div>
-        ) : null}
+          </>
+        )}
       </div>
     </div>
   )
