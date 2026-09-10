@@ -41,10 +41,12 @@ services:
         max-file: "5"
         max-size: 10m
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    # The marker is APP_READINESS_MARKER, written by app/http.php once the core schema exists.
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
+        - 'test -f /tmp/.appwrite-ready && curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}"
+          http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12

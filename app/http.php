@@ -333,6 +333,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::current()?->finish();
         }
 
+        // The container healthcheck gates on this file. The listener opens before this
+        // coroutine runs, so until the core schema exists every request that reaches a
+        // collection this loop has not created yet answers 500, not 404.
+        \touch(APP_READINESS_MARKER);
+
         // Usage is in ClickHouse, not the primary database, so it sets itself up
         // here. Giving up never blocks boot; reads and ingestion gate on
         // Connection::isReady() and recover once the schema lands.
