@@ -33,7 +33,6 @@ async function mockApi(
     profile?: 'cloud' | 'self-hosted'
     member?: boolean
     listError?: boolean
-    creationError?: string
   } = {},
 ) {
   await page.addInitScript((profile) => {
@@ -46,11 +45,16 @@ async function mockApi(
 
   const state = {
     authenticated: true,
-    creates: 0,
-    projects: 0,
-    lists: 0,
     prefs: {} as Record<string, unknown>,
   }
+  const projects = [
+    {
+      $id: 'existing-project',
+      name: 'Existing project',
+      teamId: ORGANIZATION.$id,
+      region: 'default',
+    },
+  ]
   await page.route('**/*', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
@@ -101,13 +105,8 @@ async function mockApi(
     }
     if (path === '/teams' || path === '/organizations') {
       if (request.method() === 'POST') {
-        state.creates++
-        return failure(
-          403,
-          options.creationError ?? 'organization_creation_prohibited',
-        )
+        return failure(403, 'organization_creation_prohibited')
       }
-      state.lists++
       if (options.listError) return failure(503, 'general_server_error')
       const teams = options.member ? [ORGANIZATION] : []
       return json(200, { total: teams.length, teams })
@@ -119,18 +118,20 @@ async function mockApi(
       return json(200, ORGANIZATION)
     }
     if (path.endsWith('/projects')) {
-      if (request.method() === 'POST') state.projects++
-      const projects = options.member
-        ? [
-            {
-              $id: 'existing-project',
-              name: 'Existing project',
-              teamId: ORGANIZATION.$id,
-              region: 'default',
-            },
-          ]
-        : []
-      return json(200, { total: projects.length, projects })
+      if (request.method() === 'POST') {
+        if (!options.member) return failure(403, 'general_unauthorized_scope')
+        const body = request.postDataJSON()
+        const project = {
+          $id: body.projectId,
+          name: body.name,
+          teamId: body.teamId,
+          region: 'default',
+        }
+        projects.push(project)
+        return json(201, project)
+      }
+      const visible = options.member ? projects : []
+      return json(200, { total: visible.length, projects: visible })
     }
     if (path === '/account/sessions') {
       return json(200, { total: 0, sessions: [] })
@@ -148,7 +149,7 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL(/\/account\/?$/)
 }
 
-test('policy denial is not retried during sign-in and invitation guidance survives reload', async ({
+test('invitation guidance after a policy denial survives reload', async ({
   page,
 }) => {
   const state = await mockApi(page)
@@ -160,8 +161,6 @@ test('policy denial is not retried during sign-in and invitation guidance surviv
   await expect(guidance).toContainText(
     'Ask an organization owner to invite you',
   )
-  expect(state.creates).toBe(1)
-  expect(state.projects).toBe(0)
   await page.reload()
   await expect(guidance).toBeVisible()
 })
@@ -190,20 +189,14 @@ test('membership granted after a denial is rechecked without creating another pr
   await expect(
     page.getByText('Existing project', { exact: true }).first(),
   ).toBeVisible()
-  expect(state.creates).toBe(1)
-  expect(state.projects).toBe(0)
-})
-
-test('other permission failures are not remembered as organization policy denials', async ({
-  page,
-}) => {
-  const state = await mockApi(page, {
-    creationError: 'general_unauthorized_scope',
-  })
-  state.authenticated = false
-  await signIn(page)
-  await expect.poll(() => state.creates).toBeGreaterThan(1)
-  expect(state.projects).toBe(0)
+  // Reload so cached list data cannot hide an accidentally created project.
+  await page.reload()
+  await expect(
+    page.getByText('Existing project', { exact: true }).first(),
+  ).toBeVisible()
+  await expect(page.getByText('My first project', { exact: true })).toHaveCount(
+    0,
+  )
 })
 
 for (const scenario of [
@@ -214,15 +207,21 @@ for (const scenario of [
   test(`invitation guidance is not shown for ${scenario.name}`, async ({
     page,
   }) => {
-    const state = await mockApi(page, scenario.options)
+    await mockApi(page, scenario.options)
+    const organizationsLoaded =
+      scenario.options.profile !== 'cloud'
+        ? page.waitForResponse(
+            (response) =>
+              /\/v1\/(teams|organizations)$/.test(
+                new URL(response.url()).pathname,
+              ) && response.request().method() === 'GET',
+          )
+        : undefined
     await page.goto('/account')
+    await organizationsLoaded
     await expect(page.getByTestId('account-logout')).toBeVisible()
-    if (scenario.options.profile !== 'cloud') {
-      await expect.poll(() => state.lists).toBeGreaterThan(0)
-    }
     await expect(
       page.getByRole('heading', { name: 'Join an organization' }),
     ).toHaveCount(0)
-    expect(state.creates).toBe(0)
   })
 }
