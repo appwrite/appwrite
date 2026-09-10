@@ -152,17 +152,53 @@ function schemaText(value: string, fallback: string): string {
   return trimmed.length > 0 ? sanitized : sanitizeJsonLdText(fallback)
 }
 
+function authorNameSlug(name: string): string {
+  const slug = schemaText(name, 'anonymous')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+  return slug || 'anonymous'
+}
+
+/**
+ * Older synced messages often have `author_id: null` but a custom Discord
+ * avatar URL that still contains the user snowflake.
+ */
+function extractDiscordUserIdFromAvatar(
+  avatar?: string | null,
+): string | undefined {
+  if (!avatar) return undefined
+  const customAvatar = avatar.match(
+    /cdn\.discordapp\.com\/avatars\/(\d{5,32})\//i,
+  )
+  if (customAvatar?.[1]) return customAvatar[1]
+  const guildAvatar = avatar.match(
+    /cdn\.discordapp\.com\/guilds\/\d+\/users\/(\d{5,32})\//i,
+  )
+  return guildAvatar?.[1]
+}
+
 function getThreadAuthorPersonSchema(
   name: string,
-  authorId?: string,
+  options: {
+    authorId?: string | null
+    avatar?: string | null
+    canonicalUrl: string
+  },
 ): Record<string, unknown> {
-  const trimmedAuthorId = authorId?.trim()
+  const trimmedAuthorId = options.authorId?.trim()
+  const avatarUserId = extractDiscordUserIdFromAvatar(options.avatar)
+  const url = trimmedAuthorId
+    ? getThreadsCanonicalUrl(`/threads/authors/${trimmedAuthorId}`)
+    : avatarUserId
+      ? `https://discord.com/users/${avatarUserId}`
+      : `${options.canonicalUrl}#author-${authorNameSlug(name)}`
+
   return {
     '@type': 'Person',
     name: schemaText(name, 'Anonymous'),
-    ...(trimmedAuthorId
-      ? { url: getThreadsCanonicalUrl(`/threads/authors/${trimmedAuthorId}`) }
-      : {}),
+    url,
   }
 }
 
@@ -170,11 +206,17 @@ export function getDiscussionForumPageSchema(options: {
   canonicalUrl: string
   thread: Pick<
     DiscordThread,
-    'title' | 'content' | 'author' | 'author_id' | '$createdAt' | 'vote_count'
+    | 'title'
+    | 'content'
+    | 'author'
+    | 'author_id'
+    | 'author_avatar'
+    | '$createdAt'
+    | 'vote_count'
   >
   messages: Pick<
     DiscordMessage,
-    'author' | 'author_id' | 'message' | 'timestamp' | '$id'
+    'author' | 'author_id' | 'author_avatar' | 'message' | 'timestamp' | '$id'
   >[]
 }) {
   const { canonicalUrl, thread, messages } = options
@@ -185,6 +227,7 @@ export function getDiscussionForumPageSchema(options: {
   )
   const opAuthor = (first?.author ?? thread.author).trim() || 'Anonymous'
   const opAuthorId = first?.author_id ?? thread.author_id
+  const opAvatar = first?.author_avatar ?? thread.author_avatar
   const opDate = toIso8601DateTime(first?.timestamp ?? thread.$createdAt)
 
   const comments = messages.slice(1).map((message) => {
@@ -192,7 +235,11 @@ export function getDiscussionForumPageSchema(options: {
     const comment: Record<string, unknown> = {
       '@type': 'Comment',
       text,
-      author: getThreadAuthorPersonSchema(message.author, message.author_id),
+      author: getThreadAuthorPersonSchema(message.author, {
+        authorId: message.author_id,
+        avatar: message.author_avatar,
+        canonicalUrl,
+      }),
       datePublished: toIso8601DateTime(message.timestamp),
     }
     if (message.$id) {
@@ -207,7 +254,11 @@ export function getDiscussionForumPageSchema(options: {
     url: canonicalUrl,
     mainEntityOfPage: canonicalUrl,
     text: opText,
-    author: getThreadAuthorPersonSchema(opAuthor, opAuthorId),
+    author: getThreadAuthorPersonSchema(opAuthor, {
+      authorId: opAuthorId,
+      avatar: opAvatar,
+      canonicalUrl,
+    }),
     datePublished: opDate,
   }
 
@@ -246,6 +297,7 @@ export function getThreadsAuthorPageSchema(
       '@type': 'Person',
       name: schemaText(author.display_name, 'Author'),
       alternateName: schemaText(author.username, 'Author'),
+      url: canonicalUrl,
       ...(author.bio?.trim()
         ? { description: sanitizeJsonLdText(author.bio) }
         : {}),
