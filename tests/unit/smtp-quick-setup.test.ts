@@ -14,6 +14,7 @@ import {
   parseOAuthErrorMessage,
   parseQuickSetupReturn,
   pickDefaultQuickSetupDomain,
+  providerInterestFeatureId,
   sortQuickSetupDomains,
   stripQuickSetupReturn,
 } from '@/lib/smtp/quick-setup'
@@ -233,6 +234,17 @@ describe('provider registry', () => {
         true,
       )
       expect(ANALYTICS_ACTIONS[provider.analyticsAction]).toBeTruthy()
+    }
+  })
+
+  test('interest feature ids are unique and safe for the comma-separated pref', () => {
+    const ids = SMTP_QUICK_SETUP_PROVIDERS.map((provider) =>
+      providerInterestFeatureId(provider.id),
+    )
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const id of ids) {
+      expect(id).not.toContain(',')
+      expect(id.startsWith('smtp-quick-setup-')).toBe(true)
     }
   })
 

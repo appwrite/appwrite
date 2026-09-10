@@ -54,10 +54,24 @@ export type UserPrefs = Record<string, unknown>
 export const USER_PREFS_KEY_ORGANIZATION = 'organization'
 
 /**
- * Comma-separated feature IDs the user has dismissed (coming-soon curtains).
- * Value: string (legacy array format may still appear until rewritten).
+ * Comma-separated feature IDs the user asked to be notified about (coming-soon
+ * curtains, SMTP quick setup providers). Value: string (legacy array format
+ * may still appear until rewritten).
  */
 export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
+
+export function parseFeatureNotificationIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string')
+  }
+  return []
+}
 
 /**
  * Comma-separated console banner IDs the user has dismissed.

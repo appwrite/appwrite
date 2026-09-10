@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
+import { Check, Trash2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks'
+import {
+  accountIdentitiesQueryOptions,
+  useToggleFeatureNotification,
+} from '@/lib/react-query/hooks'
+import { parseFeatureNotificationIds } from '@/lib/user-prefs-keys'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -29,6 +33,7 @@ import { cn } from '@/lib/utils'
 import {
   isProviderTokenExpired,
   parseQuickSetupReturn,
+  providerInterestFeatureId,
   stripQuickSetupReturn,
 } from '@/lib/smtp/quick-setup'
 import {
@@ -78,8 +83,17 @@ export function SmtpQuickSetupCard({
   const queryClient = useQueryClient()
   const search = useSearch({ strict: false })
   const { account } = useAuth()
-  const accountId =
-    (account as Models.User<Models.Preferences> | null | undefined)?.$id ?? null
+  const consoleAccount = account as
+    Models.User<Models.Preferences> | null | undefined
+  const accountId = consoleAccount?.$id ?? null
+
+  // "Register interest" on coming-soon providers reuses the account's
+  // featureNotifications pref, the same list the coming-soon curtains use.
+  const toggleInterest = useToggleFeatureNotification()
+  const interestIds = useMemo(
+    () => new Set(parseFeatureNotificationIds(consoleAccount?.prefs)),
+    [consoleAccount?.prefs],
+  )
 
   // Identities already linked to this console account, so a provider that was
   // connected earlier reads as connected here too (matches account settings).
@@ -240,6 +254,21 @@ export function SmtpQuickSetupCard({
     }
   }
 
+  const handleToggleInterest = async (provider: SmtpQuickSetupProvider) => {
+    const featureId = providerInterestFeatureId(provider.id)
+    const wasInterested = interestIds.has(featureId)
+    try {
+      await toggleInterest.mutateAsync(featureId)
+      toast.success(
+        wasInterested
+          ? t('Interest removed.')
+          : t("You'll be notified when this provider is available."),
+      )
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to update your interest')))
+    }
+  }
+
   const planTooltip = !supportsCustomSmtp
     ? t('Custom SMTP is available on Appwrite Cloud Pro and higher plans.') // pragma: allowlist secret
     : undefined
@@ -266,6 +295,11 @@ export function SmtpQuickSetupCard({
                 key={provider.id}
                 provider={provider}
                 connected={identityByProvider.has(provider.id)}
+                interested={interestIds.has(
+                  providerInterestFeatureId(provider.id),
+                )}
+                interestPending={toggleInterest.isPending}
+                onToggleInterest={() => void handleToggleInterest(provider)}
                 disabled={
                   !supportsCustomSmtp ||
                   !isProviderAvailable(provider) ||
@@ -321,11 +355,15 @@ interface ProviderTileProps {
   provider: SmtpQuickSetupProvider
   /** This console account already has an identity for the provider. */
   connected: boolean
+  /** Coming-soon providers: the account asked to be told when this ships. */
+  interested: boolean
+  interestPending: boolean
   disabled: boolean
   /** Shown only for the plan gate; the badges already explain the other states. */
   planTooltip?: string
   onSelect: () => void
   onDisconnect: () => void
+  onToggleInterest: () => void
 }
 
 /**
@@ -335,20 +373,46 @@ interface ProviderTileProps {
 function ProviderTile({
   provider,
   connected,
+  interested,
+  interestPending,
   disabled,
   planTooltip,
   onSelect,
   onDisconnect,
+  onToggleInterest,
 }: ProviderTileProps) {
   const t = useT()
   const comingSoon = !isProviderAvailable(provider)
 
-  const action = (
+  // Coming-soon providers cannot connect yet, so the tile's action collects
+  // interest instead. One button toggles: it reads back the registered state
+  // and a second click removes it, mirroring the coming-soon curtain.
+  const action = comingSoon ? (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="h-8 text-[12px]"
+      onClick={onToggleInterest}
+      disabled={interestPending}
+      aria-pressed={interested}
+      {...analyticsAttrs(provider.analyticsAction)}
+    >
+      {interested ? (
+        <>
+          <Check className="h-3.5 w-3.5" />
+          {t('Interest registered')}
+        </>
+      ) : (
+        t('Register interest')
+      )}
+    </Button>
+  ) : (
     <ActionButton
       label={connected ? t('Quick setup') : t(provider.connectLabel)}
       onClick={onSelect}
       disabled={disabled}
-      planTooltip={comingSoon ? undefined : planTooltip}
+      planTooltip={planTooltip}
       analyticsAction={provider.analyticsAction}
     />
   )

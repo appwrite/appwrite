@@ -285,6 +285,15 @@ export function pickDefaultQuickSetupDomain<T extends QuickSetupDomain>(
   return verified[0]
 }
 
+/**
+ * Feature ID stored in the account's `featureNotifications` pref when a user
+ * registers interest in a provider that is still coming soon. Must stay free
+ * of commas, since that pref is a comma-separated list.
+ */
+export function providerInterestFeatureId(providerId: string): string {
+  return `smtp-quick-setup-${providerId}`
+}
+
 /** Credential name written at the provider, trimmed to that provider's limit. */
 export function buildCredentialName(
   projectName: string,
