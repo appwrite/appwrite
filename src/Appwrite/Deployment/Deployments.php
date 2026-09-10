@@ -390,9 +390,13 @@ readonly class Deployments
 
         // The jobs-service (and the containers it spawns) reach Appwrite over
         // the internal Docker network, so the presigned + callback URLs use an
-        // internal endpoint when configured, falling back to the public host.
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
+        // internal endpoint, falling back to the platform hostname. That traffic
+        // stays on plain HTTP regardless of _APP_OPTIONS_FORCE_HTTPS — TLS
+        // terminates at the public proxy, not on the internal network — so the
+        // fallback scheme is always http. Deriving it from FORCE_HTTPS produced
+        // an https:// URL the sidecar could not reach (port 80 only), leaving the
+        // deployment stuck in waiting.
+        $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "http://{$platform['apiHostname']}");
 
         // Source artifacts, all ending in /mnt/code/source:
         //  - remote tarball ($source with url): templates (public codeload URL)

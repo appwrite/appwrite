@@ -1695,13 +1695,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        // The session flow replaces the caller's current session with the one
+        // created below, so the browser stays signed in. The token flow creates
+        // no session here; the app exchanges the returned token through
+        // createSession later. Deleting the current session in that flow would
+        // sign the caller out until the exchange, so it is left in place.
+        if (empty($state['token'])) {
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        if ($current) { // Delete current session of new one.
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->purgeCachedDocument('users', $user->getId());
+            if ($current) { // Replace the current session with the new one.
+                $currentDocument = $dbForProject->getDocument('sessions', $current);
+                if (!$currentDocument->isEmpty()) {
+                    $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                }
             }
         }
 

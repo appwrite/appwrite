@@ -1520,6 +1520,11 @@ return [
         'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
         'code' => 403,
     ],
+    Exception::ORGANIZATION_CREATION_PROHIBITED => [
+        'name' => Exception::ORGANIZATION_CREATION_PROHIBITED,
+        'description' => 'This self-hosted instance already has an organization. Ask an organization owner to invite you instead.',
+        'code' => 403,
+    ],
     Exception::PROJECT_ID_MISSING => [
         'name' => Exception::PROJECT_ID_MISSING,
         'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',

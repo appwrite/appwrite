@@ -35,13 +35,14 @@ final class Func extends Base
         ?string $userId = null,
         array $payload = [],
         array $platform = [],
+        ?Document $database = null,
     ): static {
         return new self(
             project: $project,
             user: $user,
             userId: $userId,
             payload: $payload,
-            events: $event !== '' ? Event::generateEvents($event, $params) : [],
+            events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
         );
     }

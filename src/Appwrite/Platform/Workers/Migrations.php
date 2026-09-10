@@ -892,9 +892,8 @@ class Migrations extends Action
 
         Console::info("Created file document in bucket: $fileId");
 
-        // Generate JWT valid for 1 hour
-        $maxAge = 60 * 60;
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 0);
+        // The link is emailed, so it lives as long as the file itself does.
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', DATA_EXPORT_RETENTION, 0);
         $jwt = $encoder->encode([
             'bucketId' => $bucketId,
             'fileId' => $fileId,

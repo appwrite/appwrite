@@ -536,7 +536,8 @@ abstract class Action extends DatabasesAction
             // Generate events for this document operation
             $generatedEvents = Event::generateEvents(
                 $queueForEvents->getEvent(),
-                $queueForEvents->getParams()
+                $queueForEvents->getParams(),
+                $queueForEvents->getContext('database')
             );
 
 
@@ -551,6 +552,7 @@ abstract class Action extends DatabasesAction
                             userId: $queueForEvents->getUserId(),
                             payload: $queueForEvents->getPayload(),
                             platform: $queueForEvents->getPlatform(),
+                            database: $queueForEvents->getContext('database'),
                         ));
                         break;
                     }

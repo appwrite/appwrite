@@ -889,7 +889,8 @@ Http::shutdown()
         // Generate events for this operation
         $generatedEvents = Event::generateEvents(
             $queueForEvents->getEvent(),
-            $queueForEvents->getParams()
+            $queueForEvents->getParams(),
+            $queueForEvents->getContext('database')
         );
 
         $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
@@ -911,6 +912,7 @@ Http::shutdown()
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        database: $queueForEvents->getContext('database'),
                     ));
                     break;
                 }

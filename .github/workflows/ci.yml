@@ -545,6 +545,18 @@ jobs:
             sleep 1
           done
 
+      - name: Test first organization creation
+        if: matrix.service.name == 'Teams'
+        timeout-minutes: 2
+        run: |
+          # Health/version can respond before the platform schema is initialized.
+          while [ "$(docker compose exec -T appwrite curl -s -o /dev/null -w '%{http_code}' -H 'X-Appwrite-Project: console' http://appwrite/v1/account)" != "401" ]; do
+            sleep 1
+          done
+          docker compose exec -T -e _APP_E2E_FRESH_INSTANCE=enabled \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
+
       - name: Run tests
         timeout-minutes: 25
         run: |
