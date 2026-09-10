@@ -458,12 +458,9 @@ readonly class Deployments
         // Two terminal callbacks: exit carries the code (fires before
         // post-job artifacts), complete confirms artifact delivery — the
         // worker joins them, so readiness holds on any storage strategy.
-        // Artifact callbacks carry the source-size stat, the site manifest
-        // and the outcome of a remote device's output upload.
-        $events = [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete];
-        if ($source !== null || $isSite || $output['artifacts'] !== []) {
-            $events[] = CallbackEvent::Artifact;
-        }
+        // Manual uploads need artifact callbacks too: extraction can fail
+        // before the worker starts and produces any build output.
+        $events = [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete, CallbackEvent::Artifact];
 
         return [
             'id' => static::id($projectId, $deploymentId),

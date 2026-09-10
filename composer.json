@@ -87,7 +87,7 @@
         "utopia-php/abuse": "dev-feat-query-lib as 2.0.0",
         "utopia-php/agents": "2.*",
         "utopia-php/audit": "dev-feat-query-lib as 4.0.0",
-        "utopia-php/auth": "^0.10",
+        "utopia-php/auth": "^0.11",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
         "utopia-php/cdn": "^0.0.8",
