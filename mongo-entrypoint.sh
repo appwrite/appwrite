@@ -20,11 +20,19 @@ chown mongodb:mongodb "$KEYFILE_PATH" 2>/dev/null || chown 999:999 "$KEYFILE_PAT
 # leaves it exiting 48, "Address already in use", taking the container with it.
 # Initialise here instead, on a port the real server never binds, and hand over a
 # directory the standard entrypoint has nothing left to do to.
-if [ ! -e /data/db/WiredTiger ]; then
+#
+# The marker is written only once every user exists, because mongod creates the
+# data directory long before that: keying off the directory would let a first boot
+# interrupted midway come back up with authentication on and no one to authenticate
+# as. Each step below is skippable, so a resumed initialisation finishes the part
+# that did not happen.
+INIT_MARKER=/data/db/.appwrite-initialised
+
+if [ ! -e "$INIT_MARKER" ]; then
   INIT_PORT=27018
 
   echo "Initialising MongoDB data directory..."
-  chown -R mongodb:mongodb /data/db
+  find -L /data/db \! -user mongodb -exec chown mongodb '{}' +
   export MONGO_INITDB_DATABASE="${MONGO_INITDB_DATABASE:-test}"
 
   gosu mongodb mongod --dbpath /data/db --bind_ip 127.0.0.1 --port "$INIT_PORT" &
@@ -48,13 +56,19 @@ if [ ! -e /data/db/WiredTiger ]; then
   fi
 
   mongosh --host 127.0.0.1 --port "$INIT_PORT" --quiet admin --eval '
-    db.createUser({
-      user: process.env.MONGO_INITDB_ROOT_USERNAME,
-      pwd: process.env.MONGO_INITDB_ROOT_PASSWORD,
-      roles: [{ role: "root", db: "admin" }]
-    });
+    const username = process.env.MONGO_INITDB_ROOT_USERNAME;
+
+    if (db.getUser(username) === null) {
+      db.createUser({
+        user: username,
+        pwd: process.env.MONGO_INITDB_ROOT_PASSWORD,
+        roles: [{ role: "root", db: "admin" }]
+      });
+    }
   '
   mongosh --host 127.0.0.1 --port "$INIT_PORT" --quiet "$MONGO_INITDB_DATABASE" /mongo-init.js
+
+  touch "$INIT_MARKER"
 
   kill -TERM "$INIT_SERVER"
   wait "$INIT_SERVER"
