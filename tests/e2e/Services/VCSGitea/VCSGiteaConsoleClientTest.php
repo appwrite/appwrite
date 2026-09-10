@@ -312,15 +312,10 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], true, false);
 
         $this->assertEquals(301, $callback['headers']['status-code']);
-        $location = (string) ($callback['headers']['location'] ?? '');
-
-        if ($redirects) {
-            $this->assertSame($consoleUrl, $location);
-        } else {
-            // Nothing was signed into state, so the callback falls back to its own
-            // console URL, whose shape follows _APP_CONSOLE_URL_SCHEME.
-            $this->assertStringContainsString($projectId, $location);
-        }
+        $this->assertSame(
+            $redirects ? $consoleUrl : $this->defaultRedirectUrl($projectId),
+            (string) ($callback['headers']['location'] ?? '')
+        );
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', \array_merge([
             'x-appwrite-project' => $projectId,
@@ -537,9 +532,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $location = (string) $response['headers']['location'];
-        $this->assertStringContainsString($projectId, $location);
-        $this->assertStringContainsString('?error=', $location);
+        $this->assertStringStartsWith($this->defaultRedirectUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationWithInvalidState(): void
@@ -587,6 +580,18 @@ final class VCSGiteaConsoleClientTest extends Scope
         $installation = $this->createInstallationHelper(redirects: false);
 
         $this->assertNotEmpty($installation['$id']);
+    }
+
+    /**
+     * The redirect the callback falls back to when state carries no URLs. The
+     * suite runs under both schemes -- server-ce sets root, cloud leaves the
+     * default -- and the tests share the appwrite container's environment.
+     */
+    private function defaultRedirectUrl(string $projectId): string
+    {
+        return System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+            ? $this->gitInstallationsUrl($projectId)
+            : "http://localhost/projects/{$projectId}/settings";
     }
 
     /**
