@@ -107,6 +107,16 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
         ...(loaderData.post.draft ? [NOINDEX_ROBOTS_META] : []),
       ],
       links: [
+        ...(loaderData.post.cover
+          ? [
+              {
+                rel: 'preload' as const,
+                as: 'image' as const,
+                href: loaderData.post.cover,
+                type: 'image/avif',
+              },
+            ]
+          : []),
         {
           rel: 'alternate',
           type: 'application/rss+xml',

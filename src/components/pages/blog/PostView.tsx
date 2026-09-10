@@ -87,7 +87,7 @@ export function PostView({ post }: PostViewProps) {
               />
 
               <div className="mt-8">
-                <BlogCover title={post.title} cover={post.cover} />
+                <BlogCover title={post.title} cover={post.cover} priority />
               </div>
 
               <div className="mt-8 min-w-0 overflow-x-hidden">
