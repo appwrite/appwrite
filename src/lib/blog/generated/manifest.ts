@@ -19,6 +19,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "phone-duo-whats-new-and-what-developers-can-build",
+    "href": "/blog/post/phone-duo-whats-new-and-what-developers-can-build",
+    "title": "Iphone Duo: What’s new and what developers can build",
+    "description": "See how iPhone Duo could change app development, from adaptive interfaces and testing to new experiences built for foldable screens.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/phone-duo-whats-new-and-what-developers-can-build/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
