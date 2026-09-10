@@ -19,6 +19,7 @@ import {
   Query,
 } from '@appwrite.io/console' // pragma: allowlist secret
 import {
+  applyConsoleImpersonateUserId,
   clearConsoleImpersonateUser,
   clearConsoleSessionLocally,
   sdk,
@@ -39,6 +40,7 @@ import {
   clearConsoleImpersonationSession,
   getConsoleAccountQueryRevision,
   hasConsoleImpersonationSessionTarget,
+  readConsoleImpersonationTargetUserId,
 } from '@/lib/console-impersonation'
 import {
   isValidRelativeRedirect,
@@ -393,12 +395,18 @@ export async function performConsoleSignOut(
   consoleSigningOut = true
   showConsoleSignOutCover()
 
-  // Consent switching must not pretend to sign out or revoke other sessions.
-  // Keep credentials, impersonation and cached account data intact on failure.
+  // Consent switching must revoke the underlying operator session, never an
+  // impersonated identity. Suspend headers only; preserve credentials, persisted
+  // impersonation and account caches so a failed revoke can restore the same UI.
   if (options?.requireServerRevocation) {
+    const impersonatedUserId = readConsoleImpersonationTargetUserId()
+    clearConsoleImpersonateUser()
     try {
       await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
     } catch {
+      if (impersonatedUserId) {
+        applyConsoleImpersonateUserId(impersonatedUserId)
+      }
       consoleSigningOut = false
       if (typeof document !== 'undefined') {
         document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
