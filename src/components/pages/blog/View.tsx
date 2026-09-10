@@ -1,18 +1,17 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   MarketingCtaSection,
   MarketingCtaSignupButtons,
   MarketingHeroSection,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getDraftBlogPosts, normalizeCategory } from '@/lib/blog/content'
-import { buildBlogRouteSearch } from '@/lib/blog/search'
 import type { BlogPostsPage } from '@/lib/blog/types'
 import { cn } from '@/lib/utils'
+import { useCommandCenter } from '@/hooks/use-command-center'
 import { BlogCategorySpotlightsSection } from './BlogCategorySpotlightsSection'
 import { BlogDraftsSection } from './BlogDraftsSection'
 import { BlogFeaturedSection } from './BlogFeaturedSection'
@@ -41,36 +40,19 @@ export function View({
   navigation,
   search,
 }: ViewProps) {
-  const navigate = useNavigate()
   const { features } = useConsoleProfile()
-  const [query, setQuery] = useState(search?.search ?? '')
+  const { openCommandCenter } = useCommandCenter()
   const selectedCategory = search?.category ?? 'Latest'
 
-  useEffect(() => {
-    setQuery(search?.search ?? '')
-  }, [search?.search])
-
-  const handleSearch = () => {
-    navigate({
-      to: '/blog',
-      search: () =>
-        buildBlogRouteSearch({
-          search: query,
-          category: selectedCategory,
-        }),
-      replace: true,
-    })
-  }
-
   const handleCategoryChange = (category: string) => {
-    navigate({
-      to: '/blog',
-      search: () =>
-        buildBlogRouteSearch({
-          search: query,
-          category,
-        }),
-    })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('search')
+    if (category !== 'Latest') {
+      url.searchParams.set('category', category)
+    } else {
+      url.searchParams.delete('category')
+    }
+    window.location.href = url.toString()
   }
 
   const showSpotlights =
@@ -126,21 +108,15 @@ export function View({
             </div>
           ) : null}
 
-          <div className={cn(showSpotlights ? 'mt-8' : undefined, 'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between')}>
-            <div className="relative max-w-md flex-1">
-              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') handleSearch()
-                }}
-                placeholder="Search articles..."
-                className="h-10 ps-9 text-[13px]"
-              />
-            </div>
-            <Button size="sm" className="h-10 text-[13px]" onClick={handleSearch}>
-              Search
+          <div className={cn(showSpotlights ? 'mt-8' : undefined, 'flex items-center justify-end')}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 gap-2 text-[13px]"
+              onClick={openCommandCenter}
+            >
+              <Search className="h-4 w-4" />
+              Search articles
             </Button>
           </div>
 

@@ -40,6 +40,7 @@ export interface CommandContext {
   closeCommandCenter: () => void
   openShortcutsPage: () => void
   openDocsSearchPage?: () => void
+  openBlogSearchPage?: () => void
   openFeedbackPage?: () => void
   openSupportPage?: () => void
   /** Optional handlers wired by the parent (e.g. KeyboardShortcutsProvider). */
