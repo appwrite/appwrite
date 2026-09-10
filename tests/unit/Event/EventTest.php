@@ -160,6 +160,68 @@ final class EventTest extends TestCase
         }
     }
 
+    public function testWildcardDeduplicationPreservesDeliveryOrder(): void
+    {
+        $events = Event::generateEvents(
+            'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
+            ['databaseId' => 'db', 'collectionId' => 'col', 'documentId' => 'doc'],
+            new Document(['type' => 'documentsdb']),
+        );
+
+        // Realtime derives its target from events[0]. Keep the concrete event
+        // first and preserve the wildcard and parent event delivery order.
+        $this->assertSame([
+            'documentsdb.db.collections.col.documents.doc.create',
+            'documentsdb.*.collections.*.documents.*.create',
+            'documentsdb.db.collections.*.documents.doc.create',
+            'documentsdb.*.collections.*.documents.doc.create',
+            'documentsdb.*.collections.col.documents.doc.create',
+            'documentsdb.db.collections.col.documents.*.create',
+            'documentsdb.*.collections.col.documents.*.create',
+            'documentsdb.db.collections.*.documents.*.create',
+            'documentsdb.db.collections.col.documents.doc',
+            'documentsdb.*.collections.*.documents.*',
+            'documentsdb.db.collections.*.documents.doc',
+            'documentsdb.*.collections.*.documents.doc',
+            'documentsdb.*.collections.col.documents.doc',
+            'documentsdb.db.collections.col.documents.*',
+            'documentsdb.*.collections.col.documents.*',
+            'documentsdb.db.collections.*.documents.*',
+            'documentsdb.db.collections.col',
+            'documentsdb.*.collections.*',
+            'documentsdb.db.collections.*',
+            'documentsdb.*.collections.col',
+            'documentsdb.db',
+            'documentsdb.*',
+        ], $events);
+    }
+
+    public function testGenerateEventsOrder(): void
+    {
+        // The first event is the concrete event that happened, in full. Consumers that
+        // report a single name take it from there -- the functions worker publishes it
+        // as `x-appwrite-event` and `APPWRITE_FUNCTION_EVENT`.
+        $this->assertSame([
+            'users.torsten.update.name',
+            'users.*.update.name',
+            'users.torsten.update',
+            'users.*.update',
+            'users.torsten',
+            'users.*',
+        ], Event::generateEvents('users.[userId].update.name', [
+            'userId' => 'torsten'
+        ]));
+
+        $membershipEvents = Event::generateEvents('teams.[teamId].memberships.[membershipId].update.status', [
+            'teamId' => 'jets',
+            'membershipId' => 'torsten',
+        ]);
+        $this->assertSame('teams.jets.memberships.torsten.update.status', $membershipEvents[0]);
+
+        // An attribute of a sub-resource does not also belong to its parent.
+        $this->assertNotContains('teams.jets.update.status', $membershipEvents);
+    }
+
     public function testGenerateMirrorEvents(): void
     {
         $legacyDatabase = new Document(['type' => 'legacy']);
