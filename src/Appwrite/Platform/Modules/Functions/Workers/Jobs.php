@@ -298,7 +298,7 @@ class Jobs extends Action
         // the queue can deliver those callbacks out of order.
         if ($artifact->artifactId === 'output') {
             if ($failed) {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error?->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -317,7 +317,7 @@ class Jobs extends Action
         // upload is the one best-effort artifact: losing it costs the next
         // build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error?->message ?? 'Build failed.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
