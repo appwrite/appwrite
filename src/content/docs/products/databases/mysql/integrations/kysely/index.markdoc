@@ -1,0 +1,196 @@
+---
+layout: article
+title: Kysely
+description: Use Kysely with an Appwrite native MySQL database. Configure MysqlDialect with mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [Kysely](https://kysely.dev/) works against it with no Appwrite-specific dialect or driver. Point `MysqlDialect` and a `mysql2` pool at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use the type-safe query builder as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection string in your environment. Never commit it:
+
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Connections on Appwrite Cloud are encrypted with TLS. If `mysql2` does not infer TLS from the connection string, pass `ssl` options on the pool. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+
+# Install and configure Kysely {% #driver %}
+
+Install Kysely and `mysql2`:
+
+```bash
+npm install kysely mysql2
+npm install -D typescript
+```
+
+Create a typed database interface and a `Kysely` instance backed by `MysqlDialect`:
+
+```ts
+import { Kysely, MysqlDialect } from 'kysely';
+import { createPool } from 'mysql2';
+
+interface UsersTable {
+  id: number;
+  email: string;
+  created_at: Date;
+}
+
+interface Database {
+  users: UsersTable;
+}
+
+const dialect = new MysqlDialect({
+  pool: createPool({
+    uri: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    connectionLimit: 10
+  })
+});
+
+export const db = new Kysely<Database>({ dialect });
+```
+
+You can also pass discrete `host`, `port`, `user`, `password`, and `database` fields to `createPool` instead of `uri`.
+
+# Run migrations {% #migrate %}
+
+Use [kysely-ctl](https://github.com/kysely-org/kysely-ctl) or Kysely's `Migrator` against the **direct** engine port (`3306`). Migrations issue DDL that needs a session-level connection rather than the transaction-mode pooler:
+
+```env
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Example with the built-in migrator:
+
+```ts
+import { promises as fs } from 'fs';
+import { FileMigrationProvider, Kysely, Migrator, MysqlDialect } from 'kysely';
+import { createPool } from 'mysql2';
+import * as path from 'path';
+
+const db = new Kysely({
+  dialect: new MysqlDialect({
+    pool: createPool({
+      uri: process.env.DIRECT_URL,
+      ssl: { rejectUnauthorized: false }
+    })
+  })
+});
+
+const migrator = new Migrator({
+  db,
+  provider: new FileMigrationProvider({
+    fs,
+    path,
+    migrationFolder: path.join(__dirname, 'migrations')
+  })
+});
+
+const { error, results } = await migrator.migrateToLatest();
+await db.destroy();
+
+if (error) {
+  throw error;
+}
+```
+
+A migration file that creates the `users` table:
+
+```ts
+import { Kysely, sql } from 'kysely';
+
+export async function up(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('users')
+    .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
+    .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
+    .addColumn('created_at', 'timestamp', (col) =>
+      col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`)
+    )
+    .execute();
+}
+
+export async function down(db: Kysely<any>): Promise<void> {
+  await db.schema.dropTable('users').execute();
+}
+```
+
+The `admin.<hash>` user owns the `default` database and can run schema changes.
+
+# Query with Kysely {% #query %}
+
+Once the schema is migrated, use the query builder. MySQL insert results do not return the full row by default, so read the row back when you need it:
+
+```ts
+import { db } from './db';
+
+const insertResult = await db
+  .insertInto('users')
+  .values({ email: 'ada@example.com' })
+  .executeTakeFirstOrThrow();
+
+const user = await db
+  .selectFrom('users')
+  .selectAll()
+  .where('id', '=', Number(insertResult.insertId))
+  .executeTakeFirstOrThrow();
+
+const recent = await db
+  .selectFrom('users')
+  .selectAll()
+  .orderBy('created_at', 'desc')
+  .limit(10)
+  .execute();
+```
+
+On long-running servers, create the `Kysely` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the pool, and use the Appwrite pooler for runtime traffic. Call `db.destroy()` on shutdown.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
+
+Keep the migrator pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+
+```env
+# Runtime: pooler port
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+
+# Migrations: direct connection to the engine
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Size the `mysql2` pool conservatively for serverless (often a `connectionLimit` of `1` or a small single-digit value per isolate). Prefer normal parameterized queries over session-scoped prepared statement workflows when you use transaction pooling. Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` and `DATABASE_URL` for the preview or CI job.
+3. Run `migrateToLatest` (or kysely-ctl) and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS and network controls for native MySQL databases.
+{% /cards_item %}
+{% /cards %}
