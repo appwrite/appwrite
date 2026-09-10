@@ -74,7 +74,7 @@
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
         "utopia-php/cache": "^5.0.0",
-        "utopia-php/cdn": "^0.0.8",
+        "utopia-php/cdn": "^0.0.11",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
@@ -113,10 +113,10 @@
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
-        "utopia-php/client": "^0.4",
-        "open-runtimes/sdk-for-php": "0.13.*",
+        "utopia-php/client": "^0.4.4",
+        "open-runtimes/sdk-for-php": "^1.0.1",
         "utopia-php/schedule": "^0.2.0",
-        "utopia-php/usage": "^0.15.0",
+        "utopia-php/usage": "^0.16.4",
         "utopia-php/query": "0.6.*"
     },
     "require-dev": {
