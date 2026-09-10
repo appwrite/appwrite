@@ -60,7 +60,14 @@ export function View({
         align="left"
       />
 
-      <BlogSearchSection />
+      {showSpotlights && categorySpotlights.length > 0 ? (
+        <>
+          <BlogSearchSection />
+          <BlogCategorySpotlightsSection spotlights={categorySpotlights} />
+        </>
+      ) : (
+        <BlogSearchSection />
+      )}
 
       {showFeatured ? (
         <BlogFeaturedSection post={featured} authors={authors} />
@@ -72,10 +79,6 @@ export function View({
 
       {showSpotlights && features.blogDrafts ? (
         <BlogDraftsSection posts={drafts} authors={authors} />
-      ) : null}
-
-      {showSpotlights && categorySpotlights.length > 0 ? (
-        <BlogCategorySpotlightsSection spotlights={categorySpotlights} />
       ) : null}
 
       <section className="border-b border-border py-10 sm:py-14">
