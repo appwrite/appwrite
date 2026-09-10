@@ -88,6 +88,7 @@ import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
+import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -397,13 +398,13 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
-  // Use the rendered location, not the pending one. During `/` → `/home` the
-  // desired path is already `/home` while the outlet is still empty; using
-  // that path would wrap the blank hop in the marketing footer.
+  // Use the rendered location, not the pending one. During `/` → `/home`
+  // (or `/app` → org) the desired path can already be the destination while the
+  // outlet is still the blank hop; wrapping that hop would flash the footer.
   const renderedPathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
   })
-  if (renderedPathname === '/') {
+  if (isConsoleRedirectHopPath(renderedPathname)) {
     return <>{children}</>
   }
 

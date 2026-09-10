@@ -1,3 +1,4 @@
+import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -32,10 +33,8 @@ function isConsoleAuthRouteMatch(
 }
 
 function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
+  if (isConsoleRedirectHopPath(pathname)) return true
   const normalized = pathname.replace(/\/+$/, '') || '/'
-  // `/` and `/app` are console redirect hops, not marketing pages.
-  if (normalized === '/') return true
-  if (normalized === '/app') return true
   if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true

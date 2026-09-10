@@ -4,7 +4,6 @@ import {
   isRedirect,
 } from '@tanstack/react-router'
 import { AppwriteException } from '@appwrite.io/console'
-import { FullscreenLoader } from '@/components/ui/loader'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
@@ -96,5 +95,6 @@ function ConsoleEntry() {
     )
   }
 
-  return <FullscreenLoader />
+  // Redirect runs from the loader after org data is prefetched; keep empty like `/`.
+  return null
 }

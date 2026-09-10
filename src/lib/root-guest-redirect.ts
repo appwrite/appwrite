@@ -28,6 +28,12 @@ export function isRootRedirectPath(pathname: string | undefined): boolean {
   return normalized === '/'
 }
 
+/** `/` and `/app` are blank redirect hops (no marketing/console chrome). */
+export function isConsoleRedirectHopPath(pathname: string | undefined): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  return normalized === '/' || normalized === CONSOLE_ENTRY_PATH
+}
+
 function isLocalSiteRequest(request: Request): boolean {
   try {
     return isLocalDevelopmentHost(new URL(request.url).hostname)

@@ -114,20 +114,20 @@ export function useInitialLoader() {
   const skipStaticLoader =
     isAuthRoute || isInstantPublicRoute || isMarketingRoute
 
-  // `/` is a redirect hop, same as marketing: never show the branded overlay
-  // here. Do not treat it as skipStaticLoader, or the first console paint after
-  // `/` would skip the overlay too.
+  // `/` and `/app` are redirect hops: never show the branded overlay here.
+  // Do not treat them as skipStaticLoader, or the first console paint after
+  // the hop would skip the overlay too.
   const shouldShowLoader = useMemo(
     () =>
       !skipStaticLoader &&
       location.pathname !== '/' &&
+      location.pathname !== '/app' &&
       (location.pathname.startsWith('/protected') ||
         location.pathname.startsWith('/marketplace') ||
         location.pathname.startsWith('/organizations') ||
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
         location.pathname.startsWith('/account') ||
-        location.pathname.startsWith('/app') ||
         location.pathname.startsWith('/generator')),
     [location.pathname, skipStaticLoader],
   )
