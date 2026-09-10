@@ -241,7 +241,6 @@ describe('provider registry', () => {
       expect(provider.connectLabel).toBe(`Connect with ${provider.name}`)
       expect(provider.setupTitle).toBe(`Set up SMTP with ${provider.name}`)
       expect(provider.disconnectTitle).toBe(`Disconnect ${provider.name}`)
-      expect(provider.setupDescription).toContain(provider.name)
     }
   })
 

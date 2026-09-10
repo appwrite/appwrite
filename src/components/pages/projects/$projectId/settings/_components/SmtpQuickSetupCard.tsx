@@ -45,8 +45,6 @@ import {
   startProviderAuthorization,
   type ProviderAccessToken,
 } from '@/lib/smtp/quick-setup-oauth'
-import { useDebugOverrides } from '@/lib/debug-overrides'
-import { SmtpQuickSetupDialog } from './SmtpQuickSetupDialog'
 import { SmtpQuickSetupWizard } from './SmtpQuickSetupWizard'
 import type { ProviderApiCall } from './use-smtp-quick-setup'
 import { DisconnectSmtpProvider } from './DisconnectSmtpProvider'
@@ -67,7 +65,7 @@ interface SmtpQuickSetupCardProps {
  * From there this card resolves the provider access token from any session
  * this account holds for the provider, refreshing it through `updateSession`.
  * Clicking a connected provider never leaves the page: if no session can
- * produce a token, the dialog says the authorization expired and the user
+ * produce a token, the wizard says the authorization expired and the user
  * decides whether to reconnect. Tokens are kept in memory only.
  */
 export function SmtpQuickSetupCard({
@@ -80,7 +78,6 @@ export function SmtpQuickSetupCard({
   const queryClient = useQueryClient()
   const search = useSearch({ strict: false })
   const { account } = useAuth()
-  const { smtpQuickSetupWizard } = useDebugOverrides()
   const accountId =
     (account as Models.User<Models.Preferences> | null | undefined)?.$id ?? null
 
@@ -100,7 +97,7 @@ export function SmtpQuickSetupCard({
   const handledReturnRef = useRef(false)
   const [activeProvider, setActiveProvider] =
     useState<AvailableSmtpQuickSetupProvider | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const [disconnecting, setDisconnecting] =
     useState<SmtpQuickSetupProvider | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -133,7 +130,7 @@ export function SmtpQuickSetupCard({
   /**
    * Runs a provider API call with the cached token. Expired tokens and 401
    * responses trigger one `updateSession` refresh; when the current session
-   * cannot refresh the token, the dialog asks to reconnect.
+   * cannot refresh the token, the wizard asks to reconnect.
    */
   const callProvider = useCallback<ProviderApiCall>(
     async (run) => {
@@ -157,13 +154,13 @@ export function SmtpQuickSetupCard({
     [activeProvider],
   )
 
-  const openDialogFor = useCallback(
+  const openWizardFor = useCallback(
     async (provider: AvailableSmtpQuickSetupProvider) => {
       const token = await resolveProviderAccessToken(provider.id)
       if (!token) return false
       tokensRef.current.set(provider.id, token)
       setActiveProvider(provider)
-      setDialogOpen(true)
+      setWizardOpen(true)
       return true
     },
     [],
@@ -194,7 +191,7 @@ export function SmtpQuickSetupCard({
     setIsConnecting(true)
     void (async () => {
       try {
-        if (!(await openDialogFor(provider))) {
+        if (!(await openWizardFor(provider))) {
           toast.error(t('Authorization failed'))
         }
       } catch (error) {
@@ -205,7 +202,7 @@ export function SmtpQuickSetupCard({
         setIsConnecting(false)
       }
     })()
-  }, [returnState, queryClient, stripReturnParams, openDialogFor, t])
+  }, [returnState, queryClient, stripReturnParams, openWizardFor, t])
 
   const handleSetup = async (
     provider: SmtpQuickSetupProvider,
@@ -217,7 +214,7 @@ export function SmtpQuickSetupCard({
     try {
       // Reuses a live token, or refreshes one from any session this account
       // holds for the provider.
-      if (await openDialogFor(provider)) {
+      if (await openWizardFor(provider)) {
         setIsConnecting(false)
         return
       }
@@ -227,7 +224,7 @@ export function SmtpQuickSetupCard({
         // screen on a click. The dialog opens and explains that the
         // authorization expired, leaving reconnecting to the user.
         setActiveProvider(provider)
-        setDialogOpen(true)
+        setWizardOpen(true)
         setIsConnecting(false)
         return
       }
@@ -290,29 +287,15 @@ export function SmtpQuickSetupCard({
       </div>
 
       {activeProvider ? (
-        // Same flow, two presentations: the modal ships today, the fullscreen
-        // wizard is behind debug menu -> Flags -> SMTP quick setup wizard.
-        smtpQuickSetupWizard ? (
-          <SmtpQuickSetupWizard
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            projectId={projectId}
-            project={project}
-            provider={activeProvider}
-            callProvider={callProvider}
-            onReauthorize={() => authorize(activeProvider)}
-          />
-        ) : (
-          <SmtpQuickSetupDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            projectId={projectId}
-            project={project}
-            provider={activeProvider}
-            callProvider={callProvider}
-            onReauthorize={() => authorize(activeProvider)}
-          />
-        )
+        <SmtpQuickSetupWizard
+          open={wizardOpen}
+          onOpenChange={setWizardOpen}
+          projectId={projectId}
+          project={project}
+          provider={activeProvider}
+          callProvider={callProvider}
+          onReauthorize={() => authorize(activeProvider)}
+        />
       ) : null}
 
       {disconnecting && identityByProvider.get(disconnecting.id) ? (

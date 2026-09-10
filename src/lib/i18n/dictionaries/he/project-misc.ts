@@ -2713,12 +2713,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
   'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
   'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
-  'Choose a verified Resend domain to send from. Appwrite creates a sending-only API key and saves it as your SMTP password.':
-    'בחרו דומיין מאומת ב-Resend שממנו יישלחו האימיילים. Appwrite תיצור מפתח API לשליחה בלבד ותשמור אותו כסיסמת ה-SMTP שלכם.',
-  'Choose a verified Mailgun domain to send from. Appwrite creates a domain sending key and saves it as your SMTP password.':
-    'בחרו דומיין מאומת ב-Mailgun שממנו יישלחו האימיילים. Appwrite תיצור מפתח שליחה לדומיין ותשמור אותו כסיסמת ה-SMTP שלכם.',
-  'Choose an authenticated SendGrid domain to send from. Appwrite creates a restricted API key and saves it as your SMTP password.':
-    'בחרו דומיין מאומת ב-SendGrid שממנו יישלחו האימיילים. Appwrite תיצור מפתח API מוגבל ותשמור אותו כסיסמת ה-SMTP שלכם.',
   'Creating credential and saving SMTP settings…':
     'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':

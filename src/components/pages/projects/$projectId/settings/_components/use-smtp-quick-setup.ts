@@ -49,8 +49,8 @@ interface UseSmtpQuickSetupOptions {
  * The quick setup flow itself: load sending domains, pick sender details, mint
  * a credential, and save the project's SMTP settings.
  *
- * Presentation lives in the callers ({@link SmtpQuickSetupDialog} and
- * {@link SmtpQuickSetupWizard}), so the two designs cannot drift apart.
+ * Presentation lives in {@link SmtpQuickSetupWizard}; this hook owns the
+ * state so the flow can be tested and re-skinned without touching it.
  */
 export function useSmtpQuickSetup({
   active,

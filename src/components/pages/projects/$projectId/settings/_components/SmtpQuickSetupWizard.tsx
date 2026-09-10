@@ -30,10 +30,9 @@ interface SmtpQuickSetupWizardProps {
 }
 
 /**
- * Fullscreen presentation of the quick setup flow, behind the
- * `smtpQuickSetupWizard` debug flag. Same steps as
- * {@link SmtpQuickSetupDialog}, laid out as a wizard page with a live summary
- * of what will be saved.
+ * Fullscreen quick setup: pick a sending domain and sender, review the relay
+ * settings in the sidebar, and save. Every other phase (loading, no domains,
+ * success, reconnect, error) is a single centered message.
  */
 export function SmtpQuickSetupWizard({
   open,
@@ -118,19 +117,26 @@ export function SmtpQuickSetupWizard({
     </div>
   )
 
-  const showSummary = phase === 'form'
+  const isForm = phase === 'form'
 
   return (
     <WizardLayout
       fullscreen
       title={t(provider.setupTitle)}
-      description={t(provider.setupDescription)}
       onClose={close}
-      useSidebar={showSummary}
+      useSidebar={isForm}
       footer={footer}
       footerAlign="right"
+      // Message phases fill the content area so they can sit in its center:
+      // the scroll wrapper becomes a flex column and both nested containers
+      // stretch to its full height.
+      contentWrapperClassName={isForm ? undefined : 'flex flex-col'}
+      fullscreenInnerClassName={
+        isForm ? undefined : 'flex min-h-0 flex-1 flex-col'
+      }
+      contentClassName={isForm ? undefined : 'flex min-h-0 flex-1 flex-col'}
       sidebar={
-        showSummary ? (
+        isForm ? (
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -172,29 +178,7 @@ export function SmtpQuickSetupWizard({
         ) : undefined
       }
     >
-      {phase === 'loading' || phase === 'submitting' ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-[13px] text-muted-foreground text-center">
-            {phase === 'loading'
-              ? t('Loading domains…')
-              : t('Creating credential and saving SMTP settings…')}
-          </p>
-        </div>
-      ) : null}
-
-      {phase === 'no-domains' ? (
-        <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <p className="text-[15px] font-semibold text-foreground">
-            {t('No verified domains')}
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            {t('Add and verify a sending domain, then check again.')}
-          </p>
-        </div>
-      ) : null}
-
-      {phase === 'form' ? (
+      {isForm ? (
         <div className="max-w-xl space-y-8">
           <section className="space-y-3">
             <div>
@@ -301,43 +285,67 @@ export function SmtpQuickSetupWizard({
             </p>
           ) : null}
         </div>
-      ) : null}
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          {phase === 'loading' || phase === 'submitting' ? (
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-[13px] text-muted-foreground">
+                {phase === 'loading'
+                  ? t('Loading domains…')
+                  : t('Creating credential and saving SMTP settings…')}
+              </p>
+            </div>
+          ) : null}
 
-      {phase === 'success' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <CheckCircle2 className="h-10 w-10 text-green-600" />
-          <p className="text-[15px] font-semibold text-foreground">
-            {t(
-              'Custom SMTP is enabled and your project now sends emails through this provider.',
-            )}
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            {setup.senderName.trim()} &lt;{setup.senderEmail.trim()}&gt;
-          </p>
-        </div>
-      ) : null}
+          {phase === 'no-domains' ? (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[15px] font-semibold text-foreground">
+                {t('No verified domains')}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                {t('Add and verify a sending domain, then check again.')}
+              </p>
+            </div>
+          ) : null}
 
-      {phase === 'reauthorize' ? (
-        <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <p className="text-[15px] font-semibold text-foreground">
-            {t('Authorization expired')}
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            {t('Reconnect your provider account to continue.')}
-          </p>
-        </div>
-      ) : null}
+          {phase === 'success' ? (
+            <div className="flex flex-col items-center gap-3">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+              <p className="text-[15px] font-semibold text-foreground">
+                {t(
+                  'Custom SMTP is enabled and your project now sends emails through this provider.',
+                )}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                {setup.senderName.trim()} &lt;{setup.senderEmail.trim()}&gt;
+              </p>
+            </div>
+          ) : null}
 
-      {phase === 'error' ? (
-        <div className="max-w-xl py-4">
-          <Alert variant="destructive" className="border-destructive/30">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-[13px]">
-              {setup.errorMessage}
-            </AlertDescription>
-          </Alert>
+          {phase === 'reauthorize' ? (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[15px] font-semibold text-foreground">
+                {t('Authorization expired')}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                {t('Reconnect your provider account to continue.')}
+              </p>
+            </div>
+          ) : null}
+
+          {phase === 'error' ? (
+            <div className="w-full max-w-xl text-start">
+              <Alert variant="destructive" className="border-destructive/30">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-[13px]">
+                  {setup.errorMessage}
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      )}
     </WizardLayout>
   )
 }

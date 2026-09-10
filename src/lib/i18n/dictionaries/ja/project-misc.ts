@@ -2709,12 +2709,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
   'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
-  'Choose a verified Resend domain to send from. Appwrite creates a sending-only API key and saves it as your SMTP password.':
-    '送信元となる検証済みの Resend ドメインを選択してください。Appwrite が送信専用の API キーを作成し、SMTP パスワードとして保存します。',
-  'Choose a verified Mailgun domain to send from. Appwrite creates a domain sending key and saves it as your SMTP password.':
-    '送信元となる検証済みの Mailgun ドメインを選択してください。Appwrite がドメイン送信キーを作成し、SMTP パスワードとして保存します。',
-  'Choose an authenticated SendGrid domain to send from. Appwrite creates a restricted API key and saves it as your SMTP password.':
-    '送信元となる認証済みの SendGrid ドメインを選択してください。Appwrite が制限付き API キーを作成し、SMTP パスワードとして保存します。',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':

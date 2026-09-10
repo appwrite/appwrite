@@ -55,13 +55,12 @@ export interface SmtpQuickSetupProvider {
   /** One line shown next to the provider name. */
   tagline: string
   /**
-   * Connect button label, setup dialog title, and setup dialog description.
-   * Whole sentences per provider rather than fragments joined with the brand,
-   * so languages that order words differently still read correctly.
+   * Connect button label and wizard titles. Whole sentences per provider
+   * rather than fragments joined with the brand, so languages that order
+   * words differently still read correctly.
    */
   connectLabel: string
   setupTitle: string
-  setupDescription: string
   disconnectTitle: string
   smtp: {
     host: string
@@ -91,8 +90,6 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     tagline: 'Creates a sending-only API key for a verified domain.',
     connectLabel: 'Connect with Resend',
     setupTitle: 'Set up SMTP with Resend',
-    setupDescription:
-      'Choose a verified Resend domain to send from. Appwrite creates a sending-only API key and saves it as your SMTP password.',
     disconnectTitle: 'Disconnect Resend',
     smtp: {
       host: RESEND_SMTP_HOST,
@@ -118,8 +115,6 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     tagline: 'Creates a domain sending key for a verified domain.',
     connectLabel: 'Connect with Mailgun',
     setupTitle: 'Set up SMTP with Mailgun',
-    setupDescription:
-      'Choose a verified Mailgun domain to send from. Appwrite creates a domain sending key and saves it as your SMTP password.',
     disconnectTitle: 'Disconnect Mailgun',
     smtp: {
       host: 'smtp.mailgun.org',
@@ -139,8 +134,6 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     tagline: 'Creates a restricted API key with mail send access.',
     connectLabel: 'Connect with SendGrid',
     setupTitle: 'Set up SMTP with SendGrid',
-    setupDescription:
-      'Choose an authenticated SendGrid domain to send from. Appwrite creates a restricted API key and saves it as your SMTP password.',
     disconnectTitle: 'Disconnect SendGrid',
     smtp: {
       host: 'smtp.sendgrid.net',
