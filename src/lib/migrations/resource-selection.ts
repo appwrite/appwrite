@@ -15,7 +15,7 @@ import {
  * kept pure and covered by tests rather than living inside the wizard.
  *
  * Several resources also depend on a sibling being present in the same
- * request; see RESOURCE_DEPENDENCIES.
+ * request, and on being named before it; each is noted where it is emitted.
  */
 
 export type MigrationResource =
@@ -108,47 +108,6 @@ export const FIREBASE_RESOURCES: FirebaseMigrationResource[] = [
   FirebaseMigrationResource.Bucket,
   FirebaseMigrationResource.File,
 ]
-
-/**
- * Resources the server cannot transfer on their own, and what has to accompany
- * them in the same request. Derived from utopia-php/migration: an exporter that
- * reads a parent out of the transfer cache finds it empty when the parent was
- * not requested, and an importer that resolves a parent by id throws.
- *
- * Kept as data so the tests can assert every emitted set satisfies it.
- */
-export const RESOURCE_DEPENDENCIES: Partial<
-  Record<AppwriteMigrationResource, AppwriteMigrationResource[]>
-> = {
-  [AppwriteMigrationResource.Membership]: [
-    AppwriteMigrationResource.User,
-    AppwriteMigrationResource.Team,
-  ],
-  [AppwriteMigrationResource.Table]: [AppwriteMigrationResource.Database],
-  [AppwriteMigrationResource.Column]: [
-    AppwriteMigrationResource.Database,
-    AppwriteMigrationResource.Table,
-  ],
-  [AppwriteMigrationResource.Index]: [
-    AppwriteMigrationResource.Database,
-    AppwriteMigrationResource.Table,
-    AppwriteMigrationResource.Column,
-  ],
-  [AppwriteMigrationResource.Row]: [
-    AppwriteMigrationResource.Database,
-    AppwriteMigrationResource.Table,
-    AppwriteMigrationResource.Column,
-  ],
-  [AppwriteMigrationResource.File]: [AppwriteMigrationResource.Bucket],
-  [AppwriteMigrationResource.Environmentvariable]: [
-    AppwriteMigrationResource.Function,
-  ],
-  [AppwriteMigrationResource.Deployment]: [AppwriteMigrationResource.Function],
-  [AppwriteMigrationResource.Subscriber]: [
-    AppwriteMigrationResource.Topic,
-    AppwriteMigrationResource.User,
-  ],
-}
 
 function allowlistFor(kind: MigrationProviderKind): readonly string[] {
   switch (kind) {

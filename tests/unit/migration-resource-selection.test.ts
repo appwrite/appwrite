@@ -17,10 +17,32 @@ import { describe, expect, test } from 'bun:test'
 import { AppwriteMigrationResource } from '@appwrite.io/console'
 import {
   INITIAL_RESOURCE_FORM,
-  RESOURCE_DEPENDENCIES,
   resourceFormToResources,
   type ResourceFormState,
 } from '@/lib/migrations/resource-selection'
+
+/**
+ * What the server needs alongside each resource, stated here from the migration
+ * library's own behavior rather than read back from the wizard:
+ *
+ * - membership: exportMemberships walks the exported teams and looks each
+ *   member up among the exported users
+ * - subscriber: exportSubscribers walks the exported topics, and the importer
+ *   resolves the subscriber's user before writing it
+ * - table/column/index/row, file: the exporter walks its exported parent
+ * - environment-variable, deployment: the exporter walks the exported functions
+ */
+const DEPENDENCIES: Record<string, string[]> = {
+  membership: ['user', 'team'],
+  subscriber: ['topic', 'user'],
+  table: ['database'],
+  column: ['database', 'table'],
+  index: ['database', 'table', 'column'],
+  row: ['database', 'table', 'column'],
+  file: ['bucket'],
+  'environment-variable': ['function'],
+  deployment: ['function'],
+}
 
 const everything: ResourceFormState = {
   users: { root: true, teams: true },
@@ -106,9 +128,7 @@ describe('resourceFormToResources, Appwrite', () => {
         resourceFormToResources(form, 'appwrite'),
       )
 
-      for (const [resource, requires] of Object.entries(
-        RESOURCE_DEPENDENCIES,
-      )) {
+      for (const [resource, requires] of Object.entries(DEPENDENCIES)) {
         if (!resources.has(resource)) continue
 
         for (const required of requires) {
