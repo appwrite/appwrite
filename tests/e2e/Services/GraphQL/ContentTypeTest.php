@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -49,6 +50,80 @@ final class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
         $this->assertEquals(197, $response['total']);
+    }
+
+    #[DataProvider('postRoutes')]
+    public function testPostSDKQuery(string $path): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-sdk-graphql' => 'true',
+        ], $this->getHeaders());
+        $countries = ['query' => 'query { localeListCountries { total } }'];
+        $continents = ['query' => 'query { localeListContinents { total } }'];
+
+        $single = $this->client->call(Client::METHOD_POST, $path, $headers, ['query' => $countries]);
+
+        $this->assertSame(200, $single['headers']['status-code']);
+        $this->assertArrayNotHasKey('errors', $single['body']);
+        $this->assertSame(197, $single['body']['data']['localeListCountries']['total']);
+
+        $batch = $this->client->call(Client::METHOD_POST, $path, $headers, ['query' => [$countries, $continents]]);
+
+        $this->assertSame(200, $batch['headers']['status-code']);
+        $this->assertCount(2, $batch['body']);
+        $this->assertArrayNotHasKey('errors', $batch['body'][0]);
+        $this->assertArrayNotHasKey('errors', $batch['body'][1]);
+        $this->assertSame(197, $batch['body'][0]['data']['localeListCountries']['total']);
+        $this->assertSame(7, $batch['body'][1]['data']['localeListContinents']['total']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function postRoutes(): \Iterator
+    {
+        yield 'query' => ['/graphql'];
+        yield 'mutation' => ['/graphql/mutation'];
+    }
+
+    #[DataProvider('invalidSDKQueries')]
+    public function testPostInvalidSDKQuery(string $path, array $payload, string $type): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, $path, \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-sdk-graphql' => 'true',
+        ], $this->getHeaders()), $payload);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame($type, $response['body']['type']);
+        $this->assertNotEmpty($response['body']['message']);
+        $this->assertArrayNotHasKey('data', $response['body']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array, string}>
+     */
+    public static function invalidSDKQueries(): \Iterator
+    {
+        foreach (self::postRoutes() as $route => [$path]) {
+            foreach (['string' => '{ localeListCountries { total } }', 'number' => 42, 'boolean' => true] as $name => $query) {
+                yield $route . ' ' . $name => [$path, ['query' => $query], 'general_argument_invalid'];
+            }
+
+            yield $route . ' missing' => [$path, [], 'graphql_no_query'];
+            yield $route . ' null' => [$path, ['query' => null], 'graphql_no_query'];
+            yield $route . ' empty' => [$path, ['query' => []], 'graphql_no_query'];
+            yield $route . ' object' => [$path, ['query' => new \stdClass()], 'graphql_no_query'];
+        }
     }
 
     public function testJSONObjectVariables()
