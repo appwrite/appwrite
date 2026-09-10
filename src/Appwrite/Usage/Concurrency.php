@@ -88,7 +88,11 @@ class Concurrency
         }
 
         $samples = [];
+        // Cast: a tenant is a project sequence, so PHP turned the array key into
+        // an int, and the store requires a non-empty string.
         foreach ($deltas as $tenant => $byBucket) {
+            $tenant = (string) $tenant;
+
             \ksort($byBucket);
             $buckets = \array_keys($byBucket);
             $count = \count($buckets);
