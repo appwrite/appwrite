@@ -520,7 +520,9 @@ class Event
         }
 
         /**
-         * Create all possible patterns including placeholders.
+         * Create all possible patterns including placeholders, most specific first:
+         * consumers such as the functions worker take the first event as the name of
+         * the event that actually happened.
          */
         if ($action) {
             if ($subSubResource) {
@@ -536,10 +538,10 @@ class Event
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
             } else {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
+                }
                 $patterns[] = \implode('.', [$type, $resource, $action]);
-            }
-            if ($attribute) {
-                $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
         }
         if ($subSubResource) {
@@ -562,6 +564,9 @@ class Event
         foreach ($patterns as $eventPattern) {
             $events[] = \str_replace($paramKeys, $paramValues, $eventPattern);
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
+            // Several permutations produce the same wildcard pattern. Deduplicate
+            // before substituting values, preserving the first occurrence order.
+            $wildcards = [];
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
                     if ($subSubResource) {
@@ -569,20 +574,21 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
+                            $wildcard = \str_replace(\is_string($subCurrent) ? $subCurrent : [], '*', $eventPattern);
+                            $wildcards[$wildcard] = true;
+                            $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $wildcard)] = true;
+                            $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $eventPattern)] = true;
                         }
                     } else {
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
-                        $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
+                        $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $eventPattern)] = true;
                     }
                 }
+            }
+            foreach ($wildcards as $wildcard => $_) {
+                $events[] = \str_replace($paramKeys, $paramValues, $wildcard);
             }
         }
 

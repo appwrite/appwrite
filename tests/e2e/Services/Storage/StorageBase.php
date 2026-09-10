@@ -1218,27 +1218,29 @@ trait StorageBase
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
 
-        //get image preview after
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'width' => 300,
-            'height' => 100,
-            'borderRadius' => '50',
-            'opacity' => '0.5',
-            'output' => 'png',
-            'rotation' => '45',
-        ]);
+        // The delete worker invalidates previews asynchronously.
+        $this->assertEventually(function () use ($bucketId, $fileId, $imageBefore) {
+            $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'width' => 300,
+                'height' => 100,
+                'borderRadius' => '50',
+                'opacity' => '0.5',
+                'output' => 'png',
+                'rotation' => '45',
+            ]);
 
-        $this->assertEquals(200, $file3['headers']['status-code']);
-        $this->assertEquals('image/png', $file3['headers']['content-type']);
-        $this->assertNotEmpty($file3['body']);
+            $this->assertEquals(200, $file3['headers']['status-code']);
+            $this->assertEquals('image/png', $file3['headers']['content-type']);
+            $this->assertNotEmpty($file3['body']);
 
-        $imageAfter = new \Imagick();
-        $imageAfter->readImageBlob($file3['body']);
+            $imageAfter = new \Imagick();
+            $imageAfter->readImageBlob($file3['body']);
 
-        $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+        }, 10_000, 500);
     }
 
     public function testFilePreviewCacheControlOnCacheHit(): void

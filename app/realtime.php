@@ -1413,6 +1413,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                     Span::init('realtime.close.presenceCleanup');
                     Span::add('realtime.projectId', $projectId);
                     Span::add('realtime.presenceCount', \count($presencesById));
+                    Span::add('user.id', $userId ?? null);
 
                     try {
                         $dbForPlatform = getConsoleDB();
@@ -1422,7 +1423,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             return;
                         }
 
-                        $presenceIds = \array_keys($presencesById);
+                        $presenceIds = \array_map(strval(...), \array_keys($presencesById));
                         $dbForProject = getProjectDB($project);
 
                         $user = new User([]);
@@ -1461,7 +1462,11 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             Span::current()?->setError($th);
                             logError($th, 'realtimeOnClosePresenceDeletion', tags: [
                                 'projectId' => $projectId,
-                                'presences' => \count($presenceIds)
+                                'userId' => $userId ?? '',
+                                'presences' => \count($presenceIds),
+                                // Bounded sample; total is carried by `presences` above so the
+                                // tag cannot blow past telemetry length limits on a busy connection.
+                                'presenceIds' => \implode(',', \array_slice($presenceIds, 0, 10)),
                             ]);
                         }
 
