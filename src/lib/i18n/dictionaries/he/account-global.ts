@@ -4,6 +4,9 @@
  */
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': 'הצטרפו לארגון',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
   Account: 'חשבון',
   'Account ID': 'מזהה חשבון',
