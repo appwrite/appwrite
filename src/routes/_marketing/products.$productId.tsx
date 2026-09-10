@@ -11,6 +11,7 @@ import {
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 import { translate } from '@/lib/i18n/translate'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -48,7 +49,7 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
         ? [
             {
               type: 'application/ld+json',
-              children: JSON.stringify({
+              children: stringifyJsonLd({
                 '@context': 'https://schema.org',
                 '@type': 'FAQPage',
                 mainEntity: content.faq.map((faq) => ({

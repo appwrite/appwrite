@@ -13,6 +13,7 @@ import {
   getThreadsCanonicalUrl,
 } from '@/lib/threads/seo'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/threads/$threadId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -56,7 +57,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify(
+          children: stringifyJsonLd(
             getDiscussionForumPageSchema({
               canonicalUrl,
               thread,
@@ -66,7 +67,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify(
+          children: stringifyJsonLd(
             getThreadsBreadcrumbSchema([
               { name: 'Threads', path: '/threads' },
               { name: thread.title, path: `/threads/${thread.discord_id}` },

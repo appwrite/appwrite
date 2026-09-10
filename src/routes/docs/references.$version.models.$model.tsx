@@ -10,6 +10,7 @@ import {
   getDocsArticleSchema,
 } from '@/lib/docs/seo'
 import { fetchApiReferenceModel } from '@/lib/docs/references/reference-api'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/docs/references/$version/models/$model')({
   ssr: true,
@@ -49,11 +50,11 @@ export const Route = createFileRoute('/docs/references/$version/models/$model')(
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsBreadcrumbSchema(meta, slug, seoOptions)),
+          children: stringifyJsonLd(getDocsBreadcrumbSchema(meta, slug, seoOptions)),
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsArticleSchema(meta, slug, seoOptions)),
+          children: stringifyJsonLd(getDocsArticleSchema(meta, slug, seoOptions)),
         },
       ],
     }

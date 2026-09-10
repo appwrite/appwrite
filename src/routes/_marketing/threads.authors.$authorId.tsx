@@ -8,6 +8,7 @@ import {
   getThreadsCanonicalUrl,
 } from '@/lib/threads/seo'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/threads/authors/$authorId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -51,13 +52,13 @@ export const Route = createFileRoute('/_marketing/threads/authors/$authorId')({
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify(
+          children: stringifyJsonLd(
             getThreadsAuthorPageSchema(author, canonicalUrl),
           ),
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify(
+          children: stringifyJsonLd(
             getThreadsBreadcrumbSchema([
               { name: 'Threads', path: '/threads' },
               {

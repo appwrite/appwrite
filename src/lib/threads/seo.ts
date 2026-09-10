@@ -1,6 +1,7 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
+import { sanitizeJsonLdText } from '@/lib/seo/json-ld'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
 import { getAuthorDescription } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
@@ -132,37 +133,66 @@ function toIso8601DateTime(value: string): string {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString()
 }
 
-function nonEmptyText(value: string, fallback: string): string {
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? value : fallback
+function toSchemaInteger(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.trunc(value))
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.trunc(parsed))
+    }
+  }
+  return undefined
+}
+
+function schemaText(value: string, fallback: string): string {
+  const sanitized = sanitizeJsonLdText(value)
+  const trimmed = sanitized.trim()
+  return trimmed.length > 0 ? sanitized : sanitizeJsonLdText(fallback)
+}
+
+function getThreadAuthorPersonSchema(
+  name: string,
+  authorId?: string,
+): Record<string, unknown> {
+  const trimmedAuthorId = authorId?.trim()
+  return {
+    '@type': 'Person',
+    name: schemaText(name, 'Anonymous'),
+    ...(trimmedAuthorId
+      ? { url: getThreadsCanonicalUrl(`/threads/authors/${trimmedAuthorId}`) }
+      : {}),
+  }
 }
 
 export function getDiscussionForumPageSchema(options: {
   canonicalUrl: string
   thread: Pick<
     DiscordThread,
-    'title' | 'content' | 'author' | '$createdAt' | 'vote_count'
+    'title' | 'content' | 'author' | 'author_id' | '$createdAt' | 'vote_count'
   >
-  messages: Pick<DiscordMessage, 'author' | 'message' | 'timestamp' | '$id'>[]
+  messages: Pick<
+    DiscordMessage,
+    'author' | 'author_id' | 'message' | 'timestamp' | '$id'
+  >[]
 }) {
   const { canonicalUrl, thread, messages } = options
   const first = messages[0]
-  const opText = nonEmptyText(
+  const opText = schemaText(
     first?.message ?? '',
-    nonEmptyText(thread.content, thread.title),
+    schemaText(thread.content, thread.title),
   )
   const opAuthor = (first?.author ?? thread.author).trim() || 'Anonymous'
+  const opAuthorId = first?.author_id ?? thread.author_id
   const opDate = toIso8601DateTime(first?.timestamp ?? thread.$createdAt)
 
   const comments = messages.slice(1).map((message) => {
-    const text = nonEmptyText(message.message, '(No text)')
+    const text = schemaText(message.message, '(No text)')
     const comment: Record<string, unknown> = {
       '@type': 'Comment',
       text,
-      author: {
-        '@type': 'Person',
-        name: message.author.trim() || 'Anonymous',
-      },
+      author: getThreadAuthorPersonSchema(message.author, message.author_id),
       datePublished: toIso8601DateTime(message.timestamp),
     }
     if (message.$id) {
@@ -173,27 +203,25 @@ export function getDiscussionForumPageSchema(options: {
 
   const mainEntity: Record<string, unknown> = {
     '@type': 'DiscussionForumPosting',
-    headline: thread.title,
+    headline: schemaText(thread.title, 'Thread'),
     url: canonicalUrl,
     mainEntityOfPage: canonicalUrl,
     text: opText,
-    author: {
-      '@type': 'Person',
-      name: opAuthor,
-    },
+    author: getThreadAuthorPersonSchema(opAuthor, opAuthorId),
     datePublished: opDate,
   }
 
-  if (typeof thread.vote_count === 'number' && thread.vote_count >= 0) {
+  const voteCount = toSchemaInteger(thread.vote_count)
+  if (voteCount !== undefined) {
     mainEntity.interactionStatistic = {
       '@type': 'InteractionCounter',
       interactionType: 'https://schema.org/LikeAction',
-      userInteractionCount: thread.vote_count,
+      userInteractionCount: voteCount,
     }
   }
 
-  const replyCount = Math.max(0, messages.length - 1)
-  if (replyCount > 0) {
+  const replyCount = toSchemaInteger(Math.max(0, messages.length - 1))
+  if (replyCount !== undefined && replyCount > 0) {
     mainEntity.commentCount = replyCount
     mainEntity.comment = comments
   }
@@ -216,14 +244,18 @@ export function getThreadsAuthorPageSchema(
     url: canonicalUrl,
     mainEntity: {
       '@type': 'Person',
-      name: author.display_name,
-      alternateName: author.username,
-      ...(author.bio ? { description: author.bio } : {}),
+      name: schemaText(author.display_name, 'Author'),
+      alternateName: schemaText(author.username, 'Author'),
+      ...(author.bio?.trim()
+        ? { description: sanitizeJsonLdText(author.bio) }
+        : {}),
       interactionStatistic: [
         {
           '@type': 'InteractionCounter',
           interactionType: 'https://schema.org/WriteAction',
-          userInteractionCount: author.thread_count + author.reply_count,
+          userInteractionCount:
+            (toSchemaInteger(author.thread_count) ?? 0) +
+            (toSchemaInteger(author.reply_count) ?? 0),
         },
       ],
     },
@@ -255,7 +287,7 @@ export function getThreadsBreadcrumbSchema(
     itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      name: item.name,
+      name: schemaText(item.name, 'Threads'),
       item: getThreadsCanonicalUrl(item.path),
     })),
   }
