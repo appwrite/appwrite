@@ -108,6 +108,8 @@ A storage bucket is more than a folder in the cloud. It's the unit where you dec
 
 [Appwrite Storage](/docs/products/storage) gives you all of that in a managed backend, alongside auth, databases, and functions, so you can handle user files and the rest of your backend in one place with no infrastructure to run. Create a bucket, set its permissions, and wire an upload into your app in minutes.
 
+Appwrite Storage also supports an [S3-compatible API](/blog/post/announcing-s3-api), so you can use existing S3 clients, SDKs, and tools like the AWS CLI and rclone with your Appwrite buckets without migrating your files.
+
 ## Resources
 
 * [Appwrite Storage documentation](/docs/products/storage)
