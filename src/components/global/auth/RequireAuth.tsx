@@ -17,7 +17,10 @@ import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
-import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import {
+  isValidRelativeRedirect,
+  requiresConsoleEmailVerification,
+} from '@/lib/post-auth-navigation'
 import {
   applyScreenshotModeAccount,
   subscribeScreenshotMode,
@@ -96,30 +99,6 @@ function getRelativeRedirectUrl(
       : null
     : `${pathname}${search}`
   return redirect && isValidRelativeRedirect(redirect) ? redirect : null
-}
-
-function isValidRelativeRedirect(value: string): boolean {
-  if (
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    /[\\\u0000-\u001f\u007f]/.test(value)
-  ) {
-    return false
-  }
-  try {
-    // Inspect only destination structure, not encoded query values or URLs
-    // embedded in them. Never normalize the raw redirect we return to callers.
-    const origin = 'https://console.invalid'
-    const destination = new URL(value, origin)
-    const pathname = decodeURIComponent(destination.pathname)
-    return (
-      destination.origin === origin &&
-      !pathname.startsWith('//') &&
-      !/[\\\u0000-\u001f\u007f]/.test(pathname)
-    )
-  } catch {
-    return false
-  }
 }
 
 type RouterLocation = ReturnType<typeof useLocation>

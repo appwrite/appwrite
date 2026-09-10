@@ -30,22 +30,13 @@ import {
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-// Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    // Must start with / and not contain :// (which would indicate a protocol)
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z

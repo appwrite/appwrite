@@ -40,7 +40,10 @@ import {
   getConsoleAccountQueryRevision,
   hasConsoleImpersonationSessionTarget,
 } from '@/lib/console-impersonation'
-import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  isValidRelativeRedirect,
+  resolvePostAuthRedirect,
+} from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -358,13 +361,8 @@ function showConsoleSignOutCover(): void {
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
 export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
-  const isValidRelativeRedirect =
-    !!redirect &&
-    redirect.startsWith('/') &&
-    !redirect.startsWith('//') &&
-    !redirect.includes('://')
   window.location.replace(
-    isValidRelativeRedirect
+    redirect && isValidRelativeRedirect(redirect)
       ? `/sign-in?redirect=${encodeURIComponent(redirect)}`
       : '/sign-in',
   )
