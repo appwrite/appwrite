@@ -2,6 +2,7 @@ import { createMiddleware } from '@tanstack/react-start'
 import {
   isRootRedirectPath,
   resolveRootGuestRedirect,
+  rootRedirectLocationPath,
 } from '@/lib/root-guest-redirect'
 import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
@@ -20,7 +21,7 @@ export const rootGuestRedirectMiddleware = createMiddleware({
   const redirect = resolveRootGuestRedirect(request, pathname)
   if (redirect) {
     const headers = new Headers({
-      Location: redirect.url.toString(),
+      Location: rootRedirectLocationPath(redirect.url),
       Vary: 'Cookie',
       'Cache-Control': 'private, no-store',
     })

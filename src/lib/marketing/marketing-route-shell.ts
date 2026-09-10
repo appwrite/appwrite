@@ -8,6 +8,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'projects',
   'organizations',
   'account',
+  'app',
   'blocks',
   'impersonate',
   'init',
@@ -32,8 +33,9 @@ function isConsoleAuthRouteMatch(
 
 function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
-  // `/` is a redirect hop (SSR 301, or a blank client hop on localhost).
+  // `/` and `/app` are console redirect hops, not marketing pages.
   if (normalized === '/') return true
+  if (normalized === '/app') return true
   if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true

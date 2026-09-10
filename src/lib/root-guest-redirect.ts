@@ -47,6 +47,17 @@ function guestRedirectUrl(
 }
 
 /**
+ * Absolute Location headers must be https on production. Behind Cloudflare,
+ * `request.url` is often `http://appwrite.io/...`, which produced
+ * `Location: http://appwrite.io/app` and dropped Secure session cookies.
+ */
+export function rootRedirectLocationPath(
+  redirectUrl: URL,
+): string {
+  return `${redirectUrl.pathname}${redirectUrl.search}`
+}
+
+/**
  * 301 for the stable public landing (`/home`, and `/sign-in` when marketing is
  * off). Crawlers do not send a console session cookie, so this is the URL
  * they should index; a 302 would leave `/` in the index with no content.
