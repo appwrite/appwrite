@@ -177,22 +177,21 @@ final class DeploymentsTest extends TestCase
 
     public function testPayloadInternalEndpointIsHttpEvenWhenForceHttpsEnabled(): void
     {
+        // Regression: with the documented self-hosted default
+        // (_APP_OPTIONS_FORCE_HTTPS=enabled) and no _APP_JOBS_ENDPOINT override,
+        // the source presigned URL and the CloudEvents callback URL must reach
+        // Appwrite over plain HTTP. The jobs-service and its sidecars live on
+        // the internal Docker network where nothing listens on port 443 — an
+        // https://appwrite/... URL leaves deployments stuck in "waiting".
         $this->withEnv(
             ['_APP_OPTIONS_FORCE_HTTPS' => 'enabled', '_APP_JOBS_ENDPOINT' => ''],
             function (): void {
                 $payload = $this->buildPayload([]);
 
-                $this->assertStringStartsWith(
-                    'http://localhost/v1/jobs/event?',
-                    $payload['callback']->url,
-                    'CloudEvents callback must reach Appwrite over HTTP on the internal network'
-                );
-
-                $source = $this->findSourceArtifact($payload);
-                $this->assertStringStartsWith(
-                    'http://localhost/v1/functions/function1/deployments/deployment1/download',
-                    $source->in,
-                    'Source presigned download URL must use HTTP for the sidecar'
+                $this->assertInternalEndpoint($payload['callback']->url, 'localhost');
+                $this->assertInternalEndpoint(
+                    $this->findSourceArtifact($payload)->in,
+                    'localhost'
                 );
             }
         );
@@ -200,6 +199,9 @@ final class DeploymentsTest extends TestCase
 
     public function testPayloadRespectsExplicitJobsEndpointOverride(): void
     {
+        // _APP_JOBS_ENDPOINT stays the supported escape hatch for non-default
+        // internal topologies — its value must win regardless of the public
+        // _APP_OPTIONS_FORCE_HTTPS flag.
         $this->withEnv(
             [
                 '_APP_OPTIONS_FORCE_HTTPS' => 'enabled',
@@ -208,18 +210,31 @@ final class DeploymentsTest extends TestCase
             function (): void {
                 $payload = $this->buildPayload([]);
 
-                $this->assertStringStartsWith(
-                    'http://internal-appwrite:9000/v1/jobs/event?',
-                    $payload['callback']->url
+                $this->assertInternalEndpoint(
+                    $payload['callback']->url,
+                    'internal-appwrite:9000'
                 );
-
-                $source = $this->findSourceArtifact($payload);
-                $this->assertStringStartsWith(
-                    'http://internal-appwrite:9000/v1/functions/function1/deployments/deployment1/download',
-                    $source->in
+                $this->assertInternalEndpoint(
+                    $this->findSourceArtifact($payload)->in,
+                    'internal-appwrite:9000'
                 );
             }
         );
+    }
+
+    /**
+     * Asserts the URL is reachable over HTTP on the given internal authority
+     * (host[:port]). Treats the path, query, and any future route changes as
+     * opaque — the regression is the scheme + authority, not the URL shape.
+     */
+    private function assertInternalEndpoint(string $url, string $expectedAuthority): void
+    {
+        $parts = \parse_url($url);
+        $this->assertIsArray($parts, "Expected a valid URL, got: {$url}");
+        $this->assertSame('http', $parts['scheme'] ?? null, "Expected http scheme in {$url}");
+
+        $actualAuthority = ($parts['host'] ?? '') . (isset($parts['port']) ? ':' . $parts['port'] : '');
+        $this->assertSame($expectedAuthority, $actualAuthority, "Expected authority {$expectedAuthority} in {$url}");
     }
 
     /**
