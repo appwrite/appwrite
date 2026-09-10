@@ -590,6 +590,11 @@ test.describe('plan downgrade deletions (mocked API)', () => {
     await expect(
       dialog.getByText(/moves to the Free plan on |will move to the Free plan/),
     ).toBeVisible()
+    await expect(
+      dialog.getByText(
+        'Deleted data cannot be recovered. This action cannot be undone.',
+      ),
+    ).toBeVisible()
 
     state.submitted = true
     await dialog.getByRole('button', { name: 'Delete and change plan' }).click()

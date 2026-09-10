@@ -100,8 +100,7 @@ export function ConfirmPlanChange({
               : t('Confirm organization deletion')}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('The following is deleted as soon as you confirm.')}{' '}
-            {t('This action cannot be undone.')}
+            {t('The following is deleted as soon as you confirm.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -153,25 +152,27 @@ export function ConfirmPlanChange({
             </div>
           </div>
         ) : null}
-        {planLabel ? (
-          <p
-            className={cn(
-              'px-6 pb-4 text-[13px] leading-normal text-muted-foreground',
-              !showBody && 'pt-4',
-            )}
-          >
-            {planChangeDate
-              ? t(
-                  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.',
-                )
-                  .replace('{plan}', planLabel)
-                  .replace('{date}', formatDate(planChangeDate))
-              : t('Your organization will move to the {plan} plan.').replace(
-                  '{plan}',
-                  planLabel,
-                )}
+        <div className={cn('space-y-2 px-6 pb-4', !showBody && 'pt-4')}>
+          {planLabel ? (
+            <p className="text-[13px] leading-normal text-muted-foreground">
+              {planChangeDate
+                ? t(
+                    'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.',
+                  )
+                    .replace('{plan}', planLabel)
+                    .replace('{date}', formatDate(planChangeDate))
+                : t('Your organization will move to the {plan} plan.').replace(
+                    '{plan}',
+                    planLabel,
+                  )}
+            </p>
+          ) : null}
+          {/* The last line before the destructive button, so it carries the warning. */}
+          <p className="text-[13px] font-medium leading-normal text-red-600 dark:text-red-400">
+            {t('Deleted data cannot be recovered.')}{' '}
+            {t('This action cannot be undone.')}
           </p>
-        ) : null}
+        </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"

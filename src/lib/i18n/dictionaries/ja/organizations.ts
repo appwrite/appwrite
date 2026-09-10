@@ -1267,6 +1267,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
   'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
     '削除はただちに実行されます。組織は現在の請求サイクルが終了する {date} に {plan} プランへ移行します。',
+  'Deleted data cannot be recovered.': '削除されたデータは復元できません。',
   'Could not load which backup policies stop running when your plan changes.':
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
