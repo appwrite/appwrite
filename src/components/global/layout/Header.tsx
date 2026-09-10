@@ -468,8 +468,8 @@ export function ConsoleHeader({
       undefined
   const optionalAuthPending = isOptionalAuth && !optionalAuthResolved
   const headerAuthenticated = isAuthenticated || !!headerAccount
-  const showGuestHeader =
-    isOptionalAuth && optionalAuthResolved && !headerAuthenticated
+  // The pending pathname changes before this header unmounts on auth navigation.
+  const showGuestHeader = !headerAuthenticated
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
