@@ -85,18 +85,65 @@ final class ConcurrencyTest extends TestCase
         $this->assertSame([], $written);
     }
 
-    public function testCappedReadSamplesOnlyTheBucketsItCompleted(): void
+    public function testDenseReadIsPagedUntilExhausted(): void
     {
-        // Exactly the cap across two buckets: the read is time-ascending, so the
-        // later bucket may be missing rows and has to wait for the next run.
-        $events = [self::metric('t0', 1, '2026-09-08 11:50:00')];
-        for ($i = 1; $i < Concurrency::MAX_ROWS; $i++) {
-            $events[] = self::metric('t' . $i, 1, self::BUCKET);
-        }
+        // Page one fills mid-way through 11:55, so that bucket is dropped and
+        // re-read whole on page two rather than sampled short.
+        $written = $this->sample(
+            gauge: [self::metric('t1', 0, '2026-09-08 11:45:00')],
+            events: [
+                self::metric('t1', 1, '2026-09-08 11:50:00'),
+                self::metric('t2', 1, '2026-09-08 11:50:00'),
+                self::metric('t1', 1, self::BUCKET),
+                self::metric('t2', -1, self::BUCKET),
+            ],
+            pageSize: 3,
+        );
 
-        $written = $this->sample(gauge: [self::metric('t0', 0, '2026-09-08 11:45:00')], events: $events);
+        $this->assertSame([
+            ['tenant' => 't1', 'value' => 1, 'time' => '2026-09-08 11:50:00'],
+            ['tenant' => 't1', 'value' => 2, 'time' => self::BUCKET],
+            ['tenant' => 't2', 'value' => 1, 'time' => '2026-09-08 11:50:00'],
+            ['tenant' => 't2', 'value' => 0, 'time' => self::BUCKET],
+        ], $written);
 
-        $this->assertSame([['tenant' => 't0', 'value' => 1, 'time' => '2026-09-08 11:50:00']], $written);
+        $eventReads = \array_filter($this->reads, fn ($r) => $r[0] === Usage::TYPE_EVENT);
+        $this->assertCount(2, $eventReads);
+    }
+
+    public function testDenseHistoryBeforeTheFirstBucketDoesNotStall(): void
+    {
+        // The window's history alone overruns a page. Reading it in one capped
+        // query returns nothing the first bucket can be sampled from, and since
+        // the resume point never moves, every later run reads the same page.
+        $written = $this->sample(
+            gauge: [self::metric('t1', 0, self::PREVIOUS_SAMPLE)],
+            events: [
+                self::metric('t1', 1, '2026-09-08 06:05:00'),
+                self::metric('t1', 1, '2026-09-08 06:10:00'),
+                self::metric('t1', 1, self::BUCKET),
+            ],
+            pageSize: 2,
+        );
+
+        $this->assertSame([['tenant' => 't1', 'value' => 3, 'time' => self::BUCKET]], $written);
+    }
+
+    public function testSingleBucketOverThePageSizeIsNotSampled(): void
+    {
+        // No page size gets past one bucket that fills a page, so the fold
+        // writes nothing instead of sampling it short.
+        $written = $this->sample(
+            gauge: [self::metric('t1', 0, self::PREVIOUS_SAMPLE)],
+            events: [
+                self::metric('t1', 1, self::BUCKET),
+                self::metric('t2', 1, self::BUCKET),
+                self::metric('t3', 1, self::BUCKET),
+            ],
+            pageSize: 2,
+        );
+
+        $this->assertSame([], $written);
     }
 
     public function testEventReadCoversOneWindowBeforeTheFirstEmittedBucket(): void
@@ -121,19 +168,53 @@ final class ConcurrencyTest extends TestCase
 
     /**
      * @param list<Metric> $gauge rows every TYPE_GAUGE read returns
-     * @param list<Metric> $events rows every TYPE_EVENT read returns
+     * @param list<Metric> $events the whole event stream; reads are served from it
+     *                             time-ordered and cut to the page size, as ClickHouse would
      * @return list<array{tenant: string, value: int, time: string}> gauge rows the fold wrote
      */
-    private function sample(array $gauge, array $events): array
+    private function sample(array $gauge, array $events, int $pageSize = 50_000): array
     {
         $this->reads = [];
         $usage = $this->createStub(Usage::class);
 
-        $usage->method('findAcrossTenants')->willReturnCallback(function (array $queries, ?string $type) use ($gauge, $events): array {
-            $this->reads[] = [$type, $queries];
+        \usort($events, fn (Metric $a, Metric $b) => (string) $a->getAttribute('time') <=> (string) $b->getAttribute('time'));
 
-            return $type === Usage::TYPE_GAUGE ? $gauge : $events;
-        });
+        $usage->method('findAcrossTenants')->willReturnCallback(
+            function (array $queries, ?string $type) use ($gauge, $events, $pageSize): array {
+                $this->reads[] = [$type, $queries];
+
+                if ($type === Usage::TYPE_GAUGE) {
+                    return $gauge;
+                }
+
+                $from = $to = null;
+                foreach ($queries as $query) {
+                    if ($query->getAttribute() !== 'time') {
+                        continue;
+                    }
+                    if ($query->getMethod() === Method::GreaterThanEqual) {
+                        $from = (string) $query->getValue();
+                    }
+                    if ($query->getMethod() === Method::LessThan) {
+                        $to = (string) $query->getValue();
+                    }
+                }
+
+                $page = [];
+                foreach ($events as $event) {
+                    $time = (string) $event->getAttribute('time');
+                    if (($from !== null && $time < $from) || ($to !== null && $time >= $to)) {
+                        continue;
+                    }
+                    $page[] = $event;
+                    if (\count($page) >= $pageSize) {
+                        break;
+                    }
+                }
+
+                return $page;
+            }
+        );
 
         $written = [];
         $usage->method('addBatch')->willReturnCallback(function (array $rows) use (&$written): bool {
@@ -148,7 +229,7 @@ final class ConcurrencyTest extends TestCase
             return true;
         });
 
-        (new Concurrency())->sample($usage, new \DateTimeImmutable(self::NOW, new \DateTimeZone('UTC')));
+        (new Concurrency($pageSize))->sample($usage, new \DateTimeImmutable(self::NOW, new \DateTimeZone('UTC')));
 
         return $written;
     }

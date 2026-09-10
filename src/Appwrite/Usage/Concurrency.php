@@ -5,6 +5,7 @@ namespace Appwrite\Usage;
 use Utopia\Console;
 use Utopia\Query\Query as UsageFilter;
 use Utopia\System\System;
+use Utopia\Usage\Metric;
 use Utopia\Usage\Usage;
 use Utopia\Usage\UsageQuery;
 
@@ -40,7 +41,12 @@ class Concurrency
     private const int MAX_CATCHUP_HOURS = 168;
 
     /** Row cap per cross-tenant query, one row per (tenant, bucket). */
-    public const int MAX_ROWS = 50_000;
+    private const int MAX_ROWS = 50_000;
+
+    /** @param int $pageSize rows per event read; only tests need it smaller. */
+    public function __construct(private readonly int $pageSize = self::MAX_ROWS)
+    {
+    }
 
     /**
      * Sample every whole bucket that has closed since the last sample.
@@ -73,43 +79,12 @@ class Concurrency
         // window is one interval after `start − window`.
         $readFrom = (clone $start)->sub(new \DateInterval('PT' . ($window - self::INTERVAL_SECONDS) . 'S'));
 
-        $rows = $usage->findAcrossTenants([
-            UsageFilter::equal('metric', [METRIC_REALTIME_CONNECTIONS]),
-            UsageFilter::greaterThanEqual('time', $readFrom->format('Y-m-d H:i:s')),
-            UsageFilter::lessThan('time', $end->format('Y-m-d H:i:s')),
-            UsageQuery::groupBy('tenant'),
-            UsageQuery::groupByInterval('time', REALTIME_CONCURRENCY_INTERVAL),
-            UsageFilter::orderAsc('time'),
-            UsageFilter::limit(self::MAX_ROWS),
-        ], Usage::TYPE_EVENT);
+        $deltas = $this->readDeltas($usage, $readFrom, $end);
 
-        // Time-ascending, so a capped result is still complete for every bucket
-        // before the last one it returned: sample up to there and let the next
-        // run resume, rather than write levels that are missing deltas.
-        if (\count($rows) >= self::MAX_ROWS) {
-            $lastTime = new \DateTime((string) \end($rows)->getAttribute('time'), new \DateTimeZone('UTC'));
-            $cut = \intdiv($lastTime->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS;
+        if ($deltas === null) {
+            Console::warning('Realtime concurrency: a single bucket holds over ' . $this->pageSize . ' tenants; nothing sampled');
 
-            if ($cut <= $start->getTimestamp()) {
-                Console::warning('Realtime concurrency: over ' . self::MAX_ROWS . ' tenant buckets before the first bucket closed; nothing sampled');
-
-                return 0;
-            }
-
-            $end->setTimestamp($cut);
-        }
-
-        /** @var array<string, array<int, int>> $deltas tenant → bucket start → net delta */
-        $deltas = [];
-        foreach ($rows as $row) {
-            $tenant = $row->getTenant();
-            if ($tenant === '' || $tenant === null) {
-                continue;
-            }
-
-            $time = new \DateTime((string) $row->getAttribute('time'), new \DateTimeZone('UTC'));
-            $bucket = \intdiv($time->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS;
-            $deltas[$tenant][$bucket] = ($deltas[$tenant][$bucket] ?? 0) + (int) $row->getValue();
+            return 0;
         }
 
         $samples = [];
@@ -154,6 +129,74 @@ class Concurrency
         $usage->addBatch($samples, Usage::TYPE_GAUGE);
 
         return \count($samples);
+    }
+
+    /**
+     * Every (tenant, bucket) delta in the range, read a page at a time so a
+     * dense window is covered in full rather than silently truncated -- a
+     * truncated read would sample levels that are missing deltas, and the
+     * resume point would then advance past them for good.
+     *
+     * @return array<string, array<int, int>>|null tenant → bucket start → net
+     *         delta, or null when one bucket alone fills a page, which reading
+     *         further pages cannot get past.
+     */
+    private function readDeltas(Usage $usage, \DateTime $from, \DateTime $to): ?array
+    {
+        $deltas = [];
+        $cursor = $from->getTimestamp();
+
+        while ($cursor < $to->getTimestamp()) {
+            $rows = $usage->findAcrossTenants([
+                UsageFilter::equal('metric', [METRIC_REALTIME_CONNECTIONS]),
+                UsageFilter::greaterThanEqual('time', \gmdate('Y-m-d H:i:s', $cursor)),
+                UsageFilter::lessThan('time', $to->format('Y-m-d H:i:s')),
+                UsageQuery::groupBy('tenant'),
+                UsageQuery::groupByInterval('time', REALTIME_CONCURRENCY_INTERVAL),
+                UsageFilter::orderAsc('time'),
+                UsageFilter::limit($this->pageSize),
+            ], Usage::TYPE_EVENT);
+
+            // Rows are time-ascending, so a full page may have split its newest
+            // bucket across the limit: drop that bucket and re-read it from the
+            // next page, where it is whole.
+            $partial = \count($rows) >= $this->pageSize ? $this->bucketOf(\end($rows)) : null;
+
+            foreach ($rows as $row) {
+                $tenant = $row->getTenant();
+                if ($tenant === '' || $tenant === null) {
+                    continue;
+                }
+
+                $bucket = $this->bucketOf($row);
+                if ($partial !== null && $bucket >= $partial) {
+                    continue;
+                }
+
+                $deltas[$tenant][$bucket] = ($deltas[$tenant][$bucket] ?? 0) + (int) $row->getValue();
+            }
+
+            if ($partial === null) {
+                break;
+            }
+
+            // The page held nothing but that one bucket, so the next read would
+            // return the same rows and the fold would never advance.
+            if ($partial <= $cursor) {
+                return null;
+            }
+
+            $cursor = $partial;
+        }
+
+        return $deltas;
+    }
+
+    private function bucketOf(Metric $row): int
+    {
+        $time = new \DateTime((string) $row->getAttribute('time'), new \DateTimeZone('UTC'));
+
+        return \intdiv($time->getTimestamp(), self::INTERVAL_SECONDS) * self::INTERVAL_SECONDS;
     }
 
     /**
