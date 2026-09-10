@@ -3,7 +3,7 @@ import { BlogCover } from './BlogCoverPlaceholder'
 import { BlogPostAuthors } from './_components/BlogPostAuthors'
 import { formatDate } from '@/lib/date-utils'
 import type { BlogAuthor, BlogPostMeta } from '@/lib/blog/types'
-import { resolveBlogAuthors } from '@/lib/blog/content'
+import { getPostCategoryLabel, resolveBlogAuthors } from '@/lib/blog/content'
 import { BLOG_INDEX_CARD_TITLE_LINES_CLASS } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ type BlogPostCardProps = {
   authors: BlogAuthor[]
   featured?: boolean
   showDescription?: boolean
+  variant?: 'card' | 'list'
   className?: string
 }
 
@@ -20,9 +21,48 @@ export function BlogPostCard({
   authors,
   featured = false,
   showDescription = true,
+  variant = 'card',
   className,
 }: BlogPostCardProps) {
   const postAuthors = resolveBlogAuthors(post.author, authors)
+  const categoryLabel = getPostCategoryLabel(post)
+
+  if (variant === 'list') {
+    return (
+      <article className={cn('border-b border-border py-5 last:border-b-0 sm:py-6', className)}>
+        <Link
+          to="/blog/post/$slug"
+          params={{ slug: post.slug }}
+          className="group block"
+        >
+          <h2
+            className={cn(
+              BLOG_INDEX_CARD_TITLE_LINES_CLASS,
+              'font-aeonik-pro text-[16px] font-normal leading-snug text-foreground transition-colors group-hover:text-foreground/80 sm:text-[17px]',
+            )}
+          >
+            {post.title}
+          </h2>
+          <p className="text-[12px] text-muted-foreground">
+            <time dateTime={post.date}>{formatDate(post.date)}</time>
+            {postAuthors.length > 0 ? (
+              <>
+                {' · '}
+                {postAuthors.map((author, index) => (
+                  <span key={author.slug}>
+                    {index > 0 ? ', ' : null}
+                    {author.name}
+                  </span>
+                ))}
+              </>
+            ) : null}
+            {categoryLabel ? ` · ${categoryLabel}` : ''}
+            {post.timeToRead > 0 ? ` · ${post.timeToRead} min read` : ''}
+          </p>
+        </Link>
+      </article>
+    )
+  }
 
   return (
     <article className={cn('group flex h-full flex-col', className)}>
