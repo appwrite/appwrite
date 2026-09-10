@@ -2418,7 +2418,6 @@ final class FunctionsCustomServerTest extends Scope
             'async' => 'false'
         ]);
 
-        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('OK', $execution['body']['responseBody']);
