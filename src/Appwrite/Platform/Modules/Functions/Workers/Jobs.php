@@ -127,11 +127,8 @@ class Jobs extends Action
                 $cache->save($key, true);
             }
 
-            // A build finalizes once. A failed artifact fails it with the
-            // artifact's own message, and the exit that follows must not
-            // overwrite that with a bare exit code.
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
+            if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
                 return;
             }
 
@@ -296,7 +293,7 @@ class Jobs extends Action
         // the queue can deliver those callbacks out of order.
         if (($data['artifactId'] ?? '') === 'output') {
             if (($data['status'] ?? '') === 'failed') {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($data['error'] ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . self::failureMessage($data, 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if (($data['status'] ?? '') !== 'success') {
@@ -536,6 +533,15 @@ class Jobs extends Action
         Bus $bus,
         int $buildSize = 0,
     ): Document {
+        // A build finalizes once. A failed artifact fails it with the
+        // artifact's own message, and the exit that follows must not overwrite
+        // that with a bare exit code. Late logs and metadata still land: only
+        // the outcome is sealed. Sound under the per-deployment lock, which
+        // serializes callbacks and re-reads the document for each.
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            return $deployment;
+        }
+
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
 
