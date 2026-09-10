@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import type { CSSProperties } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -17,7 +18,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { EmailPreview } from '@/components/global/shared/EmailPreview'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { emailTemplatePreviewDocument } from '@/lib/email-preview'
 import {
   Dialog,
   DialogContent,
@@ -557,6 +562,11 @@ interface TemplateEditorProps {
 }
 
 // Helper function to detect RTL languages based on locale code
+/** Keeps the editor on the field's own surface instead of the darker code-editor one. */
+const EDITOR_SURFACE = {
+  '--editor-bg': 'var(--background)',
+} as CSSProperties
+
 function isRTLLocale(locale: string): boolean {
   // RTL language codes: Arabic, Hebrew, Urdu, Persian/Farsi, Yiddish, etc.
   const rtlLanguageCodes = ['ar', 'he', 'iw', 'ur', 'fa', 'yi']
@@ -586,6 +596,12 @@ function TemplateEditor({
 }: TemplateEditorProps) {
   const t = useT()
   const [localFormData, setLocalFormData] = useState(formData)
+  const [messageViewChoice, setMessageViewChoice] = useState<
+    'source' | 'preview' | null
+  >(null)
+  // Without custom SMTP the body is read-only, so it opens on the rendered mail.
+  const messageView =
+    messageViewChoice ?? (isSmtpEnabled ? 'source' : 'preview')
   const isRTL = isRTLLocale(locale)
 
   useEffect(() => {
@@ -677,7 +693,10 @@ function TemplateEditor({
                 "HTTP header. Templates are automatically selected based on the user's locale.",
               )}
             </p>
-            <DocsRouteLink className="link-neutral inline-flex items-center gap-1 text-xs" href="/docs/advanced/platform/message-templates">
+            <DocsRouteLink
+              className="link-neutral inline-flex items-center gap-1 text-xs"
+              href="/docs/advanced/platform/message-templates"
+            >
               {t('Learn more about message templates')}
               <ExternalLink className="h-3 w-3" />
             </DocsRouteLink>
@@ -751,21 +770,50 @@ function TemplateEditor({
           {/* Message */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="message">{t('Message')}</Label>
-              {!isSmtpEnabled && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-xs text-muted-foreground">
-                        {t('SMTP required')}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('Set up an SMTP server to edit the message body')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+              <Label>{t('Message')}</Label>
+              <div className="flex items-center gap-3">
+                {!isSmtpEnabled && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-muted-foreground">
+                          {t('SMTP required')}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {t('Set up an SMTP server to edit the message body')}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  value={messageView}
+                  onValueChange={(value) => {
+                    if (value === 'source' || value === 'preview') {
+                      setMessageViewChoice(value)
+                    }
+                  }}
+                  className="shrink-0"
+                >
+                  <ToggleGroupItem
+                    value="source"
+                    className="h-8 px-3 text-[12px]"
+                  >
+                    {t('Source')}
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="preview"
+                    className="h-8 px-3 text-[12px]"
+                  >
+                    {t('Preview')}
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </div>
 
             {/* Template Variables */}
@@ -828,18 +876,41 @@ function TemplateEditor({
               </div>
             )}
 
-            <Textarea
-              id="message"
-              placeholder={t('Enter your message')}
-              rows={12}
-              value={localFormData.message}
-              onChange={(e) =>
-                handleLocalFieldChange('message', e.target.value)
-              }
-              readOnly={!isSmtpEnabled}
-              className={cn(!isSmtpEnabled && 'cursor-not-allowed opacity-60')}
-              dir="ltr"
-            />
+            {messageView === 'preview' ? (
+              <EmailPreview
+                content={emailTemplatePreviewDocument(localFormData.message)}
+                html
+                className="h-[28rem]"
+              />
+            ) : (
+              <div
+                role="group"
+                aria-label={t('Message')}
+                className={cn('h-[28rem]', !isSmtpEnabled && 'opacity-60')}
+                style={EDITOR_SURFACE}
+              >
+                {isSmtpEnabled ? (
+                  <CodeEditor
+                    value={localFormData.message}
+                    onChange={(value) => handleLocalFieldChange('message', value)}
+                    language="html"
+                    ariaLabel={t('Message')}
+                    height="28rem"
+                    minimap={false}
+                    lineNumbers="off"
+                    highlightMatches={false}
+                  />
+                ) : (
+                  <CodeBlock
+                    code={localFormData.message}
+                    language="markup"
+                    fixedHeight="28rem"
+                    wrapLines
+                    copyInside
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -931,7 +1002,10 @@ function TemplateTypeSelector({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={t('Search templates...')} />
           <CommandList>

@@ -35,6 +35,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageSectionChartError } from './UsageSectionChartError'
 import { UsageChartBrushReferenceArea } from './UsageChartBrushReferenceArea'
+import { UsageChartRefreshingOverlay } from './UsageChartRefreshingOverlay'
 
 const metricHeaderClass =
   'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
@@ -85,6 +86,7 @@ type InboundOutboundUsageChartCardProps = {
   changePercent: number
   dualChartPoints: BandwidthDualChartPoint[]
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   error?: unknown
   /** @deprecated Prefer `error` */
@@ -106,6 +108,7 @@ export function InboundOutboundUsageChartCard({
   changePercent,
   dualChartPoints,
   isLoading,
+  isRefreshing = false,
   isError,
   error,
   queryError,
@@ -178,31 +181,36 @@ export function InboundOutboundUsageChartCard({
             {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
-              <>
-                <span className="text-[24px] font-semibold tabular-nums text-foreground">
-                  {formattedTotal}
-                </span>
-                {!isError && dualChartPoints.length > 0 ? (
-                  <span
-                    className={cn(
-                      'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 &&
-                        'text-emerald-600 dark:text-emerald-400',
-                      changePercent < 0 && 'text-amber-600 dark:text-amber-400',
-                      changePercent === 0 && 'text-muted-foreground',
-                    )}
-                  >
-                    {changeLabel} {t('vs previous period')}
+              <UsageChartRefreshingOverlay
+                isRefreshing={isRefreshing}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
+              >
+                <>
+                  <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                    {formattedTotal}
                   </span>
-                ) : !isLoading ? (
-                  <span
-                    className="invisible text-[12px] font-medium tabular-nums"
-                    aria-hidden
-                  >
-                    0% {t('vs previous period')}
-                  </span>
-                ) : null}
-              </>
+                  {!isError && dualChartPoints.length > 0 ? (
+                    <span
+                      className={cn(
+                        'text-[12px] font-medium tabular-nums',
+                        changePercent > 0 &&
+                          'text-emerald-600 dark:text-emerald-400',
+                        changePercent < 0 && 'text-amber-600 dark:text-amber-400',
+                        changePercent === 0 && 'text-muted-foreground',
+                      )}
+                    >
+                      {changeLabel} {t('vs previous period')}
+                    </span>
+                  ) : (
+                    <span
+                      className="invisible text-[12px] font-medium tabular-nums"
+                      aria-hidden
+                    >
+                      0% {t('vs previous period')}
+                    </span>
+                  )}
+                </>
+              </UsageChartRefreshingOverlay>
             )}
           </div>
         </div>
@@ -251,17 +259,18 @@ export function InboundOutboundUsageChartCard({
           </ChartArea>
         ) : (
           <ChartArea>
-            <div
-              className={surfaceClassName}
-              aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
-              }
-            >
-              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-                <AreaChart
-                  data={chartData}
+            <UsageChartRefreshingOverlay isRefreshing={isRefreshing}>
+              <div
+                className={surfaceClassName}
+                aria-label={
+                  canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
+                }
+              >
+                <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                  <AreaChart
+                    data={chartData}
                   margin={USAGE_CHART_MARGIN}
                   {...chartProps}
                 >
@@ -405,6 +414,7 @@ export function InboundOutboundUsageChartCard({
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            </UsageChartRefreshingOverlay>
           </ChartArea>
         )}
       </div>

@@ -64,6 +64,7 @@ export async function fetchProjectBandwidthBreakdown(
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  logRetentionHours?: number,
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     BANDWIDTH_EVENT_METRICS.map((metric) =>
@@ -74,6 +75,9 @@ export async function fetchProjectBandwidthBreakdown(
         dimension,
         limit,
         queries,
+        undefined,
+        undefined,
+        logRetentionHours,
       ),
     ),
   )

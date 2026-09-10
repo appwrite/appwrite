@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/cdi-cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 featured: false
 faqs:
   - question: "Can I use the Appwrite CLI in a CI/CD pipeline?"

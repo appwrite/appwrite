@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/encrypted-attributes-for-sensitive-fields/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "What are encrypted text columns in Appwrite?"
     answer: "Encrypted text columns are a field type in [Appwrite Databases](/docs/products/databases) that store values encrypted at rest using AES-128 in Galois/Counter Mode (GCM). The data is decrypted transparently when read by authorized clients, so application code does not need any special encryption logic."

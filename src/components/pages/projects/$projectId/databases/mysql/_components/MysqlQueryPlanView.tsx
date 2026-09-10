@@ -209,7 +209,12 @@ export function MysqlQueryPlanView({
         </div>
       </div>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+      <div
+        className={cn(
+          'min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain',
+          viewMode === 'raw' ? 'px-0 py-0' : 'px-4 py-4 sm:px-6',
+        )}
+      >
         {isLoading && !explanation ? (
           <div className="flex min-h-[8rem] items-center justify-center gap-2 text-[13px] text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -222,7 +227,7 @@ export function MysqlQueryPlanView({
               language={rawLanguage}
               headless
               wrapLines
-              className="min-h-[8rem] rounded-lg border border-border"
+              className="[&_pre]:px-3 [&_pre]:py-2 sm:[&_pre]:px-4"
             />
           ) : (
             <SqlWorkbenchPanelEmptyState variant="query-no-rows" />
@@ -239,7 +244,7 @@ export function MysqlQueryPlanView({
             language={rawLanguage}
             headless
             wrapLines
-            className="min-h-[8rem] rounded-lg border border-border"
+            className="[&_pre]:px-3 [&_pre]:py-2 sm:[&_pre]:px-4"
           />
         ) : (
           <SqlWorkbenchPanelEmptyState variant="query-no-rows" />

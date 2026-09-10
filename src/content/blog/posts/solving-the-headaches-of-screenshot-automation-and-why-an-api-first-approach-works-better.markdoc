@@ -6,7 +6,7 @@ date: 2026-03-11
 cover: /images/blog/solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better/cover.avif
 timeToRead: 5
 author: aishwari
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Why is screenshot automation harder than it looks?"

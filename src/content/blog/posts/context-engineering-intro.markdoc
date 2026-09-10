@@ -8,7 +8,7 @@ date: 2025-10-31
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is context engineering in simple terms?"
     answer: "Context engineering is the process of designing everything around an AI model: rules, data, tools, memory, and structure, so it can reason instead of guessing. Instead of just prompting the model once, you create an environment where it has enough information to consistently make accurate decisions."

@@ -12,6 +12,7 @@ import {
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { isUsageHistoryLimitExceededError } from '@/lib/usage/usage-history-errors'
 
 const activitySearchSchema = z.object({
   /** Activity event `$id` - opens the detail drawer when valid. */
@@ -68,10 +69,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       filterQueryKey,
     })
 
-    const [activities] = await Promise.all([
-      queryClient.ensureQueryData(activitiesOptions),
-      queryClient.ensureQueryData(countriesQueryOptions()).catch(() => undefined),
-    ])
+    let activities
+    try {
+      activities = await queryClient.ensureQueryData(activitiesOptions)
+    } catch (error) {
+      if (!isUsageHistoryLimitExceededError(error)) throw error
+    }
+
+    await queryClient
+      .ensureQueryData(countriesQueryOptions())
+      .catch(() => undefined)
 
     return { activities }
   },

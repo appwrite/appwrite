@@ -6,7 +6,7 @@ date: 2025-05-20
 cover: /images/blog/hosting-flutter-web/cover.avif
 timeToRead: 5
 author: steven
-category: product, init
+category: products, init
 featured: false
 faqs:
   - question: "Can I deploy a Flutter web app on [Appwrite Sites](/docs/products/sites)?"

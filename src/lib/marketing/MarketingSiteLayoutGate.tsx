@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useLocation, useMatches } from '@tanstack/react-router'
+import { useMatches, useRouterState } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { MarketingSiteLayout } from '@/lib/marketing/MarketingSiteLayout'
 import { shouldUseMarketingSiteLayout } from '@/lib/marketing/marketing-route-shell'
@@ -16,13 +16,15 @@ type MarketingSiteLayoutGateProps = {
 export function MarketingSiteLayoutGate({
   children,
 }: MarketingSiteLayoutGateProps) {
-  const location = useLocation()
+  const pathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const matches = useMatches()
   const { features } = useConsoleProfile()
 
   const useMarketingShell = shouldUseMarketingSiteLayout({
     marketingEnabled: features.marketing,
-    pathname: location.pathname,
+    pathname,
     matches,
   })
 

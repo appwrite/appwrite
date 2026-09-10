@@ -7,7 +7,7 @@ lastUpdated: 2026-05-22
 cover: /images/blog/cloud-pricing.avif
 timeToRead: 5
 author: laura-du-ry
-category: announcement
+category: announcements
 faqs:
   - question: "What pricing plans does Appwrite Cloud offer?"
     answer: "Appwrite Cloud offers a Free plan for side projects, a Pro plan for production apps priced per project, and an Enterprise plan for larger organizations that need higher limits, advanced security, and premium support. See the current [pricing page](/pricing) for up-to-date numbers."

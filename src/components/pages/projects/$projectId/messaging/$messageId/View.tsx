@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -50,6 +51,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -59,7 +61,17 @@ import { ID, MessagePriority } from '@appwrite.io/console'
 import { formatDateTime } from '@/lib/date-utils'
 import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { EmailPreview } from '@/components/global/shared/EmailPreview'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
+
+type EmailBodyView = 'source' | 'preview'
+
+/** Keeps the editor on the field's own surface instead of the darker code-editor one. */
+const EDITOR_SURFACE = {
+  '--editor-bg': 'var(--background)',
+} as CSSProperties
 
 function parseIdArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
@@ -295,6 +307,11 @@ export function View({
   const [emailSubject, setEmailSubject] = useState('')
   const [emailContent, setEmailContent] = useState('')
   const [emailHtml, setEmailHtml] = useState(false)
+  const [emailBodyViewChoice, setEmailBodyViewChoice] =
+    useState<EmailBodyView | null>(null)
+  // Drafts open on the editor; everything else opens on what the recipient sees.
+  const emailBodyView: EmailBodyView =
+    emailBodyViewChoice ?? (isDraft ? 'source' : 'preview')
   const [smsContent, setSmsContent] = useState('')
   const [pushTitle, setPushTitle] = useState('')
   const [pushBody, setPushBody] = useState('')
@@ -1084,20 +1101,71 @@ export function View({
                       />
                     </div>
                     <div>
-                      <Label
-                        htmlFor="email-content"
-                        className="text-[13px] font-medium text-foreground"
-                      >
-                        {t('Body')}
-                      </Label>
-                      <Textarea
-                        id="email-content"
-                        value={emailContent}
-                        onChange={(e) => setEmailContent(e.target.value)}
-                        disabled={!isDraft}
-                        placeholder={t('Email content')}
-                        className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          {t('Body')}
+                        </Label>
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          size="sm"
+                          value={emailBodyView}
+                          onValueChange={(value) => {
+                            if (value === 'source' || value === 'preview') {
+                              setEmailBodyViewChoice(value)
+                            }
+                          }}
+                          className="shrink-0"
+                        >
+                          <ToggleGroupItem
+                            value="source"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Source')}
+                          </ToggleGroupItem>
+                          <ToggleGroupItem
+                            value="preview"
+                            className="h-8 px-3 text-[12px]"
+                          >
+                            {t('Preview')}
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                      {emailBodyView === 'preview' ? (
+                        <EmailPreview
+                          content={emailContent}
+                          html={emailHtml}
+                          className="mt-1.5 h-[28rem]"
+                        />
+                      ) : (
+                        <div
+                          role="group"
+                          aria-label={t('Body')}
+                          className="mt-1.5 h-[28rem]"
+                          style={EDITOR_SURFACE}
+                        >
+                          {isDraft ? (
+                            <CodeEditor
+                              value={emailContent}
+                              onChange={setEmailContent}
+                              language="html"
+                              ariaLabel={t('Body')}
+                              height="28rem"
+                              minimap={false}
+                              lineNumbers="off"
+                                highlightMatches={false}
+                            />
+                          ) : (
+                            <CodeBlock
+                              code={emailContent}
+                              language="markup"
+                              fixedHeight="28rem"
+                              wrapLines
+                              copyInside
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
                       <div>

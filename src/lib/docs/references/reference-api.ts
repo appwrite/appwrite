@@ -1,3 +1,4 @@
+import { createIsomorphicFn } from '@tanstack/react-start'
 import type { ApiExplorerProjectPlatform } from '@/lib/api-explorer/types'
 import type { ReferencePlatform, ReferenceService, ReferenceVersion } from './constants'
 import type {
@@ -15,10 +16,31 @@ export const REFERENCE_API_PATHS = {
 
 type ReferenceNavCountsResponse = Array<[ReferenceService, number]>
 
-async function fetchReferenceJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    headers: { Accept: 'application/json' },
+// SSR invokes the same handlers without making a loopback HTTP request.
+// The fixed origin only makes the internal Request URL absolute; it is not fetched.
+const fetchReferenceResponse = createIsomorphicFn()
+  .server(async (url: string): Promise<Response> => {
+    const handlers = await import('@/server/api-reference/http-handlers')
+    const request = new Request(new URL(url, 'http://localhost'))
+    switch (new URL(request.url).pathname) {
+      case REFERENCE_API_PATHS.service:
+        return handlers.handleApiReferenceServiceRequest(request)
+      case REFERENCE_API_PATHS.model:
+        return handlers.handleApiReferenceModelRequest(request)
+      case REFERENCE_API_PATHS.navCounts:
+        return handlers.handleReferenceNavCountsRequest(request)
+      case REFERENCE_API_PATHS.openApiSpec:
+        return handlers.handleReferenceOpenApiSpecRequest(request)
+      default:
+        throw new Error('Unknown reference API path')
+    }
   })
+  .client((url: string): Promise<Response> =>
+    fetch(url, { headers: { Accept: 'application/json' } }),
+  )
+
+async function fetchReferenceJson<T>(url: string): Promise<T> {
+  const response = await fetchReferenceResponse(url)
 
   if (response.status === 404) {
     throw new Error('API_REFERENCE_NOT_FOUND')

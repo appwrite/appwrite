@@ -1,6 +1,10 @@
 import { isStaleChunkLoadError } from '@/lib/stale-chunk-error'
 import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
 import { isWebGLContextError } from '@/lib/webgl'
+import {
+  isUsageAddonNotFoundError,
+  isUsageHistoryLimitExceededError,
+} from '@/lib/usage/usage-history-errors'
 
 function getErrorCode(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined
@@ -14,5 +18,7 @@ export function shouldSkipSentryError(error: unknown): boolean {
   if (isStaleChunkLoadError(error)) return true
   if (isIndexedDBMutationError(error)) return true
   if (isWebGLContextError(error)) return true
+  if (isUsageHistoryLimitExceededError(error)) return true
+  if (isUsageAddonNotFoundError(error)) return true
   return false
 }

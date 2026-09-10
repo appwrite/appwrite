@@ -85,7 +85,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
             { name: 'Blog', path: '/blog' },
             {
               name: getPostCategoryLabel(loaderData.post),
-              path: `/blog/category/${getPrimaryPostCategorySlug(loaderData.post)}`,
+              path: `/blog/categories/${getPrimaryPostCategorySlug(loaderData.post)}`,
             },
             { name: loaderData.post.title, path: loaderData.post.href },
           ]),
@@ -107,6 +107,16 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
         ...(loaderData.post.draft ? [NOINDEX_ROBOTS_META] : []),
       ],
       links: [
+        ...(loaderData.post.cover
+          ? [
+              {
+                rel: 'preload' as const,
+                as: 'image' as const,
+                href: loaderData.post.cover,
+                type: 'image/avif',
+              },
+            ]
+          : []),
         {
           rel: 'alternate',
           type: 'application/rss+xml',

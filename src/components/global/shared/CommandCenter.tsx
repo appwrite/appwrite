@@ -96,6 +96,7 @@ import { useRecentResourcesSafe } from '@/components/global/providers/RecentReso
 import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
+import { docsHrefToRoute } from '@/lib/docs/docs-href'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
 import type {
@@ -384,7 +385,17 @@ export function CommandCenter({
         navigate({ to: '/docs/' })
         return
       }
-      navigate({ to: '/docs/$', params: { _splat: slug } })
+      const route = docsHrefToRoute(`/docs/${slug}`)
+      if (!route) return
+      if (route.params) {
+        navigate({
+          to: route.to,
+          params: route.params,
+          hash: route.hash,
+        })
+        return
+      }
+      navigate({ to: route.to, hash: route.hash })
     },
     [
       navigate,

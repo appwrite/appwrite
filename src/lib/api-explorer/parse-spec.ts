@@ -1,3 +1,4 @@
+import { getPlatformAuth, getSdkMethodName } from './spec-metadata'
 import { getOpenApiEnumValues } from './openapi-schema'
 import { normalizeDatabaseOpenApiSpec } from './normalize-database-spec'
 import {
@@ -9,6 +10,7 @@ import type {
   ApiExplorerMethod,
   ApiExplorerService,
   ApiSpecPlatform,
+  AppwriteAuth,
   AppwriteOpenApiExtension,
   OpenApiOperation,
   OpenApiParameter,
@@ -74,6 +76,7 @@ function filterRequestBodyProperties(
   requestBody: OpenApiRequestBody | undefined,
   allowedParameters: string[],
   components?: OpenApiSpec['components'],
+  required?: string[],
 ): OpenApiRequestBody | undefined {
   if (!requestBody?.content) return requestBody
 
@@ -84,7 +87,9 @@ function filterRequestBodyProperties(
   if (!schema?.properties) return requestBody
 
   const filteredProperties: Record<string, OpenApiSchema> = {}
-  for (const [propertyName, propertySchema] of Object.entries(schema.properties)) {
+  for (const [propertyName, propertySchema] of Object.entries(
+    schema.properties,
+  )) {
     if (allowedParameters.includes(propertyName)) {
       filteredProperties[propertyName] = propertySchema
     }
@@ -99,7 +104,7 @@ function filterRequestBodyProperties(
         schema: {
           ...schema,
           properties: filteredProperties,
-          required: schema.required?.filter((prop) =>
+          required: (required ?? schema.required)?.filter((prop) =>
             allowedParameters.includes(prop),
           ),
         },
@@ -126,11 +131,13 @@ function* processAdditionalMethods(
   httpMethod: string,
   path: string,
   service: string,
+  platform: ApiSpecPlatform,
   components?: OpenApiSpec['components'],
 ): Generator<ParsedOperationContext> {
   const xAppwrite = operation['x-appwrite'] as AppwriteOpenApiExtension
   for (const additionalMethod of xAppwrite.methods ?? []) {
     if (additionalMethod.public === false) continue
+    if (!isPlatformSupported(additionalMethod, platform)) continue
 
     const responseCode = additionalMethod.responses?.[0]?.code
     const responseModel = additionalMethod.responses?.[0]?.model
@@ -141,19 +148,30 @@ function* processAdditionalMethods(
       service,
       operation: {
         ...operation,
+        operationId: `${additionalMethod.namespace ?? service}${additionalMethod.name.charAt(0).toUpperCase()}${additionalMethod.name.slice(1)}`,
         summary:
-          additionalMethod.desc && additionalMethod.desc.length > 0
-            ? additionalMethod.desc
-            : operation.summary,
+          additionalMethod.summary ||
+          additionalMethod.desc ||
+          operation.summary,
+        parameters: additionalMethod.parameters
+          ? operation.parameters?.filter((param) =>
+              additionalMethod.parameters!.includes(param.name),
+            )
+          : operation.parameters,
         description: additionalMethod.description ?? operation.description,
-        requestBody: filterRequestBodyProperties(
-          operation.requestBody,
-          additionalMethod.parameters ?? [],
-          components,
-        ),
+        requestBody: additionalMethod.parameters
+          ? filterRequestBodyProperties(
+              operation.requestBody,
+              additionalMethod.parameters,
+              components,
+              additionalMethod.required,
+            )
+          : operation.requestBody,
         'x-appwrite': {
           ...xAppwrite,
           method: additionalMethod.name,
+          auth: additionalMethod.auth ?? xAppwrite.auth,
+          deprecated: additionalMethod.deprecated ?? xAppwrite.deprecated,
           demo: additionalMethod.demo ?? xAppwrite.demo,
           public: additionalMethod.public ?? true,
           weight: additionalMethod.weight ?? xAppwrite.weight,
@@ -161,7 +179,6 @@ function* processAdditionalMethods(
         responses:
           responseCode !== undefined
             ? {
-                ...operation.responses,
                 [String(responseCode)]:
                   responseCode === 204
                     ? { description: 'No Content' }
@@ -226,6 +243,7 @@ function* iterateOperations(
         httpMethod,
         path,
         service,
+        platform,
         spec.components,
       )
     }
@@ -242,7 +260,9 @@ function getPrimaryContentType(
   return Object.keys(content)[0]
 }
 
-function normalizeScope(scope: string | string[] | undefined): string | undefined {
+function normalizeScope(
+  scope: string | string[] | undefined,
+): string | undefined {
   if (scope === undefined) return undefined
   if (Array.isArray(scope)) {
     const values = scope.filter(Boolean).map(String)
@@ -256,10 +276,10 @@ function parseOperation(
   components?: OpenApiSpec['components'],
 ): ApiExplorerMethod {
   const { path, httpMethod, operation, service } = context
-  const xAppwrite = operation['x-appwrite'] as AppwriteOpenApiExtension
+  const xAppwrite = operation['x-appwrite'] ?? {}
+  const methodName = getSdkMethodName(operation)
   const operationId =
-    operation.operationId ??
-    `${httpMethod}${path.replace(/[^a-zA-Z0-9]/g, '')}`
+    operation.operationId ?? `${httpMethod}${path.replace(/[^a-zA-Z0-9]/g, '')}`
   const contentType = getPrimaryContentType(operation)
 
   const parameters = (operation.parameters ?? []).map((param) => {
@@ -288,11 +308,11 @@ function parseOperation(
     Boolean(operation.deprecated) || Boolean(xAppwrite?.deprecated)
 
   return {
-    id: xAppwrite.method,
+    id: methodName,
     operationId,
     path,
     httpMethod: httpMethod.toLowerCase(),
-    summary: operation.summary ?? xAppwrite.method,
+    summary: operation.summary ?? methodName,
     description: operation.description,
     deprecated: isDeprecated,
     scope: normalizeScope(xAppwrite.scope),
@@ -304,7 +324,8 @@ function parseOperation(
     requestBody,
     contentType,
     security: operation.security,
-    xAppwrite,
+    rawResponses: operation.responses,
+    xAppwrite: { ...xAppwrite, auth: xAppwrite.auth as AppwriteAuth },
     authLabel: formatAuthLabel(xAppwrite, operation.security),
   }
 }
@@ -312,7 +333,11 @@ function parseOperation(
 function getOperationOrder(summary: string): number {
   const title = summary.toLowerCase()
   if (title.startsWith('create')) return 1
-  if (title.startsWith('read') || title.startsWith('get') || title.startsWith('list')) {
+  if (
+    title.startsWith('read') ||
+    title.startsWith('get') ||
+    title.startsWith('list')
+  ) {
     return 2
   }
   if (title.startsWith('update')) return 3
@@ -355,7 +380,9 @@ function sortMethodsByOperationOrder(
     const orderA = getOperationOrder(a.summary)
     const orderB = getOperationOrder(b.summary)
     if (orderA !== orderB) return orderA - orderB
-    return a.summary.localeCompare(b.summary, undefined, { sensitivity: 'base' })
+    return a.summary.localeCompare(b.summary, undefined, {
+      sensitivity: 'base',
+    })
   })
 }
 
@@ -386,7 +413,32 @@ export function parseOpenApiSpec(
   const tagDescriptions = buildTagDescriptionMap(normalizedSpec)
 
   for (const context of iterateOperations(normalizedSpec, platform)) {
-    const parsed = parseOperation(context, normalizedSpec.components)
+    const operation = context.operation
+    const security = (operation.security ?? normalizedSpec.security)?.map(
+      (requirement) =>
+        Object.fromEntries(
+          Object.entries(requirement).filter(([name]) => {
+            const platforms =
+              normalizedSpec.components?.securitySchemes?.[name]?.['x-appwrite']
+                ?.platforms
+            return !platforms?.length || platforms.includes(platform)
+          }),
+        ),
+    )
+    const parsed = parseOperation(
+      {
+        ...context,
+        operation: {
+          ...operation,
+          security,
+          'x-appwrite': {
+            ...operation['x-appwrite'],
+            auth: getPlatformAuth(operation['x-appwrite']?.auth, platform),
+          },
+        },
+      },
+      normalizedSpec.components,
+    )
     const existing = serviceMap.get(parsed.service) ?? []
     existing.push(parsed)
     serviceMap.set(parsed.service, existing)
@@ -512,7 +564,8 @@ export function buildSampleValue(schema: OpenApiSchema): unknown {
     if (!isOpenApiPlaceholderExample(schema.example)) return schema.example
   }
   if (schema['x-example'] !== undefined) {
-    if (!isOpenApiPlaceholderExample(schema['x-example'])) return schema['x-example']
+    if (!isOpenApiPlaceholderExample(schema['x-example']))
+      return schema['x-example']
   }
   if (schema.default !== undefined) return schema.default
   const enumValues = getOpenApiEnumValues(schema)

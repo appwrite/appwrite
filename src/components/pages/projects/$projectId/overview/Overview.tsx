@@ -110,7 +110,7 @@ import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import {
-  shouldShowUsageChartSkeleton,
+  getUsageChartLoadingProps,
   shouldShowUsageTabMetricSkeleton,
 } from '@/lib/usage/usage-chart-loading'
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
@@ -217,17 +217,17 @@ export function View({ projectId, initialData }: ViewProps) {
   const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
   const {
     dateRange: dashboardChartDateRange,
     chartInterval,
     dateRangePresetId: dashboardChartDateRangePresetId,
     setDateRange: setDashboardChartDateRange,
     setChartInterval,
-  } = useUsageChartFilters(organizationPlan)
-  const usageLogRetentionHours = useMemo(
-    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
-    [organizationPlan],
-  )
+  } = useUsageChartFilters(organizationPlan, usageLogRetentionHours)
   const usageLogRetentionDays = useMemo(
     () =>
       organizationPlan?.usageLogs != null &&
@@ -402,35 +402,73 @@ export function View({ projectId, initialData }: ViewProps) {
     [storageError, usageLogRetentionDays],
   )
 
-  const showBandwidthChartLoading = shouldShowUsageChartSkeleton(
-    isBandwidthError,
-    isBandwidthLoading,
-    isBandwidthPlaceholderData,
+  const bandwidthChartPoints = isBandwidthError
+    ? []
+    : (bandwidthUsage?.dualChartPoints ?? [])
+  const requestsChartPoints = isRequestsError
+    ? []
+    : (requestsUsage?.chartPoints ?? [])
+  const executionsChartPoints = isExecutionsError
+    ? []
+    : (executionsUsage?.chartPoints ?? [])
+  const gbHoursChartPoints = isGbHoursError
+    ? []
+    : (gbHoursUsage?.chartPoints ?? [])
+  const storageChartPoints = isStorageError
+    ? []
+    : (storageUsage?.chartPoints ?? [])
+
+  const bandwidthChartLoading = getUsageChartLoadingProps(
+    {
+      isError: isBandwidthError,
+      isLoading: isBandwidthLoading,
+      isFetching: isBandwidthFetching,
+      isPlaceholderData: isBandwidthPlaceholderData,
+    },
+    bandwidthChartPoints,
+  )
+  const requestsChartLoading = getUsageChartLoadingProps(
+    {
+      isError: isRequestsError,
+      isLoading: isRequestsLoading,
+      isFetching: isRequestsFetching,
+      isPlaceholderData: isRequestsPlaceholderData,
+    },
+    requestsChartPoints,
+  )
+  const executionsChartLoading = getUsageChartLoadingProps(
+    {
+      isError: isExecutionsError,
+      isLoading: isExecutionsLoading,
+      isFetching: isExecutionsFetching,
+      isPlaceholderData: isExecutionsPlaceholderData,
+    },
+    executionsChartPoints,
+  )
+  const gbHoursChartLoading = getUsageChartLoadingProps(
+    {
+      isError: isGbHoursError,
+      isLoading: isGbHoursLoading,
+      isFetching: isGbHoursFetching,
+      isPlaceholderData: isGbHoursPlaceholderData,
+    },
+    gbHoursChartPoints,
+  )
+  const storageChartLoading = getUsageChartLoadingProps(
+    {
+      isError: isStorageError,
+      isLoading: isStorageLoading,
+      isFetching: isStorageFetching,
+      isPlaceholderData: isStoragePlaceholderData,
+    },
+    storageChartPoints,
   )
 
-  const showRequestsChartLoading = shouldShowUsageChartSkeleton(
-    isRequestsError,
-    isRequestsLoading,
-    isRequestsPlaceholderData,
-  )
-
-  const showExecutionsChartLoading = shouldShowUsageChartSkeleton(
-    isExecutionsError,
-    isExecutionsLoading,
-    isExecutionsPlaceholderData,
-  )
-
-  const showGbHoursChartLoading = shouldShowUsageChartSkeleton(
-    isGbHoursError,
-    isGbHoursLoading,
-    isGbHoursPlaceholderData,
-  )
-
-  const showStorageChartLoading = shouldShowUsageChartSkeleton(
-    isStorageError,
-    isStorageLoading,
-    isStoragePlaceholderData,
-  )
+  const showBandwidthChartLoading = bandwidthChartLoading.isLoading
+  const showRequestsChartLoading = requestsChartLoading.isLoading
+  const showExecutionsChartLoading = executionsChartLoading.isLoading
+  const showGbHoursChartLoading = gbHoursChartLoading.isLoading
+  const showStorageChartLoading = storageChartLoading.isLoading
 
   const showBandwidthTabMetricLoading = shouldShowUsageTabMetricSkeleton(
     isBandwidthError,
@@ -1078,10 +1116,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="bandwidth"
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
-                    chartData={
-                      isBandwidthError ? [] : (bandwidthUsage?.dualChartPoints ?? [])
-                    }
+                    chartData={bandwidthChartPoints}
                     isLoading={showBandwidthChartLoading}
+                    isRefreshing={bandwidthChartLoading.isRefreshing}
                     isError={isBandwidthError}
                     onRetry={
                       shouldSuppressUsageChartRetry(bandwidthErrorCopy)
@@ -1137,10 +1174,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="requests"
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
-                    chartData={
-                      isRequestsError ? [] : (requestsUsage?.chartPoints ?? [])
-                    }
+                    chartData={requestsChartPoints}
                     isLoading={showRequestsChartLoading}
+                    isRefreshing={requestsChartLoading.isRefreshing}
                     isError={isRequestsError}
                     onRetry={
                       shouldSuppressUsageChartRetry(requestsErrorCopy)
@@ -1194,8 +1230,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     isPanelVisible={activeTab === 'storage'}
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
-                    chartData={isStorageError ? [] : (storageUsage?.chartPoints ?? [])}
+                    chartData={storageChartPoints}
                     isLoading={showStorageChartLoading}
+                    isRefreshing={storageChartLoading.isRefreshing}
                     isError={isStorageError}
                     onRetry={
                       shouldSuppressUsageChartRetry(storageErrorCopy)
@@ -1257,10 +1294,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="executions"
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
-                    chartData={
-                      isExecutionsError ? [] : (executionsUsage?.chartPoints ?? [])
-                    }
+                    chartData={executionsChartPoints}
                     isLoading={showExecutionsChartLoading}
+                    isRefreshing={executionsChartLoading.isRefreshing}
                     isError={isExecutionsError}
                     onRetry={
                       shouldSuppressUsageChartRetry(executionsErrorCopy)
@@ -1317,10 +1353,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="gbhours"
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
-                    chartData={
-                      isGbHoursError ? [] : (gbHoursUsage?.chartPoints ?? [])
-                    }
+                    chartData={gbHoursChartPoints}
                     isLoading={showGbHoursChartLoading}
+                    isRefreshing={gbHoursChartLoading.isRefreshing}
                     isError={isGbHoursError}
                     onRetry={
                       shouldSuppressUsageChartRetry(gbHoursErrorCopy)

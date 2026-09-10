@@ -6,7 +6,7 @@ date: 2024-08-02
 cover: /images/blog/swift-101/cover.avif
 timeToRead: 6
 author: jake-barnby
-category: engineering, tutorial
+category: engineering, tutorials
 featured: false
 faqs:
   - question: "What is Swift Package Manager?"

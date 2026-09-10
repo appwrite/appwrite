@@ -27,7 +27,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 const AUTH_USAGE_ERROR = {
   title: "Couldn't load auth usage",
@@ -91,6 +91,10 @@ export function AuthSection({
     ? []
     : (signupsQuery.data?.chartPoints ?? [])
 
+  const mauLoading = getUsageChartLoadingProps(mauQuery, mauPoints)
+  const otpLoading = getUsageChartLoadingProps(otpQuery, otpPoints)
+  const signupsLoading = getUsageChartLoadingProps(signupsQuery, signupsPoints)
+
   return (
     <div className="space-y-6">
       <UsageTimeSeriesChartCard
@@ -101,11 +105,8 @@ export function AuthSection({
         total={getAuthMauDisplayTotal(mauPoints)}
         changePercent={mauQuery.data?.changePercent ?? 0}
         chartPoints={mauPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          mauQuery.isError,
-          mauQuery.isLoading,
-          mauQuery.isPlaceholderData,
-        )}
+        isLoading={mauLoading.isLoading}
+        isRefreshing={mauLoading.isRefreshing}
         isError={mauQuery.isError}
         queryError={mauQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}
@@ -124,11 +125,8 @@ export function AuthSection({
         total={sumUsageChartPoints(otpPoints)}
         changePercent={otpQuery.data?.changePercent ?? 0}
         chartPoints={otpPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          otpQuery.isError,
-          otpQuery.isLoading,
-          otpQuery.isPlaceholderData,
-        )}
+        isLoading={otpLoading.isLoading}
+        isRefreshing={otpLoading.isRefreshing}
         isError={otpQuery.isError}
         queryError={otpQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}
@@ -147,11 +145,8 @@ export function AuthSection({
         total={getAuthSignupsDisplayTotal(signupsPoints)}
         changePercent={signupsQuery.data?.changePercent ?? 0}
         chartPoints={signupsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          signupsQuery.isError,
-          signupsQuery.isLoading,
-          signupsQuery.isPlaceholderData,
-        )}
+        isLoading={signupsLoading.isLoading}
+        isRefreshing={signupsLoading.isRefreshing}
         isError={signupsQuery.isError}
         queryError={signupsQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}

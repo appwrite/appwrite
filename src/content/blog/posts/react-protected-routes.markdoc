@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/react-protected-routes/cover.avif
 timeToRead: 4
 author: dennis-ivy
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "What is a protected route in React?"

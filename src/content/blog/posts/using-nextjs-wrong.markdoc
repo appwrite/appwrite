@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/using-nextjs-wrong/cover.avif
 timeToRead: 8
 author: atharva
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "When should I use Next.js instead of plain React with Vite?"

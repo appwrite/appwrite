@@ -20,7 +20,7 @@ export type ProxyApiExplorerRequestResult = {
 }
 
 export const proxyApiExplorerRequestFn = createServerFn({ method: 'POST' })
-  .inputValidator(proxyApiExplorerRequestSchema)
+  .validator(proxyApiExplorerRequestSchema)
   .handler(async ({ data }): Promise<ProxyApiExplorerRequestResult> => {
     assertAllowedExplorerRequestUrl(data.url, data.allowedEndpoint)
 

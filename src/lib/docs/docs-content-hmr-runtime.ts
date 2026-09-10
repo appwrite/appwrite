@@ -15,7 +15,6 @@ export const DOCS_CONTENT_HMR_EVENT = 'docs-content-hmr'
 function isDocsHmrUpdatePath(path: string): boolean {
   return (
     path.includes('/content/docs') ||
-    path.includes('/content/docs-local') ||
     path.includes('/content/docs-partials') ||
     path.includes('/lib/docs/content') ||
     path.includes('/lib/docs/partials') ||

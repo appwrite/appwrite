@@ -3,7 +3,6 @@ import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-qu
 import { useRouterState, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import {
-  isHttpForbiddenError,
   isHttpPaymentRequiredError,
   isHttpProjectAccessError,
 } from '@/lib/utils/error-formatting'
@@ -18,43 +17,6 @@ import {
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
 import { useInitialLoaderShellGatesReady } from '@/hooks/use-initial-loader-shell-gates'
-
-/**
- * True when any `['account','console', ...]` query is in error with HTTP 403.
- * Subscribes to the query cache so `/` can hide the fullscreen loader when the
- * account is blocked (no redirect off `/`).
- */
-function useConsoleAccountQueryForbidden403(): boolean {
-  const queryClient = useQueryClient()
-  const [cacheTick, bumpCache] = useReducer((n: number) => n + 1, 0)
-
-  useEffect(() => {
-    const lastForbiddenRef = { current: false }
-    return queryClient.getQueryCache().subscribe(() => {
-      const queries = queryClient.getQueryCache().findAll({
-        queryKey: ['account', 'console'],
-      })
-      const next = queries.some(
-        (q) =>
-          q.state.status === 'error' && isHttpForbiddenError(q.state.error),
-      )
-      if (next !== lastForbiddenRef.current) {
-        lastForbiddenRef.current = next
-        bumpCache()
-      }
-    })
-  }, [queryClient])
-
-  return useMemo(() => {
-    const queries = queryClient.getQueryCache().findAll({
-      queryKey: ['account', 'console'],
-    })
-    return queries.some(
-      (q) =>
-        q.state.status === 'error' && isHttpForbiddenError(q.state.error),
-    )
-  }, [queryClient, cacheTick])
-}
 
 /**
  * True when the current project query settled into 401/403/404 (or 402 budget).
@@ -104,7 +66,6 @@ export function useInitialLoader() {
   const routerStatus = useRouterState({ select: (s) => s.status })
   const location = useLocation()
   const matches = useMatches()
-  const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
   const projectShellGateBypass = useProjectQueryShellGateBypass(
     location.pathname,
   )
@@ -150,16 +111,18 @@ export function useInitialLoader() {
     [location.pathname, matches],
   )
 
-  const skipStaticLoader = isAuthRoute || isInstantPublicRoute || isMarketingRoute
+  const skipStaticLoader =
+    isAuthRoute || isInstantPublicRoute || isMarketingRoute
 
-  // Include "/" so the branded loader shows until redirect; don't count root as "first page".
-  // "/marketplace" is a redirect-only share URL into the console — without it the
-  // branded loader hid on mount and the hop flashed a second, unbranded loader.
+  // `/` (and legacy `/app`) are redirect hops: never show the branded overlay.
+  // Do not treat them as skipStaticLoader, or the first console paint after
+  // the hop would skip the overlay too.
   const shouldShowLoader = useMemo(
     () =>
       !skipStaticLoader &&
-      (location.pathname === '/' ||
-        location.pathname.startsWith('/protected') ||
+      location.pathname !== '/' &&
+      location.pathname !== '/app' &&
+      (location.pathname.startsWith('/protected') ||
         location.pathname.startsWith('/marketplace') ||
         location.pathname.startsWith('/organizations') ||
         location.pathname.startsWith('/projects') ||
@@ -248,14 +211,18 @@ export function useInitialLoader() {
     }
 
     if (!shouldShowLoader) {
-      if (skipStaticLoader) {
-        completeInitialLoad()
-      } else if (
-        routerStatus === 'idle' &&
-        isFetching === 0 &&
-        isMutating === 0
-      ) {
-        completeInitialLoad()
+      // Stay on `/` until the destination route decides. Completing here
+      // would hide the console overlay after `/` → org.
+      if (location.pathname !== '/') {
+        if (skipStaticLoader) {
+          completeInitialLoad()
+        } else if (
+          routerStatus === 'idle' &&
+          isFetching === 0 &&
+          isMutating === 0
+        ) {
+          completeInitialLoad()
+        }
       }
       if (wasLoadingRef.current) {
         setIsLoading(false)
@@ -270,7 +237,6 @@ export function useInitialLoader() {
     const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
     const shouldHideLoader =
-      (location.pathname !== '/' || isConsoleAccount403) &&
       !currentHasActiveRequests &&
       shellGatesReady &&
       wasLoadingRef.current
@@ -324,7 +290,6 @@ export function useInitialLoader() {
     location.pathname,
     isFetching,
     isMutating,
-    isConsoleAccount403,
     shellGatesReady,
   ])
 

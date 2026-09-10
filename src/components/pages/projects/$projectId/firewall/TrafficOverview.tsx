@@ -208,6 +208,10 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
   const projectId = params.projectId as string
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
   const {
     dateRange,
     chartInterval,
@@ -215,11 +219,7 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
     setDateRange,
     setChartInterval,
     refreshRollingDateRange,
-  } = useUsageChartFilters(organizationPlan)
-  const usageLogRetentionHours = useMemo(
-    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
-    [organizationPlan],
-  )
+  } = useUsageChartFilters(organizationPlan, usageLogRetentionHours)
   const usageLogRetentionDays = useMemo(
     () => getUsageLogRetentionDaysFromPlan(organizationPlan),
     [organizationPlan],
@@ -488,6 +488,11 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
             onDateRangeChange={setDateRange}
             presetId={dateRangePresetId}
             className="h-9 shrink-0"
+            retentionHours={
+              hasFiniteUsageLogRetention(organizationPlan)
+                ? usageLogRetentionHours
+                : null
+            }
           />
           <FirewallChartLiveControls
             isLive={liveUpdatesEnabled}

@@ -6,7 +6,7 @@ date: 2024-08-19
 cover: /images/blog/init-day0/cover.avif
 timeToRead: 5
 author: matej-baco
-category: init, announcement, product
+category: init, announcements, products
 featured: false
 faqs:
   - question: "How do I run an Appwrite Function locally?"

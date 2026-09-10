@@ -1,10 +1,17 @@
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
-import { resolveUsageChartFetchBounds } from '@/lib/usage/usage-date-range'
+import {
+  clampUsageChartFetchBounds,
+  getLogRetentionFloor,
+  hasFiniteLogRetentionHours,
+  isDateRangeBeforeRetentionFloor,
+  UNLIMITED_LOG_RETENTION_HOURS,
+} from '@/lib/date-range-retention'
 import {
   getUsageDateRangePresetByValue,
   type UsageDateRangePreset,
 } from '@/lib/usage/usage-date-range-presets'
+import { resolveUsageChartFetchBounds } from '@/lib/usage/usage-date-range'
 
 /** Fallback when plan retention is unknown (Pro default). */
 export const DEFAULT_USAGE_LOG_RETENTION_DAYS = 30
@@ -12,7 +19,8 @@ export const DEFAULT_USAGE_LOG_RETENTION_DAYS = 30
 export const DEFAULT_USAGE_LOG_RETENTION_HOURS =
   DEFAULT_USAGE_LOG_RETENTION_DAYS * 24
 
-const UNLIMITED_USAGE_LOG_RETENTION_THRESHOLD = 36500
+const UNLIMITED_USAGE_LOG_RETENTION_THRESHOLD =
+  UNLIMITED_LOG_RETENTION_HOURS / 24
 
 export function hasFiniteUsageLogRetention(
   plan: Models.BillingPlan | null | undefined,
@@ -45,18 +53,56 @@ export function getUsageLogRetentionHoursFromPlan(
 
 export function getUsageLogRetentionFloor(
   retentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  nowMs?: number,
 ): Date {
-  return new Date(Date.now() - retentionHours * 60 * 60 * 1000)
+  return getLogRetentionFloor(retentionHours, nowMs)
 }
 
-export function isUsageDateRangeBeyondRetention(
+/** Whether the clamped chart range still fits within plan retention. */
+export function isClampedUsageDateRangeWithinRetention(
   dateRange: DateRange | undefined,
   retentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
   presetId?: string | null,
 ): boolean {
-  if (retentionHours <= 0) return false
-  const { from } = resolveUsageChartFetchBounds(dateRange, presetId)
-  return from.getTime() < getUsageLogRetentionFloor(retentionHours).getTime()
+  if (!hasFiniteLogRetentionHours(retentionHours)) return true
+
+  const { from } = clampUsageChartFetchBounds(
+    resolveUsageChartFetchBounds(dateRange, presetId),
+    retentionHours,
+  )
+
+  return from.getTime() >= getLogRetentionFloor(retentionHours).getTime()
+}
+
+/** Hours from retention floor treated as "at the limit" for the upgrade banner. */
+const USAGE_RETENTION_NEAR_FLOOR_TOLERANCE_HOURS = 24
+
+/** Minimum share of plan retention a range must span to count as maxed out. */
+const USAGE_RETENTION_NEAR_LIMIT_SPAN_RATIO = 0.9
+
+/** Selected range uses most of the plan retention window (valid but at the limit). */
+export function isUsageDateRangeNearRetentionLimit(
+  dateRange: DateRange | undefined,
+  retentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  presetId?: string | null,
+): boolean {
+  if (!hasFiniteLogRetentionHours(retentionHours)) return false
+
+  const { from, to } = clampUsageChartFetchBounds(
+    resolveUsageChartFetchBounds(dateRange, presetId),
+    retentionHours,
+  )
+  const floor = getLogRetentionFloor(retentionHours)
+  const spanHours = (to.getTime() - from.getTime()) / (60 * 60 * 1000)
+  const hoursFromFloor = (from.getTime() - floor.getTime()) / (60 * 60 * 1000)
+
+  const startsNearFloor =
+    hoursFromFloor >= 0 &&
+    hoursFromFloor <= USAGE_RETENTION_NEAR_FLOOR_TOLERANCE_HOURS
+  const spansMostOfRetention =
+    spanHours >= retentionHours * USAGE_RETENTION_NEAR_LIMIT_SPAN_RATIO
+
+  return startsNearFloor || spansMostOfRetention
 }
 
 const SHORTER_USAGE_DATE_RANGE_PRESET_CANDIDATES = [
@@ -79,7 +125,7 @@ export function resolveShorterUsageDateRangePreset(
     const preset = getUsageDateRangePresetByValue(value)
     if (!preset) continue
     if (
-      !isUsageDateRangeBeyondRetention(
+      !isDateRangeBeforeRetentionFloor(
         preset.getRange(),
         retentionHours,
         preset.value,

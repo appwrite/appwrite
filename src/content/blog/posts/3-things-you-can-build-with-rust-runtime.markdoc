@@ -6,7 +6,7 @@ date: 2026-05-11
 cover: /images/blog/3-things-you-can-build-with-rust-runtime/cover.avif
 timeToRead: 10
 author: atharva
-category: product
+category: products
 featured: false
 faqs:
   - question: "Which Rust version does the Appwrite runtime use?"

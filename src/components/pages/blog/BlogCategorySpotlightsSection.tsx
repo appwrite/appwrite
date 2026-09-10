@@ -65,7 +65,7 @@ export function BlogCategorySpotlightsSection({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <Link
-                    to="/blog/category/$category"
+                    to="/blog/categories/$category"
                     params={{ category: category.slug }}
                     className="group inline-block min-w-0"
                   >
@@ -84,7 +84,7 @@ export function BlogCategorySpotlightsSection({
                 </div>
 
                 <Link
-                  to="/blog/category/$category"
+                  to="/blog/categories/$category"
                   params={{ category: category.slug }}
                   className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
                 >

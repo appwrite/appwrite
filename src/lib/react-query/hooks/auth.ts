@@ -551,7 +551,7 @@ export async function ensureConsoleAccountOnAuthRoute(
 export async function ensureConsoleAccountQueryData(
   queryClient: QueryClient,
 ): Promise<Models.User | undefined> {
-  if (shouldRevalidateConsoleAccount(queryClient)) {
+  if (shouldRevalidateConsoleAccountOnAuthRoute(queryClient)) {
     try {
       return await refreshConsoleAccountAfterAuth(queryClient)
     } catch {

@@ -12,6 +12,7 @@ import {
   setConsoleAccountUnauthenticatedError,
 } from '@/lib/console-account-cache'
 import { CONSOLE_SESSION_COOKIE_NAME } from '@/lib/console-session-cookie'
+import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 
 type RawConsoleAccountGet = () => Promise<Models.User>
@@ -37,6 +38,21 @@ export function hasLikelyConsoleSession(): boolean {
   }
 
   return document.cookie.includes(`${CONSOLE_SESSION_COOKIE_NAME}=`)
+}
+
+/**
+ * Skip `account.get` on `/` only for localhost guests (no cookieFallback).
+ * Production session cookies are HttpOnly, so {@link hasLikelyConsoleSession}
+ * is false even when signed in. Those visits stay on `/` and always probe.
+ */
+export function shouldSkipRootAccountProbe(): boolean {
+  if (typeof window === 'undefined') return true
+  if (hasLikelyConsoleSession()) return false
+  try {
+    return isLocalDevelopmentHost(window.location.hostname)
+  } catch {
+    return false
+  }
 }
 
 /** Called once from `sdk.ts` so every `account.get` shares the same singleton. */
@@ -88,7 +104,9 @@ export async function fetchConsoleAccount(
     if (cached) return cached
 
     const cachedUnauthenticated = getConsoleAccountUnauthenticatedError(revision)
-    if (cachedUnauthenticated && !hasLikelyConsoleSession()) {
+    // Do not replay a guest 401 just because document.cookie is empty.
+    // Production `a_session_console` is HttpOnly.
+    if (cachedUnauthenticated && shouldSkipRootAccountProbe()) {
       throw cachedUnauthenticated
     }
   } else {

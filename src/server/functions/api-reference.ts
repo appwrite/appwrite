@@ -24,7 +24,7 @@ const referenceOpenApiSpecSchema = z.object({
 })
 
 export const loadApiReferenceServiceFn = createServerFn({ method: 'GET' })
-  .inputValidator(referenceServiceSchema)
+  .validator(referenceServiceSchema)
   .handler(async ({ data }) => {
     const { loadApiReferenceService } = await import(
       '@/server/api-reference/load-service'
@@ -51,7 +51,7 @@ export const loadApiReferenceServiceFn = createServerFn({ method: 'GET' })
   })
 
 export const loadApiReferenceModelFn = createServerFn({ method: 'GET' })
-  .inputValidator(referenceModelSchema)
+  .validator(referenceModelSchema)
   .handler(async ({ data }) => {
     const { loadApiReferenceModel } = await import(
       '@/server/api-reference/load-model'
@@ -74,7 +74,7 @@ export const loadApiReferenceModelFn = createServerFn({ method: 'GET' })
   })
 
 export const loadReferenceNavServiceCountsFn = createServerFn({ method: 'GET' })
-  .inputValidator(referenceNavCountsSchema)
+  .validator(referenceNavCountsSchema)
   .handler(async ({ data }) => {
     const { loadReferenceNavServiceCounts } = await import(
       '@/server/api-reference/reference-nav'
@@ -94,7 +94,7 @@ export const loadReferenceNavServiceCountsFn = createServerFn({ method: 'GET' })
   })
 
 export const loadReferenceOpenApiSpecFn = createServerFn({ method: 'GET' })
-  .inputValidator(referenceOpenApiSpecSchema)
+  .validator(referenceOpenApiSpecSchema)
   .handler(async ({ data }) => {
     const { loadReferenceOpenApiSpecByMode } = await import(
       '@/server/api-reference/load-spec'
