@@ -17,14 +17,6 @@ final class ConcurrencyTest extends TestCase
     private const string BUCKET = '2026-09-08 11:55:00';
     private const string PREVIOUS_SAMPLE = '2026-09-08 11:50:00';
 
-    public static function setUpBeforeClass(): void
-    {
-        // app/init defines these when the suite boots through it; needed when this file runs alone.
-        \defined('METRIC_REALTIME_CONNECTIONS') || \define('METRIC_REALTIME_CONNECTIONS', 'realtime.connections');
-        \defined('REALTIME_CONCURRENCY_INTERVAL') || \define('REALTIME_CONCURRENCY_INTERVAL', '5m');
-        \defined('REALTIME_CONCURRENCY_LAG_SECONDS') || \define('REALTIME_CONCURRENCY_LAG_SECONDS', 300);
-    }
-
     public function testLevelIsTheWindowedSumNotTheCarriedGauge(): void
     {
         $written = $this->sample(
