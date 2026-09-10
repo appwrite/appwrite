@@ -5,9 +5,11 @@ namespace Appwrite\Deployment;
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
+use OpenRuntimes\Orchestrator\Enum\ArchiveFormat;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\ArchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
@@ -395,10 +397,15 @@ readonly class Deployments
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
                 // Appwrite never sees the remote source (the sidecar fetches it),
-                // so unlike the uploaded-tarball path it can't size it. Stat the
-                // downloaded archive so the orchestrator reports its byte size in
-                // an artifact callback, which the worker records as sourceSize.
-                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'source'),
+                // so unlike the uploaded-tarball path it can't size it. But the
+                // provider archive spans the whole repository: recording its byte
+                // size as sourceSize inflates every monorepo deployment (and the
+                // storage totals that sum it) with the rest of the repo. Stat the
+                // extracted tree instead, already scoped to rootDirectory with
+                // the forge wrapper stripped. Stat rejects directories, so
+                // re-pack 'source' into a plain tar first.
+                new ArchiveArtifact(id: 'sourceSizeArchive', in: 'source', out: 'source-size.tar', format: ArchiveFormat::Tar, depends: 'extract'),
+                new StatArtifact(id: 'sourceSize', in: 'source-size.tar', depends: 'sourceSizeArchive'),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by
