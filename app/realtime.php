@@ -862,7 +862,17 @@ $server->onWorkerStop(function (int $workerId) use ($register) {
     }
 });
 
-$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime) {
+// Swoole re-runs this until the worker's loop is empty, so the sweep happens
+// once and the later calls just let the closes it started drain.
+$exitSwept = false;
+
+$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitSwept) {
+    if ($exitSwept) {
+        return;
+    }
+
+    $exitSwept = true;
+
     // Connections still open here outlive this worker, and no later worker knows
     // them, so their closes never reach onClose and the concurrency level only
     // ratchets up. Close them while the loop still runs; clients reconnect.
