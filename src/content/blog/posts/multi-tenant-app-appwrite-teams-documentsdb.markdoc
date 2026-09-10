@@ -2,7 +2,7 @@
 layout: post
 title: "How to build a multi-tenant SaaS app with Appwrite Teams"
 description: Step-by-step tutorial for building a multi-tenant SaaS app with Appwrite Teams for tenant isolation and DocumentsDB for schemaless data, using a real forms app.
-date: 2026-09-10
+date: 2026-09-11
 cover: /images/blog/multi-tenant-app-appwrite-teams-documentsdb/cover.avif
 timeToRead: 15
 author: aditya-oberai
