@@ -37,20 +37,50 @@ fi
 # server took 1126ms to exit after the real one had already started, losing the
 # bind by 24ms; the same sequence takes 127ms on an idle machine and passes.
 #
-# The data directory is fully initialised by the time this happens, so starting
-# again is enough: the second pass finds it populated, skips the temporary
-# server, and binds once the port is free.
+# Run it as a child so that this one outcome can be retried.
 docker-entrypoint.sh "$@" &
 server=$!
-trap 'kill -TERM "$server" 2>/dev/null || true' TERM INT
-wait "$server" || true
+
+signal=0
+trap 'signal=15; kill -s TERM "$server" 2>/dev/null || true' TERM
+trap 'signal=2; kill -s INT "$server" 2>/dev/null || true' INT
+
+status=0
+wait "$server" || status=$?
+
+# A trapped signal interrupts `wait` and returns 128+signal without reaping the
+# child, so wait again: mongod has to finish its own shutdown before this
+# process, which is PID 1, leaves and takes the container with it.
+while kill -0 "$server" 2>/dev/null; do
+  status=0
+  wait "$server" || status=$?
+done
+
 trap - TERM INT
 
-echo "mongodb: first start did not survive initialisation, starting again" >&2
+# Asked to stop. Report it the way a process killed by the signal does instead
+# of starting the server the caller just asked to go away.
+if [ "$signal" -ne 0 ]; then
+  exit $((128 + signal))
+fi
 
+# 48 is EXIT_NET_ERROR, what mongod exits with when it cannot bind, and the
+# standard entrypoint ends in `exec "$@"` so it arrives unchanged. A temporary
+# server that loses the bind instead fails inside `mongod --fork`, whose parent
+# reports 1. Every other status has to be raised rather than retried, an
+# initialisation script that failed once the storage files existed most of all:
+# a second pass would find /data/db populated, skip /docker-entrypoint-initdb.d
+# and serve a database with no application user, hiding why.
+if [ "$status" -ne 48 ]; then
+  exit "$status"
+fi
+
+echo "mongodb: lost 0.0.0.0:27017 to the initialisation server, starting again" >&2
+
+# The data directory is fully initialised by now, so the second pass skips the
+# temporary server and only has to wait for the port.
 for _ in $(seq 1 30); do
   (exec 3<>/dev/tcp/127.0.0.1/27017) 2>/dev/null || break
-  exec 3>&- 2>/dev/null || true
   sleep 1
 done
 
