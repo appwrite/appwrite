@@ -11,6 +11,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -1251,7 +1252,13 @@ final class SitesCustomServerTest extends Scope
         file_put_contents($tempDir . '/large.bin', random_bytes(12 * 1024 * 1024)); // 12MB non-compressible
 
         $codePath = $tempDir . '/code.tar.gz';
-        Console::execute("cd $tempDir && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->flag('-czf')
+            ->argument($codePath)
+            ->option('-C', $tempDir)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         $totalSize = filesize($codePath);
         $chunkSize = 5 * 1024 * 1024; // 5MB chunks
@@ -1381,7 +1388,13 @@ final class SitesCustomServerTest extends Scope
             file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
 
             $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
-            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+            $tar = (new Command('tar'))
+                ->option('--exclude', 'code.tar.gz')
+                ->flag('-czf')
+                ->argument($source)
+                ->option('-C', $tmpDirectory)
+                ->argument('.');
+            Console::execute($tar, '', $this->stdout, $this->stderr);
 
             $totalSize = filesize($source);
             $chunkSize = 5 * 1024 * 1024;
@@ -3624,7 +3637,7 @@ final class SitesCustomServerTest extends Scope
         $stdout = '';
         $stderr = '';
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . '/empty';
-        Console::execute("mkdir -p $folderPath", '', $stdout, $stderr);
+        Console::execute((new Command('mkdir'))->flag('-p')->argument($folderPath), '', $stdout, $stderr);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('empty'),
