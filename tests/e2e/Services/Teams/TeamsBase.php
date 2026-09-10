@@ -7,6 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait TeamsBase
 {
@@ -121,7 +122,7 @@ trait TeamsBase
             'name' => 'Manchester United'
         ]);
 
-        if ($this->getProject()['$id'] === 'console') {
+        if ($this->getProject()['$id'] === 'console' && System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this->assertEquals(403, $response2['headers']['status-code']);
             $this->assertEquals('organization_creation_prohibited', $response2['body']['type']);
 

@@ -69,6 +69,18 @@ abstract class Scope extends TestCase
 
         // Read console fixtures as their owner, not in project admin mode.
         unset($headers['x-appwrite-mode']);
+
+        // Cloud does not limit organizations per instance, so the public create API
+        // seeds the fixture there and only the GET below is shared with self-hosted.
+        if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $this->assertSame(201, $team['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            return $response;
+        }
+
         $account = [];
         $this->assertEventually(function () use ($headers, &$account) {
             $account = $this->client->call(Client::METHOD_GET, '/account', $headers);

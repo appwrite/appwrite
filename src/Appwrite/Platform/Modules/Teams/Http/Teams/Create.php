@@ -24,6 +24,7 @@ use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -80,10 +81,15 @@ class Create extends Action
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
-        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $project) {
+        // Only the default self-hosted run limits the console to a single organization.
+        // Cloud sets _APP_EDITION=cloud and governs organizations through billing plans instead.
+        $limitOrganizations = $project->getId() === 'console'
+            && System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted';
+
+        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limitOrganizations) {
             // The seeded total only holds if the owner membership lands with the team.
-            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $project) {
-                if ($project->getId() === 'console') {
+            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limitOrganizations) {
+                if ($limitOrganizations) {
                     $organization = $authorization->skip(fn () => $dbForProject->findOne('teams'));
 
                     if (!$organization->isEmpty()) {
@@ -141,7 +147,7 @@ class Create extends Action
         };
 
         try {
-            if ($project->getId() === 'console') {
+            if ($limitOrganizations) {
                 if ($user->isEmpty()) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
