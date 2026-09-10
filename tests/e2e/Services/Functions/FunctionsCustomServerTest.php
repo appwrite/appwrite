@@ -1073,7 +1073,7 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertSame(201, $execution['headers']['status-code']);
             $this->assertSame('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
             $this->assertSame(200, $execution['body']['responseStatusCode']);
-            $this->assertSame($deploymentId, \json_decode($execution['body']['responseBody'], true)['APPWRITE_FUNCTION_DEPLOYMENT']);
+            $this->assertSame($deploymentId, $this->executionOutput($execution)['APPWRITE_FUNCTION_DEPLOYMENT']);
 
             // The download endpoint reads buildPath through the builds device. The
             // artifact format depends on the storage strategy, so compare sizes.
@@ -2139,7 +2139,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2173,7 +2173,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2418,7 +2418,7 @@ final class FunctionsCustomServerTest extends Scope
             'async' => 'false'
         ]);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('OK', $execution['body']['responseBody']);
@@ -2989,7 +2989,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $executionResponse = $this->executionOutput($execution);
         $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
         $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
