@@ -16,6 +16,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -23,14 +24,6 @@ import {
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
