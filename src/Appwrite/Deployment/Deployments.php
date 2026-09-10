@@ -366,10 +366,12 @@ readonly class Deployments
         $memory = \max((int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT), $minMemory);
 
         // The jobs-service (and the containers it spawns) reach Appwrite over
-        // the internal Docker network, so the presigned + callback URLs use an
-        // internal endpoint when configured, falling back to the public host.
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
+        // the internal Docker network, where only port 80 is exposed (TLS is
+        // terminated at Traefik). The presigned + callback URLs therefore use an
+        // internal endpoint when configured, falling back to plain HTTP on the
+        // platform host — _APP_OPTIONS_FORCE_HTTPS governs the public API only
+        // and must not bleed into internal URLs.
+        $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "http://{$platform['apiHostname']}");
 
         // Source artifacts, all ending in /mnt/code/source:
         //  - remote tarball ($source with url): templates (public codeload URL)

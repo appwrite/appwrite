@@ -174,6 +174,90 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v1', $payload['environment']['MY-VAR']);
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
+
+    public function testPayloadInternalEndpointIsHttpEvenWhenForceHttpsEnabled(): void
+    {
+        $this->withEnv(
+            ['_APP_OPTIONS_FORCE_HTTPS' => 'enabled', '_APP_JOBS_ENDPOINT' => ''],
+            function (): void {
+                $payload = $this->buildPayload([]);
+
+                $this->assertStringStartsWith(
+                    'http://localhost/v1/jobs/event?',
+                    $payload['callback']->url,
+                    'CloudEvents callback must reach Appwrite over HTTP on the internal network'
+                );
+
+                $source = $this->findSourceArtifact($payload);
+                $this->assertStringStartsWith(
+                    'http://localhost/v1/functions/function1/deployments/deployment1/download',
+                    $source->in,
+                    'Source presigned download URL must use HTTP for the sidecar'
+                );
+            }
+        );
+    }
+
+    public function testPayloadRespectsExplicitJobsEndpointOverride(): void
+    {
+        $this->withEnv(
+            [
+                '_APP_OPTIONS_FORCE_HTTPS' => 'enabled',
+                '_APP_JOBS_ENDPOINT' => 'http://internal-appwrite:9000',
+            ],
+            function (): void {
+                $payload = $this->buildPayload([]);
+
+                $this->assertStringStartsWith(
+                    'http://internal-appwrite:9000/v1/jobs/event?',
+                    $payload['callback']->url
+                );
+
+                $source = $this->findSourceArtifact($payload);
+                $this->assertStringStartsWith(
+                    'http://internal-appwrite:9000/v1/functions/function1/deployments/deployment1/download',
+                    $source->in
+                );
+            }
+        );
+    }
+
+    /**
+     * @param array<string, string> $overrides
+     */
+    private function withEnv(array $overrides, callable $then): void
+    {
+        $previous = [];
+        foreach ($overrides as $key => $value) {
+            $previous[$key] = \getenv($key);
+            if ($value === '') {
+                \putenv($key);
+            } else {
+                \putenv($key . '=' . $value);
+            }
+        }
+        try {
+            $then();
+        } finally {
+            foreach ($previous as $key => $value) {
+                if ($value === false) {
+                    \putenv($key);
+                } else {
+                    \putenv($key . '=' . $value);
+                }
+            }
+        }
+    }
+
+    private function findSourceArtifact(array $payload): object
+    {
+        foreach ($payload['artifacts'] as $artifact) {
+            if ($artifact->id === 'source') {
+                return $artifact;
+            }
+        }
+        $this->fail('No source artifact in payload');
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments
