@@ -112,16 +112,16 @@
         },
         {
             "name": "appwrite/php-clamav",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-clamav.git",
-                "reference": "f3897169f5c1f365312238a516ae9465f804634f"
+                "reference": "a340ab5599b4a83abe3b212d56cffe90ce7de7d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/f3897169f5c1f365312238a516ae9465f804634f",
-                "reference": "f3897169f5c1f365312238a516ae9465f804634f",
+                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/a340ab5599b4a83abe3b212d56cffe90ce7de7d6",
+                "reference": "a340ab5599b4a83abe3b212d56cffe90ce7de7d6",
                 "shasum": ""
             },
             "require": {
@@ -156,10 +156,10 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-clamav/issues",
-                "source": "https://github.com/appwrite/php-clamav/tree/2.0.0"
+                "source": "https://github.com/appwrite/php-clamav/tree/2.0.1"
             },
             "abandoned": true,
-            "time": "2023-02-24T09:50:42+00:00"
+            "time": "2026-09-10T02:33:36+00:00"
         },
         {
             "name": "appwrite/php-runtimes",
