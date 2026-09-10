@@ -9,10 +9,12 @@ const password = process.env.MONGO_INITDB_PASSWORD;
 const database = process.env.MONGO_INITDB_DATABASE;
 
 // Create the user
-adminDb.createUser({
-  user: username,
-  pwd: password,
-  roles: [
-    { role: 'readWrite', db: database }
-  ]
-});
+if (adminDb.getUser(username) === null) {
+  adminDb.createUser({
+    user: username,
+    pwd: password,
+    roles: [
+      { role: 'readWrite', db: database }
+    ]
+  });
+}

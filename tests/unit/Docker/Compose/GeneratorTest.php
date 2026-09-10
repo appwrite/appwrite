@@ -101,7 +101,7 @@ final class GeneratorTest extends TestCase
             'database' => 'mongodb',
         ]);
 
-        $this->assertContains('./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
     }
 
@@ -123,10 +123,28 @@ final class GeneratorTest extends TestCase
             'database' => 'mongodb',
         ]);
 
-        $this->assertContains('/tmp/appwrite/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('/tmp/appwrite/mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertContains('/tmp/appwrite/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
-        $this->assertNotContains('./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-init.js:/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
         $this->assertNotContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+    }
+
+    public function testLeavesNoRelativeBindMountOnPublishedVersions(): void
+    {
+        $compose = $this->render([
+            'hostPath' => '/tmp/appwrite',
+            'database' => 'mongodb',
+        ]);
+
+        foreach ($compose['services'] as $name => $service) {
+            foreach ($service['volumes'] ?? [] as $volume) {
+                if (!\is_string($volume)) {
+                    continue;
+                }
+
+                $this->assertStringStartsNotWith('./', $volume, "{$name} mounts {$volume}, which resolves against wherever the generated file is run rather than the installation");
+            }
+        }
     }
 
     public function testDoesNotAddDatabaseDependencyWithoutPlaceholder(): void
