@@ -57,7 +57,7 @@ export function BudgetLimitProjectCurtain({
                 })
                 return
               }
-              navigate({ to: '/app' })
+              navigate({ to: '/' })
             }}
           >
             {hasTeamId ? t('Back to organization') : t('Back to console')}

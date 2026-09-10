@@ -12,6 +12,7 @@ import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
@@ -78,7 +79,7 @@ export const Route = createFileRoute('/_auth/sign-up')({
       if (target) {
         throw redirect({ ...toRedirectNavigateOptions(target), replace: true })
       }
-      throw redirect({ to: '/app', replace: true })
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Sign up') }] }),
@@ -101,7 +102,7 @@ function SignUpPage() {
       const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
       const successUrl = resolvedRedirect
         ? `${window.location.origin}${resolvedRedirect}`
-        : `${window.location.origin}/app`
+        : `${window.location.origin}${CONSOLE_ENTRY_PATH}`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       setLastLoginMethod(provider)

@@ -61,7 +61,7 @@ function MagicUrlPage() {
         // Root loader re-fetches the account; proceed regardless.
       }
       // Root loader resolves (or provisions) the organization and redirects.
-      navigate({ to: '/app', replace: true })
+      navigate({ to: '/', replace: true })
     },
     onError: (error: unknown) => {
       setErrorMessage(

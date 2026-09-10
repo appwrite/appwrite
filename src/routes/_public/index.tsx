@@ -32,7 +32,7 @@ export const Route = createFileRoute('/_public/')({
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
 
-    // Localhost guests: skip account.get. Production `/` 302s to `/app`.
+    // Localhost guests: skip account.get. Production guests 301 to `/home`.
     if (shouldSkipRootAccountProbe()) {
       throw redirect({
         to: resolveRootGuestRedirectPathname(),
@@ -113,7 +113,7 @@ function RootRedirect() {
   }
 
   // Authenticated users are redirected from the loader after org data is prefetched.
-  // Production guests never reach this component (SSR 301). Localhost cannot
-  // read the session cookie on the server, so keep this outlet empty.
+  // Production guests never reach this component (SSR 301 to `/home`). Localhost
+  // cannot read the session cookie on the server, so keep this outlet empty.
   return null
 }

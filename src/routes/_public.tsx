@@ -48,7 +48,7 @@ export const Route = createFileRoute('/_public')({
       // as soon as we know the preferred org from prefs.
       if (
         account &&
-        (location.pathname === '/' || location.pathname === '/app') &&
+        location.pathname === '/' &&
         !requiresConsoleEmailVerification(account)
       ) {
         kickoffDefaultOrganizationPrefetch(queryClient, account)

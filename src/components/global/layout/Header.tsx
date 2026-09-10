@@ -601,7 +601,7 @@ export function ConsoleHeader({
                         to: '/organizations/$orgId',
                         params: { orgId: linkOrgId },
                       } as const)
-                    : ({ to: '/app' } as const)
+                    : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
                 {...logoDestination}
@@ -1525,7 +1525,7 @@ export function ConsoleHeader({
                                 to: '/organizations/$orgId',
                                 params: { orgId },
                               }
-                            : { to: '/app' })}
+                            : { to: '/' })}
                           className={ACCOUNT_MENU_ITEM_CLASS}
                         >
                           <FolderOpen className="h-4 w-4" />
@@ -1678,7 +1678,7 @@ export function ConsoleHeader({
                                   to: '/organizations/$orgId',
                                   params: { orgId },
                                 }
-                              : { to: '/app' })}
+                              : { to: '/' })}
                             className={ACCOUNT_MENU_ITEM_CLASS}
                             {...analyticsAttrs('header-console')}
                           >

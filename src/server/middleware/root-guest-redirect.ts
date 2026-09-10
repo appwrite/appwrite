@@ -8,8 +8,8 @@ import { applyNoIndexResponseHeaders } from '@/lib/seo/indexing'
 
 /**
  * SSR redirect for `/` on production hosts: guests 301 to `/home` (or /init /
- * sign-in). A console session cookie 302s to `/app`, which calls `account.get`
- * on the client (HttpOnly cookies are not visible to JS). Localhost skips this
+ * sign-in). A console session cookie stays on `/`, where the client calls
+ * `account.get` (HttpOnly cookies are not visible to JS). Localhost skips this
  * and uses the client loader in `routes/_public/index.tsx` (`cookieFallback`).
  *
  * `/home` uses 301 so crawlers index the marketing homepage. Pre-launch `/init`

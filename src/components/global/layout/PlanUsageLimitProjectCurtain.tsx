@@ -70,7 +70,7 @@ export function PlanUsageLimitProjectCurtain({
               </Link>
             </Button>
           ) : (
-            <Button variant="brandCta" onClick={() => navigate({ to: '/app' })}>
+            <Button variant="brandCta" onClick={() => navigate({ to: '/' })}>
               {t('Back to console')}
             </Button>
           )}

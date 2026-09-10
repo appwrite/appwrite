@@ -114,7 +114,7 @@ export function useInitialLoader() {
   const skipStaticLoader =
     isAuthRoute || isInstantPublicRoute || isMarketingRoute
 
-  // `/` and `/app` are redirect hops: never show the branded overlay here.
+  // `/` (and legacy `/app`) are redirect hops: never show the branded overlay.
   // Do not treat them as skipStaticLoader, or the first console paint after
   // the hop would skip the overlay too.
   const shouldShowLoader = useMemo(

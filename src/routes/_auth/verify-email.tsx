@@ -14,6 +14,7 @@ import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
@@ -104,7 +105,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
           replace: true,
         })
       }
-      throw redirect({ to: '/app', replace: true })
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -148,7 +149,7 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
-        navigate({ to: '/app' })
+        navigate({ to: CONSOLE_ENTRY_PATH })
       }
     },
     onError: async (error: unknown) => {
@@ -170,7 +171,7 @@ function VerifyEmailPage() {
               })
               return
             }
-            navigate({ to: '/app' })
+            navigate({ to: CONSOLE_ENTRY_PATH })
             return
           }
         } catch {

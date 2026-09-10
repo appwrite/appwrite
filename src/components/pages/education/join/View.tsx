@@ -242,7 +242,7 @@ export function View() {
                 <Button
                   className="w-full"
                   variant="outline"
-                      onClick={() => navigate({ to: '/app', replace: true })}
+                      onClick={() => navigate({ to: '/', replace: true })}
                 >
                   {t('Continue to Appwrite')}
                 </Button>

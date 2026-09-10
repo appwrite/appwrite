@@ -43,7 +43,7 @@ export function hasLikelyConsoleSession(): boolean {
 /**
  * Skip `account.get` on `/` only for localhost guests (no cookieFallback).
  * Production session cookies are HttpOnly, so {@link hasLikelyConsoleSession}
- * is false even when signed in. Those visits 302 to `/app` and always probe.
+ * is false even when signed in. Those visits stay on `/` and always probe.
  */
 export function shouldSkipRootAccountProbe(): boolean {
   if (typeof window === 'undefined') return true

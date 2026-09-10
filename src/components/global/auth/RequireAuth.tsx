@@ -208,7 +208,6 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     if (
       !is401 ||
       location.pathname === '/' ||
-      location.pathname === '/app' ||
       isAuthPage(location.pathname) ||
       isOptionalAuthPage(location.pathname)
     ) {

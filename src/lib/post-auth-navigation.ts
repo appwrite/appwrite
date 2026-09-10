@@ -74,7 +74,7 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
   if (!redirect || !isValidRelativeRedirect(redirect)) return undefined
 
   const pathname = normalizeRedirectPathname(redirect)
-  if (pathname === '/' || pathname === '/app') return undefined
+  if (pathname === '/') return undefined
   if (isAuthPagePath(pathname)) return undefined
   if (isMarketingPagePath(pathname)) return undefined
 

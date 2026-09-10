@@ -76,7 +76,7 @@ export function rewriteLegacyConsolePath(pathname: string): string {
   }
 
   if (path === '' || path === '/') {
-    return wasConsolePrefixed ? '/app' : '/'
+    return '/'
   }
 
   // The GitHub Student Developer Pack and the marketing site send students to

@@ -4711,7 +4711,7 @@ export function AgentPanelContent({
       })
       return
     }
-    void navigate({ to: '/app', replace: false })
+    void navigate({ to: '/', replace: false })
   }, [navigate, pageOrgId])
 
   const handleCloseChat = useCallback(() => {

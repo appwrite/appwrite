@@ -399,7 +399,7 @@ function isProjectRoute(pathname: string) {
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
   // Use the rendered location, not the pending one. During `/` → `/home`
-  // (or `/app` → org) the desired path can already be the destination while the
+  // (or `/` → org) the desired path can already be the destination while the
   // outlet is still the blank hop; wrapping that hop would flash the footer.
   const renderedPathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,

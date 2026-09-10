@@ -11,12 +11,10 @@ import { isLocalDevelopmentHost } from '@/lib/sentry/environment-shared'
 
 export type RootGuestRedirectPath = '/init' | '/sign-in' | '/home'
 
-/** Client console entry. Production `/` 302s here when a session cookie is present. */
-export const CONSOLE_ENTRY_PATH = '/app' as const
+/** Client console entry after auth or from `/`. */
+export const CONSOLE_ENTRY_PATH = '/' as const
 
-export type RootDocumentRedirectPath =
-  | RootGuestRedirectPath
-  | typeof CONSOLE_ENTRY_PATH
+export type RootDocumentRedirectPath = RootGuestRedirectPath
 
 export type RootGuestRedirect = {
   url: URL
@@ -28,10 +26,10 @@ export function isRootRedirectPath(pathname: string | undefined): boolean {
   return normalized === '/'
 }
 
-/** `/` and `/app` are blank redirect hops (no marketing/console chrome). */
+/** `/` (and legacy `/app`) are blank redirect hops (no marketing/console chrome). */
 export function isConsoleRedirectHopPath(pathname: string | undefined): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
-  return normalized === '/' || normalized === CONSOLE_ENTRY_PATH
+  return normalized === '/' || normalized === '/app'
 }
 
 function isLocalSiteRequest(request: Request): boolean {
@@ -55,7 +53,7 @@ function guestRedirectUrl(
 /**
  * Absolute Location headers must be https on production. Behind Cloudflare,
  * `request.url` is often `http://appwrite.io/...`, which produced
- * `Location: http://appwrite.io/app` and dropped Secure session cookies.
+ * `Location: http://appwrite.io/...` and dropped Secure session cookies.
  */
 export function rootRedirectLocationPath(
   redirectUrl: URL,
@@ -68,19 +66,20 @@ export function rootRedirectLocationPath(
  * off). Crawlers do not send a console session cookie, so this is the URL
  * they should index; a 302 would leave `/` in the index with no content.
  *
- * 302 for `/app` (session cookie) and pre-launch `/init`.
+ * 302 for pre-launch `/init` only.
  */
 export function getRootGuestRedirectStatus(
   pathname: RootDocumentRedirectPath,
 ): 301 | 302 {
-  return pathname === '/init' || pathname === CONSOLE_ENTRY_PATH ? 302 : 301
+  return pathname === '/init' ? 302 : 301
 }
 
 /**
  * Where `/` document requests should go before the SPA boots.
  *
- * Guests: 301 `/home` (or `/sign-in` / `/init`). Session cookie: 302 `/app`,
- * where the client calls `account.get` (HttpOnly cookies are invisible to JS).
+ * Guests: 301 `/home` (or `/sign-in` / `/init`). Session cookie: no redirect;
+ * the client loader on `/` calls `account.get` (HttpOnly cookies are invisible
+ * to JS) and routes to the console.
  *
  * Skipped on localhost/loopback: the Appwrite SDK often stores the session in
  * `localStorage` (`cookieFallback`) instead of an HTTP cookie, so only the
@@ -108,13 +107,13 @@ export function resolveRootGuestRedirect(
 
   const cookieHeader = request.headers.get('cookie')
   if (hasConsoleSessionCookieFromHeader(cookieHeader)) {
-    const dest: RootDocumentRedirectPath = isPreLaunchModeEnabled(cookieHeader)
-      ? '/init'
-      : CONSOLE_ENTRY_PATH
-    return {
-      url: guestRedirectUrl(request.url, dest),
-      status: getRootGuestRedirectStatus(dest),
+    if (isPreLaunchModeEnabled(cookieHeader)) {
+      return {
+        url: guestRedirectUrl(request.url, '/init'),
+        status: getRootGuestRedirectStatus('/init'),
+      }
     }
+    return null
   }
 
   const dest: RootGuestRedirectPath = isPreLaunchModeEnabled(cookieHeader)

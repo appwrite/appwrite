@@ -18,7 +18,7 @@ function resolvePathname(
 
 /**
  * Pre-2.0 console URLs (`/console`, `/console/...`, typed resource segments).
- * Exact `/console` is not a live route (Vite SSR 404s it); it 302s to `/app`.
+ * Exact `/console` is not a live route (Vite SSR 404s it); it 302s to `/`.
  */
 export const legacyConsolePathMiddleware = createMiddleware({
   type: 'request',
