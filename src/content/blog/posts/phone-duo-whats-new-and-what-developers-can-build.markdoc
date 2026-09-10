@@ -143,7 +143,7 @@ Work through this in order:
 
 Emulator testing gets you most of the layout work. It will not tell you whether your fold animation janks, and that is the thing users feel.
 
-## Building your iPhone Duo app with Appwrite
+# Building your iPhone Duo app with Appwrite
 
 Start with the layout audit, because it blocks everything else. Then decide what state has to survive a fold, and move that state somewhere the view hierarchy cannot take with it.
 
