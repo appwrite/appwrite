@@ -18,6 +18,11 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
+use OpenRuntimes\Orchestrator\Callback\JobArtifact;
+use OpenRuntimes\Orchestrator\Callback\JobExit;
+use OpenRuntimes\Orchestrator\Callback\JobLog;
+use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
+use OpenRuntimes\Orchestrator\Enum\ErrorCode;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
@@ -134,11 +139,11 @@ class Jobs extends Action
 
             $statusBefore = $deployment->getAttribute('status');
 
-            $deployment = match ($event->event) {
-                'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+            $deployment = match (CallbackEvent::tryFrom($event->event)) {
+                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, JobArtifact::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
@@ -163,10 +168,9 @@ class Jobs extends Action
         }, self::LOCK_TIMEOUT);
     }
 
-    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
+    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
     {
-        $lines = $data['lines'] ?? [];
-        $chunk = \is_array($lines) ? \implode("\n", $lines) : (string) $lines;
+        $chunk = \implode("\n", $log->lines);
         if ($chunk === '') {
             return $deployment;
         }
@@ -267,7 +271,7 @@ class Jobs extends Action
         Database $dbForPlatform,
         Document $project,
         Document $deployment,
-        array $data,
+        JobArtifact $artifact,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
@@ -278,10 +282,11 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        if (($data['artifactId'] ?? '') === 'manifest') {
+        $failed = $artifact->status === 'failed';
+        if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.
-            $manifest = ($data['status'] ?? '') === 'success' ? ($data['content'] ?? null) : null;
+            $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
@@ -291,12 +296,12 @@ class Jobs extends Action
         // On a remote builds device the sidecar delivers the artifact. Join its
         // callback explicitly because complete is emitted after artifacts but
         // the queue can deliver those callbacks out of order.
-        if (($data['artifactId'] ?? '') === 'output') {
-            if (($data['status'] ?? '') === 'failed') {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . self::failureMessage($data, 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        if ($artifact->artifactId === 'output') {
+            if ($failed) {
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error?->message ?? 'unknown error'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
-            if (($data['status'] ?? '') !== 'success') {
+            if ($artifact->status !== 'success') {
                 return $deployment;
             }
 
@@ -311,16 +316,16 @@ class Jobs extends Action
         // status) rather than waiting for the bare exit code. The build cache
         // upload is the one best-effort artifact: losing it costs the next
         // build time, not this one.
-        if (($data['status'] ?? '') === 'failed' && ($data['artifactId'] ?? '') !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, self::failureMessage($data, 'Build failed.'), $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        if ($failed && $artifact->artifactId !== 'cache') {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error?->message ?? 'Build failed.', $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
+        if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
             return $deployment;
         }
 
         // A stat artifact reports the file's byte size as its 'content'.
-        $size = (int) ($data['content'] ?? 0);
+        $size = (int) $artifact->content;
         if ($size <= 0) {
             return $deployment;
         }
@@ -343,7 +348,7 @@ class Jobs extends Action
         Database $dbForPlatform,
         Document $project,
         Document $deployment,
-        array $data,
+        JobExit $exit,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
@@ -354,29 +359,19 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $exitCode = (int) ($data['exitCode'] ?? 0);
-        if ($exitCode !== 0) {
+        if ($exit->error !== null) {
             // The build command's own exit stays an exit code; anything else
             // (out of memory, failed before it could start) is explained.
-            $message = ($data['error']['code'] ?? '') === 'job_exit_nonzero' ? '' : self::failureMessage($data, '');
+            $message = $exit->error->code === ErrorCode::JobExitNonzero
+                ? "Build failed with exit code {$exit->exitCode}."
+                : $exit->error->message;
 
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message !== '' ? $message : "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
-    }
-
-    /**
-     * The message of a callback's `error`, or the fallback. Tolerates the bare
-     * string an orchestrator older than 2.2 sends in its place.
-     */
-    protected static function failureMessage(array $data, string $fallback): string
-    {
-        $message = $data['error']['message'] ?? '';
-
-        return \is_string($message) && $message !== '' ? $message : $fallback;
     }
 
     /**

@@ -114,7 +114,7 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.4.4",
-        "open-runtimes/sdk-for-php": "^1.0.1",
+        "open-runtimes/sdk-for-php": "^2.0",
         "utopia-php/schedule": "^0.2.0",
         "utopia-php/usage": "^0.16.4",
         "utopia-php/query": "0.6.*",
