@@ -126,6 +126,20 @@ The commands connection is opened lazily on the first acknowledgment, so a publi
 
 Still pass a Closure factory rather than a live connection when the worker forks or reconnects per worker, and do not hand the same connection to anything outside the broker.
 
+#### Which axis to scale
+
+`job('…', N)` adds handler coroutines inside one process; replicas add processes. They are not interchangeable, and which one helps is decided by the handler, not by the broker. Measured with `tests/bench/run.sh` (400 messages, median of three, same host):
+
+| handler | 1 process x 1 coroutine | 1 x 4 (coroutines) | 4 x 1 (processes) |
+|---|---|---|---|
+| waits 25ms (`io`) | 35 msg/s | **143** (4.0x) | 140 (4.0x) |
+| hashes (`cpu`) | 72 msg/s | 72 (**1.0x**) | **266** (3.7x) |
+| both (`mixed`) | 46 msg/s | 98 (2.1x) | 190 (4.1x) |
+
+A handler that waits is absorbed by coroutines, because the wait yields. A handler that computes is not: PHP runs one coroutine at a time, so raising the cap buys nothing and only processes help. Most jobs are somewhere between, and scale partially on both.
+
+`Broker\Redis` and `Broker\Nats` are within noise of each other in every cell above, which is the point worth remembering: at any realistic handler cost the broker is not the constraint, so pick the axis that matches the work rather than the transport.
+
 `Consumer\Exclusive` stays for consumers built outside this package that drive one socket without serialising it. `Server::start()` refuses a job registered above one coroutine on a consumer carrying that marker, because it would crash exactly as above; scale one of those with replicas rather than coroutines.
 
 The marker is readable by callers too, which matters when concurrency comes from configuration rather than code — there, a refusal at `start()` is a worker that will not boot:

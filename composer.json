@@ -31,7 +31,8 @@
     },
     "scripts": {
         "test": "phpunit --testsuite unit",
-        "test:e2e": "tests/e2e.sh"
+        "test:e2e": "tests/e2e.sh",
+        "bench": "bash tests/bench/run.sh"
     },
     "require": {
         "php": ">=8.5",
