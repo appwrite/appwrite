@@ -1,1 +1,0 @@
-List indexes on the table.

@@ -1,1 +1,0 @@
-Get column by ID.

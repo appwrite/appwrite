@@ -1,1 +1,0 @@
-Check the Appwrite geo service is up and connection is successful.

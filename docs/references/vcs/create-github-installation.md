@@ -1,1 +1,0 @@
-Begin Appwrite's GitHub's app installation to set up version control integration. This endpoint responds with a redirect URL to the GitHub App's installation page. The GitHub App must be configured in your environment for this endpoint to work.

@@ -1,1 +1,0 @@
-Delete a VCS installation by its unique ID. This endpoint removes the installation and all its associated repositories from the project.

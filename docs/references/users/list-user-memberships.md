@@ -1,1 +1,0 @@
-Get the user membership list by its unique ID.

@@ -1,1 +1,0 @@
-Update an Amazon SES provider by its unique ID.

@@ -1,1 +1,0 @@
-Update a Mailgun provider by its unique ID.

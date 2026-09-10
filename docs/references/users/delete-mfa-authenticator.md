@@ -1,1 +1,0 @@
-Delete an authenticator app.

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="120" viewBox="0 0 120 120" onload="alert(document.domain)">
-    <script>alert(document.cookie);</script>
-    <rect width="120" height="120" rx="16" fill="#FD366E" onclick="alert(1)"/>
-    <a xlink:href="javascript:alert(1)">
-        <circle cx="60" cy="60" r="30" fill="#FFFFFF"/>
-    </a>
-</svg>

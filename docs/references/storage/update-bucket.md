@@ -1,1 +1,0 @@
-Update a storage bucket by its unique ID.

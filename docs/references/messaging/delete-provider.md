@@ -1,1 +1,0 @@
-Delete a provider by its unique ID.

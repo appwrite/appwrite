@@ -1,1 +1,0 @@
-Delete an authenticator for a user by ID.

@@ -1,1 +1,0 @@
-Get a row by its unique ID. This endpoint response returns a JSON object with the row data.

@@ -1,1 +1,0 @@
-Begin Appwrite's Bitbucket OAuth authorization to set up version control integration. This endpoint responds with a redirect URL to Bitbucket's authorization page. The Bitbucket OAuth consumer must be configured in your environment for this endpoint to work.

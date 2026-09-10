@@ -1,1 +1,0 @@
-List transactions across all databases.

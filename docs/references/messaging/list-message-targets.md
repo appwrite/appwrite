@@ -1,1 +1,0 @@
-Get a list of the targets associated with a message.

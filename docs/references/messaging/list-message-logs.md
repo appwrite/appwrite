@@ -1,1 +1,0 @@
-Get the message activity logs listed by its unique ID.

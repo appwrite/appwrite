@@ -1,1 +1,0 @@
-Delete a messaging target.

@@ -1,1 +1,0 @@
-List the factors available on the account to be used as a MFA challange.

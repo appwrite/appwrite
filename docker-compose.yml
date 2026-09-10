@@ -1809,6 +1809,8 @@ services:
       start_period: 10s
     command:
       - postgres
+      - -c
+      - max_connections=${_APP_CONNECTIONS_MAX:-151}
   appwrite-embedding:
     image: appwrite/embedding:0.3.1
     profiles:

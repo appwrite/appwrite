@@ -1,1 +1,0 @@
-Begin Appwrite's GitLab OAuth authorization to set up version control integration. This endpoint responds with a redirect URL to GitLab's authorization page. The GitLab OAuth application must be configured in your environment for this endpoint to work.

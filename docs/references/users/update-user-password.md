@@ -1,1 +1,0 @@
-Update the user password by its unique ID.

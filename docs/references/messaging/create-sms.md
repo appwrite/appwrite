@@ -1,1 +1,0 @@
-Create a new SMS message.

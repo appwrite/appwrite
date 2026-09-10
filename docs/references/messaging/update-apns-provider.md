@@ -1,1 +1,0 @@
-Update a Apple Push Notification service provider by its unique ID.

@@ -1,1 +1,0 @@
-Enable or disable MFA on a user account.

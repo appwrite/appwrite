@@ -1,1 +1,0 @@
-Update a Vonage provider by its unique ID.

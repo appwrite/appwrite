@@ -1,1 +1,0 @@
-Update a Textmagic provider by its unique ID.

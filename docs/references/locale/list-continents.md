@@ -1,1 +1,0 @@
-List of all continents. You can use the locale header to get the data in a supported language.

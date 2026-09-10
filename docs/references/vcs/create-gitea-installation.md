@@ -1,1 +1,0 @@
-Begin Appwrite's Gitea OAuth authorization to set up version control integration. This endpoint responds with a redirect URL to Gitea's authorization page. The Gitea OAuth application must be configured in your environment for this endpoint to work.
