@@ -926,9 +926,6 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
-            // The built-in broker: no third-party socket, no auth session. The adapter is
-            // the single server-side publish path, writing the ledger and fanning out over
-            // internal pub/sub, so publishing stays impossible from outside the worker.
             'appwrite' => new AppwritePush(
                 new Mqtt($this->telemetry),
                 $dbForProject,

@@ -13,24 +13,6 @@ use Utopia\Messaging\Response;
 use Utopia\Mqtt\Packet;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-/**
- * Appwrite's built-in push provider.
- *
- * Unlike FCM or APNS, this never opens an outbound socket to a third party. It
- * is the single server-side publish path into Appwrite's own MQTT broker: for
- * each topic it appends one row to the append-only {@see messages_appwrite}
- * ledger under a per-topic sequence, then hands the payload to the {@see Mqtt}
- * broker adapter, which fans it out over the internal pub/sub channel to every
- * broker worker holding live subscribers.
- *
- * The ledger is the source of truth for offline QoS 1 replay: a reconnecting
- * client resumes from its cursor and reads forward by sequence. Live fan-out
- * and durable replay are therefore written in one place, here, so there is
- * exactly one writer per topic and no way to publish from outside the worker.
- *
- * `$message->getTo()` carries topic identifiers for this provider (not device
- * tokens); the recipient resolution upstream feeds topics rather than targets.
- */
 class Appwrite extends PushAdapter
 {
     protected const NAME = 'Appwrite';
@@ -95,11 +77,6 @@ class Appwrite extends PushAdapter
         return $response->toArray();
     }
 
-    /**
-     * Append the payload to the topic's ledger under the next sequence. The
-     * atomic increment on the topic row hands back the tail so the ledger row
-     * and the topic counter never diverge under concurrent publishes.
-     */
     private function persist(string $topic, string $payload): void
     {
         $authorization = $this->dbForProject->getAuthorization();
