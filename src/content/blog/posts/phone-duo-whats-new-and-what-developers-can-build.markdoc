@@ -69,7 +69,7 @@ The closest existing analogue is Android's foldable line, which has had fold-sta
 
 ## Do existing apps need changes for iPhone Duo?
 
-**Short answer:** No, existing apps launch and run on iPhone Duo without changes. But apps built with fixed layouts, hardcoded dimensions, or view controllers that reload on size change will look stretched, letterboxed, or lose state when the device folds. Those need work.
+No, existing apps launch and run on iPhone Duo without changes. But apps built with fixed layouts, hardcoded dimensions, or view controllers that reload on size change will look stretched, letterboxed, or lose state when the device folds. Those need work.
 
 Use this to decide how much:
 
