@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
@@ -220,6 +222,49 @@ final class EventTest extends TestCase
 
         // An attribute of a sub-resource does not also belong to its parent.
         $this->assertNotContains('teams.jets.update.status', $membershipEvents);
+    }
+
+    public static function databaseEvents(): array
+    {
+        return [
+            'TablesDB create' => ['tablesdb', 'collections', 'documents', 'create', 'tablesdb.db.tables.col.rows.row.create'],
+            'TablesDB update' => ['tablesdb', 'tables', 'rows', 'update', 'tablesdb.db.tables.col.rows.row.update'],
+            'DocumentsDB create' => ['documentsdb', 'collections', 'documents', 'create', 'documentsdb.db.collections.col.documents.row.create'],
+            'VectorsDB update' => ['vectorsdb', 'collections', 'documents', 'update', 'vectorsdb.db.collections.col.documents.row.update'],
+            'legacy create' => ['legacy', 'collections', 'documents', 'create', 'databases.db.collections.col.documents.row.create'],
+        ];
+    }
+
+    #[DataProvider('databaseEvents')]
+    public function testPublishDatabaseEvents(string $type, string $collection, string $document, string $action, string $expected): void
+    {
+        $database = new Document(['type' => $type]);
+        $pattern = "databases.[databaseId].{$collection}.[collectionId].{$document}.[documentId].{$action}";
+        $params = ['databaseId' => 'db', 'collectionId' => 'col', 'documentId' => 'row'];
+        $this->object->setEvent($pattern)->setContext('database', $database);
+        foreach ($params as $key => $value) {
+            $this->object->setParam($key, $value);
+        }
+
+        $this->object->trigger();
+
+        $events = $this->publisher->getEvents($this->queue)[0]['events'];
+        $this->assertSame($expected, $events[0]);
+        $wildcard = explode('.', $expected);
+        foreach ([1, 3, 5] as $index) {
+            $wildcard[$index] = '*';
+        }
+        $this->assertContains(implode('.', $wildcard), $events);
+        if ($type === 'tablesdb') {
+            $this->assertContains("databases.db.tables.col.rows.row.{$action}", $events);
+            $this->assertContains("databases.db.collections.col.documents.row.{$action}", $events);
+        } elseif ($type !== 'legacy') {
+            $this->assertNotContains("tablesdb.db.tables.col.rows.row.{$action}", $events);
+            $this->assertNotContains("databases.db.collections.col.documents.row.{$action}", $events);
+        }
+
+        $message = Func::fromEvent(event: $pattern, params: $params, database: $database);
+        $this->assertSame($events, $message->events);
     }
 
     public function testGenerateMirrorEvents(): void
