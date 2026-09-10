@@ -137,6 +137,14 @@ Http::post('/v1/graphql/mutation')
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
@@ -188,6 +196,14 @@ Http::post('/v1/graphql')
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
@@ -212,7 +228,7 @@ Http::post('/v1/graphql')
  *
  * @param GQLSchema $schema
  * @param Adapter $promiseAdapter
- * @param mixed $query
+ * @param array $query
  * @param bool $readOnly
  * @return array
  * @throws Exception
@@ -220,16 +236,9 @@ Http::post('/v1/graphql')
 function execute(
     GQLSchema $schema,
     Adapter $promiseAdapter,
-    mixed $query,
+    array $query,
     bool $readOnly = false
 ): array {
-    if ($query instanceof \stdClass) {
-        $query = \get_object_vars($query);
-    }
-    if (!\is_array($query)) {
-        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects.');
-    }
-
     $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
     $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
     $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
