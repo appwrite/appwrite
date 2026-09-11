@@ -67,7 +67,7 @@ No application form, no minimum audience size, no separate affiliate dashboard t
 
 Create a separate link per channel instead of reusing one everywhere. A link named `youtube-auth-tutorial` and a link named `conf-workshop` cost nothing extra, and they tell you which audience actually converts. Deleting a link stops new visits to that URL but keeps the referrals and rewards it already earned.
 
-## Track clicks and conversions in the Appwrite Console
+# Track clicks and conversions in the Appwrite Console
 
 Referral programs usually fail on measurement. You share a link, something happens, and a spreadsheet shows up at the end of the month. Appwrite Affiliates reports the same funnel you'd expect from your own product analytics, in the Console you already use.
 
