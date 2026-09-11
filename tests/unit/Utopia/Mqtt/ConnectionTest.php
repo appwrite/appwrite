@@ -56,7 +56,25 @@ final class ConnectionTest extends TestCase
         $connection = new Connection(1);
         $connection->track(7, 'appwrite/push/user-1', 42);
 
-        $this->assertSame(['topic' => 'appwrite/push/user-1', 'sequence' => 42], $connection->acknowledge(7));
+        $ack = $connection->acknowledge(7);
+        $this->assertSame('appwrite/push/user-1', $ack['topic']);
+        $this->assertSame(42, $ack['sequence']);
+        // Nothing else in flight, so the cursor advances to the acked sequence.
+        $this->assertSame(42, $ack['cursor']);
+    }
+
+    public function testAcknowledgeAdvancesCursorOnlyToTheContiguousBoundary(): void
+    {
+        // Deliver 5, 6, 7; ack 5 and 7 while 6 is still pending. The cursor must stop
+        // below the gap (5), never jumping to the acked 7 and skipping the unacked 6.
+        $connection = new Connection(1);
+        $connection->track(1, 'topic', 5);
+        $connection->track(2, 'topic', 6);
+        $connection->track(3, 'topic', 7);
+
+        $this->assertSame(5, $connection->acknowledge(1)['cursor']); // 6,7 pending -> boundary 5
+        $this->assertSame(5, $connection->acknowledge(3)['cursor']); // 6 pending    -> boundary 5
+        $this->assertSame(6, $connection->acknowledge(2)['cursor']); // none pending -> this ack (6)
     }
 
     public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
