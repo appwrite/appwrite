@@ -11,6 +11,7 @@ use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\JetStream\AckPolicy;
 use Utopia\NATS\JetStream\Consumer as NatsConsumer;
 use Utopia\NATS\JetStream\ConsumerConfig;
+use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\JetStream\JetStreamMessage;
 use Utopia\NATS\JetStream\RetentionPolicy;
@@ -202,6 +203,35 @@ class Nats implements Synchronous, Consumer
      *        nowhere, which is how a lost dead letter becomes invisible. Called on
      *        the way out of receive(), after the broker has released its locks, so a
      *        reporter is free to use this broker.
+     * @param float|null $maxAge Message TTL on the work stream, in seconds. Null
+     *        derives it from the queue's own jobTtl, which is the historical
+     *        behaviour — but a queue object is built separately on each side, so
+     *        producer and consumer only agree by convention. Set this to state the
+     *        TTL where both sides read the same value, and the derivation is bypassed.
+     * @param int|null $maxMsgSize Largest accepted message, in bytes. Applied to the
+     *        work AND dead streams: a message the work stream accepts must be storable
+     *        as a dead letter too, or dead-lettering fails on exactly the messages an
+     *        operator is trying to read. The server's own max_payload (1MB by default)
+     *        is a separate, lower ceiling that is cluster configuration.
+     * @param int $maxMsgs Most messages the work stream holds; -1 is unlimited.
+     * @param int $maxBytes Most bytes the work stream holds; -1 is unlimited. This is
+     *        how one queue is stopped from consuming a shared account's whole file store.
+     * @param DiscardPolicy $discard What a full work stream does: Old drops the oldest
+     *        stored message, New refuses the publish. New is backpressure — the producer
+     *        finds out — and it requires one of $maxMsgs/$maxBytes to mean anything.
+     * @param int|null $maxAckPending In-flight ceiling per worker consumer: how many
+     *        messages JetStream will hand out before it waits for an ack. The server
+     *        default (1000) lets messages sit with the ack clock running while nothing
+     *        is working them, which surfaces as redelivery of jobs that never started —
+     *        set it near the worker's concurrency.
+     * @param int|null $maxWaiting Pull requests a consumer may have parked at once.
+     * @param float|null $inactiveThreshold Idle time after which JetStream deletes a
+     *        durable consumer, in seconds. Null keeps it forever, which is what a
+     *        scale-to-zero fleet wants: a threshold shorter than a quiet period returns
+     *        the queue to cold provisioning on the next message.
+     * @param Provisioning $provisioning Whether this broker may create and rewrite the
+     *        queue's streams and worker consumers, or must use what is already there
+     *        and refuse otherwise. See {@see Provisioning}.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -214,6 +244,15 @@ class Nats implements Synchronous, Consumer
         private readonly float $duplicateWindow = 120.0,
         private readonly ?\Closure $messageId = null,
         private readonly ?\Closure $onError = null,
+        private readonly ?float $maxAge = null,
+        private readonly ?int $maxMsgSize = null,
+        private readonly int $maxMsgs = -1,
+        private readonly int $maxBytes = -1,
+        private readonly DiscardPolicy $discard = DiscardPolicy::Old,
+        private readonly ?int $maxAckPending = null,
+        private readonly ?int $maxWaiting = null,
+        private readonly ?float $inactiveThreshold = null,
+        private readonly Provisioning $provisioning = Provisioning::Ensure,
     ) {
         $this->lock = new Mutex();
 
@@ -236,6 +275,33 @@ class Nats implements Synchronous, Consumer
         }
         if ($this->duplicateWindow <= 0) {
             throw new \InvalidArgumentException('duplicateWindow must be a positive number of seconds');
+        }
+        if ($this->maxAge !== null && $this->maxAge <= 0) {
+            throw new \InvalidArgumentException('maxAge must be a positive number of seconds, or null to derive it from the queue\'s jobTtl');
+        }
+        if ($this->maxMsgSize !== null && $this->maxMsgSize <= 0) {
+            throw new \InvalidArgumentException('maxMsgSize must be a positive number of bytes, or null for no limit');
+        }
+        foreach (['maxMsgs' => $this->maxMsgs, 'maxBytes' => $this->maxBytes] as $name => $limit) {
+            // JetStream reads -1 as unlimited and rejects 0 outright; anything below
+            // -1 is a typo that would otherwise reach the server as one of those two.
+            if ($limit !== -1 && $limit <= 0) {
+                throw new \InvalidArgumentException(\sprintf('%s must be a positive limit, or -1 for unlimited', $name));
+            }
+        }
+        if ($this->discard === DiscardPolicy::New && $this->maxMsgs === -1 && $this->maxBytes === -1) {
+            // Discard policy only takes effect on a stream that can be full, so this
+            // combination reads as backpressure and delivers none.
+            throw new \InvalidArgumentException('discard: New requires a maxMsgs or maxBytes limit — on an unlimited stream it never applies');
+        }
+        if ($this->maxAckPending !== null && $this->maxAckPending < 1) {
+            throw new \InvalidArgumentException('maxAckPending must be at least 1, or null for the server default');
+        }
+        if ($this->maxWaiting !== null && $this->maxWaiting < 1) {
+            throw new \InvalidArgumentException('maxWaiting must be at least 1, or null for the server default');
+        }
+        if ($this->inactiveThreshold !== null && $this->inactiveThreshold <= 0) {
+            throw new \InvalidArgumentException('inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever');
         }
     }
 
@@ -723,12 +789,22 @@ class Nats implements Synchronous, Consumer
      * Takes the connection lock for the whole sweep rather than per message: this is a
      * maintenance call, made against a publisher or maintenance broker, not one whose
      * consume loop is running — so there is no ack on the other side of it to starve.
+     *
+     * This is the call that motivates {@see Provisioning::Require}. ensure() below is
+     * the broker's own configuration reaching a queue it does not own: a maintenance
+     * task built with different knobs rewrites the work stream's replica count, the dead
+     * stream's TTL and the worker consumers' ack settings just by re-driving. Construct
+     * the broker with Provisioning::Require and ensure() adopts instead, so the sweep
+     * moves messages and changes nothing else.
      */
     public function retry(Queue $queue, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): void
     {
         $this->synchronize(function () use ($queue, $limit): void {
             $this->ensure($queue);
 
+            // Created in both modes on purpose: this durable reads the dead stream and
+            // carries none of the settings a running fleet depends on, so requiring it
+            // to pre-exist would only mean refusing the first re-drive of every queue.
             $consumer = $this->js()->createConsumer($this->deadStream($queue), new ConsumerConfig(
                 durableName: self::CONSUMER_RETRY,
                 ackPolicy: AckPolicy::Explicit,
@@ -881,6 +957,12 @@ class Nats implements Synchronous, Consumer
             return;
         }
 
+        if ($this->provisioning === Provisioning::Require) {
+            $this->adopt($queue, $key);
+
+            return;
+        }
+
         $attempt = 0;
         while (true) {
             try {
@@ -904,7 +986,10 @@ class Nats implements Synchronous, Consumer
     {
         $this->guardStreamName($queue, $key);
 
-        $maxAge = $queue->jobTtl > 0 ? (float) $queue->jobTtl : null;
+        // An explicit maxAge states the TTL where producer and consumer read the same
+        // value; the jobTtl derivation is per-queue-object, so the two sides agree only
+        // as long as both construct the Queue the same way.
+        $maxAge = $this->maxAge ?? ($queue->jobTtl > 0 ? (float) $queue->jobTtl : null);
 
         // JetStream refuses a stream whose duplicate window outlives its max
         // age, and it is right to: an id cannot be recognised as a duplicate of
@@ -920,9 +1005,13 @@ class Nats implements Synchronous, Consumer
             subjects: [$this->workSubject($queue), $this->prioritySubject($queue)],
             description: $key,
             retention: RetentionPolicy::WorkQueue,
+            maxMsgs: $this->maxMsgs,
+            maxBytes: $this->maxBytes,
+            maxMsgSize: $this->maxMsgSize,
             maxAge: $maxAge,
             storage: $this->storage,
             replicas: $this->replicas,
+            discard: $this->discard,
             // Without this the stream keeps no memory of message ids, so
             // Nats-Msg-Id is carried on the wire and then ignored, and a
             // retried publish is stored as a second message.
@@ -935,6 +1024,11 @@ class Nats implements Synchronous, Consumer
             subjects: [$this->deadSubject($queue)],
             description: $key,
             retention: RetentionPolicy::WorkQueue,
+            // Size limits are the work stream's backpressure and do not belong on a
+            // stream nobody publishes work to -- but maxMsgSize is mirrored: a message
+            // the work stream accepted has to be storable as a dead letter, or it is
+            // lost at exactly the point an operator would go looking for it.
+            maxMsgSize: $this->maxMsgSize,
             maxAge: $this->deadMaxAge,
             storage: $this->storage,
             replicas: $this->replicas,
@@ -948,6 +1042,9 @@ class Nats implements Synchronous, Consumer
                 ackWait: $this->ackWait,
                 maxDeliver: $this->maxDeliver,
                 filterSubject: $this->workSubject($queue),
+                maxWaiting: $this->maxWaiting,
+                maxAckPending: $this->maxAckPending,
+                inactiveThreshold: $this->inactiveThreshold,
                 backoff: $this->backoff,
             )),
             'priority' => $this->js()->createConsumer($this->workStream($queue), new ConsumerConfig(
@@ -956,6 +1053,9 @@ class Nats implements Synchronous, Consumer
                 ackWait: $this->ackWait,
                 maxDeliver: $this->maxDeliver,
                 filterSubject: $this->prioritySubject($queue),
+                maxWaiting: $this->maxWaiting,
+                maxAckPending: $this->maxAckPending,
+                inactiveThreshold: $this->inactiveThreshold,
                 backoff: $this->backoff,
             )),
         ];
@@ -978,6 +1078,67 @@ class Nats implements Synchronous, Consumer
         );
 
         $this->provisioned[$key] = true;
+    }
+
+    /**
+     * Take up a queue that is already provisioned, without sending any configuration.
+     *
+     * The counterpart to provision() under {@see Provisioning::Require}: the streams and
+     * the two worker consumers must exist, and this broker's own settings are never
+     * written to them. That is the whole guarantee — a maintenance process built with a
+     * different ackWait, replica count or dead-letter TTL can use the queue without
+     * restyling it underneath the fleet that owns it.
+     *
+     * Refusing is the point of the absent case. A queue that has never been provisioned
+     * has no configuration to inherit, and creating one here from a process that does not
+     * own the queue is exactly the side effect this mode exists to remove.
+     */
+    private function adopt(Queue $queue, string $key): void
+    {
+        // Read-only: the length limit and the cross-queue ownership check both hold
+        // here, and neither sends configuration.
+        $this->guardStreamName($queue, $key);
+
+        foreach ([$this->workStream($queue), $this->deadStream($queue)] as $stream) {
+            try {
+                $this->js()->getStreamInfo($stream);
+            } catch (JetStreamException $e) {
+                if ($e->apiError?->code === 404) {
+                    throw new \RuntimeException("NATS stream \"{$stream}\" is not provisioned; queue \"{$queue->name}\" must be created by its own producer or consumer before this broker can use it.", $e->getCode(), $e);
+                }
+                throw $e;
+            }
+        }
+
+        $this->consumers[$key] = [
+            'normal' => $this->adoptConsumer($queue, self::CONSUMER_NORMAL),
+            'priority' => $this->adoptConsumer($queue, self::CONSUMER_PRIORITY),
+        ];
+
+        // Same advisory subscription provision() takes: a core subscription carries no
+        // configuration, and a broker consuming a pre-provisioned queue still owes its
+        // exhausted messages a dead letter.
+        $this->advisories[$key] = $this->connection()->subscribe(
+            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
+            queue: self::ADVISORY_GROUP,
+        );
+
+        $this->provisioned[$key] = true;
+    }
+
+    /** Resolve an existing durable consumer, refusing rather than creating it. */
+    private function adoptConsumer(Queue $queue, string $durable): NatsConsumer
+    {
+        $stream = $this->workStream($queue);
+
+        try {
+            return $this->js()->getConsumer($stream, $durable);
+        } catch (JetStreamException $e) {
+            if ($e->apiError?->code === 404) {
+                throw new \RuntimeException("NATS consumer \"{$durable}\" on stream \"{$stream}\" is not provisioned; queue \"{$queue->name}\" must be created by its own producer or consumer before this broker can use it.", $e->getCode(), $e);
+            }
+            throw $e;
+        }
     }
 
     /**

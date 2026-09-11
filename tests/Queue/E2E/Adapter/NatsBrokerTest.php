@@ -6,9 +6,11 @@ namespace Tests\E2E\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
+use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
+use Utopia\Queue\Broker\Provisioning;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
@@ -958,5 +960,140 @@ final class NatsBrokerTest extends TestCase
         $this->assertGreaterThan(1, $overlap, 'the handlers must have actually overlapped');
         $this->assertLessThanOrEqual($cap, $overlap, 'concurrency stays bounded by maxCoroutines');
         $this->assertSame(0, $depth, 'every message must be acknowledged');
+    }
+
+    public function testSizeKnobsLandOnTheWorkStream(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(
+            Connection::connect($url),
+            maxMsgSize: 262_144,
+            maxMsgs: 1_000,
+            maxBytes: 1_048_576,
+            discard: DiscardPolicy::New,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $broker->publish($queue, ['task' => 'sized']);
+
+        $js = Connection::connect($url)->jetStream();
+        $work = $js->getStreamInfo('Q_' . strtoupper($queue->name))->config;
+        $this->assertSame(1_000, $work->maxMsgs);
+        $this->assertSame(1_048_576, $work->maxBytes);
+        $this->assertSame(262_144, $work->maxMsgSize);
+        $this->assertSame(DiscardPolicy::New, $work->discard);
+
+        // maxMsgSize is mirrored so an accepted message can always be dead-lettered;
+        // the capacity limits are the work stream's backpressure and stay there.
+        $dead = $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DEAD')->config;
+        $this->assertSame(262_144, $dead->maxMsgSize);
+        $this->assertSame(-1, $dead->maxMsgs);
+        $this->assertSame(-1, $dead->maxBytes);
+
+        $broker->close();
+    }
+
+    public function testInFlightKnobsLandOnBothWorkerConsumers(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(
+            Connection::connect($url),
+            maxAckPending: 8,
+            maxWaiting: 16,
+            inactiveThreshold: 3_600.0,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $broker->publish($queue, ['task' => 'inflight']);
+
+        $js = Connection::connect($url)->jetStream();
+        $stream = 'Q_' . strtoupper($queue->name);
+        foreach (['worker', 'worker_priority'] as $durable) {
+            $config = $js->getConsumer($stream, $durable)->info(true)->config;
+            $this->assertSame(8, $config->maxAckPending, "{$durable} must carry maxAckPending");
+            $this->assertSame(16, $config->maxWaiting, "{$durable} must carry maxWaiting");
+            $this->assertEqualsWithDelta(3_600.0, $config->inactiveThreshold, PHP_FLOAT_EPSILON, "{$durable} must carry inactiveThreshold");
+        }
+
+        $broker->close();
+    }
+
+    public function testExplicitMaxAgeOverridesTheQueuesJobTtl(): void
+    {
+        // The jobTtl derivation is per-queue-object, so producer and consumer agree
+        // only by convention; an explicit maxAge is the value both sides read.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), maxAge: 60.0);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8), 'utopia-queue', 3_600);
+
+        $broker->publish($queue, ['task' => 'ttl']);
+
+        $config = Connection::connect($url)->jetStream()
+            ->getStreamInfo('Q_' . strtoupper($queue->name))->config;
+        $this->assertEqualsWithDelta(60.0, $config->maxAge, PHP_FLOAT_EPSILON);
+
+        $broker->close();
+    }
+
+    public function testRequireRefusesAQueueNobodyHasProvisioned(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), provisioning: Provisioning::Require);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessageMatches('/is not provisioned/');
+            $broker->publish($queue, ['task' => 'orphan']);
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testRequireLeavesStreamAndConsumerConfigUntouched(): void
+    {
+        // The defect this mode closes: a maintenance broker carrying different knobs
+        // rewrote the fleet's streams and consumers just by re-driving dead letters.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $owner = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 2, replicas: 1, deadMaxAge: 604_800.0);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        // Dead-letter one message, so retry() below has something to move.
+        $owner->publish($queue, ['task' => 'doomed']);
+        for ($i = 0; $i < 2; $i++) {
+            $message = $owner->receive($queue, 3);
+            $this->assertInstanceOf(Message::class, $message);
+            $owner->reject($queue, $message);
+        }
+        $this->assertSame(1, $owner->getQueueSize($queue, true), 'message should be dead-lettered');
+
+        $js = Connection::connect($url)->jetStream();
+        $stream = 'Q_' . strtoupper($queue->name);
+        $snapshot = static fn(): array => [
+            'work' => $js->getStreamInfo($stream)->config->toArray(),
+            'dead' => $js->getStreamInfo($stream . '_DEAD')->config->toArray(),
+            'normal' => $js->getConsumer($stream, 'worker')->info(true)->config->toArray(),
+            'priority' => $js->getConsumer($stream, 'worker_priority')->info(true)->config->toArray(),
+        ];
+        $before = $snapshot();
+
+        // Every knob differs from the owner's, which is what made this destructive.
+        $maintenance = new Nats(
+            Connection::connect($url),
+            ackWait: 45.0,
+            maxDeliver: 9,
+            replicas: 1,
+            deadMaxAge: 86_400.0,
+            maxAckPending: 3,
+            provisioning: Provisioning::Require,
+        );
+        $maintenance->retry($queue);
+
+        $this->assertSame($before, $snapshot(), 'a Require broker must not rewrite any of the queue\'s configuration');
+        $this->assertSame(0, $maintenance->getQueueSize($queue, true), 'the dead letter should have been re-driven');
+        $this->assertSame(1, $maintenance->getQueueSize($queue), 'the message should be back on the work queue');
+
+        $maintenance->close();
+        $owner->close();
     }
 }
