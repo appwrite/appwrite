@@ -77,7 +77,7 @@ Referral programs usually fail on measurement. You share a link, something happe
 | Signups     | New accounts attributed to your links    |
 | Conversions | Attributed accounts that upgraded to Pro |
 
-Alongside those totals, the overview shows a **signup rate** (the share of clicks that became accounts) and a **conversion rate** (the share of attributed signups that upgraded to Pro). A funnel chart plots all three series over time, with hourly or daily buckets and a date range picker, and you can filter the whole view down to a single link.
+Alongside those totals, the overview shows signup and conversion rates, helping you understand which invite links and channels perform best.
 
 Two tables sit under the chart:
 
