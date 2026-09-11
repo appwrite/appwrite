@@ -272,6 +272,59 @@ final class MessagingMqttServerTest extends Scope
     }
 
     /**
+     * Non-contiguous acks must not drop the gap. A persistent session replays three
+     * messages and acks the first and third but not the middle; the cursor advances only
+     * to the highest contiguous ack, so on reconnect the broker re-delivers the unacked
+     * middle message rather than skipping past it.
+     */
+    public function testNonContiguousAckDoesNotDropMessages(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-gap');
+        $clientId = 'e2e-gap-' . $userId;
+
+        // Seed the persistent session, then publish three messages while offline.
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $seed->subscribe([$topicId]);
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        foreach (['first', 'second', 'third'] as $index => $body) {
+            $this->publishCampaign($server, $topicId, 'Update ' . $index, $body, ['n' => (string) $index]);
+        }
+
+        // Replay all three, but ack only the first and third — leave the middle unacked.
+        $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $resume->subscribe([$topicId]);
+        $received = $resume->consume(limit: 3, timeout: 10.0, shouldAck: fn (int $i): bool => $i !== 1);
+        $resume->disconnect();
+        $this->assertCount(3, $received);
+
+        // On reconnect the unacked middle message is re-delivered, not skipped.
+        \usleep(1000000);
+        $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $again->subscribe([$topicId]);
+        $redelivered = $again->consume(limit: 3, timeout: 5.0);
+        $again->disconnect();
+
+        $redeliveredBodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $redelivered,
+        );
+        $this->assertContains('second', $redeliveredBodies, 'the unacked middle message was dropped');
+    }
+
+    /**
      * Replay is bounded by the broker's max depth: when more messages accumulate offline
      * than the cap, only the most recent $maxDepth are replayed (the older ones are
      * dropped and the cursor jumps to the tail), and a later reconnect replays nothing.

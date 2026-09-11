@@ -84,10 +84,13 @@ final class MqttSubscriber
 
     /**
      * Consume up to $limit QoS 1 PUBLISH messages within $timeout seconds, PUBACKing each.
+     * $shouldAck, given the 0-based index of a received message, may return false to skip
+     * its PUBACK — used to simulate non-contiguous acknowledgement.
      *
+     * @param  (callable(int): bool)|null  $shouldAck
      * @return array<int, array{topic: string, payload: string, dup: bool}>
      */
-    public function consume(int $limit, float $timeout): array
+    public function consume(int $limit, float $timeout, ?callable $shouldAck = null): array
     {
         $deadline = microtime(true) + $timeout;
         $received = [];
@@ -114,7 +117,8 @@ final class MqttSubscriber
 
             $received[] = ['topic' => $topic, 'payload' => $payload, 'dup' => $packet->dup()];
 
-            if ($packet->qos() === 1 && $packetIdBytes !== '') {
+            $ack = $shouldAck === null || $shouldAck(\count($received) - 1);
+            if ($ack && $packet->qos() === 1 && $packetIdBytes !== '') {
                 $this->write(V5::puback($packetIdBytes));
             }
         }
