@@ -12,9 +12,18 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, Runtime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
+import {
+  Query,
+  Runtime,
+  FunctionTemplateUseCase,
+  ID,
+} from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
+import {
+  buildAttributePrefixSearchQueries,
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+} from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
 import { getVariableValueError, validateVariables } from '@/lib/variables'
@@ -103,23 +112,14 @@ export async function fetchProjectFunctionsByIds(
     return { functions: [] }
   }
 
-  const validIds = [
-    ...new Set(functionIds.filter((id) => typeof id === 'string' && id.trim())),
-  ]
-  if (validIds.length === 0) {
-    return { functions: [] }
-  }
+  const projectSdk = sdk.forProject(projectId)
+  const functions = await fetchLookupBatches(
+    buildIdLookupQueryBatches(functionIds),
+    async (queries) =>
+      (await projectSdk.functions.list({ queries })).functions ?? [],
+  )
 
-  const idQuery =
-    validIds.length === 1
-      ? Query.equal('$id', validIds[0])
-      : Query.or(validIds.map((id) => Query.equal('$id', id)))
-
-  const response = await sdk.forProject(projectId).functions.list({
-    queries: [idQuery, Query.limit(validIds.length)],
-  })
-
-  return { functions: response.functions ?? [] }
+  return { functions }
 }
 
 // Object form of functions.update() params (SDK has overloads; avoid string | object union)
@@ -245,9 +245,7 @@ function listTemplatesFilterPayload(
   useCases: string[] | undefined,
 ): { runtimes?: Runtime[]; useCases?: FunctionTemplateUseCase[] } {
   return {
-    runtimes: runtimes?.length
-      ? (runtimes as unknown as Runtime[])
-      : undefined,
+    runtimes: runtimes?.length ? (runtimes as unknown as Runtime[]) : undefined,
     useCases: useCases?.length
       ? (useCases as unknown as FunctionTemplateUseCase[])
       : undefined,
@@ -306,13 +304,7 @@ export function functionTemplatesPageQueryOptions(
       templatesSortKey(uc),
     ],
     queryFn: () =>
-      fetchFunctionTemplatesPage(
-        projectId!,
-        offset,
-        limit,
-        rt,
-        uc,
-      ),
+      fetchFunctionTemplatesPage(projectId!, offset, limit, rt, uc),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     refetchOnMount: false,
@@ -1465,8 +1457,9 @@ export function useCreateFunctionDomainRule(
         if (!redirectUrl?.trim() || !statusCode) {
           throw new Error('Redirect URL and status code are required')
         }
-        const { ProxyResourceType, StatusCode } =
-          await import('@appwrite.io/console')
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
         const codeMap: Record<
           string,
           (typeof StatusCode)[keyof typeof StatusCode]
