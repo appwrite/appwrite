@@ -312,7 +312,10 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], true, false);
 
         $this->assertEquals(301, $callback['headers']['status-code']);
-        $this->assertEquals($consoleUrl, $callback['headers']['location'] ?? '');
+        $this->assertSame(
+            $redirects ? $consoleUrl : $this->defaultRedirectUrl($projectId),
+            (string) ($callback['headers']['location'] ?? '')
+        );
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', \array_merge([
             'x-appwrite-project' => $projectId,
@@ -529,7 +532,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith($this->gitInstallationsUrl($projectId) . '?error=', (string) $response['headers']['location']);
+        $this->assertStringStartsWith($this->defaultRedirectUrl($projectId) . '?error=', (string) $response['headers']['location']);
     }
 
     public function testCreateInstallationWithInvalidState(): void
@@ -580,9 +583,21 @@ final class VCSGiteaConsoleClientTest extends Scope
     }
 
     /**
-     * The callback builds its fallback redirect from the project's region, so the
-     * expected URL follows the region the scope's project was created in: Cloud
-     * CI creates projects in a region other than default.
+     * The redirect the callback falls back to when state carries no URLs. The
+     * suite runs under both schemes -- server-ce sets root, cloud leaves the
+     * default -- and the tests share the appwrite container's environment.
+     */
+    private function defaultRedirectUrl(string $projectId): string
+    {
+        return System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+            ? $this->gitInstallationsUrl($projectId)
+            : "http://localhost/projects/{$projectId}/settings";
+    }
+
+    /**
+     * A console git-installations URL of the shape the console signs into state.
+     * It carries the project's region, which Cloud CI sets to something other
+     * than default.
      */
     private function gitInstallationsUrl(string $projectId): string
     {
