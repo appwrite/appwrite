@@ -73,27 +73,22 @@
             "type": "package",
             "package": {
                 "name": "utopia-php/cache",
-                "version": "5.0.999",
+                "version": "dev-bulk-cache-load",
                 "source": {
                     "url": "https://github.com/utopia-php/monorepo.git",
                     "type": "git",
-                    "reference": "bulk-cache-load"
+                    "reference": "c340994cea9841853d7722488bde443ec9d3f629"
                 },
                 "autoload": {
                     "psr-4": {
-                        "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
+                        "Utopia\\Cache\\": "packages/cache/src/Cache"
                     }
                 },
                 "require": {
-                    "php": ">=8.5.0",
-                    "ext-curl": "*",
-                    "ext-openssl": "*",
-                    "ext-swoole": "*",
-                    "psr/http-client": "^1.0",
-                    "psr/http-message": "^1.1 || ^2.0",
-                    "utopia-php/client": "^0.3",
+                    "php": ">=8.4",
+                    "ext-json": "*",
+                    "utopia-php/circuit-breaker": "^0.4",
                     "utopia-php/pools": "^2.0",
-                    "utopia-php/smtp": "^0.1",
                     "utopia-php/telemetry": "^0.4"
                 }
             }
@@ -136,7 +131,7 @@
         "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.10",
         "utopia-php/balancer": "0.4.*",
-        "utopia-php/cache": "^5.0.0",
+        "utopia-php/cache": "dev-bulk-cache-load as 5.0.999",
         "utopia-php/cdn": "^0.0.8",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",

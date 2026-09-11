@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "afb18eb0e5b98842199bcf935378b483",
+    "content-hash": "cc18bd79655117398497d7a4ca68c3cf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3037,28 +3037,23 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.999",
+            "version": "dev-bulk-cache-load",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/monorepo.git",
-                "reference": "bulk-cache-load"
+                "reference": "c340994cea9841853d7722488bde443ec9d3f629"
             },
             "require": {
-                "ext-curl": "*",
-                "ext-openssl": "*",
-                "ext-swoole": "*",
-                "php": ">=8.5.0",
-                "psr/http-client": "^1.0",
-                "psr/http-message": "^1.1 || ^2.0",
-                "utopia-php/client": "^0.3",
+                "ext-json": "*",
+                "php": ">=8.4",
+                "utopia-php/circuit-breaker": "^0.4",
                 "utopia-php/pools": "^2.0",
-                "utopia-php/smtp": "^0.1",
                 "utopia-php/telemetry": "^0.4"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
+                    "Utopia\\Cache\\": "packages/cache/src/Cache"
                 }
             }
         },
@@ -3137,6 +3132,65 @@
                 "issues": "https://github.com/utopia-php/cdn/issues"
             },
             "time": "2026-08-29T11:50:39+00:00"
+        },
+        {
+            "name": "utopia-php/circuit-breaker",
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/circuit-breaker.git",
+                "reference": "c6d93c7ba9d895cf906360e000f74ff762d83e17"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/circuit-breaker/zipball/c6d93c7ba9d895cf906360e000f74ff762d83e17",
+                "reference": "c6d93c7ba9d895cf906360e000f74ff762d83e17",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2"
+            },
+            "require-dev": {
+                "utopia-php/telemetry": "^0.4.6"
+            },
+            "suggest": {
+                "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
+                "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
+                "ext-redis": "Required when using Utopia\\CircuitBreaker\\Adapter\\Redis with the phpredis extension.",
+                "ext-swoole": "Required when using Utopia\\CircuitBreaker\\Adapter\\SwooleTable.",
+                "utopia-php/telemetry": "Required when passing telemetry adapters or running the local telemetry demo."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\CircuitBreaker\\": "src/CircuitBreaker/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Light & simple Circuit Breaker for PHP to prevent cascading failures in distributed systems.",
+            "keywords": [
+                "circuit-breaker",
+                "fault-tolerance",
+                "framework",
+                "php",
+                "resilience",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/circuit-breaker/issues",
+                "source": "https://github.com/utopia-php/circuit-breaker/tree/0.4.0"
+            },
+            "time": "2026-08-21T10:20:24+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -8481,9 +8535,17 @@
             "time": "2026-09-04T16:56:24+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/cache",
+            "version": "dev-bulk-cache-load",
+            "alias": "5.0.999",
+            "alias_normalized": "5.0.999.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/cache": 20,
         "utopia-php/http": 5,
         "utopia-php/mqtt": 20
     },
