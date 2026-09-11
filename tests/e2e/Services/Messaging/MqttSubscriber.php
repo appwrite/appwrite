@@ -137,10 +137,6 @@ final class MqttSubscriber
         return $received;
     }
 
-    /**
-     * Block until the broker closes the connection, or $timeout seconds elapse. Returns true
-     * if the broker closed it (keep-alive reap), false on timeout while still connected.
-     */
     /** Send a PINGREQ and return true once the broker answers PINGRESP within $timeout. */
     public function ping(float $timeout = 2.0): bool
     {
@@ -159,6 +155,10 @@ final class MqttSubscriber
         }
     }
 
+    /**
+     * Block until the broker closes the connection, or $timeout seconds elapse. Returns true
+     * if the broker closed it (keep-alive reap), false on timeout while still connected.
+     */
     public function awaitClose(float $timeout): bool
     {
         if (!\is_resource($this->socket)) {

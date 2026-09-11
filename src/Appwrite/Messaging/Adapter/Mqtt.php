@@ -3,12 +3,12 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
+use Appwrite\Mqtt\Connection;
+use Appwrite\Mqtt\KeepAlive;
+use Appwrite\Mqtt\Metrics;
+use Appwrite\Mqtt\SubscriptionStore;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Utopia\Mqtt\Connection;
-use Utopia\Mqtt\KeepAlive;
-use Utopia\Mqtt\Metrics;
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\SubscriptionStore;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mqtt extends MessagingAdapter

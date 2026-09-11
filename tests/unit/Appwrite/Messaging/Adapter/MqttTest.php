@@ -7,7 +7,7 @@ namespace Tests\Unit\Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Mqtt;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Mqtt\Connection;
+use Appwrite\Mqtt\Connection;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 /**

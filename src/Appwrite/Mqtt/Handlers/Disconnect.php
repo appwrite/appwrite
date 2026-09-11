@@ -1,18 +1,18 @@
 <?php
 
-namespace Utopia\Mqtt\Handlers;
+namespace Appwrite\Mqtt\Handlers;
 
-use Utopia\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
 
-class Ping extends Action
+class Disconnect extends Action
 {
     public function __construct()
     {
         $this
-            ->desc('Reply to a client heartbeat')
-            ->label(Dispatcher::LABEL_TYPE, Packet::PINGREQ)
+            ->desc('Close the connection on client request')
+            ->label(Dispatcher::LABEL_TYPE, Packet::DISCONNECT)
             ->inject('reply')
             ->callback($this->action(...));
     }
@@ -22,6 +22,6 @@ class Ping extends Action
      */
     public function action(callable $reply): void
     {
-        $reply(Packet::pingresp(), false);
+        $reply('', true);
     }
 }

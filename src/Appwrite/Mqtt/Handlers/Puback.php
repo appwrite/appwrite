@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Mqtt\Handlers;
+namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Utopia\Mqtt\Connection;
-use Utopia\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Connection;
+use Appwrite\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V5;
 use Utopia\Platform\Action;

@@ -1,6 +1,15 @@
 <?php
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Handlers\Auth as AuthHandler;
+use Appwrite\Mqtt\Handlers\Connect as ConnectHandler;
+use Appwrite\Mqtt\Handlers\Disconnect as DisconnectHandler;
+use Appwrite\Mqtt\Handlers\Ping as PingHandler;
+use Appwrite\Mqtt\Handlers\Puback as PubackHandler;
+use Appwrite\Mqtt\Handlers\Subscribe as SubscribeHandler;
+use Appwrite\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
+use Appwrite\Mqtt\KeepAlive;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
@@ -17,15 +26,6 @@ use Utopia\Database\Document;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Mqtt\Adapter;
-use Utopia\Mqtt\Dispatcher;
-use Utopia\Mqtt\Handlers\Auth as AuthHandler;
-use Utopia\Mqtt\Handlers\Connect as ConnectHandler;
-use Utopia\Mqtt\Handlers\Disconnect as DisconnectHandler;
-use Utopia\Mqtt\Handlers\Ping as PingHandler;
-use Utopia\Mqtt\Handlers\Puback as PubackHandler;
-use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
-use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
-use Utopia\Mqtt\KeepAlive;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -163,6 +163,13 @@ if (!function_exists('getProjectDB')) {
         $database->setDocumentType('users', User::class);
 
         return $ctx['dbForProject'][$project->getSequence()] = $database;
+    }
+}
+
+if (!function_exists('getPlanForUser')) {
+    function getPlanForUser(Document $project, string $userId): int
+    {
+        return (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5');
     }
 }
 

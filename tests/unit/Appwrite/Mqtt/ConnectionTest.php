@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Mqtt;
+namespace Tests\Unit\Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Mqtt\Connection;
+use Appwrite\Mqtt\KeepAlive;
 use PHPUnit\Framework\TestCase;
-use Utopia\Mqtt\Connection;
-use Utopia\Mqtt\KeepAlive;
 
 final class ConnectionTest extends TestCase
 {

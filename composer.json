@@ -26,8 +26,7 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
-            "Utopia\\Bus\\": "src/Utopia/Bus",
-            "Utopia\\Mqtt\\": "src/Utopia/Mqtt"
+            "Utopia\\Bus\\": "src/Utopia/Bus"
         }
     },
     "autoload-dev": {

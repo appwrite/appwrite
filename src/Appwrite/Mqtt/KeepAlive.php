@@ -1,11 +1,11 @@
 <?php
 
-namespace Utopia\Mqtt;
+namespace Appwrite\Mqtt;
 
 /**
  * A hashed timing wheel for MQTT keep-alive expiry.
  * Better than a priority queue as it is grouping the fds in slots of their expiry. Getting all expired and non expired fds in one go
- * 
+ *
  */
 class KeepAlive
 {

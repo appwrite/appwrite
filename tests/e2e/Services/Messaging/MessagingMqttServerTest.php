@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Mqtt\KeepAlive;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
-use Utopia\Mqtt\KeepAlive;
 
 /**
- * End-to-end tests for the MQTT push broker (src/Utopia/Mqtt). Publishing is a server
+ * End-to-end tests for the MQTT push broker (src/Appwrite/Mqtt). Publishing is a server
  * privilege driven entirely through the Messaging HTTP campaign path (there is no
  * outside MQTT publish); the subscriber side is a self-contained MqttSubscriber over
  * TCP. Exercises enhanced-auth CONNECT against the project/user graph, campaign

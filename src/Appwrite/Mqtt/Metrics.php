@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Mqtt;
+namespace Appwrite\Mqtt;
 
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;

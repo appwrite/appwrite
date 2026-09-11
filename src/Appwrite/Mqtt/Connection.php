@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Mqtt;
+namespace Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace Utopia\Mqtt\Handlers;
+namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Mqtt\Connection;
+use Appwrite\Mqtt\Dispatcher;
 use Utopia\Database\Query;
-use Utopia\Mqtt\Connection;
-use Utopia\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -122,9 +122,16 @@ class Subscribe extends Action
 
         $topics = array_keys($topicDocuments);
 
-        // TODO: expiry should track the plan
-        $expiry = 3600;
-        $maxDepth = 5;
+        $expiry = 0;
+        foreach ($topicDocuments as $topicDocument) {
+            $expiry = max($expiry, (int) $topicDocument->getAttribute('expiry', 0));
+        }
+        if ($expiry <= 0) {
+            $expiry = 3600;
+        }
+
+        // Replay depth comes from the user's org plan (self-hosted default; see getPlanForUser).
+        $maxDepth = getPlanForUser($project, $connection->identity['userId'] ?? '');
 
         $cache = getCache();
 

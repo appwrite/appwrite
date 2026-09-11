@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Mqtt;
+namespace Tests\Unit\Appwrite\Mqtt;
 
+use Appwrite\Mqtt\KeepAlive;
 use PHPUnit\Framework\TestCase;
-use Utopia\Mqtt\KeepAlive;
 
 final class KeepAliveTest extends TestCase
 {
