@@ -12,14 +12,14 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 
 # Set the connection string {% #connection-string %}
 
-Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection string in your environment. Never commit it:
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
 DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Use `DATABASE_URL` for runtime traffic (pooler port when you enable pooling) and `DIRECT_URL` for the TypeORM CLI and migration runners. Connections on Appwrite Cloud are encrypted with TLS. If your runtime or driver configuration does not infer TLS from the connection string, configure SSL on the DataSource and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for the TypeORM CLI and migration runners. Connections on Appwrite Cloud are encrypted with TLS. If your runtime or driver configuration does not infer TLS from the connection string, configure SSL on the DataSource and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure TypeORM {% #driver %}
 
@@ -72,6 +72,17 @@ export default new DataSource({
 
 `ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port (`3306`).
 
+Add short `package.json` script aliases so you do not retype the long CLI:
+
+```json
+{
+  "scripts": {
+    "typeorm:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts",
+    "typeorm:migrate": "typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts"
+  }
+}
+```
+
 Define an entity:
 
 ```ts
@@ -93,6 +104,13 @@ export class User {
 # Run migrations {% #migrate %}
 
 Point the TypeORM CLI at the migrations DataSource so it uses `DIRECT_URL`, not the pooler. Migrations issue DDL that needs a session-level connection:
+
+```bash
+npm run typeorm:generate
+npm run typeorm:migrate
+```
+
+Or call the CLI directly:
 
 ```bash
 npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
@@ -137,17 +155,9 @@ On long-running servers, initialize the `DataSource` once at module scope and re
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6033`) on the same hostname.
 
-Keep the migrations DataSource pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
-
-```env
-# Runtime: pooler port
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
-
-# Migrations & introspection: direct connection to the engine
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Keep the migrations DataSource pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
 
 Wire the runtime DataSource to `DATABASE_URL` and the CLI / migrations DataSource to `DIRECT_URL`. Cap pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
 
