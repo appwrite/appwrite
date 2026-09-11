@@ -12,7 +12,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 
 # Set the connection string {% #connection-string %}
 
-Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection strings in your environment. Never commit them:
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). That call returns one `connectionString` on the engine port (`3306`). Use it as `DIRECT_URL`, copy it to `DATABASE_URL`, and change only the port to `6033` for the [connection pooler](/docs/products/databases/mysql/connection-pooling). Never commit them:
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
