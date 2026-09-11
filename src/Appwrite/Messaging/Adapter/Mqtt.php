@@ -84,8 +84,9 @@ class Mqtt extends MessagingAdapter
      * @param array<int, string> $roles ignored
      * @param array<int, string> $channels topic filters
      * @param array<int, mixed> $queryGroup ignored
+     * @param int $qos granted QoS stored per subscription (delivery is clamped to it)
      */
-    public function subscribe(string $projectId, mixed $identifier, string $subscriptionId, array $roles, array $channels, array $queryGroup = []): void
+    public function subscribe(string $projectId, mixed $identifier, string $subscriptionId, array $roles, array $channels, array $queryGroup = [], int $qos = Packet::QOS_1): void
     {
         $userId = $this->connections[$identifier]->identity['userId'] ?? '';
 
@@ -95,7 +96,7 @@ class Mqtt extends MessagingAdapter
                 $userId,
                 $topic,
                 $identifier,
-                Packet::QOS_1,
+                $qos,
             );
         }
     }

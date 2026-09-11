@@ -46,31 +46,67 @@ class Subscribe extends Action
 
         $identity = $connection->identity;
 
-        // A denied filter answers with each version's own failure marker; a granted one
-        // with max QoS 1 (0x01), which is a granted-QoS byte in 3.1.1 and a Success
-        // reason code in 5.0.
         $denied = $connection->protocol >= 5 ? V5::REASON_NOT_AUTHORIZED : V3::SUBSCRIBE_FAILURE;
 
-        $granted = '';
-        $topics = [];
+        $consoleDatabase = getConsoleDB();
+        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
+        $projectDB = getProjectDB($project);
+
+        // Parse every (filter, requested QoS) in order; the SUBACK carries one reason code
+        // per filter in this order. Bits 0-1 of the subscription options byte are the max QoS.
+        $filters = [];
         while ($offset < strlen($body)) {
             [$filter, $offset] = Packet::readString($body, $offset);
-            $offset += 1; // subscription options byte
+            $filters[] = [$filter, isset($body[$offset]) ? \ord($body[$offset]) & 0x03 : 0];
+            $offset += 1;
+        }
+
+        $allowed = [];
+        foreach ($filters as [$filter]) {
+            if (!isset($allowed[$filter]) && ($authorizer === null || $authorizer($identity, $filter))) {
+                $allowed[$filter] = true;
+            }
+        }
+
+        $topicsById = [];
+        if ($allowed !== []) {
+            $documents = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('topics', [
+                Query::equal('$id', array_keys($allowed)),
+                Query::limit(\count($allowed)),
+            ]));
+            foreach ($documents as $document) {
+                $topicsById[$document->getId()] = $document;
+            }
+        }
+
+        $granted = '';
+        $topicDocuments = []; // filter => topic document, reused for replay below
+        foreach ($filters as [$filter, $requestedQos]) {
             Span::add('mqtt.topic', $filter);
 
-            // ACL: an unauthorized filter is refused and never stored.
-            if ($authorizer !== null && !$authorizer($identity, $filter)) {
+            if (!isset($allowed[$filter])) {
                 $granted .= chr($denied);
                 $mqtt->metrics->subscriptions->add(1, ['result' => 'denied']);
-                Span::add('mqtt.result', 'denied');
                 continue;
             }
 
-            $mqtt->subscribe($connection->projectId, $connection->fd, '', [], [$filter]);
-            $granted .= chr(Packet::QOS_1); // granted max QoS 1
+            // A filter is granted only if it maps to an existing project topic.
+            $topicDocument = $topicsById[$filter] ?? null;
+            if ($topicDocument === null) {
+                $granted .= chr($denied);
+                $mqtt->metrics->subscriptions->add(1, ['result' => 'unknown']);
+                continue;
+            }
+
+            // Requested max QoS, capped by the topic's configured QoS (null = no cap, broker max 1).
+            $topicQos = $topicDocument->getAttribute('qos');
+            $grantedQos = min($requestedQos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
+
+            $mqtt->subscribe($connection->projectId, $connection->fd, '', [], [$filter], [], $grantedQos);
+            $granted .= chr($grantedQos);
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
 
-            $topics[] = $filter;
+            $topicDocuments[$filter] = $topicDocument;
         }
 
         $reply(
@@ -80,17 +116,16 @@ class Subscribe extends Action
             false,
         );
 
-        if ($topics === []) {
+        if ($topicDocuments === []) {
             return;
         }
+
+        $topics = array_keys($topicDocuments);
 
         // TODO: expiry should track the plan
         $expiry = 3600;
         $maxDepth = 5;
 
-        $consoleDatabase = getConsoleDB();
-        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
-        $projectDB = getProjectDB($project);
         $cache = getCache();
 
         $cursorKey = 'appwrite:push:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
@@ -106,13 +141,10 @@ class Subscribe extends Action
         $resumeTopics = array_values(array_intersect($topics, $known));
 
         // Current tail (topics.sequence) per subscribed topic: the seed for new topics and
-        // the upper bound for replay. getDocument is cached, so repeated reads are cheap.
+        // the upper bound for replay. Reuses the documents fetched during the grant loop.
         $tails = [];
-        foreach ($topics as $topic) {
-            $topicDocument = $projectDB->getAuthorization()->skip(fn () => $projectDB->getDocument('topics', $topic));
-            if (!$topicDocument->isEmpty()) {
-                $tails[$topic] = (int) $topicDocument->getAttribute('sequence', 0);
-            }
+        foreach ($topicDocuments as $topic => $topicDocument) {
+            $tails[$topic] = (int) $topicDocument->getAttribute('sequence', 0);
         }
 
         $persist = [];
