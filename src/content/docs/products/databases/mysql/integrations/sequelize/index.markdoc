@@ -11,7 +11,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 {% /info %}
 
 {% info title="Sequelize 7" %}
-Appwrite connection URLs are the same on Sequelize 7. Packages move to `@sequelize/core` plus a dialect package such as `@sequelize/mysql` (the WikiRik/v7 direction). The examples below stay on the Sequelize 6 + `sequelize` / `mysql2` style that still covers most of the installed base.
+Sequelize 7 is usable in production. Appwrite connection URLs are unchanged. The main difference is packages: install `@sequelize/core` plus `@sequelize/mysql` instead of the Sequelize 6 `sequelize` + `mysql2` combo. The examples below use the Sequelize 6 style that still covers most installs; swap the imports/packages if you are on v7.
 {% /info %}
 
 # Set the connection string {% #connection-string %}
