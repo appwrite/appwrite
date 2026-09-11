@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "898dbb4270192e3f4c1e4f14a751f975",
+    "content-hash": "a1bb9cd493b34ae7dc1d60a01fb95e30",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3037,62 +3037,30 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "5.0.0",
+            "version": "5.0.999",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/cache.git",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/0d0752785fc81b5afd6571f4291763166a6532bc",
-                "reference": "0d0752785fc81b5afd6571f4291763166a6532bc",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/monorepo.git",
+                "reference": "appwrite-mqtt-poc"
             },
             "require": {
-                "ext-json": "*",
-                "php": ">=8.4",
-                "utopia-php/circuit-breaker": "^0.4",
+                "ext-curl": "*",
+                "ext-openssl": "*",
+                "ext-swoole": "*",
+                "php": ">=8.5.0",
+                "psr/http-client": "^1.0",
+                "psr/http-message": "^1.1 || ^2.0",
+                "utopia-php/client": "^0.3",
                 "utopia-php/pools": "^2.0",
+                "utopia-php/smtp": "^0.1",
                 "utopia-php/telemetry": "^0.4"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "^6.0"
-            },
-            "suggest": {
-                "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
-                "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
-                "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Cache\\": "src/Cache"
+                    "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple cache library to manage application cache storing, loading and purging",
-            "keywords": [
-                "cache",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/5.0.0"
-            },
-            "time": "2026-08-21T11:04:48+00:00"
+            }
         },
         {
             "name": "utopia-php/cdn",
@@ -3169,65 +3137,6 @@
                 "issues": "https://github.com/utopia-php/cdn/issues"
             },
             "time": "2026-08-29T11:50:39+00:00"
-        },
-        {
-            "name": "utopia-php/circuit-breaker",
-            "version": "0.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/circuit-breaker.git",
-                "reference": "c6d93c7ba9d895cf906360e000f74ff762d83e17"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/circuit-breaker/zipball/c6d93c7ba9d895cf906360e000f74ff762d83e17",
-                "reference": "c6d93c7ba9d895cf906360e000f74ff762d83e17",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2"
-            },
-            "require-dev": {
-                "utopia-php/telemetry": "^0.4.6"
-            },
-            "suggest": {
-                "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
-                "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
-                "ext-redis": "Required when using Utopia\\CircuitBreaker\\Adapter\\Redis with the phpredis extension.",
-                "ext-swoole": "Required when using Utopia\\CircuitBreaker\\Adapter\\SwooleTable.",
-                "utopia-php/telemetry": "Required when passing telemetry adapters or running the local telemetry demo."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\CircuitBreaker\\": "src/CircuitBreaker/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "Light & simple Circuit Breaker for PHP to prevent cascading failures in distributed systems.",
-            "keywords": [
-                "circuit-breaker",
-                "fault-tolerance",
-                "framework",
-                "php",
-                "resilience",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/circuit-breaker/issues",
-                "source": "https://github.com/utopia-php/circuit-breaker/tree/0.4.0"
-            },
-            "time": "2026-08-21T10:20:24+00:00"
         },
         {
             "name": "utopia-php/cli",
