@@ -377,7 +377,7 @@ $server->onReceive(function (int $fd, string $data) use (
         // Every inbound packet is liveness: push the deadline forward (O(1), no wheel touch).
         // The wheel is seeded once, when CONNECT establishes the interval; later packets only
         // move the deadline and the reaper reschedules lazily when it visits the slot.
-        $connection->touch(microtime(true));
+        $connection->updateExpiresAt(microtime(true));
         if ($packet->type === Packet::CONNECT && $connection->active && $connection->keepAlive > 0) {
             $connection->wheelSlot = $mqtt->keepAlive->schedule($fd, $connection->expiresAt);
         }

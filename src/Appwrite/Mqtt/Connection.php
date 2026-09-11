@@ -61,7 +61,7 @@ class Connection
      * Push the keep-alive deadline to KeepAlive::MULTIPLIER x the negotiated interval past
      * $now — every inbound packet is liveness. No-op when keep-alive is disabled.
      */
-    public function touch(float $now): void
+    public function updateExpiresAt(float $now): void
     {
         if ($this->keepAlive > 0) {
             $this->expiresAt = $now + $this->keepAlive * KeepAlive::MULTIPLIER;

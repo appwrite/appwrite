@@ -23,7 +23,7 @@ final class ConnectionTest extends TestCase
         $connection = new Connection(1);
         $connection->keepAlive = 20;
 
-        $connection->touch(1000.0);
+        $connection->updateExpiresAt(1000.0);
 
         $this->assertSame(1000.0 + 20 * KeepAlive::MULTIPLIER, $connection->expiresAt);
     }
@@ -33,7 +33,7 @@ final class ConnectionTest extends TestCase
         $connection = new Connection(1);
         // keepAlive defaults to 0 (disabled).
 
-        $connection->touch(1000.0);
+        $connection->updateExpiresAt(1000.0);
 
         $this->assertEqualsWithDelta(0.0, $connection->expiresAt, PHP_FLOAT_EPSILON);
     }
