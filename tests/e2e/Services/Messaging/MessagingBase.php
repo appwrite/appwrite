@@ -2991,4 +2991,128 @@ trait MessagingBase
 
         $this->assertEquals(404, $response['headers']['status-code']);
     }
+
+    public function testSendEmailSmtpHeaders(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SMTP-to-header',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
+            'encryption' => 'none',
+            'autoTLS' => false,
+            'fromName' => 'Sender',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Distinct from the user's own email, whose target is created automatically
+        // and holds that identifier already.
+        $recipient = \uniqid() . '@appwrite.io';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'SMTP Recipient',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Bind the target to this provider. A target without a provider id is
+        // delivered through whichever enabled email provider is found first,
+        // which other tests in this suite also create.
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $recipient,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        // Test for SUCCESS
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'targets' => [$target['body']['$id']],
+            'subject' => 'To header check',
+            'content' => 'To header check',
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        // A single recipient must stay in To. Moving them to BCC leaves the message
+        // with no To header at all, and clients show no recipient.
+        $email = $this->getLastEmailByAddress($recipient);
+
+        $this->assertEquals($recipient, $email['to'][0]['address']);
+
+        $ccRecipient = \uniqid() . '@appwrite.io';
+        $cc = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $ccRecipient,
+        ]);
+
+        $this->assertEquals(201, $cc['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => ID::unique(),
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', $headers, [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        // A topic subscriber explicitly included in BCC must stay hidden from CC.
+        // A retry of a lone failed BCC recipient produces the same To/BCC overlap.
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'topics' => [$topic['body']['$id']],
+            'cc' => [$cc['body']['$id']],
+            'bcc' => [$target['body']['$id']],
+            'subject' => 'BCC header check',
+            'content' => 'BCC header check',
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        $email = $this->getLastEmail(1, function (array $email) use ($ccRecipient) {
+            $this->assertEquals($ccRecipient, $email['cc'][0]['address'] ?? null);
+        });
+
+        $this->assertEmpty($email['to'] ?? []);
+        $this->assertEmpty($email['bcc'] ?? []);
+    }
 }
