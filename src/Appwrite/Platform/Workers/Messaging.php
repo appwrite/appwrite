@@ -7,7 +7,11 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Context as UsageContext;
+use Utopia\Compression\Algorithms\GZIP;
+use Utopia\Compression\Algorithms\Zstd;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -44,6 +48,7 @@ use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
 use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -121,16 +126,30 @@ class Messaging extends Action
                 $messageId = $payload['messageId'];
                 $message = $dbForProject->getDocument('messages', $messageId);
 
+                // Unique per job so a redelivery cannot reclaim a directory a live job is still
+                // reading; the underscore prefix is unreachable, as a bucket ID may not start with one.
+                $attachmentsPath = $this->getLocalDevice($project)->getPath('_attachments/' . ID::unique());
+
                 try {
                     if ($message->isEmpty()) {
                         throw new \Exception('Message not found: ' . $messageId);
                     }
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage, $attachmentsPath);
                 } catch (\Throwable $e) {
                     $this->markFailed($dbForProject, $messageId, $e);
 
                     throw $e;
+                } finally {
+                    // Decrypted plaintext must not linger. A failed delete and an absent directory both come
+                    // back false, so only a directory that is still there after the attempt is worth
+                    // reporting; throwing here would bury whatever the send itself threw.
+                    $deviceForLocal = $this->getLocalDevice($project);
+                    $deviceForLocal->delete($attachmentsPath, true);
+
+                    if ($deviceForLocal->exists($attachmentsPath)) {
+                        Span::add('message.attachments_cleanup_failed', $attachmentsPath);
+                    }
                 }
                 break;
             default:
@@ -147,7 +166,6 @@ class Messaging extends Action
         try {
             $message = $dbForProject->getDocument('messages', $messageId);
 
-            // Attachment cleanup runs after delivery and throws on its own; a terminal status must survive it.
             if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
                 return;
             }
@@ -166,7 +184,8 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        string $attachmentsPath
     ): void {
         $status = $message->getAttribute('status');
 
@@ -197,6 +216,11 @@ class Messaging extends Action
             Span::add('message.skipped', 'no_enabled_provider');
             return;
         }
+
+        // Hoisted out of buildMessage(), which every batch and every retry attempt calls.
+        $attachments = $providerType === MESSAGE_TYPE_EMAIL
+            ? $this->prepareAttachments($dbForProject, $message, $deviceForFiles, $project, $attachmentsPath)
+            : [];
 
         /**
          * Resolved providers cached for the lifetime of this job, keyed by provider id.
@@ -246,9 +270,9 @@ class Messaging extends Action
                             $resolvedProviderType,
                             $adapter,
                             $dbForProject,
-                            $deviceForFiles,
                             $project,
-                            $publisherForUsage
+                            $publisherForUsage,
+                            $attachments
                         )
                     );
                 }
@@ -323,37 +347,6 @@ class Messaging extends Action
             'deliveredTotal' => $message->getAttribute('deliveredTotal'),
             'deliveredAt' => $message->getAttribute('deliveredAt'),
         ]));
-
-        // Delete any attachments that were downloaded to local storage
-        if ($providerType === MESSAGE_TYPE_EMAIL) {
-            if ($deviceForFiles->getType() === DeviceType::Local) {
-                return;
-            }
-
-            $data = $message->getAttribute('data');
-            $attachments = $data['attachments'] ?? [];
-
-            foreach ($attachments as $attachment) {
-                $bucketId = $attachment['bucketId'];
-                $fileId = $attachment['fileId'];
-
-                $bucket = $dbForProject->getDocument('buckets', $bucketId);
-                if ($bucket->isEmpty()) {
-                    throw new \Exception('Storage bucket with the requested ID could not be found');
-                }
-
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-                if ($file->isEmpty()) {
-                    throw new \Exception('Storage file with the requested ID could not be found');
-                }
-
-                $path = $file->getAttribute('path', '');
-
-                if ($this->getLocalDevice($project)->exists($path)) {
-                    $this->getLocalDevice($project)->delete($path);
-                }
-            }
-        }
     }
 
     /**
@@ -562,6 +555,7 @@ class Messaging extends Action
      * reports the original batch size so the caller's `failed = recipients - delivered` holds.
      *
      * @param array<string> $batch
+     * @param array<Attachment> $attachments
      * @return array{delivered: int, recipients: int, errors: array<string>}
      */
     private function sendBatch(
@@ -571,16 +565,16 @@ class Messaging extends Action
         string $providerType,
         EmailAdapter|SMSAdapter|PushAdapter $adapter,
         Database $dbForProject,
-        Device $deviceForFiles,
         Document $project,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        array $attachments
     ): array {
         $recipients = \count($batch);
 
         [
             'delivered' => $delivered,
             'errors' => $errors,
-        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project);
+        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $attachments);
 
         $failed = $recipients - $delivered;
 
@@ -625,6 +619,7 @@ class Messaging extends Action
      * adapter-agnostic and rely on exponential backoff alone.
      *
      * @param array<string> $batch
+     * @param array<Attachment> $attachments
      * @return array{delivered: int, errors: array<string>}
      */
     private function retrySend(
@@ -634,8 +629,7 @@ class Messaging extends Action
         string $providerType,
         EmailAdapter|SMSAdapter|PushAdapter $adapter,
         Database $dbForProject,
-        Device $deviceForFiles,
-        Document $project
+        array $attachments
     ): array {
         $delivered = 0;
         $errors = [];
@@ -648,7 +642,7 @@ class Messaging extends Action
 
             // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
             // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $deviceForFiles, $project);
+            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
 
             $retry = [];
 
@@ -796,6 +790,7 @@ class Messaging extends Action
      * Build the provider-specific message for a set of recipients.
      *
      * @param array<string> $to
+     * @param array<Attachment> $attachments
      */
     private function buildMessage(
         array $to,
@@ -803,8 +798,7 @@ class Messaging extends Action
         Document $provider,
         string $providerType,
         Database $dbForProject,
-        Device $deviceForFiles,
-        Document $project
+        array $attachments
     ): Email|SMS|Push {
         $messageData = clone $message;
         $messageData->setAttribute('to', $to);
@@ -812,7 +806,7 @@ class Messaging extends Action
         $data = match ($providerType) {
             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
+            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $attachments),
             default => throw new \Exception('Provider with the requested ID is of the incorrect type')
         };
 
@@ -984,12 +978,112 @@ class Messaging extends Action
         return $adapter;
     }
 
+    /**
+     * Materialise a message's attachments as files the adapters can read.
+     *
+     * Uploads are compressed and then encrypted, so a stored file is not what the recipient should get; both
+     * are undone here in reverse, as the storage read endpoints do. The plaintext is written under
+     * $directory and never back to the file's own path, which on a local install is the stored original.
+     *
+     * Bytes travel as a path rather than as Attachment content because Sendgrid and Mailgun read only
+     * getPath(), and content would otherwise stay resident for the whole fan-out.
+     *
+     * @return array<Attachment>
+     */
+    private function prepareAttachments(
+        Database $dbForProject,
+        Document $message,
+        Device $deviceForFiles,
+        Document $project,
+        string $directory
+    ): array {
+        $prepared = [];
+        $mimes = Config::getParam('storage-mimes');
+
+        foreach ($message->getAttribute('data', [])['attachments'] ?? [] as $attachment) {
+            $bucket = $dbForProject->getDocument('buckets', $attachment['bucketId']);
+            if ($bucket->isEmpty()) {
+                throw new \Exception('Storage bucket with the requested ID could not be found');
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $attachment['fileId']);
+            if ($file->isEmpty()) {
+                throw new \Exception('Storage file with the requested ID could not be found');
+            }
+
+            $path = $file->getAttribute('path', '');
+            if (!$deviceForFiles->exists($path)) {
+                throw new \Exception('File not found in ' . $path);
+            }
+
+            $contentType = \in_array($file->getAttribute('mimeType'), $mimes)
+                ? $file->getAttribute('mimeType')
+                : 'text/plain';
+
+            $cipher = $file->getAttribute('openSSLCipher', '');
+            $algorithm = $file->getAttribute('algorithm', Compression::NONE);
+            $target = $directory . '/' . $bucket->getId() . '/' . $file->getId();
+
+            if (empty($cipher) && !\in_array($algorithm, [Compression::GZIP, Compression::ZSTD], true)) {
+                if ($deviceForFiles->getType() !== DeviceType::Local) {
+                    $deviceForFiles->copy($path, $target, $this->getLocalDevice($project));
+                    $path = $target;
+                }
+
+                $prepared[] = new Attachment($file->getAttribute('name'), $path, $contentType);
+                continue;
+            }
+
+            $source = (string) $deviceForFiles->read($path);
+
+            if (!empty($cipher)) {
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $cipher,
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+
+                // A rotated or missing key leaves ciphertext no one can read, which must fail the send rather
+                // than reach a recipient.
+                if ($source === false) {
+                    throw new \Exception('Failed to decrypt attachment ' . $file->getId());
+                }
+            }
+
+            $decompressed = match ($algorithm) {
+                Compression::ZSTD => (new Zstd())->decompress($source),
+                Compression::GZIP => (new GZIP())->decompress($source),
+                default => $source,
+            };
+
+            // A decompressor reports failure as an empty string. Files stored above the read buffer before 1.5.0
+            // recorded an algorithm they were never compressed with, so their bytes are already what the
+            // recipient wants; the storage read endpoints fall back to them rather than failing the read.
+            $source = $decompressed === '' && (int) $file->getAttribute('sizeOriginal') > 0
+                ? $source
+                : $decompressed;
+
+            if (!$this->getLocalDevice($project)->write($target, new Stream($source), $contentType)) {
+                throw new \Exception('Failed to prepare attachment ' . $file->getId());
+            }
+
+            $prepared[] = new Attachment($file->getAttribute('name'), $target, $contentType);
+        }
+
+        return $prepared;
+    }
+
+    /**
+     * @param array<Attachment> $attachments
+     */
     private function buildEmailMessage(
         Database $dbForProject,
         Document $message,
         Document $provider,
-        Device $deviceForFiles,
-        Document $project,
+        array $attachments,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -1000,7 +1094,6 @@ class Messaging extends Action
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
         $bcc = [];
-        $attachments = $data['attachments'] ?? [];
 
         if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
@@ -1019,46 +1112,6 @@ class Messaging extends Action
             ]);
             foreach ($bccTargets as $bccTarget) {
                 $bcc[] = ['email' => $bccTarget['identifier']];
-            }
-        }
-
-        if (!empty($attachments)) {
-            foreach ($attachments as &$attachment) {
-                $bucketId = $attachment['bucketId'];
-                $fileId = $attachment['fileId'];
-
-                $bucket = $dbForProject->getDocument('buckets', $bucketId);
-                if ($bucket->isEmpty()) {
-                    throw new \Exception('Storage bucket with the requested ID could not be found');
-                }
-
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-                if ($file->isEmpty()) {
-                    throw new \Exception('Storage file with the requested ID could not be found');
-                }
-
-                $mimes = Config::getParam('storage-mimes');
-                $path = $file->getAttribute('path', '');
-
-                if (!$deviceForFiles->exists($path)) {
-                    throw new \Exception('File not found in ' . $path);
-                }
-
-                $contentType = 'text/plain';
-
-                if (\in_array($file->getAttribute('mimeType'), $mimes)) {
-                    $contentType = $file->getAttribute('mimeType');
-                }
-
-                if ($deviceForFiles->getType() !== DeviceType::Local) {
-                    $deviceForFiles->copy($path, $path, $this->getLocalDevice($project));
-                }
-
-                $attachment = new Attachment(
-                    $file->getAttribute('name'),
-                    $path,
-                    $contentType
-                );
             }
         }
 

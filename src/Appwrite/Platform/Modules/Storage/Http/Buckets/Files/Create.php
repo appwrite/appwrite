@@ -369,9 +369,20 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
-                    if (!$antivirus->fileScanInStream($path)) {
+                    $scan = $antivirus->scanInStream($path);
+
+                    if ($scan->isInfected()) {
                         $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
+                    }
+
+                    if ($scan->hasFailed()) {
+                        // The finalized upload has no completed file record yet.
+                        $deviceForFiles->delete($path);
+                        throw new Exception(
+                            Exception::GENERAL_SERVER_ERROR,
+                            'Unable to scan the uploaded file: ' . $scan->getReply()
+                        );
                     }
                 }
 

@@ -268,7 +268,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.16
+    image: appwrite/new:1.1.74
     restart: unless-stopped
     networks:
       - appwrite
@@ -1638,7 +1638,7 @@ services:
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.7
+    image: ghcr.io/appwrite/autogravity:0.0.8
     restart: unless-stopped
     networks:
       - appwrite

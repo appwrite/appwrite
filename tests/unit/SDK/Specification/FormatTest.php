@@ -5,6 +5,7 @@ namespace Tests\Unit\SDK\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Format;
@@ -22,6 +23,8 @@ use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
+use Appwrite\Utopia\Response\Model\ColumnEmail;
+use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\FrameworkAdapter;
@@ -55,6 +58,10 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\OpenAPI\Model\CompositeSchema;
+use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\Discriminator;
+use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
@@ -125,6 +132,38 @@ final class FormatTest extends TestCase
         parent::setUp();
 
         $this->format = new TestFormat(new Container(), [], [], [], [], ['console' => 0], 'console');
+    }
+
+    public function testCompoundResponsePreservesOverlappingModelConditions(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+        $route = (new Route('GET', '/v1/tests/column'))
+            ->desc('Get column')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getColumn',
+                description: 'Get column.',
+                auth: [AuthType::ADMIN],
+                responses: [new SDKResponse(code: 200, model: [Response::MODEL_COLUMN_STRING, Response::MODEL_COLUMN_EMAIL])],
+            ));
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new ColumnString(), new ColumnEmail()], [], ['console' => 0], 'console'))->parse();
+        $document = Parser::parse(json_encode($spec, JSON_THROW_ON_ERROR));
+        $union = $document->paths['/tests/column']->operations['get']->responses['200']->content['application/json']->schema;
+
+        $this->assertInstanceOf(CompositeSchema::class, $union);
+        $this->assertSame(Composition::ANY_OF, $union->composition);
+        $this->assertNotInstanceOf(Discriminator::class, $union->discriminator);
+        $this->assertSame([
+            ['reference' => '#/components/schemas/columnString', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+            ]],
+            ['reference' => '#/components/schemas/columnEmail', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+                ['propertyName' => 'format', 'value' => 'email'],
+            ]],
+        ], $union->conditionalReferences());
     }
 
     public function testProjectRequestParameterOverrides(): void
@@ -1401,16 +1440,63 @@ final class FormatTest extends TestCase
             'server' => ['Project' => [], 'Session' => []],
             'console' => ['Project' => []],
         ], $operation['x-appwrite']['auth']);
-        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $operation['security'][0]);
+        $this->assertSame([['Project' => [], 'Session' => [], 'Key' => []]], $operation['security']);
 
         $this->assertSame(['Project' => [], 'Session' => []], $server['paths']['/account']['get']['x-appwrite']['auth']);
-        $this->assertSame(['Project' => [], 'Session' => [], 'Key' => []], $server['paths']['/account']['get']['security'][0]);
+        $this->assertSame([['Project' => [], 'Session' => [], 'Key' => []]], $server['paths']['/account']['get']['security']);
 
         $this->assertSame(['Project', 'Session', 'Key'], \array_keys($canonical['components']['securitySchemes']));
         $this->assertSame(['client', 'server', 'console'], $canonical['components']['securitySchemes']['Project']['x-appwrite']['platforms']);
         $this->assertSame(['server'], $canonical['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
         $this->assertSame(['Project', 'Key', 'Session'], \array_keys($server['components']['securitySchemes']));
         $this->assertSame(['server'], $server['components']['securitySchemes']['Key']['x-appwrite']['platforms']);
+    }
+
+    public function testLocationAuthUsesSecurityAlternatives(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/avatars/browser'))
+            ->desc('Get browser')
+            ->label('scope', 'public')
+            ->label('sdk', new Method(
+                namespace: 'avatars',
+                group: null,
+                name: 'getBrowser',
+                description: 'Get browser.',
+                auth: [AuthType::SESSION, AuthType::KEY, AuthType::ADMIN],
+                responses: [],
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
+            ));
+
+        $keys = $this->platformKeys();
+        foreach ($keys as &$schemes) {
+            $schemes['ImpersonateUserId'] = [
+                'type' => 'apiKey',
+                'name' => 'X-Appwrite-Impersonate-User-Id',
+                'in' => 'header',
+            ];
+        }
+        unset($schemes);
+        $authCounts = ['client' => 1, 'server' => 2, 'console' => 1];
+
+        foreach ([null, 'client', 'server', 'console'] as $platform) {
+            $spec = (new OpenAPI3(new Container(), [], [$route], [], $keys, $authCounts, $platform))->parse();
+            $operation = $spec['paths']['/avatars/browser']['get'];
+            $required = ['Project' => []];
+            if ($platform !== 'console') {
+                $required['Session'] = [];
+            }
+            if ($platform === null || $platform === 'server') {
+                $required['Key'] = [];
+            }
+            $this->assertSame([$required, [...$required, 'ImpersonateUserId' => []]], $operation['security']);
+            $auth = $platform === null ? $operation['x-appwrite']['auth']['server'] : $operation['x-appwrite']['auth'];
+            $this->assertArrayHasKey('ImpersonateUserId', $auth);
+            $this->assertArrayNotHasKey('optional', $spec['components']['securitySchemes']['ImpersonateUserId']['x-appwrite']);
+        }
     }
 
     public function testCanonicalDocumentListsEveryAliasVariant(): void
