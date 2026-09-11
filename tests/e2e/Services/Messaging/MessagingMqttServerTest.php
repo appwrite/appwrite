@@ -11,6 +11,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\Mqtt\KeepAlive;
 
 /**
  * End-to-end tests for the MQTT push broker (src/Utopia/Mqtt). Publishing is a server
@@ -124,6 +125,30 @@ final class MessagingMqttServerTest extends Scope
 
         try {
             $this->assertTrue($subscriber->awaitClose(40.0), 'broker did not reap a silent client past its keep-alive');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testKeepAlivePingKeepsClientAlive(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        // 1s keep-alive (reap deadline 1.5s). Ping steadily across a full reaper interval: each
+        // PINGREQ must draw a PINGRESP and push the deadline forward, so the client is never reaped.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-ping-' . $userId, cleanStart: true, keepAlive: 1));
+
+        try {
+            $deadline = microtime(true) + KeepAlive::INTERVAL + 5; // span at least one reaper tick
+            while (microtime(true) < $deadline) {
+                $this->assertTrue($subscriber->ping(2.0), 'broker did not answer PINGRESP');
+                usleep(800_000); // < the 1.5s deadline, so activity stays ahead of the reaper
+            }
+
+            // Still connected: an immediate close-await times out rather than seeing an EOF.
+            $this->assertFalse($subscriber->awaitClose(0.5), 'an actively pinging client was reaped');
         } finally {
             $subscriber->disconnect();
         }
