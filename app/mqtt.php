@@ -23,7 +23,6 @@ use Utopia\Mqtt\Handlers\Connect as ConnectHandler;
 use Utopia\Mqtt\Handlers\Disconnect as DisconnectHandler;
 use Utopia\Mqtt\Handlers\Ping as PingHandler;
 use Utopia\Mqtt\Handlers\Puback as PubackHandler;
-use Utopia\Mqtt\Handlers\Publish as PublishHandler;
 use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
 use Utopia\Mqtt\Packet;
@@ -295,7 +294,6 @@ $dispatcher = (new Dispatcher())
     ->addHandler(new ConnectHandler())
     ->addHandler(new SubscribeHandler())
     ->addHandler(new UnsubscribeHandler())
-    ->addHandler(new PublishHandler())
     ->addHandler(new PubackHandler())
     ->addHandler(new AuthHandler())
     ->addHandler(new PingHandler())
