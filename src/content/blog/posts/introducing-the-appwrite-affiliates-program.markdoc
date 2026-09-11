@@ -86,7 +86,7 @@ Two tables sit under the chart:
 
 Because referrals carry an expiry date, you can see which attributions are still live and which ran out without an upgrade. That's the difference between guessing at a channel and knowing it brought 40 signups that never needed Pro.
 
-## How referral rewards and Cloud credits work
+# How referral rewards and Cloud credits work
 
 A reward is created the moment a referred user upgrades to Pro inside the attribution window. It starts as **pending** and shows up on the overview as an amount ready to claim.
 
