@@ -96,7 +96,7 @@
         "utopia-php/platform": "1.0.0-rc20",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",
-        "utopia-php/queue": "^2.2.1",
+        "utopia-php/queue": "^2.2.3",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "^4.0",
