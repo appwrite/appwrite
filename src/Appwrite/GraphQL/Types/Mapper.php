@@ -197,7 +197,7 @@ class Mapper
                         ARRAY_FILTER_USE_KEY
                     );
 
-                    return \json_encode($data, JSON_FORCE_OBJECT);
+                    return \json_encode((object)$data);
                 }
             ];
         }
