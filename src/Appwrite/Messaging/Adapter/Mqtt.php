@@ -121,7 +121,7 @@ class Mqtt extends MessagingAdapter
      * @param array<int, string> $events ignored
      * @param array<int, string> $channels topics to publish to
      * @param array<int, string> $roles ignored
-     * @param array{payload?: string, qos?: int} $options
+     * @param array{payload?: string, qos?: int, sequence?: int} $options
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
@@ -167,7 +167,7 @@ class Mqtt extends MessagingAdapter
      * or null when the fd holds none. This is the store's copy (the projectId/userId
      * captured at subscribe time), not the live Connection object from open().
      *
-     * @return array{projectId: string, userId: string, subs: array<string, array{topic: string, qos: int}>}|null
+     * @return array{projectId: string, userId: string, subs: array<string, int>}|null
      */
     public function getConnection(int $fd): ?array
     {
