@@ -606,6 +606,21 @@ return [
         'description' => 'Installation with the requested ID could not be found. Check to see if the ID is correct, or create the installation.',
         'code' => 404,
     ],
+    Exception::INSTALLATION_REQUEST_NOT_FOUND => [
+        'name' => Exception::INSTALLATION_REQUEST_NOT_FOUND,
+        'description' => 'Installation request with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSTALLATION_REQUEST_NOT_READY => [
+        'name' => Exception::INSTALLATION_REQUEST_NOT_READY,
+        'description' => 'The installation request has not been approved on the Git provider yet. Ask an organization owner to approve it, then try again.',
+        'code' => 400,
+    ],
+    Exception::INSTALLATION_REQUEST_ALREADY_EXISTS => [
+        'name' => Exception::INSTALLATION_REQUEST_ALREADY_EXISTS,
+        'description' => 'This account already has an installation request waiting for approval. Complete or withdraw it before requesting another.',
+        'code' => 409,
+    ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
         'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
