@@ -56,7 +56,7 @@ Previous iPhone launches changed one number. A bigger screen, a notch, a Dynamic
 
 iPhone Duo changes the shape of the canvas at runtime. Three things follow from that.
 
-**One app, two displays, one session.** A user starts reading on the 5.4-inch outer display, unfolds, and expects to be on the same line of the same article. Not a re-fetch, not a scroll reset, not a re-auth prompt.
+**Keep the experience continuous across both displays.** If someone starts reading on the 5.4-inch outer display and unfolds the phone, they should stay at the same point in the article without the app reloading, resetting their scroll position, or asking them to sign in again.
 
 **Split View on iPhone.** iOS 27 lets two apps sit side by side on an iPhone for the first time. Your app is no longer guaranteed the full width of anything.
 
