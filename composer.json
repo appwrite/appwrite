@@ -77,7 +77,7 @@
                 "source": {
                     "url": "https://github.com/utopia-php/monorepo.git",
                     "type": "git",
-                    "reference": "appwrite-mqtt-poc"
+                    "reference": "bulk-cache-load"
                 },
                 "autoload": {
                     "psr-4": {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a1bb9cd493b34ae7dc1d60a01fb95e30",
+    "content-hash": "afb18eb0e5b98842199bcf935378b483",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3041,7 +3041,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/monorepo.git",
-                "reference": "appwrite-mqtt-poc"
+                "reference": "bulk-cache-load"
             },
             "require": {
                 "ext-curl": "*",
