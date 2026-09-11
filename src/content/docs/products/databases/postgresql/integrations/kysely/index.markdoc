@@ -15,10 +15,11 @@ You'll need a native PostgreSQL database in a `ready` state and its credentials.
 In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for migrations and CLI tools. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
 
 # Install and configure Kysely {% #driver %}
 
@@ -59,11 +60,7 @@ export const db = new Kysely<Database>({ dialect });
 
 # Run migrations {% #migrate %}
 
-Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at the **direct** engine port (`5432`). Migrations issue DDL and often rely on session-level locks, which need a session-level connection rather than the transaction-mode pooler:
-
-```env
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
+Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at `DIRECT_URL` on the **direct** engine port (`5432`). Migrations issue DDL and often rely on session-level locks, which need a session-level connection rather than the transaction-mode pooler.
 
 Create `kysely.config.ts` (project root or `.config/`):
 
@@ -171,17 +168,9 @@ On long-running servers, create the `Kysely` instance once at module scope and r
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
 
-The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
-
-```env
-# Runtime: pooled, transaction mode
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
-
-# Migrations: direct connection to the engine
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
 
 Size the `pg` `Pool` conservatively for serverless (often `max: 1` or a small single-digit value per isolate). Prefer Kysely's normal parameterized queries over session-scoped prepared statement workflows when you use transaction pooling.
 
