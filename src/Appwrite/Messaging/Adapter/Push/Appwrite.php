@@ -97,22 +97,24 @@ class Appwrite extends PushAdapter
             return (int) $existing->getAttribute('sequence');
         }
 
-        $sequence = (int) $authorization->skip(
-            fn () => $this->dbForProject->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
-        )->getAttribute('sequence');
+        return (int) $authorization->skip(
+            fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload): int {
+                $sequence = (int) $this->dbForProject
+                    ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
+                    ->getAttribute('sequence');
 
-        $authorization->skip(
-            fn () => $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
-                '$id' => ID::unique(),
-                'topic' => $topic,
-                'data' => $payload,
-                'messageId' => $this->messageId,
-                'messageInternalId' => $this->messageInternalId,
-                'sequence' => $sequence,
-            ]))
+                $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
+                    '$id' => ID::unique(),
+                    'topic' => $topic,
+                    'data' => $payload,
+                    'messageId' => $this->messageId,
+                    'messageInternalId' => $this->messageInternalId,
+                    'sequence' => $sequence,
+                ]));
+
+                return $sequence;
+            })
         );
-
-        return $sequence;
     }
 
     /**
