@@ -11,7 +11,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 {% /info %}
 
 {% info title="Sequelize 7" %}
-Sequelize 7 is usable in production. Appwrite connection URLs are unchanged. The main difference is packages: install `@sequelize/core` plus `@sequelize/mysql` instead of the Sequelize 6 `sequelize` + `mysql2` combo. The examples below use the Sequelize 6 style that still covers most installs; swap the imports/packages if you are on v7.
+Sequelize 7 is still alpha and coming. These examples stay on Sequelize 6 (`sequelize` + `mysql2`), which is the stable path. Appwrite URLs and ports stay the same on v7. When you try v7 later, install `@sequelize/core` plus `@sequelize/mysql`, and follow upstream for the new dialect API and migrations. The CLI is not ready on v7 yet.
 {% /info %}
 
 # Set the connection string {% #connection-string %}
