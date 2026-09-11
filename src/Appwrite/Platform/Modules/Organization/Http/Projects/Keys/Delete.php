@@ -33,7 +33,7 @@ class Delete extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Delete project key')
             ->groups(['api', 'organization'])
-            ->label('scope', 'keys.write')
+            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
             ->label('event', 'keys.[keyId].delete')
             ->label('audits.event', 'project.key.delete')
             ->label('audits.resource', 'project.key/{request.keyId}')

@@ -42,7 +42,7 @@ class Create extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys')
             ->desc('Create project key')
             ->groups(['api', 'organization'])
-            ->label('scope', 'keys.write')
+            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')

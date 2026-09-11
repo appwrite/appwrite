@@ -40,7 +40,7 @@ class Update extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Update project key')
             ->groups(['api', 'organization'])
-            ->label('scope', 'keys.write')
+            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
             ->label('event', 'keys.[keyId].update')
             ->label('audits.event', 'project.key.update')
             ->label('audits.resource', 'project.key/{response.$id}')

@@ -36,7 +36,7 @@ class XList extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys')
             ->desc('List project keys')
             ->groups(['api', 'organization'])
-            ->label('scope', 'keys.read')
+            ->label('scope', ['organization.projects.keys.read', 'keys.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'keys',
