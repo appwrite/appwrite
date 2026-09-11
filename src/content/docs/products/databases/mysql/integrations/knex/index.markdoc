@@ -15,10 +15,11 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. If Knex or `mysql2` does not infer TLS from the connection string, set SSL on the connection object and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for migrations and CLI tools. Connections on Appwrite Cloud are encrypted with TLS. If Knex or `mysql2` does not infer TLS from the connection string, set SSL on the connection object and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure Knex {% #driver %}
 
@@ -65,11 +66,7 @@ module.exports = {
 
 # Run migrations {% #migrate %}
 
-Point the Knex CLI at the **direct** engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection:
-
-```env
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Point the Knex CLI at `DIRECT_URL` on the **direct** engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection.
 
 ```bash
 npx knex migrate:make create_users --knexfile knexfile.js
@@ -116,17 +113,9 @@ Libraries built on Knex, such as Objection.js, use the same connection string an
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6033`) on the same hostname.
 
-Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
-
-```env
-# Runtime: pooler port
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
-
-# Migrations: direct connection to the engine
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
 
 Keep the runtime Knex pool small on serverless (`pool.max` of `1` or a few connections per isolate). Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
 
