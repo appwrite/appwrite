@@ -69,6 +69,19 @@ abstract class Scope extends TestCase
 
         // Read console fixtures as their owner, not in project admin mode.
         unset($headers['x-appwrite-mode']);
+
+        // The first organization of a self-hosted instance, and every organization on an
+        // edition without the instance limit, comes from the public API. Only a refusal
+        // falls through to seeding the rows directly.
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+        if ($team['headers']['status-code'] === 201) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            return $response;
+        }
+        $this->assertSame(403, $team['headers']['status-code']);
+        $this->assertSame('organization_creation_prohibited', $team['body']['type']);
+
         $account = [];
         $this->assertEventually(function () use ($headers, &$account) {
             $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
