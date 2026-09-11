@@ -16,9 +16,10 @@ In the Console, open your database and click **Credentials**. Copy the connectio
 
 ```env
 DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+Use `DATABASE_URL` for runtime traffic and `DIRECT_URL` for Sequelize CLI migrations. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
 
 # Install and configure Sequelize {% #driver %}
 
@@ -29,7 +30,7 @@ npm install sequelize pg pg-hstore
 npm install -D sequelize-cli typescript @types/node
 ```
 
-Create a Sequelize instance from the URL. Set `dialectOptions.ssl` when you need to control TLS explicitly:
+Create a Sequelize instance for runtime traffic. Prefer the URL form and set SSL with verification when you need to control TLS explicitly:
 
 ```ts
 import { Sequelize, DataTypes } from 'sequelize';
@@ -39,7 +40,7 @@ export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false
+      rejectUnauthorized: true
     }
   },
   logging: false,
@@ -76,20 +77,54 @@ export const User = sequelize.define(
 );
 ```
 
-You can also pass discrete `host`, `port`, `database`, `username`, and `password` options instead of a URL; keep `dialect: 'postgres'` and the same `dialectOptions.ssl` settings.
+`ssl: { require: true, rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass discrete `host`, `port`, `database`, `username`, and `password` options instead of a URL; keep `dialect: 'postgres'` and the same `dialectOptions.ssl` settings.
 
 # Run migrations {% #migrate %}
 
-Use Sequelize CLI migrations against the **direct** engine port (`5432`). DDL and migration metadata updates need a session-level connection, so do not point the CLI at the transaction-mode pooler:
+Use Sequelize CLI migrations against the **direct** engine port (`5432`). DDL and migration metadata updates need a session-level connection, so do not point the CLI at the transaction-mode pooler.
 
-```env
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+`sequelize-cli init` generates localhost defaults. Replace them with a concrete `.sequelizerc` and config that read `DIRECT_URL`.
+
+Create `.sequelizerc` at the project root:
+
+```js
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('config', 'config.js'),
+  'models-path': path.resolve('models'),
+  'seeders-path': path.resolve('seeders'),
+  'migrations-path': path.resolve('migrations')
+};
 ```
 
-Initialize the CLI config (`.sequelizerc` / `config/config.js`) so `url` reads `DIRECT_URL` for migrate commands:
+Create `config/config.js` so every CLI environment uses `DIRECT_URL`:
+
+```js
+require('dotenv').config();
+
+const shared = {
+  url: process.env.DIRECT_URL,
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: true
+    }
+  },
+  logging: false
+};
+
+module.exports = {
+  development: shared,
+  test: shared,
+  production: shared
+};
+```
+
+Then generate and apply migrations:
 
 ```bash
-npx sequelize-cli init
 npx sequelize-cli migration:generate --name create-users
 npx sequelize-cli db:migrate
 ```

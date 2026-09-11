@@ -16,9 +16,10 @@ In the Console, open your database and click **Credentials**. Copy the connectio
 
 ```env
 DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+Use `DATABASE_URL` for runtime traffic (pooler port when you enable pooling) and `DIRECT_URL` for the TypeORM CLI and migration runners. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
 
 # Install and configure TypeORM {% #driver %}
 
@@ -31,7 +32,7 @@ npm install -D @types/node typescript ts-node
 
 Enable decorator metadata in `tsconfig.json` if you use entity decorators (`"emitDecoratorMetadata": true` and `"experimentalDecorators": true`).
 
-Create a `DataSource` with `type: 'postgres'`. Prefer the connection URL for Appwrite; set `ssl` when your driver does not infer TLS from `sslmode=require`:
+Create a runtime `DataSource` that reads `DATABASE_URL`:
 
 ```ts
 import 'reflect-metadata';
@@ -41,7 +42,7 @@ import { User } from './entities/User';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: true },
   synchronize: false,
   logging: false,
   entities: [User],
@@ -50,7 +51,26 @@ export const AppDataSource = new DataSource({
 });
 ```
 
-Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port.
+Create a separate migrations DataSource for the CLI that reads `DIRECT_URL` (for example `src/data-source.migrations.ts`):
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export default new DataSource({
+  type: 'postgres',
+  url: process.env.DIRECT_URL,
+  ssl: { rejectUnauthorized: true },
+  synchronize: false,
+  logging: false,
+  entities: [User],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: []
+});
+```
+
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store when the driver does not rely solely on `sslmode=require` in the URL. Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port.
 
 Define an entity:
 
@@ -72,32 +92,30 @@ export class User {
 
 # Run migrations {% #migrate %}
 
-Initialize the data source, then generate and run migrations with the TypeORM CLI. Point the CLI and any migration runner at the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection:
-
-```env
-# Migrations & introspection: direct connection to the engine
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
-
-Use `DIRECT_URL` in the DataSource (or a dedicated `data-source.migrations.ts`) when you run the CLI:
+Point the TypeORM CLI at the migrations DataSource so it uses `DIRECT_URL`, not the pooler. Migrations issue DDL that needs a session-level connection:
 
 ```bash
-npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.ts
-npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts
+npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
+npx typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts
 ```
 
 The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
 
-You can also run pending migrations from application startup after `initialize()`:
+You can also run pending migrations from a one-off job that initializes the migrations DataSource:
 
 ```ts
-await AppDataSource.initialize();
-await AppDataSource.runMigrations();
+import MigrationsDataSource from './data-source.migrations';
+
+await MigrationsDataSource.initialize();
+await MigrationsDataSource.runMigrations();
+await MigrationsDataSource.destroy();
 ```
+
+Do not call `AppDataSource.runMigrations()` when `DATABASE_URL` points at the transaction-mode pooler.
 
 # Query with TypeORM {% #query %}
 
-Once the schema is migrated, use the repository API or the query builder:
+Once the schema is migrated, use the repository API or the query builder with the runtime DataSource:
 
 ```ts
 import { AppDataSource } from './data-source';
@@ -121,7 +139,7 @@ On long-running servers, initialize the `DataSource` once at module scope and re
 
 Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
 
-The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so server-side prepared statements and session-scoped state are unreliable. Keep migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so server-side prepared statements and session-scoped state are unreliable. Keep the migrations DataSource pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
 
 ```env
 # Runtime: pooled, transaction mode
@@ -131,7 +149,7 @@ DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6
 DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-Wire the runtime DataSource to `DATABASE_URL` and a separate migrations DataSource (or CLI `-d` file) to `DIRECT_URL`. Cap `extra.max` / pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
+Wire the runtime DataSource to `DATABASE_URL` and the CLI / migrations DataSource to `DIRECT_URL`. Cap `extra.max` / pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
 
 If your application relies on advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or `SET LOCAL`, switch the pooler to **session mode** or use the direct port. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
 
