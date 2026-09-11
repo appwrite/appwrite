@@ -79,7 +79,7 @@ Use this to decide how much:
 | Games and canvas-rendered apps       | Medium to high | Render target resize, touch coordinate mapping        |
 | WebView-wrapped apps                 | Medium         | Viewport meta assumptions and CSS breakpoints         |
 
-The honest test is not whether your app opens. It is whether a user can fold the device mid-task and continue without losing anything.
+A good readiness test is simple: fold the device mid-task and check whether the user can continue without losing progress.
 
 # How iPhone Duo changes iOS app design
 
