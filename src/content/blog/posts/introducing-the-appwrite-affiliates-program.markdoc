@@ -77,12 +77,9 @@ Referral programs usually fail on measurement. You share a link, something happe
 | Signups     | New accounts attributed to your links    |
 | Conversions | Attributed accounts that upgraded to Pro |
 
-Alongside those totals, the overview shows signup and conversion rates, helping you understand which invite links and channels perform best.
+Alongside those totals, the overview shows signup and conversion rates, helping you understand which invite links and channels perform best. 
 
-Two tables sit under the chart:
-
-* **Referrals** lists every attributed signup with a masked user ID, country, the link that earned it, status, the date it was attributed, and the date attribution expires.
-* **Rewards** lists each $15 credit with its status, the link that produced it, and the organization it was claimed to.
+You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when rewards are ready.
 
 Because referrals carry an expiry date, you can see which attributions are still live and which ran out without an upgrade. That's the difference between guessing at a channel and knowing it brought 40 signups that never needed Pro.
 
