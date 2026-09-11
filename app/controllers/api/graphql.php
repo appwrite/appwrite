@@ -136,7 +136,15 @@ Http::post('/v1/graphql/mutation')
         $query = $request->getParams();
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+            $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
@@ -187,7 +195,15 @@ Http::post('/v1/graphql')
         $query = $request->getParams();
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+            $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
