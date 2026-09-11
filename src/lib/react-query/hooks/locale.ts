@@ -151,6 +151,11 @@ export function localeQueryOptions() {
     queryKey: ['locale', 'console'],
     queryFn: fetchLocale,
     staleTime: LONG_STALE_TIME,
+    gcTime: LONG_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: typeof window !== 'undefined',
   })
 }
 

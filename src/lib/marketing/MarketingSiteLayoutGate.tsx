@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react'
+import { useRef } from 'react'
 import { useMatches, useRouterState } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { MarketingSiteLayout } from '@/lib/marketing/MarketingSiteLayout'
-import { shouldUseMarketingSiteLayout } from '@/lib/marketing/marketing-route-shell'
+import {
+  isConsoleAreaPath,
+  isExcludedMarketingSiteLayoutPath,
+  shouldUseMarketingSiteLayout,
+} from '@/lib/marketing/marketing-route-shell'
 
 type MarketingSiteLayoutGateProps = {
   children: ReactNode
@@ -16,17 +21,38 @@ type MarketingSiteLayoutGateProps = {
 export function MarketingSiteLayoutGate({
   children,
 }: MarketingSiteLayoutGateProps) {
-  const pathname = useRouterState({
+  const pendingPathname = useRouterState({
+    select: (s) => s.location.pathname,
+  })
+  const resolvedPathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
   })
   const matches = useMatches()
   const { features } = useConsoleProfile()
+  const keepMarketingShellRef = useRef(false)
 
-  const useMarketingShell = shouldUseMarketingSiteLayout({
-    marketingEnabled: features.marketing,
-    pathname,
-    matches,
-  })
+  const computed =
+    shouldUseMarketingSiteLayout({
+      marketingEnabled: features.marketing,
+      pathname: pendingPathname,
+      matches,
+    }) ||
+    shouldUseMarketingSiteLayout({
+      marketingEnabled: features.marketing,
+      pathname: resolvedPathname,
+      matches,
+    })
+
+  if (computed) {
+    keepMarketingShellRef.current = true
+  } else if (
+    isExcludedMarketingSiteLayoutPath(resolvedPathname) ||
+    isConsoleAreaPath(resolvedPathname)
+  ) {
+    keepMarketingShellRef.current = false
+  }
+
+  const useMarketingShell = computed || keepMarketingShellRef.current
 
   if (!useMarketingShell) {
     return children

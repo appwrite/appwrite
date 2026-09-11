@@ -1,11 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { LegalPolicyView } from '@/components/pages/legal/View'
 import cookiesContent from '@/content/legal/cookies.md?raw'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { useT } from '@/lib/i18n/translate'
 
 export const Route = createFileRoute('/_marketing/cookies')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({

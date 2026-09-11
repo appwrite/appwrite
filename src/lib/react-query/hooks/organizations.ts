@@ -1528,7 +1528,7 @@ export function organizationScopesQueryOptions(
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
     queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
     enabled,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,

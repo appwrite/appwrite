@@ -1,5 +1,58 @@
-import { dehydrate, hydrate, type QueryClient } from '@tanstack/react-query'
+import {
+  defaultShouldDehydrateQuery,
+  dehydrate,
+  hydrate,
+  type QueryClient,
+} from '@tanstack/react-query'
 import type { AnyRouter } from '@tanstack/react-router'
+
+type DehydratedQuery = {
+  queryKey: unknown
+  state?: { status?: string; dataUpdatedAt?: number }
+}
+
+/**
+ * Session and header queries must stay on the client QueryClient. SSR payloads
+ * often include a pending/empty observer (enabled is false on the server) whose
+ * hydrate would wipe a settled account and trigger another `account.get`.
+ */
+export function isClientOwnedQueryKey(queryKey: unknown): boolean {
+  if (!Array.isArray(queryKey) || queryKey.length === 0) return false
+  const [scope, name] = queryKey
+  if (scope === 'account' && name === 'console') return true
+  if (
+    scope === 'organization' &&
+    (name === 'plan' || name === 'scopes' || name === 'project-scope')
+  ) {
+    return true
+  }
+  if (scope === 'locale' && name === 'console') return true
+  return false
+}
+
+export function shouldDehydrateRouterQuery(query: {
+  queryKey: unknown
+  state: { status: string }
+}): boolean {
+  if (isClientOwnedQueryKey(query.queryKey)) return false
+  if (query.state.status !== 'success') return false
+  return defaultShouldDehydrateQuery(query as never)
+}
+
+export function shouldHydrateRouterQuery(
+  queryClient: QueryClient,
+  queryKey: unknown,
+): boolean {
+  if (!Array.isArray(queryKey)) return true
+  const existing = queryClient.getQueryState(queryKey)
+  if (!existing) return !isClientOwnedQueryKey(queryKey)
+  if (isClientOwnedQueryKey(queryKey)) return false
+  if (existing.status === 'success' || existing.status === 'error') {
+    return false
+  }
+  if (existing.data !== undefined) return false
+  return true
+}
 
 /**
  * Wire React Query to TanStack Router SSR without streaming late queries.
@@ -36,7 +89,9 @@ export function setupQueryClientRouterIntegration(
       registerRenderCleanup()
 
       const ogDehydrated = await ogDehydrate?.()
-      const dehydratedQueryClient = dehydrate(queryClient)
+      const dehydratedQueryClient = dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) => shouldDehydrateRouterQuery(query),
+      })
 
       return {
         ...ogDehydrated,
@@ -53,8 +108,16 @@ export function setupQueryClientRouterIntegration(
 
   router.options.hydrate = async (dehydrated) => {
     await ogHydrate?.(dehydrated)
-    if (dehydrated.dehydratedQueryClient) {
-      hydrate(queryClient, dehydrated.dehydratedQueryClient)
-    }
+    const incoming = dehydrated.dehydratedQueryClient as
+      | { queries?: DehydratedQuery[]; mutations?: unknown[] }
+      | undefined
+    if (!incoming?.queries?.length) return
+
+    hydrate(queryClient, {
+      ...incoming,
+      queries: incoming.queries.filter((query) =>
+        shouldHydrateRouterQuery(queryClient, query.queryKey),
+      ),
+    })
   }
 }

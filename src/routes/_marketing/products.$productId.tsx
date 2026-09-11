@@ -2,7 +2,10 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
 import { getProductContent } from '@/lib/products/content'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
@@ -14,6 +17,7 @@ import { translate } from '@/lib/i18n/translate'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {

@@ -1,5 +1,5 @@
 import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
-import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
+import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   type MarketingPageRouteStaticData,
@@ -17,7 +17,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'agent',
 ])
 
-function isConsoleAreaPath(pathname: string): boolean {
+export function isConsoleAreaPath(pathname: string): boolean {
   const firstSegment = pathname.split('/').filter(Boolean)[0]
   return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
 }
@@ -31,10 +31,9 @@ function isConsoleAuthRouteMatch(
   )
 }
 
-function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
+export function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   if (isConsoleRedirectHopPath(pathname)) return true
   const normalized = pathname.replace(/\/+$/, '') || '/'
-  if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true
   }
@@ -89,9 +88,8 @@ export function shouldUseMarketingSiteLayout({
 }: {
   marketingEnabled: boolean
   pathname: string
-  matches: Array<{ staticData?: unknown }>
+  matches: Array<{ staticData?: unknown; routeId?: string }>
 }): boolean {
-  if (!marketingEnabled) return false
   if (isConsoleAuthRouteMatch(matches)) return false
   if (isExcludedMarketingSiteLayoutPath(pathname)) return false
 
@@ -99,5 +97,7 @@ export function shouldUseMarketingSiteLayout({
     return true
   }
 
-  return isMarketingPagePath(pathname) || !isConsoleAreaPath(pathname)
+  if (!marketingEnabled) return false
+
+  return matchesMarketingPagePath(pathname) || !isConsoleAreaPath(pathname)
 }

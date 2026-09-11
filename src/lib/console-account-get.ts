@@ -104,9 +104,10 @@ export async function fetchConsoleAccount(
     if (cached) return cached
 
     const cachedUnauthenticated = getConsoleAccountUnauthenticatedError(revision)
-    // Do not replay a guest 401 just because document.cookie is empty.
-    // Production `a_session_console` is HttpOnly.
-    if (cachedUnauthenticated && shouldSkipRootAccountProbe()) {
+    // First probe still runs when nothing is cached (HttpOnly session cookies
+    // are invisible to JS). After a guest 401, replay it. Sign-in and
+    // impersonation pass `force: true`.
+    if (cachedUnauthenticated) {
       throw cachedUnauthenticated
     }
   } else {

@@ -64,7 +64,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     isError: localeError,
   } = useQuery({
     ...localeQueryOptions(),
-    enabled: cookieBannerEnabled,
+    enabled: cookieBannerEnabled && typeof window !== 'undefined',
   })
   const bannerRequired = !cookieBannerEnabled
     ? false

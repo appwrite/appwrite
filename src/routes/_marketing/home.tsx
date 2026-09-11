@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import {
   ArrowRight,
   BadgeCheck,
@@ -229,6 +232,7 @@ const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO
 const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
 
 export const Route = createFileRoute('/_marketing/home')({
+  ...marketingRouteLifetime,
   staticData: {
     ...MARKETING_PAGE_ROUTE_STATIC_DATA,
     headerBanner: 'init-org-promo',

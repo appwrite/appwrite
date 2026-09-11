@@ -1,6 +1,4 @@
 import {
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -18,17 +16,21 @@ import {
   type KeyboardShortcutsContextValue,
 } from '@/components/global/providers/keyboard-shortcuts-context'
 
-const LazyCommandCenter = lazy(async () => {
-  const module = await import('@/components/global/shared/CommandCenter')
-  return { default: module.CommandCenter }
-})
+type CommandCenterComponent =
+  (typeof import('@/components/global/shared/CommandCenter'))['CommandCenter']
 
 type StandaloneCommandCenterScopeProps = {
   children: ReactNode
 } & Omit<
-  ComponentProps<typeof LazyCommandCenter>,
+  ComponentProps<CommandCenterComponent>,
   'open' | 'onOpenChange' | 'initialSubPage' | 'onInitialSubPageConsumed'
 >
+
+function loadCommandCenter(): Promise<CommandCenterComponent> {
+  return import('@/components/global/shared/CommandCenter').then(
+    (module) => module.CommandCenter,
+  )
+}
 
 /** Command center + global shortcuts for pages outside project/org providers (e.g. home). */
 export function StandaloneCommandCenterScope({
@@ -38,6 +40,8 @@ export function StandaloneCommandCenterScope({
 }: StandaloneCommandCenterScopeProps) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [commandCenterMounted, setCommandCenterMounted] = useState(false)
+  const [CommandCenterImpl, setCommandCenterImpl] =
+    useState<CommandCenterComponent | null>(null)
   const [initialSubPage, setInitialSubPage] = useState<string | null>(null)
 
   const openCommandCenter = useCallback(() => {
@@ -74,7 +78,7 @@ export function StandaloneCommandCenterScope({
     let idleId: number | undefined
     let timeoutId: number | undefined
     const prefetch = () => {
-      void import('@/components/global/shared/CommandCenter')
+      void loadCommandCenter()
     }
 
     if (typeof window.requestIdleCallback === 'function') {
@@ -88,6 +92,17 @@ export function StandaloneCommandCenterScope({
       if (timeoutId !== undefined) window.clearTimeout(timeoutId)
     }
   }, [])
+
+  useEffect(() => {
+    if (!commandCenterMounted || CommandCenterImpl) return
+    let cancelled = false
+    void loadCommandCenter().then((component) => {
+      if (!cancelled) setCommandCenterImpl(() => component)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [commandCenterMounted, CommandCenterImpl])
 
   const closeCommandCenter = useCallback(() => {
     setCommandCenterOpen(false)
@@ -124,21 +139,19 @@ export function StandaloneCommandCenterScope({
   return (
     <KeyboardShortcutsContext.Provider value={contextValue}>
       {children}
-      {commandCenterMounted ? (
-        <Suspense fallback={null}>
-          <LazyCommandCenter
-            {...commandCenterProps}
-            context={context}
-            open={commandCenterOpen}
-            onOpenChange={(open) => {
-              if (open) setCommandCenterMounted(true)
-              setCommandCenterOpen(open)
-              if (!open) setInitialSubPage(null)
-            }}
-            initialSubPage={initialSubPage}
-            onInitialSubPageConsumed={handleInitialSubPageConsumed}
-          />
-        </Suspense>
+      {commandCenterMounted && CommandCenterImpl ? (
+        <CommandCenterImpl
+          {...commandCenterProps}
+          context={context}
+          open={commandCenterOpen}
+          onOpenChange={(open) => {
+            if (open) setCommandCenterMounted(true)
+            setCommandCenterOpen(open)
+            if (!open) setInitialSubPage(null)
+          }}
+          initialSubPage={initialSubPage}
+          onInitialSubPageConsumed={handleInitialSubPageConsumed}
+        />
       ) : null}
     </KeyboardShortcutsContext.Provider>
   )
