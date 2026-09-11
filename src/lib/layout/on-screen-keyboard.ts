@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 
 /**
  * Shortest covered strip treated as an on-screen keyboard. Phone keyboards are
@@ -14,7 +14,11 @@ export type VisibleViewportBand = {
 }
 
 export type ViewportMetrics = {
-  /** `window.innerHeight`: the layout viewport the fixed app shell fills. */
+  /**
+   * `document.documentElement.clientHeight`: a stable layout viewport baseline
+   * for keyboard detection. Unlike `window.innerHeight` on iOS, pinch zoom
+   * leaves it alone.
+   */
   layoutHeight: number
   visualHeight: number
   visualOffsetTop: number
@@ -45,42 +49,58 @@ export function getOnScreenKeyboardBand({
 }
 
 /**
- * Tracks {@link getOnScreenKeyboardBand} while `enabled`. Give a fixed element
- * the band's `top` and `height` to keep it above the keyboard.
+ * Tracks {@link getOnScreenKeyboardBand} while `enabled` and focus is inside
+ * `containerRef`. Give a fixed element the band's `top` and `height` to keep it
+ * above the keyboard.
  */
 export function useOnScreenKeyboardBand(
+  containerRef: RefObject<HTMLElement | null>,
   enabled: boolean,
 ): VisibleViewportBand | null {
   const [band, setBand] = useState<VisibleViewportBand | null>(null)
 
   useEffect(() => {
+    const container = containerRef.current
     const viewport = window.visualViewport
-    if (!enabled || !viewport) {
+    if (!enabled || !container || !viewport) {
       setBand(null)
       return
     }
 
     const update = () => {
-      const next = getOnScreenKeyboardBand({
-        layoutHeight: window.innerHeight,
-        visualHeight: viewport.height,
-        visualOffsetTop: viewport.offsetTop,
-        visualScale: viewport.scale,
-      })
+      // Read the live active element: WebKit fires no focusout when a focused
+      // element is removed, so tracked focus state can go stale.
+      const next = container.contains(document.activeElement)
+        ? getOnScreenKeyboardBand({
+            layoutHeight: document.documentElement.clientHeight,
+            visualHeight: viewport.height,
+            visualOffsetTop: viewport.offsetTop,
+            visualScale: viewport.scale,
+          })
+        : null
       setBand((prev) =>
         prev?.top === next?.top && prev?.height === next?.height ? prev : next,
       )
     }
+    const handleFocusOut = (event: FocusEvent) => {
+      // Focus moving to another element is handled by the focusin that follows.
+      if (!event.relatedTarget) update()
+    }
 
     update()
     // `scroll` fires when the browser pans the visual viewport to the input.
+    // Focus can also enter or leave while the keyboard stays open.
     viewport.addEventListener('resize', update)
     viewport.addEventListener('scroll', update)
+    document.addEventListener('focusin', update)
+    document.addEventListener('focusout', handleFocusOut)
     return () => {
       viewport.removeEventListener('resize', update)
       viewport.removeEventListener('scroll', update)
+      document.removeEventListener('focusin', update)
+      document.removeEventListener('focusout', handleFocusOut)
     }
-  }, [enabled])
+  }, [containerRef, enabled])
 
   return enabled ? band : null
 }

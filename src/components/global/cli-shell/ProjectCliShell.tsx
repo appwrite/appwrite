@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
@@ -72,36 +73,56 @@ export function ProjectCliShell() {
   }, [open, panelEverOpened])
 
   const shellRef = useRef<HTMLDivElement>(null)
-  const [hasFocusWithin, setHasFocusWithin] = useState(false)
-
-  // Native listeners: React focus events also bubble from portaled menus.
-  useEffect(() => {
-    const shell = shellRef.current
-    if (!shell) return
-    const handleFocusIn = () => setHasFocusWithin(true)
-    const handleFocusOut = (event: FocusEvent) => {
-      const next = event.relatedTarget
-      setHasFocusWithin(next instanceof Node && shell.contains(next))
-    }
-    shell.addEventListener('focusin', handleFocusIn)
-    shell.addEventListener('focusout', handleFocusOut)
-    return () => {
-      shell.removeEventListener('focusin', handleFocusIn)
-      shell.removeEventListener('focusout', handleFocusOut)
-    }
-  }, [])
-
   // The on-screen keyboard covers the bottom of the fixed app shell, where the
-  // docked (or `inset-0` fullscreen) panel sits. While typing, pin the panel to
-  // the band still visible above the keyboard.
-  const keyboardBand = useOnScreenKeyboardBand(open && hasFocusWithin)
+  // docked (or `inset-0` fullscreen) panel sits. While typing in the terminal,
+  // pin the panel to the band still visible above the keyboard.
+  const keyboardBand = useOnScreenKeyboardBand(shellRef, open)
 
   const showCollapsedBar = !open && !isCollapsing
   const isFullyCollapsed = showCollapsedBar && !fullscreen
   const isFullscreenOpen = open && fullscreen
-  const isOverlay = isFullscreenOpen || keyboardBand !== null
   const containerHeight =
     open && !fullscreen ? height : CLI_SHELL_COLLAPSED_HEIGHT_PX
+
+  const [dockedSlot, setDockedSlot] = useState<{
+    left: number
+    width: number
+  } | null>(null)
+  const pinsDockedPanel = keyboardBand !== null && !isFullscreenOpen
+
+  // A docked pin keeps the slot's horizontal bounds (the parent stays in flow).
+  // Going full width can cross CliTerminalResizableLayout's strip/sidebar
+  // breakpoint, which remounts the terminals and drops focus.
+  useLayoutEffect(() => {
+    const slot = shellRef.current?.parentElement
+    if (!pinsDockedPanel || !slot) {
+      setDockedSlot(null)
+      return
+    }
+    const measure = () => {
+      const { left, width } = slot.getBoundingClientRect()
+      setDockedSlot((prev) =>
+        prev?.left === left && prev?.width === width ? prev : { left, width },
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(slot)
+    return () => observer.disconnect()
+  }, [pinsDockedPanel])
+
+  const keyboardPin =
+    keyboardBand && (isFullscreenOpen || dockedSlot)
+      ? {
+          top: keyboardBand.top,
+          bottom: 'auto',
+          height: keyboardBand.height,
+          ...(!isFullscreenOpen && dockedSlot
+            ? { left: dockedSlot.left, right: 'auto', width: dockedSlot.width }
+            : null),
+        }
+      : null
+  const isOverlay = isFullscreenOpen || keyboardPin !== null
 
   return (
     <div
@@ -117,18 +138,13 @@ export function ProjectCliShell() {
             ),
       )}
       style={
-        keyboardBand
-          ? {
-              top: keyboardBand.top,
-              bottom: 'auto',
-              height: keyboardBand.height,
-            }
-          : isFullscreenOpen
-            ? undefined
-            : {
-                height: containerHeight,
-                transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
-              }
+        keyboardPin ??
+        (isFullscreenOpen
+          ? undefined
+          : {
+              height: containerHeight,
+              transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
+            })
       }
     >
       {panelEverOpened ? (
@@ -151,7 +167,7 @@ export function ProjectCliShell() {
         >
           <ProjectCliShellPanel
             onResizingChange={setIsResizing}
-            keyboardPinned={keyboardBand !== null}
+            keyboardPinned={keyboardPin !== null}
           />
         </div>
       ) : null}
