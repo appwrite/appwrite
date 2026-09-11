@@ -46,7 +46,7 @@ class Complete extends Action
             $state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
         }
 
-        @updateExpiresAt(Server::INSTALLER_COMPLETE_FILE);
+        @touch(Server::INSTALLER_COMPLETE_FILE);
 
         $progressData = ($installId !== '') ? $state->readProgressFile($installId) : [];
 
