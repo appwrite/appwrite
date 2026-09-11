@@ -3,15 +3,11 @@ import { OAuthProvider } from '@appwrite.io/console'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import {
-  QUICK_SETUP_CALLBACK_PATH,
   buildCredentialName,
   buildQuickSetupOAuthUrls,
-  buildQuickSetupReturnPath,
   defaultSenderEmail,
   emailBelongsToDomain,
-  isExpectedQuickSetupClaim,
   isProviderTokenExpired,
-  isSafeQuickSetupReturnPath,
   parseOAuthErrorMessage,
   parseQuickSetupReturn,
   pickDefaultQuickSetupDomain,
@@ -54,119 +50,32 @@ describe('isProviderTokenExpired', () => {
 })
 
 describe('OAuth2 round trip', () => {
-  test('sends the provider to the callback route, not the settings tab', () => {
-    const urls = buildQuickSetupOAuthUrls(
-      'https://cloud.appwrite.io',
-      'my project',
-      'resend',
-    )
-    // Appwrite deletes the current session when the flow starts, so the
-    // landing route must tolerate guests and restore it.
+  test('returns the provider to the page that started the flow', () => {
+    // The token flow keeps the console session, so the provider comes back to
+    // the page itself instead of an intermediate route that restores it.
+    const returnUrl =
+      'https://cloud.appwrite.io/projects/proj/messaging/providers/create'
+    const urls = buildQuickSetupOAuthUrls(returnUrl, 'resend')
+
     expect(urls.success).toBe(
-      `https://cloud.appwrite.io${QUICK_SETUP_CALLBACK_PATH}?smtpSetup=connected&smtpProvider=resend&projectId=my%20project`,
+      `${returnUrl}?smtpSetup=connected&smtpProvider=resend`,
     )
     expect(urls.failure).toBe(
-      `https://cloud.appwrite.io${QUICK_SETUP_CALLBACK_PATH}?smtpSetup=failed&smtpProvider=resend&projectId=my%20project`,
+      `${returnUrl}?smtpSetup=failed&smtpProvider=resend`,
     )
-    expect(urls.success).not.toContain('/settings/smtp')
   })
 
-  test('returns the user to the SMTP tab with the outcome', () => {
-    expect(
-      buildQuickSetupReturnPath({
-        projectId: 'my project',
-        providerId: 'resend',
-        status: 'connected',
-      }),
-    ).toBe(
-      '/projects/my%20project/settings/smtp?smtpSetup=connected&smtpProvider=resend',
-    )
-
-    const failed = buildQuickSetupReturnPath({
-      projectId: 'proj',
-      providerId: 'resend',
-      status: 'failed',
-      error: JSON.stringify({ message: 'Scope not allowed' }),
-    })
-    expect(
-      parseQuickSetupReturn(
-        Object.fromEntries(
-          new URL(`https://console.test${failed}`).searchParams,
-        ),
-      ),
-    ).toEqual({
-      status: 'failed',
-      providerId: 'resend',
-      message: 'Scope not allowed',
-    })
-  })
-
-  test('carries the starting page through the round trip', () => {
-    const returnPath = '/projects/proj/messaging/providers/create'
+  test('appends the outcome to a return URL that already has a query', () => {
     const urls = buildQuickSetupOAuthUrls(
-      'https://cloud.appwrite.io',
-      'proj',
+      'https://cloud.appwrite.io/projects/proj/settings/smtp?tab=custom',
       'resend',
-      returnPath,
     )
-    expect(urls.success).toContain(
-      `&returnTo=${encodeURIComponent(returnPath)}`,
-    )
-
-    expect(
-      buildQuickSetupReturnPath({
-        projectId: 'proj',
-        providerId: 'resend',
-        status: 'connected',
-        returnPath,
-      }),
-    ).toBe(`${returnPath}?smtpSetup=connected&smtpProvider=resend`)
-
-    // A return path that already carries search state gets the outcome appended.
-    expect(
-      buildQuickSetupReturnPath({
-        projectId: 'proj',
-        providerId: 'resend',
-        status: 'connected',
-        returnPath: '/projects/proj/settings/smtp?tab=custom',
-      }),
-    ).toBe(
-      '/projects/proj/settings/smtp?tab=custom&smtpSetup=connected&smtpProvider=resend',
+    expect(urls.success).toBe(
+      'https://cloud.appwrite.io/projects/proj/settings/smtp?tab=custom&smtpSetup=connected&smtpProvider=resend',
     )
   })
 
-  test('refuses open redirects and falls back to the SMTP tab', () => {
-    expect(isSafeQuickSetupReturnPath('/projects/proj/settings/smtp')).toBe(
-      true,
-    )
-    expect(isSafeQuickSetupReturnPath('https://evil.example')).toBe(false)
-    expect(isSafeQuickSetupReturnPath('//evil.example')).toBe(false)
-    expect(isSafeQuickSetupReturnPath('/x?next=https://evil.example')).toBe(
-      false,
-    )
-    expect(isSafeQuickSetupReturnPath('projects/proj')).toBe(false)
-
-    const urls = buildQuickSetupOAuthUrls(
-      'https://cloud.appwrite.io',
-      'proj',
-      'resend',
-      '//evil.example',
-    )
-    expect(urls.success).not.toContain('returnTo')
-
-    expect(
-      buildQuickSetupReturnPath({
-        projectId: 'proj',
-        providerId: 'resend',
-        status: 'connected',
-        returnPath: 'https://evil.example/',
-      }),
-    ).toBe(
-      '/projects/proj/settings/smtp?smtpSetup=connected&smtpProvider=resend',
-    )
-  })
-
-  test('parses the outcome on the settings tab', () => {
+  test('parses the outcome on return', () => {
     expect(
       parseQuickSetupReturn({ smtpSetup: 'connected', smtpProvider: 'resend' }),
     ).toEqual({ status: 'connected', providerId: 'resend' })
@@ -197,41 +106,19 @@ describe('OAuth2 round trip', () => {
     expect(parseQuickSetupReturn(undefined)).toBeNull()
   })
 
-  test('strips only the round-trip params', () => {
+  test('strips the round-trip params, including the unused login token', () => {
     expect(
       stripQuickSetupReturn({
         smtpSetup: 'connected',
         smtpProvider: 'resend',
         error: 'e',
+        // Appended by Appwrite's token flow; never used and never left in the URL.
+        userId: 'user_1',
+        secret: 'jwt.token.value',
         alert: 'keep-me',
       }),
     ).toEqual({ alert: 'keep-me' })
     expect(stripQuickSetupReturn(null)).toEqual({})
-  })
-
-  test('claims only callbacks this browser started for this account', () => {
-    const pending = {
-      providerId: 'resend',
-      projectId: 'proj',
-      accountId: 'user_1',
-    }
-    const claim = {
-      providerId: 'resend',
-      projectId: 'proj',
-      userId: 'user_1',
-    }
-    expect(isExpectedQuickSetupClaim(pending, claim)).toBe(true)
-    // No pending record: a crafted callback URL must not create a session.
-    expect(isExpectedQuickSetupClaim(null, claim)).toBe(false)
-    expect(
-      isExpectedQuickSetupClaim(pending, { ...claim, userId: 'attacker' }),
-    ).toBe(false)
-    expect(
-      isExpectedQuickSetupClaim(pending, { ...claim, projectId: 'other' }),
-    ).toBe(false)
-    expect(
-      isExpectedQuickSetupClaim(pending, { ...claim, providerId: 'mailgun' }),
-    ).toBe(false)
   })
 })
 

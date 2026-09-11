@@ -88,7 +88,6 @@ type Phase =
   | 'error'
 
 interface ResendOneClickSetupProps {
-  projectId: string
   projectName: string
   /** Current wizard values, so filling does not clobber what the user typed. */
   values: Record<string, unknown>
@@ -99,8 +98,6 @@ interface ResendOneClickSetupProps {
     fromName?: string
     fromEmail?: string
   }) => void
-  /** Path to come back to after authorizing. */
-  returnPath: string
   /** Run the flow on mount, used when returning from authorization. */
   autoStart?: boolean
 }
@@ -110,16 +107,14 @@ interface ResendOneClickSetupProps {
  * then let Appwrite mint a sending-only API key for a verified domain and fill
  * the wizard's API key and sender fields.
  *
- * Same credentials and refresh rules as the project SMTP one-click setup; the
- * difference is what gets filled, since this provider sends through Resend's
- * API rather than the SMTP relay.
+ * Same credentials and reconnect rules as the project SMTP one-click setup;
+ * the difference is what gets filled, since this provider sends through
+ * Resend's API rather than the SMTP relay.
  */
 export function ResendOneClickSetup({
-  projectId,
   projectName,
   values,
   onFill,
-  returnPath,
   autoStart = false,
 }: ResendOneClickSetupProps) {
   const t = useT()
@@ -198,7 +193,7 @@ export function ResendOneClickSetup({
         typeof values.fromEmail === 'string' ? values.fromEmail : undefined,
     })
     try {
-      startProviderAuthorization(provider, projectId, accountId, returnPath)
+      startProviderAuthorization(provider)
     } catch (error) {
       clearResendDraft()
       failWith(error, 'Failed to connect the email provider')

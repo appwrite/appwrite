@@ -32,35 +32,10 @@ export function isProviderTokenExpired(
 // OAuth2 round trip
 // ---------------------------------------------------------------------------
 
-/**
- * Appwrite deletes the caller's current session as soon as an OAuth2 flow
- * starts for a signed-in user (see the `$current` session delete in
- * `account.php`'s oauth2 redirect handler). With the token flow that leaves the
- * browser signed out until `account.createSession` runs, so the provider must
- * return to a route that tolerates guests and restores the session there.
- * Landing straight on the SMTP tab would bounce through /sign-in instead.
- */
-export const QUICK_SETUP_CALLBACK_PATH = '/auth/smtp/callback'
-
 /** Query param carrying the outcome of the round trip. */
 export const QUICK_SETUP_STATUS_PARAM = 'smtpSetup'
 /** Query param carrying which provider was authorized. */
 export const QUICK_SETUP_PROVIDER_PARAM = 'smtpProvider'
-/** Query param carrying the project to return to. */
-export const QUICK_SETUP_PROJECT_PARAM = 'projectId'
-/** Query param carrying the console path the flow started from. */
-export const QUICK_SETUP_RETURN_PARAM = 'returnTo'
-
-/**
- * Guards the return path against open redirects. Same rule as
- * `isValidRelativeRedirect`, inlined because this module stays dependency-free
- * for the server routes and the auth guard that import it.
- */
-export function isSafeQuickSetupReturnPath(path: string): boolean {
-  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://')
-}
-
-export type QuickSetupStatus = 'connected' | 'failed'
 
 export type QuickSetupReturn =
   | { status: 'connected'; providerId: string }
@@ -93,61 +68,31 @@ export function parseOAuthErrorMessage(error: unknown): string | undefined {
 }
 
 /**
- * Success and failure URLs handed to Appwrite. Both point at the callback
- * route; Appwrite appends `userId` + `secret` on success and `error` on
- * failure. The project and provider ride along so the callback knows where to
- * send the user once the session is back.
+ * Success and failure URLs handed to Appwrite. Both point back at the page the
+ * flow starts from: the token flow keeps the caller's console session, so the
+ * provider can return straight to a guarded console route.
+ *
+ * Appwrite appends `error` on failure, and `userId` + `secret` on success. The
+ * quick setup ignores that one-time token, because the same round trip writes a
+ * fresh provider access token onto the account's identity, which is what the
+ * flow reads. `stripQuickSetupReturn` drops it from the URL on arrival.
  */
 export function buildQuickSetupOAuthUrls(
-  origin: string,
-  projectId: string,
+  /** Absolute URL of the page to come back to. */
+  returnUrl: string,
   providerId: string,
-  /** Console path to come back to. Defaults to the project's SMTP settings. */
-  returnPath?: string,
 ): { success: string; failure: string } {
-  const base = `${origin}${QUICK_SETUP_CALLBACK_PATH}`
-  let shared =
-    `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}` +
-    `&${QUICK_SETUP_PROJECT_PARAM}=${encodeURIComponent(projectId)}`
-  if (returnPath && isSafeQuickSetupReturnPath(returnPath)) {
-    shared += `&${QUICK_SETUP_RETURN_PARAM}=${encodeURIComponent(returnPath)}`
-  }
+  const separator = returnUrl.includes('?') ? '&' : '?'
+  const provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
   return {
-    success: `${base}?${QUICK_SETUP_STATUS_PARAM}=connected&${shared}`,
-    failure: `${base}?${QUICK_SETUP_STATUS_PARAM}=failed&${shared}`,
+    success: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=connected&${provider}`,
+    failure: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=failed&${provider}`,
   }
 }
 
 /**
- * Where the callback sends the user once the console session is restored:
- * the page that started the flow, or the project's SMTP settings by default.
- */
-export function buildQuickSetupReturnPath(options: {
-  projectId: string
-  providerId: string
-  status: QuickSetupStatus
-  /** Raw `error` value from Appwrite, forwarded so the page can show it. */
-  error?: string
-  /** Console path the flow started from; ignored when it is not relative. */
-  returnPath?: string
-}): string {
-  const params = new URLSearchParams({
-    [QUICK_SETUP_STATUS_PARAM]: options.status,
-    [QUICK_SETUP_PROVIDER_PARAM]: options.providerId,
-  })
-  if (options.error) params.set('error', options.error)
-
-  const base =
-    options.returnPath && isSafeQuickSetupReturnPath(options.returnPath)
-      ? options.returnPath
-      : `/projects/${encodeURIComponent(options.projectId)}/settings/smtp`
-  return `${base}${base.includes('?') ? '&' : '?'}${params.toString()}`
-}
-
-/**
- * Read the outcome from the SMTP tab's search params. Returns `null` when the
- * page was not reached through a quick setup round trip. The one-time token
- * never reaches this page: the callback route consumes it.
+ * Read the outcome from the page's search params. Returns `null` when the page
+ * was not reached through a quick setup round trip.
  */
 export function parseQuickSetupReturn(
   search: unknown,
@@ -178,80 +123,12 @@ export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
   delete next[QUICK_SETUP_STATUS_PARAM]
   delete next[QUICK_SETUP_PROVIDER_PARAM]
   delete next.error
+  // Appwrite's token flow also appends a one-time login token that the quick
+  // setup never uses. Drop it so it does not linger in the address bar, the
+  // history entry, or a referrer header.
+  delete next.userId
+  delete next.secret
   return next
-}
-
-// ---------------------------------------------------------------------------
-// Pending flow state
-// ---------------------------------------------------------------------------
-
-/**
- * Recorded before leaving for the provider so the callback can prove this
- * browser started the flow. Without it, opening a crafted callback URL would
- * create a session from attacker-supplied credentials.
- */
-export interface QuickSetupPending {
-  providerId: string
-  projectId: string
-  /** Console account that started the flow; the claim must come back for it. */
-  accountId: string
-}
-
-const PENDING_STORAGE_KEY = 'smtp.quickSetup.pending'
-
-export function rememberQuickSetupPending(pending: QuickSetupPending): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending))
-  } catch {
-    // Private mode: the callback falls back to refusing the claim.
-  }
-}
-
-export function readQuickSetupPending(): QuickSetupPending | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = window.sessionStorage.getItem(PENDING_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<QuickSetupPending>
-    if (
-      typeof parsed?.providerId === 'string' &&
-      typeof parsed?.projectId === 'string' &&
-      typeof parsed?.accountId === 'string'
-    ) {
-      return parsed as QuickSetupPending
-    }
-  } catch {
-    // Corrupt entry is treated as absent.
-  }
-  return null
-}
-
-export function clearQuickSetupPending(): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.removeItem(PENDING_STORAGE_KEY)
-  } catch {
-    // Nothing to clean up.
-  }
-}
-
-/**
- * True when a callback matches the flow this browser started: same provider,
- * same project, and a token issued for the same console account. Appwrite
- * links the identity to the signed-in user, so the ids always match on the
- * happy path; a mismatch means the callback was not ours to claim.
- */
-export function isExpectedQuickSetupClaim(
-  pending: QuickSetupPending | null,
-  claim: { providerId: string; projectId: string; userId: string },
-): boolean {
-  if (!pending) return false
-  return (
-    pending.providerId === claim.providerId &&
-    pending.projectId === claim.projectId &&
-    pending.accountId === claim.userId
-  )
 }
 
 // ---------------------------------------------------------------------------

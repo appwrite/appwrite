@@ -61,14 +61,13 @@ interface SmtpQuickSetupCardProps {
 /**
  * One-click SMTP setup for any provider in `lib/smtp/providers.ts`.
  *
- * Authorization leaves for the provider and comes back through
- * `/auth/smtp/callback`, which restores the console session (Appwrite drops it
- * when the OAuth2 flow starts) and returns here with `smtpSetup=connected`.
- * From there this card resolves the provider access token from any session
- * this account holds for the provider, refreshing it through `updateSession`.
- * Clicking a connected provider never leaves the page: if no session can
- * produce a token, the wizard says the authorization expired and the user
- * decides whether to reconnect. Tokens are kept in memory only.
+ * Authorization leaves for the provider and comes straight back to this tab
+ * with `smtpSetup=connected`, because the OAuth2 token flow keeps the console
+ * session. The same round trip leaves a short-lived provider access token on
+ * the account's identity, which is what this card reads. Clicking a connected
+ * provider whose token has expired does not bounce to the consent screen: the
+ * wizard says the authorization expired and the user decides whether to
+ * reconnect. Tokens are kept in memory only.
  */
 export function SmtpQuickSetupCard({
   projectId,
@@ -123,10 +122,9 @@ export function SmtpQuickSetupCard({
 
   const authorize = useCallback(
     (provider: AvailableSmtpQuickSetupProvider) => {
-      if (!accountId) return
       setIsConnecting(true)
       try {
-        startProviderAuthorization(provider, projectId, accountId)
+        startProviderAuthorization(provider)
       } catch (error) {
         setIsConnecting(false)
         toast.error(
@@ -134,7 +132,7 @@ export function SmtpQuickSetupCard({
         )
       }
     },
-    [accountId, projectId, t],
+    [t],
   )
 
   const callProvider = useCallback<ProviderApiCall>(
@@ -155,7 +153,7 @@ export function SmtpQuickSetupCard({
     [prime],
   )
 
-  // Pick the flow back up after `/auth/smtp/callback` restored the session.
+  // Pick the flow back up when the provider redirects back to this tab.
   useEffect(() => {
     if (!returnState) {
       handledReturnRef.current = false
@@ -175,7 +173,6 @@ export function SmtpQuickSetupCard({
 
     // The identity is new; account settings and the tile badge should show it.
     void queryClient.invalidateQueries({ queryKey: ['identities', 'account'] })
-    void queryClient.invalidateQueries({ queryKey: ['sessions', 'account'] })
 
     setIsConnecting(true)
     void (async () => {
@@ -201,8 +198,7 @@ export function SmtpQuickSetupCard({
 
     setIsConnecting(true)
     try {
-      // Reuses a live token, or refreshes one from any session this account
-      // holds for the provider.
+      // Reuses the access token the last authorization left on the identity.
       if (await openWizardFor(provider)) {
         setIsConnecting(false)
         return
@@ -220,7 +216,7 @@ export function SmtpQuickSetupCard({
 
       // First connection: the page unloads on redirect, so the tile stays
       // disabled until then.
-      startProviderAuthorization(provider, projectId, accountId)
+      startProviderAuthorization(provider)
     } catch (error) {
       setIsConnecting(false)
       toast.error(

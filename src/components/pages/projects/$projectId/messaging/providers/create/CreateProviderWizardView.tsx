@@ -674,10 +674,8 @@ export function CreateProviderWizardView() {
           {/* Needs the console's Resend OAuth2 provider, which only cloud has. */}
           {selected.id === 'resend' && isCloudProfile() ? (
             <ResendOneClickSetup
-              projectId={pid}
               projectName={project?.name ?? ''}
               values={values}
-              returnPath={`/projects/${pid}/messaging/providers/create`}
               autoStart={autoStartOneClick}
               onFill={(fields) =>
                 setValues((prev) => ({
