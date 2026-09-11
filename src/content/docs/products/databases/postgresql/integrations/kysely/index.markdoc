@@ -117,7 +117,8 @@ If you prefer not to use kysely-ctl, Kysely's built-in `Migrator` works the same
 
 ```ts
 import { promises as fs } from 'fs';
-import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
+import { FileMigrationProvider, Migrator } from 'kysely/migration';
 import * as path from 'path';
 import { Pool } from 'pg';
 
