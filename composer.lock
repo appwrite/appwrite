@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0de6ceea0738acc2df7824646c70f6b",
+    "content-hash": "7c0ea679d70fcde2e936cca98fc0fb13",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3037,11 +3037,17 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "dev-bulk-cache-load",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/monorepo.git",
-                "reference": "c340994cea9841853d7722488bde443ec9d3f629"
+                "url": "https://github.com/utopia-php/cache.git",
+                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/f808a39d018e1f325ac553b8de39798cae40c1f9",
+                "reference": "f808a39d018e1f325ac553b8de39798cae40c1f9",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -3050,12 +3056,43 @@
                 "utopia-php/pools": "^2.0",
                 "utopia-php/telemetry": "^0.4"
             },
+            "require-dev": {
+                "swoole/ide-helper": "^6.0"
+            },
+            "suggest": {
+                "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
+                "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
+                "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0)."
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Cache\\": "packages/cache/src/Cache"
+                    "Utopia\\Cache\\": "src/Cache"
                 }
-            }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple cache library to manage application cache storing, loading and purging",
+            "keywords": [
+                "cache",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/cache/issues",
+                "source": "https://github.com/utopia-php/cache/tree/5.0.3"
+            },
+            "time": "2026-09-11T08:23:02+00:00"
         },
         {
             "name": "utopia-php/cdn",
@@ -4045,11 +4082,17 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "2.1.999",
+            "version": "2.1.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/monorepo.git",
-                "reference": "appwrite-mqtt-poc"
+                "url": "https://github.com/utopia-php/messaging.git",
+                "reference": "99dfd12d5ba61d4bd677361de714411c13d9a01b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/99dfd12d5ba61d4bd677361de714411c13d9a01b",
+                "reference": "99dfd12d5ba61d4bd677361de714411c13d9a01b",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -4063,12 +4106,33 @@
                 "utopia-php/smtp": "^0.1",
                 "utopia-php/telemetry": "^0.4"
             },
+            "require-dev": {
+                "swoole/ide-helper": "^6.0"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Messaging\\": "packages/messaging/src/Utopia/Messaging"
+                    "Utopia\\Messaging\\": "src/Utopia/Messaging"
                 }
-            }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple, light and advanced PHP messaging library",
+            "keywords": [
+                "library",
+                "messaging",
+                "php",
+                "upf",
+                "utopia",
+                "utopia-php"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/messaging/issues",
+                "source": "https://github.com/utopia-php/messaging/tree/2.1.3"
+            },
+            "time": "2026-09-09T11:20:02+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8494,17 +8558,9 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/cache",
-            "version": "dev-bulk-cache-load",
-            "alias": "5.0.999",
-            "alias_normalized": "5.0.999.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/cache": 20,
         "utopia-php/http": 5,
         "utopia-php/mqtt": 20
     },
