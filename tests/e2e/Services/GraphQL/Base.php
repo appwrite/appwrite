@@ -1217,6 +1217,7 @@ trait Base
                         _id
                         _collectionId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_DOCUMENTS:
@@ -1269,6 +1270,7 @@ trait Base
                         _id
                         _tableId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_CUSTOM_ENTITY:
