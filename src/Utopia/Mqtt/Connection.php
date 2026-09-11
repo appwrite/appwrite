@@ -35,7 +35,9 @@ class Connection
     /**
      * Outbound QoS 1 deliveries awaiting a PUBACK, keyed by packet id. Each entry
      * keeps the topic and the durable sequence delivered, so the matching PUBACK
-     * can advance that topic's cursor. Emptied as acks arrive.
+     * can advance that topic's cursor. Emptied as acks arrive; the remaining entries
+     * are exactly this session's unacked gaps, used to advance the cursor only to the
+     * highest *contiguous* ack (Redis holds only the committed cursor, not the gaps).
      *
      * @var array<int, array{topic: string, sequence: int}>
      */
@@ -61,18 +63,35 @@ class Connection
     }
 
     /**
-     * Resolve a PUBACK to the delivery it acknowledges, removing it from the
-     * in-flight set. Returns the topic and sequence, or null for an unknown or
-     * duplicate ack.
+     * Resolve a PUBACK to the delivery it acknowledges, removing it from the in-flight
+     * set. Returns the topic, the acked sequence, and `cursor`: the highest sequence
+     * safe to persist — one below the lowest sequence still in flight for the topic, or
+     * this ack's sequence once nothing is pending. Advancing to `cursor` (not `sequence`)
+     * keeps a non-contiguous ack from skipping an earlier unacked message; the worst case
+     * is a harmless tail re-delivery on reconnect, never a lost message. Returns null for
+     * an unknown or duplicate ack.
      *
-     * @return array{topic: string, sequence: int}|null
+     * @return array{topic: string, sequence: int, cursor: int}|null
      */
     public function acknowledge(int $packetId): ?array
     {
         $delivery = $this->inflight[$packetId] ?? null;
         unset($this->inflight[$packetId]);
+        if ($delivery === null) {
+            return null;
+        }
 
-        return $delivery;
+        $topic = $delivery['topic'];
+        $pending = [];
+        foreach ($this->inflight as $entry) {
+            if ($entry['topic'] === $topic) {
+                $pending[] = $entry['sequence'];
+            }
+        }
+
+        $cursor = $pending === [] ? $delivery['sequence'] : (min($pending) - 1);
+
+        return ['topic' => $topic, 'sequence' => $delivery['sequence'], 'cursor' => $cursor];
     }
 
     public function setClientId(string $clientId): void
