@@ -44,32 +44,32 @@ $register->set('pools', function () {
         'scheme' => System::getEnv('_APP_DB_ADAPTER', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT', '5432'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => System::getEnv('_APP_REDIS_USER', ''),
-        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_REDIS_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_REDIS_PASS', '')),
     ]);
 
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
-        'user' => System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_DOCUMENTSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
-        'user' => System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', ''),
+        'user' => \rawurlencode(System::getEnv('_APP_DB_USER_VECTORSDB', '') ?: System::getEnv('_APP_DB_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_DB_PASS_VECTORSDB', '') ?: System::getEnv('_APP_DB_PASS', '')),
         'path' => System::getEnv('_APP_DB_SCHEMA_VECTORSDB', '') ?: System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
@@ -210,11 +210,11 @@ $register->set('pools', function () {
                         \PDO::ATTR_STRINGIFY_FETCHES => true
                     ));
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
+                    if ($dsnPass !== null && $dsnPass !== '') {
+                        $redis->auth($dsnUser !== null && $dsnUser !== '' ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
@@ -252,7 +252,12 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                $connection = new Queue\Connection\Redis(
+                                    $dsn->getHost(),
+                                    $dsn->getPort(),
+                                    $dsn->getUser() === '' ? null : $dsn->getUser(),
+                                    $dsn->getPassword() === '' ? null : $dsn->getPassword(),
+                                );
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
