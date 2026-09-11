@@ -323,7 +323,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     $projectId = (string) ($event['project'] ?? '');
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
-                    $sequence = (int) ($event['payload']['sequence'] ?? 0);
+                    $sequence = (int) ($event['sequence'] ?? 0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
                     // The broker is the sender on this hop (fan-out to subscribers), so the

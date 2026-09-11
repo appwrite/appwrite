@@ -127,6 +127,7 @@ class Mqtt extends MessagingAdapter
     {
         $message = $options['payload'] ?? '';
         $qos = $options['qos'] ?? 0;
+        $sequence = (int) ($options['sequence'] ?? 0);
 
         foreach ($channels as $topic) {
             $this->metrics->messagesPublished->add(1, ['qos' => $qos]);
@@ -134,6 +135,7 @@ class Mqtt extends MessagingAdapter
                 'project' => $projectId,
                 'topic' => $topic,
                 'qos' => $qos,
+                'sequence' => $sequence,
                 'payload' => base64_encode($message),
             ]));
         }
