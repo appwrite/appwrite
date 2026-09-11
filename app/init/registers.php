@@ -210,11 +210,11 @@ $register->set('pools', function () {
                         \PDO::ATTR_STRINGIFY_FETCHES => true
                     ));
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
-                        $redis->auth($dsnPass);
+                        $redis->auth($dsnUser ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
@@ -252,7 +252,12 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                $connection = new Queue\Connection\Redis(
+                                    $dsn->getHost(),
+                                    $dsn->getPort(),
+                                    $dsn->getUser() ?: null,
+                                    $dsn->getPassword() ?: null,
+                                );
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
