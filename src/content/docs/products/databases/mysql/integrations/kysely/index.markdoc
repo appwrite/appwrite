@@ -119,7 +119,8 @@ If you prefer not to use kysely-ctl, Kysely's built-in `Migrator` works the same
 
 ```ts
 import { promises as fs } from 'fs';
-import { FileMigrationProvider, Kysely, Migrator, MysqlDialect } from 'kysely';
+import { Kysely, MysqlDialect } from 'kysely';
+import { FileMigrationProvider, Migrator } from 'kysely/migration';
 import { createPool } from 'mysql2';
 import * as path from 'path';
 
