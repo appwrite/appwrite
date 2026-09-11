@@ -358,7 +358,9 @@ class Builds extends Action
 
                 // Commit and push
                 $commitMessage = \escapeshellarg('Create ' . $resource->getAttribute('name', '') . ' function');
-                $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                // Branch clones already created the local branch; commit clones
+                // have a detached HEAD. Both should commit on the cloned HEAD.
+                $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -B ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to push code repository: ' . $stderr);
