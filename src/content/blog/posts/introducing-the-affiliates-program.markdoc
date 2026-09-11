@@ -67,6 +67,8 @@ There’s no separate affiliate dashboard to manage. Everything lives in your Ap
 
 **3. Create your first invite link and share it.** Create an invite link for a campaign or channel and share it with your audience. Appwrite tracks visits and attributes signups made through that link.
 
+![The Create link dialog in the Appwrite Console, with an optional name and an auto-generated link ID](/images/blog/introducing-the-affiliates-program/create-link.avif)
+
 Create a separate link per channel instead of reusing one everywhere. A link named `youtube-auth-tutorial` and a link named `conf-workshop` cost nothing extra, and they tell you which audience actually converts.
 
 # Track referrals and earn Cloud credits 
@@ -74,6 +76,8 @@ Create a separate link per channel instead of reusing one everywhere. A link nam
 You can track your affiliate activity directly from the Appwrite Console. See how many people clicked your links, signed up, and upgraded to Pro, all in one place.
 
 You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when they're ready.
+
+![The Affiliates page in the Appwrite Console showing an active invite link and the Referrals section](/images/blog/introducing-the-affiliates-program/referral-link.avif)
 
 Attribution lasts for 180 days, so people have plenty of time to try Appwrite before deciding to upgrade.
 
