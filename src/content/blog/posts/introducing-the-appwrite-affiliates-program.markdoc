@@ -101,25 +101,6 @@ Here’s how the referral journey works:
 
 Only Pro upgrades generate a reward. Referrals that stay on the Free plan can still appear in your referral analytics as attributed signups.
 
-# Why the 180-day attribution window matters
-
-Short attribution windows don't always reflect how developers choose backend tools. Developers may discover a tool, try it on a project, and only decide to upgrade months later.
-
-The real path looks like this: a developer watches your tutorial, spins up a side project on the Free plan, builds for a couple of months, gets actual users, and then upgrades when limits start to bite. Under a 30-day window, you did all the work and the attribution was gone before the decision happened.
-
-**180 days covers the gap between discovery and the upgrade.** A developer can discover Appwrite, start building on the Free plan, and upgrade later without the referral expiring after only a few weeks.
-
-# Who the Appwrite Affiliates program is for
-
-The program is open to anyone with an Appwrite Cloud account, but it pays off most for people who already recommend tools as part of their work:
-
-* **Creators and educators** publishing tutorials, courses, or videos that use Appwrite for [auth](/products/auth), [databases](/products/databases), or [functions](/products/functions).
-* **Agencies and freelancers** who pick the backend for client projects and hand those projects over.
-* **Open source maintainers** shipping starters, templates, or boilerplates that developers clone and deploy.
-* **Community organizers** running workshops, hackathons, and meetups where attendees build something real.
-
-One honest caveat: rewards depend on Cloud Pro upgrades. If your audience self-hosts Appwrite, which is free and open source, you'll see signups without conversions. The same is true of audiences that build purely on the Free plan. Treat Affiliates as credits that offset your own Appwrite bill for work you're already doing, not as a revenue line. If your situation is different, our [Startups](/startups) and [Education](/education) programs may fit better.
-
 # Getting started with Appwrite Affiliates
 
 Appwrite Affiliates is available on Appwrite Cloud today. Open [Account, then Affiliates](/account/affiliates), create your first invite link, share Appwrite the way you already do, and start earning credits when the developers you refer upgrade to Pro.
@@ -129,6 +110,3 @@ We’re excited to finally give something back to the people who have helped App
 * [Appwrite Affiliates](/affiliates)
 * [Affiliates in your account](/account/affiliates)
 * [Appwrite pricing](/pricing)
-* [Announcing Appwrite Pro](/blog/post/announcing-appwrite-pro)
-* [Appwrite Startups program](/startups)
-* [Appwrite Education program](/education)
