@@ -60,7 +60,7 @@ iPhone Duo changes the shape of the canvas at runtime. Three things follow from 
 
 **Split View on iPhone.** iOS 27 lets two apps sit side by side on an iPhone for the first time. Your app is no longer guaranteed the full width of anything.
 
-**The system chrome moved.** Apple redesigned the Dynamic Island vertically and repositioned Home Screen controls and the Dock to the sides to preserve vertical content space. Anything you pinned to a hardcoded offset is now in the wrong place.
+**The system chrome moved.** Apple redesigned the Dynamic Island to sit vertically along the side of both displays, expanding when it needs to show Live Activities or alerts. Home Screen controls and the Dock also move to the sides to preserve vertical content space, so layouts that rely on hardcoded offsets may need to be adjusted.
 
 The closest existing analogue is Android's foldable line, which has had fold-state APIs for years. The difference is that Apple is shipping a single foldable with a single geometry, so you are targeting one device, not a fragmented category.
 
