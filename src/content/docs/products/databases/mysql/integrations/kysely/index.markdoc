@@ -15,10 +15,11 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. If `mysql2` does not infer TLS from the connection string, pass `ssl` options on the pool and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for migrations and CLI tools. Connections on Appwrite Cloud are encrypted with TLS. If `mysql2` does not infer TLS from the connection string, pass `ssl` options on the pool and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure Kysely {% #driver %}
 
@@ -60,11 +61,7 @@ export const db = new Kysely<Database>({ dialect });
 
 # Run migrations {% #migrate %}
 
-Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at the **direct** engine port (`3306`). Migrations issue DDL that needs a session-level connection rather than the transaction-mode pooler:
-
-```env
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at `DIRECT_URL` on the **direct** engine port (`3306`). Migrations issue DDL that needs a session-level connection rather than the transaction-mode pooler.
 
 Create `kysely.config.ts` (project root or `.config/`):
 
@@ -181,17 +178,9 @@ On long-running servers, create the `Kysely` instance once at module scope and r
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6033`) on the same hostname.
 
-Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
-
-```env
-# Runtime: pooler port
-DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
-
-# Migrations: direct connection to the engine
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
 
 Size the `mysql2` pool conservatively for serverless (often a `connectionLimit` of `1` or a small single-digit value per isolate). Prefer normal parameterized queries over session-scoped prepared statement workflows when you use transaction pooling. Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
 
