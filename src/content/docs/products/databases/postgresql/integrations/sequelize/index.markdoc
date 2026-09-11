@@ -10,16 +10,20 @@ Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [Seque
 You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
 {% /info %}
 
+{% info title="Sequelize 7" %}
+Appwrite connection URLs are the same on Sequelize 7. Packages move to `@sequelize/core` plus a dialect package such as `@sequelize/postgres` (the WikiRik/v7 direction). The examples below stay on the Sequelize 6 + `sequelize` / `pg` style that still covers most of the installed base.
+{% /info %}
+
 # Set the connection string {% #connection-string %}
 
 In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
 DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-Use `DATABASE_URL` for runtime traffic and `DIRECT_URL` for Sequelize CLI migrations. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for Sequelize CLI migrations. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
 
 # Install and configure Sequelize {% #driver %}
 
@@ -161,7 +165,7 @@ module.exports = {
 };
 ```
 
-Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/productss/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
 
 # Query with Sequelize {% #query %}
 
@@ -184,17 +188,9 @@ On long-running servers, create the Sequelize instance once at module scope and 
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
 
-The pooler defaults to **transaction mode** (PgBouncer-style multiplexing). That mode does not keep a backend connection across statements, so session-scoped prepared statements, advisory locks, `LISTEN`/`NOTIFY`, temporary tables, and `SET LOCAL` are unsafe. Keep Sequelize CLI migrations pointed at `DIRECT_URL`:
-
-```env
-# Runtime: pooled, transaction mode
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
-
-# Migrations: direct connection to the engine
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
+The pooler defaults to **transaction mode** (PgBouncer-style multiplexing). That mode does not keep a backend connection across statements, so session-scoped prepared statements, advisory locks, `LISTEN`/`NOTIFY`, temporary tables, and `SET LOCAL` are unsafe. Keep Sequelize CLI migrations pointed at `DIRECT_URL`.
 
 Keep the Sequelize `pool.max` small on serverless. If your application depends on session-level features, switch the pooler to **session mode** or use the direct port. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
 
