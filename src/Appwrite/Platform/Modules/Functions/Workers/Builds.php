@@ -275,10 +275,7 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-            $rootDirectory = \rtrim($rootDirectory, '/');
-            $rootDirectory = \ltrim($rootDirectory, '.');
-            $rootDirectory = \ltrim($rootDirectory, '/');
+            $rootDirectory = Deployments::rootDirectory($resource->getAttribute('providerRootDirectory', ''));
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -333,10 +330,7 @@ class Builds extends Action
             $templateReferenceType = $template->getAttribute('referenceType', '');
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-            $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+            $templateRootDirectory = Deployments::rootDirectory($template->getAttribute('rootDirectory', ''));
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -403,7 +397,7 @@ class Builds extends Action
                 $cloneOwner,
                 $cloneRepository,
                 $ref,
-                $resource->getAttribute('providerRootDirectory', ''),
+                $rootDirectory,
             );
 
             Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);

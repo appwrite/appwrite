@@ -391,6 +391,7 @@ trait Deployment
                     'providerCommitUrl' => $providerCommitUrl,
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
+                    'providerRootDirectory' => $resource->getAttribute('providerRootDirectory', ''),
                     'activate' => $activate,
                 ]);
 

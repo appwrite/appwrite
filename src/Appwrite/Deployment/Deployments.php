@@ -294,6 +294,22 @@ readonly class Deployments
     }
 
     /**
+     * Resolve the path forms a caller may store - '', '.', './docs', 'docs/' -
+     * to the plain subdirectory an artifact matches against a tree. Whole '.'
+     * segments go, not the character: ltrim('.github', '.') would deploy
+     * 'github'. '..' is left for the extractor to resolve.
+     */
+    public static function rootDirectory(string $rootDirectory): string
+    {
+        $segments = \array_filter(
+            \explode('/', $rootDirectory),
+            fn (string $segment) => $segment !== '' && $segment !== '.',
+        );
+
+        return \implode('/', $segments);
+    }
+
+    /**
      * The build command for a deployment: its buildCommands, wrapped for
      * sites with the framework's env and bundle commands.
      */
@@ -389,12 +405,12 @@ readonly class Deployments
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
         if (isset($source['clone'])) {
-            $subdir = \trim($source['subdir'] ?? '', '/');
+            $subdir = self::rootDirectory($source['subdir'] ?? '');
             $sourceArtifacts = [
                 new CloneArtifact(id: 'source', in: $source['clone'], out: 'source', ref: $source['ref'] ?? '', subdir: $subdir, headers: $source['headers'] ?? []),
             ];
         } elseif ($source !== null) {
-            $subdir = \trim($source['subdir'] ?? '', '/');
+            $subdir = self::rootDirectory($source['subdir'] ?? '');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
