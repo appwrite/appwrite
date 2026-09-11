@@ -5,8 +5,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "introducing-the-appwrite-affiliates-program",
     "href": "/blog/post/introducing-the-appwrite-affiliates-program",
-    "title": "Introducing the Appwrite Affiliates program",
-    "description": "Introducing Appwrite Affiliates, a new way to share Appwrite, track referrals, and earn Cloud credits when people you refer upgrade to Pro.",
+    "title": "Introducing the Affiliates program",
+    "description": "Introducing the Affiliates program, a new way to share Appwrite, track referrals, and earn Cloud credits when people you refer upgrade to Pro.",
     "date": "2026-09-11",
     "lastUpdated": "2026-09-11",
     "timeToRead": 5,
