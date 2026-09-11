@@ -143,7 +143,7 @@ Http::post('/v1/graphql/mutation')
                 $query = \get_object_vars($query);
             }
             if (!\is_array($query)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
             }
         }
 
@@ -202,7 +202,7 @@ Http::post('/v1/graphql')
                 $query = \get_object_vars($query);
             }
             if (!\is_array($query)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
             }
         }
 
