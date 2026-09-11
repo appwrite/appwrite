@@ -165,7 +165,7 @@ module.exports = {
 };
 ```
 
-Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/productss/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
 
 # Query with Sequelize {% #query %}
 
