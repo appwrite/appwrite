@@ -87,17 +87,19 @@ Because attribution lasts 180 days, developers have time to try Appwrite before 
 
 # How referral rewards and Cloud credits work
 
- When a referred user upgrades to Pro within the 180-day attribution window, you earn $15 in Appwrite Cloud credits. Rewards can be claimed from the Affiliates dashboard.
+When a referred user upgrades to Pro within the 180-day attribution window, you earn $15 in Appwrite Cloud credits. Rewards can be claimed from the Affiliates dashboard.
 
 Claiming asks you to pick an organization you own, and the credits are added there as organization credits that you can use on Appwrite Cloud.
 
-| Referral status | Meaning                                                                  |
-| --------------- | ------------------------------------------------------------------------ |
-| Pending         | Signed up through your link, still inside the window, no Pro upgrade yet |
-| Converted       | Upgraded to Pro, a $15 reward was created                                |
-| Expired         | The 180-day window closed without an upgrade                             |
+Here’s how the referral journey works:
 
-Only Pro upgrades generate a reward. A referral who stays on the Free plan forever costs you nothing, and it still shows up in your analytics as a signup you brought in.
+| Stage | What happens |
+| --- | --- |
+| Signup | Someone signs up through your invite link and is attributed to you |
+| Pro upgrade | They upgrade to Pro within 180 days and you earn a $15 reward |
+| No upgrade | If they don’t upgrade within the attribution window, no reward is generated |
+
+Only Pro upgrades generate a reward. Referrals that stay on the Free plan can still appear in your referral analytics as attributed signups.
 
 # Why the 180-day attribution window matters
 
