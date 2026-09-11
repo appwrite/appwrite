@@ -66,9 +66,9 @@ class URL
 
         $parts['port'] = isset($url['port']) ? ':' . $url['port'] : '';
 
-        $parts['user'] = isset($url['user']) ? \rawurlencode($url['user']) : '';
+        $parts['user'] = isset($url['user']) ? $url['user'] : '';
 
-        $parts['pass'] = !empty($url['pass']) ? ':' . \rawurlencode($url['pass']) : '';
+        $parts['pass'] = !empty($url['pass']) ? ':' . $url['pass'] : '';
 
         $parts['pass'] = ($parts['user'] || !empty($parts['pass'])) ? $parts['pass'] . '@' : '';
 
