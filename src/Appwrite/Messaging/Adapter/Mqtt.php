@@ -5,6 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Utopia\Mqtt\Connection;
+use Utopia\Mqtt\KeepAlive;
 use Utopia\Mqtt\Metrics;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\SubscriptionStore;
@@ -26,6 +27,9 @@ class Mqtt extends MessagingAdapter
     /** Telemetry instruments the handlers record connection and delivery outcomes on. */
     public readonly Metrics $metrics;
 
+    /** Keep-alive reaper wheel: connections register their deadline here, the tick drains it. */
+    public readonly KeepAlive $keepAlive;
+
     private ?SubscriptionStore $subscriptions = null;
 
     private ?PubSubPool $pubSubPool = null;
@@ -33,6 +37,7 @@ class Mqtt extends MessagingAdapter
     public function __construct(Telemetry $telemetry)
     {
         $this->metrics = new Metrics($telemetry);
+        $this->keepAlive = new KeepAlive();
     }
 
     /**
@@ -67,8 +72,13 @@ class Mqtt extends MessagingAdapter
     public function close(int $fd): void
     {
         $connection = $this->connections[$fd] ?? null;
-        if ($connection !== null && $connection->active) {
-            $this->metrics->connectionsActive->add(-1);
+        if ($connection !== null) {
+            if ($connection->active) {
+                $this->metrics->connectionsActive->add(-1);
+            }
+            if ($connection->wheelSlot > 0) {
+                $this->keepAlive->remove($fd, $connection->wheelSlot);
+            }
         }
         $this->unsubscribe($fd);
         unset($this->connections[$fd]);

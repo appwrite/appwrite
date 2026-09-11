@@ -34,7 +34,7 @@ final class MqttSubscriber
      * Enhanced-auth CONNECT. Returns the CONNACK reason code (0 = success); the broker
      * rejects with 0x87 (not authorized). Throws only on a transport failure.
      */
-    public function connect(string $projectId, string $credential, string $clientId, bool $cleanStart, string $authMethod = 'appwrite-jwt'): int
+    public function connect(string $projectId, string $credential, string $clientId, bool $cleanStart, string $authMethod = 'appwrite-jwt', int $keepAlive = 60): int
     {
         $errno = 0;
         $errstr = '';
@@ -49,7 +49,7 @@ final class MqttSubscriber
         $properties->add(new Property(Property::AUTHENTICATION_DATA, $credential));
         $properties->add(new Property(Property::USER, ['projectId' => $projectId]));
 
-        $this->write(V5::connect($clientId, 60, $cleanStart, $properties));
+        $this->write(V5::connect($clientId, $keepAlive, $cleanStart, $properties));
 
         $packet = $this->readPacket(microtime(true) + $this->connectTimeout);
         if ($packet === null || $packet->type !== Packet::CONNACK) {
@@ -135,6 +135,43 @@ final class MqttSubscriber
         }
 
         return $received;
+    }
+
+    /**
+     * Block until the broker closes the connection, or $timeout seconds elapse. Returns true
+     * if the broker closed it (keep-alive reap), false on timeout while still connected.
+     */
+    public function awaitClose(float $timeout): bool
+    {
+        if (!\is_resource($this->socket)) {
+            return true;
+        }
+
+        $deadline = microtime(true) + $timeout;
+        while (true) {
+            $remaining = $deadline - microtime(true);
+            if ($remaining <= 0) {
+                return false;
+            }
+
+            $read = [$this->socket];
+            $write = null;
+            $except = null;
+            $seconds = (int) $remaining;
+            $ready = @stream_select($read, $write, $except, $seconds, (int) (($remaining - $seconds) * 1_000_000));
+            if ($ready === false) {
+                return false;
+            }
+            if ($ready === 0) {
+                continue; // idle but still open
+            }
+
+            // Readable: a broker-closed socket reads '' at EOF; anything else keeps it open.
+            $chunk = @fread($this->socket, 1024);
+            if (($chunk === '' || $chunk === false) && feof($this->socket)) {
+                return true;
+            }
+        }
     }
 
     public function disconnect(): void

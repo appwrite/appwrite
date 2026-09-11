@@ -30,6 +30,15 @@ class Connection
     /** Counted as active (accepted CONNECT), for a balanced gauge. */
     public bool $active = false;
 
+    /** CONNECT keep-alive interval in seconds; 0 disables keep-alive (the client is never reaped). */
+    public int $keepAlive = 0;
+
+    /** Absolute unix deadline (fractional seconds) past which a silent client is reaped; 0 while disabled. */
+    public float $expiresAt = 0.0;
+
+    /** The keep-alive wheel bucket (second) this connection currently sits in; 0 when not scheduled. */
+    public int $wheelSlot = 0;
+
     private int $packetId = 0;
 
     /**
@@ -46,6 +55,17 @@ class Connection
     public function __construct(
         public readonly int $fd,
     ) {
+    }
+
+    /**
+     * Push the keep-alive deadline to KeepAlive::MULTIPLIER x the negotiated interval past
+     * $now — every inbound packet is liveness. No-op when keep-alive is disabled.
+     */
+    public function touch(float $now): void
+    {
+        if ($this->keepAlive > 0) {
+            $this->expiresAt = $now + $this->keepAlive * KeepAlive::MULTIPLIER;
+        }
     }
 
     /** Next outbound packet id, wrapping 1..65535 (0 is not allowed). */

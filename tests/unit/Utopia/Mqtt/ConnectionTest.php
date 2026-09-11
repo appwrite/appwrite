@@ -7,6 +7,7 @@ namespace Tests\Unit\Utopia\Mqtt;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Mqtt\Connection;
+use Utopia\Mqtt\KeepAlive;
 
 final class ConnectionTest extends TestCase
 {
@@ -15,6 +16,26 @@ final class ConnectionTest extends TestCase
         $connection = new Connection(1);
 
         $this->assertTrue($connection->cleanStart);
+    }
+
+    public function testTouchSetsTheDeadlineToKeepAliveTimesMultiplier(): void
+    {
+        $connection = new Connection(1);
+        $connection->keepAlive = 20;
+
+        $connection->touch(1000.0);
+
+        $this->assertSame(1000.0 + 20 * KeepAlive::MULTIPLIER, $connection->expiresAt);
+    }
+
+    public function testTouchIsANoOpWhenKeepAliveIsDisabled(): void
+    {
+        $connection = new Connection(1);
+        // keepAlive defaults to 0 (disabled).
+
+        $connection->touch(1000.0);
+
+        $this->assertEqualsWithDelta(0.0, $connection->expiresAt, PHP_FLOAT_EPSILON);
     }
 
     public function testClientSuppliedIdIsStoredVerbatim(): void

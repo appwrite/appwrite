@@ -5,6 +5,7 @@ use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
+use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -24,6 +25,7 @@ use Utopia\Mqtt\Handlers\Ping as PingHandler;
 use Utopia\Mqtt\Handlers\Puback as PubackHandler;
 use Utopia\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Utopia\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
+use Utopia\Mqtt\KeepAlive;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -240,6 +242,27 @@ $dispatcher = (new Dispatcher())
 $server->onStart(fn () => print("MQTT broker started\n"));
 
 $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register): void {
+    // Keep-alive reaper: every INTERVAL seconds drain the wheel's due buckets and close any
+    // client silent past its deadline (keepAlive x MULTIPLIER). A survivor whose deadline was
+    // pushed forward by recent traffic is rescheduled instead. onClose balances the gauge and
+    // forgets the fd. Per worker, since connections and the wheel are per worker.
+    Timer::tick(KeepAlive::INTERVAL * 1000, function () use ($server, $mqtt): void {
+        $now = microtime(true);
+
+        foreach ($mqtt->keepAlive->drain((int) $now) as $fd) {
+            $connection = $mqtt->connections[$fd] ?? null;
+            if ($connection === null || $connection->keepAlive <= 0) {
+                continue;
+            }
+
+            if ($connection->expiresAt <= $now) {
+                $server->close($fd);
+            } else {
+                $connection->wheelSlot = $mqtt->keepAlive->schedule($fd, $connection->expiresAt);
+            }
+        }
+    });
+
     go(function () use ($server, $mqtt, $register): void {
         $attempts = 0;
         while ($attempts < 300) {
@@ -343,6 +366,14 @@ $server->onReceive(function (int $fd, string $data) use (
 
     try {
         $dispatcher->dispatch($packetContainer, $packet->type);
+
+        // Every inbound packet is liveness: push the deadline forward (O(1), no wheel touch).
+        // The wheel is seeded once, when CONNECT establishes the interval; later packets only
+        // move the deadline and the reaper reschedules lazily when it visits the slot.
+        $connection->touch(microtime(true));
+        if ($packet->type === Packet::CONNECT && $connection->active && $connection->keepAlive > 0) {
+            $connection->wheelSlot = $mqtt->keepAlive->schedule($fd, $connection->expiresAt);
+        }
 
         // The identity, project and clean-start flag are populated by the CONNECT
         // handler during dispatch, so record them afterwards rather than as defaults.

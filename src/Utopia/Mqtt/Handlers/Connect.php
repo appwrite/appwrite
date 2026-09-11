@@ -42,7 +42,8 @@ class Connect extends Action
         $connection->protocol = $level;
         $offset += 1; // protocol level
         $offset += 1; // connect flags
-        $offset += 2; // keep alive
+        [$keepAlive, $offset] = Packet::readInt16($body, $offset); // keep alive (seconds)
+        $connection->keepAlive = $keepAlive;
 
         $connection->cleanStart = Packet::isCleanStart($body);
         Span::add('mqtt.clean_start', $connection->cleanStart);

@@ -112,6 +112,23 @@ final class MessagingMqttServerTest extends Scope
         }
     }
 
+    public function testKeepAliveReapsSilentClient(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        // Connect with a 1s keep-alive (reap deadline 1.5s) and then stay silent. The reaper
+        // must close the socket. Its tick period bounds detection, so allow generous slack.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-keepalive-' . $userId, cleanStart: true, keepAlive: 1));
+
+        try {
+            $this->assertTrue($subscriber->awaitClose(40.0), 'broker did not reap a silent client past its keep-alive');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     public function testGrantedQosIsCappedByTopicConfig(): void
     {
         $projectId = $this->getProject()['$id'];
