@@ -12,7 +12,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 
 # Set the connection string {% #connection-string %}
 
-Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection string in your environment. Never commit it:
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
@@ -26,7 +26,7 @@ Install Kysely and `mysql2`:
 
 ```bash
 npm install kysely mysql2
-npm install -D typescript
+npm install -D typescript kysely-ctl
 ```
 
 Create a typed database interface and a `Kysely` instance backed by `MysqlDialect`. Mark database-generated columns with `Generated<T>` so insert-only payloads typecheck:
@@ -60,13 +60,62 @@ export const db = new Kysely<Database>({ dialect });
 
 # Run migrations {% #migrate %}
 
-Use [kysely-ctl](https://github.com/kysely-org/kysely-ctl) or Kysely's `Migrator` against the **direct** engine port (`3306`). Migrations issue DDL that needs a session-level connection rather than the transaction-mode pooler:
+Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at the **direct** engine port (`3306`). Migrations issue DDL that needs a session-level connection rather than the transaction-mode pooler:
 
 ```env
 DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Example with the built-in migrator:
+Create `kysely.config.ts` (project root or `.config/`):
+
+```ts
+import { defineConfig } from 'kysely-ctl';
+
+export default defineConfig({
+  dialect: 'mysql2',
+  dialectConfig: {
+    uri: process.env.DIRECT_URL,
+    ssl: { rejectUnauthorized: true }
+  },
+  migrations: {
+    migrationFolder: 'migrations'
+  }
+});
+```
+
+Generate and apply migrations:
+
+```bash
+npx kysely migrate make create_users
+npx kysely migrate latest
+```
+
+A migration file that creates the `users` table:
+
+```ts
+import { Kysely, sql } from 'kysely';
+
+export async function up(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('users')
+    .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
+    .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
+    .addColumn('created_at', 'timestamp', (col) =>
+      col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`)
+    )
+    .execute();
+}
+
+export async function down(db: Kysely<any>): Promise<void> {
+  await db.schema.dropTable('users').execute();
+}
+```
+
+After the schema exists, you can optionally generate TypeScript types with [kysely-codegen](https://github.com/RobinBlomberg/kysely-codegen) (`npx kysely-codegen`) instead of hand-writing table interfaces. Keep `Generated<T>` on database-generated columns either way.
+
+### Alternate: Migrator API
+
+If you prefer not to use kysely-ctl, Kysely's built-in `Migrator` works the same way against `DIRECT_URL`:
 
 ```ts
 import { promises as fs } from 'fs';
@@ -97,27 +146,6 @@ await db.destroy();
 
 if (error) {
   throw error;
-}
-```
-
-A migration file that creates the `users` table:
-
-```ts
-import { Kysely, sql } from 'kysely';
-
-export async function up(db: Kysely<any>): Promise<void> {
-  await db.schema
-    .createTable('users')
-    .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
-    .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
-    .addColumn('created_at', 'timestamp', (col) =>
-      col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`)
-    )
-    .execute();
-}
-
-export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('users').execute();
 }
 ```
 
@@ -155,7 +183,7 @@ On long-running servers, create the `Kysely` instance once at module scope and r
 
 Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
 
-Keep the migrator pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
 
 ```env
 # Runtime: pooler port
@@ -173,7 +201,7 @@ Size the `mysql2` pool conservatively for serverless (often a `connectionLimit` 
 
 1. Create a branch from the API and read its `connectionString`.
 2. Export it as `DIRECT_URL` and `DATABASE_URL` for the preview or CI job.
-3. Run `migrateToLatest` (or kysely-ctl) and your test suite against the branch.
+3. Run `kysely migrate latest` (or `migrateToLatest`) and your test suite against the branch.
 4. Delete the branch when the job finishes.
 
 Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
