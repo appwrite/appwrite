@@ -18,7 +18,7 @@ Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. If `mysql2` does not infer TLS from the connection string, pass `ssl` options on the pool. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Connections on Appwrite Cloud are encrypted with TLS. If `mysql2` does not infer TLS from the connection string, pass `ssl` options on the pool and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure Kysely {% #driver %}
 
@@ -29,16 +29,16 @@ npm install kysely mysql2
 npm install -D typescript
 ```
 
-Create a typed database interface and a `Kysely` instance backed by `MysqlDialect`:
+Create a typed database interface and a `Kysely` instance backed by `MysqlDialect`. Mark database-generated columns with `Generated<T>` so insert-only payloads typecheck:
 
 ```ts
-import { Kysely, MysqlDialect } from 'kysely';
+import { Generated, Kysely, MysqlDialect } from 'kysely';
 import { createPool } from 'mysql2';
 
 interface UsersTable {
-  id: number;
+  id: Generated<number>;
   email: string;
-  created_at: Date;
+  created_at: Generated<Date>;
 }
 
 interface Database {
@@ -48,7 +48,7 @@ interface Database {
 const dialect = new MysqlDialect({
   pool: createPool({
     uri: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: true },
     connectionLimit: 10
   })
 });
@@ -56,7 +56,7 @@ const dialect = new MysqlDialect({
 export const db = new Kysely<Database>({ dialect });
 ```
 
-You can also pass discrete `host`, `port`, `user`, `password`, and `database` fields to `createPool` instead of `uri`.
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass discrete `host`, `port`, `user`, `password`, and `database` fields to `createPool` instead of `uri`.
 
 # Run migrations {% #migrate %}
 
@@ -78,7 +78,7 @@ const db = new Kysely({
   dialect: new MysqlDialect({
     pool: createPool({
       uri: process.env.DIRECT_URL,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: true }
     })
   })
 });
