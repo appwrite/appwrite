@@ -85,7 +85,7 @@ Because attribution lasts 180 days, developers have time to try Appwrite before 
 
 # How referral rewards and Cloud credits work
 
-A reward is created the moment a referred user upgrades to Pro inside the attribution window. It starts as **pending** and shows up on the overview as an amount ready to claim.
+ When a referred user upgrades to Pro within the 180-day attribution window, you earn $15 in Appwrite Cloud credits. Rewards can be claimed from the Affiliates dashboard.
 
 Claiming asks you to pick an organization you own, and the credits are added there as organization credits that you can use on Appwrite Cloud.
 
