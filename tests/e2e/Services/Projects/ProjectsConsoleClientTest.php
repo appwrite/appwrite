@@ -33,7 +33,7 @@ final class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -41,7 +41,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Project Test',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals('Project Test', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
@@ -119,7 +119,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testDeleteProjectWithMultiDB(): void
     {
         // Create a team and project
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -127,7 +127,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'MultiDB Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -226,7 +226,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testCreateDuplicateProject(): void
     {
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -234,7 +234,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Duplicate Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Create a project
@@ -277,7 +277,7 @@ final class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -285,13 +285,13 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Team 1',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals('Team 1', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
         $team1 = $team['body']['$id'];
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -299,7 +299,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Team 2',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals('Team 2', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
@@ -449,7 +449,7 @@ final class ProjectsConsoleClientTest extends Scope
         /**
          * Test pagination
          */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -457,7 +457,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Project Test 2',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals('Project Test 2', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
@@ -593,7 +593,7 @@ final class ProjectsConsoleClientTest extends Scope
     #[Group('projectsCRUD')]
     public function testListProjectsQuerySelect(): void
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -601,7 +601,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Query Select Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -854,7 +854,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testGetProject(): void
     {
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -862,7 +862,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Get Project Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         // Create a project
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -1572,7 +1572,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testUpdateProject(): void
     {
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1580,7 +1580,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Update Project Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Create a project
@@ -1724,7 +1724,7 @@ final class ProjectsConsoleClientTest extends Scope
         $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
 
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1732,7 +1732,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Create Project SMTP Tests Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Create a project
@@ -1920,14 +1920,14 @@ final class ProjectsConsoleClientTest extends Scope
         $smtpPassword = 'password';
 
         /** Create team */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => ID::unique(),
             'name' => 'Session Alert Locale Fallback Test Team',
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         /** Create project */
@@ -2263,7 +2263,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectInvalidateSessions(): void
     {
         // Create a team for the test project
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2271,7 +2271,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Session Invalidation Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         // Create a test project
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -2338,7 +2338,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth(): void
     {
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2346,7 +2346,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Update Project OAuth Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Create a project
@@ -2473,7 +2473,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectAuthStatus(): void
     {
         // Create a team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2481,7 +2481,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Update Project Auth Status Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Create a project
@@ -3590,7 +3590,7 @@ final class ProjectsConsoleClientTest extends Scope
 
     public function testUpdateProjectApiStatus(): void
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -3599,7 +3599,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Project Test',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -3683,7 +3683,7 @@ final class ProjectsConsoleClientTest extends Scope
 
     public function testUpdateProjectApiStatusRealtimeBackwardsCompat(): void
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -3692,7 +3692,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Project Test',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -3761,7 +3761,7 @@ final class ProjectsConsoleClientTest extends Scope
 
     public function testUpdateProjectServiceStatusAdmin(): array
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -3769,7 +3769,7 @@ final class ProjectsConsoleClientTest extends Scope
             'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
@@ -5761,7 +5761,7 @@ final class ProjectsConsoleClientTest extends Scope
         $data = [];
 
         // Create a team and a project
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -5769,7 +5769,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Amazing Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals('Amazing Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
@@ -5838,7 +5838,7 @@ final class ProjectsConsoleClientTest extends Scope
 
     public function testDeleteSharedProject(): void
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -6330,7 +6330,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testProjectLabels(): void
     {
         // Setup: Prepare team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -6338,7 +6338,7 @@ final class ProjectsConsoleClientTest extends Scope
             'name' => 'Query Select Test Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
         // Setup: Prepare project

@@ -6,6 +6,7 @@ use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
+use Utopia\OpenAPI\Model\Composition;
 
 abstract class Format
 {
@@ -394,16 +395,39 @@ abstract class Format
             ];
         }
 
-        // Single-key failed — try compound discriminator
-        return $this->getCompoundDiscriminator($models, $refPrefix);
+        return null;
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>
+     */
+    protected function getUnion(array $models, string $refPrefix, Composition $composition = Composition::ONE_OF): array
+    {
+        $discriminator = $this->getDiscriminator($models, $refPrefix);
+        if ($discriminator === null) {
+            $compound = $this->getCompoundSchema($models, $refPrefix);
+            if ($compound !== null) {
+                return $compound;
+            }
+        }
+
+        return \array_filter([
+            $composition->value => \array_map(fn (Model $model) => ['$ref' => $refPrefix . $model->getType()], $models),
+            'discriminator' => $discriminator,
+        ]);
     }
 
     /**
      * @param array<Model> $models
      * @return array<string, mixed>|null
      */
-    private function getCompoundDiscriminator(array $models, string $refPrefix): ?array
+    private function getCompoundSchema(array $models, string $refPrefix): ?array
     {
+        if (\count($models) < 2 || \array_intersect(...\array_map(fn (Model $model) => \array_keys($model->conditions), $models)) === []) {
+            return null;
+        }
+
         $allKeys = [];
         foreach ($models as $model) {
             foreach (\array_keys($model->conditions) as $key) {
@@ -417,9 +441,8 @@ abstract class Format
             return null;
         }
 
-        $primaryKey = $allKeys[0];
-        $primaryMapping = [];
-        $compoundMapping = [];
+        $branches = [];
+        $seen = [];
 
         foreach ($models as $model) {
             $rules = $model->getRules();
@@ -434,47 +457,68 @@ abstract class Format
                     return null;
                 }
 
-                $conditions[$key] = \is_bool($condition) ? ($condition ? 'true' : 'false') : (string) $condition;
+                $conditions[$key] = $condition;
             }
 
             if (empty($conditions)) {
                 return null;
             }
 
-            $ref = $refPrefix . $model->getType();
-            $compoundMapping[$ref] = $conditions;
-
-            // Best-effort single-key mapping — last model with this value wins (fallback)
-            if (isset($conditions[$primaryKey])) {
-                $primaryMapping[$conditions[$primaryKey]] = $ref;
-            }
-        }
-
-        // Verify compound uniqueness
-        $seen = [];
-        foreach ($compoundMapping as $conditions) {
-            $sig = \json_encode($conditions, JSON_THROW_ON_ERROR);
-            if (isset($seen[$sig])) {
+            $signature = $conditions;
+            \ksort($signature);
+            $signature = \json_encode($signature, JSON_THROW_ON_ERROR);
+            if (isset($seen[$signature])) {
                 return null;
             }
-            $seen[$sig] = true;
+            $seen[$signature] = true;
+
+            $branches[] = [Composition::ALL_OF->value => [
+                ['$ref' => $refPrefix . $model->getType()],
+                [
+                    'type' => 'object',
+                    'required' => \array_keys($conditions),
+                    'properties' => \array_map(fn (mixed $value) => ['enum' => [$value]], $conditions),
+                ],
+            ]];
         }
 
-        return \array_filter([
-            'propertyName' => $primaryKey,
-            'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
-            'x-mapping' => $compoundMapping,
-        ]);
+        // Broad String overlaps Email/Enum/Url/Ip, so these alternatives are
+        // inclusive. SDK consumers retain their most-specific-first selection.
+        return [Composition::ANY_OF->value => $branches];
     }
 
     protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
     {
-        if (isset($schema['enum'])) {
-            return \in_array($default, $schema['enum'], true);
+        if (isset($schema['enum']) && !\in_array($default, $schema['enum'], true)) {
+            return false;
         }
 
-        if (\is_array($schema['items'] ?? null) && isset($schema['items']['enum'])) {
-            return \is_array($default) && empty(\array_diff($default, $schema['items']['enum']));
+        // Named enums use titled oneOf branches; open enums additionally
+        // accept a free-string branch through anyOf.
+        foreach ([Composition::ONE_OF, Composition::ANY_OF] as $composition) {
+            if (!isset($schema[$composition->value])) {
+                continue;
+            }
+            $matches = 0;
+            foreach ($schema[$composition->value] as $branch) {
+                if ($this->shouldEmitDefaultForSchema($default, $branch)) {
+                    $matches++;
+                }
+            }
+            if ($composition === Composition::ONE_OF ? $matches !== 1 : $matches === 0) {
+                return false;
+            }
+        }
+
+        if (\is_array($schema['items'] ?? null)) {
+            if (!\is_array($default)) {
+                return false;
+            }
+            foreach ($default as $item) {
+                if (!$this->shouldEmitDefaultForSchema($item, $schema['items'])) {
+                    return false;
+                }
+            }
         }
 
         return true;
