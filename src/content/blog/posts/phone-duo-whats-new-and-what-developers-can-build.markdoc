@@ -116,7 +116,7 @@ To be fair about the tradeoff: none of this is unique to Appwrite. You can build
 
 # New app experiences you can build for iPhone Duo
 
-The interesting part is not fixing layouts. It is the experiences that need two displays or a hinge to exist at all.
+iPhone Duo also opens up new app experiences built around its two displays and foldable form factor.
 
 * **Side-by-side workflows.** A document and its comments, code and its preview, a chat and the thread you are referencing. Split View on iPhone makes these viable without a tablet.
 * **Presenter and viewer modes.** Show a translation, a menu, or a quote on the outer display while you keep controls on the inner one. Two audiences, one device.
