@@ -6,6 +6,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Messages\Push as PushMessage;
 use Utopia\Messaging\Priority;
@@ -57,14 +58,14 @@ class Appwrite extends PushAdapter
 
         foreach ($message->getTo() as $topic) {
             try {
-                $this->persist($topic, $payload);
+                $sequence = $this->persist($topic, $payload);
                 $this->broker->send(
                     $this->projectId,
                     [],
                     [],
                     [$topic],
                     [],
-                    ['payload' => $payload, 'qos' => $this->qos],
+                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
                 );
 
                 $response->incrementDeliveredTo();
@@ -77,11 +78,26 @@ class Appwrite extends PushAdapter
         return $response->toArray();
     }
 
-    private function persist(string $topic, string $payload): void
+    /**
+     * Append the notification to the ledger and return its per-topic sequence. Idempotent
+     * on (messageId, topic): a retry after a transient publish failure reuses the existing
+     * row and sequence instead of incrementing the topic counter or inserting a duplicate.
+     */
+    private function persist(string $topic, string $payload): int
     {
         $authorization = $this->dbForProject->getAuthorization();
 
-        $sequence = $authorization->skip(
+        $existing = $authorization->skip(
+            fn () => $this->dbForProject->findOne('appwrite_push_ledger', [
+                Query::equal('messageId', [$this->messageId]),
+                Query::equal('topic', [$topic]),
+            ])
+        );
+        if (!$existing->isEmpty()) {
+            return (int) $existing->getAttribute('sequence');
+        }
+
+        $sequence = (int) $authorization->skip(
             fn () => $this->dbForProject->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
         )->getAttribute('sequence');
 
@@ -95,6 +111,8 @@ class Appwrite extends PushAdapter
                 'sequence' => $sequence,
             ]))
         );
+
+        return $sequence;
     }
 
     /**
