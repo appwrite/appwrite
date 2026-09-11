@@ -171,9 +171,9 @@ class Base extends Action
         ]);
 
         // Build a plain (non-template) VCS deployment through $deployments.
-        // Template-into-repo pushes go through the Builds worker, which does the
-        // git write and then hands the build to the jobs-service itself.
-        if ($template->isEmpty()) {
+        // Template-into-repo pushes, and providers whose archive url carries no
+        // credential, go through the Builds worker, which clones instead.
+        if ($template->isEmpty() && $vcs->supportsAuthenticatedArchiveUrl()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $deployment = $deployments->createFromVcs(
                 $function,
@@ -398,9 +398,8 @@ class Base extends Action
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization, $bus);
 
-        // Plain VCS deployments build through $deployments; template-into-repo
-        // pushes go through the Builds worker (same split as redeployVcsFunction).
-        if ($template->isEmpty()) {
+        // Same split as redeployVcsFunction.
+        if ($template->isEmpty() && $vcs->supportsAuthenticatedArchiveUrl()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $deployment = $deployments->createFromVcs(
                 $site,
