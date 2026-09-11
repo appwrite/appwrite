@@ -72,6 +72,17 @@ export default new DataSource({
 
 `ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store when the driver does not rely solely on `sslmode=require` in the URL. Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port.
 
+Add short `package.json` script aliases so you do not retype the long CLI:
+
+```json
+{
+  "scripts": {
+    "typeorm:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts",
+    "typeorm:migrate": "typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts"
+  }
+}
+```
+
 Define an entity:
 
 ```ts
@@ -93,6 +104,13 @@ export class User {
 # Run migrations {% #migrate %}
 
 Point the TypeORM CLI at the migrations DataSource so it uses `DIRECT_URL`, not the pooler. Migrations issue DDL that needs a session-level connection:
+
+```bash
+npm run typeorm:generate
+npm run typeorm:migrate
+```
+
+Or call the CLI directly:
 
 ```bash
 npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
