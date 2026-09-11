@@ -3,8 +3,8 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
-    "slug": "introducing-the-appwrite-affiliates-program",
-    "href": "/blog/post/introducing-the-appwrite-affiliates-program",
+    "slug": "introducing-the-affiliates-program",
+    "href": "/blog/post/introducing-the-affiliates-program",
     "title": "Introducing the Affiliates program",
     "description": "Introducing the Affiliates program, a new way to share Appwrite, track referrals, and earn Cloud credits when people you refer upgrade to Pro.",
     "date": "2026-09-11",
@@ -14,7 +14,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "unlisted": false,
-    "cover": "/images/blog/introducing-the-appwrite-affiliates-program/cover.avif",
+    "cover": "/images/blog/introducing-the-affiliates-program/cover.avif",
     "hasCover": true
   },
   {
