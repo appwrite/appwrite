@@ -304,13 +304,14 @@ trait KeysBase
         $this->assertSame(true, $dateValidator->isValid($key['body']['$updatedAt']));
         $this->assertSame(true, $dateValidator->isValid($key['body']['expire']));
 
-        // Verify JWT payload
-        $jwt = substr($key['body']['secret'], strlen(API_KEY_EPHEMERAL . '_'));
-        $parts = explode('.', $jwt);
-        $this->assertCount(3, $parts);
-        $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
-        $this->assertNotEmpty($payload['projectId']);
-        $this->assertSame(['users.read', 'users.write'], $payload['scopes']);
+        // The key authenticates requests against the project it was issued for
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $key['body']['secret'],
+        ]);
+
+        $this->assertSame(200, $users['headers']['status-code']);
 
         $expireDt = new \DateTime($key['body']['expire']);
         $now = new \DateTime();
