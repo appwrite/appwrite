@@ -103,7 +103,7 @@ Short attribution windows don't always reflect how developers choose backend too
 
 The real path looks like this: a developer watches your tutorial, spins up a side project on the Free plan, builds for a couple of months, gets actual users, and then upgrades when limits start to bite. Under a 30-day window, you did all the work and the attribution was gone before the decision happened.
 
-**180 days covers the gap between discovery and the upgrade.** Attribution is last-click, so credit goes to the last invite link clicked before signup. Earlier clicks still appear in analytics, which means you can see the channels that contributed to a signup even when another link closed it.
+**180 days covers the gap between discovery and the upgrade.** A developer can discover Appwrite, start building on the Free plan, and upgrade later without the referral expiring after only a few weeks.
 
 # Who the Appwrite Affiliates program is for
 
