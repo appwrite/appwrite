@@ -13,7 +13,6 @@ use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Mqtt\Adapter;
@@ -213,71 +212,10 @@ if (!function_exists('getRedis')) {
     }
 }
 
-/**
- * Authenticate a CONNECT: resolve the project and verify the session in a child
- * container, using the same domain logic as HTTP/realtime. Returns the identity
- * for the connection, or an empty array when the credential is invalid.
- *
- * @return array{projectId: string, userId: string}|array{}
- */
-$authenticate = function (string $projectId, string $authMethod, string $credential) use ($container, $registerMqttConnectionResources): array {
-    $connectionContainer = new Container($container);
-    $connectionContainer->set('projectId', fn () => $projectId);
-    $connectionContainer->set('authMethod', fn () => $authMethod);
-    $connectionContainer->set('credential', fn () => $credential);
-
-    $registerMqttConnectionResources($connectionContainer);
-
-    /** @var Document $project */
-    $project = $connectionContainer->get('project');
-    /** @var User $user */
-    $user = $connectionContainer->get('user');
-
-    if ($project->isEmpty() || $user->isEmpty()) {
-        return [];
-    }
-
-    return [
-        'projectId' => $project->getId(),
-        'userId' => $user->getId(),
-    ];
-};
-
-/**
- * ACL for SUBSCRIBE: refuse blocked accounts. Re-checked per subscribe so a block
- * applied mid-connection takes effect on the next subscription.
- *
- * TODO: also authorize the topic itself — verify it maps to an existing messaging
- * Topic in the project (topics API/collection) and that this user is allowed on it.
- * A subscription to a non-existent or unauthorized topic should be denied. Deferred
- * until the topic subscription model is wired.
- */
-$authorize = function (array $identity, string $topic) use ($container, $registerMqttConnectionResources): bool {
-    $userId = $identity['userId'] ?? '';
-    $projectId = $identity['projectId'] ?? '';
-    if ($userId === '' || $projectId === '') {
-        return false;
-    }
-
-    $connectionContainer = new Container($container);
-    $connectionContainer->set('projectId', fn () => $projectId);
-    $registerMqttConnectionResources($connectionContainer);
-
-    /** @var Authorization $authorization */
-    $authorization = $connectionContainer->get('authorization');
-    /** @var Document $project */
-    $project = $connectionContainer->get('project');
-    if ($project->isEmpty()) {
-        return false;
-    }
-
-    $dbForProject = getProjectDB($project);
-    $dbForProject->setAuthorization($authorization);
-    $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
-
-    // status: true = enabled, false = blocked.
-    return !$user->isEmpty() && $user->getAttribute('status', true) !== false;
-};
+// Register the CONNECT authenticator and per-SUBSCRIBE authorizer on the global container
+// (see app/init/mqtt/connection.php). The CONNECT/SUBSCRIBE handlers inject them by name,
+// resolved through the packet container that inherits from this one.
+$registerMqttConnectionResources($container);
 
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
@@ -378,8 +316,6 @@ $server->onReceive(function (int $fd, string $data) use (
     $server,
     $mqtt,
     $dispatcher,
-    $authenticate,
-    $authorize,
     $container
 ): void {
     $packet = Packet::parse($data);
@@ -398,12 +334,11 @@ $server->onReceive(function (int $fd, string $data) use (
         }
     };
 
+    // authenticator/authorizer are inherited from the global container (registered above).
     $packetContainer = new Container($container);
     $packetContainer->set('mqtt', fn () => $mqtt);
     $packetContainer->set('connection', fn () => $connection);
     $packetContainer->set('packet', fn () => $packet);
-    $packetContainer->set('authenticator', fn () => $authenticate);
-    $packetContainer->set('authorizer', fn () => $authorize);
     $packetContainer->set('reply', fn () => $reply);
 
     try {
