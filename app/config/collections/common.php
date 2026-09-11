@@ -2290,6 +2290,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_message_topic'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['messageId', 'topic'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ],
         ],
     ],
 
