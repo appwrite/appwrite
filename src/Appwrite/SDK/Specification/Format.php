@@ -540,7 +540,8 @@ abstract class Format
             'nullable' => $nullable,
         ];
 
-        $config['emitDefault'] = !$config['required'] && !\is_null($default);
+        // A closure default is resolved per request from injected resources and has no spec representation.
+        $config['emitDefault'] = !$config['required'] && !\is_null($default) && !($default instanceof \Closure);
 
         return $config;
     }

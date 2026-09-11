@@ -13,7 +13,7 @@ return [
     'project.createWindowsPlatform' => true,
     'project.createLinuxPlatform' => true,
     // Connect — API key
-    'project.createKey' => true,
+    'organization.createProjectKey' => true,
 
     // Auth
     'users.create' => true,

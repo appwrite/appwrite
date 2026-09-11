@@ -1,11 +1,10 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
+namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -24,7 +23,7 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 
@@ -35,23 +34,25 @@ class Update extends Base
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
-            ->setHttpPath('/v1/project/keys/:keyId')
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
+            ->httpAlias('/v1/project/keys/:keyId')
             ->httpAlias('/v1/projects/:projectId/keys/:keyId')
             ->desc('Update project key')
-            ->groups(['api', 'project'])
+            ->groups(['api', 'organization'])
             ->label('scope', 'keys.write')
             ->label('event', 'keys.[keyId].update')
             ->label('audits.event', 'project.key.update')
             ->label('audits.resource', 'project.key/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'project',
+                namespace: 'organization',
                 group: 'keys',
-                name: 'updateKey',
+                name: 'updateProjectKey',
                 description: <<<EOT
-                Update a key by its unique ID. Use this endpoint to update the name, scopes, or expiration time of an API key.
+                Update a project key by its unique ID. Use this endpoint to update the name, scopes, or expiration time of an API key.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -59,6 +60,7 @@ class Update extends Base
                     )
                 ]
             ))
+            ->param('projectId', fn (Document $project) => $project->getId(), new UID(), 'Project unique ID.', true, ['project'])
             ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, enum: new Enum(name: 'ProjectKeyScopes'))
@@ -66,12 +68,14 @@ class Update extends Base
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('team')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $projectId,
         string $keyId,
         string $name,
         array $scopes,
@@ -79,9 +83,12 @@ class Update extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
-        Document $project,
+        Document $team,
         Authorization $authorization,
+        ?Key $apiKey,
     ) {
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {

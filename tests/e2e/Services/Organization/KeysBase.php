@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Project;
+namespace Tests\E2E\Services\Organization;
 
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
@@ -8,6 +8,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait KeysBase
 {
@@ -105,7 +106,7 @@ trait KeysBase
             'x-appwrite-mode' => 'admin',
         ];
 
-        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $headers, [
+        $key = $this->client->call(Client::METHOD_POST, $this->keysPath(), $headers, [
             'keyId' => ID::unique(),
             'name' => 'V22 Compat Key',
             'scopes' => null,
@@ -136,7 +137,7 @@ trait KeysBase
         ];
         $headers = array_merge($headers, $this->getHeaders());
 
-        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $headers, [
+        $updated = $this->client->call(Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, $headers, [
             'name' => 'V22 Update Compat Key',
             'scopes' => null,
         ]);
@@ -245,7 +246,7 @@ trait KeysBase
     public function testCreateKeyRequiresSession(): void
     {
         // A request authorized with a standard API key cannot create a key
-        $response = $this->client->call(Client::METHOD_POST, '/project/keys', [
+        $response = $this->client->call(Client::METHOD_POST, $this->keysPath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -262,7 +263,7 @@ trait KeysBase
         $ephemeral = $this->createEphemeralKey(['keys.read', 'keys.write'], 900);
         $this->assertSame(201, $ephemeral['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/project/keys', [
+        $response = $this->client->call(Client::METHOD_POST, $this->keysPath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $ephemeral['body']['secret'],
@@ -900,8 +901,257 @@ trait KeysBase
     }
 
     // =========================================================================
+    // Organization scope tests
+    // =========================================================================
+
+    public function testListKeysWithOrganizationHeader(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'Organization Header Key',
+            ['users.read'],
+        );
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $headers = $this->getOrganizationHeaders($this->getTeamId());
+
+        /**
+         * Test for SUCCESS
+         */
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
+
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Organization Header Key', $get['body']['name']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, $headers, [
+            'name' => 'Organization Header Key Updated',
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Organization Header Key Updated', $updated['body']['name']);
+
+        $created = $this->client->call(Client::METHOD_POST, $this->keysPath(), $headers, [
+            'keyId' => ID::unique(),
+            'name' => 'Organization Header Created Key',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertNotEmpty($created['body']['secret']);
+
+        $ephemeral = $this->client->call(Client::METHOD_POST, $this->keysPath() . '/ephemeral', $headers, [
+            'scopes' => ['users.read'],
+            'duration' => 900,
+        ]);
+
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $ephemeral['body']['secret']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, $this->keysPath() . '/' . $created['body']['$id'], $headers);
+
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - missing organization header
+         */
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $this->getConsoleHeaders());
+
+        $this->assertSame(401, $list['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
+    public function testListKeysFromOtherOrganization(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'Other Organization Key',
+            ['users.read'],
+        );
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $otherTeam = $this->createTeamFixture($this->getConsoleHeaders(), [
+            'teamId' => ID::unique(),
+            'name' => 'Other Organization',
+        ]);
+        $this->assertSame(200, $otherTeam['headers']['status-code']);
+
+        $headers = $this->getOrganizationHeaders($otherTeam['body']['$id']);
+
+        /**
+         * Test for FAILURE - project belongs to another organization
+         */
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers);
+
+        $this->assertSame(404, $list['headers']['status-code']);
+        $this->assertSame('project_not_found', $list['body']['type']);
+
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers);
+
+        $this->assertSame(404, $get['headers']['status-code']);
+        $this->assertSame('project_not_found', $get['body']['type']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, $this->keysPath() . '/' . $keyId, $headers);
+
+        $this->assertSame(404, $delete['headers']['status-code']);
+        $this->assertSame('project_not_found', $delete['body']['type']);
+
+        // Verify the key still exists
+        $get = $this->getKey($keyId);
+        $this->assertSame(200, $get['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
+    public function testListKeysWithSiblingProjectKey(): void
+    {
+        $sibling = $this->client->call(Client::METHOD_POST, '/projects', $this->getConsoleHeaders(), [
+            'projectId' => ID::unique(),
+            'name' => 'Sibling Project',
+            'teamId' => $this->getTeamId(),
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertSame(201, $sibling['headers']['status-code']);
+        $siblingId = $sibling['body']['$id'];
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        /**
+         * Test for SUCCESS - a project key reaches its own project
+         */
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - a project key must not reach a sibling project of the same organization
+         */
+        $list = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $siblingId . '/keys', $headers);
+
+        $this->assertSame(401, $list['headers']['status-code']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/projects/' . $siblingId . '/keys', $headers);
+
+        $this->assertSame(403, $list['headers']['status-code']);
+        $this->assertSame('project_id_missing', $list['body']['type']);
+
+        // Cleanup
+        $delete = $this->client->call(Client::METHOD_DELETE, '/projects/' . $siblingId, $this->getConsoleHeaders());
+        $this->assertSame(204, $delete['headers']['status-code']);
+    }
+
+    public function testListKeysLegacyPaths(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'Legacy Path Key',
+            ['users.read'],
+        );
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $projectId = $this->getProject()['$id'];
+
+        $projectHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS - /project/keys resolves the project from the request
+         */
+        $list = $this->client->call(Client::METHOD_GET, '/project/keys', $projectHeaders);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
+
+        $get = $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $projectHeaders);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Legacy Path Key', $get['body']['name']);
+
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
+            'scopes' => ['users.read'],
+            'duration' => 900,
+        ]);
+
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $ephemeral['body']['secret']);
+
+        /**
+         * Test for SUCCESS - /projects/:projectId/keys resolves the project from the path
+         */
+        $list = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/keys', $this->getConsoleHeaders());
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/jwts', $this->getConsoleHeaders(), [
+            'scopes' => ['users.read'],
+            'duration' => 900,
+        ]);
+
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $jwt['body']['secret']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
+
+    protected function keysPath(): string
+    {
+        return '/organization/projects/' . $this->getProject()['$id'] . '/keys';
+    }
+
+    protected function getTeamId(): string
+    {
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], $this->getConsoleHeaders());
+
+        $this->assertSame(200, $project['headers']['status-code']);
+
+        return $project['body']['teamId'];
+    }
+
+    /**
+     * Console session headers for the console project.
+     */
+    protected function getConsoleHeaders(): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+    }
+
+    /**
+     * Console session headers acting on behalf of an organization.
+     */
+    protected function getOrganizationHeaders(string $teamId): array
+    {
+        return array_merge($this->getConsoleHeaders(), [
+            'x-appwrite-organization' => $teamId,
+        ]);
+    }
 
     /**
      * @param array<string>|null $scopes
@@ -935,7 +1185,7 @@ trait KeysBase
             ]);
         }
 
-        return $this->client->call(Client::METHOD_POST, '/project/keys', $headers, $params);
+        return $this->client->call(Client::METHOD_POST, $this->keysPath(), $headers, $params);
     }
 
     /**
@@ -966,7 +1216,7 @@ trait KeysBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, $headers, $params);
     }
 
     protected function getKey(string $keyId, bool $authenticated = true): mixed
@@ -980,7 +1230,7 @@ trait KeysBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $headers);
+        return $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers);
     }
 
     /**
@@ -997,7 +1247,7 @@ trait KeysBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_GET, '/project/keys', $headers, [
+        return $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers, [
             'queries' => $queries,
             'total' => $total,
         ]);
@@ -1014,7 +1264,7 @@ trait KeysBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $keyId, $headers);
+        return $this->client->call(Client::METHOD_DELETE, $this->keysPath() . '/' . $keyId, $headers);
     }
 
     /**
@@ -1039,6 +1289,6 @@ trait KeysBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $headers, $params);
+        return $this->client->call(Client::METHOD_POST, $this->keysPath() . '/ephemeral', $headers, $params);
     }
 }

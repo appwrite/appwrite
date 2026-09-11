@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\Project;
+namespace Tests\E2E\Services\Organization;
 
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
