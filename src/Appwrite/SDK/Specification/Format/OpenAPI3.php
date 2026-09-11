@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
+use Utopia\OpenAPI\Model\Composition;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -513,10 +514,7 @@ class OpenAPI3 extends Format
                             'description' => $modelDescription,
                             'content' => [
                                 $produces => [
-                                    'schema' => \array_filter([
-                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model),
-                                        'discriminator' => $this->getDiscriminator($model, '#/components/schemas/'),
-                                    ]),
+                                    'schema' => $this->getUnion($model, '#/components/schemas/'),
                                 ],
                             ],
                         ];
@@ -1210,21 +1208,7 @@ class OpenAPI3 extends Format
                                 throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
                             }, $rule['type']);
 
-                            if ($rule['array']) {
-                                $items = \array_filter([
-                                    'anyOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            } else {
-                                $items = \array_filter([
-                                    'oneOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type']),
-                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
-                                ]);
-                            }
+                            $items = $this->getUnion($resolvedModels, '#/components/schemas/', $rule['array'] ? Composition::ANY_OF : Composition::ONE_OF);
                         } else {
                             $items = [
                                 '$ref' => '#/components/schemas/' . $rule['type'],

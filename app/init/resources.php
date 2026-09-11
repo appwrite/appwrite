@@ -306,12 +306,13 @@ $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $conf
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $user = System::getEnv('_APP_REDIS_USER', '');
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
     @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
+    if ($pass !== '') {
+        $redis->auth($user !== '' ? [$user, $pass] : $pass);
     }
     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
