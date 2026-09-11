@@ -234,6 +234,14 @@ class Swoole extends Adapter
         while (!$this->isStopped()) {
             $slots->push(true);
 
+            // The push blocks while every slot is busy, so a stop that landed
+            // during a handler is first seen here. Receiving now would claim
+            // a message the process was told not to take.
+            if ($this->isStopped()) {
+                $slots->pop();
+                break;
+            }
+
             $message = $this->nextMessage($errorCallback);
 
             if (!$message instanceof Message) {
@@ -286,6 +294,14 @@ class Swoole extends Adapter
 
         while (!$this->isStopped()) {
             $slots->push(true);
+
+            // The push blocks while every slot is busy, so a stop that landed
+            // during a handler is first seen here. Receiving now would claim
+            // a message the process was told not to take.
+            if ($this->isStopped()) {
+                $slots->pop();
+                break;
+            }
 
             $message = $this->nextMessageFrom($errorCallback, $queue, $consumer);
 

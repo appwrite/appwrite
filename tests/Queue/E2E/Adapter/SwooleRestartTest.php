@@ -112,21 +112,31 @@ final class SwooleRestartTest extends TestCase
 
     public static function stopSignals(): \Iterator
     {
-        yield 'SIGTERM' => [SIGTERM];
-        yield 'SIGINT' => [SIGINT];
+        // One queue per worker takes the single-queue loop, two the
+        // multi-queue one; both must drain the same way.
+        foreach ([1, 2] as $queues) {
+            yield "SIGTERM, {$queues} queue(s)" => [SIGTERM, $queues];
+            yield "SIGINT, {$queues} queue(s)" => [SIGINT, $queues];
+        }
     }
 
     #[DataProvider('stopSignals')]
-    public function testShutdownDrainsJobWithoutRestartingWorkers(int $signal): void
+    public function testShutdownDrainsJobWithoutRestartingWorkers(int $signal, int $queues): void
     {
-        $this->start(3);
+        $this->start(3, $queues);
         $ready = $this->waitFor('ready', 3);
         $this->events = [];
+        $this->publish(0, 'slow');
         $this->publish(0, 'slow');
         $this->waitFor('started', 1);
         $this->assertTrue(proc_terminate($this->process, $signal));
         $this->waitFor('exited', 1);
+        // The job in flight finishes; the one behind it stays put. Before the
+        // stop flag was re-checked after the slot came free, the loop went
+        // straight back to receive and pulled it, and a job accepted after
+        // SIGTERM is one more the grace period has to cover.
         $this->assertCount(1, array_filter($this->events, fn(array $e): bool => $e['event'] === 'processed'));
+        $this->assertSame(1, $this->queued(0), 'A message published behind the in-flight job must still be on the queue after the drain');
         $this->assertCount(3, array_filter($this->events, fn(array $e): bool => $e['event'] === 'stopped'));
         $this->assertCount(0, array_filter($this->events, fn(array $e): bool => $e['event'] === 'ready'));
         foreach ($ready as $worker) {
@@ -134,12 +144,12 @@ final class SwooleRestartTest extends TestCase
         }
     }
 
-    private function start(int $workers): void
+    private function start(int $workers, int $queues = 1): void
     {
         $this->namespace = 'restart-' . bin2hex(random_bytes(8));
         $this->log = tempnam(sys_get_temp_dir(), 'queue-restart-');
         $this->process = proc_open(
-            [PHP_BINARY, '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', 'error_log=/dev/stderr', __DIR__ . '/../../servers/Swoole/restart.php', $this->namespace, (string) $workers],
+            [PHP_BINARY, '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', 'error_log=/dev/stderr', __DIR__ . '/../../servers/Swoole/restart.php', $this->namespace, (string) $workers, (string) $queues],
             [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $this->log, 'a']],
             $pipes,
         );
@@ -152,6 +162,13 @@ final class SwooleRestartTest extends TestCase
     {
         $broker = new Redis(new Connection('127.0.0.1', 16379), new Connection('127.0.0.1', 16379));
         $this->assertTrue($broker->publish(new Queue('worker-' . $worker, $this->namespace), ['mode' => $mode]));
+    }
+
+    private function queued(int $worker): int
+    {
+        $broker = new Redis(new Connection('127.0.0.1', 16379), new Connection('127.0.0.1', 16379));
+
+        return $broker->getQueueSize(new Queue('worker-' . $worker, $this->namespace));
     }
 
     private function waitFor(string $event, int $count): array
