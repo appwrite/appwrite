@@ -61,13 +61,16 @@ final class MqttSubscriber
     }
 
     /**
-     * SUBSCRIBE to the given topic filters at QoS 1; returns once the SUBACK arrives.
+     * SUBSCRIBE to the given topic filters at the requested max QoS; returns the SUBACK
+     * reason code per filter (a granted QoS 0x00/0x01, or a failure such as 0x87), index
+     * aligned with $topics.
      *
      * @param string[] $topics
+     * @return array<int, int>
      */
-    public function subscribe(array $topics, float $timeout = 5.0): void
+    public function subscribe(array $topics, int $qos = Packet::QOS_1, float $timeout = 5.0): array
     {
-        $this->write(V5::subscribe($this->nextPacketId(), $topics, Packet::QOS_1));
+        $this->write(V5::subscribe($this->nextPacketId(), $topics, $qos));
 
         $deadline = microtime(true) + $timeout;
         while (true) {
@@ -76,7 +79,15 @@ final class MqttSubscriber
                 throw new \RuntimeException('mqtt: no SUBACK received');
             }
             if ($packet->type === Packet::SUBACK) {
-                return;
+                // SUBACK body: [packetId:2][properties][one reason code per filter].
+                $offset = Properties::skip($packet->body, 2);
+
+                $codes = [];
+                for ($i = $offset; $i < \strlen($packet->body); $i++) {
+                    $codes[] = \ord($packet->body[$i]);
+                }
+
+                return $codes;
             }
             // Ignore any early PUBLISH replay queued before the SUBACK; consume() reads those.
         }

@@ -94,6 +94,50 @@ final class MessagingMqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testSubscribeToUnknownTopicRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-unknown-' . $userId, cleanStart: true));
+
+        try {
+            // Test for FAILURE: a filter that maps to no project topic is refused in the
+            // SUBACK (reason 0x87), not silently granted.
+            $codes = $subscriber->subscribe(['does-not-exist-' . $userId]);
+            $this->assertSame([0x87], $codes);
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testGrantedQosIsCappedByTopicConfig(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicQos1 = $this->setupPushTopic($server, $userId, 'mqtt-qos1', qos: 1);
+        $topicQos0 = $this->setupPushTopic($server, $userId, 'mqtt-qos0', qos: 0);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-qos-' . $userId, cleanStart: true));
+
+        try {
+            // The client requests QoS 1 for both: the qos-1 topic grants 1, the qos-0 topic
+            // caps the grant to 0 (the topic's configured QoS wins from the DB).
+            $this->assertSame([1], $subscriber->subscribe([$topicQos1], 1));
+            $this->assertSame([0], $subscriber->subscribe([$topicQos0], 1));
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     /**
      * The messaging graph for the built-in Appwrite push provider: a provider, a topic
      * (whose id is the MQTT delivery channel), a user with a push target identified by
@@ -101,7 +145,7 @@ final class MessagingMqttServerTest extends Scope
      *
      * @param  array<string, string>  $server server-key headers
      */
-    private function setupPushTopic(array $server, string $userId, string $name): string
+    private function setupPushTopic(array $server, string $userId, string $name, int $qos = 1): string
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
             'providerId' => ID::unique(),
@@ -113,7 +157,7 @@ final class MessagingMqttServerTest extends Scope
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
             'topicId' => ID::unique(),
             'name' => $name,
-            'qos' => 1,
+            'qos' => $qos,
         ]);
         $this->assertEquals(201, $topic['headers']['status-code']);
         $topicId = $topic['body']['$id'];
