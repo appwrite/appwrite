@@ -50,6 +50,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/mqtt"
         }
     ],
     "require": {
@@ -73,7 +77,7 @@
         "utopia-php/audit": "^4.0",
         "utopia-php/auth": "^0.12",
         "utopia-php/balancer": "0.4.*",
-        "utopia-php/cache": "^5.0.0",
+        "utopia-php/cache": "^5.0",
         "utopia-php/cdn": "^0.0.11",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
@@ -93,6 +97,7 @@
         "utopia-php/lock": "0.3.*",
         "utopia-php/messaging": "^2.1",
         "utopia-php/migration": "^2.0.0",
+        "utopia-php/mqtt": "dev-dev",
         "utopia-php/platform": "1.0.0-rc20",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",

@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Roles;
@@ -14,6 +15,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -53,13 +55,16 @@ class Update extends Action
             ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
             ->param('name', null, new Nullable(new Text(128)), 'Topic Name.', true)
             ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+            ->param('qos', null, new Nullable(new Range(0, 1)), 'QoS for MQTT delivery on this topic (0 or 1). Null lets the subscriber choose.', true)
+            ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Message retention in seconds for offline delivery. Max 7 days (604800).', true)
+            ->inject('request')
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $topicId, ?string $name, ?array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $topicId, ?string $name, ?array $subscribe, ?int $qos, ?int $expiry, Request $request, Event $queueForEvents, Database $dbForProject, Response $response)
     {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
@@ -73,6 +78,20 @@ class Update extends Action
 
         if (!\is_null($subscribe)) {
             $topic->setAttribute('subscribe', $subscribe);
+        }
+
+        // qos and expiry are nullable settings: an explicit null resets them to the
+        // documented default (subscriber-chosen QoS, no expiry). Since an omitted param
+        // and an explicit null both arrive as null, honour the key's presence in the
+        // request body rather than the value, so a reset isn't silently ignored.
+        $params = $request->getParams();
+
+        if (\array_key_exists('qos', $params)) {
+            $topic->setAttribute('qos', $qos);
+        }
+
+        if (\array_key_exists('expiry', $params)) {
+            $topic->setAttribute('expiry', $expiry);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);

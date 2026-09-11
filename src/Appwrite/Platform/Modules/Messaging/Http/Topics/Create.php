@@ -17,6 +17,8 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -56,13 +58,15 @@ class Create extends Action
             ->param('topicId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. Choose a custom Topic ID or a new Topic ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Topic Name.')
             ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+            ->param('qos', null, new Nullable(new Range(0, 1)), 'QoS for MQTT delivery on this topic (0 or 1). Null lets the subscriber choose.', true)
+            ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Message retention in seconds for offline delivery. Max 7 days (604800).', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $topicId, string $name, array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $topicId, string $name, array $subscribe, ?int $qos, ?int $expiry, Event $queueForEvents, Database $dbForProject, Response $response)
     {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
@@ -70,6 +74,8 @@ class Create extends Action
             '$id' => $topicId,
             'name' => $name,
             'subscribe' => $subscribe,
+            'qos' => $qos,
+            'expiry' => $expiry,
         ]);
 
         try {

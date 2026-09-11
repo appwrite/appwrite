@@ -14,6 +14,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Messages\Targets\XList as ListTarge
 use Appwrite\Platform\Modules\Messaging\Http\Messages\XList as ListMessages;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Create as CreateApnsProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Update as UpdateApnsProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Create as CreateAppwriteProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Update as UpdateAppwriteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Delete as DeleteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Create as CreateFcmProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Update as UpdateFcmProvider;
@@ -81,6 +83,8 @@ class Http extends Service
         $this->addAction(UpdateFcmProvider::getName(), new UpdateFcmProvider());
         $this->addAction(CreateApnsProvider::getName(), new CreateApnsProvider());
         $this->addAction(UpdateApnsProvider::getName(), new UpdateApnsProvider());
+        $this->addAction(CreateAppwriteProvider::getName(), new CreateAppwriteProvider());
+        $this->addAction(UpdateAppwriteProvider::getName(), new UpdateAppwriteProvider());
         $this->addAction(ListProviders::getName(), new ListProviders());
         $this->addAction(GetProvider::getName(), new GetProvider());
         $this->addAction(DeleteProvider::getName(), new DeleteProvider());
