@@ -191,6 +191,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -266,7 +267,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.74
+    image: appwrite/new:1.1.78-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -476,6 +477,7 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
@@ -845,6 +847,7 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
@@ -930,6 +933,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
