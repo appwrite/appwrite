@@ -1395,85 +1395,85 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/mysql/integrations/drivers',
           },
           {
-            label: 'Drizzle',
-            href: '/docs/products/databases/mysql/integrations/drizzle',
+            label: 'Next.js',
+            href: '/docs/products/databases/mysql/integrations/nextjs',
           },
           {
-            label: 'TypeORM',
-            href: '/docs/products/databases/mysql/integrations/typeorm',
+            label: 'Drizzle',
+            href: '/docs/products/databases/mysql/integrations/drizzle',
           },
           {
             label: 'Kysely',
             href: '/docs/products/databases/mysql/integrations/kysely',
           },
           {
-            label: 'Knex',
-            href: '/docs/products/databases/mysql/integrations/knex',
-          },
-          {
-            label: 'Sequelize',
-            href: '/docs/products/databases/mysql/integrations/sequelize',
-          },
-          {
             label: 'Prisma',
             href: '/docs/products/databases/mysql/integrations/prisma',
-          },
-          {
-            label: 'Auth.js',
-            href: '/docs/products/databases/mysql/integrations/auth-js',
           },
           {
             label: 'Better Auth',
             href: '/docs/products/databases/mysql/integrations/better-auth',
           },
           {
-            label: 'Laravel',
-            href: '/docs/products/databases/mysql/integrations/laravel',
+            label: 'Auth.js',
+            href: '/docs/products/databases/mysql/integrations/auth-js',
           },
           {
-            label: 'Rails',
-            href: '/docs/products/databases/mysql/integrations/rails',
+            label: 'Knex',
+            href: '/docs/products/databases/mysql/integrations/knex',
+          },
+          {
+            label: 'TypeORM',
+            href: '/docs/products/databases/mysql/integrations/typeorm',
+          },
+          {
+            label: 'Sequelize',
+            href: '/docs/products/databases/mysql/integrations/sequelize',
+          },
+          {
+            label: 'Laravel',
+            href: '/docs/products/databases/mysql/integrations/laravel',
           },
           {
             label: 'Django',
             href: '/docs/products/databases/mysql/integrations/django',
           },
           {
-            label: 'FastAPI',
-            href: '/docs/products/databases/mysql/integrations/fastapi',
+            label: 'Rails',
+            href: '/docs/products/databases/mysql/integrations/rails',
           },
           {
             label: 'Spring Boot',
             href: '/docs/products/databases/mysql/integrations/spring-boot',
           },
           {
-            label: 'EF Core',
-            href: '/docs/products/databases/mysql/integrations/ef-core',
+            label: 'FastAPI',
+            href: '/docs/products/databases/mysql/integrations/fastapi',
           },
           {
             label: 'GORM',
             href: '/docs/products/databases/mysql/integrations/gorm',
           },
           {
-            label: 'Next.js',
-            href: '/docs/products/databases/mysql/integrations/nextjs',
-          },
-          {
-            label: 'dbt',
-            href: '/docs/products/databases/mysql/integrations/dbt',
-          },
-          {
-            label: 'Metabase',
-            href: '/docs/products/databases/mysql/integrations/metabase',
+            label: 'EF Core',
+            href: '/docs/products/databases/mysql/integrations/ef-core',
           },
           {
             label: 'Grafana',
             href: '/docs/products/databases/mysql/integrations/grafana',
           },
           {
+            label: 'Metabase',
+            href: '/docs/products/databases/mysql/integrations/metabase',
+          },
+          {
+            label: 'dbt',
+            href: '/docs/products/databases/mysql/integrations/dbt',
+          },
+          {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          },
+          }
         ],
       },
     ],
@@ -1589,85 +1589,85 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/postgresql/integrations/drivers',
           },
           {
-            label: 'Drizzle',
-            href: '/docs/products/databases/postgresql/integrations/drizzle',
+            label: 'Next.js',
+            href: '/docs/products/databases/postgresql/integrations/nextjs',
           },
           {
-            label: 'TypeORM',
-            href: '/docs/products/databases/postgresql/integrations/typeorm',
+            label: 'Drizzle',
+            href: '/docs/products/databases/postgresql/integrations/drizzle',
           },
           {
             label: 'Kysely',
             href: '/docs/products/databases/postgresql/integrations/kysely',
           },
           {
-            label: 'Knex',
-            href: '/docs/products/databases/postgresql/integrations/knex',
-          },
-          {
-            label: 'Sequelize',
-            href: '/docs/products/databases/postgresql/integrations/sequelize',
-          },
-          {
             label: 'Prisma',
             href: '/docs/products/databases/postgresql/integrations/prisma',
-          },
-          {
-            label: 'Auth.js',
-            href: '/docs/products/databases/postgresql/integrations/auth-js',
           },
           {
             label: 'Better Auth',
             href: '/docs/products/databases/postgresql/integrations/better-auth',
           },
           {
-            label: 'Laravel',
-            href: '/docs/products/databases/postgresql/integrations/laravel',
+            label: 'Auth.js',
+            href: '/docs/products/databases/postgresql/integrations/auth-js',
           },
           {
-            label: 'Rails',
-            href: '/docs/products/databases/postgresql/integrations/rails',
+            label: 'Knex',
+            href: '/docs/products/databases/postgresql/integrations/knex',
+          },
+          {
+            label: 'TypeORM',
+            href: '/docs/products/databases/postgresql/integrations/typeorm',
+          },
+          {
+            label: 'Sequelize',
+            href: '/docs/products/databases/postgresql/integrations/sequelize',
+          },
+          {
+            label: 'Laravel',
+            href: '/docs/products/databases/postgresql/integrations/laravel',
           },
           {
             label: 'Django',
             href: '/docs/products/databases/postgresql/integrations/django',
           },
           {
-            label: 'FastAPI',
-            href: '/docs/products/databases/postgresql/integrations/fastapi',
+            label: 'Rails',
+            href: '/docs/products/databases/postgresql/integrations/rails',
           },
           {
             label: 'Spring Boot',
             href: '/docs/products/databases/postgresql/integrations/spring-boot',
           },
           {
-            label: 'EF Core',
-            href: '/docs/products/databases/postgresql/integrations/ef-core',
+            label: 'FastAPI',
+            href: '/docs/products/databases/postgresql/integrations/fastapi',
           },
           {
             label: 'GORM',
             href: '/docs/products/databases/postgresql/integrations/gorm',
           },
           {
-            label: 'Next.js',
-            href: '/docs/products/databases/postgresql/integrations/nextjs',
-          },
-          {
-            label: 'dbt',
-            href: '/docs/products/databases/postgresql/integrations/dbt',
-          },
-          {
-            label: 'Metabase',
-            href: '/docs/products/databases/postgresql/integrations/metabase',
+            label: 'EF Core',
+            href: '/docs/products/databases/postgresql/integrations/ef-core',
           },
           {
             label: 'Grafana',
             href: '/docs/products/databases/postgresql/integrations/grafana',
           },
           {
+            label: 'Metabase',
+            href: '/docs/products/databases/postgresql/integrations/metabase',
+          },
+          {
+            label: 'dbt',
+            href: '/docs/products/databases/postgresql/integrations/dbt',
+          },
+          {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          },
+          }
         ],
       },
     ],
