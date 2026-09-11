@@ -155,6 +155,26 @@ final class DatabaseServerTest extends Scope
         $this->assertIsArray($collection2['body']['data']);
         $collection2 = $collection2['body']['data']['databasesCreateCollection'];
 
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'collectionId' => $collection['_id'],
+                'key' => 'tags',
+                'size' => 64,
+                'required' => false,
+                'array' => true,
+            ]
+        ];
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+
+        $this->assertEventually(function () use ($database, $collection, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $database['_id'] . '/collections/' . $collection['_id'] . '/attributes/tags', $headers);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 240000, 500);
+
         self::$collectionCache[$cacheKey] = [
             'database' => $database,
             'collection' => $collection,
@@ -613,6 +633,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1725,100 +1746,6 @@ final class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    public function testCreateDocumentWithArrays(): void
-    {
-        $database = $this->setupDatabase();
-        $collectionId = ID::unique();
-        $documentId = ID::unique();
-        $headers = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-        $path = '/databases/' . $database['_id'] . '/collections/' . $collectionId;
-
-        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $database['_id'] . '/collections', $headers, [
-            'collectionId' => $collectionId,
-            'name' => 'Arrays',
-        ]);
-        $this->assertEquals(201, $collection['headers']['status-code']);
-
-        try {
-            foreach (['string', 'integer', 'boolean'] as $type) {
-                $attribute = $this->client->call(Client::METHOD_POST, $path . '/attributes/' . $type, $headers, array_merge([
-                    'key' => $type,
-                    'required' => false,
-                    'array' => true,
-                ], $type === 'string' ? ['size' => 64] : []));
-                $this->assertEquals(202, $attribute['headers']['status-code']);
-
-                $this->assertEventually(function () use ($path, $headers, $type) {
-                    $attribute = $this->client->call(Client::METHOD_GET, $path . '/attributes/' . $type, $headers);
-                    $this->assertEquals('available', $attribute['body']['status']);
-                }, 240000, 500);
-            }
-
-            $variables = [
-                'databaseId' => $database['_id'],
-                'collectionId' => $collectionId,
-                'documentId' => $documentId,
-            ];
-            $create = 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!) {
-                databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data) {
-                    _id
-                    data
-                }
-            }';
-
-            // Test for SUCCESS: create, read, list and update preserve JSON arrays.
-            foreach ([
-                'databasesCreateDocument' => ['string' => ['first', 'second'], 'integer' => [0, -4, 12], 'boolean' => []],
-                'databasesUpdateDocument' => ['string' => [], 'integer' => [], 'boolean' => [true, false]],
-            ] as $method => $expected) {
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $method === 'databasesCreateDocument' ? $create : $this->getQuery(self::UPDATE_DOCUMENT),
-                    'variables' => array_merge($variables, ['data' => $expected]),
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $documents = [$response['body']['data'][$method]];
-
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $this->getQuery(self::GET_DOCUMENT),
-                    'variables' => $variables,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $documents[] = $response['body']['data']['databasesGetDocument'];
-
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $this->getQuery(self::GET_DOCUMENTS),
-                    'variables' => [
-                        'databaseId' => $database['_id'],
-                        'collectionId' => $collectionId,
-                    ],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $this->assertSame(1, $response['body']['data']['databasesListDocuments']['total']);
-                $documents[] = $response['body']['data']['databasesListDocuments']['documents'][0];
-
-                foreach ($documents as $document) {
-                    $this->assertSame($documentId, $document['_id']);
-                    $data = json_decode($document['data'], false, flags: JSON_THROW_ON_ERROR);
-                    $this->assertInstanceOf(\stdClass::class, $data);
-                    foreach ($expected as $key => $value) {
-                        $this->assertSame($value, $data->{$key});
-                    }
-                }
-            }
-        } finally {
-            $this->client->call(Client::METHOD_DELETE, $path, $headers);
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
     public function testCreateDocument(): void
     {
         $data = $this->setupIndex();
@@ -1833,6 +1760,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1858,6 +1786,7 @@ final class DatabaseServerTest extends Scope
 
         $document = $document['body']['data']['databasesCreateDocument'];
         $this->assertIsArray($document);
+        $this->assertSame(['first', 'second'], json_decode($document['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         // Store for caching so setupDocument() doesn't try to recreate
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -2140,6 +2069,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $documents['body']);
         $this->assertIsArray($documents['body']['data']);
         $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
+
+        $documents = array_column($documents['body']['data']['databasesListDocuments']['documents'], null, '_id');
+        $this->assertArrayHasKey($data['document']['_id'], $documents);
+        $this->assertSame(['first', 'second'], json_decode($documents[$data['document']['_id']]['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     /**
@@ -2168,6 +2101,7 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
+        $this->assertSame(['first', 'second'], json_decode($document['body']['data']['databasesGetDocument']['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**
@@ -2290,6 +2224,7 @@ final class DatabaseServerTest extends Scope
                 'documentId' => $data['document']['_id'],
                 'data' => [
                     'name' => 'New Document Name',
+                    'tags' => [],
                 ],
             ]
         ];
@@ -2304,6 +2239,7 @@ final class DatabaseServerTest extends Scope
         $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
         $this->assertStringContainsString('New Document Name', (string) $document['data']);
+        $this->assertSame([], json_decode($document['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**

@@ -126,6 +126,26 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $table2['body']);
         $table2 = $table2['body']['data']['tablesDBCreateTable'];
 
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'tableId' => $table['_id'],
+                'key' => 'tags',
+                'size' => 64,
+                'required' => false,
+                'array' => true,
+            ]
+        ];
+        $column = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        $this->assertArrayNotHasKey('errors', $column['body']);
+
+        $this->assertEventually(function () use ($database, $table, $headers) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $database['_id'] . '/tables/' . $table['_id'] . '/columns/tags', $headers);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 240000, 500);
+
         self::$cachedTableData[$cacheKey] = [
             'database' => $database,
             'table' => $table,
@@ -809,6 +829,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1779,100 +1800,6 @@ final class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    public function testCreateRowWithArrays(): void
-    {
-        $database = $this->setupDatabase();
-        $tableId = ID::unique();
-        $rowId = ID::unique();
-        $headers = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-        $path = '/tablesdb/' . $database['_id'] . '/tables/' . $tableId;
-
-        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $database['_id'] . '/tables', $headers, [
-            'tableId' => $tableId,
-            'name' => 'Arrays',
-        ]);
-        $this->assertEquals(201, $table['headers']['status-code']);
-
-        try {
-            foreach (['string', 'integer', 'boolean'] as $type) {
-                $column = $this->client->call(Client::METHOD_POST, $path . '/columns/' . $type, $headers, array_merge([
-                    'key' => $type,
-                    'required' => false,
-                    'array' => true,
-                ], $type === 'string' ? ['size' => 64] : []));
-                $this->assertEquals(202, $column['headers']['status-code']);
-
-                $this->assertEventually(function () use ($path, $headers, $type) {
-                    $column = $this->client->call(Client::METHOD_GET, $path . '/columns/' . $type, $headers);
-                    $this->assertEquals('available', $column['body']['status']);
-                }, 240000, 500);
-            }
-
-            $variables = [
-                'databaseId' => $database['_id'],
-                'tableId' => $tableId,
-                'rowId' => $rowId,
-            ];
-            $create = 'mutation createRow($databaseId: String!, $tableId: String!, $rowId: String!, $data: Json!) {
-                tablesDBCreateRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, data: $data) {
-                    _id
-                    data
-                }
-            }';
-
-            // Test for SUCCESS: create, read, list and update preserve JSON arrays.
-            foreach ([
-                'tablesDBCreateRow' => ['string' => ['first', 'second'], 'integer' => [0, -4, 12], 'boolean' => []],
-                'tablesDBUpdateRow' => ['string' => [], 'integer' => [], 'boolean' => [true, false]],
-            ] as $method => $expected) {
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $method === 'tablesDBCreateRow' ? $create : $this->getQuery(self::UPDATE_ROW),
-                    'variables' => array_merge($variables, ['data' => $expected]),
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $rows = [$response['body']['data'][$method]];
-
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $this->getQuery(self::GET_ROW),
-                    'variables' => $variables,
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $rows[] = $response['body']['data']['tablesDBGetRow'];
-
-                $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
-                    'query' => $this->getQuery(self::GET_ROWS),
-                    'variables' => [
-                        'databaseId' => $database['_id'],
-                        'tableId' => $tableId,
-                    ],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-                $this->assertArrayNotHasKey('errors', $response['body']);
-                $this->assertSame(1, $response['body']['data']['tablesDBListRows']['total']);
-                $rows[] = $response['body']['data']['tablesDBListRows']['rows'][0];
-
-                foreach ($rows as $row) {
-                    $this->assertSame($rowId, $row['_id']);
-                    $data = json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR);
-                    $this->assertInstanceOf(\stdClass::class, $data);
-                    foreach ($expected as $key => $value) {
-                        $this->assertSame($value, $data->{$key});
-                    }
-                }
-            }
-        } finally {
-            $this->client->call(Client::METHOD_DELETE, $path, $headers);
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
     public function testCreateRow(): void
     {
         // Need all columns that the row data references
@@ -1910,6 +1837,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1935,6 +1863,7 @@ final class DatabaseServerTest extends Scope
 
         $row = $row['body']['data']['tablesDBCreateRow'];
         $this->assertIsArray($row);
+        $this->assertSame(['first', 'second'], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -2196,7 +2125,7 @@ final class DatabaseServerTest extends Scope
      */
     public function testGetRows(): void
     {
-        $data = $this->setupTable();
+        $data = $this->setupRow();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ROWS);
         $gqlPayload = [
@@ -2215,6 +2144,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
         $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
+
+        $rows = array_column($rows['body']['data']['tablesDBListRows']['rows'], null, '_id');
+        $this->assertArrayHasKey($data['row']['_id'], $rows);
+        $this->assertSame(['first', 'second'], json_decode($rows[$data['row']['_id']]['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     /**
@@ -2243,6 +2176,7 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
         $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
+        $this->assertSame(['first', 'second'], json_decode($row['body']['data']['tablesDBGetRow']['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         $row = $row['body']['data']['tablesDBGetRow'];
         $this->assertSame($data['row']['_permissions'], $row['_permissions']);
@@ -2367,6 +2301,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => $data['row']['_id'],
                 'data' => [
                     'name' => 'New Row Name',
+                    'tags' => [],
                 ],
             ]
         ];
@@ -2381,6 +2316,7 @@ final class DatabaseServerTest extends Scope
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
         $this->assertStringContainsString('New Row Name', (string) $row['data']);
+        $this->assertSame([], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**

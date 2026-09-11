@@ -31,7 +31,9 @@ final class MapperTest extends TestCase
         $result = GraphQL::executeQuery($schema, '{ record { data } }', ['record' => $data])->toArray();
 
         $this->assertArrayNotHasKey('errors', $result);
-        $this->assertSame($expected, $result['data']['record']['data']);
+        $actual = json_decode($result['data']['record']['data'], false, flags: JSON_THROW_ON_ERROR);
+        $this->assertInstanceOf(\stdClass::class, $actual);
+        $this->assertEquals(json_decode($expected, false, flags: JSON_THROW_ON_ERROR), $actual);
     }
 
     public static function additionalDataProvider(): \Iterator
