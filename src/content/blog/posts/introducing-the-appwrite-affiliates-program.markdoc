@@ -102,7 +102,7 @@ Only Pro upgrades generate a reward. A referral who stays on the Free plan forev
 
 # Why the 180-day attribution window matters
 
-Most referral programs run a 30-day cookie. That window is borrowed from ecommerce, where someone reads a review and buys a blender the same week. Backend decisions don't work that way.
+Most referral programs run a 30-day cookie. Backend decisions don't work that way.
 
 The real path looks like this: a developer watches your tutorial, spins up a side project on the Free plan, builds for a couple of months, gets actual users, and then upgrades when limits start to bite. Under a 30-day window, you did all the work and the attribution was gone before the decision happened.
 
