@@ -44,6 +44,7 @@ interface KeyboardShortcutsContextValue {
   openCommandCenter: () => void
   /** Open Command Center directly on a named sub-page (protocol / agent). */
   openCommandCenterPage: (page: CommandCenterPage) => void
+  openBlogSearch: () => void
   closeCommandCenter: () => void
   isCommandCenterOpen: boolean
 }
@@ -55,6 +56,7 @@ const KeyboardShortcutsContext =
 const defaultContextValue: KeyboardShortcutsContextValue = {
   openCommandCenter: () => {},
   openCommandCenterPage: () => {},
+  openBlogSearch: () => {},
   closeCommandCenter: () => {},
   isCommandCenterOpen: false,
 }
@@ -259,6 +261,10 @@ export function KeyboardShortcutsProvider({
     setCommandCenterOpen(true)
   }, [])
 
+  const openBlogSearch = useCallback(() => {
+    openCommandCenterPage('blog')
+  }, [openCommandCenterPage])
+
   const openShortcutsHelp = useCallback(() => {
     openCommandCenterPage('shortcuts')
   }, [openCommandCenterPage])
@@ -362,6 +368,7 @@ export function KeyboardShortcutsProvider({
   const contextValue: KeyboardShortcutsContextValue = {
     openCommandCenter,
     openCommandCenterPage,
+    openBlogSearch,
     closeCommandCenter,
     isCommandCenterOpen: commandCenterOpen,
   }
@@ -411,6 +418,10 @@ export function StandaloneCommandCenterScope({
     setCommandCenterOpen(true)
   }, [])
 
+  const openBlogSearch = useCallback(() => {
+    openCommandCenterPage('blog')
+  }, [openCommandCenterPage])
+
   const openShortcutsHelp = useCallback(() => {
     openCommandCenterPage('shortcuts')
   }, [openCommandCenterPage])
@@ -427,6 +438,10 @@ export function StandaloneCommandCenterScope({
     setInitialSubPage(null)
   }, [])
 
+  const handleInitialSubPageConsumed = useCallback(() => {
+    setInitialSubPage(null)
+  }, [])
+
   useGlobalCommandShortcuts({
     commandCenterOpen,
     onOpenCommandCenter: openCommandCenter,
@@ -437,12 +452,14 @@ export function StandaloneCommandCenterScope({
     () => ({
       openCommandCenter,
       openCommandCenterPage,
+      openBlogSearch,
       closeCommandCenter,
       isCommandCenterOpen: commandCenterOpen,
     }),
     [
       openCommandCenter,
       openCommandCenterPage,
+      openBlogSearch,
       closeCommandCenter,
       commandCenterOpen,
     ],
@@ -460,7 +477,7 @@ export function StandaloneCommandCenterScope({
           if (!open) setInitialSubPage(null)
         }}
         initialSubPage={initialSubPage}
-        onInitialSubPageConsumed={() => setInitialSubPage(null)}
+        onInitialSubPageConsumed={handleInitialSubPageConsumed}
       />
     </KeyboardShortcutsContext.Provider>
   )

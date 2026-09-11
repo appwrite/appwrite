@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/change-regions-with-migrations/cover.avif
 timeToRead: 10
 author: ebenezer-don
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "Why would I move an Appwrite Cloud project to a different region?"

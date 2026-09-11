@@ -7,7 +7,7 @@ lastUpdated: 2026-05-22
 cover: /images/blog/custom-backup-policy/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: product, security
+category: products, security
 faqs:
   - question: "What is a custom backup policy?"
     answer: "A custom backup policy lets you define how often each piece of data is backed up, how long it is retained, where it is stored, and how it is secured. Instead of one rigid schedule for everything, you tailor the policy to the importance of each dataset so critical data is backed up frequently and less important data is backed up sparingly."

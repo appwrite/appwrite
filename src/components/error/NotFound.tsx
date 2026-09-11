@@ -25,6 +25,8 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'projects',
   'organizations',
   'account',
+  'app',
+  'console',
   'blocks',
   'init',
   'generator',

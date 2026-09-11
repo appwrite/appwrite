@@ -6,7 +6,7 @@ date: 2023-11-01
 cover: /images/blog/hf-2023-journey/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: hackathon
+category: hackathons
 faqs:
   - question: "What did Appwrite achieve during Hacktoberfest 2023?"
     answer: "Appwrite tracked 135+ Hacktoberfest issues, accepted 65+ pull requests, onboarded 30+ new GitHub contributors, and hosted 8 PR Review Parties. Notable contributions included a Postmark messaging adapter, an IBM Cloud Object Storage adapter, and SDK unit tests."

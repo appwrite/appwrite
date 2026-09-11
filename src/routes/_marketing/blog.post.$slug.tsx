@@ -16,6 +16,7 @@ import {
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { NOINDEX_ROBOTS_META, NOINDEX_ROBOTS_HEADER } from '@/lib/seo/indexing'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -76,16 +77,16 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
     const scripts = [
       {
         type: 'application/ld+json',
-        children: JSON.stringify(getBlogPostSchema(loaderData.post, authors, seoOptions)),
+        children: stringifyJsonLd(getBlogPostSchema(loaderData.post, authors, seoOptions)),
       },
       {
         type: 'application/ld+json',
-        children: JSON.stringify(
+        children: stringifyJsonLd(
           getBlogBreadcrumbSchema([
             { name: 'Blog', path: '/blog' },
             {
               name: getPostCategoryLabel(loaderData.post),
-              path: `/blog/category/${getPrimaryPostCategorySlug(loaderData.post)}`,
+              path: `/blog/categories/${getPrimaryPostCategorySlug(loaderData.post)}`,
             },
             { name: loaderData.post.title, path: loaderData.post.href },
           ]),
@@ -96,7 +97,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
     if (loaderData.post.faqs?.length) {
       scripts.push({
         type: 'application/ld+json',
-        children: JSON.stringify(getBlogFaqSchema(loaderData.post.faqs)),
+        children: stringifyJsonLd(getBlogFaqSchema(loaderData.post.faqs)),
       })
     }
 
@@ -107,6 +108,16 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
         ...(loaderData.post.draft ? [NOINDEX_ROBOTS_META] : []),
       ],
       links: [
+        ...(loaderData.post.cover
+          ? [
+              {
+                rel: 'preload' as const,
+                as: 'image' as const,
+                href: loaderData.post.cover,
+                type: 'image/avif',
+              },
+            ]
+          : []),
         {
           rel: 'alternate',
           type: 'application/rss+xml',

@@ -9,6 +9,7 @@ import {
 import { fetchProjectUsageGaugesChartOverview } from '@/lib/usage/usage-gauges-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 
 /** Webhook events successfully delivered (event counter). */
 export const WEBHOOKS_EVENTS_SENT_EVENT_METRIC =
@@ -106,12 +107,16 @@ export async function fetchProjectWebhooksCountOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<WebhooksUsageChartOverview> {
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+
   const overview = await fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     WEBHOOKS_GAUGE_METRICS,
     interval,
     options?.queries,
+    logRetentionHours,
   )
 
   return {

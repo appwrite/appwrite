@@ -6,7 +6,7 @@ date: 2025-10-28
 cover: /images/blog/tanstack-start-support-in-appwrite-sites/cover.avif
 timeToRead: 5
 author: matej-baco
-category: announcement
+category: announcements
 faqs:
   - question: "What is TanStack Start?"
     answer: "TanStack Start is a full stack React framework from the team behind TanStack Query and TanStack Router. It focuses on type safety, explicit routing, and server-side rendering, powered by Vite for fast builds. It also supports SolidJS as an alternative renderer."

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { setBodyResizeDragActive } from '@/lib/layout/horizontal-resize'
+import { useOnScreenKeyboardBand } from '@/lib/layout/on-screen-keyboard'
 import { useT } from '@/lib/i18n/translate'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import {
@@ -70,18 +71,45 @@ export function ProjectCliShell() {
     return () => window.clearTimeout(timer)
   }, [open, panelEverOpened])
 
+  const shellRef = useRef<HTMLDivElement>(null)
+  const [hasFocusWithin, setHasFocusWithin] = useState(false)
+
+  // Native listeners: React focus events also bubble from portaled menus.
+  useEffect(() => {
+    const shell = shellRef.current
+    if (!shell) return
+    const handleFocusIn = () => setHasFocusWithin(true)
+    const handleFocusOut = (event: FocusEvent) => {
+      const next = event.relatedTarget
+      setHasFocusWithin(next instanceof Node && shell.contains(next))
+    }
+    shell.addEventListener('focusin', handleFocusIn)
+    shell.addEventListener('focusout', handleFocusOut)
+    return () => {
+      shell.removeEventListener('focusin', handleFocusIn)
+      shell.removeEventListener('focusout', handleFocusOut)
+    }
+  }, [])
+
+  // The on-screen keyboard covers the bottom of the fixed app shell, where the
+  // docked (or `inset-0` fullscreen) panel sits. While typing, pin the panel to
+  // the band still visible above the keyboard.
+  const keyboardBand = useOnScreenKeyboardBand(open && hasFocusWithin)
+
   const showCollapsedBar = !open && !isCollapsing
   const isFullyCollapsed = showCollapsedBar && !fullscreen
   const isFullscreenOpen = open && fullscreen
+  const isOverlay = isFullscreenOpen || keyboardBand !== null
   const containerHeight =
     open && !fullscreen ? height : CLI_SHELL_COLLAPSED_HEIGHT_PX
 
   return (
     <div
+      ref={shellRef}
       data-cli-shell
       className={cn(
         'bg-background',
-        isFullscreenOpen
+        isOverlay
           ? 'fixed inset-0 z-[140] flex min-h-0 flex-col'
           : cn(
               'relative shrink-0 overflow-hidden border-t border-border',
@@ -89,24 +117,30 @@ export function ProjectCliShell() {
             ),
       )}
       style={
-        isFullscreenOpen
-          ? undefined
-          : {
-              height: containerHeight,
-              transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
+        keyboardBand
+          ? {
+              top: keyboardBand.top,
+              bottom: 'auto',
+              height: keyboardBand.height,
             }
+          : isFullscreenOpen
+            ? undefined
+            : {
+                height: containerHeight,
+                transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
+              }
       }
     >
       {panelEverOpened ? (
         <div
           className={cn(
             'flex min-h-0 flex-col',
-            isFullscreenOpen ? 'h-full flex-1' : undefined,
+            isOverlay ? 'h-full flex-1' : undefined,
             !isFullscreenOpen && !open && 'pointer-events-none',
             isFullyCollapsed && 'opacity-0',
           )}
           style={
-            isFullscreenOpen
+            isOverlay
               ? undefined
               : {
                   height,
@@ -115,7 +149,10 @@ export function ProjectCliShell() {
           }
           aria-hidden={!isFullscreenOpen && !open}
         >
-          <ProjectCliShellPanel onResizingChange={setIsResizing} />
+          <ProjectCliShellPanel
+            onResizingChange={setIsResizing}
+            keyboardPinned={keyboardBand !== null}
+          />
         </div>
       ) : null}
       {showCollapsedBar ? (
@@ -233,9 +270,14 @@ function ProjectCliShellCollapsedBar() {
 
 type ProjectCliShellPanelProps = {
   onResizingChange?: (isResizing: boolean) => void
+  /** Pinned above the on-screen keyboard, where the docked height is ignored. */
+  keyboardPinned?: boolean
 }
 
-function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
+function ProjectCliShellPanel({
+  onResizingChange,
+  keyboardPinned = false,
+}: ProjectCliShellPanelProps) {
   const t = useT()
   const { isMac } = usePlatform()
   const newTerminalShortcutKeys = formatDisplayKeys(
@@ -336,7 +378,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
         fullscreen ? 'h-full min-h-0 flex-1' : 'h-full',
       )}
     >
-      {!fullscreen && (
+      {!fullscreen && !keyboardPinned && (
         <div
           role="separator"
           aria-orientation="horizontal"

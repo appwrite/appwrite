@@ -19,6 +19,7 @@ import {
   Query,
 } from '@appwrite.io/console' // pragma: allowlist secret
 import {
+  applyConsoleImpersonateUserId,
   clearConsoleImpersonateUser,
   clearConsoleSessionLocally,
   sdk,
@@ -39,8 +40,12 @@ import {
   clearConsoleImpersonationSession,
   getConsoleAccountQueryRevision,
   hasConsoleImpersonationSessionTarget,
+  readConsoleImpersonationTargetUserId,
 } from '@/lib/console-impersonation'
-import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  isValidRelativeRedirect,
+  resolvePostAuthRedirect,
+} from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -358,13 +363,8 @@ function showConsoleSignOutCover(): void {
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
 export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
-  const isValidRelativeRedirect =
-    !!redirect &&
-    redirect.startsWith('/') &&
-    !redirect.startsWith('//') &&
-    !redirect.includes('://')
   window.location.replace(
-    isValidRelativeRedirect
+    redirect && isValidRelativeRedirect(redirect)
       ? `/sign-in?redirect=${encodeURIComponent(redirect)}`
       : '/sign-in',
   )
@@ -384,11 +384,41 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
  */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
-  options?: { redirect?: string },
+  options?: { redirect?: string; requireServerRevocation?: boolean },
 ): Promise<void> {
-  if (consoleSigningOut) return
+  if (consoleSigningOut) {
+    if (options?.requireServerRevocation) {
+      throw new Error('Console sign-out is already in progress')
+    }
+    return
+  }
   consoleSigningOut = true
   showConsoleSignOutCover()
+
+  // Consent switching must revoke the underlying operator session, never an
+  // impersonated identity. Suspend headers only; preserve credentials, persisted
+  // impersonation and account caches so a failed revoke can restore the same UI.
+  if (options?.requireServerRevocation) {
+    const impersonatedUserId = readConsoleImpersonationTargetUserId()
+    clearConsoleImpersonateUser()
+    try {
+      await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
+    } catch {
+      if (impersonatedUserId) {
+        applyConsoleImpersonateUserId(impersonatedUserId)
+      }
+      consoleSigningOut = false
+      if (typeof document !== 'undefined') {
+        document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)?.remove()
+      }
+      // Do not propagate credential-bearing SDK errors into UI or telemetry.
+      throw new Error('Current console session could not be revoked')
+    }
+    clearConsoleSessionLocally()
+    purgeConsoleAccountCaches(queryClient)
+    redirectToSignInAfterConsoleSignOut(options.redirect)
+    return
+  }
 
   // Drop impersonation headers only. Do not clear session credentials before
   // the delete call or the API request may go out unauthenticated.
@@ -529,7 +559,7 @@ export async function ensureConsoleAccountOnAuthRoute(
 export async function ensureConsoleAccountQueryData(
   queryClient: QueryClient,
 ): Promise<Models.User | undefined> {
-  if (shouldRevalidateConsoleAccount(queryClient)) {
+  if (shouldRevalidateConsoleAccountOnAuthRoute(queryClient)) {
     try {
       return await refreshConsoleAccountAfterAuth(queryClient)
     } catch {
@@ -1240,6 +1270,7 @@ export function accountIdentitiesQueryOptions() {
     queryKey: ['identities', 'account'],
     queryFn: fetchAccountIdentities,
     staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows

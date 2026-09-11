@@ -1,6 +1,7 @@
 'use client'
 
 import { Link } from '@tanstack/react-router'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,7 +9,7 @@ import {
   type AnalyticsActionId,
 } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
 import { cn } from '@/lib/utils'
 
 type PricingTier = {
@@ -20,6 +21,7 @@ type PricingTier = {
   cta: string
   ctaVariant: 'brandCta' | 'outline'
   href: string
+  contactSales?: boolean
   marketingAware?: boolean
   popular?: boolean
 }
@@ -59,8 +61,8 @@ const pricingTiers: PricingTier[] = [
     description: 'For enterprises that need more power and premium support.',
     cta: 'Contact us',
     ctaVariant: 'outline',
-    href: CONTACT_ENTERPRISE_URL,
-    marketingAware: true,
+    href: SALES_FORM_ROUTE,
+    contactSales: true,
   },
 ]
 
@@ -75,6 +77,16 @@ function PricingTierCta({ tier }: { tier: PricingTier }) {
   )
   const action = HOME_PRICING_CTA_ACTIONS[tier.id]
   const analytics = action ? analyticsAttrs(action) : undefined
+
+  if (tier.contactSales) {
+    return (
+      <Button variant={tier.ctaVariant} className={buttonClassName} asChild>
+        <ContactSalesLink {...analytics}>
+          {t(tier.cta)}
+        </ContactSalesLink>
+      </Button>
+    )
+  }
 
   if (tier.marketingAware) {
     return (

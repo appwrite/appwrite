@@ -20,6 +20,12 @@ import {
   type UsageDateRangePreset,
 } from '@/lib/usage/usage-date-range-presets'
 import { isFullCalendarDayRange, normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
+import {
+  clampDateRangeToRetentionFloor,
+  getLogRetentionCalendarMinDate,
+  hasFiniteLogRetentionHours,
+  isUsageDateRangePresetWithinRetention,
+} from '@/lib/date-range-retention'
 import { useT } from '@/lib/i18n/translate'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
@@ -55,6 +61,12 @@ interface DateRangePickerProps {
    * Preferred over inferring from snapshotted `dateRange` timestamps.
    */
   presetId?: string | null
+  /**
+   * Plan log retention in hours. When finite, presets beyond retention and
+   * calendar dates before the retention floor are disabled; selections are
+   * clamped on apply.
+   */
+  retentionHours?: number | null
 }
 
 export function DateRangePicker({
@@ -63,10 +75,50 @@ export function DateRangePicker({
   className,
   popoverContentAlign = 'end',
   presetId = null,
+  retentionHours = null,
 }: DateRangePickerProps) {
   const t = useT()
   const { formatDate } = useLocalizedDateFormat()
   const isWideLayout = useMediaMinWidth(WIDE_LAYOUT_MIN_WIDTH)
+  const retentionLimited =
+    retentionHours != null && hasFiniteLogRetentionHours(retentionHours)
+  const calendarMinDate = React.useMemo(
+    () =>
+      retentionLimited
+        ? getLogRetentionCalendarMinDate(retentionHours!)
+        : undefined,
+    [retentionLimited, retentionHours],
+  )
+  const calendarDisabled = React.useMemo(
+    () => (calendarMinDate ? { before: calendarMinDate } : undefined),
+    [calendarMinDate],
+  )
+  const isPresetEnabled = React.useCallback(
+    (preset: UsageDateRangePreset) =>
+      !retentionLimited ||
+      isUsageDateRangePresetWithinRetention(preset, retentionHours!),
+    [retentionHours, retentionLimited],
+  )
+
+  const emitDateRangeChange = React.useCallback(
+    (range: DateRange | undefined) => {
+      onDateRangeChange(range)
+    },
+    [onDateRangeChange],
+  )
+
+  const handlePendingDateRangeSelect = React.useCallback(
+    (range: DateRange | undefined) => {
+      if (!retentionLimited) {
+        setPendingDateRange(range)
+        return
+      }
+      setPendingDateRange(
+        clampDateRangeToRetentionFloor(range, retentionHours!) ?? range,
+      )
+    },
+    [retentionHours, retentionLimited],
+  )
   const [isOpen, setIsOpen] = React.useState(false)
   const [pendingDateRange, setPendingDateRange] = React.useState<
     DateRange | undefined
@@ -119,10 +171,11 @@ export function DateRangePicker({
   }
 
   const handlePresetSelect = (preset: DateRangePreset) => {
+    if (!isPresetEnabled(preset)) return
     const range = preset.getRange()
     setPendingDateRange(range)
     setSelectedPreset(preset.value)
-    onDateRangeChange(range)
+    emitDateRangeChange(range)
     setIsOpen(false)
   }
 
@@ -139,7 +192,7 @@ export function DateRangePicker({
   }
 
   const handleApply = () => {
-    onDateRangeChange(normalizeUsageDateRangeSelection(pendingDateRange))
+    emitDateRangeChange(normalizeUsageDateRangeSelection(pendingDateRange))
     setIsOpen(false)
   }
 
@@ -225,17 +278,24 @@ export function DateRangePicker({
                     <div className="grid grid-cols-1 gap-0.5">
                       {group.presets.map((preset) => {
                         const isSelected = selectedPreset === preset.value
+                        const presetEnabled = isPresetEnabled(preset)
                         return (
                           <button
                             key={preset.value}
                             type="button"
+                            disabled={!presetEnabled}
                             onClick={() => handlePresetSelect(preset)}
                             className={cn(
-                              'cursor-pointer rounded-md px-2.5 py-1.5 text-start text-[12px] font-medium transition-colors',
+                              'rounded-md px-2.5 py-1.5 text-start text-[12px] font-medium transition-colors',
                               'outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                              presetEnabled
+                                ? 'cursor-pointer'
+                                : 'cursor-not-allowed opacity-50',
                               isSelected
                                 ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
-                                : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
+                                : presetEnabled
+                                  ? 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                  : 'text-muted-foreground',
                             )}
                           >
                             {t(preset.label)}
@@ -253,8 +313,9 @@ export function DateRangePicker({
                 <Calendar
                   mode="range"
                   selected={pendingDateRange}
-                  onSelect={setPendingDateRange}
+                  onSelect={handlePendingDateRangeSelect}
                   numberOfMonths={2}
+                  disabled={calendarDisabled}
                   defaultMonth={
                     pendingDateRange?.from || dateRange?.from || new Date()
                   }
@@ -325,6 +386,7 @@ export function DateRangePicker({
                         <SelectItem
                           key={preset.value}
                           value={preset.value}
+                          disabled={!isPresetEnabled(preset)}
                           className="text-[13px]"
                         >
                           {t(preset.label)}
@@ -340,8 +402,9 @@ export function DateRangePicker({
               <Calendar
                 mode="range"
                 selected={pendingDateRange}
-                onSelect={setPendingDateRange}
+                onSelect={handlePendingDateRangeSelect}
                 numberOfMonths={1}
+                disabled={calendarDisabled}
                 defaultMonth={
                   pendingDateRange?.from || dateRange?.from || new Date()
                 }

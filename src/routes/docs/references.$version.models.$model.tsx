@@ -9,7 +9,8 @@ import {
   getDocsBreadcrumbSchema,
   getDocsArticleSchema,
 } from '@/lib/docs/seo'
-import { loadApiReferenceModelFn } from '@/server/functions/api-reference'
+import { fetchApiReferenceModel } from '@/lib/docs/references/reference-api'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/docs/references/$version/models/$model')({
   ssr: true,
@@ -22,7 +23,7 @@ export const Route = createFileRoute('/docs/references/$version/models/$model')(
     }
 
     try {
-      const data = await loadApiReferenceModelFn({ data: { version, model } })
+      const data = await fetchApiReferenceModel(version, model)
       return { data, version }
     } catch (error) {
       if (isApiReferenceNotFoundError(error)) {
@@ -49,11 +50,11 @@ export const Route = createFileRoute('/docs/references/$version/models/$model')(
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsBreadcrumbSchema(meta, slug, seoOptions)),
+          children: stringifyJsonLd(getDocsBreadcrumbSchema(meta, slug, seoOptions)),
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify(getDocsArticleSchema(meta, slug, seoOptions)),
+          children: stringifyJsonLd(getDocsArticleSchema(meta, slug, seoOptions)),
         },
       ],
     }

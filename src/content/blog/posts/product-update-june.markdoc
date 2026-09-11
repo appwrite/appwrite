@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/product-update-june/product-update-june-2024.avif
 timeToRead: 5
 author: dennis-ivy
-category: product
+category: products
 faqs:
   - question: "Why did Appwrite publish a public roadmap?"
     answer: "The public roadmap on GitHub gives the community visibility into what is being built, when it is planned, and how to influence priorities. It is meant to align expectations and make it easier to report bugs and request features."

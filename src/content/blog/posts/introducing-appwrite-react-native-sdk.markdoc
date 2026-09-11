@@ -6,7 +6,7 @@ date: 2024-04-09
 cover: /images/blog/introducing-appwrite-react-native-sdk/cover.avif
 timeToRead: 4
 author: vincent-ge
-category: product, announcement
+category: products, announcements
 faqs:
   - question: "Why does Appwrite have a separate React Native SDK?"
     answer: "React Native needs access to device APIs like the camera, file system, and storage. The dedicated SDK uses Expo modules under the hood so features like file uploads and OAuth work correctly on iOS and Android, which the Web SDK can't do."

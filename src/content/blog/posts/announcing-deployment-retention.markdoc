@@ -6,7 +6,7 @@ date: 2026-05-15
 cover: /images/blog/announcing-deployment-retention/cover.avif
 timeToRead: 4
 author: aditya-oberai
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "What is deployment retention in Appwrite?"

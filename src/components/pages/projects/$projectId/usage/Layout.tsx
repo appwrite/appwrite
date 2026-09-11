@@ -447,7 +447,10 @@ function UsageLayoutContent({
   )
   const usageFilterScope = getUsageSavedFilterScope(categoryId)
   const { project } = useProject(projectId)
-  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { plan: organizationPlan, isFetched: isOrganizationPlanFetched } =
+    useOrganizationPlan(project?.teamId)
+  const usageLogRetentionReady =
+    !project?.teamId || isOrganizationPlanFetched
   const showUsageFilters =
     categorySupportsUsageFilters(categoryId) &&
     canShowUsageCategoryFilters(categoryId, organizationPlan)
@@ -591,6 +594,10 @@ function UsageLayoutContent({
     usageFilterMap,
   ])
 
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
   const {
     dateRange: usageDateRange,
     chartInterval,
@@ -598,11 +605,7 @@ function UsageLayoutContent({
     setDateRange: setUsageDateRange,
     setChartInterval,
     refreshRollingDateRange,
-  } = useUsageChartFilters(organizationPlan)
-  const usageLogRetentionHours = useMemo(
-    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
-    [organizationPlan],
-  )
+  } = useUsageChartFilters(organizationPlan, usageLogRetentionHours)
   const usageLogRetentionDays = useMemo(
     () => getUsageLogRetentionDaysFromPlan(organizationPlan),
     [organizationPlan],
@@ -809,6 +812,11 @@ function UsageLayoutContent({
                   onDateRangeChange={setUsageDateRange}
                   presetId={dateRangePresetId}
                   className="h-9"
+                  retentionHours={
+                    hasFiniteUsageLogRetention(organizationPlan)
+                      ? usageLogRetentionHours
+                      : null
+                  }
                 />
 
                 <RefreshButton
@@ -872,7 +880,9 @@ function UsageLayoutContent({
                     organizationId: project?.teamId,
                     usageLogRetentionHours,
                     usageLogRetentionDays,
+                    usageLogRetentionReady,
                     dateRange: usageDateRange,
+                    dateRangePresetId,
                     chartInterval,
                     onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,

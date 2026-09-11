@@ -145,6 +145,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Content: 'תוכן',
   'Cookie preferences': 'העדפות עוגיות',
   'Cookies Policy': 'מדיניות העוגיות',
+  'We use cookies to improve Appwrite.':
+    'אנחנו משתמשים בעוגיות כדי לשפר את Appwrite.',
   'Copied line': 'השורה הועתקה',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',

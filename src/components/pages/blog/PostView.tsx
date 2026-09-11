@@ -63,7 +63,7 @@ export function PostView({ post }: PostViewProps) {
               <BreadcrumbItem className="min-w-0">
                 <BreadcrumbLink asChild>
                   <Link
-                    to="/blog/category/$category"
+                    to="/blog/categories/$category"
                     params={{ category: categorySlug }}
                     className="cursor-pointer"
                   >
@@ -87,7 +87,7 @@ export function PostView({ post }: PostViewProps) {
               />
 
               <div className="mt-8">
-                <BlogCover title={post.title} cover={post.cover} />
+                <BlogCover title={post.title} cover={post.cover} priority />
               </div>
 
               <div className="mt-8 min-w-0 overflow-x-hidden">

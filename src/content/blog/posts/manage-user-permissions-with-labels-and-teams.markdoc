@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/manage-user-permissions-with-labels-and-teams/labels_cover.avif
 timeToRead: 8
 author: dennis-ivy
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "What is the difference between Teams and Labels in Appwrite?"

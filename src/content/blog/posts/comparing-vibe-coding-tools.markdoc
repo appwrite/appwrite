@@ -10,7 +10,7 @@ timeToRead: 13
 author:
   - eldad-fux
   - ebenezer-don
-category: tutorial
+category: tutorials
 callToAction:
   heading: "Put Appwrite behind the apps you vibe code"
   description: "Open-source auth, databases, storage, and functions. Use MCP so agents in Cursor, Claude Code, Copilot, Codex, OpenCode, or browser builders call your real APIs instead of inventing a backend."

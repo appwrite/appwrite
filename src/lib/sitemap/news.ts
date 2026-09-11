@@ -1,3 +1,4 @@
+import { resolveCategorySlug } from '@/lib/blog/category-slugs'
 import type { BlogPostMeta } from '@/lib/blog/types'
 import { escapeXml } from './xml'
 import { getSitemapSiteOrigin } from './config'
@@ -9,13 +10,15 @@ export const NEWS_SITEMAP_PATH = '/sitemap/news.xml'
 export const NEWS_SITEMAP_SECTION_ID = 'news'
 
 /**
- * Blog categories that are news-like. Tutorials, comparisons, and other
- * evergreen posts stay in the regular blog sitemap only.
+ * Canonical blog category slugs that are news-like. Tutorials, comparisons,
+ * and other evergreen posts stay in the regular blog sitemap only. Post
+ * categories are resolved through the blog alias map before matching, so
+ * legacy singular values such as `announcement` still qualify.
  */
 export const NEWS_SITEMAP_CATEGORIES = [
   'news',
-  'announcement',
-  'company',
+  'announcements',
+  'companies',
   'init',
 ] as const
 
@@ -55,10 +58,6 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 const W3C_PUBLICATION_DATE =
   /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/
 
-function normalizeCategorySlug(value: string): string {
-  return value.replace(/\s+/g, '-').toLowerCase()
-}
-
 function utcDayStartMs(date: Date): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 }
@@ -90,7 +89,7 @@ export function isWithinNewsSitemapWindow(
 export function getPostCategorySlugs(post: Pick<BlogPostMeta, 'category'>): string[] {
   return post.category
     .split(',')
-    .map((part) => normalizeCategorySlug(part.trim()))
+    .map((part) => resolveCategorySlug(part.trim()))
     .filter(Boolean)
 }
 

@@ -1,3 +1,4 @@
+import { installBrowserApi } from '@/lib/browser-api'
 import interRegularUrl from '../assets/fonts/inter/inter-v8-latin-regular.woff2?url'
 import interSemiboldUrl from '../assets/fonts/inter/inter-v8-latin-600.woff2?url'
 import aeonikRegularUrl from '../assets/fonts/aeonik-pro/AeonikPro-Regular.woff2?url'
@@ -76,7 +77,7 @@ import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/consol
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
-import { useLocation, useMatches } from '@tanstack/react-router'
+import { useLocation, useMatches, useRouterState } from '@tanstack/react-router'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -87,6 +88,7 @@ import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
+import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -396,6 +398,16 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
+  // Use the rendered location, not the pending one. During `/` → `/home`
+  // (or `/` → org) the desired path can already be the destination while the
+  // outlet is still the blank hop; wrapping that hop would flash the footer.
+  const renderedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+  if (isConsoleRedirectHopPath(renderedPathname)) {
+    return <>{children}</>
+  }
+
   return (
     <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
       <DevConstructionStripe />
@@ -428,6 +440,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setClientMounted(true)
+    return installBrowserApi()
   }, [])
 
   useEffect(() => {

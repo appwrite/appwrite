@@ -6,7 +6,7 @@ date: 2025-11-12
 cover: /images/blog/nextjs-standalone-builds/cover.avif
 timeToRead: 4
 author: ebenezer-don
-category: announcement
+category: announcements
 faqs:
   - question: "How do I enable Next.js standalone mode on Appwrite Sites?"
     answer: "Add output: 'standalone' to your next.config.js and build the project as usual. [Appwrite Sites](/docs/products/sites) detects the standalone output automatically, so no further configuration is required. You can then deploy with git push or the Appwrite CLI."

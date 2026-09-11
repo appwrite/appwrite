@@ -7,10 +7,10 @@ const packageRoot = path.resolve(
   '../../..',
 )
 
-const changelogEntryDirectories = [
-  path.join(packageRoot, 'src/content/changelog/entries'),
-  path.join(packageRoot, 'src/content/changelog-local/entries'),
-]
+const changelogEntriesDirectory = path.join(
+  packageRoot,
+  'src/content/changelog/entries',
+)
 
 function readChangelogEntryPathsFromDirectories(
   directories: string[],
@@ -31,7 +31,7 @@ function readChangelogEntryPathsFromDirectories(
 
 /** Build-time paths from source markdoc files. */
 export function getChangelogEntryPrerenderPaths(): string[] {
-  return readChangelogEntryPathsFromDirectories(changelogEntryDirectories)
+  return readChangelogEntryPathsFromDirectories([changelogEntriesDirectory])
 }
 
 /** Runtime paths from prerendered client HTML output. */

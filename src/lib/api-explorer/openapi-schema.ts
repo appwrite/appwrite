@@ -49,7 +49,9 @@ function isUnrestrictedStringBranch(schema: OpenApiSchema): boolean {
   return !schema.type || schema.type === 'string'
 }
 
-function memberFromBranch(schema: OpenApiSchema): OpenApiEnumMember | undefined {
+function memberFromBranch(
+  schema: OpenApiSchema,
+): OpenApiEnumMember | undefined {
   const value = singletonEnumValue(schema)
   if (value === undefined) return undefined
   const key = schema.title?.trim() || value
@@ -87,7 +89,8 @@ function parseAnnotatedEnum(schema: OpenApiSchema): OpenApiEnumInfo | null {
   if (closedBranches?.length && unrestrictedCount > 0) return null
 
   const values = members.map((member) => member.value)
-  const name = schema.title?.trim() || schema['x-enum-name']?.trim() || undefined
+  const name =
+    schema.title?.trim() || schema['x-enum-name']?.trim() || undefined
 
   return {
     name,
@@ -175,10 +178,105 @@ function schemaIdFromRef(ref: string): string {
   return ref.replace('#/components/schemas/', '')
 }
 
-/** Discriminator property names from x-mapping conditions, with x-propertyNames fallback. */
+type ConditionValue = string | number | boolean
+
+/** Only interpret reference + required literal constraints, not arbitrary allOf models. */
+function conditionalReferences(
+  schema: OpenApiSchema | undefined,
+): Map<string, Map<string, ConditionValue>> {
+  const cases = new Map<string, Map<string, ConditionValue>>()
+  if (
+    !schema ||
+    schema.nullable ||
+    schema.not ||
+    schema.enum?.length ||
+    schema.const !== undefined
+  )
+    return cases
+  const branches = schema.oneOf ?? schema.anyOf ?? []
+  for (const branch of branches) {
+    let ref: string | undefined
+    const conditions = new Map<string, ConditionValue>()
+    const pending = [branch]
+    while (pending.length) {
+      const member = pending.pop()!
+      if (member.$ref) {
+        if (ref) return new Map()
+        ref = member.$ref
+        continue
+      }
+      if (
+        member.nullable ||
+        member.not ||
+        member.enum?.length ||
+        member.const !== undefined
+      )
+        return new Map()
+      if (member.oneOf || member.anyOf) return new Map()
+      if (member.allOf) {
+        if (!member.allOf.length) return new Map()
+        pending.push(...member.allOf.slice().reverse())
+        continue
+      }
+      if (
+        (member.type && member.type !== 'object') ||
+        !member.properties ||
+        !Object.keys(member.properties).length ||
+        member.additionalProperties !== undefined ||
+        member.minProperties !== undefined ||
+        member.maxProperties !== undefined ||
+        member.required?.some(
+          (name) => !Object.hasOwn(member.properties!, name),
+        )
+      )
+        return new Map()
+      for (const [name, property] of Object.entries(member.properties)) {
+        const values =
+          property.enum ??
+          (property.const !== undefined ? [property.const] : [])
+        const value = values[0]
+        if (
+          !member.required?.includes(name) ||
+          property.nullable ||
+          property.$ref ||
+          property.not ||
+          property.oneOf ||
+          property.anyOf ||
+          property.allOf ||
+          property.properties ||
+          property.items ||
+          (property.type &&
+            !['string', 'integer', 'number', 'boolean'].includes(
+              property.type,
+            )) ||
+          values.length !== 1 ||
+          (typeof value !== 'string' &&
+            typeof value !== 'number' &&
+            typeof value !== 'boolean')
+        )
+          return new Map()
+        if (conditions.has(name) && conditions.get(name) !== value)
+          return new Map()
+        conditions.set(name, value)
+      }
+    }
+    if (!ref || !conditions.size || cases.has(ref)) return new Map()
+    cases.set(ref, conditions)
+  }
+  return cases
+}
+
+/** Standard required conditions first, with legacy discriminator fallbacks. */
 export function getDiscriminatorPropertyNames(
   schema: OpenApiSchema | undefined,
 ): string[] {
+  const cases = conditionalReferences(schema)
+  if (cases.size) {
+    return uniqueStrings(
+      [...cases.values()].flatMap((conditions) => [...conditions.keys()]),
+    )
+  }
+
   const discriminator = schema?.discriminator
   if (!discriminator) return []
 
@@ -193,11 +291,14 @@ export function getDiscriminatorPropertyNames(
   return [...names]
 }
 
-/** Model refs from oneOf/anyOf $refs and discriminator mappings (including x-mapping keys). */
+/** Model identities from constrained union branches, direct refs, or legacy mappings. */
 export function getPolymorphicModelRefs(
   schema: OpenApiSchema | undefined,
 ): string[] {
   if (!schema) return []
+
+  const cases = conditionalReferences(schema)
+  if (cases.size) return uniqueStrings([...cases.keys()].map(schemaIdFromRef))
 
   const refs: string[] = []
   for (const branch of [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])]) {

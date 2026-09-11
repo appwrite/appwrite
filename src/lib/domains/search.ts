@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDomainPrices } from '@/lib/react-query/hooks/domains'
-import {
-  DOMAIN_SEARCH_INITIAL_VISIBLE_COUNT,
-  DOMAIN_SEARCH_TLDS,
-} from '@/lib/domains/tlds'
+import { DOMAIN_SEARCH_TLDS } from '@/lib/domains/tlds'
 
 export type DomainSuggestion = {
   full: string
@@ -26,7 +23,7 @@ export type DomainSelectionQuote = {
   renewalPeriodYears?: number
 }
 
-export const DOMAIN_SEARCH_DEBOUNCE_MS = 500
+export const DOMAIN_SEARCH_DEBOUNCE_MS = 200
 
 export function normalizeDomainSearchInput(value: string): string {
   return value
@@ -126,16 +123,23 @@ export function buildDomainSuggestions({
   })
 }
 
-export function useDomainSearch(initialSearch = '') {
-  const [searchValue, setSearchValue] = useState(initialSearch)
+export function useDomainSearch(
+  initialSearch = '',
+  onSearchValueChange?: (value: string) => void,
+) {
+  const [localSearchValue, setLocalSearchValue] = useState(initialSearch)
+  // Public search is controlled by the route so shared links and browser
+  // history restore the input. Purchase wizards keep their local search state.
+  const searchValue = onSearchValueChange ? initialSearch : localSearchValue
+  const setSearchValue = onSearchValueChange ?? setLocalSearchValue
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [requestedTlds, setRequestedTlds] = useState<string[]>(() =>
-    DOMAIN_SEARCH_TLDS.slice(0, DOMAIN_SEARCH_INITIAL_VISIBLE_COUNT),
-  )
-
-  const addRequestedTld = useCallback((tld: string) => {
-    setRequestedTlds((prev) => (prev.includes(tld) ? prev : [...prev, tld]))
-  }, [])
+  const [requested, setRequested] = useState<{
+    baseName: string
+    tlds: string[]
+  }>({
+    baseName: '',
+    tlds: [],
+  })
 
   const normalizedSearch = useMemo(
     () => normalizeDomainSearchInput(searchValue),
@@ -152,21 +156,45 @@ export function useDomainSearch(initialSearch = '') {
     [normalizedSearch],
   )
 
+  const addRequestedTld = useCallback(
+    (tld: string) => {
+      setRequested((prev) => {
+        const tlds = prev.baseName === baseName ? prev.tlds : []
+        return tlds.includes(tld) ? prev : { baseName, tlds: [...tlds, tld] }
+      })
+    },
+    [baseName],
+  )
+
   useEffect(() => {
     const timer = setTimeout(
-      () => setDebouncedSearch(baseName),
+      () => setDebouncedSearch(normalizedSearch),
       DOMAIN_SEARCH_DEBOUNCE_MS,
     )
     return () => clearTimeout(timer)
-  }, [baseName])
+  }, [normalizedSearch])
+
+  const submitSearch = useCallback(() => {
+    setDebouncedSearch(normalizedSearch)
+  }, [normalizedSearch])
+
+  const priorityTlds = useMemo(
+    () =>
+      DOMAIN_SEARCH_TLDS.some((tld) => tld === typedTld) &&
+      normalizedSearch === `${baseName}.${typedTld}`
+        ? [typedTld]
+        : ['com', 'dev', 'app', 'io'],
+    [baseName, normalizedSearch, typedTld],
+  )
 
   const showSuggestions =
     baseName.length >= 2 ||
     (baseName.length === 1 && normalizedSearch.includes('.'))
 
-  const { pricesByDomain, error } = useDomainPrices(
-    showSuggestions ? debouncedSearch : '',
-    requestedTlds,
+  const { pricesByDomain, error, retry, isRetrying } = useDomainPrices(
+    showSuggestions && debouncedSearch === normalizedSearch ? baseName : '',
+    requested.baseName === baseName ? requested.tlds : [],
+    priorityTlds,
   )
 
   const apiDataByDomain = useMemo(() => {
@@ -209,8 +237,11 @@ export function useDomainSearch(initialSearch = '') {
   return {
     searchValue,
     setSearchValue,
+    submitSearch,
     suggestions,
     error,
+    retry,
+    isRetrying,
     showSuggestions,
     hasContent: searchValue.trim().length > 0,
     baseName,

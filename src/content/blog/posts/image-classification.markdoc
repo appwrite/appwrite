@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/image-classification.avif
 timeToRead: 9
 author: bradley-schofield
-category: product
+category: products
 faqs:
   - question: "What is image classification?"
     answer: "Image classification is a computer vision task where a model takes an image and assigns it one or more labels describing what's in it. Use cases include moderating user uploads, categorizing product photos, organizing media libraries, and tagging content for search. It's distinct from object detection, which also locates objects within the image."

@@ -25,6 +25,38 @@ export type ResourcesToDeleteEntry = {
 
 export type ResourcesToDelete = Record<string, ResourcesToDeleteEntry>
 
+/**
+ * Slice a payload down to one resource type across all projects, so the
+ * downgrade can run (and report) one deletion step at a time.
+ */
+export function narrowResourcesToType(
+  resourcesToDelete: ResourcesToDelete,
+  type: DowngradeResourceType,
+): ResourcesToDelete {
+  const narrowed: ResourcesToDelete = {}
+
+  for (const [projectId, entry] of Object.entries(resourcesToDelete)) {
+    if (!entry) continue
+
+    if (type === 'databases') {
+      const databases = entry.databases
+      if (databases && databases.length > 0) {
+        narrowed[projectId] = { databases }
+      }
+      continue
+    }
+
+    const ids = entry[type]
+    if (ids && ids.length > 0) {
+      const projectEntry: ResourcesToDeleteEntry = {}
+      projectEntry[type] = ids
+      narrowed[projectId] = projectEntry
+    }
+  }
+
+  return narrowed
+}
+
 export async function deleteDowngradeResources(
   resourcesToDelete: ResourcesToDelete,
 ): Promise<void> {
@@ -83,28 +115,32 @@ export async function deleteDowngradeResources(
   await Promise.all(tasks)
 }
 
+/**
+ * Only IDs the user marked for deletion, and only if they are in the
+ * fetched list. Missing marks must never mean "delete the rest".
+ */
 export function buildResourcesToDelete(
-  projectId: string,
   resources: ProjectDowngradeResources,
-  keepSelections: Partial<Record<DowngradeResourceType, Set<string>>>,
+  deleteSelections: Partial<Record<DowngradeResourceType, Set<string>>>,
 ): ResourcesToDeleteEntry {
   const result: ResourcesToDeleteEntry = {}
 
   for (const type of Object.keys(resources) as DowngradeResourceType[]) {
-    const keepIds = keepSelections[type] ?? new Set<string>()
-    const remainingItems = resources[type].items.filter(
-      (item) => !keepIds.has(item.$id),
-    )
+    const deleteIds = deleteSelections[type]
+    if (!deleteIds || deleteIds.size === 0) continue
 
-    if (remainingItems.length === 0) continue
+    const markedItems = resources[type].items.filter((item) =>
+      deleteIds.has(item.$id),
+    )
+    if (markedItems.length === 0) continue
 
     if (type === 'databases') {
-      result.databases = remainingItems.map((item) => ({
+      result.databases = markedItems.map((item) => ({
         $id: item.$id,
         dbKind: item.dbKind ?? 'tablesdb',
       }))
     } else {
-      result[type] = remainingItems.map((item) => item.$id)
+      result[type] = markedItems.map((item) => item.$id)
     }
   }
 

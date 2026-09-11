@@ -33,14 +33,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
 const PUBLIC_DIR = join(VIBES_ROOT, 'public')
 const DOCS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs')
-const BLOG_POSTS_DIRS = [
-  join(VIBES_ROOT, 'src', 'content', 'blog', 'posts'),
-  join(VIBES_ROOT, 'src', 'content', 'blog-local', 'posts'),
-]
-const CHANGELOG_DIRS = [
-  join(VIBES_ROOT, 'src', 'content', 'changelog', 'entries'),
-  join(VIBES_ROOT, 'src', 'content', 'changelog-local', 'entries'),
-]
+const BLOG_POSTS_DIR = join(VIBES_ROOT, 'src', 'content', 'blog', 'posts')
+const CHANGELOG_DIR = join(VIBES_ROOT, 'src', 'content', 'changelog', 'entries')
 const INTEGRATIONS_DIR = join(VIBES_ROOT, 'src', 'content', 'integrations')
 const DOCS_PARTIALS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs-partials')
 
@@ -90,24 +84,22 @@ async function readMarkdocFiles(
 async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]> {
   const postsBySlug = new Map<string, LlmsContentMeta & { date: string }>()
 
-  for (const directory of BLOG_POSTS_DIRS) {
-    for (const { slug, raw } of await readMarkdocFiles(directory)) {
-      const { frontmatter } = parseBlogFrontmatter(raw)
-      if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
-        postsBySlug.delete(slug)
-        continue
-      }
-
-      postsBySlug.set(slug, {
-        slug,
-        title: asString(frontmatter.title) ?? slug,
-        description: asString(frontmatter.description),
-        date:
-          frontmatter.date instanceof Date
-            ? frontmatter.date.toISOString()
-            : (asString(frontmatter.date) ?? ''),
-      })
+  for (const { slug, raw } of await readMarkdocFiles(BLOG_POSTS_DIR)) {
+    const { frontmatter } = parseBlogFrontmatter(raw)
+    if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
+      postsBySlug.delete(slug)
+      continue
     }
+
+    postsBySlug.set(slug, {
+      slug,
+      title: asString(frontmatter.title) ?? slug,
+      description: asString(frontmatter.description),
+      date:
+        frontmatter.date instanceof Date
+          ? frontmatter.date.toISOString()
+          : (asString(frontmatter.date) ?? ''),
+    })
   }
 
   return [...postsBySlug.values()].sort(
@@ -115,23 +107,19 @@ async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]
   )
 }
 
-/** Changelog entries, newest first (slugs are dates). Local entries override imported ones. */
+/** Changelog entries, newest first (slugs are dates). */
 async function collectChangelogMeta(): Promise<LlmsContentMeta[]> {
-  const entriesBySlug = new Map<string, LlmsContentMeta & { date: string }>()
-
-  for (const directory of CHANGELOG_DIRS) {
-    for (const { slug, raw } of await readMarkdocFiles(directory)) {
-      const { frontmatter } = parseChangelogFrontmatter(raw)
-      entriesBySlug.set(slug, {
-        slug,
-        title: asString(frontmatter.title) ?? slug,
-        description: asString(frontmatter.description),
-        date: asString(frontmatter.date) ?? slug,
-      })
+  const entries = (await readMarkdocFiles(CHANGELOG_DIR)).map(({ slug, raw }) => {
+    const { frontmatter } = parseChangelogFrontmatter(raw)
+    return {
+      slug,
+      title: asString(frontmatter.title) ?? slug,
+      description: asString(frontmatter.description),
+      date: asString(frontmatter.date) ?? slug,
     }
-  }
+  })
 
-  return [...entriesBySlug.values()].sort(
+  return entries.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   )
 }

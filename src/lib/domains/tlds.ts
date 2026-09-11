@@ -1,6 +1,3 @@
-/** Number of TLDs to fetch on first paint (above the fold). */
-export const DOMAIN_SEARCH_INITIAL_VISIBLE_COUNT = 24
-
 /** All TLDs shown in domain search; prices are fetched only for visible cards. */
 export const DOMAIN_SEARCH_TLDS = [
   'com',

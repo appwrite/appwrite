@@ -6,7 +6,7 @@ date: 2024-10-09
 cover: /images/blog/deno-2-appwrite-functions/cover.avif
 timeToRead: 6
 author: ebenezer-don
-category: product
+category: products
 faqs:
   - question: "What is Deno 2.0?"
     answer: "Deno 2.0 is the latest major release of the Deno runtime, created by Node.js author Ryan Dahl. It is a secure-by-default, modern JavaScript and TypeScript runtime with built-in tooling (linter, formatter, test runner), improved Node.js compatibility, and a refined permission model."

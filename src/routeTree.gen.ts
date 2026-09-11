@@ -51,12 +51,14 @@ import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_pr
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
+import { Route as PublicAppRouteImport } from './routes/_public/app'
 import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
+import { Route as PublicSalesRouteImport } from './routes/_public/sales'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
 import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
@@ -79,10 +81,15 @@ import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]p
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
 import { Route as ApiRERouteImport } from './routes/_api/r/e'
 import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
+import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
+import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
+import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
+import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
 import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
 import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
+import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
@@ -133,7 +140,7 @@ import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.o
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as AuthAuthSmtpCallbackRouteImport } from './routes/_auth/auth.smtp.callback'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
-import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_marketing/blog.category.$category'
+import { Route as MarketingBlogCategoriesCategoryRouteImport } from './routes/_marketing/blog.categories.$category'
 import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
 import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
 import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
@@ -635,6 +642,11 @@ const PublicAgentRoute = PublicAgentRouteImport.update({
   path: '/agent',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicAppRoute = PublicAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicAssistantRoute = PublicAssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
@@ -663,6 +675,11 @@ const PublicInitRoute = PublicInitRouteImport.update({
 const PublicResetRoute = PublicResetRouteImport.update({
   id: '/reset',
   path: '/reset',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSalesRoute = PublicSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
@@ -775,6 +792,28 @@ const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
   path: '/r/v.js',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
+  id: '/_api/references-api/model',
+  path: '/references-api/model',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferencesApiNavCountsRoute =
+  ApiReferencesApiNavCountsRouteImport.update({
+    id: '/_api/references-api/nav-counts',
+    path: '/references-api/nav-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiOpenApiSpecRoute =
+  ApiReferencesApiOpenApiSpecRouteImport.update({
+    id: '/_api/references-api/open-api-spec',
+    path: '/references-api/open-api-spec',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
+  id: '/_api/references-api/service',
+  path: '/references-api/service',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiResendApiKeysRoute = ApiResendApiKeysRouteImport.update({
   id: '/_api/resend/api-keys',
   path: '/resend/api-keys',
@@ -793,6 +832,11 @@ const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
 const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
   id: '/auth/magic-url',
   path: '/auth/magic-url',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthEducationJoinRoute = AuthEducationJoinRouteImport.update({
+  id: '/education/join',
+  path: '/education/join',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
@@ -1065,10 +1109,10 @@ const MarketingBlogAuthorAuthorRoute =
     path: '/blog/author/$author',
     getParentRoute: () => MarketingRoute,
   } as any)
-const MarketingBlogCategoryCategoryRoute =
-  MarketingBlogCategoryCategoryRouteImport.update({
-    id: '/blog/category/$category',
-    path: '/blog/category/$category',
+const MarketingBlogCategoriesCategoryRoute =
+  MarketingBlogCategoriesCategoryRouteImport.update({
+    id: '/blog/categories/$category',
+    path: '/blog/categories/$category',
     getParentRoute: () => MarketingRoute,
   } as any)
 const MarketingBlogPostSlugRoute = MarketingBlogPostSlugRouteImport.update({
@@ -3096,12 +3140,14 @@ export interface FileRoutesByFullPath {
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/agent': typeof PublicAgentRouteWithChildren
+  '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -3124,10 +3170,15 @@ export interface FileRoutesByFullPath {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/references-api/model': typeof ApiReferencesApiModelRoute
+  '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/references-api/service': typeof ApiReferencesApiServiceRoute
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -3178,7 +3229,7 @@ export interface FileRoutesByFullPath {
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -3508,12 +3559,14 @@ export interface FileRoutesByTo {
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
+  '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
+  '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -3536,10 +3589,15 @@ export interface FileRoutesByTo {
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/r/e': typeof ApiRERoute
   '/r/v.js': typeof ApiRVDotjsRoute
+  '/references-api/model': typeof ApiReferencesApiModelRoute
+  '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/references-api/service': typeof ApiReferencesApiServiceRoute
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -3586,7 +3644,7 @@ export interface FileRoutesByTo {
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -3882,12 +3940,14 @@ export interface FileRoutesById {
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/agent': typeof PublicAgentRouteWithChildren
+  '/_public/app': typeof PublicAppRoute
   '/_public/assistant': typeof PublicAssistantRoute
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
+  '/_public/sales': typeof PublicSalesRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
@@ -3911,10 +3971,15 @@ export interface FileRoutesById {
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/r/e': typeof ApiRERoute
   '/_api/r/v.js': typeof ApiRVDotjsRoute
+  '/_api/references-api/model': typeof ApiReferencesApiModelRoute
+  '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
+  '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
+  '/_api/references-api/service': typeof ApiReferencesApiServiceRoute
   '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
+  '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
@@ -3965,7 +4030,7 @@ export interface FileRoutesById {
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_auth/auth/smtp/callback': typeof AuthAuthSmtpCallbackRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
-  '/_marketing/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/_marketing/blog/categories/$category': typeof MarketingBlogCategoriesCategoryRoute
   '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/_marketing/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/_marketing/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -4301,12 +4366,14 @@ export interface FileRouteTypes {
     | '/example-protected-route'
     | '/account'
     | '/agent'
+    | '/app'
     | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
+    | '/sales'
     | '/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -4329,10 +4396,15 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/references-api/model'
+    | '/references-api/nav-counts'
+    | '/references-api/open-api-spec'
+    | '/references-api/service'
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
+    | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -4383,7 +4455,7 @@ export interface FileRouteTypes {
     | '/auth/oauth2/success'
     | '/auth/smtp/callback'
     | '/blog/author/$author'
-    | '/blog/category/$category'
+    | '/blog/categories/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
@@ -4713,12 +4785,14 @@ export interface FileRouteTypes {
     | '/startups'
     | '/terms'
     | '/example-protected-route'
+    | '/app'
     | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
+    | '/sales'
     | '/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -4741,10 +4815,15 @@ export interface FileRouteTypes {
     | '/og/init.png'
     | '/r/e'
     | '/r/v.js'
+    | '/references-api/model'
+    | '/references-api/nav-counts'
+    | '/references-api/open-api-spec'
+    | '/references-api/service'
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
+    | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -4791,7 +4870,7 @@ export interface FileRouteTypes {
     | '/auth/oauth2/success'
     | '/auth/smtp/callback'
     | '/blog/author/$author'
-    | '/blog/category/$category'
+    | '/blog/categories/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
@@ -5086,12 +5165,14 @@ export interface FileRouteTypes {
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/agent'
+    | '/_public/app'
     | '/_public/assistant'
     | '/_public/blocks'
     | '/_public/cache'
     | '/_public/comps'
     | '/_public/init'
     | '/_public/reset'
+    | '/_public/sales'
     | '/_public/upgrade'
     | '/cli/install.ps1'
     | '/cli/install.sh'
@@ -5115,10 +5196,15 @@ export interface FileRouteTypes {
     | '/_api/og/init.png'
     | '/_api/r/e'
     | '/_api/r/v.js'
+    | '/_api/references-api/model'
+    | '/_api/references-api/nav-counts'
+    | '/_api/references-api/open-api-spec'
+    | '/_api/references-api/service'
     | '/_api/resend/api-keys'
     | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
+    | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_marketing/blog/$page'
@@ -5169,7 +5255,7 @@ export interface FileRouteTypes {
     | '/_auth/auth/oauth2/success'
     | '/_auth/auth/smtp/callback'
     | '/_marketing/blog/author/$author'
-    | '/_marketing/blog/category/$category'
+    | '/_marketing/blog/categories/$category'
     | '/_marketing/blog/post/$slug'
     | '/_marketing/changelog/entry/$entry'
     | '/_marketing/threads/authors/$authorId'
@@ -5497,6 +5583,10 @@ export interface RootRouteChildren {
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiRERoute: typeof ApiRERoute
   ApiRVDotjsRoute: typeof ApiRVDotjsRoute
+  ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
+  ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
+  ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
+  ApiReferencesApiServiceRoute: typeof ApiReferencesApiServiceRoute
   ApiResendApiKeysRoute: typeof ApiResendApiKeysRouteWithChildren
   ApiResendDomainsRoute: typeof ApiResendDomainsRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
@@ -5801,6 +5891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicAgentRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/app': {
+      id: '/_public/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof PublicAppRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/assistant': {
       id: '/_public/assistant'
       path: '/assistant'
@@ -5841,6 +5938,13 @@ declare module '@tanstack/react-router' {
       path: '/reset'
       fullPath: '/reset'
       preLoaderRoute: typeof PublicResetRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/sales': {
+      id: '/_public/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof PublicSalesRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/upgrade': {
@@ -5997,6 +6101,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRVDotjsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_api/references-api/model': {
+      id: '/_api/references-api/model'
+      path: '/references-api/model'
+      fullPath: '/references-api/model'
+      preLoaderRoute: typeof ApiReferencesApiModelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/nav-counts': {
+      id: '/_api/references-api/nav-counts'
+      path: '/references-api/nav-counts'
+      fullPath: '/references-api/nav-counts'
+      preLoaderRoute: typeof ApiReferencesApiNavCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/open-api-spec': {
+      id: '/_api/references-api/open-api-spec'
+      path: '/references-api/open-api-spec'
+      fullPath: '/references-api/open-api-spec'
+      preLoaderRoute: typeof ApiReferencesApiOpenApiSpecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/service': {
+      id: '/_api/references-api/service'
+      path: '/references-api/service'
+      fullPath: '/references-api/service'
+      preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_api/resend/api-keys': {
       id: '/_api/resend/api-keys'
       path: '/resend/api-keys'
@@ -6023,6 +6155,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/magic-url'
       fullPath: '/auth/magic-url'
       preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/education/join': {
+      id: '/_auth/education/join'
+      path: '/education/join'
+      fullPath: '/education/join'
+      preLoaderRoute: typeof AuthEducationJoinRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/oauth2/consent': {
@@ -6375,11 +6514,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
       parentRoute: typeof MarketingRoute
     }
-    '/_marketing/blog/category/$category': {
-      id: '/_marketing/blog/category/$category'
-      path: '/blog/category/$category'
-      fullPath: '/blog/category/$category'
-      preLoaderRoute: typeof MarketingBlogCategoryCategoryRouteImport
+    '/_marketing/blog/categories/$category': {
+      id: '/_marketing/blog/categories/$category'
+      path: '/blog/categories/$category'
+      fullPath: '/blog/categories/$category'
+      preLoaderRoute: typeof MarketingBlogCategoriesCategoryRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/blog/post/$slug': {
@@ -8445,6 +8584,7 @@ interface AuthRouteChildren {
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
+  AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
@@ -8463,6 +8603,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
+  AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
@@ -8500,7 +8641,7 @@ interface MarketingRouteChildren {
   MarketingIntegrationsIndexRoute: typeof MarketingIntegrationsIndexRoute
   MarketingThreadsIndexRoute: typeof MarketingThreadsIndexRoute
   MarketingBlogAuthorAuthorRoute: typeof MarketingBlogAuthorAuthorRoute
-  MarketingBlogCategoryCategoryRoute: typeof MarketingBlogCategoryCategoryRoute
+  MarketingBlogCategoriesCategoryRoute: typeof MarketingBlogCategoriesCategoryRoute
   MarketingBlogPostSlugRoute: typeof MarketingBlogPostSlugRoute
   MarketingChangelogEntryEntryRoute: typeof MarketingChangelogEntryEntryRoute
   MarketingThreadsAuthorsAuthorIdRoute: typeof MarketingThreadsAuthorsAuthorIdRoute
@@ -8532,7 +8673,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingIntegrationsIndexRoute: MarketingIntegrationsIndexRoute,
   MarketingThreadsIndexRoute: MarketingThreadsIndexRoute,
   MarketingBlogAuthorAuthorRoute: MarketingBlogAuthorAuthorRoute,
-  MarketingBlogCategoryCategoryRoute: MarketingBlogCategoryCategoryRoute,
+  MarketingBlogCategoriesCategoryRoute: MarketingBlogCategoriesCategoryRoute,
   MarketingBlogPostSlugRoute: MarketingBlogPostSlugRoute,
   MarketingChangelogEntryEntryRoute: MarketingChangelogEntryEntryRoute,
   MarketingThreadsAuthorsAuthorIdRoute: MarketingThreadsAuthorsAuthorIdRoute,
@@ -10154,12 +10295,14 @@ const PublicProjectsProjectIdRouteWithChildren =
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
   PublicAgentRoute: typeof PublicAgentRouteWithChildren
+  PublicAppRoute: typeof PublicAppRoute
   PublicAssistantRoute: typeof PublicAssistantRoute
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
   PublicInitRoute: typeof PublicInitRoute
   PublicResetRoute: typeof PublicResetRoute
+  PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
@@ -10179,12 +10322,14 @@ interface PublicRouteChildren {
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
   PublicAgentRoute: PublicAgentRouteWithChildren,
+  PublicAppRoute: PublicAppRoute,
   PublicAssistantRoute: PublicAssistantRoute,
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,
   PublicInitRoute: PublicInitRoute,
   PublicResetRoute: PublicResetRoute,
+  PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
@@ -10300,6 +10445,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiRERoute: ApiRERoute,
   ApiRVDotjsRoute: ApiRVDotjsRoute,
+  ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,
+  ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
+  ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,
+  ApiReferencesApiServiceRoute: ApiReferencesApiServiceRoute,
   ApiResendApiKeysRoute: ApiResendApiKeysRouteWithChildren,
   ApiResendDomainsRoute: ApiResendDomainsRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,

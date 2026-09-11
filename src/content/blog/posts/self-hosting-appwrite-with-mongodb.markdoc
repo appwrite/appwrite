@@ -6,7 +6,7 @@ date: 2026-04-01
 cover: /images/blog/self-hosting-appwrite-with-mongodb/cover.avif
 timeToRead: 6
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "Which Appwrite version is needed to run MongoDB as the backend?"
     answer: "Appwrite 1.9.0 introduced MongoDB as a supported database backend for self-hosted installs. Earlier versions only support MariaDB, so you need to either install fresh on 1.9 or later, or migrate an existing instance through the upgrade path before switching backends."

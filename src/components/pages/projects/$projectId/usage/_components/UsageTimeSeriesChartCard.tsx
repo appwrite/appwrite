@@ -50,6 +50,7 @@ import {
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageChartBrushReferenceArea } from './UsageChartBrushReferenceArea'
+import { UsageChartRefreshingOverlay } from './UsageChartRefreshingOverlay'
 
 const usageMetricHeaderClass =
   'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
@@ -101,6 +102,7 @@ type UsageTimeSeriesChartCardProps = {
   changePercent: number
   chartPoints: { date: string; day: Date; total: number }[]
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   error?: unknown
   /** @deprecated Prefer `error` */
@@ -132,6 +134,7 @@ export function UsageTimeSeriesChartCard({
   changePercent,
   chartPoints,
   isLoading,
+  isRefreshing = false,
   isError,
   error,
   queryError,
@@ -231,34 +234,39 @@ export function UsageTimeSeriesChartCard({
             {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
-              <>
-                <span className="text-[24px] font-semibold tabular-nums text-foreground">
-                  {formattedTotal}
-                </span>
-                <span className="text-[13px] text-muted-foreground">
-                  {t(unitLabel)}
-                </span>
-                {!isError && chartPoints.length > 0 ? (
-                  <span
-                    className={cn(
-                      'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 &&
-                        'text-emerald-600 dark:text-emerald-400',
-                      changePercent < 0 && 'text-amber-600 dark:text-amber-400',
-                      changePercent === 0 && 'text-muted-foreground',
-                    )}
-                  >
-                    {changeLabel} {t('vs previous period')}
+              <UsageChartRefreshingOverlay
+                isRefreshing={isRefreshing}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
+              >
+                <>
+                  <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                    {formattedTotal}
                   </span>
-                ) : !isLoading ? (
-                  <span
-                    className="invisible text-[12px] font-medium tabular-nums"
-                    aria-hidden
-                  >
-                    0% {t('vs previous period')}
+                  <span className="text-[13px] text-muted-foreground">
+                    {t(unitLabel)}
                   </span>
-                ) : null}
-              </>
+                  {!isError && chartPoints.length > 0 ? (
+                    <span
+                      className={cn(
+                        'text-[12px] font-medium tabular-nums',
+                        changePercent > 0 &&
+                          'text-emerald-600 dark:text-emerald-400',
+                        changePercent < 0 && 'text-amber-600 dark:text-amber-400',
+                        changePercent === 0 && 'text-muted-foreground',
+                      )}
+                    >
+                      {changeLabel} {t('vs previous period')}
+                    </span>
+                  ) : (
+                    <span
+                      className="invisible text-[12px] font-medium tabular-nums"
+                      aria-hidden
+                    >
+                      0% {t('vs previous period')}
+                    </span>
+                  )}
+                </>
+              </UsageChartRefreshingOverlay>
             )}
           </div>
         </div>
@@ -303,93 +311,95 @@ export function UsageTimeSeriesChartCard({
           </UsageChartArea>
         ) : (
           <UsageChartArea>
-            <div
-              className={surfaceClassName}
-              aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
-              }
-            >
-              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-                <AreaChart
-                  data={chartData}
-                  margin={USAGE_CHART_MARGIN}
-                  {...chartProps}
-                >
-                  <defs>
-                    <linearGradient
-                      id={chartGradientId}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={chartColor}
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={chartColor}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                    vertical={false}
-                  />
-                  <UsageChartXAxis
-                    points={chartPoints}
-                    dateRange={dateRange}
-                    chartInterval={chartInterval}
-                  />
-                  <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
-                  <Tooltip
-                    isAnimationActive={false}
-                    cursor={!isSelecting}
-                    content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length)
-                        return null
-                      const data = payload[0].payload as {
-                        fullDate: string
-                        value: number
-                      }
-                      return (
-                        <div className="rounded-md border border-border bg-popover px-3 py-2">
-                          <p className="mb-1 text-[11px] text-muted-foreground">
-                            {data.fullDate}
-                          </p>
-                          <p className="text-[13px] font-medium text-foreground">
-                            {formatValue(data.value)}{' '}
-                            <span className="font-normal text-muted-foreground">
-                              {t(unitLabel)}
-                            </span>
-                          </p>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke={chartColor}
-                    strokeWidth={2}
-                    fill={`url(#${chartGradientId})`}
-                    name={title}
-                    dot={false}
-                    {...CHART_ANIMATION_DISABLED}
-                  />
-                  <UsageChartBrushReferenceArea
-                    left={brushLeft}
-                    right={brushRight}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <UsageChartRefreshingOverlay isRefreshing={isRefreshing}>
+              <div
+                className={surfaceClassName}
+                aria-label={
+                  canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
+                }
+              >
+                <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                  <AreaChart
+                    data={chartData}
+                    margin={USAGE_CHART_MARGIN}
+                    {...chartProps}
+                  >
+                    <defs>
+                      <linearGradient
+                        id={chartGradientId}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={chartColor}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={chartColor}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      vertical={false}
+                    />
+                    <UsageChartXAxis
+                      points={chartPoints}
+                      dateRange={dateRange}
+                      chartInterval={chartInterval}
+                    />
+                    <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
+                    <Tooltip
+                      isAnimationActive={false}
+                      cursor={!isSelecting}
+                      content={({ active, payload }) => {
+                        if (isSelecting || !active || !payload?.length)
+                          return null
+                        const data = payload[0].payload as {
+                          fullDate: string
+                          value: number
+                        }
+                        return (
+                          <div className="rounded-md border border-border bg-popover px-3 py-2">
+                            <p className="mb-1 text-[11px] text-muted-foreground">
+                              {data.fullDate}
+                            </p>
+                            <p className="text-[13px] font-medium text-foreground">
+                              {formatValue(data.value)}{' '}
+                              <span className="font-normal text-muted-foreground">
+                                {t(unitLabel)}
+                              </span>
+                            </p>
+                          </div>
+                        )
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke={chartColor}
+                      strokeWidth={2}
+                      fill={`url(#${chartGradientId})`}
+                      name={title}
+                      dot={false}
+                      {...CHART_ANIMATION_DISABLED}
+                    />
+                    <UsageChartBrushReferenceArea
+                      left={brushLeft}
+                      right={brushRight}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </UsageChartRefreshingOverlay>
           </UsageChartArea>
         )}
       </div>

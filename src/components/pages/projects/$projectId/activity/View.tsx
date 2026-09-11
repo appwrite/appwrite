@@ -74,6 +74,7 @@ import {
   getActivityLogRetentionDaysFromPlan,
   getActivityLogRetentionHoursFromPlan,
   getDefaultActivityDateRangeFromRetentionDays,
+  hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
@@ -89,6 +90,9 @@ import {
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 import { McpIcon } from '@/components/global/shared/McpIcon'
+import {
+  clampDateRangeToRetentionFloor,
+} from '@/lib/date-range-retention'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
@@ -606,7 +610,18 @@ export function View({ projectId, initialData }: ViewProps) {
     return undefined
   }, [filterMap])
 
-  const dateRangeForPicker = dateRangeFromFilters ?? defaultActivityDateRange
+  const dateRangeForPicker = useMemo(() => {
+    const base = dateRangeFromFilters ?? defaultActivityDateRange
+    if (!hasFiniteActivityLogRetention(organizationPlan)) return base
+    return (
+      clampDateRangeToRetentionFloor(base, activityLogRetentionHours) ?? base
+    )
+  }, [
+    activityLogRetentionHours,
+    dateRangeFromFilters,
+    defaultActivityDateRange,
+    organizationPlan,
+  ])
 
   const volumeChartRange = useMemo(() => {
     const from = dateRangeFromFilters?.from ?? defaultActivityDateRange.from
@@ -681,12 +696,17 @@ export function View({ projectId, initialData }: ViewProps) {
 
   const handleDateRangeChange = useCallback(
     (range: DateRange | undefined) => {
+      const clampedRange =
+        hasFiniteActivityLogRetention(organizationPlan) && range
+          ? clampDateRangeToRetentionFloor(range, activityLogRetentionHours)
+          : range
+
       const next = new Map(filterMap)
       for (const key of [...next.keys()]) {
         if (key.c === 'time') next.delete(key)
       }
-      if (range?.from && range?.to) {
-        const v = `${range.from.toISOString()},${range.to.toISOString()}`
+      if (clampedRange?.from && clampedRange?.to) {
+        const v = `${clampedRange.from.toISOString()},${clampedRange.to.toISOString()}`
         const compactKey: CompactFilterKey = { c: 'time', o: 'between', v }
         next.set(
           compactKey,
@@ -701,7 +721,12 @@ export function View({ projectId, initialData }: ViewProps) {
         replace: true,
       })
     },
-    [filterMap, navigate],
+    [
+      activityLogRetentionHours,
+      filterMap,
+      navigate,
+      organizationPlan,
+    ],
   )
 
   const activeResourceTypeFilter = useMemo(() => {
@@ -919,6 +944,11 @@ export function View({ projectId, initialData }: ViewProps) {
                 onDateRangeChange={handleDateRangeChange}
                 className="h-9 min-w-[200px]"
                 popoverContentAlign="start"
+                retentionHours={
+                  hasFiniteActivityLogRetention(organizationPlan)
+                    ? activityLogRetentionHours
+                    : null
+                }
               />
             </div>
           }

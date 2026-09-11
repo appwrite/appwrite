@@ -157,6 +157,9 @@ export async function fetchProjectBandwidthOverview(
           ['path'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
+          undefined,
+          undefined,
+          logRetentionHours,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])

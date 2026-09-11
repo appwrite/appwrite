@@ -2421,6 +2421,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Draft updated': 'הטיוטה עודכנה',
   'EU region': 'אזור האיחוד האירופי',
   'Email content': 'תוכן האימייל',
+  'Email preview': 'תצוגה מקדימה של האימייל',
   'Email subject': 'נושא האימייל',
   'Enable for development builds, disable for production.':
     'הפעילו עבור גרסאות פיתוח, השביתו עבור סביבת ייצור.',

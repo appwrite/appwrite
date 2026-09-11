@@ -4,6 +4,9 @@
  */
 export const jaAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': '組織に参加する',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
   '123 Main St': '大手町 1-1-1',
   'Account ID': 'アカウント ID',
   'Account was deleted': 'アカウントを削除しました',
@@ -152,6 +155,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Billing addresses': '請求先住所',
   'Created At': '作成日時',
   'Delete account': 'アカウントを削除',
+  'Delete identity': 'ID を削除',
   'Delete all sessions': 'すべてのセッションを削除',
   'Delete authenticator app': '認証アプリを削除',
   'Delete billing address': '請求先住所を削除',
@@ -711,6 +715,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     '招待を承認するには、招待が送信されたアカウントに切り替えてください。',
   'Switch account': 'アカウントを切り替え',
   'Use a different account': '別のアカウントを使用',
+  'Could not sign out. Try switching accounts again.':
+    'サインアウトできませんでした。もう一度アカウントを切り替えてください。',
   'Signing out...': 'サインアウト中...',
   'Go to dashboard': 'ダッシュボードへ',
   'Invalid invitation link': '招待リンクが無効です',
@@ -1128,4 +1134,30 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Switch to dark mode': 'ダークモードに切り替え',
   'Switch to light mode': 'ライトモードに切り替え',
   'Use system theme': 'システムテーマを使用',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
+  'Read about the program': 'プログラムについて読む',
+  'Checking your account...': 'アカウントを確認しています...',
+  'Setting up your Education plan organization...':
+    'Education プランの組織を設定しています...',
+  'Continue to Appwrite': 'Appwrite に進む',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub でのサインインが完了しませんでした。もう一度お試しのうえ、プログラムにご参加ください。',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    '現在、GitHub Student Developer Pack の対象ではないようです。',
+  'You can still use Appwrite without an Education plan.':
+    'Education プランがなくても、引き続き Appwrite をご利用いただけます。',
+  "You've already joined the Education program.":
+    'すでに Education プログラムに参加しています。',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
+  'We could not check your GitHub connection':
+    'GitHub との接続を確認できませんでした',
+  'We could not set up your Education plan': 'Education プランを設定できませんでした',
+  'We could not reach GitHub': 'GitHub に接続できませんでした',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    '少し時間をおいてもう一度お試しいただくか、サインインして Appwrite をご覧ください。',
 }

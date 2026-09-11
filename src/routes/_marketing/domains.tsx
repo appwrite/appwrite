@@ -22,13 +22,23 @@ export const Route = createFileRoute('/_marketing/domains')({
       description: domainsHero.description,
     }),
   }),
-  loader: async ({ context }) => {
-  },
   component: DomainsPage,
 })
 
 function DomainsPage() {
   const { q } = Route.useSearch()
+  const navigate = Route.useNavigate()
 
-  return <View initialSearch={q?.trim() ?? ''} />
+  return (
+    <View
+      initialSearch={q ?? ''}
+      onSearchValueChange={(value) => {
+        void navigate({
+          search: (previous) => ({ ...previous, q: value || undefined }),
+          replace: true,
+          resetScroll: false,
+        })
+      }}
+    />
+  )
 }

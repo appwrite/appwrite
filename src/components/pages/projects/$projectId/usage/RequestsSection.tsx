@@ -19,7 +19,7 @@ import {
   formatRequestsTotal,
   formatRequestsValue,
 } from '@/lib/usage/requests-events'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
@@ -61,6 +61,7 @@ import {
 } from './_components/UsageMetricCard'
 import { UsageSectionChartError } from './_components/UsageSectionChartError'
 import { UsageChartBrushReferenceArea } from './_components/UsageChartBrushReferenceArea'
+import { UsageChartRefreshingOverlay } from './_components/UsageChartRefreshingOverlay'
 import { Skeleton } from '@/components/ui/skeleton'
 const API_REQUESTS_DESCRIPTION =
   'Total API requests during the selected period. Each call to your project endpoint counts as one request.'
@@ -136,6 +137,7 @@ type RequestsChartCardProps = {
   changePercent: number
   chartPoints: { date: string; day: Date; total: number }[]
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   chartError?: unknown
   onRetry?: () => void
@@ -146,6 +148,7 @@ function RequestsChartCard({
   changePercent,
   chartPoints,
   isLoading,
+  isRefreshing = false,
   isError,
   chartError,
   onRetry,
@@ -200,34 +203,39 @@ function RequestsChartCard({
             {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
-              <>
-                <span className="text-[24px] font-semibold tabular-nums text-foreground">
-                  {formattedTotal}
-                </span>
-                <span className="text-[13px] text-muted-foreground">
-                  {t('requests')}
-                </span>
-                {!isError && chartPoints.length > 0 ? (
-                  <span
-                    className={cn(
-                      'text-[12px] font-medium tabular-nums',
-                      changePercent > 0 &&
-                        'text-emerald-600 dark:text-emerald-400',
-                      changePercent < 0 && 'text-amber-600 dark:text-amber-400',
-                      changePercent === 0 && 'text-muted-foreground',
-                    )}
-                  >
-                    {changeLabel} {t('vs previous period')}
+              <UsageChartRefreshingOverlay
+                isRefreshing={isRefreshing}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
+              >
+                <>
+                  <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                    {formattedTotal}
                   </span>
-                ) : !isLoading ? (
-                  <span
-                    className="invisible text-[12px] font-medium tabular-nums"
-                    aria-hidden
-                  >
-                    0% {t('vs previous period')}
+                  <span className="text-[13px] text-muted-foreground">
+                    {t('requests')}
                   </span>
-                ) : null}
-              </>
+                  {!isError && chartPoints.length > 0 ? (
+                    <span
+                      className={cn(
+                        'text-[12px] font-medium tabular-nums',
+                        changePercent > 0 &&
+                          'text-emerald-600 dark:text-emerald-400',
+                        changePercent < 0 && 'text-amber-600 dark:text-amber-400',
+                        changePercent === 0 && 'text-muted-foreground',
+                      )}
+                    >
+                      {changeLabel} {t('vs previous period')}
+                    </span>
+                  ) : (
+                    <span
+                      className="invisible text-[12px] font-medium tabular-nums"
+                      aria-hidden
+                    >
+                      0% {t('vs previous period')}
+                    </span>
+                  )}
+                </>
+              </UsageChartRefreshingOverlay>
             )}
           </div>
         </div>
@@ -246,17 +254,18 @@ function RequestsChartCard({
           </UsageRequestsChartArea>
         ) : (
           <UsageRequestsChartArea>
-            <div
-              className={surfaceClassName}
-              aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
-              }
-            >
-              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-                <AreaChart
-                  data={chartData}
+            <UsageChartRefreshingOverlay isRefreshing={isRefreshing}>
+              <div
+                className={surfaceClassName}
+                aria-label={
+                  canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
+                }
+              >
+                <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                  <AreaChart
+                    data={chartData}
                   margin={USAGE_CHART_MARGIN}
                   {...chartProps}
                 >
@@ -331,6 +340,7 @@ function RequestsChartCard({
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            </UsageChartRefreshingOverlay>
           </UsageRequestsChartArea>
         )}
       </div>
@@ -365,6 +375,7 @@ export function RequestsSection({
   const {
     data: chartOverview,
     isLoading: isChartLoading,
+    isFetching: isChartFetching,
     isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
     error: chartError,
@@ -404,10 +415,14 @@ export function RequestsSection({
   }, [queryClient, projectId, registerRefreshHandler, unregisterRefreshHandler])
 
   const chartPoints = isChartError ? [] : (chartOverview?.chartPoints ?? [])
-  const showChartLoading = shouldShowUsageChartSkeleton(
-    isChartError,
-    isChartLoading,
-    isChartPlaceholderData,
+  const chartLoading = getUsageChartLoadingProps(
+    {
+      isError: isChartError,
+      isLoading: isChartLoading,
+      isFetching: isChartFetching,
+      isPlaceholderData: isChartPlaceholderData,
+    },
+    chartPoints,
   )
   const total = sumUsageChartPoints(chartPoints)
   const changePercent = chartOverview?.changePercent ?? 0
@@ -423,7 +438,8 @@ export function RequestsSection({
         total={total}
         changePercent={changePercent}
         chartPoints={chartPoints}
-        isLoading={showChartLoading}
+        isLoading={chartLoading.isLoading}
+        isRefreshing={chartLoading.isRefreshing}
         isError={isChartError}
         chartError={chartError}
         onRetry={handleRetryChart}

@@ -5,6 +5,7 @@ import { Globe, Server, Zap } from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NumberInput } from '@/components/ui/number-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -115,11 +116,10 @@ export function View() {
     resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
-  const initialSelection: FirewallResourceSelection =
-    parseFirewallListSearch({
-      resourceType: initialResourceType,
-      resourceId: initialResourceId,
-    }) ?? { resourceType: 'api' }
+  const initialSelection: FirewallResourceSelection = parseFirewallListSearch({
+    resourceType: initialResourceType,
+    resourceId: initialResourceId,
+  }) ?? { resourceType: 'api' }
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState({
@@ -265,34 +265,22 @@ export function View() {
           <Label htmlFor="firewall-limit" className="text-[12px]">
             {t('Request limit')}
           </Label>
-          <Input
+          <NumberInput
             id="firewall-limit"
-            type="number"
             min={1}
             value={form.limit}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                limit: Number(e.target.value) || 1,
-              })
-            }
+            onValueChange={(limit) => setForm({ ...form, limit })}
           />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="firewall-interval" className="text-[12px]">
             {t('Interval (seconds)')}
           </Label>
-          <Input
+          <NumberInput
             id="firewall-interval"
-            type="number"
             min={1}
             value={form.interval}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                interval: Number(e.target.value) || 1,
-              })
-            }
+            onValueChange={(interval) => setForm({ ...form, interval })}
           />
         </div>
         {form.strategy === 'tokenBucket' ? (
@@ -300,17 +288,13 @@ export function View() {
             <Label htmlFor="firewall-max-bucket-size" className="text-[12px]">
               {t('Max bucket size')}
             </Label>
-            <Input
+            <NumberInput
               id="firewall-max-bucket-size"
-              type="number"
               min={MAX_BUCKET_SIZE_MIN}
               max={MAX_BUCKET_SIZE_MAX}
               value={form.maxBucketSize}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  maxBucketSize: Number(e.target.value) || MAX_BUCKET_SIZE_MIN,
-                })
+              onValueChange={(maxBucketSize) =>
+                setForm({ ...form, maxBucketSize })
               }
             />
             <p className="text-[12px] text-muted-foreground">
@@ -327,18 +311,12 @@ export function View() {
           <Label htmlFor="firewall-difficulty" className="text-[12px]">
             {t('Difficulty')}
           </Label>
-          <Input
+          <NumberInput
             id="firewall-difficulty"
-            type="number"
             min={CHALLENGE_DIFFICULTY_MIN}
             max={CHALLENGE_DIFFICULTY_MAX}
             value={form.difficulty}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                difficulty: Number(e.target.value) || CHALLENGE_DIFFICULTY_MIN,
-              })
-            }
+            onValueChange={(difficulty) => setForm({ ...form, difficulty })}
           />
           <p className="text-[12px] text-muted-foreground">
             {t('1 (easiest) to 5 (hardest).')}
@@ -348,18 +326,12 @@ export function View() {
           <Label htmlFor="firewall-ttl" className="text-[12px]">
             {t('TTL (seconds)')}
           </Label>
-          <Input
+          <NumberInput
             id="firewall-ttl"
-            type="number"
             min={CHALLENGE_TTL_MIN}
             max={CHALLENGE_TTL_MAX}
             value={form.ttl}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                ttl: Number(e.target.value) || CHALLENGE_TTL_MIN,
-              })
-            }
+            onValueChange={(ttl) => setForm({ ...form, ttl })}
           />
           <p className="text-[12px] text-muted-foreground">
             {t('How long a visitor stays cleared after passing.')}
@@ -383,18 +355,12 @@ export function View() {
           <Label htmlFor="firewall-status-code" className="text-[12px]">
             {t('Status code')}
           </Label>
-          <Input
+          <NumberInput
             id="firewall-status-code"
-            type="number"
             min={300}
             max={399}
             value={form.statusCode}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                statusCode: Number(e.target.value) || 302,
-              })
-            }
+            onValueChange={(statusCode) => setForm({ ...form, statusCode })}
           />
         </div>
       </div>
@@ -546,16 +512,10 @@ export function View() {
             {t('Priority')}
             <PriorityHint />
           </Label>
-          <Input
-            type="number"
+          <NumberInput
             min={0}
             value={form.priority}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                priority: Number(e.target.value) || 0,
-              })
-            }
+            onValueChange={(priority) => setForm({ ...form, priority })}
           />
         </div>
 

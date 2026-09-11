@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/how-to-migrate-database-with-cli/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: product
+category: products
 faqs:
   - question: "What does `appwrite.config.json` do in the Appwrite CLI?"
     answer: "`appwrite.config.json` is the source of truth for your project's tables, functions, and other resources. You commit it to Git, edit it like any other config, and use `appwrite push` to apply changes. This lets you track schema history, code-review migrations, and replicate projects across environments."

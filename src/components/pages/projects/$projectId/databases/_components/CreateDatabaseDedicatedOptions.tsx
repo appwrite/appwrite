@@ -9,7 +9,7 @@ import {
   MAX_DEDICATED_DB_HA_REPLICA_COUNT,
   type DedicatedDatabaseCreatePricing,
 } from '@/lib/database-create-pricing'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { useT } from '@/lib/i18n/translate'
 
 type CreateDatabaseDedicatedOptionsProps = {
@@ -154,13 +154,7 @@ export function CreateDatabaseDedicatedOptions({
                   className="h-8 shrink-0 text-[13px]"
                   asChild
                 >
-                  <a
-                    href={CONTACT_ENTERPRISE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t('Contact sales')}
-                  </a>
+                  <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
                 </Button>
               </div>
             )}

@@ -10,7 +10,7 @@ import {
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { OAuth2RelayCard } from '@/components/global/auth/OAuth2RelayCard'
-import { OAuth2DeviceCodeInput, OAUTH2_DEVICE_CODE_LENGTH } from '@/components/global/auth/OAuth2DeviceCodeInput'
+import { OAuth2DeviceCodeInput } from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -227,7 +227,7 @@ function DeviceCodeCard({
             type="submit"
             variant="brandCta"
             className="w-full"
-            disabled={code.length < OAUTH2_DEVICE_CODE_LENGTH}
+            disabled={code.length === 0}
           >
             Continue
           </Button>
@@ -440,7 +440,7 @@ function OAuth2PreviewPage() {
           ) : null}
 
           {!outcome && screen === 'device-confirm-code' ? (
-            <DeviceCodeCard code="AB12CD" hasPrefilledCode />
+            <DeviceCodeCard code="MDF2TN39" hasPrefilledCode />
           ) : null}
 
           {!outcome && screen === 'outcome-approved' ? (

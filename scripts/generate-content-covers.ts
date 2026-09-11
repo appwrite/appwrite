@@ -4,7 +4,6 @@
  *
  * Scans:
  * - public/images/blog/<slug>/cover.*
- * - public/images/blog-local/<slug>/cover.*
  * - public/images/changelog/*.avif
  *
  * Covers below the minimum width are resized (aspect ratio preserved) and
@@ -27,15 +26,13 @@ const COVER_FILE_PATTERN = /^cover\.(avif|png|jpe?g|webp)$/i
 function listCoverFiles(): string[] {
   const files: string[] = []
 
-  for (const blogRoot of ['images/blog', 'images/blog-local']) {
-    const root = join(PUBLIC_ROOT, blogRoot)
-    for (const slug of readdirSync(root)) {
-      const dir = join(root, slug)
-      if (!statSync(dir).isDirectory()) continue
-      for (const file of readdirSync(dir)) {
-        if (COVER_FILE_PATTERN.test(file)) {
-          files.push(join(dir, file))
-        }
+  const blogRoot = join(PUBLIC_ROOT, 'images/blog')
+  for (const slug of readdirSync(blogRoot)) {
+    const dir = join(blogRoot, slug)
+    if (!statSync(dir).isDirectory()) continue
+    for (const file of readdirSync(dir)) {
+      if (COVER_FILE_PATTERN.test(file)) {
+        files.push(join(dir, file))
       }
     }
   }
@@ -52,7 +49,7 @@ function listCoverFiles(): string[] {
 
 async function encodeForPath(pipeline: sharp.Sharp, path: string): Promise<Buffer> {
   if (/\.avif$/i.test(path)) {
-    // Same encode settings as scripts/generate-blog-local-images.ts
+    // Same encode settings as scripts/generate-blog-images.ts
     return pipeline
       .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
       .toBuffer()

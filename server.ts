@@ -174,16 +174,26 @@ async function readClientExportOrFallback(
 function htmlResponse(
   req: Request,
   html: string,
-  headers: Record<string, string>,
+  headers: HeadersInit,
+  status: number = 200,
+  statusText?: string,
 ): Response {
   // Prerendered HTML (/init, marketing pages) is served from Bun routes and
   // never reaches TanStack host-canonical middleware.
   const canonicalRedirect = getCanonicalHostRedirectResponse(req)
   if (canonicalRedirect) return canonicalRedirect
 
+  const responseHeaders = new Headers(headers)
+  // Runtime config injection changes the body length.
+  responseHeaders.delete('content-length')
+
   return withSeoIndexingHeaders(
     req,
-    new Response(injectRuntimeConfig(html), { headers }),
+    new Response(injectRuntimeConfig(html), {
+      headers: responseHeaders,
+      status,
+      statusText,
+    }),
   )
 }
 
@@ -905,10 +915,11 @@ async function initializeServer() {
             return withSeoIndexingHeaders(req, res)
           }
           const html = await res.text()
-          return htmlResponse(req, html, {
-            'Content-Type': contentType,
-            'Cache-Control': res.headers.get('cache-control') ?? 'no-store',
-          })
+          const headers = new Headers(res.headers)
+          if (!headers.has('cache-control')) {
+            headers.set('Cache-Control', 'no-store')
+          }
+          return htmlResponse(req, html, headers, res.status, res.statusText)
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
           captureServerException(error, {

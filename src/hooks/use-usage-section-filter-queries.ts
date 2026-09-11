@@ -10,6 +10,8 @@ export function useUsageSectionFilterQueries(
 ): {
   filterQueries: UsageFilterQueries
   logRetentionHours: number
+  dateRangePresetId?: string | null
+  usageLogRetentionReady: boolean
 } {
   const context = useOptionalUsageFilters()
   return {
@@ -23,5 +25,7 @@ export function useUsageSectionFilterQueries(
       logRetentionHoursOverride ??
       context?.usageLogRetentionHours ??
       DEFAULT_USAGE_LOG_RETENTION_HOURS,
+    dateRangePresetId: context?.dateRangePresetId,
+    usageLogRetentionReady: context?.usageLogRetentionReady ?? true,
   }
 }

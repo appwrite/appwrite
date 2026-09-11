@@ -4,6 +4,9 @@
  */
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': 'הצטרפו לארגון',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
   Account: 'חשבון',
   'Account ID': 'מזהה חשבון',
@@ -185,6 +188,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Current: 'נוכחי',
   Delete: 'מחיקה',
   'Delete account': 'מחיקת חשבון',
+  'Delete identity': 'מחיקת זהות',
   'Delete all sessions': 'מחיקת כל הסשנים',
   'Delete authenticator app': 'מחיקת אפליקציית האימות',
   'Delete billing address': 'מחיקת כתובת חיוב',
@@ -1110,6 +1114,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
   'Switch account': 'החלפת חשבון',
   'Use a different account': 'שימוש בחשבון אחר',
+  'Could not sign out. Try switching accounts again.':
+    'לא הצלחנו לנתק את החשבון. נסו שוב להחליף חשבון.',
   'Signing out...': 'מתנתקים...',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',
@@ -1244,4 +1250,30 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Switch to dark mode': 'מעבר למצב כהה',
   'Switch to light mode': 'מעבר למצב בהיר',
   'Use system theme': 'שימוש בערכת הנושא של המערכת',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
+  'Read about the program': 'מידע על התוכנית',
+  'Checking your account...': 'בודקים את החשבון שלכם...',
+  'Setting up your Education plan organization...':
+    'מגדירים את הארגון שלכם בתוכנית Education...',
+  'Continue to Appwrite': 'המשך אל Appwrite',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub לא השלים את ההתחברות. נסו שוב כדי להצטרף לתוכנית.',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    'נראה שאינכם זכאים כרגע ל-GitHub Student Developer Pack.',
+  'You can still use Appwrite without an Education plan.':
+    'עדיין תוכלו להשתמש ב-Appwrite ללא תוכנית Education.',
+  "You've already joined the Education program.": 'כבר הצטרפתם לתוכנית Education.',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
+  'We could not check your GitHub connection':
+    'לא הצלחנו לבדוק את החיבור שלכם ל-GitHub',
+  'We could not set up your Education plan':
+    'לא הצלחנו להגדיר את תוכנית ה-Education שלכם',
+  'We could not reach GitHub': 'לא הצלחנו להתחבר ל-GitHub',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    'נסו שוב בעוד רגע, או התחברו והתנסו ב-Appwrite.',
 }

@@ -8,7 +8,7 @@ timeToRead: 5
 author:
   - eldad-fux
   - ariel-weinberger
-category: announcement
+category: announcements
 faqs:
   - question: "What is Imagine?"
     answer: "Imagine is an AI powered platform from the Appwrite team that turns natural language prompts into real, production ready applications backed by Appwrite Cloud. Unlike disposable prototype tools, the output is a full project with database schemas, auth, storage, and deployable code."

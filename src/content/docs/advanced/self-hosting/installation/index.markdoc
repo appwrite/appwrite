@@ -161,11 +161,13 @@ On non-Linux hosts, the server might take a few minutes to start after installat
 
 ## Organizations {% #organizations %}
 
-A self-hosted Console starts with one organization. Appwrite creates it the first time you sign in to the Console, and every project you create from the Console belongs to it. The Console does not offer a way to create more, and it hides the organization switcher while your account belongs to only one.
+A self-hosted instance allows one organization to be created. The Console creates it, along with an initial project, when the first user signs in. Once any organization exists, requests to create another are rejected by the API with HTTP 403 (`organization_creation_prohibited`), including requests made through the SDKs or CLI. The limit applies to the instance, not to each account.
 
-Members you invite to the organization get owner access to every project on the instance. There are no organization roles on a self-hosted instance.
+Invite other users to the organization to share its existing projects. Creating an account alone does not grant organization or project access, and signing up does not create a separate project for each user. If you allow additional accounts to register with `_APP_CONSOLE_WHITELIST_ROOT=disabled`, they still need to accept an organization invitation.
 
-Multi-tenancy is still supported through the API. An organization is a team, and creating a project through the API or the CLI takes its `teamId` as before. When your account belongs to more than one organization, for example after upgrading an instance that already had several organizations, the Console shows the organization switcher, lists every organization in the project selector, and lets you transfer projects between them.
+Existing organizations from an upgrade are preserved; they are not merged or deleted. Accounts belonging to several organizations can still switch between them and transfer projects. The Console hides the organization switcher when an account belongs to only one organization.
+
+Organizations use console teams, but this restriction does not apply to teams inside application projects. You can continue creating those teams through the API and SDKs.
 
 ## SDK version compatibility {% #sdk-version-compatibility %}
 

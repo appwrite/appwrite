@@ -120,6 +120,7 @@ import {
   getMarketingPageUrl,
   isMarketingPageExternal,
 } from '@/lib/marketing/urls'
+import { getAccountMenuLinks } from '@/lib/account-menu-section'
 import {
   isMarketingProductsNavItem,
   MarketingProductsMobileNav,
@@ -158,7 +159,7 @@ function getDefaultMarketingHeaderNav(
     },
     {
       label: copy.customers,
-      href: '/blog/category/customer-stories',
+      href: '/blog/categories/customer-stories',
     },
     {
       label: copy.blog,
@@ -177,7 +178,7 @@ function getMarketingNavAnalyticsAction(
   if (href === '/docs') return 'marketing-nav-docs'
   if (href === '/pricing') return 'marketing-nav-pricing'
   if (href === '/enterprise') return 'marketing-nav-enterprise'
-  if (href === '/blog/category/customer-stories')
+  if (href === '/blog/categories/customer-stories')
     return 'marketing-nav-customers'
   if (href === '/blog') return 'marketing-nav-blog'
   if (href === '/changelog') return 'marketing-nav-changelog'
@@ -369,10 +370,10 @@ export function ConsoleHeader({
     if (item.href === '/blog') {
       return { ...item, href: getBlogPageUrl('/blog', localMarketing) }
     }
-    if (item.href === '/blog/category/customer-stories') {
+    if (item.href === '/blog/categories/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/category/customer-stories', localMarketing),
+        href: getBlogPageUrl('/blog/categories/customer-stories', localMarketing),
       }
     }
     if (item.href === '/docs') {
@@ -467,8 +468,8 @@ export function ConsoleHeader({
       undefined
   const optionalAuthPending = isOptionalAuth && !optionalAuthResolved
   const headerAuthenticated = isAuthenticated || !!headerAccount
-  const showGuestHeader =
-    isOptionalAuth && optionalAuthResolved && !headerAuthenticated
+  // The pending pathname changes before this header unmounts on auth navigation.
+  const showGuestHeader = !headerAuthenticated
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
@@ -489,6 +490,12 @@ export function ConsoleHeader({
   const changelogHref = getMarketingPageUrl('/changelog', localMarketing)
   const homeHref = getMarketingPageUrl('/home', localMarketing)
   const marketingNavLinksExternal = isMarketingPageExternal(localMarketing)
+  // The account menu links elsewhere: drop the entry for the page you are on.
+  const accountMenuLinks = getAccountMenuLinks({
+    pathname: location.pathname,
+    showMarketingNav,
+    isCloud,
+  })
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -1202,14 +1209,22 @@ export function ConsoleHeader({
               <div className="h-9 w-[4.75rem] shrink-0 rounded-md @[640px]:w-[4.875rem]" />
               <div className="h-9 w-[4.875rem] shrink-0 rounded-md" />
             </div>
-          ) : showGuestHeader ? (
+          ) : (
+            <div
+              className={cn(
+                'flex min-w-0 items-center gap-1 @[640px]:gap-2',
+                showMarketingNav &&
+                  'animate-in fade-in duration-500 fill-mode-both motion-reduce:animate-none',
+              )}
+            >
+          {showGuestHeader ? (
             <>
               {showCenterSearch ? (
                 <button
                   type="button"
                   {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
@@ -1629,7 +1644,33 @@ export function ConsoleHeader({
                     <>
                       <DropdownMenuSeparator className="my-1 bg-border" />
 
-                      {showMarketingNav && !preLaunch ? (
+                      {accountMenuLinks.includes('home') && (
+                        <DropdownMenuItem asChild>
+                          {marketingNavLinksExternal ? (
+                            <a
+                              href={homeHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...analyticsAttrs('header-home')}
+                            >
+                              <Home className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.home}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              to="/home"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...analyticsAttrs('header-home')}
+                            >
+                              <Home className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.home}</span>
+                            </Link>
+                          )}
+                        </DropdownMenuItem>
+                      )}
+
+                      {accountMenuLinks.includes('console') && (
                         <DropdownMenuItem asChild>
                           <Link
                             {...(orgId
@@ -1645,95 +1686,75 @@ export function ConsoleHeader({
                             <span>{headerCopy.accountMenu.console}</span>
                           </Link>
                         </DropdownMenuItem>
-                      ) : marketingNavLinksExternal ? (
+                      )}
+
+                      {accountMenuLinks.includes('docs') && (
                         <DropdownMenuItem asChild>
-                          <a
-                            href={homeHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-home')}
-                          >
-                            <Home className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.home}</span>
-                          </a>
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to="/home"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-home')}
-                          >
-                            <Home className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.home}</span>
-                          </Link>
+                          {marketingNavLinksExternal ? (
+                            <a
+                              href={docsHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...analyticsAttrs('header-docs')}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.docs}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              to="/docs"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...analyticsAttrs('header-docs')}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.docs}</span>
+                            </Link>
+                          )}
                         </DropdownMenuItem>
                       )}
 
-                      <DropdownMenuItem asChild>
-                        {marketingNavLinksExternal ? (
-                          <a
-                            href={docsHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-docs')}
-                          >
-                            <BookOpen className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.docs}</span>
-                          </a>
-                        ) : (
-                          <Link
-                            to="/docs"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-docs')}
-                          >
-                            <BookOpen className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.docs}</span>
-                          </Link>
-                        )}
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem asChild>
-                        {marketingNavLinksExternal ? (
-                          <a
-                            href={changelogHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...(showChangelogBadge
-                              ? {
-                                  'aria-label':
-                                    headerCopy.marketingNav
-                                      .changelogNewUpdatesAria,
-                                }
-                              : {})}
-                          >
-                            <Clock className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.changelog}</span>
-                          </a>
-                        ) : (
-                          <Link
-                            to="/changelog"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...(showChangelogBadge
-                              ? {
-                                  'aria-label':
-                                    headerCopy.marketingNav
-                                      .changelogNewUpdatesAria,
-                                }
-                              : {})}
-                          >
-                            <Clock className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.changelog}</span>
-                          </Link>
-                        )}
-                      </DropdownMenuItem>
+                      {accountMenuLinks.includes('changelog') && (
+                        <DropdownMenuItem asChild>
+                          {marketingNavLinksExternal ? (
+                            <a
+                              href={changelogHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...(showChangelogBadge
+                                ? {
+                                    'aria-label':
+                                      headerCopy.marketingNav
+                                        .changelogNewUpdatesAria,
+                                  }
+                                : {})}
+                            >
+                              <Clock className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.changelog}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              to="/changelog"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                              {...(showChangelogBadge
+                                ? {
+                                    'aria-label':
+                                      headerCopy.marketingNav
+                                        .changelogNewUpdatesAria,
+                                  }
+                                : {})}
+                            >
+                              <Clock className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.changelog}</span>
+                            </Link>
+                          )}
+                        </DropdownMenuItem>
+                      )}
 
                       {/* Temporary: remove once the old console is retired.
                         Cloud only: self-hosted 2.0 ships no legacy console. */}
-                      {isCloud && (
+                      {accountMenuLinks.includes('oldConsole') && (
                         <DropdownMenuItem asChild>
                           <a
                             href="https://cloud.appwrite.io"
@@ -1816,6 +1837,8 @@ export function ConsoleHeader({
                 onOpenChange={setImpersonateDialogOpen}
               />
             </>
+          )}
+            </div>
           )}
         </div>
       </header>

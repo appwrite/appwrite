@@ -26,7 +26,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { InboundOutboundUsageChartCard } from './_components/InboundOutboundUsageChartCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
 
 const REALTIME_USAGE_ERROR = {
@@ -95,6 +95,19 @@ export function RealtimeSection({
     ? []
     : (bandwidthQuery.data?.dualChartPoints ?? [])
 
+  const connectionsLoading = getUsageChartLoadingProps(
+    connectionsQuery,
+    connectionsPoints,
+  )
+  const messagesLoading = getUsageChartLoadingProps(
+    messagesQuery,
+    messagesPoints,
+  )
+  const bandwidthLoading = getUsageChartLoadingProps(
+    bandwidthQuery,
+    dualBandwidthPoints,
+  )
+
   return (
     <div className="space-y-6">
       <UsageTimeSeriesChartCard
@@ -105,11 +118,8 @@ export function RealtimeSection({
         total={getUsageChartPeakValue(connectionsPoints)}
         changePercent={connectionsQuery.data?.changePercent ?? 0}
         chartPoints={connectionsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          connectionsQuery.isError,
-          connectionsQuery.isLoading,
-          connectionsQuery.isPlaceholderData,
-        )}
+        isLoading={connectionsLoading.isLoading}
+        isRefreshing={connectionsLoading.isRefreshing}
         isError={connectionsQuery.isError}
         queryError={connectionsQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}
@@ -128,11 +138,8 @@ export function RealtimeSection({
         total={sumUsageChartPoints(messagesPoints)}
         changePercent={messagesQuery.data?.changePercent ?? 0}
         chartPoints={messagesPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          messagesQuery.isError,
-          messagesQuery.isLoading,
-          messagesQuery.isPlaceholderData,
-        )}
+        isLoading={messagesLoading.isLoading}
+        isRefreshing={messagesLoading.isRefreshing}
         isError={messagesQuery.isError}
         queryError={messagesQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}
@@ -150,11 +157,8 @@ export function RealtimeSection({
         total={sumUsageChartPoints(bandwidthQuery.data?.chartPoints ?? [])}
         changePercent={bandwidthQuery.data?.changePercent ?? 0}
         dualChartPoints={dualBandwidthPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          bandwidthQuery.isError,
-          bandwidthQuery.isLoading,
-          bandwidthQuery.isPlaceholderData,
-        )}
+        isLoading={bandwidthLoading.isLoading}
+        isRefreshing={bandwidthLoading.isRefreshing}
         isError={bandwidthQuery.isError}
         queryError={bandwidthQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}

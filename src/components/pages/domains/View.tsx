@@ -9,7 +9,6 @@ import {
   buildSignInForDomainPath,
   buildSignUpForDomainPath,
 } from '@/lib/domains/buy-wizard'
-import type { DomainSelectionQuote } from '@/lib/domains/search'
 import { domainsHero } from '@/lib/domains/marketing-content'
 import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
 import { trackEvent } from '@/lib/analytics'
@@ -17,23 +16,18 @@ import { useT } from '@/lib/i18n/translate'
 
 type DomainsViewProps = {
   initialSearch?: string
+  onSearchValueChange?: (value: string) => void
 }
 
 function DomainsAuthFooter() {
   const t = useT()
   return (
     <p>
-      <Link
-        {...buildSignUpForDomainPath()}
-        className="link-neutral"
-      >
+      <Link {...buildSignUpForDomainPath()} className="link-neutral">
         {t('Create an account')}
       </Link>{' '}
       {t('or')}{' '}
-      <Link
-        {...buildSignInForDomainPath()}
-        className="link-neutral"
-      >
+      <Link {...buildSignInForDomainPath()} className="link-neutral">
         {t('sign in')}
       </Link>{' '}
       {t('to register and connect your domain.')}
@@ -41,7 +35,10 @@ function DomainsAuthFooter() {
   )
 }
 
-export function View({ initialSearch = '' }: DomainsViewProps) {
+export function View({
+  initialSearch = '',
+  onSearchValueChange,
+}: DomainsViewProps) {
   const t = useT()
   const navigate = useNavigate()
   const {
@@ -94,7 +91,7 @@ export function View({ initialSearch = '' }: DomainsViewProps) {
   )
 
   const handleSelectDomain = useCallback(
-    (full: string, _quote: DomainSelectionQuote) => {
+    (full: string) => {
       trackEvent('Wizard Option Selected', {
         wizard: 'domains_marketing',
         step: 'search',
@@ -112,6 +109,7 @@ export function View({ initialSearch = '' }: DomainsViewProps) {
         <DomainSearchResults
           variant="focus"
           initialSearch={initialSearch}
+          onSearchValueChange={onSearchValueChange}
           onSelectDomain={handleSelectDomain}
           actionLabel={t('Continue')}
           inputId="marketing-domain-search"
