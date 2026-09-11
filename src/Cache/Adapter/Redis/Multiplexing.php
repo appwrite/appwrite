@@ -8,6 +8,7 @@ use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Lock;
 use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Telemetry as TelemetryFeature;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -23,7 +24,7 @@ use Utopia\Telemetry\UpDownCounter;
  * single reader coroutine parses inbound frames and dispatches each one to
  * the next pending Channel, exploiting Redis's guarantee of in-order replies.
  */
-class Multiplexing extends Leasable implements Adapter, TelemetryFeature
+class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
 {
     private ?ConnectionContext $connection = null;
 
@@ -132,7 +133,59 @@ class Multiplexing extends Leasable implements Adapter, TelemetryFeature
         return Envelope::decode($value, $ttl, time());
     }
 
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    /**
+     * HMGET for an explicit field list, HGETALL when $fields is empty. Both come
+     * back as one RESP array reply from the multiplexed reader.
+     *
+     * @param  string[]  $fields
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        $now = time();
+        $pairs = [];
+
+        if ($fields === []) {
+            $flat = $this->command(['HGETALL', $key]);
+            if (! \is_array($flat)) {
+                return [];
+            }
+            // HGETALL returns a flat [field, value, field, value, …] reply.
+            $count = \count($flat);
+            for ($i = 0; $i + 1 < $count; $i += 2) {
+                $pairs[(string) $flat[$i]] = $flat[$i + 1];
+            }
+        } else {
+            $values = $this->command(['HMGET', $key, ...$fields]);
+            if (! \is_array($values)) {
+                return [];
+            }
+            // HMGET returns values positional to the requested fields (null when absent).
+            foreach (array_values($fields) as $i => $field) {
+                $pairs[$field] = $values[$i] ?? null;
+            }
+        }
+
+        $result = [];
+        foreach ($pairs as $field => $value) {
+            if (! \is_string($value)) {
+                continue;
+            }
+            if ($this->isReserved((string) $field)) {
+                continue;
+            }
+
+            $decoded = Envelope::decode($value, $ttl, $now);
+            if ($decoded !== false) {
+                $result[(string) $field] = $decoded;
+            }
+        }
+
+        return $result;
+    }
+
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         if ($key === '' || $key === '0' || empty($data)) {
             return false;
@@ -146,10 +199,54 @@ class Multiplexing extends Leasable implements Adapter, TelemetryFeature
             return false;
         }
 
-        $value = Envelope::encode($data, time());
-        $this->command(['HSET', $key, $hash, $value]);
+        try {
+            $value = Envelope::encode($data, time());
+            $this->command(['HSET', $key, $hash, $value]);
 
-        return $data;
+            if ($ttl > 0) {
+                $this->command(['EXPIRE', $key, (string) $ttl]);
+            }
+
+            return $data;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * One variadic HSET for every field => value pair of $data, then one EXPIRE.
+     *
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        $args = ['HSET', $key];
+        foreach ($data as $field => $value) {
+            $field = (string) $field;
+            if ($this->isReserved($field)) {
+                continue;
+            }
+            $args[] = $field;
+            $args[] = Envelope::encode($value, time());
+        }
+
+        if (\count($args) <= 2) {
+            return false;
+        }
+
+        try {
+            $this->command($args);
+
+            if ($ttl > 0) {
+                $this->command(['EXPIRE', $key, (string) $ttl]);
+            }
+
+            return $data;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     public function touch(string $key, string $hash = ''): bool

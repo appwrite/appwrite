@@ -7,7 +7,7 @@ use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class CircuitBreaker implements Adapter, Feature\Leasable, Feature\Telemetry
+class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Feature\Telemetry
 {
     public function __construct(
         private readonly Adapter $adapter,
@@ -34,10 +34,44 @@ class CircuitBreaker implements Adapter, Feature\Leasable, Feature\Telemetry
         return $this->delegate(__FUNCTION__, \func_get_args(), false);
     }
 
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         /** @var bool|string|array<int|string, mixed> $result */
         $result = $this->delegate(__FUNCTION__, \func_get_args(), false);
+
+        return $result;
+    }
+
+    /**
+     * @param  string[]  $fields
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        if (! $this->adapter instanceof Feature\Batchable) {
+            return [];
+        }
+
+        /** @var array<string, mixed> $result */
+        $result = $this->delegate('loadMany', [$key, $fields, $ttl], []);
+
+        return $result;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        if (! $this->adapter instanceof Feature\Batchable) {
+            return false;
+        }
+
+        /** @var array<string, mixed>|false $result */
+        $result = $this->delegate('saveMany', [$key, $data, $ttl], false);
 
         return $result;
     }

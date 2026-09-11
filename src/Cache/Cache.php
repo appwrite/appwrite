@@ -2,6 +2,7 @@
 
 namespace Utopia\Cache;
 
+use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Leasable;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -103,22 +104,87 @@ class Cache
     /**
      * Save data to cache. Returns data on success of false on failure.
      *
+     * When $ttl > 0 the key is also given a key-level expiry (adapters that
+     * support it arm it; others keep their timestamp TTL and ignore it). $ttl = 0
+     * preserves the prior behaviour and leaves any expiry untouched.
+     *
      * @param  string|array<int|string, mixed>  $data
      * @param  string  $hash optional
+     * @param  int  $ttl time in seconds
      * @return bool|string|array<int|string, mixed>
      */
-    public function save(string $key, mixed $data, string $hash = ''): bool|string|array
+    public function save(string $key, mixed $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         $key = $this->caseSensitive ? $key : strtolower($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
         $start = microtime(true);
 
         try {
-            return $this->adapter->save($key, $data, $hash);
+            return $this->adapter->save($key, $data, $hash, $ttl);
         } finally {
             $duration = microtime(true) - $start;
             $this->getOperationDuration()->record($duration, [
                 'operation' => 'save',
+                'adapter' => $this->adapter->getName($key),
+            ]);
+        }
+    }
+
+    /**
+     * Load several fields of $key in one round trip, as a field => value map with
+     * missing/expired fields omitted. An empty $fields loads every field. Adapters
+     * that do not store fields return an empty map.
+     *
+     * @param  int  $ttl time in seconds
+     * @param  string[]  $fields
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, int $ttl, array $fields = []): array
+    {
+        $key = $this->caseSensitive ? $key : strtolower($key);
+        if (! $this->caseSensitive) {
+            $fields = array_map(strtolower(...), $fields);
+        }
+
+        $start = microtime(true);
+        $result = $this->adapter instanceof Batchable
+            ? $this->adapter->loadMany($key, $fields, $ttl)
+            : [];
+        $duration = microtime(true) - $start;
+        $this->getOperationDuration()->record($duration, [
+            'operation' => 'loadMany',
+            'adapter' => $this->adapter->getName($key),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Write every field => value pair of $data in one round trip. When $ttl > 0
+     * the key is given a key-level expiry. Returns $data on success, or false on
+     * failure or for adapters that do not store fields.
+     *
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        $key = $this->caseSensitive ? $key : strtolower($key);
+        if (! $this->caseSensitive) {
+            $data = array_change_key_case($data, CASE_LOWER);
+        }
+
+        $start = microtime(true);
+
+        try {
+            return $this->adapter instanceof Batchable
+                ? $this->adapter->saveMany($key, $data, $ttl)
+                : false;
+        } finally {
+            $duration = microtime(true) - $start;
+            $this->getOperationDuration()->record($duration, [
+                'operation' => 'saveMany',
                 'adapter' => $this->adapter->getName($key),
             ]);
         }

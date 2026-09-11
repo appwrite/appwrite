@@ -3,10 +3,11 @@
 namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Leasable;
 use Utopia\Pools\Pool as UtopiaPool;
 
-class Pool implements Adapter, Leasable
+class Pool implements Adapter, Batchable, Leasable
 {
     /**
      * @param  UtopiaPool<covariant Adapter>  $pool The pool to use for connections. Must contain instances of Adapter.
@@ -39,12 +40,38 @@ class Pool implements Adapter, Leasable
         return $this->delegate(__FUNCTION__, \func_get_args());
     }
 
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         /**
          * @var bool|string|array<mixed> $result
          */
         $result = $this->delegate(__FUNCTION__, \func_get_args());
+
+        return $result;
+    }
+
+    /**
+     * @param  string[]  $fields
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        /** @var array<string, mixed> $result */
+        $result = $this->pool->use(fn(Adapter $adapter): array => $adapter instanceof Batchable ? $adapter->loadMany($key, $fields, $ttl) : []);
+
+        return $result;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        /** @var array<string, mixed>|false $result */
+        $result = $this->pool->use(fn(Adapter $adapter): array|false => $adapter instanceof Batchable ? $adapter->saveMany($key, $data, $ttl) : false);
 
         return $result;
     }

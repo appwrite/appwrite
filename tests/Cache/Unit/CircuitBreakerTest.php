@@ -114,7 +114,7 @@ class FailingAdapter implements Adapter
         throw new RuntimeException('Cache failed.');
     }
 
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         throw new RuntimeException('Cache failed.');
     }

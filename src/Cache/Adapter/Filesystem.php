@@ -36,10 +36,11 @@ class Filesystem implements Adapter
     /**
      * @param  array<int|string, mixed>|string  $data
      * @param  string  $hash optional
+     * @param  int  $ttl time in seconds
      * @return bool|string|array<int|string, mixed>
      * @throws Exception
      */
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         if (empty($data)) {
             return false;

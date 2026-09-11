@@ -6,9 +6,10 @@ use Exception;
 use RedisCluster as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
-class RedisCluster implements Adapter, Retryable
+class RedisCluster implements Adapter, Batchable, Retryable
 {
     private int $maxRetries = 0;
 
@@ -73,11 +74,50 @@ class RedisCluster implements Adapter, Retryable
     }
 
     /**
+     * HMGET for an explicit field list, HGETALL when $fields is empty.
+     *
+     * @param  string[]  $fields
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        $now = time();
+
+        /** @var array<string, mixed> $raw */
+        $raw = (array) ($fields === []
+            ? $this->execute(fn(): array => $this->redis->hGetAll($key))
+            : $this->execute(fn(): array => $this->redis->hMget($key, $fields)));
+
+        $result = [];
+        foreach ($raw as $field => $value) {
+            if (! \is_string($value)) {
+                continue;
+            }
+
+            $cache = Json::decode($value);
+            if (! \is_array($cache)) {
+                continue;
+            }
+            if (! isset($cache['time'], $cache['data'])) {
+                continue;
+            }
+
+            if ($cache['time'] + $ttl > $now) {
+                $result[(string) $field] = $cache['data'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @param  array<int|string, mixed>|string  $data
      * @param  string  $hash optional
+     * @param  int  $ttl time in seconds
      * @return bool|string|array<int|string, mixed>
      */
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
         if ($key === '' || $key === '0' || empty($data)) {
             return false;
@@ -98,6 +138,48 @@ class RedisCluster implements Adapter, Retryable
 
         try {
             $this->execute(fn(): int => $this->redis->hSet($key, $hash, $value));
+
+            if ($ttl > 0) {
+                $this->execute(fn(): bool => $this->redis->expire($key, $ttl));
+            }
+
+            return $data;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * HMSET every field => value pair of $data in one round trip, then one EXPIRE.
+     *
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        $map = [];
+        foreach ($data as $field => $value) {
+            try {
+                $map[(string) $field] = json_encode([
+                    'time' => time(),
+                    'data' => $value,
+                ], flags: JSON_THROW_ON_ERROR);
+            } catch (Throwable) {
+                return false;
+            }
+        }
+
+        if ($map === []) {
+            return false;
+        }
+
+        try {
+            $this->execute(fn(): bool => $this->redis->hMSet($key, $map));
+
+            if ($ttl > 0) {
+                $this->execute(fn(): bool => $this->redis->expire($key, $ttl));
+            }
 
             return $data;
         } catch (Throwable) {

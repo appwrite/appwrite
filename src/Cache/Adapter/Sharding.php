@@ -3,9 +3,10 @@
 namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Leasable;
 
-class Sharding implements Adapter, Leasable
+class Sharding implements Adapter, Batchable, Leasable
 {
     /**
      * @var Adapter[]
@@ -54,11 +55,36 @@ class Sharding implements Adapter, Leasable
     /**
      * @param  array<int|string, mixed>|string  $data
      * @param  string  $hash optional
+     * @param  int  $ttl time in seconds
      * @return bool|string|array<int|string, mixed>
      */
-    public function save(string $key, array|string $data, string $hash = ''): bool|string|array
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        return $this->getAdapter($key)->save($key, $data, $hash);
+        return $this->getAdapter($key)->save($key, $data, $hash, $ttl);
+    }
+
+    /**
+     * @param  string[]  $fields
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>
+     */
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        $adapter = $this->getAdapter($key);
+
+        return $adapter instanceof Batchable ? $adapter->loadMany($key, $fields, $ttl) : [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data field => value
+     * @param  int  $ttl time in seconds
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        $adapter = $this->getAdapter($key);
+
+        return $adapter instanceof Batchable ? $adapter->saveMany($key, $data, $ttl) : false;
     }
 
     public function getGeneration(string $key): string
