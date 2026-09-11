@@ -37,19 +37,16 @@ This post covers what iPhone Duo actually is, what changes for iOS app developme
 
 iPhone Duo is Apple's first foldable iPhone. It has a 5.4-inch outer display and a 7.6-inch inner display that share the same aspect ratio, runs on the A20 Pro chip, and starts at $1,999 for 256GB.
 
-Here are the specs that matter when you are writing code rather than shopping:
+Here are the characteristics that matter most when building for iPhone Duo:
 
-| Spec             | Detail                                       | Why developers care                             |
-| ---------------- | -------------------------------------------- | ----------------------------------------------- |
-| Inner display    | 7.6-inch Super Retina XDR, nano-texture      | Your layout has to fill a near-square canvas    |
-| Outer display    | 5.4-inch Super Retina XDR                    | Roughly 90% of iPhone 18 Pro screen area        |
-| Aspect ratio     | Identical on both displays                   | Content scales instead of reflowing awkwardly   |
-| Display features | ProMotion, Always On, 3000 nits peak         | Animation budget is 120Hz, not 60Hz             |
-| Chip             | A20 Pro, dual 16-core Neural Engine          | 2x on-device AI compute versus A19 Pro          |
-| Battery          | Dual-battery, one per side                   | 31 hrs video inner, 44 hrs outer, 24 hrs mixed  |
-| Build            | Grade 5 titanium, 100+ component hinge, IP68 | Fold and unfold is a frequent, everyday action  |
-| OS               | iOS 27, ships on 27.1                        | Split View arrives on iPhone for the first time |
-| Availability     | Pre-order October 16, ships October 23, 2026 | Your update window is about six weeks           |
+* **Two display sizes:** The 5.4-inch outer display and 7.6-inch inner display mean your interface needs to adapt as the available space changes.
+* **A larger inner canvas:** The near-square inner display gives you more room for sidebars, detail panes, and other layouts that would feel cramped on a regular iPhone.
+* **The same aspect ratio across both displays:** Content can scale between the outer and inner screens, but layouts still need to respond to the change in available space.
+* **ProMotion support:** Both displays support refresh rates up to 120Hz, so animations and transitions should remain smooth as layouts resize.
+* **A20 Pro and dual 16-core Neural Engine:** The additional on-device compute creates more room for local AI features and processing.
+* **A foldable form factor:** Folding and unfolding is part of normal device use, so apps need to preserve state and respond cleanly when the display changes.
+* **iOS 27.1 and Split View:** Developers need to account for apps sharing screen space instead of assuming they always have the full display width.
+* **October 23 availability:** With the device shipping shortly after launch, developers have a limited window to test and optimize existing apps.
 
 Netflix, Zoom, and Slack are already optimizing their apps for the foldable design, per Apple's announcement. That is your competitive baseline in your category.
 
