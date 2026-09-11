@@ -87,7 +87,7 @@ Because attribution lasts 180 days, developers have time to try Appwrite before 
 
 A reward is created the moment a referred user upgrades to Pro inside the attribution window. It starts as **pending** and shows up on the overview as an amount ready to claim.
 
-Claiming asks you to pick an organization you own, and the credits are added there as organization credits on Appwrite Cloud, applied toward eligible Cloud charges. Referrals themselves move through three states.
+Claiming asks you to pick an organization you own, and the credits are added there as organization credits that you can use on Appwrite Cloud.
 
 | Referral status | Meaning                                                                  |
 | --------------- | ------------------------------------------------------------------------ |
