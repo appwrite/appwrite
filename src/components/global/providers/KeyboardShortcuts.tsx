@@ -1,12 +1,9 @@
 import {
-  createContext,
-  useContext,
   useState,
   useCallback,
   useEffect,
   useMemo,
   type ReactNode,
-  type ComponentProps,
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -37,35 +34,14 @@ import {
   registerCommandCenterOpener,
   type CommandCenterPage,
 } from '@/lib/command-center/opener-bridge'
+import {
+  KeyboardShortcutsContext,
+  useKeyboardShortcutsContext,
+  type KeyboardShortcutsContextValue,
+} from '@/components/global/providers/keyboard-shortcuts-context'
 
 export type { CommandCenterPage }
-
-interface KeyboardShortcutsContextValue {
-  openCommandCenter: () => void
-  /** Open Command Center directly on a named sub-page (protocol / agent). */
-  openCommandCenterPage: (page: CommandCenterPage) => void
-  openBlogSearch: () => void
-  closeCommandCenter: () => void
-  isCommandCenterOpen: boolean
-}
-
-const KeyboardShortcutsContext =
-  createContext<KeyboardShortcutsContextValue | null>(null)
-
-/** Fallback when outside a provider (agent pane / pages without a CC host). */
-const defaultContextValue: KeyboardShortcutsContextValue = {
-  openCommandCenter: () => {},
-  openCommandCenterPage: () => {},
-  openBlogSearch: () => {},
-  closeCommandCenter: () => {},
-  isCommandCenterOpen: false,
-}
-
-export function useKeyboardShortcutsContext() {
-  const context = useContext(KeyboardShortcutsContext)
-  // Return default context if not within provider (e.g., agent pane / org overview)
-  return context ?? defaultContextValue
-}
+export { useKeyboardShortcutsContext }
 
 interface KeyboardShortcutsProviderProps {
   children: ReactNode
@@ -387,97 +363,6 @@ export function KeyboardShortcutsProvider({
         projectId={projectId}
         initialSubPage={initialSubPage}
         onInitialSubPageConsumed={() => setInitialSubPage(null)}
-      />
-    </KeyboardShortcutsContext.Provider>
-  )
-}
-
-type StandaloneCommandCenterScopeProps = {
-  children: ReactNode
-} & Omit<
-  ComponentProps<typeof CommandCenter>,
-  'open' | 'onOpenChange' | 'initialSubPage' | 'onInitialSubPageConsumed'
->
-
-/** Command center + global shortcuts for pages outside project/org providers (e.g. home). */
-export function StandaloneCommandCenterScope({
-  children,
-  context = 'account',
-  ...commandCenterProps
-}: StandaloneCommandCenterScopeProps) {
-  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
-  const [initialSubPage, setInitialSubPage] = useState<string | null>(null)
-
-  const openCommandCenter = useCallback(() => {
-    setInitialSubPage(null)
-    setCommandCenterOpen(true)
-  }, [])
-
-  const openCommandCenterPage = useCallback((page: CommandCenterPage) => {
-    setInitialSubPage(page)
-    setCommandCenterOpen(true)
-  }, [])
-
-  const openBlogSearch = useCallback(() => {
-    openCommandCenterPage('blog')
-  }, [openCommandCenterPage])
-
-  const openShortcutsHelp = useCallback(() => {
-    openCommandCenterPage('shortcuts')
-  }, [openCommandCenterPage])
-
-  useEffect(() => {
-    return registerCommandCenterOpener((page) => {
-      setInitialSubPage(page)
-      setCommandCenterOpen(true)
-    })
-  }, [])
-
-  const closeCommandCenter = useCallback(() => {
-    setCommandCenterOpen(false)
-    setInitialSubPage(null)
-  }, [])
-
-  const handleInitialSubPageConsumed = useCallback(() => {
-    setInitialSubPage(null)
-  }, [])
-
-  useGlobalCommandShortcuts({
-    commandCenterOpen,
-    onOpenCommandCenter: openCommandCenter,
-    onOpenShortcutsHelp: openShortcutsHelp,
-  })
-
-  const contextValue = useMemo<KeyboardShortcutsContextValue>(
-    () => ({
-      openCommandCenter,
-      openCommandCenterPage,
-      openBlogSearch,
-      closeCommandCenter,
-      isCommandCenterOpen: commandCenterOpen,
-    }),
-    [
-      openCommandCenter,
-      openCommandCenterPage,
-      openBlogSearch,
-      closeCommandCenter,
-      commandCenterOpen,
-    ],
-  )
-
-  return (
-    <KeyboardShortcutsContext.Provider value={contextValue}>
-      {children}
-      <CommandCenter
-        {...commandCenterProps}
-        context={context}
-        open={commandCenterOpen}
-        onOpenChange={(open) => {
-          setCommandCenterOpen(open)
-          if (!open) setInitialSubPage(null)
-        }}
-        initialSubPage={initialSubPage}
-        onInitialSubPageConsumed={handleInitialSubPageConsumed}
       />
     </KeyboardShortcutsContext.Provider>
   )

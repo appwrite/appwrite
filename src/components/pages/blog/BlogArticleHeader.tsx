@@ -1,7 +1,7 @@
 'use client'
 
 import { Link } from '@tanstack/react-router'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatDate } from '@/lib/date-utils'
 import type { BlogAuthor } from '@/lib/blog/types'
 import {
@@ -37,10 +37,21 @@ export function BlogArticleHeader({
 }: BlogArticleHeaderProps) {
   const contentAnchorRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const [stickyEnabled, setStickyEnabled] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)')
+    const sync = () => setStickyEnabled(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
   const { pinned, bounds } = useArticleStickyOverlay({
     sentinelRef,
     contentAnchorRef,
     resetKey: title,
+    enabled: stickyEnabled,
   })
 
   const shareActions = <BlogPostShareActions slug={slug} title={title} />

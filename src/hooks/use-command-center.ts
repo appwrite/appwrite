@@ -1,4 +1,4 @@
-import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
+import { useKeyboardShortcutsContext } from '@/components/global/providers/keyboard-shortcuts-context'
 
 /**
  * Hook to access command center controls from any component

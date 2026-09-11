@@ -90,7 +90,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
+import { useKeyboardShortcutsContext } from '@/components/global/providers/keyboard-shortcuts-context'
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'

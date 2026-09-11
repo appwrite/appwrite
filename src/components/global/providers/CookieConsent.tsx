@@ -123,11 +123,11 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     (preferences: CookieConsentPreferences) => {
       writeStoredCookieConsent(preferences.analytics)
       setDraftAnalytics(preferences.analytics)
-      applyAnalyticsConsent(preferences.analytics)
       setShowBanner(false)
       setPreferencesOpen(false)
       setIsReopening(false)
       setCustomizeOpen(false)
+      applyAnalyticsConsent(preferences.analytics)
     },
     [],
   )
