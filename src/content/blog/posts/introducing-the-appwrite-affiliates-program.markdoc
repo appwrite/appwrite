@@ -33,9 +33,11 @@ faqs:
       referred developer signs up, giving them time to try Appwrite before
       deciding to upgrade to Pro.
 ---
-Almost every way Appwrite has grown traces back to the same thing: a developer told another developer. A tutorial that saved someone a weekend of wiring auth. An answer under a "which backend should I use" thread. A teammate who argued for replacing four services with one. A workshop where someone shipped their first full-stack app in an afternoon.
+A lot of Appwrite’s growth has come from developers sharing it with other developers.
 
-That has been the honest story of our growth for years. The people doing it got a thank you in a Discord thread and nothing else.
+Maybe you recommended Appwrite to a teammate, used it in a tutorial, mentioned it in a community thread, or introduced it during a workshop. However it happened, those recommendations have played a huge part in helping more developers discover and build with Appwrite.
+
+That kind of support has meant a lot to us, and we wanted to give something back to the people helping us grow.
 
 Today, we're introducing **Appwrite Affiliates**: create invite links from your Appwrite account, share them however you already share things, and earn **$15 in organization credits to use on Appwrite Cloud** every time someone you refer upgrades to Pro. It's live on [Appwrite Cloud](/affiliates) today.
 
@@ -118,10 +120,13 @@ One honest caveat: rewards depend on Cloud Pro upgrades. If your audience self-h
 
 # Getting started with Appwrite Affiliates
 
-Affiliates is available on Appwrite Cloud today. Open [Account, then Affiliates](/account/affiliates), create your first invite link, and share it with the developers you'd have recommended Appwrite to anyway.
+Appwrite Affiliates is available on Appwrite Cloud today. Open [Account, then Affiliates](/account/affiliates), create your first invite link, and share it with the developers you'd have recommended Appwrite to anyway.
 
-* [Appwrite Affiliates program page](/affiliates) for program terms and FAQs
-* [Affiliates in your account](/account/affiliates) to create links and claim rewards
-* [Appwrite pricing](/pricing) to see what a referred developer gets when they upgrade to Pro
-* [Announcing Appwrite Pro](/blog/post/announcing-appwrite-pro) for the plan that triggers a reward
-* [Appwrite Startups program](/startups) and [Appwrite Education program](/education) for the other ways to get Cloud credits
+We’re excited to finally give something back to the people who have helped Appwrite grow, and we can’t wait to see where you share it next.
+
+* [Appwrite Affiliates](/affiliates)
+* [Affiliates in your account](/account/affiliates)
+* [Appwrite pricing](/pricing)
+* [Announcing Appwrite Pro](/blog/post/announcing-appwrite-pro)
+* [Appwrite Startups program](/startups)
+* [Appwrite Education program](/education)
