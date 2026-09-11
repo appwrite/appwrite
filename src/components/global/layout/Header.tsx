@@ -610,10 +610,17 @@ export function ConsoleHeader({
   const showOrgDomainsLink = Boolean(
     orgId && canShowOrgDomainsTab(access, features),
   )
-  const docsHref = getMarketingPageUrl('/docs', inAppMarketingNav)
-  const changelogHref = getMarketingPageUrl('/changelog', inAppMarketingNav)
-  const homeHref = getMarketingPageUrl('/home', inAppMarketingNav)
-  const marketingNavLinksExternal = isMarketingPageExternal(inAppMarketingNav)
+  // Cloud: in-app `/home` (signed-in `/` is the console). Self-hosted: appwrite.io.
+  const accountMenuMarketingLocal = features.marketing && !preLaunch
+  const docsHref = getMarketingPageUrl('/docs', accountMenuMarketingLocal)
+  const changelogHref = getMarketingPageUrl(
+    '/changelog',
+    accountMenuMarketingLocal,
+  )
+  const homeHref = getMarketingPageUrl('/home', accountMenuMarketingLocal)
+  const marketingNavLinksExternal = isMarketingPageExternal(
+    accountMenuMarketingLocal,
+  )
   // The account menu links elsewhere: drop the entry for the page you are on.
   const accountMenuLinks = getAccountMenuLinks({
     pathname: location.pathname,
