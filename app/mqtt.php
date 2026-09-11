@@ -389,9 +389,6 @@ $server->onReceive(function (int $fd, string $data) use (
 
     $span = Span::init('mqtt.' . $packet->name());
     $span->set('mqtt.fd', $fd);
-    $span->set('project.id', $connection->projectId);
-    $span->set('user.id', $connection->identity['userId'] ?? '');
-    $span->set('mqtt.clean_start', $connection->cleanStart);
     $span->set('mqtt.is_broker', false); // an inbound packet from a client
 
     $reply = function (string $packet = '', bool $close = false) use ($server, $fd): void {
@@ -413,8 +410,16 @@ $server->onReceive(function (int $fd, string $data) use (
 
     try {
         $dispatcher->dispatch($packetContainer, $packet->type);
+
+        // The identity, project and clean-start flag are populated by the CONNECT
+        // handler during dispatch, so record them afterwards rather than as defaults.
+        $span->set('project.id', $connection->projectId);
+        $span->set('user.id', $connection->identity['userId'] ?? '');
+        $span->set('mqtt.clean_start', $connection->cleanStart);
         $span->finish();
     } catch (\Throwable $error) {
+        $span->set('project.id', $connection->projectId);
+        $span->set('user.id', $connection->identity['userId'] ?? '');
         $span->finish(error: $error);
         throw $error;
     }
