@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Messaging;
 
+use Appwrite\Messaging\Status as MessageStatus;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
-use Utopia\Messaging\Adapter\Push\Appwrite as AppwritePush;
-use Utopia\Messaging\Messages\Push;
 
 /**
- * End-to-end tests for the MQTT push broker (src/Utopia/Mqtt), driven by the
- * utopia-php/messaging Appwrite Push adapter. Exercises the real broker container
- * over TCP: enhanced-auth CONNECT against the project/user graph, QoS 1
- * publish/ack, fan-out to a subscriber via consume(), and subscribe-side ACL.
+ * End-to-end tests for the MQTT push broker (src/Utopia/Mqtt). Publishing is a server
+ * privilege driven entirely through the Messaging HTTP campaign path (there is no
+ * outside MQTT publish); the subscriber side is a self-contained MqttSubscriber over
+ * TCP. Exercises enhanced-auth CONNECT against the project/user graph, campaign
+ * fan-out to a live subscriber, and offline QoS 1 session replay from the ledger.
  *
- * Blocked accounts are refused at CONNECT (CONNACK 0x87); the subscribe authorizer
- * re-checks as defense in depth. (Topic-existence authorization is still pending.)
+ * Blocked/unauthenticated accounts are refused at CONNECT (CONNACK reason 0x87).
  *
  * Grouped `mqtt` because it needs the broker container (appwrite-mqtt:1883): the
  * standard e2e stacks exclude this group, and a dedicated lane that runs the broker
@@ -66,51 +65,15 @@ final class MessagingMqttServerTest extends Scope
         return ['userId' => $userId, 'jwt' => $jwt['body']['jwt']];
     }
 
-    private function newAdapter(string $projectId, string $credential): AppwritePush
-    {
-        return new AppwritePush(
-            endpoint: self::BROKER_HOST . ':' . self::BROKER_PORT,
-            projectId: $projectId,
-            credential: $credential,
-            authMethod: 'appwrite-jwt',
-            tls: false,
-        );
-    }
-
-    public function testAdapterPublishesToBroker(): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $jwt = $this->createUser()['jwt'];
-
-        // Test for SUCCESS: publishing is a server privilege (not ACL-gated).
-        $response = $this->newAdapter($projectId, $jwt)->send(new Push(
-            to: ['device-1', 'device-2'],
-            title: 'Hi',
-            body: 'Hello',
-        ));
-
-        $this->assertEquals('push', $response['type']);
-        $this->assertEquals(2, $response['deliveredTo']);
-        foreach ($response['results'] as $result) {
-            $this->assertEquals('success', $result['status']);
-            $this->assertEquals('', $result['error']);
-        }
-    }
-
     public function testUnauthorizedConnectRejected(): void
     {
         $projectId = $this->getProject()['$id'];
 
-        // Test for FAILURE: a bogus credential yields CONNACK 0x87 and a closed socket,
-        // which the adapter surfaces as a thrown error out of send().
-        $adapter = $this->newAdapter($projectId, 'not.a.valid.jwt');
-
-        $this->expectException(\Throwable::class);
-        $adapter->send(new Push(
-            to: ['device-1'],
-            title: 'Hi',
-            body: 'Hello',
-        ));
+        // Test for FAILURE: a bogus credential is refused at CONNECT with reason 0x87
+        // (not authorized).
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, 'not.a.valid.jwt', 'e2e-reject', cleanStart: true));
+        $subscriber->disconnect();
     }
 
     public function testBlockedUserConnectRejected(): void
@@ -125,75 +88,292 @@ final class MessagingMqttServerTest extends Scope
         ], $this->getHeaders()), ['status' => false]);
         $this->assertEquals(200, $status['headers']['status-code']);
 
-        // Test for FAILURE: a blocked account is refused at CONNECT (CONNACK 0x87),
-        // which the adapter surfaces as a thrown error out of send().
-        $this->expectException(\Throwable::class);
-        $this->expectExceptionMessageMatches('/reject/i');
-        $this->newAdapter($projectId, $jwt)->send(new Push(
-            to: ['device-1'],
-            title: 'Hi',
-            body: 'Hello',
-        ));
+        // Test for FAILURE: a blocked account is refused at CONNECT with reason 0x87.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $jwt, 'e2e-blocked', cleanStart: true));
+        $subscriber->disconnect();
     }
 
-    public function testPublishConsumedBySubscriber(): void
+    /**
+     * The messaging graph for the built-in Appwrite push provider: a provider, a topic
+     * (whose id is the MQTT delivery channel), a user with a push target identified by
+     * that topic id, and a subscription. Returns the topic id.
+     *
+     * @param  array<string, string>  $server server-key headers
+     */
+    private function setupPushTopic(array $server, string $userId, string $name): string
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
+            'providerId' => ID::unique(),
+            'name' => $name,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => ID::unique(),
+            'name' => $name,
+            'qos' => 1,
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $server, [
+            'targetId' => ID::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $topicId,
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', $server, [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        return $topicId;
+    }
+
+    /**
+     * Publish a push campaign to a topic and block until the worker marks it terminal
+     * (SENT persists it to the ledger and fans it into the broker).
+     *
+     * @param  array<string, string>  $server
+     * @param  array<string, mixed>  $data
+     */
+    private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = []): void
+    {
+        $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, [
+            'messageId' => ID::unique(),
+            'topics' => [$topicId],
+            'title' => $title,
+            'body' => $body,
+            'data' => $data,
+        ]);
+        $this->assertEquals(201, $push['headers']['status-code']);
+        $messageId = $push['body']['$id'];
+
+        $this->assertEventually(function () use ($server, $messageId) {
+            $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $server);
+            $this->assertContains($message['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
+        }, 30000, 500);
+    }
+
+    /**
+     * Full flow: a Messaging push campaign fans out through the worker and the built-in
+     * Appwrite provider into the broker, and a live MQTT subscriber on the topic-id
+     * channel receives it. The subscriber is our own MqttSubscriber (no messaging
+     * adapter): connect + subscribe, publish the campaign, then read the live delivery.
+     */
+    public function testCampaignFansOutToMqttSubscriber(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
 
-        // The connection subscribes to its own user scope (ACL-allowed) and the server
-        // publishes to that same topic.
-        $topic = 'appwrite/push/' . $userId;
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-flow');
 
-        // Publish from a separate OS process so it runs while consume() blocks. The
-        // broker only fans out to already-connected subscribers, so the publisher waits.
-        // Resolve the autoloader from the running one rather than a fixed relative depth,
-        // so it works both standalone (repo vendor/) and vendored inside another project
-        // (e.g. cloud's vendor/appwrite/server-ce, whose own vendor/ is not installed).
-        $autoload = \dirname((new \ReflectionClass(\Composer\Autoload\ClassLoader::class))->getFileName(), 2) . '/autoload.php';
-        $publisher = \tempnam(\sys_get_temp_dir(), 'mqtt-pub-') . '.php';
-        \file_put_contents($publisher, <<<'PHP'
-            <?php
-            [$_, $autoload, $endpoint, $projectId, $jwt, $userId] = $argv;
-            require $autoload;
-            usleep(1500000);
-            $adapter = new Utopia\Messaging\Adapter\Push\Appwrite($endpoint, $projectId, $jwt, 'appwrite-jwt', false);
-            try {
-                $adapter->send(new Utopia\Messaging\Messages\Push(to: [$userId], title: 'Ping', body: 'Pong', data: ['k' => 'v']));
-            } catch (\Throwable $error) {
-                \fwrite(STDERR, $error->getMessage());
-            }
-            PHP);
-
-        $process = \proc_open(
-            [PHP_BINARY, $publisher, $autoload, self::BROKER_HOST . ':' . self::BROKER_PORT, $projectId, $jwt, $userId],
-            [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'a'], 2 => ['file', '/dev/null', 'a']],
-            $pipes,
-        );
-        $this->assertNotFalse($process, 'could not start publisher process');
+        // Subscribe first (the fan-out only reaches connected subscribers), then publish,
+        // then read the delivery that lands on the still-open socket.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-flow-' . $userId, cleanStart: true));
+        $subscriber->subscribe([$topicId]);
 
         try {
-            $received = [];
-            $handled = $this->newAdapter($projectId, $jwt)->consume(
-                [$topic],
-                function (array $message) use (&$received): void {
-                    $received = $message;
-                },
-                limit: 1,
-                timeout: 10.0,
-            );
-
-            // Test for SUCCESS: the broker delivered the publish to the subscribed consumer.
-            $this->assertSame(1, $handled, 'consumer did not receive the publish');
-            $this->assertSame($topic, $received['topic']);
-
-            $decoded = \json_decode($received['payload'], true);
-            $this->assertEquals('Ping', $decoded['notification']['title']);
-            $this->assertEquals('Pong', $decoded['notification']['body']);
-            $this->assertEquals(['k' => 'v'], $decoded['data']);
+            $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
+            $received = $subscriber->consume(limit: 1, timeout: 20.0);
         } finally {
-            \proc_close($process);
-            @\unlink($publisher);
+            $subscriber->disconnect();
         }
+
+        // Test for SUCCESS: the campaign reached the live subscriber through the broker.
+        $this->assertCount(1, $received, 'subscriber did not receive the campaign');
+        $this->assertSame($topicId, $received[0]['topic']);
+
+        $payload = \json_decode($received[0]['payload'], true);
+        $this->assertEquals('Match update', $payload['notification']['title']);
+        $this->assertEquals('India needs 12 off 6', $payload['notification']['body']);
+        $this->assertEquals(['matchId' => '42'], $payload['data']);
+    }
+
+    /**
+     * Offline QoS 1 session replay: a persistent-session subscriber (cleanStart = false,
+     * stable client id) subscribes once to register its cursor, disconnects, and while it
+     * is offline two campaigns are published. On reconnect the broker replays the missed
+     * messages from the ledger, in order, and PUBACK advances the cursor.
+     */
+    public function testSessionReplaysOfflineMessages(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-replay');
+
+        $clientId = 'e2e-replay-' . $userId;
+
+        // 1) Persistent session seeds its cursor at the current tail; a new topic does not
+        // replay, so it receives nothing.
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $seed->subscribe([$topicId]);
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        // 2) Two campaigns are published while that subscriber is offline.
+        $bodies = ['first offline message', 'second offline message'];
+        foreach ($bodies as $index => $body) {
+            $this->publishCampaign($server, $topicId, 'Update ' . $index, $body, ['n' => (string) $index]);
+        }
+
+        // 3) The same persistent session reconnects and the broker replays both, in order.
+        $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $resume->subscribe([$topicId]);
+        $received = $resume->consume(limit: 2, timeout: 10.0);
+        $resume->disconnect();
+
+        // Test for SUCCESS: both offline messages replayed, in sequence order.
+        $this->assertCount(2, $received, 'offline messages were not replayed');
+        foreach ($received as $message) {
+            $this->assertSame($topicId, $message['topic']);
+            $this->assertTrue($message['dup'], 'replayed messages carry the DUP flag');
+        }
+        $replayedBodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $received,
+        );
+        $this->assertSame($bodies, $replayedBodies);
+
+        // 4) The PUBACKs advanced the cursor past the earlier message, so a third connect
+        // never re-delivers it. (Acks run in per-packet coroutines, so under QoS 1 the tail
+        // may be re-delivered; the cursor never rewinds below the first ack.)
+        \usleep(1000000);
+        $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $again->subscribe([$topicId]);
+        $leftover = $again->consume(limit: 2, timeout: 3.0);
+        $again->disconnect();
+
+        $leftoverBodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $leftover,
+        );
+        $this->assertNotContains($bodies[0], $leftoverBodies, 'an already-acked message was re-delivered');
+    }
+
+    /**
+     * Replay is bounded by the broker's max depth: when more messages accumulate offline
+     * than the cap, only the most recent $maxDepth are replayed (the older ones are
+     * dropped and the cursor jumps to the tail), and a later reconnect replays nothing.
+     */
+    public function testReplayIsBoundedByMaxDepth(): void
+    {
+        // Mirrors the handler's cap (Subscribe.php $maxDepth).
+        $maxDepth = 5;
+        $overflow = $maxDepth + 2;
+
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-depth');
+        $clientId = 'e2e-depth-' . $userId;
+
+        // Seed the persistent session at the current tail, then go offline.
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $seed->subscribe([$topicId]);
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        // Publish more than the cap while offline.
+        $bodies = [];
+        for ($i = 0; $i < $overflow; $i++) {
+            $body = 'offline message ' . $i;
+            $bodies[] = $body;
+            $this->publishCampaign($server, $topicId, 'Update ' . $i, $body, ['n' => (string) $i]);
+        }
+
+        // Reconnect: only the last $maxDepth replay, in order.
+        $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $resume->subscribe([$topicId]);
+        $received = $resume->consume(limit: $overflow, timeout: 10.0);
+        $resume->disconnect();
+
+        $this->assertCount($maxDepth, $received, 'replay was not capped at max depth');
+        $replayedBodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $received,
+        );
+        $this->assertSame(\array_slice($bodies, -$maxDepth), $replayedBodies);
+
+        // The dropped (capped-out) messages are gone for good: a later reconnect never
+        // re-delivers them. (Acks are processed in per-packet coroutines, so under QoS 1 a
+        // tail message may be re-delivered; the guarantee we assert is that the cursor never
+        // rewinds below the replayed window, so the dropped set is never seen again.)
+        \usleep(1000000);
+        $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $again->subscribe([$topicId]);
+        $leftover = $again->consume(limit: $overflow, timeout: 3.0);
+        $again->disconnect();
+
+        $leftoverBodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $leftover,
+        );
+        foreach (\array_slice($bodies, 0, $overflow - $maxDepth) as $droppedBody) {
+            $this->assertNotContains($droppedBody, $leftoverBodies, 'a capped-out message was re-delivered');
+        }
+    }
+
+    /**
+     * A clean-start reconnect discards the persisted session: the cursor is purged and the
+     * client re-seeds at the current tail, so an offline backlog is NOT replayed.
+     */
+    public function testCleanStartDiscardsSession(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-clean');
+        $clientId = 'e2e-clean-' . $userId;
+
+        // Establish a persistent session, then go offline.
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $seed->subscribe([$topicId]);
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        // A message accumulates while offline.
+        $this->publishCampaign($server, $topicId, 'Update', 'while offline', ['n' => '0']);
+
+        // Reconnect with cleanStart = true: the session is discarded, so nothing replays.
+        $fresh = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $fresh->connect($projectId, $jwt, $clientId, cleanStart: true));
+        $fresh->subscribe([$topicId]);
+        $this->assertCount(0, $fresh->consume(limit: 1, timeout: 3.0), 'clean-start session should not replay a backlog');
+        $fresh->disconnect();
     }
 }
