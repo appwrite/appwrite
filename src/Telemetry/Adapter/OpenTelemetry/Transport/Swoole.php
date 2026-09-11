@@ -103,18 +103,23 @@ class Swoole implements TransportInterface
             return new ErrorFuture(new Exception('Transport has been shut down'));
         }
 
-        $client = null;
+        $headers = $this->baseHeaders;
+        $headers['Content-Length'] = \strlen($payload);
+
+        $client = $this->pooledClient();
+        $reused = $client instanceof Client;
+        $client ??= $this->connect();
         $forceClose = false;
 
         try {
-            $client = $this->popClient();
-            $headers = $this->baseHeaders;
-            $headers['Content-Length'] = \strlen($payload);
-            $client->setHeaders($headers);
-            $client->post($this->path, $payload);
-            $statusCode = $client->getStatusCode();
+            $statusCode = $this->post($client, $headers, $payload);
 
-            // Connection error (timeout, reset, etc.)
+            if ($reused && $this->isRetryable($statusCode)) {
+                $client->close();
+                $client = $this->connect();
+                $statusCode = $this->post($client, $headers, $payload);
+            }
+
             if ($statusCode < 0) {
                 $forceClose = true;
                 $errCode = \is_int($client->errCode) ? $client->errCode : 0;
@@ -135,35 +140,66 @@ class Swoole implements TransportInterface
                 $forceClose = true;
             }
 
-            $statusCodeStr = \is_int($statusCode) ? (string) $statusCode : 'unknown';
-            return new ErrorFuture(new Exception("OTLP export failed with status {$statusCodeStr}: {$bodyStr}"));
+            return new ErrorFuture(new Exception("OTLP export failed with status {$statusCode}: {$bodyStr}"));
         } catch (\Throwable $e) {
             $forceClose = true;
 
             return new ErrorFuture($e);
         } finally {
-            if ($client instanceof \Swoole\Coroutine\Http\Client) {
-                $this->putClient($client, $forceClose);
-            }
+            $this->putClient($client, $forceClose);
         }
     }
 
     /**
-     * Acquire a client from the pool or create a new one.
+     * Whether a request that failed on a pooled connection can be sent again.
+     *
+     * Swoole reconnects a pooled socket the collector closed while idle, but not
+     * one it dropped with the request in flight. Both statuses below mean the
+     * socket died before any answer, so the export never landed and a fresh
+     * connection can carry it. A timeout is deliberately not retryable: the
+     * collector may have accepted the export and still be working on it, so
+     * sending it again would duplicate it and wait out a second timeout.
      */
-    private function popClient(): Client
+    private function isRetryable(int $statusCode): bool
+    {
+        return match ($statusCode) {
+            SWOOLE_HTTP_CLIENT_ESTATUS_SERVER_RESET,
+            SWOOLE_HTTP_CLIENT_ESTATUS_SEND_FAILED => true,
+            default => false,
+        };
+    }
+
+    /**
+     * @param array<string, string|int> $headers
+     */
+    private function post(Client $client, array $headers, string $payload): int
+    {
+        $client->setHeaders($headers);
+        $client->post($this->path, $payload);
+        $statusCode = $client->getStatusCode();
+
+        return \is_int($statusCode) ? $statusCode : -1;
+    }
+
+    private function pooledClient(): ?Client
     {
         $client = $this->pool->pop(0.001);
         if ($client === false) {
             $client = $this->pool->pop(0.05);
         }
-        if ($client instanceof Client) {
-            if ($client->connected) {
-                return $client;
-            }
-            $client->close();
+        if (!$client instanceof Client) {
+            return null;
         }
+        if ($client->connected) {
+            return $client;
+        }
+        $client->close();
 
+        return null;
+    }
+
+    private function connect(): Client
+    {
         $client = new Client($this->host, $this->port, $this->ssl);
         $client->set($this->settings);
 
