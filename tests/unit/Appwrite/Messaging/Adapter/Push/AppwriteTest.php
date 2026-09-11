@@ -95,12 +95,12 @@ final class AppwriteTest extends TestCase
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
-        $this->database->createCollection('appwrite_push_ledger', [], [], $any, false);
-        $this->database->createAttribute('appwrite_push_ledger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('appwrite_push_ledger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('appwrite_push_ledger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('appwrite_push_ledger', 'messageInternalId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('appwrite_push_ledger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection('appwritePushLedger', [], [], $any, false);
+        $this->database->createAttribute('appwritePushLedger', 'topic', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('appwritePushLedger', 'data', Database::VAR_STRING, 65535, true);
+        $this->database->createAttribute('appwritePushLedger', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('appwritePushLedger', 'messageInternalId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('appwritePushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
     }
 
     /** Seed a topic row with a starting sequence (the current tail). */
@@ -129,7 +129,7 @@ final class AppwriteTest extends TestCase
      */
     private function ledger(): array
     {
-        return $this->database->getAuthorization()->skip(fn () => $this->database->find('appwrite_push_ledger'));
+        return $this->database->getAuthorization()->skip(fn () => $this->database->find('appwritePushLedger'));
     }
 
     /** The topic counter row, read past authorization. */

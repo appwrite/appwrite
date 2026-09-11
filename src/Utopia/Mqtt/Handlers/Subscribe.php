@@ -93,7 +93,7 @@ class Subscribe extends Action
         $projectDB = getProjectDB($project);
         $cache = getCache();
 
-        $cursorKey = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+        $cursorKey = 'appwrite:push:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
 
         // A clean-start session discards any persisted cursor before resuming.
         if ($connection->cleanStart) {
@@ -131,7 +131,7 @@ class Subscribe extends Action
             }
 
             $start = max($from + 1, $tail - $maxDepth + 1);
-            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('appwrite_push_ledger', [
+            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('appwritePushLedger', [
                 Query::equal('topic', [$topic]),
                 Query::greaterThanEqual('sequence', $start),
                 Query::orderAsc('sequence'),

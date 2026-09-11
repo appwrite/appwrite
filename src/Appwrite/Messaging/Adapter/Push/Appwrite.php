@@ -107,7 +107,7 @@ class Appwrite extends PushAdapter
                         ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
                         ->getAttribute('sequence');
 
-                    $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
+                    $this->dbForProject->createDocument('appwritePushLedger', new Document([
                         '$id' => ID::unique(),
                         'topic' => $topic,
                         'data' => $payload,
@@ -130,7 +130,7 @@ class Appwrite extends PushAdapter
     private function findLedger(Authorization $authorization, string $topic): Document
     {
         return $authorization->skip(
-            fn () => $this->dbForProject->findOne('appwrite_push_ledger', [
+            fn () => $this->dbForProject->findOne('appwritePushLedger', [
                 Query::equal('messageId', [$this->messageId]),
                 Query::equal('topic', [$topic]),
             ])

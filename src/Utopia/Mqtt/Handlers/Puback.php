@@ -60,7 +60,7 @@ class Puback extends Action
         // sequence it just acked — so an out-of-order ack can't skip a still-unacked
         // message. Only ever move the cursor forward, so two acks at once can't rewind it.
         $cache = getCache();
-        $cursorKey = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+        $cursorKey = 'appwrite:push:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
         $topic = $delivery['topic'];
         $cursor = (int) $delivery['cursor'];
 
