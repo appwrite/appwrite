@@ -252,6 +252,11 @@ class Redis implements Connection
             try {
                 $redis->connect($this->host, $this->port, $connectTimeout);
 
+                if ($this->password !== null && $this->password !== '') {
+                    $hasUser = $this->user !== null && $this->user !== '';
+                    $redis->auth($hasUser ? [$this->user, $this->password] : $this->password);
+                }
+
                 if ($this->readTimeout >= 0) {
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, $this->readTimeout);
                 }

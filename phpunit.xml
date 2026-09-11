@@ -22,6 +22,7 @@
             <file>./tests/Queue/E2E/Adapter/NatsPoolTest.php</file>
             <file>./tests/Queue/E2E/Adapter/KedaTest.php</file>
             <file>./tests/Queue/E2E/Adapter/PoolTest.php</file>
+            <file>./tests/Queue/E2E/Adapter/RedisAuthTest.php</file>
             <file>./tests/Queue/E2E/Adapter/RedisConnectionRecoveryTest.php</file>
             <file>./tests/Queue/E2E/Adapter/SwooleTest.php</file>
             <file>./tests/Queue/E2E/Adapter/SwooleRestartTest.php</file>

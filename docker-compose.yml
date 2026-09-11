@@ -9,6 +9,22 @@ services:
       timeout: 3s
       retries: 15
 
+  redis-auth:
+    image: redis:alpine
+    command:
+      - sh
+      - -c
+      - |
+        printf 'requirepass secretpw\nuser worker on >workerpw ~* &* +@all\n' > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
+    ports:
+      - "16380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "secretpw", "--no-auth-warning", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
   nats:
     image: nats:2.11-alpine
     command: ["-js", "-m", "8222"]
