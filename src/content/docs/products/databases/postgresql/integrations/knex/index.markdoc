@@ -41,7 +41,7 @@ export const db = knex({
 });
 ```
 
-If you configure the connection with discrete fields instead of a URL, include `ssl: { rejectUnauthorized: false }` (or your preferred verification mode). The connection string form above is enough when it already contains `sslmode=require`.
+If you configure the connection with discrete fields instead of a URL, set `ssl: { rejectUnauthorized: true }` so `pg` verifies the server certificate against Node's built-in CA store. The connection string form above is enough when it already contains `sslmode=require`.
 
 A `knexfile.js` (or `.ts`) keeps runtime and CLI configuration in one place:
 

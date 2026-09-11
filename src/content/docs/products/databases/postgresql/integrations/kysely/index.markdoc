@@ -29,16 +29,16 @@ npm install kysely pg
 npm install -D @types/pg typescript
 ```
 
-Create a typed database interface and a `Kysely` instance backed by `PostgresDialect`:
+Create a typed database interface and a `Kysely` instance backed by `PostgresDialect`. Mark database-generated columns with `Generated<T>` so insert-only payloads typecheck:
 
 ```ts
-import { Kysely, PostgresDialect } from 'kysely';
+import { Generated, Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
 
 interface UsersTable {
-  id: number;
+  id: Generated<number>;
   email: string;
-  created_at: Date;
+  created_at: Generated<Date>;
 }
 
 interface Database {
@@ -55,7 +55,7 @@ const dialect = new PostgresDialect({
 export const db = new Kysely<Database>({ dialect });
 ```
 
-`pg` honors `sslmode=require` in the URL. If you pass discrete host options instead of a URL, set `ssl: { rejectUnauthorized: false }` (or your preferred verification mode) explicitly.
+`pg` honors `sslmode=require` in the URL. If you pass discrete host options instead of a URL, set `ssl: { rejectUnauthorized: true }` so the driver verifies the server certificate against Node's built-in CA store.
 
 # Run migrations {% #migrate %}
 
