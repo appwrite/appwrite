@@ -71,6 +71,13 @@ class Connection
      * is a harmless tail re-delivery on reconnect, never a lost message. Returns null for
      * an unknown or duplicate ack.
      *
+     * Example — messages 5, 6, 7 were delivered and the client acks 5, then 7 (6 is still
+     * pending):
+     *   ack 5 -> in flight {6, 7}, cursor = 5   (lowest pending is 6, so stop at 5)
+     *   ack 7 -> in flight {6},    cursor = 5   (6 is still the gap, don't jump to 7)
+     *   ack 6 -> in flight {},     cursor = 6   (nothing pending; 7 may be re-sent later)
+     * The cursor never moves past the unacked 6, so on reconnect 6 is replayed, not lost.
+     *
      * @return array{topic: string, sequence: int, cursor: int}|null
      */
     public function acknowledge(int $packetId): ?array

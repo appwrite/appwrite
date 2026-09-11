@@ -56,9 +56,9 @@ class Puback extends Action
         Span::add('mqtt.sequence', $delivery['sequence']);
         $mqtt->metrics->messagesAcked->add(1);
 
-        // Advance to the contiguous boundary from acknowledge(), never the acked sequence
-        // itself: a non-contiguous ack must not skip an earlier unacked message. The
-        // monotonic guard covers concurrent per-packet PUBACK coroutines.
+        // Save how far the client has caught up (the "cursor" from acknowledge), not the
+        // sequence it just acked — so an out-of-order ack can't skip a still-unacked
+        // message. Only ever move the cursor forward, so two acks at once can't rewind it.
         $cache = getCache();
         $cursorKey = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
         $topic = $delivery['topic'];
