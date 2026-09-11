@@ -65,13 +65,16 @@ Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration 
 Create `kysely.config.ts` (project root or `.config/`):
 
 ```ts
+import { PostgresDialect } from 'kysely';
 import { defineConfig } from 'kysely-ctl';
+import { Pool } from 'pg';
 
 export default defineConfig({
-  dialect: 'pg',
-  dialectConfig: {
-    connectionString: process.env.DIRECT_URL
-  },
+  dialect: new PostgresDialect({
+    pool: new Pool({
+      connectionString: process.env.DIRECT_URL
+    })
+  }),
   migrations: {
     migrationFolder: 'migrations'
   }
