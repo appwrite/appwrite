@@ -80,47 +80,80 @@ class Subscribe extends Action
             false,
         );
 
-        // session replay
-        // TODO: update the ttl + bulk fetch + bulk upload to the cache to reduce the network calls
-        // same for the database below
+        if ($topics === []) {
+            return;
+        }
+
+        // TODO: expiry should track the plan
+        $expiry = 3600;
+        $maxDepth = 5;
+
         $consoleDatabase = getConsoleDB();
         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
         $projectDB = getProjectDB($project);
-
         $cache = getCache();
+
+        $cursorKey = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+
+        // A clean-start session discards any persisted cursor before resuming.
+        if ($connection->cleanStart) {
+            $cache->purge($cursorKey);
+        }
+
+        $cursors = $cache->loadMany($cursorKey, $expiry);
+        $known = array_keys($cursors);
+        $newTopics = array_values(array_diff($topics, $known));
+        $resumeTopics = array_values(array_intersect($topics, $known));
+
+        // Current tail (topics.sequence) per subscribed topic: the seed for new topics and
+        // the upper bound for replay. getDocument is cached, so repeated reads are cheap.
+        $tails = [];
         foreach ($topics as $topic) {
-            $lastMessageCursorKey =  'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $topic;
-            $payload = $cache->load($lastMessageCursorKey, 3600);
-
-            $topicDocument = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('messages', [Query::containsAny('topics', [$topic]), Query::orderDesc('$sequence'), Query::orderDesc('data')]));
-            if ($topicDocument->isEmpty()) {
-                continue;
+            $topicDocument = $projectDB->getAuthorization()->skip(fn () => $projectDB->getDocument('topics', $topic));
+            if (!$topicDocument->isEmpty()) {
+                $tails[$topic] = (int) $topicDocument->getAttribute('sequence', 0);
             }
-            if (empty($topicDocument->getAttribute('data'))) {
-                continue;
-            }
+        }
 
-            $sequence = $topicDocument?->getAttribute('$sequence') ?? -1;
+        $persist = [];
+        foreach ($newTopics as $topic) {
+            $persist[$topic] = ['sequence' => $tails[$topic] ?? 0];
+        }
+        foreach ($resumeTopics as $topic) {
+            $persist[$topic] = $cursors[$topic];
+        }
 
-            if ($payload === false) {
-                // Newly connected device: register at the current tail so it starts from now.
-                $cache->save($lastMessageCursorKey, ['sequence' => $sequence]);
-                continue;
-            }
-
-            $lastSubscriberSequence = max(-1, $payload['sequence'] ?? -1);
-
-            if ($lastSubscriberSequence === $sequence) {
+        foreach ($resumeTopics as $topic) {
+            $from = (int) ($cursors[$topic]['sequence'] ?? 0);
+            $tail = $tails[$topic] ?? $from;
+            if ($tail <= $from) {
                 continue;
             }
 
-            // TODO: fetch the last global message cursor then calculate the depth and send
-            $packetId = $connection->nextPacketId();
-            $publish = $connection->protocol >= 5
-                ? V5::publish($topic, json_encode($topicDocument->getAttribute('data')), Packet::QOS_1, $packetId, dup: true)
-                : V3::publish($topic, json_encode($topicDocument->getAttribute('data')), Packet::QOS_1, $packetId, dup: true);
-            $reply($publish, false);
-            $connection->track($packetId, $topic, $sequence);
+            $start = max($from + 1, $tail - $maxDepth + 1);
+            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('appwrite_push_ledger', [
+                Query::equal('topic', [$topic]),
+                Query::greaterThanEqual('sequence', $start),
+                Query::orderAsc('sequence'),
+                Query::limit($maxDepth),
+            ]));
+
+            foreach ($messages as $message) {
+                $packetId = $connection->nextPacketId();
+                // The ledger `data` (json filter) already holds the encoded envelope
+                // string the live path publishes; re-encoding it would double-encode.
+                $stored = $message->getAttribute('data');
+                $data = \is_string($stored) ? $stored : (string) json_encode($stored);
+                $publish = $connection->protocol >= 5
+                    ? V5::publish($topic, $data, Packet::QOS_1, $packetId, dup: true)
+                    : V3::publish($topic, $data, Packet::QOS_1, $packetId, dup: true);
+                $reply($publish, false);
+                $connection->track($packetId, $topic, (int) $message->getAttribute('sequence'));
+            }
+        }
+
+        if ($persist !== []) {
+            $cache->saveMany($cursorKey, $persist, $expiry);
         }
     }
 }
