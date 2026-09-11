@@ -4,7 +4,7 @@ title: TypeORM
 description: Use TypeORM with an Appwrite native MySQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.
 ---
 
-Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [TypeORM](https://typeorm.io/) works against it with no Appwrite-specific configuration. Point TypeORM's `mysql2` (or `mysql`) driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use entities, the query builder, and migrations as you would against any MySQL server.
+Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [TypeORM](https://typeorm.io/) works against it with no Appwrite-specific configuration. Point TypeORM's `mysql2` driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use entities, the query builder, and migrations as you would against any MySQL server. TypeORM 1.x (current) requires Node 20+ and mysql2 only; `typeorm@0.3` remains on the `legacy` tag.
 
 {% info title="Before you start" %}
 You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
@@ -12,7 +12,7 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 
 # Set the connection string {% #connection-string %}
 
-In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection strings in your environment. Never commit them:
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"

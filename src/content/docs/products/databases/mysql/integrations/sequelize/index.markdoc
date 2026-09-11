@@ -11,12 +11,12 @@ You'll need a native MySQL database in a `ready` state and its credentials. See 
 {% /info %}
 
 {% info title="Sequelize 7" %}
-Sequelize 7 is still alpha and coming. These examples stay on Sequelize 6 (`sequelize` + `mysql2`), which is the stable path. Appwrite URLs and ports stay the same on v7. When you try v7 later, install `@sequelize/core` plus `@sequelize/mysql`, and follow upstream for the new dialect API and migrations. The CLI is not ready on v7 yet.
+Sequelize 7 (`@sequelize/core` + `@sequelize/mysql`) is still alpha. These examples use Sequelize 6 (`sequelize` + `mysql2`), the current stable line. Appwrite connection URLs and ports are unchanged on v7. Stay on v6 unless you are deliberately adopting the alpha: v7 uses a different dialect API, and its CLI is not ready yet.
 {% /info %}
 
 # Set the connection string {% #connection-string %}
 
-In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). Put it in your environment, never commit it:
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection strings in your environment. Never commit them:
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
