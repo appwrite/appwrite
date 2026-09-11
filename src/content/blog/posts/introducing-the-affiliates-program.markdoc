@@ -73,11 +73,9 @@ Create a separate link per channel instead of reusing one everywhere. A link nam
 
 You can track your affiliate activity directly from the Appwrite Console. See how many people clicked your links, signed up, and upgraded to Pro, all in one place.
 
-You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when they’re ready.
+You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when they're ready.
 
 Attribution lasts for 180 days, so people have plenty of time to try Appwrite before deciding to upgrade.
-
-# How referral rewards and Cloud credits work
 
 When a referred user upgrades to Pro within the 180-day attribution window, you earn $15 in Appwrite Cloud credits. Rewards can be claimed from the Affiliates dashboard.
 
@@ -91,7 +89,7 @@ Here’s how the referral journey works:
 | Pro upgrade | They upgrade to Pro within 180 days and you earn a $15 reward |
 | No upgrade | If they don’t upgrade within the attribution window, no reward is generated |
 
-Only Pro upgrades generate a reward. Referrals that stay on the Free plan can still appear in your referral analytics as attributed signups.
+Only Pro upgrades generate a reward. Referrals that stay on the Free plan can still appear in your referral analytics as a
 
 # Getting started with the Affiliates program
 
