@@ -66,14 +66,17 @@ Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration 
 Create `kysely.config.ts` (project root or `.config/`):
 
 ```ts
+import { MysqlDialect } from 'kysely';
 import { defineConfig } from 'kysely-ctl';
+import { createPool } from 'mysql2';
 
 export default defineConfig({
-  dialect: 'mysql2',
-  dialectConfig: {
-    uri: process.env.DIRECT_URL,
-    ssl: { rejectUnauthorized: true }
-  },
+  dialect: new MysqlDialect({
+    pool: createPool({
+      uri: process.env.DIRECT_URL,
+      ssl: { rejectUnauthorized: true }
+    })
+  }),
   migrations: {
     migrationFolder: 'migrations'
   }
