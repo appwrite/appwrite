@@ -5,8 +5,10 @@ namespace Appwrite\Messaging\Adapter\Push;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Messages\Push as PushMessage;
 use Utopia\Messaging\Priority;
@@ -82,38 +84,56 @@ class Appwrite extends PushAdapter
      * Append the notification to the ledger and return its per-topic sequence. Idempotent
      * on (messageId, topic): a retry after a transient publish failure reuses the existing
      * row and sequence instead of incrementing the topic counter or inserting a duplicate.
+     *
+     * The increment and insert run in one transaction so a failed insert rolls the
+     * increment back — the topic sequence never advances without a matching ledger row.
+     * The unique index on (messageId, topic) also serialises two concurrent attempts:
+     * the loser's insert throws Duplicate, its increment rolls back, and it resolves to
+     * the winner's sequence instead of opening a gap.
      */
     private function persist(string $topic, string $payload): int
     {
         $authorization = $this->dbForProject->getAuthorization();
 
-        $existing = $authorization->skip(
-            fn () => $this->dbForProject->findOne('appwrite_push_ledger', [
-                Query::equal('messageId', [$this->messageId]),
-                Query::equal('topic', [$topic]),
-            ])
-        );
+        $existing = $this->findLedger($authorization, $topic);
         if (!$existing->isEmpty()) {
             return (int) $existing->getAttribute('sequence');
         }
 
-        return (int) $authorization->skip(
-            fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload): int {
-                $sequence = (int) $this->dbForProject
-                    ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
-                    ->getAttribute('sequence');
+        try {
+            return (int) $authorization->skip(
+                fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload): int {
+                    $sequence = (int) $this->dbForProject
+                        ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
+                        ->getAttribute('sequence');
 
-                $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
-                    '$id' => ID::unique(),
-                    'topic' => $topic,
-                    'data' => $payload,
-                    'messageId' => $this->messageId,
-                    'messageInternalId' => $this->messageInternalId,
-                    'sequence' => $sequence,
-                ]));
+                    $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
+                        '$id' => ID::unique(),
+                        'topic' => $topic,
+                        'data' => $payload,
+                        'messageId' => $this->messageId,
+                        'messageInternalId' => $this->messageInternalId,
+                        'sequence' => $sequence,
+                    ]));
 
-                return $sequence;
-            })
+                    return $sequence;
+                })
+            );
+        } catch (Duplicate) {
+            // A concurrent attempt won the (messageId, topic) unique index; its row and
+            // increment are committed. Return that sequence rather than incrementing again.
+            return (int) $this->findLedger($authorization, $topic)->getAttribute('sequence');
+        }
+    }
+
+    /** The existing ledger row for this campaign message on a topic, or an empty document. */
+    private function findLedger(Authorization $authorization, string $topic): Document
+    {
+        return $authorization->skip(
+            fn () => $this->dbForProject->findOne('appwrite_push_ledger', [
+                Query::equal('messageId', [$this->messageId]),
+                Query::equal('topic', [$topic]),
+            ])
         );
     }
 
