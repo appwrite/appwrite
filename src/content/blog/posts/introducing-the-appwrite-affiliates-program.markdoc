@@ -11,20 +11,20 @@ featured: false
 unlisted: false
 cover: /images/blog/introducing-the-appwrite-affiliates-program/cover.avif
 faqs:
-  - question: What is the Appwrite Affiliates program?
-    answer: Appwrite Affiliates is a referral program that lets you create invite
+  - question: What is the Affiliates program?
+    answer: Affiliates program is a referral program that lets you create invite
       links and earn Appwrite Cloud credits when someone you refer signs up and
       upgrades to Pro.
-  - question: How much can I earn with Appwrite Affiliates?
+  - question: How much can I earn with the Affiliates program?
     answer: You earn $15 in Appwrite Cloud credits for every referred user who
       upgrades to Appwrite Pro within the attribution window. The credits can be
       claimed by an organization you own.
-  - question: Who can join the Appwrite Affiliates program?
+  - question: Who can join the Affiliates program?
     answer: Anyone with an Appwrite Cloud account can use the Affiliates program. It
       is especially useful for developers, creators, educators, agencies,
       freelancers, open source maintainers, and community organizers who already
       recommend Appwrite.
-  - question: Where can I use Appwrite affiliate rewards?
+  - question: Where can I use the affiliate rewards?
     answer: Affiliate rewards are issued as organization credits that can be used
       toward eligible Appwrite Cloud charges. Each qualifying Pro referral earns
       $15 in credits.
@@ -39,9 +39,9 @@ Maybe you recommended Appwrite to a teammate, used it in a tutorial, mentioned i
 
 That kind of support has meant a lot to us, and we wanted to give something back to the people helping us grow.
 
-Today, we're introducing **Appwrite Affiliates**: create invite links from your Appwrite account, share them however you already share things, and earn **$15 in organization credits to use on Appwrite Cloud** every time someone you refer upgrades to Pro. It's live on [Appwrite Cloud](/affiliates) today.
+Today, we're introducing the **Affiliates program**: create invite links from your Appwrite account, share them however you already share things, and earn **$15 in organization credits to use on Appwrite Cloud** every time someone you refer upgrades to Pro. It's live on [Appwrite Cloud](/affiliates) today.
 
-# What is the Appwrite Affiliates program?
+# What is the Affiliates program?
 
 The Appwrite Affiliates program is a referral program for developers. You generate invite links in the Appwrite Console, and when someone signs up through one of your links and later upgrades to [Appwrite Pro](/pricing), you earn $15 in organization credits that you can claim and use on Appwrite Cloud. Clicks, signups, and conversions are tracked for you, and attribution lasts **180 days** after signup.
 
@@ -59,7 +59,7 @@ Here is the whole program in one table.
 
 There’s no separate affiliate dashboard to manage. Everything lives in your Appwrite account.
 
-# How to join Appwrite Affiliates in three steps
+# How to join the Affiliates program in three steps
 
 **1. Create an Appwrite Cloud account.** If you already build on Appwrite, you're done with this step. Affiliates lives in your personal account, not inside a specific project.
 
@@ -69,21 +69,13 @@ There’s no separate affiliate dashboard to manage. Everything lives in your Ap
 
 Create a separate link per channel instead of reusing one everywhere. A link named `youtube-auth-tutorial` and a link named `conf-workshop` cost nothing extra, and they tell you which audience actually converts.
 
-# Track clicks and conversions in the Appwrite Console
+# See how your referrals are doing
 
-Referral programs usually fail on measurement. You share a link, something happens, and a spreadsheet shows up at the end of the month. Appwrite Affiliates reports the same funnel you'd expect from your own product analytics, in the Console you already use.
+You can track your affiliate activity directly from the Appwrite Console. See how many people clicked your links, signed up, and upgraded to Pro, all in one place.
 
-| Metric      | What it counts                           |
-| ----------- | ---------------------------------------- |
-| Clicks      | Visits to your invite links              |
-| Signups     | New accounts attributed to your links    |
-| Conversions | Attributed accounts that upgraded to Pro |
+You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when they’re ready.
 
-Alongside those totals, the overview shows signup and conversion rates, helping you understand which invite links and channels perform best. 
-
-You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when rewards are ready.
-
-Because attribution lasts 180 days, developers have time to try Appwrite before deciding whether to upgrade to Pro.
+Attribution lasts for 180 days, so people have plenty of time to try Appwrite before deciding to upgrade.
 
 # How referral rewards and Cloud credits work
 
@@ -101,9 +93,9 @@ Here’s how the referral journey works:
 
 Only Pro upgrades generate a reward. Referrals that stay on the Free plan can still appear in your referral analytics as attributed signups.
 
-# Getting started with Appwrite Affiliates
+# Getting started with the Affiliates program
 
-Appwrite Affiliates is available on Appwrite Cloud today. Open [Account, then Affiliates](/account/affiliates), create your first invite link, share Appwrite the way you already do, and start earning credits when the developers you refer upgrade to Pro.
+Affiliates program is available on Appwrite Cloud today. Open [Account, then Affiliates](/account/affiliates), create your first invite link, share Appwrite the way you already do, and start earning credits when the developers you refer upgrade to Pro.
 
 We’re excited to finally give something back to the people who have helped Appwrite grow, and we can’t wait to see where you share it next.
 
