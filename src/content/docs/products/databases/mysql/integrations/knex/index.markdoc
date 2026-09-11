@@ -18,7 +18,7 @@ Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. If Knex or `mysql2` does not infer TLS from the connection string, set SSL on the connection object. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Connections on Appwrite Cloud are encrypted with TLS. If Knex or `mysql2` does not infer TLS from the connection string, set SSL on the connection object and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure Knex {% #driver %}
 
@@ -38,13 +38,13 @@ export const db = knex({
   client: 'mysql2',
   connection: {
     uri: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: true }
   },
   pool: { min: 0, max: 10 }
 });
 ```
 
-You can also pass the connection string as a plain string when your environment already forces TLS. A `knexfile.js` keeps runtime and CLI configuration together:
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass the connection string as a plain string when your environment already forces TLS with verification. A `knexfile.js` keeps runtime and CLI configuration together:
 
 ```js
 require('dotenv').config();
@@ -53,7 +53,7 @@ module.exports = {
   client: 'mysql2',
   connection: {
     uri: process.env.DIRECT_URL || process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: true }
   },
   migrations: {
     directory: './migrations',
