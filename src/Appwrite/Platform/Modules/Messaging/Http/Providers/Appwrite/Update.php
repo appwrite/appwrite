@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -56,13 +57,14 @@ class Update extends Action
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('qos', null, new Nullable(new Range(0, 1)), 'Default QoS for topics on this provider (0 or 1). Null lets the subscriber choose.', true)
             ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Default message retention in seconds for offline delivery. Max 7 days (604800).', true)
+            ->inject('request')
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, ?bool $enabled, ?int $qos, ?int $expiry, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $providerId, string $name, ?bool $enabled, ?int $qos, ?int $expiry, Request $request, Event $queueForEvents, Database $dbForProject, Response $response)
     {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
@@ -82,12 +84,16 @@ class Update extends Action
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if (!\is_null($qos) || !\is_null($expiry)) {
+        // qos and expiry are nullable defaults: an explicit null resets them (subscriber
+        // chooses the QoS, no expiry). An omitted param and an explicit null both arrive as
+        // null, so key on the request body's presence rather than the value.
+        $params = $request->getParams();
+        if (\array_key_exists('qos', $params) || \array_key_exists('expiry', $params)) {
             $options = $provider->getAttribute('options', []);
-            if (!\is_null($qos)) {
+            if (\array_key_exists('qos', $params)) {
                 $options['qos'] = $qos;
             }
-            if (!\is_null($expiry)) {
+            if (\array_key_exists('expiry', $params)) {
                 $options['expiry'] = $expiry;
             }
             $provider->setAttribute('options', $options);
