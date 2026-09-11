@@ -5,7 +5,6 @@ namespace Appwrite\Messaging\Adapter\Push;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -85,11 +84,12 @@ class Appwrite extends PushAdapter
      * on (messageId, topic): a retry after a transient publish failure reuses the existing
      * row and sequence instead of incrementing the topic counter or inserting a duplicate.
      *
-     * The increment and insert run in one transaction so a failed insert rolls the
-     * increment back — the topic sequence never advances without a matching ledger row.
-     * The unique index on (messageId, topic) also serialises two concurrent attempts:
-     * the loser's insert throws Duplicate, its increment rolls back, and it resolves to
-     * the winner's sequence instead of opening a gap.
+     * The increment and insert run in one transaction, opened by locking the topic row
+     * (getDocument FOR UPDATE). A concurrent attempt for the same message blocks on that
+     * lock, then re-reads the ledger row this transaction committed rather than racing a
+     * second increment — so the topic sequence can't advance without a matching row, and
+     * two attempts can't open a gap. The unique index on (messageId, topic) remains as a
+     * correctness backstop.
      */
     private function persist(string $topic, string $payload): int
     {
@@ -100,30 +100,33 @@ class Appwrite extends PushAdapter
             return (int) $existing->getAttribute('sequence');
         }
 
-        try {
-            return (int) $authorization->skip(
-                fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload): int {
-                    $sequence = (int) $this->dbForProject
-                        ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
-                        ->getAttribute('sequence');
+        return (int) $authorization->skip(
+            fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload, $authorization): int {
+                // Lock the topic row so a concurrent attempt for the same message waits here.
+                $this->dbForProject->getDocument('topics', $topic, forUpdate: true);
 
-                    $this->dbForProject->createDocument('appwritePushLedger', new Document([
-                        '$id' => ID::unique(),
-                        'topic' => $topic,
-                        'data' => $payload,
-                        'messageId' => $this->messageId,
-                        'messageInternalId' => $this->messageInternalId,
-                        'sequence' => $sequence,
-                    ]));
+                // Re-check under the lock: a racing attempt may have persisted it already.
+                $existing = $this->findLedger($authorization, $topic);
+                if (!$existing->isEmpty()) {
+                    return (int) $existing->getAttribute('sequence');
+                }
 
-                    return $sequence;
-                })
-            );
-        } catch (Duplicate) {
-            // A concurrent attempt won the (messageId, topic) unique index; its row and
-            // increment are committed. Return that sequence rather than incrementing again.
-            return (int) $this->findLedger($authorization, $topic)->getAttribute('sequence');
-        }
+                $sequence = (int) $this->dbForProject
+                    ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
+                    ->getAttribute('sequence');
+
+                $this->dbForProject->createDocument('appwritePushLedger', new Document([
+                    '$id' => ID::unique(),
+                    'topic' => $topic,
+                    'data' => $payload,
+                    'messageId' => $this->messageId,
+                    'messageInternalId' => $this->messageInternalId,
+                    'sequence' => $sequence,
+                ]));
+
+                return $sequence;
+            })
+        );
     }
 
     /** The existing ledger row for this campaign message on a topic, or an empty document. */
