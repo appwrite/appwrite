@@ -214,10 +214,10 @@ final class AppwriteTest extends TestCase
     {
         $this->seedTopic('topic-1', 0);
         $broker = new FakeBroker();
-        $adapter = $this->adapter($broker);
 
-        $adapter->send(new Push(to: ['topic-1'], title: 'first'));
-        $adapter->send(new Push(to: ['topic-1'], title: 'second'));
+        // Two distinct campaigns (distinct message ids) to the same topic.
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'first'));
+        $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['topic-1'], title: 'second'));
 
         $sequences = \array_map(
             static fn (Document $row): int => $row->getAttribute('sequence'),
@@ -228,6 +228,20 @@ final class AppwriteTest extends TestCase
 
         $topic = $this->topic('topic-1');
         $this->assertSame(2, $topic->getAttribute('sequence'));
+    }
+
+    public function testRepublishIsIdempotent(): void
+    {
+        // Re-sending the same campaign (a retry after a transient failure) must not
+        // advance the sequence or add a second ledger row for the (message, topic) pair.
+        $this->seedTopic('topic-1', 0);
+        $broker = new FakeBroker();
+
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'once'));
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'once'));
+
+        $this->assertCount(1, $this->ledger());
+        $this->assertSame(1, $this->topic('topic-1')->getAttribute('sequence'));
     }
 
     public function testEachTopicGetsItsOwnSequence(): void
