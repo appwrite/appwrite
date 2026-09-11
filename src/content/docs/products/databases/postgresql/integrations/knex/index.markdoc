@@ -15,10 +15,11 @@ You'll need a native PostgreSQL database in a `ready` state and its credentials.
 In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
 
 ```env
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
 ```
 
-The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for migrations and CLI tools. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
 
 # Install and configure Knex {% #driver %}
 
@@ -61,11 +62,7 @@ module.exports = {
 
 # Run migrations {% #migrate %}
 
-Point the Knex CLI at the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection:
-
-```env
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
+Point the Knex CLI at `DIRECT_URL` on the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection.
 
 Create and apply a migration:
 
@@ -115,17 +112,9 @@ Libraries built on Knex, such as Objection.js, use the same connection string an
 
 # Pool connections from serverless {% #pooling %}
 
-Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
 
-The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
-
-```env
-# Runtime: pooled, transaction mode
-DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
-
-# Migrations: direct connection to the engine
-DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
-```
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
 
 Keep the runtime Knex pool small on serverless (`pool.max` of `1` or a few connections per isolate). Avoid session-scoped features such as advisory locks, `LISTEN`/`NOTIFY`, temporary tables, and `SET LOCAL` over transaction-mode pooling; switch the pooler to **session mode** or use the direct port when you need them. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
 
