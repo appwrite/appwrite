@@ -86,7 +86,7 @@ class Appwrite extends PushAdapter
         )->getAttribute('sequence');
 
         $authorization->skip(
-            fn () => $this->dbForProject->createDocument('messages_appwrite', new Document([
+            fn () => $this->dbForProject->createDocument('appwrite_push_ledger', new Document([
                 '$id' => ID::unique(),
                 'topic' => $topic,
                 'data' => $payload,

@@ -2212,9 +2212,9 @@ return [
         ],
     ],
 
-    'messages_appwrite' => [
+    'appwrite_push_ledger' => [
         '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('messages_appwrite'),
+        '$id' => ID::custom('appwrite_push_ledger'),
         'name' => 'MQTT Messages',
         'attributes' => [
             [
