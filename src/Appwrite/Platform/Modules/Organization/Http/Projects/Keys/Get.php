@@ -30,7 +30,7 @@ class Get extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Get project key')
             ->groups(['api', 'organization'])
-            ->label('scope', 'keys.read')
+            ->label('scope', ['organization.projects.keys.read', 'keys.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'keys',
