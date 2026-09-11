@@ -57,7 +57,13 @@ class Puback extends Action
         $mqtt->metrics->messagesAcked->add(1);
 
         $cache = getCache();
-        $key = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId() . ':' . $delivery['topic'];
-        $cache->save($key, ['sequence' => $delivery['sequence']]);
+        $cursorKey = 'mqtt:cursor:' . $connection->projectId . ':' . $connection->identity['userId'] . ':' . $connection->getClientId();
+        $topic = $delivery['topic'];
+        $sequence = (int) $delivery['sequence'];
+
+        $current = $cache->loadMany($cursorKey, 3600, [$topic]);
+        if ($sequence > (int) ($current[$topic]['sequence'] ?? -1)) {
+            $cache->saveMany($cursorKey, [$topic => ['sequence' => $sequence]], 3600);
+        }
     }
 }
