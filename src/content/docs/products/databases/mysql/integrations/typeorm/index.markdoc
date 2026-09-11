@@ -16,9 +16,10 @@ Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. If your runtime or driver configuration does not infer TLS from the connection string, configure SSL on the DataSource. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Use `DATABASE_URL` for runtime traffic (pooler port when you enable pooling) and `DIRECT_URL` for the TypeORM CLI and migration runners. Connections on Appwrite Cloud are encrypted with TLS. If your runtime or driver configuration does not infer TLS from the connection string, configure SSL on the DataSource and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure TypeORM {% #driver %}
 
@@ -31,7 +32,7 @@ npm install -D @types/node typescript ts-node
 
 Enable decorator metadata in `tsconfig.json` if you use entity decorators (`"emitDecoratorMetadata": true` and `"experimentalDecorators": true`).
 
-Create a `DataSource` with `type: 'mysql'`. Prefer the URL, and set `ssl` when TLS is not inferred:
+Create a runtime `DataSource` that reads `DATABASE_URL`:
 
 ```ts
 import 'reflect-metadata';
@@ -41,7 +42,7 @@ import { User } from './entities/User';
 export const AppDataSource = new DataSource({
   type: 'mysql',
   url: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: true },
   synchronize: false,
   logging: false,
   entities: [User],
@@ -50,7 +51,26 @@ export const AppDataSource = new DataSource({
 });
 ```
 
-Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port (`3306`).
+Create a separate migrations DataSource for the CLI that reads `DIRECT_URL` (for example `src/data-source.migrations.ts`):
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export default new DataSource({
+  type: 'mysql',
+  url: process.env.DIRECT_URL,
+  ssl: { rejectUnauthorized: true },
+  synchronize: false,
+  logging: false,
+  entities: [User],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: []
+});
+```
+
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port (`3306`).
 
 Define an entity:
 
@@ -72,29 +92,30 @@ export class User {
 
 # Run migrations {% #migrate %}
 
-Point the TypeORM CLI and any migration runner at the **direct** engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection:
-
-```env
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
-```
+Point the TypeORM CLI at the migrations DataSource so it uses `DIRECT_URL`, not the pooler. Migrations issue DDL that needs a session-level connection:
 
 ```bash
-npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.ts
-npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts
+npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
+npx typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts
 ```
 
 The `admin.<hash>` user owns the `default` database and can run schema changes.
 
-You can also run pending migrations from application startup after `initialize()`:
+You can also run pending migrations from a one-off job that initializes the migrations DataSource:
 
 ```ts
-await AppDataSource.initialize();
-await AppDataSource.runMigrations();
+import MigrationsDataSource from './data-source.migrations';
+
+await MigrationsDataSource.initialize();
+await MigrationsDataSource.runMigrations();
+await MigrationsDataSource.destroy();
 ```
+
+Do not call `AppDataSource.runMigrations()` when `DATABASE_URL` points at the transaction-mode pooler.
 
 # Query with TypeORM {% #query %}
 
-Once the schema is migrated, use the repository API:
+Once the schema is migrated, use the repository API with the runtime DataSource:
 
 ```ts
 import { AppDataSource } from './data-source';
@@ -118,7 +139,7 @@ On long-running servers, initialize the `DataSource` once at module scope and re
 
 Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) by connecting on port `6033` on the same hostname.
 
-Keep migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+Keep the migrations DataSource pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
 
 ```env
 # Runtime: pooler port
@@ -128,7 +149,7 @@ DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center
 DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Wire the runtime DataSource to `DATABASE_URL` and a separate migrations DataSource (or CLI `-d` file) to `DIRECT_URL`. Cap pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
+Wire the runtime DataSource to `DATABASE_URL` and the CLI / migrations DataSource to `DIRECT_URL`. Cap pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
 
 The pooler defaults to transaction mode, which does not keep a backend connection across statements. Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
 
