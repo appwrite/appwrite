@@ -245,8 +245,8 @@ if (!function_exists('getRedis')) {
 
         $redis = new \Redis();
         @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($user ? [$user, $pass] : $pass);
+        if ($pass !== '') {
+            $redis->auth($user !== '' ? [$user, $pass] : $pass);
         }
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
