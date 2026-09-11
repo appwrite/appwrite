@@ -933,6 +933,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
