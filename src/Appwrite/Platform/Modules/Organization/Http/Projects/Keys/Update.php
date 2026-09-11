@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -69,6 +70,7 @@ class Update extends Action
             ->inject('team')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('auditContext')
             ->callback($this->action(...));
     }
 
@@ -84,9 +86,13 @@ class Update extends Action
         Document $team,
         Authorization $authorization,
         ?Key $apiKey,
+        AuditContext $auditContext,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
+        // The request may run through the console project; events and audits belong to the resolved project
+        $queueForEvents->setProject($project);
+        $auditContext->project = $project;
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {

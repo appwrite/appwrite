@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Action;
 use Appwrite\SDK\AuthType;
@@ -68,6 +69,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('team')
             ->inject('apiKey')
+            ->inject('auditContext')
             ->callback($this->action(...));
     }
 
@@ -80,9 +82,13 @@ class Create extends Action
         Database $dbForPlatform,
         Document $team,
         ?Key $apiKey,
+        AuditContext $auditContext,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
+        // The request may run through the console project; events and audits belong to the resolved project
+        $queueForEvents->setProject($project);
+        $auditContext->project = $project;
         $keyId = ID::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);

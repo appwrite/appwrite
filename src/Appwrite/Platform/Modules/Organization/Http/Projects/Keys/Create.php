@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -73,6 +74,7 @@ class Create extends Action
             ->inject('team')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('auditContext')
             ->callback($this->action(...));
     }
 
@@ -88,6 +90,7 @@ class Create extends Action
         Document $team,
         Authorization $authorization,
         ?Key $apiKey,
+        AuditContext $auditContext,
     ) {
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
@@ -96,6 +99,9 @@ class Create extends Action
 
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
+        // The request may run through the console project; events and audits belong to the resolved project
+        $queueForEvents->setProject($project);
+        $auditContext->project = $project;
         $keyId = ($keyId == 'unique()') ? ID::unique() : $keyId;
 
         $key = new Document([
