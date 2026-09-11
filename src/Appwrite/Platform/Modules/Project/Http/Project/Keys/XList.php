@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
-use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,11 +16,15 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
-class XList extends Action
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
+class XList extends Base
 {
     use HTTP;
 
@@ -33,18 +37,19 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/organization/projects/:projectId/keys')
+            ->setHttpPath('/v1/project/keys')
+            ->httpAlias('/v1/projects/:projectId/keys')
             ->desc('List project keys')
-            ->groups(['api', 'organization'])
+            ->groups(['api', 'project'])
             ->label('scope', 'keys.read')
             ->label('sdk', new Method(
-                namespace: 'organization',
+                namespace: 'project',
                 group: 'keys',
-                name: 'listProjectKeys',
+                name: 'listKeys',
                 description: <<<EOT
-                Get a list of all API keys of a project in your organization.
+                Get a list of all API keys from the current project.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -52,14 +57,12 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('queries', [], new Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Keys::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('team')
             ->inject('authorization')
-            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -67,17 +70,13 @@ class XList extends Action
      * @param array<string> $queries
      */
     public function action(
-        string $projectId,
         array $queries,
         bool $includeTotal,
+        Document $project,
         Response $response,
         Database $dbForPlatform,
-        Document $team,
         Authorization $authorization,
-        ?Key $apiKey,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

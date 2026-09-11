@@ -179,14 +179,6 @@ final class FormatTest extends TestCase
         $this->assertTrue($listPlatforms['emitDefault']);
     }
 
-    public function testClosureDefaultIsNotEmitted(): void
-    {
-        $projectId = $this->format->requestParameterConfig(true, false, fn () => 'resolved', 'organization.getProjectKey', 'projectId');
-
-        $this->assertFalse($projectId['required']);
-        $this->assertFalse($projectId['emitDefault']);
-    }
-
     public function testProjectPlatformResponseTypeUsesSharedEnumMetadata(): void
     {
         $models = [

@@ -1043,73 +1043,11 @@ trait KeysBase
         $list = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $siblingId . '/keys', $headers);
 
         $this->assertSame(401, $list['headers']['status-code']);
-
-        $list = $this->client->call(Client::METHOD_GET, '/projects/' . $siblingId . '/keys', $headers);
-
-        $this->assertSame(403, $list['headers']['status-code']);
-        $this->assertSame('project_id_missing', $list['body']['type']);
+        $this->assertSame('user_unauthorized', $list['body']['type']);
 
         // Cleanup
         $delete = $this->client->call(Client::METHOD_DELETE, '/projects/' . $siblingId, $this->getConsoleHeaders());
         $this->assertSame(204, $delete['headers']['status-code']);
-    }
-
-    public function testListKeysLegacyPaths(): void
-    {
-        $key = $this->createKey(
-            ID::unique(),
-            'Legacy Path Key',
-            ['users.read'],
-        );
-        $this->assertSame(201, $key['headers']['status-code']);
-        $keyId = $key['body']['$id'];
-
-        $projectId = $this->getProject()['$id'];
-
-        $projectHeaders = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders());
-
-        /**
-         * Test for SUCCESS - /project/keys resolves the project from the request
-         */
-        $list = $this->client->call(Client::METHOD_GET, '/project/keys', $projectHeaders);
-
-        $this->assertSame(200, $list['headers']['status-code']);
-        $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
-
-        $get = $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $projectHeaders);
-
-        $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('Legacy Path Key', $get['body']['name']);
-
-        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
-            'scopes' => ['users.read'],
-            'duration' => 900,
-        ]);
-
-        $this->assertSame(201, $ephemeral['headers']['status-code']);
-        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $ephemeral['body']['secret']);
-
-        /**
-         * Test for SUCCESS - /projects/:projectId/keys resolves the project from the path
-         */
-        $list = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/keys', $this->getConsoleHeaders());
-
-        $this->assertSame(200, $list['headers']['status-code']);
-        $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
-
-        $jwt = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/jwts', $this->getConsoleHeaders(), [
-            'scopes' => ['users.read'],
-            'duration' => 900,
-        ]);
-
-        $this->assertSame(201, $jwt['headers']['status-code']);
-        $this->assertStringStartsWith(API_KEY_EPHEMERAL . '_', $jwt['body']['secret']);
-
-        // Cleanup
-        $this->deleteKey($keyId);
     }
 
     // =========================================================================

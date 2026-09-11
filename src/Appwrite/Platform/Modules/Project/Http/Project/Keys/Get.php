@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
-use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -12,9 +12,14 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Get extends Action
+/**
+ * TODO: Remove once the Console, CLI and SDKs use the Organization API
+ * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
+ */
+class Get extends Base
 {
     use HTTP;
 
@@ -27,18 +32,19 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
+            ->setHttpPath('/v1/project/keys/:keyId')
+            ->httpAlias('/v1/projects/:projectId/keys/:keyId')
             ->desc('Get project key')
-            ->groups(['api', 'organization'])
+            ->groups(['api', 'project'])
             ->label('scope', 'keys.read')
             ->label('sdk', new Method(
-                namespace: 'organization',
+                namespace: 'project',
                 group: 'keys',
-                name: 'getProjectKey',
+                name: 'getKey',
                 description: <<<EOT
-                Get a project key by its unique ID.
+                Get a key by its unique ID. 
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -46,27 +52,21 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('team')
+            ->inject('project')
             ->inject('authorization')
-            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $projectId,
         string $keyId,
         Response $response,
         Database $dbForPlatform,
-        Document $team,
+        Document $project,
         Authorization $authorization,
-        ?Key $apiKey,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
-
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {

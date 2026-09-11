@@ -6,6 +6,12 @@ use Appwrite\Platform\Modules\Project\Http\Init;
 use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Get as GetProject;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral\Create as CreateEphemeralKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
@@ -133,6 +139,15 @@ class Http extends Service
         $this->addAction(GetVariable::getName(), new GetVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
+
+        // Keys
+        // TODO: Remove once the Console, CLI and SDKs use the Organization API instead
+        $this->addAction(CreateKey::getName(), new CreateKey());
+        $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
+        $this->addAction(ListKeys::getName(), new ListKeys());
+        $this->addAction(GetKey::getName(), new GetKey());
+        $this->addAction(DeleteKey::getName(), new DeleteKey());
+        $this->addAction(UpdateKey::getName(), new UpdateKey());
 
         // Platforms
         $this->addAction(ListPlatforms::getName(), new ListPlatforms());

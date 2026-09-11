@@ -79,6 +79,8 @@ class V22 extends Filter
             case 'project.updateProtocol':
                 $content = $this->parseUpdateProtocolStatus($content);
                 break;
+            case 'project.createKey':
+            case 'project.updateKey':
             case 'organization.createProjectKey':
             case 'organization.updateProjectKey':
                 $content = $this->parseKeyScopes($content);

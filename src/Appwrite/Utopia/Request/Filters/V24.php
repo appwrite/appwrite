@@ -10,7 +10,7 @@ class V24 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
-            case 'organization.createProjectKey':
+            case 'project.createStandardKey':
                 $content = $this->fillKeyId($content);
                 $content = $this->parseKeyScopes($content);
                 break;
