@@ -81,7 +81,7 @@ Alongside those totals, the overview shows signup and conversion rates, helping 
 
 You can also manage your invite links, referrals, and rewards from the same dashboard, and claim credits when rewards are ready.
 
-Because referrals carry an expiry date, you can see which attributions are still live and which ran out without an upgrade. That's the difference between guessing at a channel and knowing it brought 40 signups that never needed Pro.
+Because attribution lasts 180 days, developers have time to try Appwrite before deciding whether to upgrade to Pro.
 
 # How referral rewards and Cloud credits work
 
