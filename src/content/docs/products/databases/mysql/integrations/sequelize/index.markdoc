@@ -16,9 +16,10 @@ Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql
 
 ```env
 DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 ```
 
-Connections on Appwrite Cloud are encrypted with TLS. Configure `dialectOptions.ssl` when Sequelize or `mysql2` does not infer TLS from the URL. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+Use `DATABASE_URL` for runtime traffic and `DIRECT_URL` for Sequelize CLI migrations. Connections on Appwrite Cloud are encrypted with TLS. Configure `dialectOptions.ssl` when Sequelize or `mysql2` does not infer TLS from the URL, and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
 
 # Install and configure Sequelize {% #driver %}
 
@@ -29,7 +30,7 @@ npm install sequelize mysql2
 npm install -D sequelize-cli typescript @types/node
 ```
 
-Create a Sequelize instance. Prefer the URL form and set SSL explicitly:
+Create a Sequelize instance for runtime traffic. Prefer the URL form and set SSL with verification:
 
 ```ts
 import { Sequelize, DataTypes } from 'sequelize';
@@ -39,7 +40,7 @@ export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false
+      rejectUnauthorized: true
     }
   },
   logging: false,
@@ -76,20 +77,54 @@ export const User = sequelize.define(
 );
 ```
 
-You can also pass discrete `host`, `port`, `database`, `username`, and `password` options instead of a URL; keep `dialect: 'mysql'` and the same `dialectOptions.ssl` settings.
+`ssl: { require: true, rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass discrete `host`, `port`, `database`, `username`, and `password` options instead of a URL; keep `dialect: 'mysql'` and the same `dialectOptions.ssl` settings.
 
 # Run migrations {% #migrate %}
 
-Use Sequelize CLI migrations against the **direct** engine port (`3306`). DDL needs a session-level connection, so do not point the CLI at the transaction-mode pooler:
+Use Sequelize CLI migrations against the **direct** engine port (`3306`). DDL needs a session-level connection, so do not point the CLI at the transaction-mode pooler.
 
-```env
-DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+`sequelize-cli init` generates localhost defaults. Replace them with a concrete `.sequelizerc` and config that read `DIRECT_URL`.
+
+Create `.sequelizerc` at the project root:
+
+```js
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('config', 'config.js'),
+  'models-path': path.resolve('models'),
+  'seeders-path': path.resolve('seeders'),
+  'migrations-path': path.resolve('migrations')
+};
 ```
 
-Initialize the CLI config so migrate commands read `DIRECT_URL`:
+Create `config/config.js` so every CLI environment uses `DIRECT_URL`:
+
+```js
+require('dotenv').config();
+
+const shared = {
+  url: process.env.DIRECT_URL,
+  dialect: 'mysql',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: true
+    }
+  },
+  logging: false
+};
+
+module.exports = {
+  development: shared,
+  test: shared,
+  production: shared
+};
+```
+
+Then generate and apply migrations:
 
 ```bash
-npx sequelize-cli init
 npx sequelize-cli migration:generate --name create-users
 npx sequelize-cli db:migrate
 ```
