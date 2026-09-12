@@ -2427,7 +2427,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                             ? endpointCustomUrl
                             : activeEndpointUrl !== '—'
                               ? activeEndpointUrl
-                              : 'http://localhost/v1',
+                              : 'http://localhost:9601/v1',
                       },
                     ],
                     confirmLabel: 'Use endpoint',
