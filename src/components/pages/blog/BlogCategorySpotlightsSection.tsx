@@ -56,11 +56,11 @@ export function BlogCategorySpotlightsSection({
           Explore by topic
         </p>
 
-        <div className="mt-6 grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {spotlights.map(({ category, posts }) => (
             <article
               key={category.slug}
-              className="flex flex-col bg-background p-6"
+              className="flex flex-col p-6"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">

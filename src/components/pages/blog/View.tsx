@@ -7,6 +7,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getDraftBlogPosts } from '@/lib/blog/content'
 import type { BlogPostsPage } from '@/lib/blog/types'
+import { cn } from '@/lib/utils'
 import { BlogCategorySpotlightsSection } from './BlogCategorySpotlightsSection'
 import { BlogSearchSection } from './BlogSearchSection'
 import { BlogDraftsSection } from './BlogDraftsSection'
@@ -97,13 +98,18 @@ export function View({
             </div>
           ) : (
             <>
-              <div className={showSpotlights ? 'mt-10' : undefined}>
+              <div
+                className={cn(
+                  'grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-3',
+                  showSpotlights && 'mt-10',
+                )}
+              >
                 {posts.map((post) => (
                   <BlogPostCard
                     key={post.slug}
                     post={post}
                     authors={authors}
-                    variant="list"
+                    showDescription={false}
                   />
                 ))}
               </div>
