@@ -17,9 +17,32 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'agent',
 ])
 
+const CONSOLE_AUTH_EXACT_PATHS = new Set([
+  '/sign-in',
+  '/sign-up',
+  '/sign-out',
+  '/recovery',
+  '/join',
+  '/mfa',
+  '/verify-email',
+  '/education/join',
+])
+
 export function isConsoleAreaPath(pathname: string): boolean {
   const firstSegment = pathname.split('/').filter(Boolean)[0]
   return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
+}
+
+function normalizeShellPath(pathname: string): string {
+  return pathname.replace(/\/+$/, '') || '/'
+}
+
+export function isConsoleAuthPath(pathname: string): boolean {
+  const normalized = normalizeShellPath(pathname)
+  if (CONSOLE_AUTH_EXACT_PATHS.has(normalized)) return true
+  if (normalized === '/auth' || normalized.startsWith('/auth/')) return true
+  if (normalized === '/oauth2' || normalized.startsWith('/oauth2/')) return true
+  return false
 }
 
 function isConsoleAuthRouteMatch(
@@ -33,7 +56,8 @@ function isConsoleAuthRouteMatch(
 
 export function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   if (isConsoleRedirectHopPath(pathname)) return true
-  const normalized = pathname.replace(/\/+$/, '') || '/'
+  const normalized = normalizeShellPath(pathname)
+  if (isConsoleAuthPath(normalized)) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true
   }

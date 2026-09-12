@@ -31,19 +31,26 @@ export function MarketingSiteLayoutGate({
   const { features } = useConsoleProfile()
   const keepMarketingShellRef = useRef(false)
 
+  const leavingMarketingShell =
+    isExcludedMarketingSiteLayoutPath(pendingPathname) ||
+    isConsoleAreaPath(pendingPathname)
+
   const computed =
-    shouldUseMarketingSiteLayout({
+    !leavingMarketingShell &&
+    (shouldUseMarketingSiteLayout({
       marketingEnabled: features.marketing,
       pathname: pendingPathname,
       matches,
     }) ||
-    shouldUseMarketingSiteLayout({
-      marketingEnabled: features.marketing,
-      pathname: resolvedPathname,
-      matches,
-    })
+      shouldUseMarketingSiteLayout({
+        marketingEnabled: features.marketing,
+        pathname: resolvedPathname,
+        matches,
+      }))
 
-  if (computed) {
+  if (leavingMarketingShell) {
+    keepMarketingShellRef.current = false
+  } else if (computed) {
     keepMarketingShellRef.current = true
   } else if (
     isExcludedMarketingSiteLayoutPath(resolvedPathname) ||
