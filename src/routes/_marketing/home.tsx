@@ -428,7 +428,7 @@ function HomePage() {
         {/* Top customer logos - hidden for now. Restore from git history when needed. */}
 
         <section className="bg-background py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-[84rem] px-4 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="font-aeonik-pro text-[40px] font-normal leading-none tracking-tight text-foreground sm:text-[48px]">
                 {homeCopy.productsHeadingLineOne}
