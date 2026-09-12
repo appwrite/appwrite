@@ -131,23 +131,25 @@ class Maintenance extends Action
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void
     {
         $time = DatabaseDateTime::now();
+        $expired = DatabaseDateTime::format(new DateTime('-' . APP_CERTIFICATE_GENERATION_LEASE . ' seconds'));
 
-        $documents = $dbForPlatform->find('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
+        $documents = $dbForPlatform->iterate('certificates', [
+            Query::or([
+                Query::lessThan('attempts', APP_LIMIT_CERTIFICATE_ATTEMPTS),
+                Query::and([
+                    Query::isNotNull('updated'),
+                    Query::lessThanEqual('updated', $expired),
+                ]),
+            ]),
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-            Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+            Query::orderAsc('$sequence'),
+            Query::limit(200),
         ]);
-
-        if (\count($documents) === 0) {
-            Console::info("[{$time}] No certificates for renewal.");
-            return;
-        }
-
-        Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
 
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
+        $scheduled = 0;
 
         foreach ($documents as $certificate) {
             $domain = $certificate->getAttribute('domain');
@@ -158,7 +160,16 @@ class Maintenance extends Action
                         Query::limit(1)
                     ]);
 
-            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+            if ($rule->isEmpty()
+                || $rule->getAttribute('region') !== $appRegion
+                || $rule->getAttribute('certificateId') !== $certificate->getId()) {
+                continue;
+            }
+
+            // A crashed final renewal still needs reconciliation. Completed
+            // failures at the attempt limit require an explicit retry.
+            if ($certificate->getAttribute('attempts', 0) >= APP_LIMIT_CERTIFICATE_ATTEMPTS
+                && $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATION_FAILED) {
                 continue;
             }
 
@@ -180,7 +191,15 @@ class Maintenance extends Action
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
             ));
+            $scheduled++;
+            // Keep room below Let's Encrypt's 300 orders per three hours for
+            // new domains. Skipped rows must not consume this renewal budget.
+            if ($scheduled === 200) {
+                break;
+            }
         }
+
+        Console::info("[{$time}] Scheduled {$scheduled} certificate renewal jobs.");
     }
 
     private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
