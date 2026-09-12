@@ -3,13 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Certificate;
-use DateTime;
 use Swoole\Coroutine\Channel;
 use Swoole\Process;
 use Swoole\Timer;
 use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
@@ -90,11 +88,7 @@ class Interval extends Action
 
     private function verifyDomain(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
-        $time = DatabaseDateTime::now();
-        $fromTime = new DateTime('-3 days'); // Max 3 days old
-
         $rules = $dbForPlatform->find('rules', [
-            Query::createdAfter(DatabaseDateTime::format($fromTime)),
             Query::equal('status', [RULE_STATUS_CREATED]), // Created but not verified yet
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
