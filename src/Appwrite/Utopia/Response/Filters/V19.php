@@ -25,8 +25,6 @@ class V19 extends Filter
             Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
             Response::MODEL_PROVIDER_REPOSITORY => $this->parseProviderRepository($content),
             Response::MODEL_TEMPLATE_VARIABLE => $this->parseTemplateVariable($content),
-            Response::MODEL_USAGE_FUNCTION => $this->parseUsageFunction($content),
-            Response::MODEL_USAGE_FUNCTIONS => $this->parseUsageFunctions($content),
             Response::MODEL_VARIABLE => $this->parseVariable($content),
             Response::MODEL_VARIABLE_LIST => $this->handleList($content, 'variables', fn ($item) => $this->parseVariable($item)),
             default => $parsedResponse,
@@ -94,25 +92,6 @@ class V19 extends Filter
     protected function parseTemplateVariable(array $content)
     {
         unset($content['secret']);
-        return $content;
-    }
-
-    protected function parseUsageFunction(array $content)
-    {
-        unset($content['buildsSuccessTotal']);
-        unset($content['buildsFailedTotal']);
-        unset($content['buildsTimeAverage']);
-        unset($content['buildsSuccess']);
-        unset($content['buildsFailed']);
-        return $content;
-    }
-
-    protected function parseUsageFunctions(array $content)
-    {
-        unset($content['buildsSuccessTotal']);
-        unset($content['buildsFailedTotal']);
-        unset($content['buildsSuccess']);
-        unset($content['buildsFailed']);
         return $content;
     }
 

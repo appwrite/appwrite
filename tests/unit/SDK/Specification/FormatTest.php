@@ -29,7 +29,6 @@ use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\FrameworkAdapter;
 use Appwrite\Utopia\Response\Model\HealthStatus;
-use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
@@ -45,7 +44,7 @@ use Appwrite\Utopia\Response\Model\TemplateFramework;
 use Appwrite\Utopia\Response\Model\TemplateSite;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\UsageDataPoint;
-use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageMetric;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -831,12 +830,10 @@ final class FormatTest extends TestCase
     }
 
     /**
-     * The project usage handler writes the text embedding metrics as four
-     * per-period lists plus four scalar totals. A typed SDK generated from a
-     * schema that calls all eight a single metric object rejects every valid
-     * response, so pin the emitted schema rather than the rule table.
+     * A single model reference is deliberately wrapped in `allOf`, but a list of
+     * one must not be: typed SDKs reject every valid response if it is.
      */
-    public function testUsageProjectEmbeddingsTextSchema(): void
+    public function testUsageMetricPointsSchema(): void
     {
         Method::$processed = [];
         Method::$errors = [];
@@ -852,31 +849,35 @@ final class FormatTest extends TestCase
                 responses: [
                     new SDKResponse(
                         code: 200,
-                        model: Response::MODEL_USAGE_PROJECT,
+                        model: Response::MODEL_USAGE_METRIC,
                     ),
                 ],
             ));
 
         $models = [
-            new UsageProject(),
-            new Metric(),
+            new UsageMetric(),
+            new UsageDataPoint(),
             new ErrorModel(),
         ];
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
 
-        $properties = $openApi['components']['schemas']['usageProject']['properties'];
+        $points = $openApi['components']['schemas']['usageMetric']['properties']['points'];
 
-        foreach (['embeddingsText', 'embeddingsTextTokens', 'embeddingsTextDuration', 'embeddingsTextErrors'] as $key) {
-            $this->assertSame('array', $properties[$key]['type'], $key);
-            $this->assertSame(['$ref' => '#/components/schemas/metric'], $properties[$key]['items'], $key);
-            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
-        }
+        $this->assertSame('array', $points['type']);
+        $this->assertSame(['$ref' => '#/components/schemas/usageDataPoint'], $points['items']);
+        $this->assertArrayNotHasKey('allOf', $points);
 
-        foreach (['embeddingsTextTotal', 'embeddingsTextTokensTotal', 'embeddingsTextDurationTotal', 'embeddingsTextErrorsTotal'] as $key) {
-            $this->assertSame('integer', $properties[$key]['type'], $key);
-            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
-            $this->assertArrayNotHasKey('items', $properties[$key], $key);
+        foreach ([
+            ['usageMetric', 'metric', 'string'],
+            ['usageDataPoint', 'time', 'string'],
+            ['usageDataPoint', 'value', 'number'],
+        ] as [$schema, $key, $type]) {
+            $property = $openApi['components']['schemas'][$schema]['properties'][$key];
+
+            $this->assertSame($type, $property['type'], $key);
+            $this->assertArrayNotHasKey('allOf', $property, $key);
+            $this->assertArrayNotHasKey('items', $property, $key);
         }
     }
 
