@@ -276,7 +276,7 @@ class Deletes extends Action
                         $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        $this->deleteBucket($dbForPlatform, $getProjectDB, $deviceForFiles, $document, $certificates, $project, $bus);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -1850,19 +1850,35 @@ class Deletes extends Action
     }
 
     /**
+     * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param Device $deviceForFiles
      * @param Document $document
+     * @param Provider $certificates
      * @param Document $project
+     * @param Bus $bus
      * @return void
      */
-    private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
+    private function deleteBucket(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Bus $bus): void
     {
         $dbForProject = $getProjectDB($project);
+        $bucketId = $document->getId();
+
+        /**
+         * Delete rules for bucket
+         */
+        Console::info("Deleting rules for bucket " . $bucketId);
+        $this->deleteByGroup('rules', [
+            Query::equal('deploymentResourceType', ['bucket']),
+            Query::equal('deploymentResourceInternalId', [$document->getSequence()]),
+            Query::equal('projectInternalId', [$project->getSequence()])
+        ], $dbForPlatform, function (Document $rule) use ($dbForPlatform, $certificates, $bus) {
+            $this->deleteRule($dbForPlatform, $rule, $certificates, $bus);
+        });
 
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());
 
-        $deviceForFiles->deletePath($document->getId());
+        $deviceForFiles->deletePath($bucketId);
     }
 
     /**

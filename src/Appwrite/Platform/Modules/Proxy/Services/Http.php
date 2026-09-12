@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Proxy\Services;
 
 use Appwrite\Platform\Modules\Proxy\Http\Rules\API\Create as CreateAPIRule;
+use Appwrite\Platform\Modules\Proxy\Http\Rules\Bucket\Create as CreateBucketRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Delete as DeleteRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Function\Create as CreateFunctionRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Get as GetRule;
@@ -23,6 +24,7 @@ class Http extends Service
         $this->addAction(CreateSiteRule::getName(), new CreateSiteRule());
         $this->addAction(CreateFunctionRule::getName(), new CreateFunctionRule());
         $this->addAction(CreateRedirectRule::getName(), new CreateRedirectRule());
+        $this->addAction(CreateBucketRule::getName(), new CreateBucketRule());
         $this->addAction(GetRule::getName(), new GetRule());
         $this->addAction(ListRules::getName(), new ListRules());
         $this->addAction(DeleteRule::getName(), new DeleteRule());

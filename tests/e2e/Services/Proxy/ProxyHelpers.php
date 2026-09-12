@@ -7,6 +7,8 @@ use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Console;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 trait ProxyHelpers
 {
@@ -98,6 +100,19 @@ trait ProxyHelpers
         return $rule;
     }
 
+    protected function createBucketRule(string $domain, string $bucketId): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/bucket', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $domain,
+            'bucketId' => $bucketId,
+        ]);
+
+        return $rule;
+    }
+
     protected function deleteRule(string $ruleId): mixed
     {
         $rule = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, array_merge([
@@ -144,6 +159,15 @@ trait ProxyHelpers
         return $rule['body']['$id'];
     }
 
+    protected function setupBucketRule(string $domain, string $bucketId): string
+    {
+        $rule = $this->createBucketRule($domain, $bucketId);
+
+        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
+
+        return $rule['body']['$id'];
+    }
+
     protected function cleanupRule(string $ruleId): void
     {
         $rule = $this->deleteRule($ruleId);
@@ -168,6 +192,16 @@ trait ProxyHelpers
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $function['headers']['status-code'], 'Failed to cleanup function: ' . \json_encode($function));
+    }
+
+    protected function cleanupBucket(string $bucketId): void
+    {
+        $bucket = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $bucket['headers']['status-code'], 'Failed to cleanup bucket: ' . \json_encode($bucket));
     }
 
     protected function setupSite(): mixed
@@ -255,6 +289,72 @@ trait ProxyHelpers
         }, 100000, 500);
 
         return ['functionId' => $functionId, 'deploymentId' => $deploymentId];
+    }
+
+    protected function setupBucket(): mixed
+    {
+        // Bucket without read permission, so file permissions decide what guests can see
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Proxy bucket',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals($bucket['headers']['status-code'], 201, 'Setup bucket failed with status code: ' . $bucket['headers']['status-code'] . ' and response: ' . json_encode($bucket['body'], JSON_PRETTY_PRINT));
+
+        $bucketId = $bucket['body']['$id'];
+
+        // Public file at the bucket root, addressed by key "logo.png"
+        $file = $this->setupFile($bucketId, 'logo.png', [Permission::read(Role::any())]);
+
+        // Public file in a folder, addressed by key "photos/2026/pink.png"
+        $folderFile = $this->setupFile($bucketId, 'pink.png', [Permission::read(Role::any())], 'photos/2026');
+
+        // Private file, readable only through a file token
+        $privateFile = $this->setupFile($bucketId, 'private.png', []);
+
+        // Two files sharing one key, so that key is ambiguous and must be refused
+        $twinA = $this->setupFile($bucketId, 'twin.png', [Permission::read(Role::any())]);
+        $twinB = $this->setupFile($bucketId, 'twin.png', [Permission::read(Role::any())]);
+
+        return [
+            'bucketId' => $bucketId,
+            'fileId' => $file['$id'],
+            'folderFileId' => $folderFile['$id'],
+            'privateFileId' => $privateFile['$id'],
+            'twinIds' => [$twinA['$id'], $twinB['$id']],
+        ];
+    }
+
+    protected function setupFile(string $bucketId, string $name, array $permissions, string $folder = ''): array
+    {
+        $params = [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', $name),
+        ];
+
+        if (!empty($permissions)) {
+            $params['permissions'] = $permissions;
+        }
+
+        if ($folder !== '') {
+            $params['folder'] = $folder;
+        }
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        $this->assertEquals($file['headers']['status-code'], 201, 'Setup file failed with status code: ' . $file['headers']['status-code'] . ' and response: ' . json_encode($file['body'], JSON_PRETTY_PRINT));
+
+        return $file['body'];
     }
 
     private function packageSite(string $site): CURLFile
