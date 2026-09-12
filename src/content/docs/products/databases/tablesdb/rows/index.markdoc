@@ -128,6 +128,124 @@ mutation {
 During testing, you might prefer to create rows in the Appwrite Console.
 To do so, navigate to the **Rows** tab of your table and click the **Add row** button.
 
+# Get row {% #get-row %}
+
+{% info title="Permissions required" %}
+You must grant _read_ permissions to users at the _table level_ or _row level_ before users can read rows.
+[Learn more about permissions](#permissions)
+{% /info %}
+
+A single row can be retrieved by its ID using the [Get row](/docs/references/cloud/client-web/tables#getRow) endpoint.
+
+Pass `queries` to shape the response, for example `Query.select()` to return only the columns you need or to
+[load relationship data](/docs/products/databases/relationships#performance-loading).
+
+{% multicode %}
+```client-web
+import { Client, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>'
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final row = await tablesDB.getRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: '<ROW_ID>'
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let row = try await tablesDB.getRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: "<ROW_ID>"
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val row = tablesDB.getRow(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            rowId = "<ROW_ID>",
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+```graphql
+query {
+    tablesGetRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: "<ROW_ID>"
+    ) {
+        _id
+        _tableId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
 # List rows {% #list-rows %}
 
 {% info title="Permissions required" %}
@@ -980,6 +1098,7 @@ suspend fun main() {
         Log.e("Appwrite", "Error: " + e.message)
     }
 }
+```
 ```graphql
 mutation {
     tablesDBUpdateRow(
