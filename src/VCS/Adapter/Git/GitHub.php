@@ -644,6 +644,16 @@ class GitHub extends Git
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
+        // Some env files can't hold a multiline PEM, so also accept it base64-encoded or with escaped newlines.
+        // Strict decoding rejects the '-' in a raw PEM, so a working key is never decoded.
+        $decoded = base64_decode($privateKey, true);
+        if ($decoded !== false && str_contains($decoded, '-----BEGIN')) {
+            $privateKey = $decoded;
+        }
+        if (str_contains($privateKey, '-----BEGIN')) {
+            $privateKey = str_replace('\n', "\n", $privateKey);
+        }
+
         // adhocore/jwt treats a string key as a file path, so it must receive the parsed key object
         $privateKeyObj = openssl_pkey_get_private($privateKey);
         if ($privateKeyObj === false) {

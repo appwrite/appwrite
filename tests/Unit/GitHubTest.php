@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -158,6 +159,42 @@ final class GitHubTest extends Base
         $this->assertSame(5678, $claims['iss']);
     }
 
+    #[DataProvider('encodedPemProvider')]
+    public function testInitializeVariablesSignsJwtWithEncodedPem(callable $encode): void
+    {
+        $keyPair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $this->assertNotFalse($keyPair);
+        openssl_pkey_export($keyPair, $pem);
+        $publicKey = openssl_pkey_get_details($keyPair)['key'];
+
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var array<string, mixed> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured = ['headers' => $headers];
+
+                return [
+                    'body' => ['token' => 'installation-token'],
+                    'headers' => ['status-code' => 201],
+                ];
+            }
+        };
+
+        $adapter->initializeVariables('1234', $encode($pem), '5678');
+
+        $jwt = substr((string) $adapter->captured['headers']['Authorization'], \strlen('Bearer '));
+        [$header, $payload, $signature] = explode('.', $jwt);
+        $verified = openssl_verify(
+            $header . '.' . $payload,
+            base64_decode(strtr($signature, '-_', '+/')),
+            $publicKey,
+            OPENSSL_ALGO_SHA256,
+        );
+        $this->assertSame(1, $verified);
+    }
+
     public function testInitializeVariablesKeepsClientIdIssuerAsString(): void
     {
         $keyPair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
@@ -185,5 +222,15 @@ final class GitHubTest extends Base
         $payload = explode('.', $jwt)[1];
         $claims = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
         $this->assertSame('Iv1.0123456789abcdef', $claims['iss']);
+    }
+
+    /**
+     * @return \Iterator<string, array{callable(string): string}>
+     */
+    public static function encodedPemProvider(): \Iterator
+    {
+        yield 'base64' => [base64_encode(...)];
+        yield 'wrapped base64' => [fn(string $pem): string => chunk_split(base64_encode($pem), 76, "\n")];
+        yield 'escaped newlines' => [fn(string $pem): string => str_replace("\n", '\n', $pem)];
     }
 }

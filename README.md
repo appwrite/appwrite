@@ -49,7 +49,7 @@ $repository = $github->createRepository($owner, $name, $private);
 ### Environment variables
 To configure your GitHub App, set the following environment variables in your environment or configuration file. The adapter authenticates with the GitHub API on behalf of your app with them.
 
-1. *PRIVATE_KEY*: generate this from your GitHub App settings.
+1. *PRIVATE_KEY*: generate this from your GitHub App settings. The adapter accepts the PEM as is, base64-encoded, or on one line with newlines escaped as `\n`.
 ```bash
 PRIVATE_KEY = your-github-app-private-key
 ```
