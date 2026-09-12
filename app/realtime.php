@@ -29,7 +29,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -225,45 +225,6 @@ if (!function_exists('getCache')) {
         }
 
         return $ctx['cache'] = new Cache(new Sharding($adapters));
-    }
-}
-
-// Allows overriding
-if (!function_exists('getRedis')) {
-    function getRedis(): \Redis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['redis'])) {
-            return $ctx['redis'];
-        }
-
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = System::getEnv('_APP_REDIS_PORT', 6379);
-        $user = System::getEnv('_APP_REDIS_USER', '');
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-        $redis = new \Redis();
-        @$redis->pconnect($host, (int)$port);
-        if ($pass !== '') {
-            $redis->auth($user !== '' ? [$user, $pass] : $pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-        return $ctx['redis'] = $redis;
-    }
-}
-
-if (!function_exists('getTimelimit')) {
-    function getTimelimit(string $key = "", int $limit = 0, int $seconds = 1): TimeLimitRedis
-    {
-        $ctx = Coroutine::getContext();
-
-        if (isset($ctx['timelimit'])) {
-            return $ctx['timelimit'];
-        }
-
-        return $ctx['timelimit'] = new TimeLimitRedis($key, $limit, $seconds, getRedis());
     }
 }
 
@@ -964,14 +925,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
-        $timelimit
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+        $isRateLimited = $timelimit('url:{url},ip:{ip}', 128, 60, function (TimeLimit $timeLimit) use ($request): bool {
+            $timeLimit
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timelimit);
+            $abuse = new Abuse($timeLimit);
 
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
+            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check();
+        });
+
+        if ($isRateLimited) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
@@ -1255,15 +1219,17 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
+        $isRateLimited = $container->get('timelimit')('url:{url},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId): bool {
+            $timeLimit
+                ->setParam('{connection}', $connection)
+                ->setParam('{container}', $containerId);
 
-        $timeLimit
-            ->setParam('{connection}', $connection)
-            ->setParam('{container}', $containerId);
+            $abuse = new Abuse($timeLimit);
 
-        $abuse = new Abuse($timeLimit);
+            return $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+        });
 
-        if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if ($isRateLimited) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 

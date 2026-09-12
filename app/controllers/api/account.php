@@ -3125,13 +3125,12 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('publisherForMessaging')
     ->inject('locale')
-    ->inject('timelimit')
     ->inject('usage')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4541,12 +4540,11 @@ Http::post('/v1/account/verifications/phone')
     ->inject('publisherForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->inject('timelimit')
     ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }

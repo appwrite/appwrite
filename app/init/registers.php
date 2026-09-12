@@ -128,10 +128,19 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['redis'],
         ],
+        // Abuse gets its own pool rather than sharing 'lock': lock leases are
+        // held for the whole guarded callback, which for storage chunk uploads
+        // spans the transfer. Rate limit checks must not queue behind those.
+        'abuse' => [
+            'type' => 'abuse',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 15);
 
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
@@ -274,6 +283,7 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'abuse':
                     case 'lock':
                         return $resource();
                     default:
