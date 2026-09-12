@@ -485,7 +485,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
             </Badge>
             <Badge
               variant="inactive"
-              className="h-5 px-1.5 text-[9px] transition-[color,background-color,border-color] duration-300 group-hover:border-[var(--brand-cta)]/25 group-hover:bg-[var(--brand-cta)]/10 group-hover:text-[var(--brand-cta)] sm:text-[10px]"
+              className="h-5 px-1.5 text-[9px] transition-colors duration-300 group-hover:bg-[var(--brand-cta)]/10 group-hover:text-[var(--brand-cta)] sm:text-[10px]"
             >
               cosine
             </Badge>
@@ -516,8 +516,8 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
             <span
               key={filter}
               className={cn(
-                'rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground transition-[border-color,background-color,color] duration-300 sm:text-[10px]',
-                'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+                'rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground transition-colors duration-300 sm:text-[10px]',
+                'group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_8%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
               )}
               style={{ transitionDelay: `${index * 40}ms` }}
             >
@@ -620,7 +620,7 @@ function NativeDbOrSeparator() {
     <div className="flex items-center gap-2 px-1">
       <div className="h-px flex-1 bg-border" />
       <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-        {t('or')}
+        {t('or Appwrite DBs')}
       </span>
       <div className="h-px flex-1 bg-border" />
     </div>
@@ -631,7 +631,7 @@ function NativeDbSelectionStrip() {
   const [postgres, mysql] = NATIVE_DATABASES
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid w-full grid-cols-2 gap-2">
       <NativeDbSelectionCard label={postgres.label} Icon={postgres.Icon} />
       <NativeDbSelectionCard label={mysql.label} Icon={mysql.Icon} />
     </div>
@@ -639,38 +639,58 @@ function NativeDbSelectionStrip() {
 }
 
 export function DatabasesProductVisual() {
+  const rootRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState<AppwriteTabId>('tablesdb')
   const [tablesPlayKey, setTablesPlayKey] = useState(0)
   const [documentsPlayKey, setDocumentsPlayKey] = useState(0)
   const [vectorsPlayKey, setVectorsPlayKey] = useState(0)
   const visualHoveredRef = useRef(false)
+  const activeTabRef = useRef(activeTab)
+  activeTabRef.current = activeTab
 
   const tabPanelClassName =
-    'absolute inset-x-0 top-0 bottom-0 mt-0 flex min-h-0 w-full flex-col overflow-hidden px-3.5 focus-visible:outline-none'
+    'absolute inset-x-0 top-0 bottom-0 mt-0 flex min-h-0 w-full flex-col overflow-hidden focus-visible:outline-none'
 
   const replayTablesAnimation = () => {
     setTablesPlayKey((key) => key + 1)
   }
 
-  const handleVisualEnter = () => {
-    if (visualHoveredRef.current) {
-      return
+  useEffect(() => {
+    const group = rootRef.current?.closest('.group')
+    if (!group) return
+
+    const onEnter = () => {
+      if (visualHoveredRef.current) {
+        return
+      }
+
+      visualHoveredRef.current = true
+
+      if (activeTabRef.current === 'tablesdb') {
+        replayTablesAnimation()
+      }
     }
 
-    visualHoveredRef.current = true
+    const onLeave = () => {
+      visualHoveredRef.current = false
 
-    if (activeTab === 'tablesdb') {
-      replayTablesAnimation()
+      if (activeTabRef.current === 'tablesdb') {
+        setTablesPlayKey(0)
+      }
     }
-  }
 
-  const handleVisualLeave = () => {
-    visualHoveredRef.current = false
-
-    if (activeTab === 'tablesdb') {
-      setTablesPlayKey(0)
+    if (group.matches(':hover')) {
+      onEnter()
     }
-  }
+
+    group.addEventListener('mouseenter', onEnter)
+    group.addEventListener('mouseleave', onLeave)
+
+    return () => {
+      group.removeEventListener('mouseenter', onEnter)
+      group.removeEventListener('mouseleave', onLeave)
+    }
+  }, [])
 
   const handleTabChange = (value: string) => {
     const tab = value as AppwriteTabId
@@ -686,13 +706,38 @@ export function DatabasesProductVisual() {
   }
 
   return (
+    <div ref={rootRef} className="absolute inset-0">
     <Tabs
       value={activeTab}
       onValueChange={handleTabChange}
-      onMouseEnter={handleVisualEnter}
-      onMouseLeave={handleVisualLeave}
-      className="absolute inset-0 flex flex-col gap-0 overflow-visible"
+      className="flex h-full min-h-0 flex-col gap-0 overflow-visible"
     >
+      <div className="relative z-10 shrink-0 pb-2.5 pt-0 sm:pb-3">
+        <NativeDbSelectionStrip />
+        <div className="mt-2.5">
+          <NativeDbOrSeparator />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex shrink-0 justify-center px-3 pb-2.5">
+        <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border/45 bg-background/80 p-1 shadow-sm">
+          {APPWRITE_TABS.map((tab) => {
+            const Icon = tab.Icon
+
+            return (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="h-auto gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-[10px] text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-300 data-[state=active]:border-border/40 data-[state=active]:bg-background/70 data-[state=active]:text-muted-foreground data-[state=active]:shadow-sm sm:text-[11px] group-hover:data-[state=active]:border-border/55 group-hover:data-[state=active]:bg-background/90 group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
+              >
+                <Icon aria-hidden />
+                <span className="truncate">{tab.label}</span>
+              </TabsTrigger>
+            )
+          })}
+        </TabsList>
+      </div>
+
       <div className="relative min-h-0 flex-1">
         <TabsContent value="tablesdb" className={tabPanelClassName}>
           <TablesDbPanel playKey={tablesPlayKey} />
@@ -703,33 +748,8 @@ export function DatabasesProductVisual() {
         <TabsContent value="vectorsdb" className={tabPanelClassName}>
           <VectorsDbPanel key={vectorsPlayKey} playKey={vectorsPlayKey} />
         </TabsContent>
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-0.5">
-          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border/45 bg-background/80 p-1 shadow-sm">
-            {APPWRITE_TABS.map((tab) => {
-              const Icon = tab.Icon
-
-              return (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="h-auto gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-[10px] text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-300 data-[state=active]:border-border/40 data-[state=active]:bg-background/70 data-[state=active]:text-muted-foreground data-[state=active]:shadow-sm sm:text-[11px] group-hover:data-[state=active]:border-border/55 group-hover:data-[state=active]:bg-background/90 group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
-                >
-                  <Icon aria-hidden />
-                  <span className="truncate">{tab.label}</span>
-                </TabsTrigger>
-              )
-            })}
-          </TabsList>
-        </div>
-      </div>
-
-      <div className="relative z-10 shrink-0 bg-card/10 px-3.5 pb-3 pt-4 sm:pb-3.5">
-        <NativeDbOrSeparator />
-        <div className="mt-2.5">
-          <NativeDbSelectionStrip />
-        </div>
       </div>
     </Tabs>
+    </div>
   )
 }

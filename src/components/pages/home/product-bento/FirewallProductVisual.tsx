@@ -168,10 +168,10 @@ function FirewallRuleRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md border border-border/70 px-2 py-1.5 transition-[border-color,background-color,opacity,transform] duration-300',
+        'flex items-center gap-2 rounded-md border border-border/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300',
         productBentoContainer.panelMd,
         enabled
-          ? 'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_22%,var(--border))] group-hover:bg-background motion-reduce:group-hover:border-border/70 motion-reduce:group-hover:bg-card/70'
+          ? 'group-hover:bg-background motion-reduce:group-hover:bg-card/70'
           : 'opacity-60',
         highlightOnHover &&
           'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
@@ -217,7 +217,7 @@ export function FirewallProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+      <div className={cn('flex h-full min-h-0 w-full flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -245,7 +245,7 @@ export function FirewallProductVisual() {
               {TRAFFIC_STATS.map((stat) => (
                 <div
                   key={stat.id}
-                  className="rounded-md border border-border bg-background px-2 py-1.5 text-center shadow-sm transition-[border-color,box-shadow] duration-300 group-hover:border-border group-hover:shadow-md"
+                  className="rounded-md border border-border bg-background px-2 py-1.5 text-center shadow-sm transition-shadow duration-300 group-hover:shadow-md"
                 >
                   <p className="text-[11px] font-semibold tabular-nums text-foreground sm:text-[12px]">
                     {stat.value}

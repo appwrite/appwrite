@@ -1841,7 +1841,6 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: calc(0.75rem - 1px);
 }
 
 /* Skip layout/paint for off-screen bento tiles while scrolling the home page. */

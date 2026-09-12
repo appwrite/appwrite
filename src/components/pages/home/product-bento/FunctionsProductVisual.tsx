@@ -63,15 +63,15 @@ function UseCaseRow({ useCase, index }: { useCase: UseCase; index: number }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-2 rounded-md border border-border/80 bg-background px-2 py-1.5 transition-[border-color,background-color] duration-300',
-        'group-hover:border-[color-mix(in_srgb,var(--row-color)_42%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--row-color)_12%,var(--background))] motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-background',
+        'flex items-start gap-2 rounded-md border border-border/80 bg-background px-2 py-1.5 transition-colors duration-300',
+        'group-hover:bg-[color-mix(in_srgb,var(--row-color)_12%,var(--background))] motion-reduce:group-hover:bg-background',
       )}
       style={rowColorStyle(useCase.color, { transitionDelay: `${index * 70}ms` })}
     >
       <span
         className={cn(
-          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background transition-[border-color,background-color] duration-300',
-          'group-hover:border-[color-mix(in_srgb,var(--row-color)_38%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--row-color)_14%,var(--background))] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background transition-colors duration-300',
+          'group-hover:bg-[color-mix(in_srgb,var(--row-color)_14%,var(--background))] motion-reduce:group-hover:bg-background',
         )}
       >
         {useCase.iconSrc ? (
@@ -99,7 +99,7 @@ export function FunctionsProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col', productBentoContainer.shell)}>
+      <div className={cn('flex h-full min-h-0 w-full flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
           <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>
             {t('My functions')}

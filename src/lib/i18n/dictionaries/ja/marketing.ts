@@ -607,6 +607,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Open-source alternative to Hacker News.': 'Hacker Newsのオープンソース代替。',
   'Open-source launch': 'オープンソースローンチ',
   'or': 'または',
+  'or Appwrite DBs': 'または Appwrite DBs',
   'Organization members': '組織メンバー',
   'Organization roles': '組織ロール',
   'Original': 'オリジナル',
