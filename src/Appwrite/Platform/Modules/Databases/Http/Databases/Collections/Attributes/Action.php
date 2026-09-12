@@ -493,6 +493,17 @@ abstract class Action extends DatabasesAction
         return $attribute;
     }
 
+    /**
+     * The SQL column for an integer range attribute is sized at create time
+     * to fit the promised range: 4 bytes when the range fits in INT32, 8
+     * bytes otherwise. The same boundary must govern updates, so the stored
+     * formatOptions cannot promise values the column cannot hold.
+     */
+    public static function intRangeColumnSize(int $min, int $max): int
+    {
+        return $min >= -2147483648 && $max <= 2147483647 ? 4 : 8;
+    }
+
     protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -566,6 +577,21 @@ abstract class Action extends DatabasesAction
                 } else {
                     // intRange and bigintRange share the same integer range semantics
                     $validator = new Range($min, $max, Range::TYPE_INTEGER);
+
+                    // The column was sized at create time to fit the range
+                    // promised then; widen it (never narrow) when the updated
+                    // range no longer fits 4 bytes, so formatOptions cannot
+                    // promise values the column would reject.
+                    if (
+                        $attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE
+                        && !$attribute->getAttribute('array', false)
+                    ) {
+                        $intSize = self::intRangeColumnSize((int) $min, (int) $max);
+                        if ($intSize > (int) ($attribute->getAttribute('size', 4))) {
+                            $size = $intSize;
+                            $attribute->setAttribute('size', $intSize);
+                        }
+                    }
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
