@@ -1838,14 +1838,24 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
-        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
-
+        // A queued deletion can outlive its rule. Preserve provider TLS and
+        // routing for a domain that has since been recreated.
         $domain = $document->getAttribute('domain');
-        $certificates->deleteCertificate($domain);
+        if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
+            $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
 
-        // Delete certificate document, so Appwrite is aware of change
-        if (isset($document['certificateId'])) {
-            $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
+            // Route cleanup to the provider that issued it. API rules persist the
+            // attribute as '', so fall back on empty rather than on absent.
+            $domainType = $document->getAttribute('deploymentResourceType') ?: $document->getAttribute('type');
+            $certificates->deleteCertificate($domain, $domainType);
+        }
+
+        // A replacement can use a different certificate. Remove the old record
+        // once no rule references it so it cannot keep scheduling renewals.
+        $certificateId = $document->getAttribute('certificateId', '');
+        if (!empty($certificateId)
+            && $dbForPlatform->findOne('rules', [Query::equal('certificateId', [$certificateId])])->isEmpty()) {
+            $dbForPlatform->deleteDocument('certificates', $certificateId);
         }
     }
 
