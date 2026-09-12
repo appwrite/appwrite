@@ -1,0 +1,10 @@
+{
+  "rules": [
+    {
+      "id": "no-regex",
+      "rule": "Flag every new regular expression (preg_match, preg_replace, preg_split, or a regex pattern passed to a validator). Ask for plain string functions instead, such as str_starts_with, str_ends_with, str_contains, strlen, substr, explode or ctype_*, or an existing validator. Regex is hard to review and easy to get subtly wrong. Accept one only when no string-function alternative exists and the PR explains why.",
+      "scope": ["**/*.php"],
+      "severity": "high"
+    }
+  ]
+}
