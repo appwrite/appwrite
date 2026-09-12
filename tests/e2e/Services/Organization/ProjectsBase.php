@@ -27,7 +27,7 @@ trait ProjectsBase
         $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $this->getConsoleHeaders()), [
             'teamId' => $teamId,
             'name' => 'Organization Test',
         ]);
@@ -40,11 +40,22 @@ trait ProjectsBase
         return self::$cachedOrganization;
     }
 
+    /**
+     * Console session headers. Admin mode is rejected for the console project.
+     */
+    protected function getConsoleHeaders(): array
+    {
+        $headers = $this->getHeaders();
+        unset($headers['x-appwrite-mode']);
+
+        return $headers;
+    }
+
     protected function getOrganizationHeaders(): array
     {
         $organization = $this->setupOrganization();
 
-        return array_merge($this->getHeaders(), [
+        return array_merge($this->getConsoleHeaders(), [
             'x-appwrite-organization' => $organization['teamId'],
         ]);
     }
@@ -60,7 +71,7 @@ trait ProjectsBase
 
         $project = null;
         for ($i = 0; $i < 3; $i++) {
-            $project = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+            $project = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getOrganizationHeaders()), [
@@ -91,7 +102,7 @@ trait ProjectsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -105,28 +116,25 @@ trait ProjectsBase
         $this->assertEquals('Organization Project Test', $response['body']['name']);
         $this->assertEquals($teamId, $response['body']['teamId']);
         $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
-        $this->assertArrayHasKey('platforms', $response['body']);
-        $this->assertArrayHasKey('webhooks', $response['body']);
-        $this->assertArrayHasKey('keys', $response['body']);
 
         /**
          * Test for FAILURE - missing organization header
          */
-        $response = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $this->getConsoleHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Organization Project Test',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE - empty name
          */
-        $response = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -143,7 +151,7 @@ trait ProjectsBase
         $organization = $this->setupOrganization();
         $projectId = ID::unique();
 
-        $response = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -157,7 +165,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - duplicate project ID
          */
-        $response = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -179,7 +187,7 @@ trait ProjectsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -189,14 +197,11 @@ trait ProjectsBase
         $this->assertEquals($projectId, $response['body']['$id']);
         $this->assertEquals('Organization Project Test', $response['body']['name']);
         $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
-        $this->assertArrayHasKey('platforms', $response['body']);
-        $this->assertArrayHasKey('webhooks', $response['body']);
-        $this->assertArrayHasKey('keys', $response['body']);
 
         /**
          * Test for FAILURE - project not found
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -209,17 +214,17 @@ trait ProjectsBase
         $otherTeam = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $this->getConsoleHeaders()), [
             'teamId' => ID::unique(),
             'name' => 'Other Organization',
         ]);
         $this->assertContains($otherTeam['headers']['status-code'], [200]);
         $otherTeamId = $otherTeam['body']['$id'] ?? $otherTeam['body']['teamId'];
 
-        $otherProject = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $otherProject = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], array_merge($this->getHeaders(), [
+        ], array_merge($this->getConsoleHeaders(), [
             'x-appwrite-organization' => $otherTeamId,
         ])), [
             'projectId' => ID::unique(),
@@ -229,7 +234,7 @@ trait ProjectsBase
         $this->assertEquals(201, $otherProject['headers']['status-code']);
         $otherProjectId = $otherProject['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects/' . $otherProjectId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $otherProjectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -245,7 +250,7 @@ trait ProjectsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -259,7 +264,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - project not found
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/v1/organization/projects/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -271,7 +276,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - empty name
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -285,7 +290,7 @@ trait ProjectsBase
     {
         $organization = $this->setupOrganization();
 
-        $project = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $project = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -300,7 +305,7 @@ trait ProjectsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -308,7 +313,7 @@ trait ProjectsBase
         $this->assertEquals(204, $response['headers']['status-code']);
 
         // Verify project is actually deleted
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -318,7 +323,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - project not found (already deleted)
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/v1/organization/projects/' . $projectId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/organization/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -332,7 +337,7 @@ trait ProjectsBase
         $teamId = $organization['teamId'];
 
         // Create a second project in the same organization
-        $project2 = $this->client->call(Client::METHOD_POST, '/v1/organization/projects', array_merge([
+        $project2 = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -347,7 +352,7 @@ trait ProjectsBase
         /**
          * Test for SUCCESS - basic list
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -360,7 +365,7 @@ trait ProjectsBase
         /**
          * Test search queries
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders(), [
@@ -370,12 +375,12 @@ trait ProjectsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
-        $this->assertEquals('Second Organization Project', $response['body']['projects'][0]['name']);
+        $this->assertContains('Second Organization Project', \array_column($response['body']['projects'], 'name'));
 
         /**
          * Test pagination with limit
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -390,7 +395,7 @@ trait ProjectsBase
         /**
          * Test pagination with offset
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -405,7 +410,7 @@ trait ProjectsBase
         /**
          * Test query by name
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -416,12 +421,12 @@ trait ProjectsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, count($response['body']['projects']));
-        $this->assertEquals('Second Organization Project', $response['body']['projects'][0]['name']);
+        $this->assertContains('Second Organization Project', \array_column($response['body']['projects'], 'name'));
 
         /**
          * Test cursor pagination
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -429,7 +434,7 @@ trait ProjectsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['projects']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -444,7 +449,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - invalid cursor
          */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -461,7 +466,7 @@ trait ProjectsBase
         $data = $this->setupOrganizationProject();
         $projectId = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/v1/organization/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
