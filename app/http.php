@@ -60,6 +60,7 @@ $swoole = new Server(
     port: System::getEnv('PORT', 80),
     settings: [
         Constant::OPTION_WORKER_NUM => $totalWorkers,
+        Constant::OPTION_HOOK_FLAGS => SWOOLE_HOOK_ALL,
         Constant::OPTION_DISPATCH_FUNC => dispatch(...),
         Constant::OPTION_DISPATCH_MODE => SWOOLE_DISPATCH_UIDMOD,
         Constant::OPTION_HTTP_COMPRESSION => false,
