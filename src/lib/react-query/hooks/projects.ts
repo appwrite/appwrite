@@ -31,7 +31,11 @@ import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { getVariableValueError, validateVariables } from '@/lib/variables'
+import {
+  fetchAllVariables,
+  getVariableValueError,
+  validateVariables,
+} from '@/lib/variables'
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
@@ -535,8 +539,8 @@ async function updatePlatformForProject(
 }
 
 /**
- * Query function to fetch all project variables (API is not paginated).
- * Sort by `$createdAt` descending; UI paginates via `useProjectVariables`.
+ * Query function to fetch all project variables.
+ * The API defaults to 25 per page; we page through the rest. UI paginates via `useProjectVariables`.
  */
 export async function fetchProjectVariables(projectId: string) {
   if (!projectId) {
@@ -545,19 +549,9 @@ export async function fetchProjectVariables(projectId: string) {
 
   const projectSdk = sdk.forProject(projectId)
   try {
-    const response = await projectSdk.projectApi.listVariables({
-      queries: [Query.orderDesc('$createdAt')],
-    })
-    const raw = response.variables || []
-    const variables = [...raw].sort((a, b) => {
-      const aTime = new Date(a.$createdAt || 0).getTime()
-      const bTime = new Date(b.$createdAt || 0).getTime()
-      return bTime - aTime
-    })
-    return {
-      variables,
-      total: variables.length,
-    }
+    return await fetchAllVariables((queries) =>
+      projectSdk.projectApi.listVariables({ queries }),
+    )
   } catch {
     return { variables: [], total: 0 }
   }

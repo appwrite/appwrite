@@ -26,7 +26,11 @@ import {
 } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
-import { getVariableValueError, validateVariables } from '@/lib/variables'
+import {
+  fetchAllVariables,
+  getVariableValueError,
+  validateVariables,
+} from '@/lib/variables'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -466,8 +470,8 @@ export async function fetchFunctionExecution(
 }
 
 /**
- * Query function to fetch all function variables (API is not paginated).
- * Sort by `$createdAt` descending; UI paginates via `useFunctionVariables`.
+ * Query function to fetch all function variables.
+ * The API defaults to 25 per page; we page through the rest. UI paginates via `useFunctionVariables`.
  */
 export async function fetchFunctionVariables(
   projectId: string,
@@ -478,18 +482,9 @@ export async function fetchFunctionVariables(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.functions.listVariables({ functionId })
-  const raw = response.variables || []
-  const variables = [...raw].sort((a, b) => {
-    const aTime = new Date(a.$createdAt || 0).getTime()
-    const bTime = new Date(b.$createdAt || 0).getTime()
-    return bTime - aTime
-  })
-
-  return {
-    variables,
-    total: variables.length,
-  }
+  return await fetchAllVariables((queries) =>
+    projectSdk.functions.listVariables({ functionId, queries }),
+  )
 }
 
 /**
