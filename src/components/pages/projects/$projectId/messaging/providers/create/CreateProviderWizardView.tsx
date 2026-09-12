@@ -263,7 +263,14 @@ const PROVIDERS: ProviderConfig[] = [
       COMMON_NAME_FIELD,
       { key: 'accountSid', label: 'Account SID', type: 'text', required: true },
       { key: 'authToken', label: 'Auth token', type: 'password', required: true },
-      PHONE_FROM_FIELD,
+      {
+        key: 'from',
+        label: 'Sender',
+        type: 'text',
+        placeholder: '+15551234567',
+        helper:
+          'Phone number with the leading + and country code, or an alphanumeric sender ID.',
+      },
     ],
     submit: (projectSdk, providerId, v) =>
       projectSdk.messaging.createTwilioProvider({

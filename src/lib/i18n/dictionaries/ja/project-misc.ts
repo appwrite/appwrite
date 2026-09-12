@@ -2032,6 +2032,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージを完全に削除します。この操作は元に戻せません。',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'このトピックとすべてのサブスクライバーを完全に削除します。この操作は元に戻せません。',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    '先頭の + と国コードを含む電話番号、または英数字の Sender ID。',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'ストレージからバケットとファイルを選択してください。メッセージでは bucketId:fileId として参照されます。',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2100,6 +2102,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Resend 経由でトランザクションメールを送信します。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
+  Sender: '送信元',
   'Sender ID': 'Sender ID',
   'Sender Name': '送信者名',
   'Sender phone': '送信元電話番号',
