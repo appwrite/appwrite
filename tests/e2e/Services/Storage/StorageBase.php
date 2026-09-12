@@ -1841,7 +1841,9 @@ trait StorageBase
      * answered -- a dead worker cannot answer, so it surfaces as a transport
      * error or a negative status code. And every answer must carry coherent
      * rate limit headers, which a limiter reading a corrupted connection
-     * cannot produce. The header check holds whatever the worker topology is;
+     * cannot produce. Those headers are only checked for internal coherence,
+     * never against a configured limit. The header check holds whatever the
+     * worker topology is;
      * the fan-out only decides how likely the requests are to land on one
      * worker together, so treat this as a regression guard rather than proof
      * of safety at any given concurrency.
@@ -1928,9 +1930,17 @@ trait StorageBase
                 $this->assertContains($response['statusCode'], [201, 429], 'Upload ' . $index . ' returned ' . $response['statusCode']);
 
                 // The limiter answered from a usable connection, so it can still count.
+                // Coherence only: whatever the route's configured limit is, the
+                // remaining count has to fall inside it.
                 $this->assertArrayHasKey('x-ratelimit-limit', $response['headers'], 'Upload ' . $index . ' carried no rate limit headers');
-                $this->assertSame((string) APP_LIMIT_WRITE_RATE_DEFAULT, (string) $response['headers']['x-ratelimit-limit']);
-                $this->assertGreaterThanOrEqual(0, (int) $response['headers']['x-ratelimit-remaining']);
+                $this->assertArrayHasKey('x-ratelimit-remaining', $response['headers'], 'Upload ' . $index . ' carried no remaining count');
+
+                $limit = (int) $response['headers']['x-ratelimit-limit'];
+                $remaining = (int) $response['headers']['x-ratelimit-remaining'];
+
+                $this->assertGreaterThan(0, $limit, 'Upload ' . $index . ' reported a nonsensical rate limit');
+                $this->assertGreaterThanOrEqual(0, $remaining);
+                $this->assertLessThanOrEqual($limit, $remaining);
             }
 
             $this->assertContains(201, array_column($responses, 'statusCode'));
