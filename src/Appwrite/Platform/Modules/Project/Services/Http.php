@@ -141,6 +141,7 @@ class Http extends Service
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
 
         // Keys
+        // TODO: Remove once the Console, CLI and SDKs use the Organization API instead
         $this->addAction(CreateKey::getName(), new CreateKey());
         $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
         $this->addAction(ListKeys::getName(), new ListKeys());
