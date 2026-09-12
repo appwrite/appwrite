@@ -1834,8 +1834,17 @@ trait StorageBase
 
     /**
      * Concurrent unauthenticated uploads run the abuse rate limiter from many
-     * coroutines in one HTTP worker. A shared Redis socket there kills the
+     * coroutines in one HTTP worker. A shared Redis connection there kills the
      * worker with a fatal Swoole error instead of answering the requests.
+     *
+     * Two assertions, both on observable behavior. Every request must be
+     * answered -- a dead worker cannot answer, so it surfaces as a transport
+     * error or a negative status code. And every answer must carry coherent
+     * rate limit headers, which a limiter reading a corrupted connection
+     * cannot produce. The header check holds whatever the worker topology is;
+     * the fan-out only decides how likely the requests are to land on one
+     * worker together, so treat this as a regression guard rather than proof
+     * of safety at any given concurrency.
      */
     public function testCreateBucketFileParallelUploads(): void
     {
@@ -1897,6 +1906,7 @@ trait StorageBase
 
                             $responses[$index] = [
                                 'error' => $client->errMsg,
+                                'headers' => $client->headers ?? [],
                                 'statusCode' => $client->statusCode,
                             ];
 
@@ -1916,6 +1926,11 @@ trait StorageBase
                 // A dead worker shows up as a transport error or a negative status code.
                 $this->assertSame('', $response['error'], 'Upload ' . $index . ' failed at the connection level');
                 $this->assertContains($response['statusCode'], [201, 429], 'Upload ' . $index . ' returned ' . $response['statusCode']);
+
+                // The limiter answered from a usable connection, so it can still count.
+                $this->assertArrayHasKey('x-ratelimit-limit', $response['headers'], 'Upload ' . $index . ' carried no rate limit headers');
+                $this->assertSame((string) APP_LIMIT_WRITE_RATE_DEFAULT, (string) $response['headers']['x-ratelimit-limit']);
+                $this->assertGreaterThanOrEqual(0, (int) $response['headers']['x-ratelimit-remaining']);
             }
 
             $this->assertContains(201, array_column($responses, 'statusCode'));
