@@ -5,6 +5,7 @@ namespace Appwrite\Certificates;
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
@@ -24,17 +25,22 @@ class LetsEncrypt implements Provider
         $stdout = '';
         $stderr = '';
 
-        $staging = (Http::isProduction()) ? '' : ' --dry-run';
-        $exit = Console::execute(
-            "certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
-            . " --email " . $this->email
-            . " --cert-name " . $certName
-            . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}",
-            '',
-            $stdout,
-            $stderr
-        );
+        $certbot = (new Command('certbot'))
+            ->argument('certonly')
+            ->flag('-v')
+            ->flag('--webroot')
+            ->flag('--noninteractive')
+            ->flag('--agree-tos')
+            ->option('--email', $this->email)
+            ->option('--cert-name', $certName)
+            ->option('-w', APP_STORAGE_CERTIFICATES)
+            ->option('-d', $domain);
+
+        if (!Http::isProduction()) {
+            $certbot->flag('--dry-run');
+        }
+
+        $exit = Console::execute($certbot, '', $stdout, $stderr);
 
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {

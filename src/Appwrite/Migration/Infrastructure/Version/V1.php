@@ -3,6 +3,7 @@
 namespace Appwrite\Migration\Infrastructure\Version;
 
 use Appwrite\Migration\Infrastructure\Migration;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\System\System;
 
@@ -44,20 +45,21 @@ class V1 extends Migration
         $files = static function (string $volume) use ($image): ?int {
             $stdout = '';
             $stderr = '';
-            $exit = Console::execute(
-                'docker run --rm -v ' . \escapeshellarg($volume . ':/v:ro') . ' ' . \escapeshellarg($image)
-                . ' sh -c ' . \escapeshellarg('find /v -type f | wc -l'),
-                '',
-                $stdout,
-                $stderr
-            );
+            $count = (new Command('docker'))
+                ->argument('run')
+                ->flag('--rm')
+                ->option('-v', $volume . ':/v:ro')
+                ->argument($image)
+                ->argument('sh')
+                ->option('-c', 'find /v -type f | wc -l');
+            $exit = Console::execute($count, '', $stdout, $stderr);
 
             return $exit === 0 ? (int) \trim($stdout) : null;
         };
 
         $stdout = '';
         $stderr = '';
-        $exit = Console::execute('docker volume ls --format ' . \escapeshellarg('{{.Name}}'), '', $stdout, $stderr);
+        $exit = Console::execute((new Command('docker'))->argument('volume')->argument('ls')->option('--format', '{{.Name}}'), '', $stdout, $stderr);
 
         if ($exit !== 0) {
             throw new \RuntimeException('could not list Docker volumes: ' . \trim($stderr ?: $stdout));
@@ -113,19 +115,22 @@ class V1 extends Migration
         // container -- while everything it did run reports success.
         $stdout = '';
         $stderr = '';
-        $exit = Console::execute(
-            'docker run --rm -v ' . \escapeshellarg($source . ':/from:ro') . ' -v ' . \escapeshellarg($target . ':/to')
-            . ' ' . \escapeshellarg($image) . ' sh -c ' . \escapeshellarg(
+        $copy = (new Command('docker'))
+            ->argument('run')
+            ->flag('--rm')
+            ->option('-v', $source . ':/from:ro')
+            ->option('-v', $target . ':/to')
+            ->argument($image)
+            ->argument('sh')
+            ->option(
+                '-c',
                 'cd /from && find . -type f | while read -r file; do'
                 . ' size=$(stat -c %s "$file");'
                 . ' [ "$(stat -c %s "/to/$file" 2>/dev/null)" = "$size" ] ||'
                 . ' { mkdir -p "/to/$(dirname "$file")" && cp -a "$file" "/to/$file"; };'
                 . ' [ "$(stat -c %s "/to/$file" 2>/dev/null)" = "$size" ] || echo "$file"; done'
-            ),
-            '',
-            $stdout,
-            $stderr
-        );
+            );
+        $exit = Console::execute($copy, '', $stdout, $stderr);
 
         $missing = \array_filter(\array_map('trim', \explode("\n", $stdout)));
 
