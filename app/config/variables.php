@@ -873,7 +873,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
+                'description' => 'Phone number, or an alphanumeric sender ID where the provider supports it, used for sending out messages. A phone number must start with a leading \'+\' and have a maximum of 15 digits without spaces (+123456789). If using Twilio, this may also be a Messaging Service SID, starting with MG.',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
