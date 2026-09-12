@@ -28,6 +28,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -194,28 +195,32 @@ class Create extends Base
     ) {
 
         // Temporary abuse check
-        $abuseCheck = function () use ($project, $timelimit, $response) {
+        $abuseCheck = function () use ($project, $timelimit, $response): void {
             $abuseKey = "projectId:{projectId},url:{url}";
             $abuseLimit = System::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
-            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{url}', '/v1/functions');
+            $isRateLimited = $timelimit($abuseKey, $abuseLimit, $abuseTime, function (TimeLimit $timeLimit) use ($project, $response, $abuseTime): bool {
+                $timeLimit
+                    ->setParam('{projectId}', $project->getId())
+                    ->setParam('{url}', '/v1/functions');
 
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-            $limit = $timeLimit->limit();
-            $time = $timeLimit->time() + $abuseTime;
+                $abuse = new Abuse($timeLimit);
+                $remaining = $timeLimit->remaining();
+                $limit = $timeLimit->limit();
+                $time = $timeLimit->time() + $abuseTime;
 
-            $response
-                ->addHeader('X-RateLimit-Limit', $limit)
-                ->addHeader('X-RateLimit-Remaining', $remaining)
-                ->addHeader('X-RateLimit-Reset', $time);
+                $response
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time);
 
-            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-            if ($enabled && $abuse->check()) {
+                $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
+                return $enabled && $abuse->check();
+            });
+
+            if ($isRateLimited) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         };

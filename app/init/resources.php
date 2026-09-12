@@ -303,22 +303,6 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('redis', function () {
-    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-    $port = System::getEnv('_APP_REDIS_PORT', 6379);
-    $user = System::getEnv('_APP_REDIS_USER', '');
-    $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-    $redis = new \Redis();
-    @$redis->pconnect($host, (int) $port);
-    if ($pass !== '') {
-        $redis->auth($user !== '' ? [$user, $pass] : $pass);
-    }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
-});
-
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
     function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
         // The callback receives the lock so long-running holders can refresh
@@ -329,7 +313,13 @@ $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callabl
     }
 ), ['pools']);
 
-$container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
+// The lease spans the whole callback because a TimeLimit issues several round
+// trips (remaining, limit, check, reset) and must hold one connection for all of
+// them. Do not throw from the callback: the pool treats that as a failed lease
+// and reconnects the socket before returning it.
+$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $time, callable $callback): mixed => $pools->get('abuse')->use(
+    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $time, $redis))
+), ['pools']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
