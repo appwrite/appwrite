@@ -61,6 +61,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vercel\Update as UpdateOAuth2Vercel;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
@@ -240,5 +241,6 @@ class Http extends Service
         $this->addAction(UpdateOAuth2TikTok::getName(), new UpdateOAuth2TikTok());
         $this->addAction(UpdateOAuth2Kakao::getName(), new UpdateOAuth2Kakao());
         $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
+        $this->addAction(UpdateOAuth2Vercel::getName(), new UpdateOAuth2Vercel());
     }
 }
