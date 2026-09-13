@@ -6,7 +6,7 @@ date: 2024-05-01
 cover: /images/blog/receipt-scan.avif
 timeToRead: 15
 author: vincent-ge
-category: tutorial
+category: tutorials
 faqs:
   - question: "What does the Hugging Face Donut Receipts model return?"
     answer: "The model returns extracted receipt fields wrapped in XML-like tags, including store name, address, phone, date, time, subtotal, tax, total, tips, and discount. You parse the response with regex (or a small parser) to pull each tagged value into a structured object you can store or return to your client."

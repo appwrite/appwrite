@@ -7,6 +7,7 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { DeploymentDetailView } from '@/components/global/shared/DeploymentDetailView'
 import { toast } from 'sonner'
@@ -50,7 +51,7 @@ export function View() {
         deploymentId,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -70,7 +71,7 @@ export function View() {
         deploymentId,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {

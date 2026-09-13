@@ -234,7 +234,7 @@ export const enterpriseFormBullets = [
   'Custom bandwidth, storage, and compute limits',
   'Dedicated success manager and 24/7 Slack support',
   'Uptime SLAs and volume-based pricing',
-  'SOC-2, HIPAA, SSO, and activity logs',
+  'SOC-2, HIPAA, SSO, extended activity logs',
   'Custom Cloud limits with fixed pricing, or premium self-hosted with enterprise management tools',
 ] as const
 
@@ -255,9 +255,9 @@ export const enterprisePreferredDeploymentOptions = [
 ] as const
 
 export const enterpriseTimelineOptions = [
-  { value: 'Exploring options', label: 'Exploring options' },
-  { value: 'Evaluating vendors', label: 'Evaluating vendors' },
-  { value: 'Ready to buy', label: 'Ready to buy' },
+  { value: 'Just researching', label: 'Just researching' },
+  { value: 'Comparing options', label: 'Comparing options' },
+  { value: 'Ready to get started', label: 'Ready to get started' },
 ] as const
 
 export const enterpriseFaqItems: MarketingFaqItem[] = [
@@ -289,6 +289,6 @@ export const enterpriseFaqItems: MarketingFaqItem[] = [
   {
     question: 'How do we get started?',
     answer:
-      'Fill out the contact form on this page. Our sales team will review your use case and schedule a conversation to scope resources, support, and deployment options.',
+      'Sign in to your Appwrite account and submit a sales inquiry. Our team will review your use case and schedule a conversation to scope resources, support, and deployment options.',
   },
 ]

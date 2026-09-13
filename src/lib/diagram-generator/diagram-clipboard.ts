@@ -9,6 +9,7 @@ import type {
   DiagramNode,
   DiagramSelection,
 } from '@/lib/diagram-generator/types'
+import { randomUUID } from '@/lib/random-uuid'
 
 export const DIAGRAM_CLIPBOARD_PASTE_OFFSET = DIAGRAM_SNAP_GRID
 
@@ -80,7 +81,7 @@ export function pasteDiagramClipboardPayload(
   const idMap = new Map<string, string>()
 
   const nodes = payload.nodes.map((node) => {
-    const nextId = crypto.randomUUID()
+    const nextId = randomUUID()
     idMap.set(node.id, nextId)
 
     return normalizeDiagramNode({
@@ -99,7 +100,7 @@ export function pasteDiagramClipboardPayload(
     return [
       normalizeDiagramEdge({
         ...edge,
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         fromNodeId,
         toNodeId,
       }),

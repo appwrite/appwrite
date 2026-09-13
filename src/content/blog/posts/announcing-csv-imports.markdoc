@@ -8,7 +8,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/announcing-csv-imports/cover.avif
 timeToRead: 5
 author: darshan-pandya
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How do I import a CSV file into an Appwrite table?"

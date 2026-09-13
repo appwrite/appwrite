@@ -43,7 +43,7 @@ First, [create an account on Perplexity](https://perplexity.ai), head to the [AP
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. In case you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
 
-Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **Perplexity** function template.
+Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **Perplexity** function template.
 
 ![Function template](/images/integrations/ai-perplexity/template.avif)
 
@@ -53,7 +53,7 @@ Add the **Perplexity API key** you saved in the **Variables** step. Then, create
 
 ## Step 3: Test the function
 
-Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. You can open this URL in your browser to test with our pre-built interface.
+Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. You can open this URL in your browser to test with our pre-built interface.
 
 ![Demo](/images/integrations/ai-perplexity/demo.avif)
 

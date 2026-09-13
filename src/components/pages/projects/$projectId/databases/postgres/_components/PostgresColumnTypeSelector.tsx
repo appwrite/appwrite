@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+import { ColumnArrayCheckbox } from '@/components/pages/projects/$projectId/databases/_components/ColumnArrayCheckbox'
 import {
   Command,
   CommandEmpty,
@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
   createDefaultPostgresColumnTypeState,
   formatPostgresColumnTypeLabel,
@@ -136,6 +137,8 @@ export function PostgresColumnTypeSelector({
 }: PostgresColumnTypeSelectorProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  const { rootRef, portalContainer, modal, handleOpenChange } =
+    useModalAwarePopover()
   const definition = getPostgresColumnTypeDefinition(value.typeId)
   const resolvedShowTypeOptions = showTypeOptions ?? !compact
   const resolvedShowArrayOption = showArrayOption ?? !compact
@@ -161,13 +164,20 @@ export function PostgresColumnTypeSelector({
   return (
     <div className={compact ? '' : 'space-y-3'}>
       {showTypePicker ? (
-        <div className={compact ? '' : 'space-y-2'}>
+        <div ref={rootRef} className={compact ? '' : 'space-y-2'}>
           {!compact ? (
             <Label htmlFor="postgres-column-type" className="text-[12px] font-medium">
               {t('Type')} <span className="text-destructive">*</span>
             </Label>
           ) : null}
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover
+            open={open}
+            modal={modal}
+            onOpenChange={(nextOpen) => {
+              handleOpenChange(nextOpen)
+              setOpen(nextOpen)
+            }}
+          >
             <PopoverTrigger asChild>
               <Button
                 id={compact ? undefined : 'postgres-column-type'}
@@ -187,16 +197,21 @@ export function PostgresColumnTypeSelector({
               </Button>
             </PopoverTrigger>
             <PopoverContent
+              container={portalContainer}
               className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[max(var(--radix-popover-trigger-width),20rem)] overflow-hidden p-0"
               align="start"
               onWheelCapture={(event) => {
                 event.stopPropagation()
+              }}
+              onCloseAutoFocus={(event) => {
+                if (portalContainer) event.preventDefault()
               }}
             >
               <Command>
                 <CommandInput
                   placeholder={t('Search types...')}
                   className="h-9 text-[13px]"
+                  onKeyDown={(event) => event.stopPropagation()}
                 />
                 <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
@@ -251,30 +266,17 @@ export function PostgresColumnTypeSelector({
       ) : null}
 
       {resolvedShowArrayOption && supportsArray ? (
-        <div className="flex items-start gap-2">
-          <Checkbox
-            id="postgres-column-array"
-            checked={value.isArray === true}
-            onCheckedChange={(checked) =>
-              onChange({
-                ...value,
-                isArray: checked === true,
-              })
-            }
-            className="mt-0.5"
-          />
-          <div className="space-y-1">
-            <Label
-              htmlFor="postgres-column-array"
-              className="text-[12px] font-medium leading-none"
-            >
-              {t('Define as array')}
-            </Label>
-            <p className="text-[11px] text-muted-foreground">
-              {t('Store multiple values of this type in a single column.')}
-            </p>
-          </div>
-        </div>
+        <ColumnArrayCheckbox
+          id="postgres-column-array"
+          checked={value.isArray === true}
+          onCheckedChange={(checked) =>
+            onChange({
+              ...value,
+              isArray: checked,
+            })
+          }
+          variant="detailed"
+        />
       ) : null}
 
       {resolvedShowTypeOptions && definition.properties.length > 0 ? (

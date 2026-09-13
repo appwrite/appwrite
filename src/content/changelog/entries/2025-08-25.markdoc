@@ -2,6 +2,7 @@
 layout: changelog
 title: Node.js 22 upgrade, execution stability, and UX fixes
 date: 2025-08-25
+tags: console, databases, functions, sites
 ---
 
 We've shipped updates and bug fixes across Functions, Sites, and the Console to improve stability and developer experience.

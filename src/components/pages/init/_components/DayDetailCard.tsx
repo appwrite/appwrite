@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type {
   LaunchEventDay,
   LaunchEventDayResource,
@@ -111,6 +112,53 @@ function DayTitle({ title }: { title: string }) {
   )
 }
 
+/** Links title / cover / description to a day resource (usually the lead blog post). */
+function DayPrimaryLink({
+  href,
+  className,
+  children,
+}: {
+  href: string
+  className?: string
+  children: ReactNode
+}) {
+  const isBlogLink = Boolean(parseBlogPagePath(href))
+  const isDocsLink = Boolean(parseDocsPagePath(href))
+  const resolved = useInitHref(href)
+
+  if (!resolved) {
+    return <div className={className}>{children}</div>
+  }
+
+  if (isBlogLink) {
+    return (
+      <BlogPageAnchor href={href} className={className}>
+        {children}
+      </BlogPageAnchor>
+    )
+  }
+
+  if (isDocsLink) {
+    return (
+      <DocsRouteLink href={href} className={className}>
+        {children}
+      </DocsRouteLink>
+    )
+  }
+
+  return (
+    <a
+      href={resolved.href}
+      {...(resolved.external
+        ? { target: '_blank', rel: 'noopener noreferrer' }
+        : {})}
+      className={className}
+    >
+      {children}
+    </a>
+  )
+}
+
 interface DayDetailCardProps {
   event: InitDisplayEvent
   day: LaunchEventDay
@@ -125,11 +173,13 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
   const isDocsLink = Boolean(parseDocsPagePath(resource.href))
   const resolved = useInitHref(resource.href)
+  // Phones give the title its own full-width line and drop the badge + action
+  // below it; three inline columns left the title ~80px and shredded it.
   const rowClassName =
-    'group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30'
+    'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
   const rowContent = (
     <>
-      <span className="flex w-[92px] shrink-0">
+      <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
         <Badge
           variant="secondary"
           className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -138,10 +188,10 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
           {resource.typeLabel}
         </Badge>
       </span>
-      <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+      <span className="order-1 w-full min-w-0 flex-none text-[13px] font-medium text-foreground sm:order-none sm:w-auto sm:flex-1">
         {resource.title}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+      <span className="order-3 ms-auto flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground sm:order-none sm:ms-0">
         {resource.actionLabel}
         <ArrowUpRight className="size-3.5" aria-hidden />
       </span>
@@ -195,11 +245,22 @@ export function DayDetailCard({
   const otherResources = day.resources.filter(
     (resource) => resource.typeLabel.toLowerCase() !== 'blog',
   )
+  const primaryArticleHref = blogResources[0]?.href
   const hasListContent =
     blogResources.length > 0 ||
     scheduleItems.length > 0 ||
     otherResources.length > 0
   const footerVideos = day.footerVideos ?? []
+
+  const copyBlock = (
+    <div>
+      <DayTitle title={day.title} />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {day.longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual day={day} />
 
   return (
     <article
@@ -225,16 +286,29 @@ export function DayDetailCard({
 
       <div className="grid lg:grid-cols-2">
         <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
-          <div>
-            <DayTitle title={day.title} />
-            <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
-              {day.longDescription}
-            </p>
-          </div>
+          {primaryArticleHref ? (
+            <DayPrimaryLink
+              href={primaryArticleHref}
+              className="group block transition-opacity hover:opacity-90"
+            >
+              {copyBlock}
+            </DayPrimaryLink>
+          ) : (
+            copyBlock
+          )}
         </div>
 
         <div className="flex items-center p-6">
-          <DayVisual day={day} />
+          {primaryArticleHref ? (
+            <DayPrimaryLink
+              href={primaryArticleHref}
+              className="block w-full transition-opacity hover:opacity-90"
+            >
+              {visualBlock}
+            </DayPrimaryLink>
+          ) : (
+            visualBlock
+          )}
         </div>
       </div>
 

@@ -20,10 +20,10 @@ Platforms can be added from the Appwrite Console, or programmatically through an
 To add a platform manually:
 
 1. Open your project in the Appwrite Console.
-2. On the project **Overview**, scroll to the **Integrations** card and select the **Platforms** tab.
-3. Click **Add platform** and choose the platform type (Web, Flutter, Android, Apple, or React Native).
-4. Fill in the name and the platform's identifier (hostname for Web, bundle or package ID for native), then click **Create platform**.
-5. To rename or remove a platform later, click its row and use the edit dialog or the **Delete** button.
+2. Open **Apps** in the project sidebar and click **Add app**.
+3. Under **Choose platform**, pick the client stack: Web, Android, Apple, Flutter, React Native, Windows, or Linux.
+4. Under **App details**, enter a display name and the platform's identifier (hostname for Web, bundle or package ID for native).
+5. To rename or remove an app later, open it from the **Apps** list.
 
 # Platform types {% #platform-types %}
 
@@ -37,7 +37,7 @@ The Project service exposes a dedicated create method per platform type. Each me
 | Windows | `createWindowsPlatform` | `packageIdentifierName` |
 | Linux | `createLinuxPlatform` | `packageName` |
 
-Flutter and React Native platforms shown in the Console map to the underlying Apple, Android, or Web type based on the target you pick.
+Flutter and React Native apps shown in the Console map to the underlying Apple, Android, or Web type based on the target you pick.
 
 # Register a platform {% #register-platform %}
 

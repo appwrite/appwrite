@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -23,13 +23,9 @@ export function SiteRuntimeLoggingCard({
 }: SiteRuntimeLoggingCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [logging, setLogging] = useState(true)
-
-  useEffect(() => {
-    if (site && site.logging !== undefined) {
-      setLogging(site.logging)
-    }
-  }, [site])
+  const [logging, setLogging] = useSyncStateFromServer(
+    site?.logging !== undefined ? site.logging : true,
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

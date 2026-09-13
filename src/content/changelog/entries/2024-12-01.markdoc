@@ -2,6 +2,7 @@
 layout: changelog
 title: Changes to Free plan bandwidth limits
 date: 2024-12-01
+tags: performance
 ---
 
 We have updated the Free plan's bandwidth limit from 10GB to 5GB to maintain platform sustainability and performance.

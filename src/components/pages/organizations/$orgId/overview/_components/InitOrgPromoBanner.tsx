@@ -57,7 +57,7 @@ export function InitOrgPromoBanner() {
   const { mockInitCurrentDay } = useDebugOverrides()
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
-    return getInitOrgPromoBannerContent({ mockCurrentDay: mockInitCurrentDay })
+    return getInitOrgPromoBannerContent({ currentDay: mockInitCurrentDay })
   }, [mockInitCurrentDay])
   if (!content) return null
 

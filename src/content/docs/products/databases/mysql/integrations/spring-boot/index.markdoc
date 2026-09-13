@@ -23,13 +23,13 @@ If you use Flyway, add `org.springframework.boot:spring-boot-starter-flyway` and
 
 # Configure the datasource {% #datasource %}
 
-Build the JDBC URL from the host and database name in the credentials returned by `mysql.get()`. Appwrite uses port `3306`, the primary user is `admin`, and the database name is generated per database. Read the password from the environment:
+Build the JDBC URL from the host returned by `mysql.get()`. Appwrite uses port `3306`, the username is `admin.<hash>`, and the database name is `default`. Read the password from the environment:
 
 ```yaml
 spring:
     datasource:
-        url: jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
-        username: admin
+        url: jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/default?sslMode=REQUIRED
+        username: admin.<hash>
         password: ${DB_PASSWORD}
         hikari:
             maximum-pool-size: 10
@@ -44,8 +44,8 @@ spring:
 The equivalent `application.properties`:
 
 ```ini
-spring.datasource.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
-spring.datasource.username=admin
+spring.datasource.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/default?sslMode=REQUIRED
+spring.datasource.username=admin.<hash>
 spring.datasource.password=${DB_PASSWORD}
 spring.datasource.hikari.maximum-pool-size=10
 spring.datasource.hikari.minimum-idle=2
@@ -54,7 +54,7 @@ spring.datasource.hikari.max-lifetime=1200000
 spring.jpa.hibernate.ddl-auto=validate
 ```
 
-`sslMode=REQUIRED` enables TLS for the MySQL connection. If your security policy requires host certificate validation, configure MySQL Connector/J with `sslMode=VERIFY_IDENTITY` and a JVM trust configuration that trusts the certificate chain. The [Network security](/docs/products/databases/mysql/network-security) page covers TLS, mTLS, and IP allowlists.
+`sslMode=REQUIRED` enables TLS for the MySQL connection. If your security policy requires host certificate validation, configure MySQL Connector/J with `sslMode=VERIFY_IDENTITY` and a JVM trust configuration that trusts the certificate chain. The [Network security](/docs/products/databases/mysql/network-security) page covers TLS and IP allowlists.
 
 # Size the HikariCP pool {% #pool %}
 
@@ -136,14 +136,14 @@ CREATE TABLE spring_boot_users (
 Flyway reads versioned scripts from `src/main/resources/db/migration`. Point Flyway at the direct MySQL port `3306` so migrations run on a session connection with DDL privileges. Setting `spring.flyway.url` gives Flyway its own datasource, independent of the runtime pool:
 
 ```ini
-spring.flyway.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
-spring.flyway.user=admin
+spring.flyway.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/default?sslMode=REQUIRED
+spring.flyway.user=admin.<hash>
 spring.flyway.password=${DB_PASSWORD}
 ```
 
 Liquibase is equivalent: it reads a changelog from `src/main/resources/db/changelog` and accepts its own `spring.liquibase.url`, `spring.liquibase.user`, and `spring.liquibase.password` pointing at the same MySQL port.
 
-The primary `admin` user owns the database and can run schema changes, so run migrations as `admin`.
+The `admin.<hash>` user owns the database and can run schema changes, so run migrations as `admin.<hash>`.
 
 # Pooling and the connection pooler {% #pooling %}
 
@@ -175,7 +175,7 @@ Pool modes, ports, and read/write splitting for the connection pooler.
 Ephemeral database copies for preview environments and CI.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
-TLS modes, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}
 

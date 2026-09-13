@@ -8,7 +8,10 @@ export const docsMarkdocConfig: Config = {
     multicode: { render: 'MultiCode' },
     info: {
       render: 'Info',
-      attributes: { title: { type: String, required: true } },
+      attributes: {
+        title: { type: String, required: true },
+        icon: { type: String },
+      },
     },
     tabs: { render: 'Tabs' },
     tabsitem: {
@@ -51,7 +54,13 @@ export const docsMarkdocConfig: Config = {
     },
     call_to_action: {
       render: 'CallToAction',
-      attributes: { href: { type: String }, title: { type: String } },
+      attributes: {
+        href: { type: String },
+        url: { type: String },
+        title: { type: String },
+        cta: { type: String },
+        description: { type: String },
+      },
     },
     blockquote: { render: 'Blockquote' },
     icon: {
@@ -74,10 +83,26 @@ export const docsMarkdocConfig: Config = {
       render: 'RateLimitStrategyAnimation',
       attributes: { strategy: { type: String, required: true } },
     },
+    index_lookup_animation: {
+      selfClosing: true,
+      render: 'IndexLookupAnimation',
+    },
+    feature_gate: {
+      render: 'FeatureGate',
+      attributes: {
+        anyOf: { type: String },
+        allOf: { type: String },
+      },
+    },
+    hyperloop_race_animation: {
+      selfClosing: true,
+      render: 'HyperloopRaceAnimation',
+    },
     compose_generator: { render: 'ComposeGenerator' },
     table: { render: 'MarkdocTableTag' },
   },
   nodes: {
+    blockquote: { render: 'Blockquote' },
     fence: {
       render: 'Fence',
       attributes: { content: { type: String }, language: { type: String } },

@@ -7,7 +7,13 @@
  * sends the stored key back unchanged and has to keep working.
  */
 
+import { Query } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import { translate } from '@/lib/i18n/translate'
+
+/** Appwrite list endpoints default to 25 and cap a page at 100. */
+const VARIABLE_LIST_PAGE_SIZE = 100
+const VARIABLE_LIST_MAX_PAGES = 50
 
 export const VARIABLE_KEY_MAX_LENGTH = 255
 export const VARIABLE_VALUE_MAX_LENGTH = 8192
@@ -68,4 +74,47 @@ export function validateVariables(
   }
 
   return null
+}
+
+function sortVariablesByCreatedAtDesc(variables: Models.Variable[]) {
+  return [...variables].sort((a, b) => {
+    const aTime = new Date(a.$createdAt || 0).getTime()
+    const bTime = new Date(b.$createdAt || 0).getTime()
+    return bTime - aTime
+  })
+}
+
+/**
+ * Page through every variable for a resource. `listVariables` defaults to 25
+ * and the settings UI paginates client-side from this full list.
+ */
+export async function fetchAllVariables(
+  list: (queries: string[]) => Promise<Models.VariableList>,
+): Promise<{ variables: Models.Variable[]; total: number }> {
+  const variables: Models.Variable[] = []
+  let total = 0
+
+  for (let page = 0; page < VARIABLE_LIST_MAX_PAGES; page++) {
+    const response = await list([
+      Query.limit(VARIABLE_LIST_PAGE_SIZE),
+      Query.offset(variables.length),
+      Query.orderDesc('$createdAt'),
+    ])
+    const chunk = response.variables || []
+    if (chunk.length === 0) {
+      break
+    }
+
+    variables.push(...chunk)
+    total = response.total || variables.length
+
+    if (variables.length >= total) {
+      break
+    }
+  }
+
+  return {
+    variables: sortVariablesByCreatedAtDesc(variables),
+    total: Math.max(total, variables.length),
+  }
 }

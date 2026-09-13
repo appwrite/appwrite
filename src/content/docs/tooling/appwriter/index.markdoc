@@ -82,11 +82,11 @@ To connect to a device, short press the `FN + 1/2/3` keys depending on the devic
 
 ## Windows mode {% #windows-mode %}
 
-To switch to Windows mode, switch the preinstalled macOS keycap with the Windows keycap and use the `FN + A` shortcut to enable Windows mode; this will enable Windows-specific keyboard commands to work, like `Ctrl + C` or `Ctrl + A`.
+To switch to Windows mode, switch the preinstalled macOS keycap with the Windows keycap and use the `FN + A` shortcut to enable Windows mode; this will enable Windows-specific keyboard commands to work, like `Ctrl + C` or `Ctrl + A`.
 
 ## MacOS mode {% #macos-mode %}
 
-To use macOS-specific keyboard commands such as `Command + C` or `Command + A`, keep the preinstalled macOS keycaps in and use the `FN + S` shortcut to enable macOS mode.
+To use macOS-specific keyboard commands such as `Command + C` or `Command + A`, keep the preinstalled macOS keycaps in and use the `FN + S` shortcut to enable macOS mode.
 
 # How to get the Appwriter {% #how-to-get-the-appwriter %}
 

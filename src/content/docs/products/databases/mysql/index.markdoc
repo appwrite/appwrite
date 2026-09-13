@@ -6,19 +6,13 @@ description: Run a native MySQL database provisioned for your project and connec
 
 Appwrite native MySQL databases give you a managed MySQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS.
 
-Native databases are different from Appwrite databases like [TablesDB](/docs/products/databases/tablesdb), [DocumentsDB](/docs/products/databases/documentsdb), and [VectorsDB](/docs/products/databases/vectorsdb), which are accessed through Appwrite SDKs and platform APIs. A native MySQL database gives you the raw engine. You connect with the `mysql` client or any MySQL driver and use the full feature set of MySQL, with no Appwrite abstraction layer in between.
-
-{% info title="Looking for Appwrite data APIs?" %}
-If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, start with [Appwrite Databases](/docs/products/databases). Native MySQL is for teams who want a managed MySQL engine they can talk to directly with their own ORM, migrations, and drivers.
-{% /info %}
+A native MySQL database gives you the raw engine: you connect with the `mysql` client or any MySQL driver, bring your own ORM and migrations, and use the full feature set of MySQL, with no Appwrite layer in between. If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, use [TablesDB](/docs/products/databases/tablesdb) for relational data, [DocumentsDB](/docs/products/databases/documentsdb) for schemaless documents, or [VectorsDB](/docs/products/databases/vectorsdb) for embeddings instead.
 
 # Supported versions {% #versions %}
 
 Appwrite manages the database container, storage, backups, and networking. You bring the application.
 
-| Engine     | Default version | Other supported versions | Default port |
-|------------|-----------------|--------------------------|--------------|
-| MySQL  | 8.4             | 8.0                      | 3306         |
+New databases run MySQL 8.4 by default, and you can select MySQL 8.0 on create instead. The database listens on the standard MySQL port, 3306.
 
 The version is selected on create and can be upgraded later. Upgrades run online by provisioning a second instance on the new version, streaming data over with logical replication, and moving traffic once replication is caught up.
 
@@ -81,23 +75,22 @@ The Storage and Bandwidth columns are the monthly allowances included with each 
 |----------------------------|---------------------------------|
 | Storage overage            | $0.125 per GB per month        |
 | Bandwidth overage          | $0.08 per GB per month         |
-| High availability replica  | 50% of the tier price, per replica |
+| High availability replica  | 100% of the tier price, per replica |
 | Point-in-time recovery     | 20% of the tier price          |
 
 You can [resize between tiers](/docs/products/databases/mysql/scaling) as your workload changes.
 
 # Limits {% #limits %}
 
-The following limits apply per database:
+The following limits apply per database. Some are also capped by your plan:
 
 | Limit                          | Value                                                     |
 |--------------------------------|-----------------------------------------------------------|
-| Databases per project          | 10                                                        |
 | High availability replicas     | 0 - 5                                                     |
 | IP allowlist entries           | 100                                                       |
-| Backup retention               | 1 - 365 days                                              |
+| Backup retention               | 7 days on Pro                                             |
 | Point-in-time recovery window  | 1 - 35 days                                               |
-| Max simultaneous connections   | 10,000 platform cap, lower on smaller specifications      |
+| Max simultaneous connections   | Set by the specification, from 100 up to 10,000           |
 
 # Billing and plan requirements {% #plans %}
 

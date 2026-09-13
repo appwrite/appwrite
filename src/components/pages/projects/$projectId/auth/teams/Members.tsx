@@ -491,7 +491,7 @@ function CreateMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!selectedUserId || roles.length === 0) {
+    if (!selectedUserId) {
       return
     }
     onSubmit({ userId: selectedUserId, roles })
@@ -526,7 +526,12 @@ function CreateMembershipDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="roles">{t('Roles')}</Label>
+              <Label htmlFor="roles">
+                {t('Roles')}{' '}
+                <span className="font-normal text-muted-foreground">
+                  {t('(optional)')}
+                </span>
+              </Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -622,7 +627,7 @@ function CreateMembershipDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!selectedUserId || roles.length === 0 || isLoading}
+            disabled={!selectedUserId || isLoading}
           >
             {t('Add member')}
           </Button>

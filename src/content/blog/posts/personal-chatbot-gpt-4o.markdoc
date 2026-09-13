@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/personal-chatbot-gpt-4o/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "Why use Appwrite Functions for a GPT-4o chatbot?"
     answer: "[Appwrite Functions](/docs/products/functions) runs your server side code without you managing infrastructure, and it lets you store secrets like the OpenAI API key as environment variables. You also get a built-in HTTP endpoint and static asset support, which is enough to host the chatbot UI and the API in one place."

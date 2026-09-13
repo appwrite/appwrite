@@ -2,6 +2,7 @@
 layout: changelog
 title: "Appwrite Cloud: Realtime usage limits and billing enforcement"
 date: 2026-03-23
+tags: storage, realtime, performance, infrastructure
 ---
 
 Starting **April 30, 2026**, we will begin actively enforcing Realtime usage limits and billing on Appwrite Cloud.

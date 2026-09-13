@@ -2,7 +2,10 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
 import { getProductContent } from '@/lib/products/content'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
@@ -11,8 +14,10 @@ import {
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 import { translate } from '@/lib/i18n/translate'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {
@@ -27,6 +32,9 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
 
     const content = getProductContent(params.productId)
     const product = PRODUCT_REGISTRY[params.productId]
+    const pageName = content.metaTitle
+      ? translate(content.metaTitle)
+      : product.name
     const metaDescription = translate(content.metaDescription)
     const ogImageSubtitle =
       content.metaDescription.trim() !== product.name.trim()
@@ -35,11 +43,31 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
 
     return {
       meta: getMarketingPageMetaTags({
-        pageName: product.name,
+        pageName,
         description: metaDescription,
         ogImageEyebrow: 'Products',
+        ogImageTitle: pageName,
         ogImageSubtitle,
       }),
+      scripts: content.faq.length
+        ? [
+            {
+              type: 'application/ld+json',
+              children: stringifyJsonLd({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: content.faq.map((faq) => ({
+                  '@type': 'Question',
+                  name: translate(faq.question),
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: translate(faq.answer),
+                  },
+                })),
+              }),
+            },
+          ]
+        : [],
     }
   },
   loader: async ({ params, context }) => {

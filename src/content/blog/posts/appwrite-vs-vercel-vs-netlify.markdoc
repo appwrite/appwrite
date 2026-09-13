@@ -6,7 +6,7 @@ date: 2026-03-20
 cover: /images/blog/appwrite-vs-vercel-vs-netlify/cover.avif
 timeToRead: 7
 author: aditya-oberai
-category: product
+category: products
 featured: false
 faqs:
   - question: "Is Appwrite a replacement for Vercel and Netlify?"

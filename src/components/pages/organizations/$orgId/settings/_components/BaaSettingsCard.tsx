@@ -15,6 +15,7 @@ import {
   isPaymentAuthentication,
   resolveStripeProviderMethodId,
 } from '@/lib/billing/addons'
+import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
 import {
   organizationAddonsQueryOptions,
   useBillingPlans,
@@ -83,9 +84,7 @@ export function BaaSettingsCard({ organizationId }: BaaSettingsCardProps) {
         queryClient.refetchQueries({
           queryKey: organizationAddonsQueryOptions(organizationId).queryKey,
         }),
-        queryClient.refetchQueries({
-          queryKey: ['organization', organizationId],
-        }),
+        refetchOrganizationBillingQueries(queryClient, organizationId),
       ])
       toast.success(t('BAA addon has been enabled'))
     } catch (error) {
@@ -95,9 +94,7 @@ export function BaaSettingsCard({ organizationId }: BaaSettingsCardProps) {
           queryClient.refetchQueries({
             queryKey: organizationAddonsQueryOptions(organizationId).queryKey,
           }),
-          queryClient.refetchQueries({
-            queryKey: ['organization', organizationId],
-          }),
+          refetchOrganizationBillingQueries(queryClient, organizationId),
         ])
         toast.success(t('BAA addon has been enabled'))
         return
@@ -190,9 +187,7 @@ export function BaaSettingsCard({ organizationId }: BaaSettingsCardProps) {
         queryClient.refetchQueries({
           queryKey: organizationAddonsQueryOptions(organizationId).queryKey,
         }),
-        queryClient.refetchQueries({
-          queryKey: ['organization', organizationId],
-        }),
+        refetchOrganizationBillingQueries(queryClient, organizationId),
       ])
       toast.success(t('BAA addon has been re-enabled'))
     } catch (error) {

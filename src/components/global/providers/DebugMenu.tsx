@@ -43,6 +43,8 @@ import {
   Link2,
   Network,
   GitBranch,
+  Camera,
+  Info,
 } from 'lucide-react'
 import {
   Popover,
@@ -56,6 +58,7 @@ import {
 } from '@/components/ui/tooltip'
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
+import { useScreenshotMode } from './ScreenshotMode'
 import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { Input } from '@/components/ui/input'
 import { useTheme } from 'next-themes'
@@ -63,6 +66,7 @@ import {
   loadDebugOverrides,
   resetFeatureFlagsMenuDebugOverrides,
   resetFeatureFlagsMenuDebugOverride,
+  resetInitMenuDebugOverrides,
   FEATURE_FLAGS_MENU_DEBUG_DEFAULTS,
   setDebugOverride,
   subscribeToDebugOverrides,
@@ -71,11 +75,6 @@ import {
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
 import { getPreLaunchDefault } from '@/lib/pre-launch'
-import {
-  OVERVIEW_CHART_TAB_ORDER,
-  OVERVIEW_CHART_TAB_DISABLE_KEYS,
-  OVERVIEW_CHART_TAB_LABELS,
-} from '@/lib/overview-chart-tabs'
 import {
   detectUserOs,
   getUserOsLabel,
@@ -116,6 +115,7 @@ import {
   type McpEndpointPresetId,
 } from '@/lib/debug-mcp-endpoint'
 import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
+import { usePromptDialog } from '@/hooks/use-prompt-dialog'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -126,6 +126,7 @@ import type {
   ConsoleProfileId,
 } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
+import { DebugMenuConsoleBannersPanel } from '@/components/global/providers/DebugMenuConsoleBannersPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
@@ -141,6 +142,7 @@ import {
 } from '@/lib/init/use-init-low-power-animations'
 import {
   clampDebugMenuPosition,
+  DEBUG_MENU_DIALOG_LAYER,
   DEBUG_MENU_EDGE_OFFSET_PX,
   getDebugMenuPopoverPlacement,
   getDebugMenuTooltipSide,
@@ -226,6 +228,8 @@ interface MenuItem {
   defaultValue?: boolean
   onResetToDefault?: () => void
   description?: string
+  /** Extended copy for the info tooltip when the inline description is shortened. */
+  descriptionTooltip?: string
   submenu?: MenuItem[]
   /** Optional note shown at the top of this item's submenu list. */
   submenuNote?: string
@@ -234,6 +238,7 @@ interface MenuItem {
     | 'profileComparison'
     | 'communityShareExamples'
     | 'prefsDebug'
+    | 'consoleBanners'
     | 'initDayMock'
     | 'initTicketMock'
     | 'seedResources'
@@ -258,6 +263,83 @@ interface MenuSection {
   items: MenuItem[]
 }
 
+const DEBUG_MENU_DESCRIPTION_MAX_LENGTH = 44
+
+/** Above the debug menu popover shell (`z-[10060]`). */
+const DEBUG_MENU_TOOLTIP_Z_CLASS = 'z-[10070]'
+
+const DEBUG_MENU_ITEM_DESCRIPTION_CLASS =
+  'min-w-0 flex-1 truncate text-[11px] font-normal text-[var(--network-globe-edge)]/80'
+
+function normalizeDebugMenuDescription(
+  description: string,
+  descriptionTooltip?: string,
+): { description: string; descriptionTooltip?: string } {
+  const inline = description.replace(/\s+/g, ' ').trim()
+  const tooltip = descriptionTooltip?.replace(/\s+/g, ' ').trim()
+
+  if (tooltip) {
+    return { description: inline, descriptionTooltip: tooltip }
+  }
+
+  if (inline.length <= DEBUG_MENU_DESCRIPTION_MAX_LENGTH) {
+    return { description: inline }
+  }
+
+  return {
+    description: `${inline.slice(0, DEBUG_MENU_DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`,
+    descriptionTooltip: inline,
+  }
+}
+
+function DebugMenuItemDescription({
+  description,
+  descriptionTooltip,
+}: {
+  description?: string
+  descriptionTooltip?: string
+}) {
+  if (!description) return null
+
+  const normalized = normalizeDebugMenuDescription(
+    description,
+    descriptionTooltip,
+  )
+
+  return (
+    <div className="mt-0.5 flex min-w-0 items-center gap-1">
+      <span className={DEBUG_MENU_ITEM_DESCRIPTION_CLASS}>
+        {normalized.description}
+      </span>
+      {normalized.descriptionTooltip ? (
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              tabIndex={-1}
+              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[var(--network-globe-edge)]/70 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+              aria-label="More info"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Info className="h-3 w-3" aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            sideOffset={6}
+            className={cn(
+              'max-w-xs whitespace-pre-line text-[12px] leading-relaxed',
+              DEBUG_MENU_TOOLTIP_Z_CLASS,
+            )}
+          >
+            {normalized.descriptionTooltip}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+    </div>
+  )
+}
+
 function formatFeatureFlagDefaultLabel(defaultValue: boolean): string {
   return defaultValue ? 'Default: On' : 'Default: Off'
 }
@@ -278,6 +360,7 @@ function matchesMenuItemSearch(item: MenuItem, query: string): boolean {
   const q = trimmed.toLowerCase()
   if (item.label.toLowerCase().includes(q)) return true
   if (item.description?.toLowerCase().includes(q)) return true
+  if (item.descriptionTooltip?.toLowerCase().includes(q)) return true
   if (item.category?.toLowerCase().includes(q)) return true
   if (item.submenu?.some((child) => matchesMenuItemSearch(child, query))) {
     return true
@@ -389,11 +472,10 @@ function DebugMenuSwitchRow({
             </span>
           )}
         </div>
-        {item.description && (
-          <div className="mt-0.5 whitespace-pre-line text-[11px] text-[var(--network-globe-edge)]/80">
-            {item.description}
-          </div>
-        )}
+        <DebugMenuItemDescription
+          description={item.description}
+          descriptionTooltip={item.descriptionTooltip}
+        />
       </div>
       <div className="flex flex-shrink-0 items-center gap-1.5">
         {showReset && (
@@ -500,14 +582,10 @@ function renderDebugSubmenuItemRow(
       )}
       <span className="min-w-0 flex-1">
         <span className="block font-medium">{item.label}</span>
-        {item.description && (
-          <span
-            className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
-            title={item.description}
-          >
-            {item.description}
-          </span>
-        )}
+        <DebugMenuItemDescription
+          description={item.description}
+          descriptionTooltip={item.descriptionTooltip}
+        />
       </span>
       {item.badge !== undefined && (
         <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
@@ -691,6 +769,7 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'profileComparison' ||
     item.submenuVariant === 'communityShareExamples' ||
     item.submenuVariant === 'prefsDebug' ||
+    item.submenuVariant === 'consoleBanners' ||
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
@@ -768,10 +847,9 @@ function resolveActiveSubmenu(
 }
 
 function getInitSubmenuDescription(overrides: DebugOverrides): string {
-  const parts: string[] = []
-  if (overrides.mockInitCurrentDay !== null) {
-    parts.push(formatInitMockCurrentDay(overrides.mockInitCurrentDay))
-  }
+  const parts: string[] = [
+    formatInitMockCurrentDay(overrides.mockInitCurrentDay),
+  ]
   if (overrides.mockInitTicketType !== null) {
     parts.push(formatInitMockTicketType(overrides.mockInitTicketType))
   }
@@ -781,7 +859,7 @@ function getInitSubmenuDescription(overrides: DebugOverrides): string {
   if (overrides.initLowPowerAnimations !== 'auto') {
     parts.push(`Low power ${overrides.initLowPowerAnimations}`)
   }
-  return parts.length > 0 ? parts.join(' · ') : 'Launch week mocks and previews'
+  return parts.join(' · ')
 }
 
 function formatLowPowerSignalValue(value: number | string | boolean | null) {
@@ -912,8 +990,10 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
+  const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
+  const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
   const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
@@ -1413,9 +1493,39 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <Sparkles className="h-3 w-3" />,
         submenu: lowPowerAnimationSubmenu,
       },
+      {
+        label: 'Reset settings',
+        description:
+          'Restore day, ticket mock, confetti preview, and low power to defaults.',
+        onClick: () => {
+          resetInitMenuDebugOverrides()
+          setOverrides(loadDebugOverrides())
+          setIsOpen(false)
+        },
+        icon: <RotateCcw className="h-3 w-3" />,
+        rowClassName:
+          'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
+      },
     ]
 
     return [
+      {
+        title: 'Capture',
+        icon: <Camera className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Screenshot mode',
+            description: isScreenshotModeActive ? 'On · Demo identity' : 'Off',
+            descriptionTooltip: isScreenshotModeActive
+              ? "Walter O'Brien, walter@appwrite.io. Masks name, email, avatar, and org names. Toggle with smile or this switch."
+              : 'Masks account name, email, avatar, and org names for captures. Toggle with smile or this switch.',
+            icon: <Camera className="h-3 w-3" />,
+            variant: 'switch',
+            switchValue: isScreenshotModeActive,
+            switchOnChange: setScreenshotModeActive,
+          },
+        ],
+      },
       {
         title: 'Appearance',
         icon: <Palette className="h-3.5 w-3.5" />,
@@ -1951,6 +2061,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'prefsDebug',
           },
           {
+            label: 'Banners',
+            description: 'Preview console promo banners and reset dismissals.',
+            icon: <Megaphone className="h-3 w-3" />,
+            submenuVariant: 'consoleBanners',
+          },
+          {
             label: 'Env',
             description: 'Check if env vars are set (values never shown).',
             icon: <Variable className="h-3 w-3" />,
@@ -1996,51 +2112,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               createProfileFeatureFlagItem(
-                'Dedicated DBs support (global)',
-                'Use fullscreen create wizard and show spec upgrade for supported DB types.',
-                'dedicatedDbsSupport',
-                profileId,
-                features.dedicatedDbsSupport,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Dedicated DBs: Documents DB',
-                'Dedicated DBs support for Documents DB.',
-                'dedicatedDbsDocumentsDB',
-                profileId,
-                features.dedicatedDbsDocumentsDB,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Dedicated DBs: Vectors DB',
-                'Dedicated DBs support for Vectors DB.',
-                'dedicatedDbsVectorsDB',
-                profileId,
-                features.dedicatedDbsVectorsDB,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Native DBs: PostgreSQL',
-                'Enable dedicated PostgreSQL databases in the create wizard.',
-                'nativeDbsPostgres',
-                profileId,
-                features.nativeDbsPostgres,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
-                'Native DBs: MySQL',
-                'Enable dedicated MySQL databases in the create wizard.',
-                'nativeDbsMySQL',
-                profileId,
-                features.nativeDbsMySQL,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
                 profileId,
                 features.nativeDbsMongo,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
+                'Database PITR restore',
+                'Restore PITR button on backups and the restore card in dedicated DB PITR settings.',
+                'databasePitrRestore',
+                profileId,
+                features.databasePitrRestore,
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
@@ -2052,11 +2136,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Extra OAuth login',
-                'Show Google, GitLab, Bitbucket, and Cursor on console sign-in and sign-up. GitHub stays available.',
-                'extraOAuthLogin',
+                'Extra VCS OAuth',
+                'Show Origin on Git connect. GitHub, GitLab, and Bitbucket stay available.',
+                'extraVcsOAuth',
                 profileId,
-                features.extraOAuthLogin,
+                features.extraVcsOAuth,
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
@@ -2068,37 +2152,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Firewall',
-                'Show the project Firewall section, routes, rules, analytics, and logs.',
-                'firewall',
-                profileId,
-                features.firewall,
-                { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
-                'Project OAuth2 server',
-                profileId === 'cloud'
-                  ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'
-                  : 'Cloud profile only. Switch to Cloud profile to preview.',
-                'oauth2Server',
-                profileId,
-                profileId === 'cloud' ? features.oauth2Server : false,
-                {
-                  disabled: profileId !== 'cloud',
-                  category: 'Auth & security',
-                },
-              ),
-              createProfileFeatureFlagItem(
-                'Organization OAuth apps',
-                'Org settings OAuth apps tab and /settings/oauth-apps route.',
-                'oauthApps',
-                profileId,
-                features.oauthApps,
-                { category: 'Organization' },
-              ),
-              createProfileFeatureFlagItem(
-                'Organization API keys',
-                'Org settings API keys tab and /settings/api-keys route.',
+                'Partners keys',
+                'Org settings Partners tab and /settings/partners route.',
                 'orgApiKeys',
                 profileId,
                 features.orgApiKeys,
@@ -2135,19 +2190,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 profileId,
                 features.notifications,
                 { category: 'UI & tools' },
-              ),
-              createProfileFeatureFlagItem(
-                'Organization marketplace',
-                profileId === 'cloud'
-                  ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
-                  : 'Cloud profile only. Switch to Cloud profile to preview.',
-                'marketplace',
-                profileId,
-                profileId === 'cloud' ? features.marketplace : false,
-                {
-                  disabled: profileId !== 'cloud',
-                  category: 'Organization',
-                },
               ),
               createDebugFeatureFlagItem(
                 'Pre-launch',
@@ -2288,68 +2330,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              createDebugFeatureFlagItem(
-                'Disable usage breakdown queries',
-                'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
-                'disableUsageBreakdownQueries',
-                overrides.disableUsageBreakdownQueries,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    disableUsageBreakdownQueries: checked,
-                  }))
-                  setDebugOverride('disableUsageBreakdownQueries', checked)
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                () => {
-                  setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
-                },
-                'Usage & analytics',
-              ),
-              ...OVERVIEW_CHART_TAB_ORDER.map((tabId) => {
-                const disableKey = OVERVIEW_CHART_TAB_DISABLE_KEYS[tabId]
-                const label = OVERVIEW_CHART_TAB_LABELS[tabId]
-                return createDebugFeatureFlagItem(
-                  `Disable overview ${label.toLowerCase()} chart`,
-                  `Hide the ${label} tab and usage queries on the project overview.`,
-                  disableKey,
-                  overrides[disableKey],
-                  (checked) => {
-                    setOverrides((prev) => ({
-                      ...prev,
-                      [disableKey]: checked,
-                    }))
-                    setDebugOverride(disableKey, checked)
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  () => {
-                    setOverrides(loadDebugOverrides())
-                    void queryClient.invalidateQueries({
-                      predicate: (query) =>
-                        query.queryKey[0] === 'usage-events' ||
-                        query.queryKey[0] === 'usage-gauges' ||
-                        query.queryKey[0] === 'usage-breakdown',
-                    })
-                  },
-                  'Usage & analytics',
-                )
-              }),
               {
                 label: 'Reset all feature flags',
                 description:
@@ -2358,12 +2338,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()
                   setOverrides(loadDebugOverrides())
-                  void queryClient.invalidateQueries({
-                    predicate: (query) =>
-                      query.queryKey[0] === 'usage-events' ||
-                      query.queryKey[0] === 'usage-gauges' ||
-                      query.queryKey[0] === 'usage-breakdown',
-                  })
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -2441,19 +2415,30 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 label: 'Add custom...',
                 description: 'Save a custom API URL to this list',
                 onClick: () => {
-                  const url = window.prompt(
-                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
-                    endpointPreset === 'custom' && endpointCustomUrl
-                      ? endpointCustomUrl
-                      : activeEndpointUrl !== '—'
-                        ? activeEndpointUrl
-                        : 'http://localhost/v1',
-                  )
-                  if (url?.trim()) {
-                    applyOverrideAndGoHome(() =>
-                      setDebugEndpointOverride('custom', url.trim()),
-                    )
-                  }
+                  void prompt({
+                    title: 'Custom API endpoint',
+                    fields: [
+                      {
+                        name: 'url',
+                        label: 'API endpoint URL',
+                        placeholder: 'https://my-appwrite.example/v1',
+                        defaultValue:
+                          endpointPreset === 'custom' && endpointCustomUrl
+                            ? endpointCustomUrl
+                            : activeEndpointUrl !== '—'
+                              ? activeEndpointUrl
+                              : 'http://localhost:9601/v1',
+                      },
+                    ],
+                    confirmLabel: 'Use endpoint',
+                  }).then((values) => {
+                    const url = values?.url.trim()
+                    if (url) {
+                      applyOverrideAndGoHome(() =>
+                        setDebugEndpointOverride('custom', url),
+                      )
+                    }
+                  })
                 },
                 icon: <Plus className="h-3 w-3" />,
                 rowClassName:
@@ -2504,16 +2489,27 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     ? mcpEndpointCustomUrl
                     : 'Enter a custom MCP URL',
                 onClick: () => {
-                  const url = window.prompt(
-                    'Enter Appwrite MCP endpoint URL (e.g. http://localhost:8100/)',
-                    mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
-                      ? mcpEndpointCustomUrl
-                      : activeMcpEndpointUrl || 'http://localhost:8100/',
-                  )
-                  if (url?.trim()) {
-                    setDebugMcpEndpointOverride('custom', url.trim())
-                    setIsOpen(false)
-                  }
+                  void prompt({
+                    title: 'Custom MCP endpoint',
+                    fields: [
+                      {
+                        name: 'url',
+                        label: 'MCP endpoint URL',
+                        placeholder: 'http://localhost:8100/',
+                        defaultValue:
+                          mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                            ? mcpEndpointCustomUrl
+                            : activeMcpEndpointUrl || 'http://localhost:8100/',
+                      },
+                    ],
+                    confirmLabel: 'Use endpoint',
+                  }).then((values) => {
+                    const url = values?.url.trim()
+                    if (url) {
+                      setDebugMcpEndpointOverride('custom', url)
+                      setIsOpen(false)
+                    }
+                  })
                 },
                 active: mcpEndpointPreset === 'custom',
                 icon: <McpIcon className="h-3 w-3" />,
@@ -2559,24 +2555,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     faviconStatus,
     profileId,
-    features.dedicatedDbsSupport,
-    features.dedicatedDbsDocumentsDB,
-    features.dedicatedDbsVectorsDB,
-    features.nativeDbsPostgres,
-    features.nativeDbsMySQL,
     features.nativeDbsMongo,
+    features.databasePitrRestore,
     features.userVerification,
-    features.extraOAuthLogin,
+    features.extraVcsOAuth,
     features.cookieBanner,
     features.blogDrafts,
-    features.oauthApps,
-    features.oauth2Server,
     features.orgApiKeys,
-    features.marketplace,
     features.partnersDocs,
     features.agent,
     features.notifications,
-    features.firewall,
     features.init,
     endpointPreset,
     endpointCustomUrl,
@@ -2590,6 +2578,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     envProfileId,
     initLowPowerDecision,
     overrides,
+    isScreenshotModeActive,
+    setScreenshotModeActive,
     banners.length,
     actions,
     navigate,
@@ -2598,6 +2588,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     clearAllBanners,
     languageCopy,
     applyOverrideAndGoHome,
+    prompt,
   ])
 
   const currentSubmenu = useMemo(
@@ -2958,6 +2949,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'communityShareExamples' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
+              currentSubmenu?.submenuVariant === 'consoleBanners' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
@@ -3087,6 +3079,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 />
               ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
                 <DebugMenuPrefsPanel />
+              ) : currentSubmenu.submenuVariant === 'consoleBanners' ? (
+                <DebugMenuConsoleBannersPanel />
               ) : currentSubmenu.submenuVariant === 'seedResources' ? (
                 <DebugMenuSeedResourcesPanel />
               ) : currentSubmenu.submenuVariant === 'initDayMock' ? (
@@ -3246,14 +3240,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               <span className="block font-medium">
                                 {item.label}
                               </span>
-                              {item.description ? (
-                                <span
-                                  className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
-                                  title={item.description}
-                                >
-                                  {item.description}
-                                </span>
-                              ) : null}
+                              <DebugMenuItemDescription
+                                description={item.description}
+                                descriptionTooltip={item.descriptionTooltip}
+                              />
                             </span>
                             {item.badge !== undefined && (
                               <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
@@ -3272,6 +3262,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               </div>
             )}
           </div>
+          {promptDialog}
         </PopoverContent>
       </Popover>
     </DismissableLayerBranch>

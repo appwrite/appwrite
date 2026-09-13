@@ -6,11 +6,6 @@ export const heSitesDictionary: Record<string, string> = {
   // Placeholder pages
   'Add Domain': 'הוספת דומיין',
   'Add a custom domain to your site': 'הוסיפו דומיין מותאם אישית לאתר שלכם',
-  'Sites Usage': 'שימוש באתרים',
-  'View aggregated usage statistics across all sites':
-    'צפייה בנתוני שימוש מצטברים בכל האתרים',
-  Usage: 'שימוש',
-  'View usage statistics for this site': 'צפייה בנתוני השימוש של האתר הזה',
   'Verify Domain': 'אימות דומיין',
   'Configure DNS settings to verify your domain':
     'הגדירו את רשומות ה-DNS כדי לאמת את הדומיין שלכם',
@@ -421,6 +416,8 @@ export const heSitesDictionary: Record<string, string> = {
     'ייבאו repos לפריסות אוטומטיות',
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
+  'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Origin': 'חיבור Origin',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
   'Search...': 'חיפוש...',

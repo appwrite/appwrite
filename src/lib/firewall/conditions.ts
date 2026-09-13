@@ -81,7 +81,11 @@ export function firewallListSearch(selection: FirewallResourceSelection): {
   }
 }
 
-/** Condition attributes shown in the rule builder, grouped for the picker. */
+/**
+ * Condition attributes shown in the rule builder, grouped for the picker.
+ * Kept in sync with the backend Firewall `ALLOWED` attribute list so a rule the
+ * console can build is always one the server will accept.
+ */
 export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
   {
     label: 'Request',
@@ -89,8 +93,13 @@ export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
       { value: 'host', label: 'Hostname' },
       { value: 'path', label: 'Path' },
       { value: 'method', label: 'Method' },
+      { value: 'protocol', label: 'Protocol' },
       { value: 'headers', label: 'Header' },
       { value: 'query', label: 'Query parameter' },
+      { value: 'queryKeys', label: 'Query parameter name' },
+      { value: 'accept', label: 'Accept' },
+      { value: 'acceptLanguage', label: 'Accept-Language' },
+      { value: 'cookie', label: 'Cookie' },
     ],
   },
   {
@@ -109,21 +118,64 @@ export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
       { value: 'continent', label: 'Continent' },
       { value: 'city', label: 'City' },
       { value: 'state', label: 'State' },
+      { value: 'postalCode', label: 'Postal code' },
+      { value: 'latitude', label: 'Latitude' },
+      { value: 'longitude', label: 'Longitude' },
+      { value: 'timeZone', label: 'Time zone' },
+      { value: 'weatherCode', label: 'Weather code' },
+    ],
+  },
+  {
+    label: 'Network',
+    attributes: [
+      { value: 'isp', label: 'ISP' },
+      { value: 'autonomousSystemNumber', label: 'AS number' },
+      {
+        value: 'autonomousSystemOrganization',
+        label: 'AS organization',
+      },
+      { value: 'connectionType', label: 'Connection type' },
+      { value: 'connectionUsageType', label: 'Connection usage type' },
+      {
+        value: 'connectionOrganization',
+        label: 'Connection organization',
+      },
     ],
   },
 ] as const
 
+/** One attribute entry (value + display label) from any picker group. */
+export type FirewallConditionAttributeDef =
+  (typeof FIREWALL_CONDITION_ATTRIBUTE_GROUPS)[number]['attributes'][number]
+
 /** Flat list of condition attributes (lookups, validation). */
-export const FIREWALL_CONDITION_ATTRIBUTES =
-  FIREWALL_CONDITION_ATTRIBUTE_GROUPS.flatMap((group) => group.attributes)
+export const FIREWALL_CONDITION_ATTRIBUTES: ReadonlyArray<FirewallConditionAttributeDef> =
+  FIREWALL_CONDITION_ATTRIBUTE_GROUPS.flatMap(
+    (group) => group.attributes as ReadonlyArray<FirewallConditionAttributeDef>,
+  )
 
-export type FirewallConditionAttribute =
-  (typeof FIREWALL_CONDITION_ATTRIBUTES)[number]['value']
+export type FirewallConditionAttribute = FirewallConditionAttributeDef['value']
 
-/** Attributes gated behind the premium Geo DB addon (enforced server-side). */
+/**
+ * Attributes gated behind the premium Geo DB addon (enforced server-side).
+ * Mirrors the backend Firewall `PREMIUM` list; the server compares
+ * case-insensitively, so the camelCase values here map 1:1 to its lowercase
+ * entries.
+ */
 export const FIREWALL_PREMIUM_ATTRIBUTES = new Set<FirewallConditionAttribute>([
   'city',
   'state',
+  'postalCode',
+  'latitude',
+  'longitude',
+  'timeZone',
+  'weatherCode',
+  'isp',
+  'autonomousSystemNumber',
+  'autonomousSystemOrganization',
+  'connectionType',
+  'connectionUsageType',
+  'connectionOrganization',
 ])
 
 export function isPremiumAttribute(
@@ -250,11 +302,23 @@ const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
 ]
 
 /**
+ * Attributes matched only by exact value or presence: coordinates (matched as
+ * strings, so text ops would compare lexicographically) and opaque numeric ids
+ * like the AS number, where contains / startsWith / endsWith are meaningless.
+ */
+const EQUALITY_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
+  'equal',
+  'notEqual',
+  'isNull',
+  'isNotNull',
+]
+
+/**
  * Operators offered per attribute. All values also exist in usage `listEvents`
  * so affected-traffic estimates stay accurate.
- * - Free text (ip / host / path / headers / query / city / state / os /
- *   browser / userAgent): full set. For `ip`, CIDR blocks only match on
- *   equal / not equal (other operators fall back to string comparison).
+ * - Free text (everything not listed below): full set. For `ip`, CIDR blocks
+ *   only match on equal / not equal (other operators fall back to string
+ *   comparison).
  * - `method`: enum-backed, equality + presence only (no text matching).
  * - `country` / `continent`: picker-backed, basic set (equal / not equal /
  *   contains / does not contain). `notContains` has no usage equivalent, so it
@@ -268,10 +332,33 @@ const OPERATORS_BY_ATTRIBUTE: Record<
   ip: FREE_TEXT_OPERATORS,
   host: FREE_TEXT_OPERATORS,
   path: FREE_TEXT_OPERATORS,
+  protocol: FREE_TEXT_OPERATORS,
   headers: FREE_TEXT_OPERATORS,
   query: FREE_TEXT_OPERATORS,
+  queryKeys: FREE_TEXT_OPERATORS,
+  accept: FREE_TEXT_OPERATORS,
+  acceptLanguage: FREE_TEXT_OPERATORS,
+  cookie: FREE_TEXT_OPERATORS,
   city: FREE_TEXT_OPERATORS,
   state: FREE_TEXT_OPERATORS,
+  postalCode: FREE_TEXT_OPERATORS,
+  // latitude / longitude are numeric coordinates the WAF matches as strings, so
+  // text matching (contains / startsWith / endsWith) would silently do
+  // lexicographic comparison — they get equality + presence only.
+  latitude: EQUALITY_OPERATORS,
+  longitude: EQUALITY_OPERATORS,
+  timeZone: FREE_TEXT_OPERATORS,
+  // weatherCode is an alphanumeric code (e.g. "USCA0746"), not a number, so the
+  // prefix (country) makes contains / startsWith genuinely useful.
+  weatherCode: FREE_TEXT_OPERATORS,
+  isp: FREE_TEXT_OPERATORS,
+  // AS number is an opaque identifier exposed as a string (e.g. "15169");
+  // prefix / range matching on it is meaningless, so equality + presence only.
+  autonomousSystemNumber: EQUALITY_OPERATORS,
+  autonomousSystemOrganization: FREE_TEXT_OPERATORS,
+  connectionType: FREE_TEXT_OPERATORS,
+  connectionUsageType: FREE_TEXT_OPERATORS,
+  connectionOrganization: FREE_TEXT_OPERATORS,
   os: FREE_TEXT_OPERATORS,
   browser: FREE_TEXT_OPERATORS,
   userAgent: FREE_TEXT_OPERATORS,
@@ -392,6 +479,108 @@ export function serializeFirewallConditions(
     .filter((value): value is string => Boolean(value))
 }
 
+/** Query methods that nest other query objects in `values` (not leaf filters). */
+const COMPOUND_CONDITION_METHODS = new Set(['and', 'or'])
+
+/**
+ * Coerce a condition value for display without calling `String(object)`.
+ * Appwrite's SDK parses API JSON with json-bigint, which yields null-prototype
+ * objects; `String(nullProtoObject)` throws "Cannot convert object to primitive value".
+ */
+function coerceConditionValue(value: unknown): string {
+  if (value == null) return ''
+  switch (typeof value) {
+    case 'string':
+      return value
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+      return String(value)
+    case 'object':
+      try {
+        return JSON.stringify(value)
+      } catch {
+        return ''
+      }
+    default:
+      return ''
+  }
+}
+
+function coerceConditionValues(valuesRaw: unknown): string[] {
+  if (Array.isArray(valuesRaw)) {
+    return valuesRaw.map(coerceConditionValue).filter((value) => value.length > 0)
+  }
+  if (valuesRaw == null) return []
+  const value = coerceConditionValue(valuesRaw)
+  return value ? [value] : []
+}
+
+function readConditionRecord(
+  item: object,
+): { method: string; attribute: string; valuesRaw: unknown } {
+  const record = item as Record<string, unknown>
+  const method = coerceConditionValue(
+    record.method ?? record.operator ?? 'equal',
+  )
+  const attribute = coerceConditionValue(
+    record.attribute ?? record.field ?? record.key ?? '',
+  )
+  return {
+    method: method || 'equal',
+    attribute: attribute || 'condition',
+    valuesRaw: record.values ?? record.value,
+  }
+}
+
+/**
+ * Parse one condition entry into leaf conditions.
+ * Compound `and` / `or` queries are expanded so nested query objects are never
+ * passed through `String()` (which throws on json-bigint null-prototype objects).
+ */
+function parseConditionItem(item: unknown): ParsedFirewallCondition[] {
+  if (typeof item === 'string') {
+    try {
+      const parsed = JSON.parse(item) as unknown
+      if (parsed && typeof parsed === 'object') {
+        return parseConditionItem(parsed)
+      }
+      return [
+        {
+          attribute: 'condition',
+          operator: 'equal',
+          values: [item],
+        },
+      ]
+    } catch {
+      return [
+        {
+          attribute: 'condition',
+          operator: 'equal',
+          values: [item],
+        },
+      ]
+    }
+  }
+
+  if (!item || typeof item !== 'object') return []
+
+  const { method, attribute, valuesRaw } = readConditionRecord(item)
+
+  if (COMPOUND_CONDITION_METHODS.has(method)) {
+    const nested = Array.isArray(valuesRaw) ? valuesRaw : []
+    return nested.flatMap(parseConditionItem)
+  }
+
+  return [
+    {
+      attribute,
+      operator: method,
+      values: coerceConditionValues(valuesRaw),
+    },
+  ]
+}
+
 export function parseFirewallConditions(
   conditions: unknown,
 ): ParsedFirewallCondition[] {
@@ -410,48 +599,7 @@ export function parseFirewallConditions(
         ? Object.values(conditions as Record<string, unknown>)
         : []
 
-  return rawList
-    .map((item): ParsedFirewallCondition | null => {
-      if (typeof item === 'string') {
-        try {
-          const parsed = JSON.parse(item) as {
-            method?: string
-            attribute?: string
-            values?: unknown[]
-          }
-          if (!parsed.method || !parsed.attribute) return null
-          return {
-            attribute: parsed.attribute,
-            operator: parsed.method,
-            values: (parsed.values ?? []).map(String),
-          }
-        } catch {
-          return {
-            attribute: 'condition',
-            operator: 'equal',
-            values: [item],
-          }
-        }
-      }
-
-      if (item && typeof item === 'object') {
-        const record = item as Record<string, unknown>
-        const attribute = String(
-          record.attribute ?? record.field ?? record.key ?? 'condition',
-        )
-        const operator = String(record.method ?? record.operator ?? 'equal')
-        const valuesRaw = record.values ?? record.value
-        const values = Array.isArray(valuesRaw)
-          ? valuesRaw.map(String)
-          : valuesRaw != null
-            ? [String(valuesRaw)]
-            : []
-        return { attribute, operator, values }
-      }
-
-      return null
-    })
-    .filter((item): item is ParsedFirewallCondition => item != null)
+  return rawList.flatMap(parseConditionItem)
 }
 
 export function draftsFromParsedConditions(

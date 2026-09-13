@@ -7,7 +7,7 @@ description: Use Ruby on Rails and ActiveRecord with an Appwrite native MySQL da
 A native MySQL database is a standard MySQL engine, so [Ruby on Rails](https://rubyonrails.org/) works against it through ActiveRecord with no Appwrite-specific configuration. Point `config/database.yml` at the connection details from the [Connections](/docs/products/databases/mysql/connections) page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any MySQL server.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. Call `mysql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and Appwrite generates the database name for each database.
+You'll need a native MySQL database in a `ready` state and its credentials. Call `mysql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. The username is `admin.<hash>`, and the database name is `default`.
 {% /info %}
 
 # Install the database driver {% #driver %}
@@ -32,11 +32,11 @@ bundle install
 Fetch the connection string with the [API](/docs/products/databases/mysql/connections#credentials). Keep it in an environment variable and do not commit it:
 
 ```env
-DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 DB_SSL_MODE="required"
 ```
 
-Rails maps the `mysql://` URL scheme to the `mysql2` adapter by default. Set `ssl_mode` in `database.yml` so mysql2 requires TLS on Appwrite Cloud. For certificate verification (`verify_identity`) or mTLS, see the [Network](/docs/products/databases/mysql/network-security) page.
+Rails maps the `mysql://` URL scheme to the `mysql2` adapter by default. Set `ssl_mode` in `database.yml` so mysql2 requires TLS on Appwrite Cloud. For certificate verification (`verify_identity`), see the [Network](/docs/products/databases/mysql/network-security) page.
 
 # Configure database.yml {% #database-yml %}
 
@@ -60,8 +60,8 @@ production:
   encoding: utf8mb4
   host: <%= ENV["DB_HOST"] %>       # db-<hash>.<region>.appwrite.center
   port: <%= ENV.fetch("DB_PORT", 3306) %>
-  database: <%= ENV["DB_NAME"] %>   # <database>
-  username: <%= ENV.fetch("DB_USER", "admin") %>
+  database: <%= ENV["DB_NAME"] %>   # default
+  username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_PASSWORD"] %>
   ssl_mode: <%= ENV.fetch("DB_SSL_MODE", "required") %>
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
@@ -91,7 +91,7 @@ Generate and apply migrations the usual way:
 bin/rails db:migrate
 ```
 
-Migrations issue DDL and need a session-level connection, so run them against the direct MySQL port `3306`, not the transaction-mode pooler. Point `DATABASE_URL` (or a separate migration URL) at the direct port when you run `db:migrate`. The primary `admin` user owns the database and can run schema changes.
+Migrations issue DDL and need a session-level connection, so run them against the direct MySQL port `3306`, not the transaction-mode pooler. Point `DATABASE_URL` (or a separate migration URL) at the direct port when you run `db:migrate`. The `admin.<hash>` user owns the database and can run schema changes.
 
 # Use ActiveRecord {% #activerecord %}
 
@@ -170,7 +170,7 @@ Pool modes, ports, and read/write splitting for high-concurrency workloads.
 Ephemeral database copies for preview environments and CI.
 {% /cards_item %}
 {% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
-TLS modes, certificate verification, mTLS, and IP allowlists.
+TLS, certificate verification, and IP allowlists.
 {% /cards_item %}
 {% /cards %}
 

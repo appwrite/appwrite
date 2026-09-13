@@ -98,7 +98,8 @@ export function CreateGitDeploymentModal({
     hasLinkedRepo ? (resource.installationId ?? null) : null,
     hasLinkedRepo ? (resource.providerRepositoryId ?? null) : null,
   )
-  const { data: installationsData } = useVcsInstallations(projectId)
+  const { data: installationsData, isLoading: installationsLoading } =
+    useVcsInstallations(projectId)
   const installations = useMemo(
     () => installationsData?.installations ?? [],
     [installationsData?.installations],
@@ -323,6 +324,7 @@ export function CreateGitDeploymentModal({
                 getGitHubAuthUrl={getGitHubAuthUrl}
                 getVcsAuthUrl={getVcsAuthUrl}
                 installations={installations}
+                isLoadingInstallations={installationsLoading}
                 selectedInstallationId={selectedInstallationId}
                 onInstallationChange={setSelectedInstallationId}
                 selectedRepositoryId={selectedRepositoryId}

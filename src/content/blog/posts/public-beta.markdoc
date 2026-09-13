@@ -6,7 +6,7 @@ date: 2023-05-02
 cover: /images/blog/cloud-beta.avif
 timeToRead: 5
 author: christy-jacob
-category: cloud, announcement
+category: cloud, announcements
 faqs:
   - question: "What is Appwrite Cloud?"
     answer: "Appwrite Cloud is the fully managed version of Appwrite. You get the same APIs and Console as the open-source edition, without running or maintaining the infrastructure yourself."

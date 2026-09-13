@@ -2,6 +2,7 @@
 layout: changelog
 title: Updating collection attribute names and sizes
 date: 2024-09-12
+tags: databases
 ---
 
 We’re happy to share that you can now update attribute names and sizes directly from your Cloud Console.

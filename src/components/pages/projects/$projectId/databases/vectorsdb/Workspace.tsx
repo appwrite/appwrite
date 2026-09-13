@@ -15,10 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-  ArrowUpDown,
   Network,
   Download,
-  Search,
   Activity,
 } from 'lucide-react'
 
@@ -56,9 +54,11 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import { CreateDatabase } from '../CreateDatabase'
 import { CreateTable } from '../CreateTable'
+import { DatabaseSidebarTableSearch } from '../_components/DatabaseSidebarTableSearch'
 import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
 import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import { DatabaseAdminNavSection } from '../_components/DatabaseAdminNavSection'
 import { DatabaseSidebarNavItem } from '../_components/DatabaseSidebarNavItem'
 import {
   DATABASE_SIDEBAR_LIST_STRIP_CLASS,
@@ -74,10 +74,10 @@ import { navigateToDatabaseFromSwitcher } from '@/lib/databases/navigate-to-data
 import { TableSelector } from '../_components/TableSelector'
 import {
   DatabaseMonitorHeaderActions,
-  getDefaultMonitorDateRange,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
 import type { DateRange } from 'react-day-picker'
+import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
 
@@ -92,6 +92,7 @@ import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
+  isCloudDedicatedDatabasesEnabled,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
@@ -120,7 +121,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Link,
@@ -153,7 +153,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Input } from '@/components/ui/input'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -264,6 +263,7 @@ export function Workspace({
     tables: sidebarTables,
     total: sidebarTablesTotal,
     isLoading: sidebarTablesLoading,
+    refetch: refetchSidebarTables,
   } = useProjectTables(
     projectId,
     databaseId,
@@ -407,15 +407,22 @@ export function Workspace({
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
-  const [monitorDateRange, setMonitorDateRange] = useState<DateRange>(() =>
-    getDefaultMonitorDateRange(),
-  )
   const [monitorChartTick, setMonitorChartTick] = useState(0)
   const queryClient = useQueryClient()
 
   const { project } = useProject(projectId)
-  const useCreateDatabaseWizard = features.dedicatedDbsSupport
+  const useCreateDatabaseWizard = isCloudDedicatedDatabasesEnabled()
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const {
+    dateRange: monitorDateRange,
+    chartInterval: monitorChartInterval,
+    dateRangePresetId: monitorDateRangePresetId,
+    planChartIntervals: monitorPlanChartIntervals,
+    setDateRange: setMonitorDateRange,
+    setChartInterval: setMonitorChartInterval,
+    refreshRollingDateRange: refreshMonitorRollingDateRange,
+    reset: resetMonitorFilters,
+  } = useDatabaseMonitorChartFilters(organizationPlan)
   const { access } = useOrganizationScopes(project?.teamId)
   const showTableSecuritySettings = canShowTableSecuritySettings(
     access,
@@ -464,9 +471,9 @@ export function Workspace({
   }, [tableId, selectedTable, activeTab, navigate, dbNav, tableNavParams])
 
   useEffect(() => {
-    setMonitorDateRange(getDefaultMonitorDateRange())
+    resetMonitorFilters()
     setMonitorChartTick(0)
-  }, [databaseId])
+  }, [databaseId, resetMonitorFilters])
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1069,37 +1076,15 @@ export function Workspace({
       {/* 2. Scrollable: search, create table, tables list, pagination */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={dbLabels.searchContainersPlaceholder}
-                value={sidebarTablesSearch}
-                onChange={(e) => setSidebarTablesSearch(e.target.value)}
-                className="h-8 ps-8 pe-2 text-[13px]"
-              />
-            </div>
-            <DropdownMenu>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        aria-label={dbLabels.sortContainersAriaLabel}
-                      >
-                        <ArrowUpDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {t('Sort by attribute and direction')}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          <DatabaseSidebarTableSearch
+            value={sidebarTablesSearch}
+            onChange={setSidebarTablesSearch}
+            placeholder={dbLabels.searchContainersPlaceholder}
+            isFetching={sidebarTablesFetching}
+            onRefresh={() => void refetchSidebarTables()}
+            sortAriaLabel={dbLabels.sortContainersAriaLabel}
+            sortTooltip={t('Sort by attribute and direction')}
+            sortMenu={
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {dbLabels.sortContainersMenu}
@@ -1143,8 +1128,8 @@ export function Workspace({
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+            }
+          />
         </div>
         <div className="shrink-0 px-2 py-2">
           {noCreateTablePermission ? (
@@ -1315,7 +1300,7 @@ export function Workspace({
 
       {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
       <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
-        <div className="space-y-0.5">
+        <DatabaseAdminNavSection>
         <Link
           {...dbNav.visualizer(tableNavParams)}
           className={cn(
@@ -1346,6 +1331,7 @@ export function Workspace({
           <DatabaseBackupsNavLink
             projectId={projectId}
             databaseId={databaseId}
+            dbKind={DB_KIND}
             disabled={provisioning}
             disabledTooltip={DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE}
             {...dbNav.backups(tableNavParams)}
@@ -1383,7 +1369,7 @@ export function Workspace({
             <span>{t('Settings')}</span>
           </DatabaseSidebarNavItem>
         )}
-        </div>
+        </DatabaseAdminNavSection>
         <DatabaseSidebarComputeSpec
           projectId={projectId}
           databaseId={databaseId}
@@ -1586,10 +1572,15 @@ export function Workspace({
           databaseTab === 'monitor' ? (
             <DatabaseMonitorHeaderActions
               dateRange={monitorDateRange}
-              onDateRangeChange={(r) =>
-                setMonitorDateRange(r ?? getDefaultMonitorDateRange())
-              }
-              onRefresh={() => setMonitorChartTick((n) => n + 1)}
+              dateRangePresetId={monitorDateRangePresetId}
+              onDateRangeChange={setMonitorDateRange}
+              chartInterval={monitorChartInterval}
+              onChartIntervalChange={setMonitorChartInterval}
+              allowedIntervals={monitorPlanChartIntervals}
+              onRefresh={() => {
+                refreshMonitorRollingDateRange()
+                setMonitorChartTick((n) => n + 1)
+              }}
             />
           ) : undefined
         }
@@ -1647,6 +1638,7 @@ export function Workspace({
               <DatabaseSectionSelector
                 projectId={projectId}
                 databaseId={databaseId}
+                dbKind={DB_KIND}
                 value={mobileSectionValue}
                 tablesLabel={dbLabels.databaseOverviewTabLabel}
                 tablesIcon={ContainerListIcon}
@@ -1788,7 +1780,9 @@ export function Workspace({
                 databaseTab === 'monitor'
                   ? {
                       dateRange: monitorDateRange,
+                      chartInterval: monitorChartInterval,
                       chartTick: monitorChartTick,
+                      onDateRangeChange: setMonitorDateRange,
                     }
                   : undefined
               }

@@ -2,14 +2,13 @@
 layout: post
 title: "Introducing worker topologies for self-hosted Appwrite"
 description: Self-hosted Appwrite now runs all background workers in a single container by default. Learn how the combined topology works and when to scale out with separate workers.
-date: 2026-08-20
-cover: /images/blog/announcing-worker-topologies/cover.png
+date: 2026-09-07
+cover: /images/blog/announcing-worker-topologies/cover.avif
 timeToRead: 5
 author: atharva
-category: announcement
+category: announcements
 featured: false
 callToAction: true
-draft: true
 faqs:
   - question: "What is a worker topology in self-hosted Appwrite?"
     answer: "A topology defines how Appwrite runs its background queue workers and schedulers. The combined topology runs every queue in one worker container and every scheduler in one scheduler container. The separate topology runs one container per queue, which lets you scale each queue on its own."

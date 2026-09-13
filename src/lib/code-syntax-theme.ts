@@ -128,12 +128,20 @@ export function prismSyntaxHighlightStyles(
       types: ['keyword', 'builtin', 'changed', 'interpolation-punctuation'],
       style: { color: colors.keyword },
     },
+    { types: ['tag'], style: { color: colors.string } },
+    // prism-react-renderer applies rules in order, later ones winning, so the
+    // markup-only overrides must follow the generic rules they refine. Tags
+    // and the doctype then match Monaco's colouring of the same HTML.
     {
       types: ['tag'],
       languages: ['markup'],
       style: { color: colors.keyword },
     },
-    { types: ['tag'], style: { color: colors.string } },
+    {
+      types: ['doctype'],
+      languages: ['markup'],
+      style: { color: colors.moduleKeyword },
+    },
     { types: ['function'], style: { color: colors.function } },
     { types: ['class-name'], style: { color: colors.moduleKeyword } },
     {

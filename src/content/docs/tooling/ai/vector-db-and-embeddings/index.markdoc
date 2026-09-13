@@ -13,7 +13,7 @@ In this guide you build a support center where a reader describes a problem in t
 # Prerequisites {% #prerequisites %}
 
 - An Appwrite project
-- An [API key](/docs/partners/project/api-keys) with the `databases.read`, `databases.write`, `collections.read`, `collections.write`, `documents.read`, `documents.write`, and `embeddings.write` scopes
+- An [API key](/docs/partners/project/api-keys) with the `vectorsdb.write`, `vectorsdb.collections.write`, `vectorsdb.indexes.write`, `vectorsdb.documents.read`, `vectorsdb.documents.write`, and `embeddings.write` scopes
 - Node.js 22 or later
 
 {% section #step-1 step=1 title="Create a database" %}

@@ -62,6 +62,7 @@ import {
   resolveUsageResourceBreakdownItem,
   type UsageBreakdownFilterEntry,
 } from '@/lib/usage/usage-resource-filters'
+import { isUsageBreakdownDimensionFilterable } from '@/lib/usage/usage-filter-configs'
 
 export const PATH_DISPLAY_MAX = 42
 
@@ -282,6 +283,7 @@ export function UsageBreakdownRow({
   formatValue = formatRequestsValue,
   onAddFilter,
 }: UsageBreakdownRowProps) {
+  const usageFilters = useOptionalUsageFilters()
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
@@ -334,7 +336,11 @@ export function UsageBreakdownRow({
       ? resolveCountryCode(item.label, countryLookups)
       : null
   const showFavicon = showHostnameFavicons
-  const canAddFilter = !!onAddFilter && !!item.label.trim()
+  const dimensionFilterable = usageFilters
+    ? isUsageBreakdownDimensionFilterable(dimension, usageFilters.filterColumns)
+    : true
+  const canAddFilter =
+    !!onAddFilter && !!item.label.trim() && dimensionFilterable
   const handleAddFilter = () => {
     if (!canAddFilter || !onAddFilter) return
 

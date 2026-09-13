@@ -6,7 +6,7 @@ date: 2024-09-16
 cover: /images/blog/appwrite-competitor-comparison/cover.avif
 timeToRead: 5
 author: aditya-oberai
-category: product
+category: products
 unlisted: true
 faqs:
   - question: "What is the main difference between Appwrite Auth and Auth0?"
@@ -32,7 +32,7 @@ Appwrite is an open-source, all-in-one cloud development platform. Use built-in 
 
 You can build your entire backend within minutes and deploy effortlessly, adding Authentication, Databases, Functions, Storage, Messaging, and more to your projects using the frameworks and languages of your choice.
 
-You can view Appwrite’s source code on [GitHub](https://github.com/appwrite/appwrite).
+You can view Appwrite’s source code on [GitHub](https://github.com/appwrite/appwrite).
 
 # What is Auth0?
 

@@ -4,6 +4,113 @@ import {
 } from '@/lib/mysql-database-routes'
 import type { MysqlIndexAlgorithm } from '@/lib/mysql-index-metadata'
 import { quoteMysqlStringLiteral, prefixMysqlSqlComment } from '@/lib/mysql-sql'
+import type { SqlColumnDefaultKind } from '@/lib/sql-column-default'
+import { resolveSqlColumnDefaultEmission } from '@/lib/sql-column-default'
+
+/** InnoDB-safe prefix for TEXT/BLOB unique and secondary indexes. */
+export const MYSQL_DEFAULT_INDEX_PREFIX_LENGTH = 255
+
+function mysqlDataTypeBase(dataType: string): string {
+  return dataType.trim().split(/[\s(]/)[0]?.toUpperCase() ?? ''
+}
+
+/**
+ * True when MySQL refuses KEY / UNIQUE / PRIMARY KEY without a prefix length
+ * (TEXT, BLOB) or cannot index the type at all (JSON).
+ */
+export function mysqlTypeRequiresIndexKeyLength(dataType: string): boolean {
+  const base = mysqlDataTypeBase(dataType)
+  return base.endsWith('TEXT') || base.endsWith('BLOB') || base === 'JSON'
+}
+
+/** TEXT/BLOB can use `column(n)` prefix indexes. JSON cannot. */
+export function mysqlTypeSupportsPrefixIndex(dataType: string): boolean {
+  const base = mysqlDataTypeBase(dataType)
+  return base.endsWith('TEXT') || base.endsWith('BLOB')
+}
+
+export function formatMysqlIndexKeyColumn(
+  columnName: string,
+  dataType?: string | null,
+): string {
+  const quoted = quoteMysqlIdentifier(columnName)
+  if (dataType && mysqlTypeSupportsPrefixIndex(dataType)) {
+    return `${quoted}(${MYSQL_DEFAULT_INDEX_PREFIX_LENGTH})`
+  }
+  return quoted
+}
+
+function mysqlDefaultRequiresExpression(dataType: string): boolean {
+  const base = mysqlDataTypeBase(dataType)
+  return (
+    base.endsWith('TEXT') ||
+    base.endsWith('BLOB') ||
+    base === 'JSON' ||
+    base === 'GEOMETRY' ||
+    base === 'POINT' ||
+    base === 'LINESTRING' ||
+    base === 'POLYGON' ||
+    base === 'MULTIPOINT' ||
+    base === 'MULTILINESTRING' ||
+    base === 'MULTIPOLYGON' ||
+    base === 'GEOMETRYCOLLECTION'
+  )
+}
+
+function isParenthesizedMysqlExpression(value: string): boolean {
+  return value.startsWith('(') && value.endsWith(')') && value.length >= 2
+}
+
+/**
+ * Format a column default for DDL.
+ * Value mode always quotes a data literal. Expression mode is passed through.
+ * TEXT, BLOB, and JSON defaults are wrapped as expressions, which MySQL requires.
+ */
+export function formatMysqlColumnDefaultSql(
+  value: string,
+  dataType: string,
+  kind: SqlColumnDefaultKind,
+): string {
+  if (kind === 'expression') {
+    const trimmed = value.trim()
+    if (!trimmed) return trimmed
+    if (
+      mysqlDefaultRequiresExpression(dataType) &&
+      !isParenthesizedMysqlExpression(trimmed)
+    ) {
+      return `(${trimmed})`
+    }
+    return trimmed
+  }
+
+  const sql = quoteMysqlStringLiteral(value)
+  if (
+    mysqlDefaultRequiresExpression(dataType) &&
+    !isParenthesizedMysqlExpression(sql)
+  ) {
+    return `(${sql})`
+  }
+  return sql
+}
+
+function mysqlDefaultSql(
+  dataType: string,
+  options?: {
+    defaultValue?: string
+    defaultKind?: SqlColumnDefaultKind
+    defaultIsNull?: boolean
+  },
+): string | undefined {
+  if (options?.defaultIsNull) return 'NULL'
+  if (options?.defaultValue === undefined) return undefined
+  const emission = resolveSqlColumnDefaultEmission({
+    isNull: false,
+    value: options.defaultValue,
+    kind: options.defaultKind ?? 'value',
+  })
+  if (emission === 'omit' || emission === 'null') return undefined
+  return formatMysqlColumnDefaultSql(emission.value, dataType, emission.kind)
+}
 
 export function buildMysqlAddColumnSql(
   tableId: string,
@@ -12,8 +119,11 @@ export function buildMysqlAddColumnSql(
   options?: {
     nullable?: boolean
     defaultValue?: string
+    defaultKind?: SqlColumnDefaultKind
+    defaultIsNull?: boolean
     primaryKey?: boolean
     unique?: boolean
+    comment?: string
   },
 ): string {
   const { schema, table } = parseMysqlTableId(tableId)
@@ -25,33 +135,61 @@ export function buildMysqlAddColumnSql(
   if (options?.nullable === false && !options?.primaryKey) {
     parts.push('NOT NULL')
   }
-  if (options?.defaultValue?.trim()) {
-    parts.push(`DEFAULT ${options.defaultValue.trim()}`)
+  const defaultSql = mysqlDefaultSql(dataType, options)
+  if (defaultSql !== undefined) {
+    parts.push(`DEFAULT ${defaultSql}`)
   }
-  if (options?.primaryKey) {
+  const usePrefixKey =
+    mysqlTypeSupportsPrefixIndex(dataType) &&
+    (options?.primaryKey || options?.unique)
+  const skipInlineKey = mysqlTypeRequiresIndexKeyLength(dataType)
+  if (options?.primaryKey && !usePrefixKey && !skipInlineKey) {
     parts.push('PRIMARY KEY')
-  } else if (options?.unique) {
+  } else if (
+    options?.unique &&
+    !options?.primaryKey &&
+    !usePrefixKey &&
+    !skipInlineKey
+  ) {
     parts.push('UNIQUE')
   }
-  return prefixMysqlSqlComment(parts.join(' '), 'Add table column')
+  if (options?.comment?.trim()) {
+    parts.push(`COMMENT ${quoteMysqlStringLiteral(options.comment.trim())}`)
+  }
+  let sql = parts.join(' ')
+  if (usePrefixKey) {
+    const keyColumn = formatMysqlIndexKeyColumn(columnName, dataType)
+    sql += options?.primaryKey
+      ? `, ADD PRIMARY KEY (${keyColumn})`
+      : `, ADD UNIQUE (${keyColumn})`
+  }
+  return prefixMysqlSqlComment(sql, 'Add table column')
 }
 
 export function buildMysqlAlterColumnDefaultSql(
   tableId: string,
   columnName: string,
   defaultValue: string | null,
+  dataType: string,
+  kind: SqlColumnDefaultKind = 'value',
+  defaultIsNull = false,
 ): string {
   const { schema, table } = parseMysqlTableId(tableId)
   const qualified = `${quoteMysqlIdentifier(schema)}.${quoteMysqlIdentifier(table)}`
   const column = quoteMysqlIdentifier(columnName)
-  if (!defaultValue?.trim()) {
+  const defaultSql = mysqlDefaultSql(dataType, {
+    defaultValue: defaultValue ?? undefined,
+    defaultKind: kind,
+    defaultIsNull,
+  })
+  if (defaultSql === undefined) {
     return prefixMysqlSqlComment(
       `ALTER TABLE ${qualified} ALTER COLUMN ${column} DROP DEFAULT`,
       'Drop column default',
     )
   }
   return prefixMysqlSqlComment(
-    `ALTER TABLE ${qualified} ALTER COLUMN ${column} SET DEFAULT ${defaultValue.trim()}`,
+    `ALTER TABLE ${qualified} ALTER COLUMN ${column} SET DEFAULT ${defaultSql}`,
     'Set column default',
   )
 }
@@ -60,11 +198,12 @@ export function buildMysqlAddPrimaryKeySql(
   tableId: string,
   columnName: string,
   constraintName: string,
+  dataType?: string,
 ): string {
   const { schema, table } = parseMysqlTableId(tableId)
   const qualified = `${quoteMysqlIdentifier(schema)}.${quoteMysqlIdentifier(table)}`
   return prefixMysqlSqlComment(
-    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quoteMysqlIdentifier(constraintName)} PRIMARY KEY (${quoteMysqlIdentifier(columnName)})`,
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quoteMysqlIdentifier(constraintName)} PRIMARY KEY (${formatMysqlIndexKeyColumn(columnName, dataType)})`,
     'Add primary key',
   )
 }
@@ -73,11 +212,12 @@ export function buildMysqlAddUniqueConstraintSql(
   tableId: string,
   columnName: string,
   constraintName: string,
+  dataType?: string,
 ): string {
   const { schema, table } = parseMysqlTableId(tableId)
   const qualified = `${quoteMysqlIdentifier(schema)}.${quoteMysqlIdentifier(table)}`
   return prefixMysqlSqlComment(
-    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quoteMysqlIdentifier(constraintName)} UNIQUE (${quoteMysqlIdentifier(columnName)})`,
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quoteMysqlIdentifier(constraintName)} UNIQUE (${formatMysqlIndexKeyColumn(columnName, dataType)})`,
     'Add unique constraint',
   )
 }
@@ -145,12 +285,15 @@ export function buildMysqlCreateIndexSql(
     algorithm?: MysqlIndexAlgorithm | string
     condition?: string
     includeColumns?: string[]
+    columnTypes?: Array<string | undefined>
   },
 ): string {
   const { schema, table } = parseMysqlTableId(tableId)
   const qualified = `${quoteMysqlIdentifier(schema)}.${quoteMysqlIdentifier(table)}`
   const columns = columnNames
-    .map((name) => quoteMysqlIdentifier(name))
+    .map((name, index) =>
+      formatMysqlIndexKeyColumn(name, options?.columnTypes?.[index]),
+    )
     .join(', ')
   const uniqueKeyword = options?.unique ? 'UNIQUE ' : ''
   const algorithm = (options?.algorithm ?? 'btree').trim().toLowerCase()

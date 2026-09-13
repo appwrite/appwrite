@@ -3,6 +3,7 @@ layout: changelog
 title: "Database Backups Now Available on Appwrite Cloud"
 date: 2024-10-15
 cover: /images/blog/introducing-database-backups/cover.avif
+tags: databases, infrastructure
 ---
 
 Appwrite Cloud now offers Database Backups, providing a more secure way to protect your data. Backups are encrypted, run without downtime, and are stored in a remote location to ensure full redundancy.

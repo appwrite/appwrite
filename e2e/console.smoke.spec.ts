@@ -32,9 +32,7 @@ test.describe('console smoke (read-only)', () => {
   })
 
   test('session stays signed in', async ({ page }) => {
-    // Do not use `/` here: the root loader can treat the request as a guest during
-    // SSR (no localStorage cookieFallback yet) and send users to `/home`, even when
-    // the Playwright storage state is valid for client-side console routes.
+    // Do not use `/` here: production `/` 301s to `/home`. Use a console route.
     await page.goto('/account', { waitUntil: 'domcontentloaded' })
     await acceptCookieBannerIfPresent(page)
     await expect(page).not.toHaveURL(/\/sign-in/)

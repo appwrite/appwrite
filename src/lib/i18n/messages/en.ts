@@ -130,6 +130,7 @@ export const enCatalog = {
         products: {
           auth: 'Auth',
           databases: 'Databases',
+          postgresql: 'PostgreSQL',
           storage: 'Storage',
           functions: 'Functions',
           messaging: 'Messaging',
@@ -172,6 +173,7 @@ export const enCatalog = {
           vsSupabase: 'Appwrite vs. Supabase', // pragma: allowlist secret
           vsFirebase: 'Appwrite vs. Firebase', // pragma: allowlist secret
           vsNeon: 'Appwrite vs. Neon', // pragma: allowlist secret
+          postgresqlHosting: 'PostgreSQL hosting',
           vsVercel: 'Appwrite vs. Vercel', // pragma: allowlist secret
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
@@ -215,6 +217,7 @@ export const enCatalog = {
       },
       badges: {
         soon: 'Soon',
+        new: 'New',
       },
       accessibility: {
         mainNavigation: 'Main navigation',
@@ -239,11 +242,6 @@ export const enCatalog = {
       recentPages: 'Recent pages',
       noRecentPages: 'No recent pages',
       searchPlaceholder: 'Search...',
-    },
-    consoleBanner: {
-      imagineAlt: 'Imagine',
-      messagePrefix: 'Turn your ideas into functional products. Vibe coding powered by',
-      dismiss: 'Dismiss banner',
     },
     debugMenu: {
       language: {
@@ -278,7 +276,8 @@ export const enCatalog = {
       heroImageAlt:
         'Appwrite console overview with usage charts, apps, and API keys', // pragma: allowlist secret
       startProject: 'Start project',
-      requestDemo: 'Request a demo',
+      viewDocs: 'View docs',
+      mcpIncluded: 'MCP included',
       toolsHeading: 'Optimized for the frameworks, languages and agents you love',
       productsHeadingLineOne: 'All the services you need',
       productsHeadingLineTwo: 'in one platform',
@@ -315,7 +314,7 @@ export const enCatalog = {
         authDescription:
           'Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.',
         databasesDescription:
-          "Model, query, and scale with Appwrite databases or native PostgreSQL and MySQL, so you can match your use case and team's needs.", // pragma: allowlist secret
+          'Model, query, and scale with Appwrite databases or managed PostgreSQL and MySQL, so you can match your use case and team needs.', // pragma: allowlist secret
         storageDescription:
           'Store files with compression, encryption, image transformations, and access control.',
         functionsDescription:
@@ -389,7 +388,7 @@ export const enCatalog = {
         },
         items: {
           authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
-          databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
+          databasesTagline: 'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',

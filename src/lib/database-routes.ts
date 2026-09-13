@@ -4,6 +4,7 @@ import {
   isNativeDatabaseTypeValue,
 } from '@/lib/databases/database-type'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 import { mysqlDatabaseHome } from '@/lib/mysql-database-routes'
 import { isMysqlEngine } from '@/lib/databases/native-database-engines'
@@ -27,39 +28,31 @@ export function isDatabaseRouteKind(value: string): value is DatabaseRouteKind {
 /** Whether the console profile exposes this product database route tree. */
 export function isProductDatabaseRouteKindEnabled(
   dbKind: DatabaseRouteKind,
-  features: ConsoleProfileFeatures,
+  _features?: ConsoleProfileFeatures,
 ): boolean {
-  if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
-  if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
-  return true
+  if (dbKind === 'tablesdb') return true
+  return isCloudProfile()
 }
 
 /** Whether API calls for this product database type are allowed. */
 export function isProductDatabaseTypeEnabled(
   type: DatabaseType,
-  features: ConsoleProfileFeatures,
+  _features?: ConsoleProfileFeatures,
 ): boolean {
-  if (type === DatabaseType.Documentsdb) return features.dedicatedDbsDocumentsDB
-  if (type === DatabaseType.Vectorsdb) return features.dedicatedDbsVectorsDB
+  if (type === DatabaseType.Documentsdb || type === DatabaseType.Vectorsdb) {
+    return isCloudProfile()
+  }
   return true
 }
 
 /**
  * Whether this database type is enabled on the active console profile.
- * TablesDB is always on. DocumentsDB, VectorsDB, and native engines follow
- * their feature flags. Databases whose flag is off can still appear in the
- * unified list and should render as disabled.
+ * TablesDB is always on. DocumentsDB, VectorsDB, and native engines are
+ * cloud-only except MongoDB, which follows `nativeDbsMongo`.
  */
 export function isDatabaseTypeFeatureEnabled(
   type: string | DatabaseType | null | undefined,
-  features: Pick<
-    ConsoleProfileFeatures,
-    | 'dedicatedDbsDocumentsDB'
-    | 'dedicatedDbsVectorsDB'
-    | 'nativeDbsPostgres'
-    | 'nativeDbsMySQL'
-    | 'nativeDbsMongo'
-  >,
+  features: Pick<ConsoleProfileFeatures, 'nativeDbsMongo'>,
 ): boolean {
   const key = String(type ?? '')
     .trim()
@@ -67,16 +60,23 @@ export function isDatabaseTypeFeatureEnabled(
     .replace(/-/g, '')
   if (!key) return true
 
-  if (key === 'documentsdb') return features.dedicatedDbsDocumentsDB
-  if (key === 'vectorsdb') return features.dedicatedDbsVectorsDB
-
   const engine = engineFromDatabaseTypeValue(key)
-  if (engine === 'postgresql') return features.nativeDbsPostgres
-  if (engine === 'mysql') return features.nativeDbsMySQL
-  if (engine === 'mongodb') return features.nativeDbsMongo
-  if (isNativeDatabaseTypeValue(key)) return features.nativeDbsPostgres
+  if (engine === 'mongodb' || engine === 'mongo') {
+    return isCloudProfile() && features.nativeDbsMongo
+  }
+
+  if (key === 'documentsdb' || key === 'vectorsdb') return isCloudProfile()
+  if (engine === 'postgresql' || engine === 'mysql' || engine === 'mariadb') {
+    return isCloudProfile()
+  }
+  if (isNativeDatabaseTypeValue(key)) return isCloudProfile()
 
   return true
+}
+
+/** Cloud-only dedicated database products and native engines (except Mongo rollout). */
+export function isCloudDedicatedDatabasesEnabled(): boolean {
+  return isCloudProfile()
 }
 
 export function databaseRouteKindFromApiType(
@@ -235,12 +235,6 @@ export function dbNavLink(kind: DatabaseRouteKind) {
   }
 }
 
-const PRODUCT_DEDICATED_API = new Set([
-  'tablesdb',
-  'documentsdb',
-  'vectorsdb',
-])
-
 export type DedicatedDatabaseLinkInput = {
   $id: string
   api: string
@@ -275,6 +269,30 @@ export function isNativeDedicatedDatabase(
   db: Pick<DedicatedDatabaseLinkInput, 'api'>,
 ): boolean {
   return !isProductOwnedDedicatedDatabase(db)
+}
+
+/**
+ * Type to pass into delete / context-menu routing.
+ *
+ * Product-owned dedicated DBs (VectorsDB, DocumentsDB, dedicated TablesDB)
+ * share a backing engine (postgres / mongo / mysql). That engine must not
+ * win over `api` / product `type`, or mutations hit the native engine
+ * endpoint and 404.
+ */
+export function databaseOwnerTypeForMutation(
+  hints: {
+    apiType?: string | null
+    databaseType?: string | null
+  },
+  dedicated?: Pick<DedicatedDatabaseLinkInput, 'api' | 'engine'> | null,
+): string | undefined {
+  if (dedicated && isProductOwnedDedicatedDatabase(dedicated)) {
+    return dedicated.api || hints.apiType || hints.databaseType || undefined
+  }
+  if (dedicated && isNativeDedicatedDatabase(dedicated)) {
+    return dedicated.engine || hints.apiType || hints.databaseType || undefined
+  }
+  return hints.apiType || hints.databaseType || undefined
 }
 
 export function needsDedicatedProductTypeLookup(

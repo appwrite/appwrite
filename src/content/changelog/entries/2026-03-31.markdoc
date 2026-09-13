@@ -3,6 +3,7 @@ layout: changelog
 title: "Security update: Axios npm incident"
 date: 2026-03-31
 cover: /images/blog/security-update-regarding-the-axios-npm-incident/cover.avif
+tags: security
 ---
 
 We have reviewed Appwrite's production repositories, SDKs, and tooling chain following the recent Axios npm supply chain incident, and confirmed that Appwrite SDKs and tooling were not impacted by the compromised Axios releases.

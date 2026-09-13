@@ -17,8 +17,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useConsoleProjectScopes } from '@/lib/react-query/hooks/console-project-scopes'
+import { isCloudProfile } from '@/lib/console-profiles'
+import { useQuery } from '@tanstack/react-query'
+import {
+  consoleOrganizationScopesQueryOptions,
+  consoleProjectScopesQueryOptions,
+} from '@/lib/react-query/hooks/console-project-scopes'
 import {
   compareScopeEditorRowsForDisplay,
   compareScopeRowsDeprecatedLast,
@@ -40,17 +44,22 @@ interface ScopeEditorProps {
   value: string[]
   onChange: (scopes: string[]) => void
   disabled?: boolean
+  catalog?: 'project' | 'organization'
 }
 
 export function ScopeEditor({
   value,
   onChange,
   disabled = false,
+  catalog = 'project',
 }: ScopeEditorProps) {
   const t = useT()
   const isCloud = isCloudEnvironment()
-  const { features } = useConsoleProfile()
-  const { data: scopeList, isLoading, isError, error } = useConsoleProjectScopes()
+  const { data: scopeList, isLoading, isError, error } = useQuery(
+    catalog === 'organization'
+      ? consoleOrganizationScopesQueryOptions()
+      : consoleProjectScopesQueryOptions(),
+  )
 
   const [searchQuery, setSearchQuery] = useState('')
   const [openCategories, setOpenCategories] = useState<string[]>([])
@@ -64,15 +73,16 @@ export function ScopeEditor({
     )
     const base = consoleKeyScopesToEditorRows(scopeList, {
       isCloud,
-      oauth2Server: features.oauth2Server,
-      selectedScopeIds: value,
+      oauth2Server: isCloudProfile(),
+      catalog,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
     for (const v of value) {
       if (byId.has(v)) continue
       const orphanEntry = scopeById.get(v)
       if (
-        !features.oauth2Server &&
+        catalog !== 'organization' &&
+        !isCloudProfile() &&
         isOAuth2AppsCatalogScope(v, orphanEntry?.category)
       ) {
         continue
@@ -98,10 +108,12 @@ export function ScopeEditor({
     return Array.from(byId.values())
       .filter(
         (row) =>
-          features.oauth2Server || !isOAuth2AppsScopeEditorRow(row),
+          catalog === 'organization' ||
+          isCloudProfile() ||
+          !isOAuth2AppsScopeEditorRow(row),
       )
       .sort(compareScopeEditorRowsForDisplay)
-  }, [features.oauth2Server, scopeList, isCloud, value])
+  }, [catalog, scopeList, isCloud, value])
 
   const filteredScopes = useMemo(
     () => filterScopeEditorRows(availableScopes, searchQuery),
@@ -163,15 +175,35 @@ export function ScopeEditor({
     }
   }
 
+  /**
+   * Rows the category checkbox grants: deprecated scopes are left out, unless
+   * the whole category is deprecated (e.g. organization "Other").
+   */
+  const getCategoryGrantableRows = (category: string): ScopeEditorRow[] => {
+    const categoryScopes = scopesByCategory[category] || []
+    const grantable = categoryScopes.filter((row) => !row.deprecated)
+    return grantable.length > 0 ? grantable : categoryScopes
+  }
+
+  /** Grantable rows plus deprecated ones already on the key. */
+  const getCategoryStateRows = (category: string): ScopeEditorRow[] => {
+    const grantable = getCategoryGrantableRows(category)
+    const grantableIds = new Set(grantable.map((row) => row.scope))
+    const extras = (scopesByCategory[category] || []).filter(
+      (row) => !grantableIds.has(row.scope) && displayScopes.includes(row.scope),
+    )
+    return extras.length > 0 ? [...grantable, ...extras] : grantable
+  }
+
   const handleCategoryToggle = (category: string, checked: boolean) => {
     isUserInteractionRef.current = true
     const categoryScopes = scopesByCategory[category] || []
-    const ids = categoryScopes.map((r) => r.scope)
-    const idSet = new Set(ids)
 
     if (checked) {
+      const ids = getCategoryGrantableRows(category).map((r) => r.scope)
       onChange([...new Set([...value, ...ids])])
     } else {
+      const idSet = new Set(categoryScopes.map((r) => r.scope))
       onChange(value.filter((s) => !idSet.has(s)))
     }
   }
@@ -223,7 +255,7 @@ export function ScopeEditor({
   const getCategoryState = (
     category: string,
   ): 'checked' | 'unchecked' | 'indeterminate' => {
-    const categoryScopes = scopesByCategory[category] || []
+    const categoryScopes = getCategoryStateRows(category)
     if (categoryScopes.length === 0) return 'unchecked'
 
     const selectedCount = categoryScopes.filter((scopeDef) =>

@@ -6,7 +6,15 @@ import {
 } from '@/lib/init/parse-css-accent'
 import { useTheme } from 'next-themes'
 import { useEffect, useRef, type RefObject } from 'react'
-import { animate, createTimeline, createTimer, stagger, utils } from 'animejs'
+import {
+  animate,
+  createScope,
+  createTimeline,
+  createTimer,
+  stagger,
+  utils,
+  type JSAnimation,
+} from 'animejs'
 import type { StaggerFunction } from 'animejs'
 import { cn } from '@/lib/utils'
 import { useInitLowPowerAnimationDecision } from '@/lib/init/use-init-low-power-animations'
@@ -227,256 +235,265 @@ export function InitHeroBackground({
       container,
     )
 
-    for (let i = 0; i < rows * rows; i++) {
-      const particle = document.createElement('div')
-      particle.className = 'init-hero-particle'
-      creatureEl.appendChild(particle)
-    }
+    const scope = createScope({ root: container })
 
-    const particleEls = creatureEl.querySelectorAll('.init-hero-particle')
-
-    const syncLayout = () => {
-      const isCompact = compactRef.current
-      const multiplier = isCompact ? 0.0045 : 0.0025
-      const minSize = isCompact ? 0.75 : 1
-      creatureEl.style.fontSize = `${Math.max(container.clientHeight * multiplier, minSize)}px`
-    }
-
-    syncLayout()
-
-    utils.set(creatureEl, {
-      width: `${rows * 10}em`,
-      height: `${rows * 10}em`,
-    })
-
-    const { opacityStagger, accent: appliedAccent } = applyParticleTheme(
-      { particleEls, scaleStagger, grid, from },
-      particleTheme,
-      darkChrome,
-      accent,
-      lowPower,
-    )
-    themeStateRef.current = {
-      particleTheme,
-      opacityStagger,
-      accent: appliedAccent,
-      lowPower,
-    }
-
-    utils.set(particleEls, {
-      x: 0,
-      y: 0,
-      zIndex: stagger([rows * rows, 1], {
-        grid,
-        from,
-        modifier: utils.round(0),
-      }),
-    })
-
-    const getViewport = () => {
-      const isCompact = compactRef.current
-      return {
-        w: container.clientWidth * (isCompact ? 0.32 : 0.5),
-        h: container.clientHeight * (isCompact ? 0.9 : 0.5),
+    scope.add(() => {
+      for (let i = 0; i < rows * rows; i++) {
+        const particle = document.createElement('div')
+        particle.className = 'init-hero-particle'
+        creatureEl.appendChild(particle)
       }
-    }
 
-    let viewport = getViewport()
-    const cursor = { x: 0, y: 0 }
+      const particleEls = creatureEl.querySelectorAll('.init-hero-particle')
 
-    const pulse = () => {
-      if (lowPower) return
+      const syncLayout = () => {
+        const isCompact = compactRef.current
+        const multiplier = isCompact ? 0.0045 : 0.0025
+        const minSize = isCompact ? 0.75 : 1
+        creatureEl.style.fontSize = `${Math.max(container.clientHeight * multiplier, minSize)}px`
+      }
 
-      const themeState = themeStateRef.current
-      if (!themeState) return
+      syncLayout()
 
-      animate(particleEls, {
-        keyframes: [
-          {
-            scale: 4,
-            opacity: themeState.particleTheme.pulseOpacity,
-            delay: stagger(dur(90), { start: dur(1650), grid, from }),
-            duration: dur(150),
-          },
-          {
-            scale: scaleStagger,
-            opacity: themeState.opacityStagger,
-            ease: 'inOutQuad',
-            duration: dur(600),
-          },
-        ],
+      utils.set(creatureEl, {
+        width: `${rows * 10}em`,
+        height: `${rows * 10}em`,
       })
-    }
 
-    const mainLoop = createTimer({
-      frameRate: lowPower ? 8 : 15,
-      onUpdate: () => {
+      const { opacityStagger, accent: appliedAccent } = applyParticleTheme(
+        { particleEls, scaleStagger, grid, from },
+        particleTheme,
+        darkChrome,
+        accent,
+        lowPower,
+      )
+      themeStateRef.current = {
+        particleTheme,
+        opacityStagger,
+        accent: appliedAccent,
+        lowPower,
+      }
+
+      utils.set(particleEls, {
+        x: 0,
+        y: 0,
+        zIndex: stagger([rows * rows, 1], {
+          grid,
+          from,
+          modifier: utils.round(0),
+        }),
+      })
+
+      const getViewport = () => {
+        const isCompact = compactRef.current
+        return {
+          w: container.clientWidth * (isCompact ? 0.32 : 0.5),
+          h: container.clientHeight * (isCompact ? 0.9 : 0.5),
+        }
+      }
+
+      let viewport = getViewport()
+      const cursor = { x: 0, y: 0 }
+      let pulseAnimation: JSAnimation | null = null
+
+      const pulse = () => {
+        if (lowPower) return
+
+        const themeState = themeStateRef.current
+        if (!themeState) return
+
+        pulseAnimation?.cancel()
+        pulseAnimation = animate(particleEls, {
+          keyframes: [
+            {
+              scale: 4,
+              opacity: themeState.particleTheme.pulseOpacity,
+              delay: stagger(dur(90), { start: dur(1650), grid, from }),
+              duration: dur(150),
+            },
+            {
+              scale: scaleStagger,
+              opacity: themeState.opacityStagger,
+              ease: 'inOutQuad',
+              duration: dur(600),
+            },
+          ],
+        })
+      }
+
+      const mainLoop = createTimer({
+        frameRate: lowPower ? 8 : 15,
+        onUpdate: () => {
+          if (!canRunRef.current || !activeRef.current) return
+
+          animate(particleEls, {
+            x: cursor.x,
+            y: cursor.y,
+            delay: stagger(lowPower ? dur(70) : dur(40), { grid, from }),
+            duration: stagger(lowPower ? dur(180) : dur(120), {
+              start: lowPower ? dur(950) : dur(750),
+              ease: 'inQuad',
+              grid,
+              from,
+            }),
+            ease: 'inOut',
+            composition: 'blend',
+          })
+        },
+      })
+
+      const autoMove = createTimeline()
+        .add(
+          cursor,
+          {
+            x: [-viewport.w * 0.45, viewport.w * 0.45],
+            modifier: (x) =>
+              x +
+              Math.sin(mainLoop.currentTime * timeScale(0.0007)) * viewport.w * 0.5,
+            duration: dur(3000),
+            ease: 'inOutExpo',
+            alternate: true,
+            loop: true,
+            onBegin: pulse,
+            onLoop: pulse,
+          },
+          0,
+        )
+        .add(
+          cursor,
+          {
+            y: [-viewport.h * 0.45, viewport.h * 0.45],
+            modifier: (y) =>
+              y +
+              Math.cos(mainLoop.currentTime * timeScale(0.00012)) * viewport.h * 0.5,
+            duration: dur(1000),
+            ease: 'inOutQuad',
+            alternate: true,
+            loop: true,
+          },
+          0,
+        )
+
+      const manualMovementTimeout = createTimer({
+        duration: dur(1500),
+        onComplete: () => {
+          onInteractionEndRef.current?.()
+          if (canRunRef.current && activeRef.current) {
+            autoMove.play()
+          }
+        },
+      })
+
+      const pause = () => {
+        mainLoop.pause()
+        autoMove.pause()
+        manualMovementTimeout.pause()
+      }
+
+      const resume = () => {
+        if (!canRunRef.current || !activeRef.current) return
+        if (document.visibilityState === 'hidden' && !keepAliveWhenHiddenRef.current) return
+        mainLoop.play()
+        autoMove.play()
+      }
+
+      const followPointer = (event: MouseEvent | TouchEvent) => {
         if (!canRunRef.current || !activeRef.current) return
 
-        animate(particleEls, {
-          x: cursor.x,
-          y: cursor.y,
-          delay: stagger(lowPower ? dur(70) : dur(40), { grid, from }),
-          duration: stagger(lowPower ? dur(180) : dur(120), {
-            start: lowPower ? dur(950) : dur(750),
-            ease: 'inQuad',
-            grid,
-            from,
-          }),
-          ease: 'inOut',
-          composition: 'blend',
-        })
-      },
-    })
+        const rect = container.getBoundingClientRect()
+        const point =
+          event.type === 'touchmove'
+            ? (event as TouchEvent).touches[0]
+            : (event as MouseEvent)
 
-    const autoMove = createTimeline()
-      .add(
-        cursor,
-        {
-          x: [-viewport.w * 0.45, viewport.w * 0.45],
-          modifier: (x) =>
-            x +
-            Math.sin(mainLoop.currentTime * timeScale(0.0007)) * viewport.w * 0.5,
-          duration: dur(3000),
-          ease: 'inOutExpo',
-          alternate: true,
-          loop: true,
-          onBegin: pulse,
-          onLoop: pulse,
-        },
-        0,
-      )
-      .add(
-        cursor,
-        {
-          y: [-viewport.h * 0.45, viewport.h * 0.45],
-          modifier: (y) =>
-            y +
-            Math.cos(mainLoop.currentTime * timeScale(0.00012)) * viewport.h * 0.5,
-          duration: dur(1000),
-          ease: 'inOutQuad',
-          alternate: true,
-          loop: true,
-        },
-        0,
-      )
+        if (!point) return
 
-    const manualMovementTimeout = createTimer({
-      duration: dur(1500),
-      onComplete: () => {
-        onInteractionEndRef.current?.()
-        if (canRunRef.current && activeRef.current) {
-          autoMove.play()
-        }
-      },
-    })
-
-    const pause = () => {
-      mainLoop.pause()
-      autoMove.pause()
-      manualMovementTimeout.pause()
-    }
-
-    const resume = () => {
-      if (!canRunRef.current || !activeRef.current) return
-      if (document.visibilityState === 'hidden' && !keepAliveWhenHiddenRef.current) return
-      mainLoop.play()
-      autoMove.play()
-    }
-
-    const followPointer = (event: MouseEvent | TouchEvent) => {
-      if (!canRunRef.current || !activeRef.current) return
-
-      const rect = container.getBoundingClientRect()
-      const point =
-        event.type === 'touchmove'
-          ? (event as TouchEvent).touches[0]
-          : (event as MouseEvent)
-
-      if (!point) return
-
-      onInteractionStartRef.current?.()
-      cursor.x = point.clientX - rect.left - viewport.w
-      cursor.y = point.clientY - rect.top - viewport.h
-      autoMove.pause()
-      manualMovementTimeout.restart()
-    }
-
-    const endPointerInteraction = () => {
-      onInteractionEndRef.current?.()
-    }
-
-    const handleResize = () => {
-      viewport = getViewport()
-      syncLayout()
-    }
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        if (keepAliveWhenHiddenRef.current) return
-        pause()
-        return
+        onInteractionStartRef.current?.()
+        cursor.x = point.clientX - rect.left - viewport.w
+        cursor.y = point.clientY - rect.top - viewport.h
+        autoMove.pause()
+        manualMovementTimeout.restart()
       }
-      if (canRunRef.current && activeRef.current) {
+
+      const endPointerInteraction = () => {
+        onInteractionEndRef.current?.()
+      }
+
+      const handleResize = () => {
+        viewport = getViewport()
+        syncLayout()
+      }
+
+      const handleVisibility = () => {
+        if (document.visibilityState === 'hidden') {
+          if (keepAliveWhenHiddenRef.current) return
+          pause()
+          return
+        }
+        if (canRunRef.current && activeRef.current) {
+          resume()
+        }
+      }
+
+      const intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          canRunRef.current = entry?.isIntersecting ?? true
+          if (
+            canRunRef.current &&
+            activeRef.current &&
+            (document.visibilityState === 'visible' || keepAliveWhenHiddenRef.current)
+          ) {
+            resume()
+          } else if (!keepAliveWhenHiddenRef.current) {
+            pause()
+          }
+        },
+        { threshold: 0.05 },
+      )
+
+      const resizeObserver = new ResizeObserver(handleResize)
+      resizeObserver.observe(container)
+      intersectionObserver.observe(container)
+
+      container.addEventListener('mousemove', followPointer)
+      container.addEventListener('touchmove', followPointer, { passive: true })
+      container.addEventListener('mouseleave', endPointerInteraction)
+      container.addEventListener('touchend', endPointerInteraction)
+      document.addEventListener('visibilitychange', handleVisibility)
+
+      if (activeRef.current) {
         resume()
       }
-    }
 
-    const intersectionObserver = new IntersectionObserver(
-      ([entry]) => {
-        canRunRef.current = entry?.isIntersecting ?? true
-        if (
-          canRunRef.current &&
-          activeRef.current &&
-          (document.visibilityState === 'visible' || keepAliveWhenHiddenRef.current)
-        ) {
-          resume()
-        } else if (!keepAliveWhenHiddenRef.current) {
-          pause()
-        }
-      },
-      { threshold: 0.05 },
-    )
+      runtimeRef.current = {
+        particleEls,
+        scaleStagger,
+        grid,
+        from,
+        mainLoop,
+        autoMove,
+        manualMovementTimeout,
+        syncLayout,
+        pause,
+        resume,
+      }
 
-    const resizeObserver = new ResizeObserver(handleResize)
-    resizeObserver.observe(container)
-    intersectionObserver.observe(container)
-
-    container.addEventListener('mousemove', followPointer)
-    container.addEventListener('touchmove', followPointer, { passive: true })
-    container.addEventListener('mouseleave', endPointerInteraction)
-    container.addEventListener('touchend', endPointerInteraction)
-    document.addEventListener('visibilitychange', handleVisibility)
-
-    if (activeRef.current) {
-      resume()
-    }
-
-    runtimeRef.current = {
-      particleEls,
-      scaleStagger,
-      grid,
-      from,
-      mainLoop,
-      autoMove,
-      manualMovementTimeout,
-      syncLayout,
-      pause,
-      resume,
-    }
+      return () => {
+        resizeObserver.disconnect()
+        intersectionObserver.disconnect()
+        container.removeEventListener('mousemove', followPointer)
+        container.removeEventListener('touchmove', followPointer)
+        container.removeEventListener('mouseleave', endPointerInteraction)
+        container.removeEventListener('touchend', endPointerInteraction)
+        document.removeEventListener('visibilitychange', handleVisibility)
+        creatureEl.replaceChildren()
+        runtimeRef.current = null
+        themeStateRef.current = null
+      }
+    })
 
     return () => {
-      resizeObserver.disconnect()
-      intersectionObserver.disconnect()
-      container.removeEventListener('mousemove', followPointer)
-      container.removeEventListener('touchmove', followPointer)
-      container.removeEventListener('mouseleave', endPointerInteraction)
-      container.removeEventListener('touchend', endPointerInteraction)
-      document.removeEventListener('visibilitychange', handleVisibility)
-      pause()
-      creatureEl.replaceChildren()
-      runtimeRef.current = null
-      themeStateRef.current = null
+      scope.revert()
     }
   }, [
     containerRef,

@@ -17,6 +17,7 @@ import {
 } from '@/lib/usage/usage-gauges-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 
 /** Monthly active users (gauge snapshot per interval). */
 export const AUTH_MAU_GAUGE_METRIC = 'users.mau' as const
@@ -110,12 +111,16 @@ export async function fetchProjectAuthMauOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<AuthUsageChartOverview> {
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+
   const overview = await fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     AUTH_MAU_GAUGE_METRICS,
     interval,
     options?.queries,
+    logRetentionHours,
   )
 
   return {
@@ -154,6 +159,9 @@ export async function fetchProjectAuthSignupsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<AuthUsageChartOverview> {
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+
   const { chartPoints, previousChartPoints } =
     await fetchProjectUsageGaugeChartSeries(
       projectId,
@@ -161,6 +169,7 @@ export async function fetchProjectAuthSignupsOverview(
       [AUTH_USERS_GAUGE_METRIC],
       interval,
       options?.queries,
+      logRetentionHours,
     )
 
   const previousBaseline =

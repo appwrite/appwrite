@@ -24,8 +24,11 @@ interface ShortcutOptions {
   capture?: boolean
 }
 
-// Normalize key names
-function normalizeKey(key: string): string {
+// Normalize key names. Android Chrome / IME keydowns can omit `KeyboardEvent.key`.
+function normalizeKey(key: string | null | undefined): string {
+  if (typeof key !== 'string' || key.length === 0) {
+    return ''
+  }
   const keyMap: Record<string, string> = {
     cmd: 'meta',
     command: 'meta',
@@ -218,8 +221,8 @@ export function useSequentialShortcuts(
         return
       }
 
-      // Ignore modifier-only keys
-      if (['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) {
+      // Ignore modifier-only keys (and IME events with no key)
+      if (!e.key || ['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) {
         return
       }
 
@@ -230,6 +233,7 @@ export function useSequentialShortcuts(
       }
 
       const key = normalizeKey(e.key)
+      if (!key) return
       sequenceRef.current.push(key)
 
       // Reset timeout

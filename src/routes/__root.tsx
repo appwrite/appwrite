@@ -1,3 +1,9 @@
+import { installBrowserApi } from '@/lib/browser-api'
+import interRegularUrl from '../assets/fonts/inter/inter-v8-latin-regular.woff2?url'
+import interSemiboldUrl from '../assets/fonts/inter/inter-v8-latin-600.woff2?url'
+import aeonikRegularUrl from '../assets/fonts/aeonik-pro/AeonikPro-Regular.woff2?url'
+import notoHebrewRegularUrl from '../assets/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2?url'
+import interLatinRegularUrl from '../assets/fonts/inter/inter-latin-400-normal.woff2?url'
 import {
   HeadContent,
   Scripts,
@@ -5,7 +11,6 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import appCss from '../styles.css?url'
 import {
   getRuntimeConfig,
   getRuntimeConfigScript,
@@ -72,7 +77,7 @@ import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/consol
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
-import { useLocation, useMatches } from '@tanstack/react-router'
+import { useLocation, useMatches, useRouterState } from '@tanstack/react-router'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -83,6 +88,7 @@ import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
+import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -139,14 +145,14 @@ function getHeadFontPreloads() {
     return [
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-regular.woff2',
+        href: interRegularUrl,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
       },
       {
         rel: 'preload' as const,
-        href: '/fonts/inter/inter-v8-latin-600.woff2',
+        href: interSemiboldUrl,
         as: 'font' as const,
         type: 'font/woff2',
         crossOrigin: 'anonymous' as const,
@@ -156,21 +162,21 @@ function getHeadFontPreloads() {
   return [
     {
       rel: 'preload' as const,
-      href: '/fonts/aeonik-pro/AeonikPro-Regular.woff2',
+      href: aeonikRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2',
+      href: notoHebrewRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
     },
     {
       rel: 'preload' as const,
-      href: '/fonts/inter/inter-latin-400-normal.woff2',
+      href: interLatinRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
@@ -229,6 +235,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         sizes: '180x180',
       },
       ...getHeadFontPreloads(),
+      // TanStack Start dev manifest omits CSS assets (styles load only after JS).
+      // Production prerender/SSR gets stylesheet links from router.tsx → entry manifest.
+      ...(import.meta.env.DEV
+        ? [
+            {
+              rel: 'stylesheet' as const,
+              href: '/src/styles.css?direct',
+              type: 'text/css',
+            },
+          ]
+        : []),
     ],
     scripts: [...scripts],
   }),
@@ -381,6 +398,16 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
+  // Use the rendered location, not the pending one. During `/` → `/home`
+  // (or `/` → org) the desired path can already be the destination while the
+  // outlet is still the blank hop; wrapping that hop would flash the footer.
+  const renderedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+  if (isConsoleRedirectHopPath(renderedPathname)) {
+    return <>{children}</>
+  }
+
   return (
     <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
       <DevConstructionStripe />
@@ -413,6 +440,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setClientMounted(true)
+    return installBrowserApi()
   }, [])
 
   useEffect(() => {
@@ -447,7 +475,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <link rel="stylesheet" href={appCss} />
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
@@ -466,13 +493,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
             ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
         <I18nProvider>
-          {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready.
-              Kept outside ClientThemeProvider remount boundaries. Always mount when the
-              debug override is on (auth/marketing pages set skipStaticLoader). */}
+          {/* Branded loader from first paint (isLoading starts true on console routes).
+              Do not force-visible on !clientMounted: remounting RootDocument used to
+              flash this overlay on later navigations. */}
           <FullscreenLoader
             isVisible={
-              showFullscreenLoader ||
-              (!skipStaticLoader && (clientMounted ? isLoading : true))
+              showFullscreenLoader || (!skipStaticLoader && isLoading)
             }
             statusBanner={
               clientMounted && isLoaderVisible ? statusBanner : undefined

@@ -399,19 +399,12 @@ export function ApiExplorer({
     ? getErrorMessage(specQueryError) || t('Failed to load API specification')
     : null
   const selectedOperationRef = useRef<string | undefined>(initialOperationId)
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
 
   const allowedServices = useMemo(
     () =>
       config.allowedServices ?? getProjectApiExplorerAllowedServices(features),
-    [
-      config.allowedServices,
-      features.dedicatedDbsDocumentsDB,
-      features.dedicatedDbsVectorsDB,
-      features.nativeDbsPostgres,
-      features.nativeDbsMySQL,
-      features.nativeDbsMongo,
-    ],
+    [config.allowedServices, features.nativeDbsMongo, isCloud],
   )
 
   const visibleServices = useMemo(

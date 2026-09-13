@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/messaging-announcement.avif
 timeToRead: 6
 author: eldad-fux
-category: init, announcement, product
+category: init, announcements, products
 featured: false
 faqs:
   - question: "What is Appwrite Messaging?"

@@ -43,6 +43,7 @@ export const REFERENCE_SERVICES = [
   'tablesDB',
   'documentsDB',
   'vectorsDB',
+  'embeddings',
   'postgresql',
   'mysql',
   'mongo',
@@ -68,6 +69,7 @@ export const SERVICE_LABELS: Record<ReferenceService, string> = {
   tablesDB: 'TablesDB',
   documentsDB: 'DocumentsDB',
   vectorsDB: 'VectorsDB',
+  embeddings: 'Embeddings',
   postgresql: 'PostgreSQL',
   mysql: 'MySQL',
   mongo: 'MongoDB',
@@ -147,13 +149,17 @@ export function isReferenceService(value: string): value is ReferenceService {
   return (REFERENCE_SERVICES as readonly string[]).includes(value)
 }
 
-export function getSpecMode(platform: ReferencePlatform): 'client' | 'server' | 'console' {
+export function getSpecMode(
+  platform: ReferencePlatform,
+): 'client' | 'server' | 'console' {
   if (platform.startsWith('client-')) return 'client'
   if (platform.startsWith('server-')) return 'server'
   return 'console'
 }
 
-export function getPlatformType(platform: ReferencePlatform): 'CLIENT' | 'SERVER' {
+export function getPlatformType(
+  platform: ReferencePlatform,
+): 'CLIENT' | 'SERVER' {
   return platform.startsWith('client-') ? 'CLIENT' : 'SERVER'
 }
 
@@ -189,8 +195,9 @@ export function getSpecFilename(
   specDir: string,
   mode: 'client' | 'server' | 'console',
 ): string {
-  if (specDir === 'latest') {
-    return `open-api3-latest-${mode}.json`
+  // 2.0+ ships one canonical document; older releases remain per-platform.
+  if (specDir === 'latest' || Number.parseInt(specDir, 10) >= 2) {
+    return `open-api3-${specDir}.json`
   }
   return `open-api3-${specDir}-${mode}.json`
 }

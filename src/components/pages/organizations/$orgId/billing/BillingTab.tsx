@@ -26,12 +26,10 @@ import {
 import {
   useOrganizationById,
   useOrganizationPaymentMethod,
-  useRetryInvoicePayment,
-  resolvePaymentMethodIdForInvoiceRetry,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
-import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { RetryPayment } from './RetryPayment'
 
 export function BillingTab() {
   const t = useT()
@@ -42,6 +40,7 @@ export function BillingTab() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
   const [addCreditsModalOpen, setAddCreditsModalOpen] = useState(false)
+  const [retryInvoiceOpen, setRetryInvoiceOpen] = useState(false)
 
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const orgRefs = organization
@@ -57,8 +56,6 @@ export function BillingTab() {
     orgRefs?.backupPaymentMethodId ?? undefined,
   )
 
-  const retryPaymentMutation = useRetryInvoicePayment()
-
   const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
 
@@ -71,36 +68,6 @@ export function BillingTab() {
   const orgBillingReadonly = isOrganizationBillingReadonlyStatus(
     (organization as { status?: string } | null | undefined)?.status,
   )
-
-  const handleRetryPayment = async () => {
-    if (!orgId || !failedInvoice || !organization) return
-
-    try {
-      const paymentMethodId = await resolvePaymentMethodIdForInvoiceRetry({
-        organization: asOrganizationPaymentRefs(organization),
-        primaryPaymentMethodFailed: primaryFailed,
-      })
-
-      if (!paymentMethodId) {
-        toast.error(
-          t('No payment method available. Please add a payment method first.'),
-        )
-        return
-      }
-
-      await retryPaymentMutation.mutateAsync({
-        organizationId: orgId,
-        invoiceId: failedInvoice.$id,
-        paymentMethodId,
-      })
-
-      toast.success(t('Payment retry initiated'))
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('Failed to retry payment'),
-      )
-    }
-  }
 
   const handleChangePlan = () => {
     navigateToUpgradeWizard(navigate, orgId)
@@ -163,8 +130,7 @@ export function BillingTab() {
                 <Button
                   size="sm"
                   className="h-8 bg-red-500 px-3 text-[12px] font-medium text-red-50 hover:bg-red-400"
-                  onClick={handleRetryPayment}
-                  disabled={retryPaymentMutation.isPending}
+                  onClick={() => setRetryInvoiceOpen(true)}
                 >
                   {t('Try again')}
                 </Button>
@@ -320,7 +286,6 @@ export function BillingTab() {
     hasPlanDowngrade,
     orgBillingReadonly,
     failedInvoice,
-    retryPaymentMutation.isPending,
     orgId,
     t,
   ])
@@ -336,6 +301,20 @@ export function BillingTab() {
         isBackup={isBackupPaymentMethod}
         onSuccess={handlePaymentModalSuccess}
       />
+
+      {orgId && failedInvoice && (
+        <RetryPayment
+          open={retryInvoiceOpen}
+          onOpenChange={setRetryInvoiceOpen}
+          organizationId={orgId}
+          invoice={{
+            $id: failedInvoice.$id,
+            amount: failedInvoice.grossAmount ?? failedInvoice.amount,
+            currency: failedInvoice.currency,
+            dueAt: failedInvoice.dueAt,
+          }}
+        />
+      )}
 
       {orgId && (
         <AddCreditsModal

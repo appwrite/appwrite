@@ -35,6 +35,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'האפליקציה הופעלה',
   'App updated': 'האפליקציה עודכנה',
   'Activity': 'פעילות',
+  'Auto crops around the main subject when both width and height are set.':
+    'חיתוך Auto ממקד את הפריים בנושא הראשי כשמוגדרים גם רוחב וגם גובה.',
   'Back to apps': 'חזרה לאפליקציות',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     'אפליקציות מושבתות לא יכולות להתחיל תהליכי הרשאה חדשים. טוקנים קיימים נשארים בתוקף עד לשלילתם.',
@@ -615,6 +617,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
   'Connect with': 'התחברות עם',
   'Connect with Appwrite': 'התחברות עם Appwrite',
+  'Connect with S3': 'התחברות עם S3',
   'Connect with this project': 'התחברות לפרויקט זה',
   'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
     'רשמו כאן לקוחות OAuth2 כאשר אתם רוצים שמוצרים אחרים יאפשרו למשתמשים להתחבר לפרויקט זה. לאפליקציות ארגון יש מטרה אחרת. צרו אותן תחת הארגון כאשר אתם רוצים שהמשתמשים שלכם יחברו את חשבון Appwrite שלהם ליישום שלכם.',

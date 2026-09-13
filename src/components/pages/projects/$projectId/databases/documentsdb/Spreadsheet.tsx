@@ -85,6 +85,7 @@ import {
   createProjectTableRow,
   updateProjectTableRow,
   fetchProjectTableRow,
+  getRelationshipColumnKeys,
   useProjectTable,
   updateProjectTable,
   deleteProjectTable,
@@ -119,6 +120,12 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
+import {
+  isMultiRelationship,
+  relatedRowLabel,
+  toRelatedRowId,
+  toRelationshipPayloadValue,
+} from '@/lib/database-relationship-values'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
@@ -172,6 +179,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  DatabaseArrayItemTextField,
+  databaseRowFieldOverlayClass,
+  databaseRowTextareaPadding,
+  DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING,
+  DATABASE_ROW_TEXTAREA_CLASS,
+} from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayItemTextField'
+import { isSpreadsheetRtlText } from '@/lib/spreadsheet-cell-formatting'
 import {
   Select,
   SelectContent,
@@ -502,6 +517,7 @@ function defaultFormValueForColumn(
     return c.default as string | number | bigint | boolean | unknown[] | null
   }
   if (c.type === 'boolean') return false
+  if (c.type === 'relationship') return isMultiRelationship(col) ? [] : null
   if (c.array) return []
   return ''
 }
@@ -512,14 +528,6 @@ function getRelationshipTableId(columnInfo?: unknown): string | undefined {
     | undefined
 
   return col?.relatedTableId || col?.relatedTable || undefined
-}
-
-function getRelationshipKind(columnInfo?: unknown): string | undefined {
-  const col = columnInfo as
-    | { relationType?: string; relationshipType?: string }
-    | undefined
-
-  return col?.relationshipType || col?.relationType || undefined
 }
 
 function getRelationshipRowLabel(
@@ -574,9 +582,7 @@ function RelationshipField({
   const projectId = params.projectId as string | undefined
   const databaseId = params.databaseId as string | undefined
   const relatedTableId = getRelationshipTableId(columnInfo)
-  const relationType = getRelationshipKind(columnInfo)
-  const isMulti =
-    relationType === 'oneToMany' || relationType === 'manyToMany'
+  const isMulti = isMultiRelationship(columnInfo)
 
   const { rows: relatedRows, isLoading: relatedRowsLoading } =
     useProjectTableRows(
@@ -600,21 +606,36 @@ function RelationshipField({
     100,
   )
 
-  const selectedValues = Array.isArray(currentValue)
+  // Values arrive as populated rows: ids drive the selection, the rows label
+  // entries that are outside the related table's first page.
+  const currentItems = Array.isArray(currentValue)
     ? currentValue
-        .map((value) => (typeof value === 'string' ? value : null))
-        .filter((value): value is string => Boolean(value))
-    : typeof currentValue === 'string' && currentValue.length > 0
-      ? [currentValue]
-      : []
+    : currentValue === null || currentValue === undefined || currentValue === ''
+      ? []
+      : [currentValue]
+  const selectedValues = currentItems
+    .map((item) => toRelatedRowId(item))
+    .filter((id): id is string => id !== null)
 
-  const options = relatedRows
-    .map((row) => row as Record<string, unknown>)
-    .filter((row) => typeof row.$id === 'string')
-    .map((row) => ({
-      value: row.$id as string,
+  const optionsById = new Map<string, { value: string; label: string }>()
+  for (const item of currentItems) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    if (typeof row.$id !== 'string') continue
+    optionsById.set(row.$id, {
+      value: row.$id,
       label: getRelationshipRowLabel(row, relatedColumns),
-    }))
+    })
+  }
+  for (const relatedRow of relatedRows) {
+    const row = relatedRow as Record<string, unknown>
+    if (typeof row.$id !== 'string') continue
+    optionsById.set(row.$id, {
+      value: row.$id,
+      label: getRelationshipRowLabel(row, relatedColumns),
+    })
+  }
+  const options = [...optionsById.values()]
 
   if (!relatedTableId) {
     return (
@@ -786,6 +807,7 @@ function RowEditDrawer({
   const [formData, setFormData] = useState<
     Record<string, string | number | bigint | boolean | unknown[] | null>
   >({})
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const [customRowId, setCustomRowId] = useState<string | undefined>(undefined)
   const fieldRefs = useRef<
     Record<
@@ -883,6 +905,7 @@ function RowEditDrawer({
         initialData[colKey] = defaultFormValueForColumn(col)
       }
       setFormData(initialData)
+      setTouchedFields(new Set())
       fieldRefs.current = {}
       // Reset custom row ID when editing existing row
       setCustomRowId(undefined)
@@ -900,6 +923,7 @@ function RowEditDrawer({
       initialData['$createdAt'] = new Date().toISOString()
       initialData['$updatedAt'] = new Date().toISOString()
       setFormData(initialData)
+      setTouchedFields(new Set())
       fieldRefs.current = {}
       // Reset custom row ID when creating new row
       setCustomRowId(undefined)
@@ -1003,14 +1027,25 @@ function RowEditDrawer({
     onOpenChange(newOpen)
   }
 
+  const markFieldTouched = (key: string) => {
+    setTouchedFields((prev) => {
+      if (prev.has(key)) return prev
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+  }
+
   const handleFieldChange = (
     key: string,
     value: string | number | bigint | boolean | unknown[] | null,
   ) => {
+    markFieldTouched(key)
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
 
   const handleNullToggle = (key: string, isNull: boolean) => {
+    markFieldTouched(key)
     if (isNull) {
       // Set to null explicitly
       setFormData((prev) => ({ ...prev, [key]: null }))
@@ -1311,6 +1346,25 @@ function RowEditDrawer({
         currentValue === undefined ||
         (typeof currentValue === 'string' && currentValue.trim() === '') ||
         (Array.isArray(currentValue) && currentValue.length === 0)
+
+      // An update is merged onto the stored row, so omitting an untouched
+      // relationship keeps it; sending null fails, or unlinks a to-one.
+      if (fieldType === 'relationship') {
+        const untouched = !touchedFields.has(fieldKey)
+        if (untouched && (!isCreateMode || !required)) {
+          delete payload[fieldKey]
+          return
+        }
+        if (required && isEmptyValue) {
+          missingRequiredFields.push(fieldKey)
+          return
+        }
+        payload[fieldKey] = toRelationshipPayloadValue(
+          currentValue,
+          columnInfo,
+        ) as string | unknown[] | null
+        return
+      }
 
       if (required && fieldType !== 'boolean' && isEmptyValue) {
         missingRequiredFields.push(fieldKey)
@@ -2110,85 +2164,41 @@ function RowEditDrawer({
                                                     className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                                   />
                                                 ) : (
-                                                  <Textarea
+                                                  <DatabaseArrayItemTextField
                                                     value={stringValue}
-                                                    onChange={(e) => {
-                                                      e.stopPropagation()
+                                                    onChange={(next) =>
                                                       handleArrayItemChange(
                                                         key,
                                                         index,
-                                                        e.target.value,
+                                                        next,
                                                       )
-                                                    }}
+                                                    }
                                                     onFocus={focusGuard}
-                                                    ref={(el) => setRef(el)}
+                                                    inputRef={(el) => setRef(el)}
                                                     autoFocus={
                                                       shouldFocus && index === 0
                                                     }
                                                     disabled={isNull}
-                                                    dir={
-                                                      isRTLContent ? 'rtl' : 'ltr'
-                                                    }
                                                     maxLength={
                                                       hasLimit ? size : undefined
                                                     }
-                                                    className={cn(
-                                                      'min-h-[36px] max-h-[600px] resize-none rounded-none border-0 bg-transparent px-3 py-2 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0',
-                                                      isNull &&
-                                                      'cursor-not-allowed opacity-50',
-                                                    )}
                                                     placeholder={`Item ${index + 1}`}
-                                                    rows={1}
+                                                    isNull={isNull}
+                                                    showNullCheckbox={showNullCheckbox}
+                                                    nullCheckboxId={`${key}-${index}-null`}
+                                                    onNullChange={(checked) => {
+                                                      const newArray = [
+                                                        ...((currentValue as unknown[]) ||
+                                                          []),
+                                                      ]
+                                                      newArray[index] = checked
+                                                        ? null
+                                                        : ''
+                                                      handleFieldChange(key, newArray)
+                                                    }}
                                                   />
                                                 )}
                                               </div>
-                                              {showFooter && (
-                                                <div className="flex items-center justify-end gap-3 border-t border-foreground/10 bg-muted/30 px-3 py-1">
-                                                  {hasLimit && (
-                                                    <span
-                                                      className={cn(
-                                                        'text-[10px] tabular-nums whitespace-nowrap',
-                                                        charCount > size
-                                                          ? 'font-medium text-destructive'
-                                                          : 'text-muted-foreground',
-                                                      )}
-                                                    >
-                                                      {charCount}/{size}
-                                                    </span>
-                                                  )}
-                                                  {showNullCheckbox && (
-                                                    <label
-                                                      htmlFor={`${key}-${index}-null`}
-                                                      className="flex cursor-pointer select-none items-center gap-1.5 text-[10px] text-muted-foreground"
-                                                    >
-                                                      <Checkbox
-                                                        id={`${key}-${index}-null`}
-                                                        checked={isNull}
-                                                        onCheckedChange={(
-                                                          checked,
-                                                        ) => {
-                                                          const newArray = [
-                                                            ...((currentValue as unknown[]) ||
-                                                              []),
-                                                          ]
-                                                          newArray[index] =
-                                                            checked ? null : ''
-                                                          handleFieldChange(
-                                                            key,
-                                                            newArray,
-                                                          )
-                                                        }}
-                                                        onClick={(e) =>
-                                                          e.stopPropagation()
-                                                        }
-                                                        className="h-3 w-3 cursor-pointer"
-                                                        disabled={false}
-                                                      />
-                                                      {t('Null')}
-                                                    </label>
-                                                  )}
-                                                </div>
-                                              )}
                                             </div>
                                             <button
                                               type="button"
@@ -2349,24 +2359,28 @@ function RowEditDrawer({
                                     fieldType === 'varchar') &&
                                   size !== null &&
                                   size > 0
-                                const isRTLContent = isRTL(stringValue)
+                                const isRTLContent = isSpreadsheetRtlText(stringValue)
                                 const showNullCheckbox = !isRequired
                                 const useTextarea =
                                   (size && size >= 50) ||
                                   fieldType === 'text' ||
                                   fieldType === 'mediumtext' ||
                                   fieldType === 'longtext'
-                                const needsCounterSpace =
-                                  hasLimit || showNullCheckbox
-                                const counterPadding = needsCounterSpace
-                                  ? isRTLContent
-                                    ? 'ps-28'
-                                    : 'pe-28'
-                                  : ''
+                                const textareaPadding = databaseRowTextareaPadding({
+                                  hasLimit,
+                                  showNullCheckbox,
+                                })
+                                const inputCounterPadding =
+                                  showNullCheckbox || hasLimit
+                                    ? DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING
+                                    : ''
 
                                 return (
                                   <div className="space-y-1.5">
-                                    <div className="relative">
+                                    <div
+                                      className="relative"
+                                      dir={isRTLContent ? 'rtl' : 'ltr'}
+                                    >
                                       {useTextarea ? (
                                         <Textarea
                                           id={key}
@@ -2404,11 +2418,10 @@ function RowEditDrawer({
                                             hasLimit ? size : undefined
                                           }
                                           className={cn(
-                                            'min-h-[36px] max-h-[600px] text-[13px] resize-none',
+                                            DATABASE_ROW_TEXTAREA_CLASS,
                                             isNull &&
                                             'opacity-50 cursor-not-allowed',
-                                            showNullCheckbox ? 'pb-8' : 'pb-2',
-                                            counterPadding,
+                                            textareaPadding,
                                           )}
                                           rows={1}
                                         />
@@ -2437,23 +2450,16 @@ function RowEditDrawer({
                                             isRequired ? undefined : 'NULL'
                                           }
                                           className={cn(
-                                            'h-9 text-[13px]',
+                                            'field-sizing-fixed h-9 w-full text-[13px] text-start',
                                             isNull &&
                                             'opacity-50 cursor-not-allowed',
-                                            counterPadding,
+                                            inputCounterPadding,
                                           )}
                                         />
                                       )}
                                       <div
-                                        className={cn(
-                                          'absolute flex items-center gap-2 pointer-events-none',
-                                          useTextarea
-                                            ? isRTLContent
-                                              ? 'bottom-2 start-2'
-                                              : 'bottom-2 end-2'
-                                            : isRTLContent
-                                              ? 'top-1/2 -translate-y-1/2 start-2'
-                                              : 'top-1/2 -translate-y-1/2 end-2',
+                                        className={databaseRowFieldOverlayClass(
+                                          useTextarea ? 'textarea' : 'input',
                                         )}
                                       >
                                         {hasLimit && (
@@ -3095,6 +3101,25 @@ export function RowsSpreadsheet({
     ? displayedFilterQueries
     : undefined
 
+  // Read before the rows queries, which need the relationship keys.
+  const { columns: apiColumns, isLoading: columnsLoading } =
+    useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
+
+  const relationshipKeys = useMemo(
+    () => getRelationshipColumnKeys(apiColumns),
+    [apiColumns],
+  )
+
+  const columnInfoByKey = useMemo(() => {
+    const map = new Map<string, unknown>()
+    for (const column of apiColumns) {
+      const col = column as { key?: unknown; $id?: unknown }
+      const key = typeof col.key === 'string' ? col.key : col.$id
+      if (typeof key === 'string') map.set(key, column)
+    }
+    return map
+  }, [apiColumns])
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -3111,6 +3136,8 @@ export function RowsSpreadsheet({
     sortOrder,
     sortBy,
     effectiveFilterQueries,
+    undefined,
+    relationshipKeys,
   )
 
   const {
@@ -3128,6 +3155,8 @@ export function RowsSpreadsheet({
     displayedSortOrder,
     displayedSortBy,
     effectiveDisplayedFilterQueries,
+    undefined,
+    relationshipKeys,
   )
 
   useEffect(() => {
@@ -3223,9 +3252,6 @@ export function RowsSpreadsheet({
   }, [urlDriven, openRowCreateFlag, navigate])
 
   // Fetch collection attributes (Documents API), not tables listColumns
-  const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
-
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
     (col: unknown) => col.type === 'relationship',
@@ -3505,7 +3531,14 @@ export function RowsSpreadsheet({
         return
       }
 
-      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId).then(
+      fetchProjectTableRow(
+        projectId,
+        databaseId,
+        DB_KIND,
+        tableId,
+        rowId,
+        relationshipKeys,
+      ).then(
         (apiRow: unknown) => {
           if (!apiRow || typeof apiRow !== 'object') return
           const rowObj = apiRow as Record<string, unknown>
@@ -3547,7 +3580,7 @@ export function RowsSpreadsheet({
         },
       )
     },
-    [projectId, databaseId, tableId],
+    [projectId, databaseId, tableId, relationshipKeys],
   )
 
   useEffect(() => {
@@ -3733,6 +3766,11 @@ export function RowsSpreadsheet({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
+      // Posting populated rows back would rewrite them instead of linking.
+      for (const key of relationshipKeys) {
+        if (!Object.prototype.hasOwnProperty.call(data, key)) continue
+        data[key] = toRelationshipPayloadValue(data[key], columnInfoByKey.get(key))
+      }
       return createProjectTableRow(projectId, databaseId, DB_KIND, tableId, data)
     },
     onSuccess: async () => {
@@ -3856,13 +3894,43 @@ export function RowsSpreadsheet({
       | Record<string, unknown>
       | null
       | undefined,
+    columnInfo?: unknown,
   ) => {
+    if ((columnInfo as { type?: string } | undefined)?.type === 'relationship') {
+      return formatRelationshipCellValue(value, columnInfo)
+    }
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
       const stringValue = stringifyStructuredValue(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
+  }
+
+  /** Related rows come back populated; label them instead of dumping JSON. */
+  function formatRelationshipCellValue(
+    value: unknown,
+    columnInfo?: unknown,
+  ): { full: string; display: string; isNull: boolean } {
+    if (isMultiRelationship(columnInfo)) {
+      const items = Array.isArray(value) ? value : value == null ? [] : [value]
+      const labels = items.map((item) => relatedRowLabel(item))
+      const count = labels.length
+      return {
+        full: labels.join(', '),
+        display: `${count} ${count === 1 ? t('item') : t('items')}`,
+        isNull: false,
+      }
+    }
+    if (value === null || value === undefined || value === '') {
+      return { full: 'null', display: 'null', isNull: true }
+    }
+    const label = relatedRowLabel(value)
+    return {
+      full: label,
+      display: label.length > 80 ? `${label.slice(0, 77)}…` : label,
+      isNull: false,
+    }
   }
 
   // Detect RTL content
@@ -4680,6 +4748,7 @@ export function RowsSpreadsheet({
                           | Record<string, unknown>
                           | null
                           | undefined,
+                          columnInfoByKey.get(col),
                         )
                         // Only apply RTL detection to string values
                         const cellValue = row.data[col as keyof typeof row.data]
@@ -5102,20 +5171,23 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   // State for Security
   const [tableRowSecurity, setTableRowSecurity] = useState<boolean | null>(null)
 
+  // Server permissions we last synced into local state. Without this, the effect
+  // below would re-run on every local edit and immediately overwrite it.
+  const syncedPermissionsRef = useRef<string | null>(null)
+
   // Initialize state from table data
   useEffect(() => {
     if (tableData) {
-      // Always sync permissions from table data to ensure we have the latest
       const tablePerms = tableData.$permissions || []
-      // Only update if permissions actually changed (avoid unnecessary re-renders)
-      const currentPermsStr = JSON.stringify([...tablePermissions].sort())
-      const newPermsStr = JSON.stringify([...tablePerms].sort())
-      if (currentPermsStr !== newPermsStr) {
+      // Only sync when the server value changed (initial load, or after a save)
+      const serverPermsStr = JSON.stringify([...tablePerms].sort())
+      if (syncedPermissionsRef.current !== serverPermsStr) {
+        syncedPermissionsRef.current = serverPermsStr
         setTablePermissions(tablePerms)
       }
       if (tableRowSecurity === null) setTableRowSecurity(tableData.rowSecurity)
     }
-  }, [tableData, tablePermissions, tableRowSecurity])
+  }, [tableData, tableRowSecurity])
 
   // Helper to check if arrays are different
   const arraysEqual = (a: string[], b: string[]) => {
@@ -5251,12 +5323,13 @@ export function TableSecurity({ table }: SpreadsheetProps) {
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                {t('When document security is enabled, users need')}{' '}
+                {t('When document security is enabled, users can access a document if they have')}{' '}
                 <strong>
-                  {t('both collection permissions and document permissions')}
-                </strong>{' '}
+                  {t('either document permissions or collection permissions')}
+                </strong>
+                {'. '}
                 {t(
-                  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.',
+                  'Document permissions grant extra access on top of collection permissions, they are not required in addition to them.',
                 )}
               </p>
               <p className="text-[13px] text-muted-foreground">

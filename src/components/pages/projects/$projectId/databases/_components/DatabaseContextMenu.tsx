@@ -57,7 +57,8 @@ import { useT } from '@/lib/i18n/translate'
 type DatabaseContextMenuDatabase = {
   $id: string
   name?: string | null
-  databaseType?: DatabaseType
+  /** Raw API `type` when available (e.g. postgresql); may be a product route kind. */
+  databaseType?: DatabaseType | string
 }
 
 interface DatabaseContextMenuProps {
@@ -87,7 +88,14 @@ export function DatabaseContextMenu({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await deleteProjectDatabase(projectId, database.$id, dbKind)
+      // Pass the API type (e.g. postgresql), not the product route kind.
+      // Native engines would otherwise be coerced to tablesdb and hit the
+      // wrong delete endpoint.
+      await deleteProjectDatabase(
+        projectId,
+        database.$id,
+        database.databaseType ?? dbKind,
+      )
     },
     onSuccess: async () => {
       invalidateDatabaseModelAndType(projectId, database.$id)

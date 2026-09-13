@@ -2,6 +2,7 @@
 layout: changelog
 title: Database improvements and fixes
 date: 2025-01-17
+tags: databases, performance
 ---
 
 We've released several Database updates to make your experience better:

@@ -25,6 +25,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useBackupPolicies } from '@/lib/react-query/hooks'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { NoBackupPoliciesWarningIcon } from './DatabaseBackupsNavLink'
 import {
   Tooltip,
@@ -47,6 +48,7 @@ export type DatabaseSectionItem = {
 export type DatabaseSectionSelectorProps = {
   projectId: string
   databaseId: string
+  dbKind?: DatabaseRouteKind
   value: DatabaseSectionId
   tablesLabel: string
   tablesIcon?: LucideIcon
@@ -61,6 +63,7 @@ export type DatabaseSectionSelectorProps = {
 export function DatabaseSectionSelector({
   projectId,
   databaseId,
+  dbKind,
   value,
   tablesLabel,
   tablesIcon: TablesIcon = Table2,
@@ -76,7 +79,7 @@ export function DatabaseSectionSelector({
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: showBackups },
+    { enabled: showBackups, dbKind },
   )
   const showBackupsWarning =
     showBackups &&

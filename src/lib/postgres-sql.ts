@@ -78,23 +78,20 @@ function stripTrailingPostgresSqlSemicolon(sql: string): string {
   return sql.trim().replace(/;\s*$/, '')
 }
 
-/** Wrap multiple DDL statements in one DO block (API allows one command per request). */
-export function buildPostgresSingleRequestDdlSql(
-  statements: string[],
-  traceComment: string,
-): string {
-  const normalized = statements
+export function normalizePostgresDdlStatements(statements: string[]): string[] {
+  return statements
     .map((statement) => stripTrailingPostgresSqlSemicolon(statement))
     .filter(Boolean)
-  if (normalized.length === 0) return ''
-  if (normalized.length === 1) {
-    return prefixPostgresSqlComment(normalized[0]!, traceComment)
+}
+
+/** Run each statement as its own HTTP call. The SQL API allows one statement per request. */
+export async function runPostgresDdlStatements(
+  run: (sql: string) => Promise<unknown>,
+  statements: string[],
+): Promise<void> {
+  for (const sql of normalizePostgresDdlStatements(statements)) {
+    await run(sql)
   }
-  const body = normalized.map((statement) => `${statement};`).join('\n  ')
-  return prefixPostgresSqlComment(
-    `DO $appwrite_ddl$\nBEGIN\n  ${body}\nEND\n$appwrite_ddl$`,
-    traceComment,
-  )
 }
 
 export function escapePostgresLikePattern(value: string): string {

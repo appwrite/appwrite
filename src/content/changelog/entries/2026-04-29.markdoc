@@ -2,6 +2,7 @@
 layout: changelog
 title: "Realtime: persistent WebSocket and message-driven subscriptions"
 date: 2026-04-29
+tags: auth, realtime
 ---
 
 Appwrite [**Realtime**](/docs/apis/realtime) now keeps a **single WebSocket** per client session and applies **incremental, message-based** subscription changes instead of encoding subscription state mainly in the connection URL and reconnecting for every add or remove.

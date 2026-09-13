@@ -52,7 +52,7 @@ Next, head to the **Network Access** page from the left sidebar, click on the **
 
 For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. In case you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
 
-Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **MongoDB** function template.
+Head over to the Appwrite console, navigate to the **Functions** page, click on the **Templates** tab, and search for the **MongoDB** function template.
 
 ![Function template](/images/integrations/query-mongodb/template.avif)
 
@@ -62,7 +62,7 @@ Add the **MongoDB connection string** you saved in the **Variables** step. Then,
 
 ## Step 3: Test the function
 
-Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. Sending a GET (HTTP) Request to this endpoint will add a randomly generated mock document and list all the documents in the database.
+Once the function is ready, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function. Sending a GET (HTTP) Request to this endpoint will add a randomly generated mock document and list all the documents in the database.
 
 ```bash
 curl DEPLOYED_FUNCTION_DOMAIN \

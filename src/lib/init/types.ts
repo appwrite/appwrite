@@ -83,7 +83,14 @@ export interface LaunchEventScheduleItem {
   /** Absolute session start, authored in IST (e.g. `2026-08-31T21:30:00+05:30`). */
   startsAt: string
   href?: string
+  /**
+   * Authored: this session is a livestream that can show "Live now" after start.
+   * Display: set true only while the session is live (for one hour after
+   * `startsAt` on the current day).
+   */
   isLive?: boolean
+  /** Display-only: within 1 hour before `startsAt` on the current unlocked day. */
+  isStartingSoon?: boolean
 }
 
 export interface LaunchEventActivity {
@@ -95,6 +102,8 @@ export interface LaunchEventActivity {
 
 export interface LaunchEventOnlineUser {
   id: string
+  /** Console account ID (`presence.userId`); use for self-matching when `id` is anonymized. */
+  ownerId?: string
   name: string
   activity: string
   isLive?: boolean
@@ -103,6 +112,10 @@ export interface LaunchEventOnlineUser {
   countryCode?: string
   /** SHA-256 hex of lowercase trimmed email for `avatars.getPhoto`. */
   emailHash?: string
+  /** When this user became online for the current Init session (ISO 8601). */
+  onlineAt?: string
+  /** Presence row uses an anonymous ID; name, photo, and country are withheld. */
+  identityHidden?: boolean
 }
 
 export interface InitCommunityCountry {
@@ -150,6 +163,11 @@ export interface LaunchEventHeaderNavCtaConfig {
 export interface LaunchEventLiveBanner {
   title: string
   href?: string
+  /**
+   * Set by visibility: `startingSoon` within 1h of the livestream start,
+   * `live` after it begins. Omitted on authored event data.
+   */
+  mode?: 'startingSoon' | 'live'
 }
 
 export interface LaunchEventGiveaway {
@@ -160,6 +178,8 @@ export interface LaunchEventGiveaway {
   imageSrcDark: string
   ctaLabel?: string
   ctaHref?: string
+  secondaryCtaLabel?: string
+  secondaryCtaHref?: string
 }
 
 export interface LaunchEventPrizeVisual {
@@ -284,6 +304,8 @@ export interface LaunchEvent {
   onlineUsers: LaunchEventOnlineUser[]
   recentlyOnlineUsers: LaunchEventOnlineUser[]
   onlineCount: number
+  hiddenOnlineCount: number
+  onlineCountCapped: boolean
   othersOnlineCount: number
   liveBanner?: LaunchEventLiveBanner
   primaryCta: LaunchEventCta

@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing DB operators: Update multiple fields without fetching the entire row"
 date: 2025-11-04
 cover: /images/blog/announcing-db-operators/cover.avif
+tags: databases, performance
 ---
 Updating just one field in a row, like incrementing a counter or adding a tag, used to require reading and rewriting the entire document. This added latency, wasted bandwidth, and created risks of lost updates under high concurrency.
 

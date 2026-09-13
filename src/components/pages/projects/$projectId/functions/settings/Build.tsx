@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { cacheUpdatedFunctionOrSite } from '@/lib/utils/settings-redeploy-alert'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -42,15 +44,10 @@ export function View() {
     SpecificationType.Builds,
   )
 
-  const [commands, setCommands] = useState('')
-  const [buildSpecification, setBuildSpecification] = useState('')
-
-  useEffect(() => {
-    if (func) {
-      setCommands(func.commands || '')
-      setBuildSpecification(func.buildSpecification || '')
-    }
-  }, [func])
+  const [commands, setCommands] = useSyncStateFromServer(func?.commands || '')
+  const [buildSpecification, setBuildSpecification] = useSyncStateFromServer(
+    func?.buildSpecification || '',
+  )
 
   const specifications = useMemo(
     () => specificationsData?.specifications || [],
@@ -68,7 +65,8 @@ export function View() {
     },
     onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
-      queryClient.setQueryData(
+      cacheUpdatedFunctionOrSite(
+        queryClient,
         ['function', 'project', projectId, functionId],
         updated,
       )

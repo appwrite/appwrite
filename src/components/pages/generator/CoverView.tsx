@@ -44,6 +44,7 @@ import {
 import { useRouteGenerationEditor } from '@/lib/generator/use-route-generation-editor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { randomUUID } from '@/lib/random-uuid'
 
 const RESIZE_HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
@@ -304,7 +305,7 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
         templateId,
         pickRandomCoverEditorThemeId(),
       )
-      openEditor(crypto.randomUUID(), coverData)
+      openEditor(randomUUID(), coverData)
     },
     [openEditor],
   )

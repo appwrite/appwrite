@@ -58,13 +58,13 @@ const ENGINE_GROUPS: DatabaseEngineGroup[] = [
     id: 'native',
     title: 'Native DBs',
     description:
-      'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
+      'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.',
     engines: [
       {
         id: 'postgresql',
         name: 'PostgreSQL',
         description:
-          'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.',
+          'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.',
         icon: PostgresElephantIcon,
       },
       {

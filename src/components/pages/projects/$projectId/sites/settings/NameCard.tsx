@@ -4,7 +4,7 @@
  * Allows users to update the site's display name.
  */
 
-import { useState, useEffect } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -24,14 +24,7 @@ interface NameCardProps {
 export function NameCard({ projectId, siteId, site }: NameCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [name, setName] = useState('')
-
-  // Initialize state from site data
-  useEffect(() => {
-    if (site) {
-      setName(site.name || '')
-    }
-  }, [site])
+  const [name, setName] = useSyncStateFromServer(site?.name || '')
 
   // Update site mutation
   const updateSiteMutation = useMutation({

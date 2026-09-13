@@ -1,4 +1,3 @@
-import type { LaunchEventOnlineUser } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import { useId, useMemo } from 'react'
@@ -39,11 +38,6 @@ function buildSegmentPath(index: number, count: number, radius: number) {
   ].join(' ')
 }
 
-function firstName(name: string) {
-  const token = name.trim().split(/\s+/)[0] || name
-  return token.charAt(0).toUpperCase() + token.slice(1)
-}
-
 export function computeRaffleWheelRotation(
   winnerIndex: number,
   participantCount: number,
@@ -58,41 +52,55 @@ export function computeRaffleWheelRotation(
   return currentRotation + 360 * 6 + delta
 }
 
+/** One wedge on the wheel. `label` is rendered as-is, so format names before passing them. */
+export interface InitGiveawayRaffleWheelSegment {
+  id: string
+  label: string
+}
+
 interface InitGiveawayRaffleWheelProps {
-  participants: LaunchEventOnlineUser[]
+  segments: InitGiveawayRaffleWheelSegment[]
   rotation: number
+  /** Shown inside the empty wheel when there is nothing to draw from. */
+  emptyMessage?: string
   className?: string
 }
 
 export function InitGiveawayRaffleWheel({
-  participants,
+  segments: wheelSegments,
   rotation,
+  emptyMessage = 'No one is online right now.',
   className,
 }: InitGiveawayRaffleWheelProps) {
   const reduceMotion = useReducedMotion()
   const clipId = `raffle-wheel-${useId().replace(/:/g, '')}`
-  const count = participants.length
+  const count = wheelSegments.length
   const center = WHEEL_SIZE / 2
 
   const segments = useMemo(() => {
     if (count === 0) return []
 
     const segmentAngle = 360 / count
-    const labelRadius = WHEEL_RADIUS * 0.58
+    // Place labels toward the rim so radial text has room to run inward.
+    const labelRadius = WHEEL_RADIUS * (count > 16 ? 0.82 : count > 8 ? 0.76 : 0.7)
 
-    return participants.map((participant, index) => {
+    return wheelSegments.map((segment, index) => {
       const midAngle = index * segmentAngle + segmentAngle / 2
       const labelPosition = polarToCartesian(midAngle, labelRadius)
+      // Rotate names along the wedge (radial) instead of across it (tangential)
+      // so thin slices stay readable. Flip the left half so text is upright.
+      const needsFlip = midAngle > 90 && midAngle < 270
 
       return {
-        participant,
+        segment,
         path: buildSegmentPath(index, count, WHEEL_RADIUS),
         fill: SEGMENT_FILLS[index % SEGMENT_FILLS.length],
         labelPosition,
-        labelRotation: midAngle,
+        labelRotation: needsFlip ? midAngle + 90 : midAngle - 90,
+        textAnchor: needsFlip ? ('start' as const) : ('end' as const),
       }
     })
-  }, [count, participants])
+  }, [count, wheelSegments])
 
   if (count === 0) {
     return (
@@ -104,7 +112,7 @@ export function InitGiveawayRaffleWheel({
         style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}
       >
         <p className="max-w-[200px] text-center text-[13px] text-muted-foreground">
-          No one is online right now.
+          {emptyMessage}
         </p>
       </div>
     )
@@ -147,23 +155,37 @@ export function InitGiveawayRaffleWheel({
             </defs>
             <g clipPath={`url(#${clipId})`}>
               <g transform={`translate(${center}, ${center})`}>
-                {segments.map(({ participant, path, fill, labelPosition, labelRotation }) => (
-                  <g key={participant.id}>
-                    <path d={path} fill={fill} stroke="var(--border)" strokeWidth={1} />
-                    <text
-                      x={labelPosition.x}
-                      y={labelPosition.y}
-                      fill="var(--foreground)"
-                      fontSize={count > 12 ? 9 : count > 6 ? 10 : 12}
-                      fontWeight={600}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      transform={`rotate(${labelRotation}, ${labelPosition.x}, ${labelPosition.y})`}
-                    >
-                      {firstName(participant.name).slice(0, count > 14 ? 6 : 12)}
-                    </text>
-                  </g>
-                ))}
+                {segments.map(
+                  ({
+                    segment,
+                    path,
+                    fill,
+                    labelPosition,
+                    labelRotation,
+                    textAnchor,
+                  }) => (
+                    <g key={segment.id}>
+                      <path d={path} fill={fill} stroke="var(--border)" strokeWidth={1} />
+                      <text
+                        x={labelPosition.x}
+                        y={labelPosition.y}
+                        fill="var(--foreground)"
+                        fontSize={
+                          count > 28 ? 7 : count > 18 ? 8 : count > 10 ? 9 : count > 6 ? 10 : 12
+                        }
+                        fontWeight={600}
+                        textAnchor={textAnchor}
+                        dominantBaseline="middle"
+                        transform={`rotate(${labelRotation}, ${labelPosition.x}, ${labelPosition.y})`}
+                      >
+                        {segment.label.slice(
+                          0,
+                          count > 40 ? 8 : count > 24 ? 10 : count > 14 ? 12 : 16,
+                        )}
+                      </text>
+                    </g>
+                  ),
+                )}
               </g>
             </g>
           </svg>

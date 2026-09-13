@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.5.4 released
 date: 2024-03-25
 cover: /images/changelog/2024-03-25.avif
+tags: integrations, functions
 ---
 
 Appwrite 1.5.4 brings several fixes and a miscellaneous update to enhance your development experience with our platform. 

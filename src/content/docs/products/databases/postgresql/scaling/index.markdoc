@@ -8,7 +8,7 @@ Native databases scale in two dimensions: the compute specification (CPU, memory
 
 # List available specifications {% #specifications %}
 
-Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan:
+Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. Listing specifications returns the whole catalogue, with an `enabled` flag showing which ones your plan allows:
 
 {% multicode %}
 ```server-nodejs
@@ -203,7 +203,7 @@ curl -X GET \
 ![Compute tier settings](/images/docs/products/databases/postgresql/settings-compute-tier.avif)
 {% /only_light %}
 
-To resize in the Console, open your database, go to **Settings** > **Compute**, and select the new tier.
+To resize in the Console, open your database, go to **Settings** > **Compute**, and pick a larger specification. The Console offers upgrades only.
 
 From the API, pass the new specification ID:
 
@@ -407,15 +407,24 @@ curl -X PATCH \
 ```
 {% /multicode %}
 
-Resizes apply with zero downtime through a rolling cutover: a new instance is provisioned on the target specification, data is streamed over, and traffic cuts over once it has caught up. The database status shows `scaling` while the resize is in progress.
+Resizes apply with zero downtime and the database keeps its storage in place. When the new size fits on the current node, the resize applies to the running instance without a restart. When it needs a larger node, the database fails over onto an instance of the target size and writes pause briefly at the cutover. The database status shows `scaling` while the resize is in progress.
+
+You cannot move a database to a smaller specification. Every specification in the catalogue includes more storage than the one below it, and a resize is rejected when the target includes less storage than the database currently has.
 
 # Storage {% #storage %}
 
-Each specification includes a storage allowance, and storage beyond the allowance is billed per GB. Storage only grows; you cannot shrink a database's storage after it has expanded. To reclaim a smaller footprint, restore a [backup](/docs/products/databases/postgresql/backups) into a new database.
+Each specification includes a storage allowance, and storage beyond the allowance is billed per GB. Storage only grows; you cannot shrink a database's storage after it has expanded. To reclaim a smaller footprint, create a second database and restore a [backup](/docs/products/databases/postgresql/backups) into it.
 
 # Storage autoscaling {% #autoscaling %}
 
-With storage autoscaling enabled, Appwrite grows the storage automatically when usage crosses a threshold, so the database never hits a full disk. Configure it under **Settings** > **Storage** in the Console, or through the API:
+With storage autoscaling enabled, Appwrite grows the storage automatically when usage crosses a threshold. Configure it under **Settings** > **Storage** in the Console, or through the API:
+
+{% only_dark %}
+![Storage settings with the autoscaling toggle](/images/docs/products/databases/postgresql/dark/settings-storage.avif)
+{% /only_dark %}
+{% only_light %}
+![Storage settings with the autoscaling toggle](/images/docs/products/databases/postgresql/settings-storage.avif)
+{% /only_light %}
 
 {% multicode %}
 ```server-nodejs
@@ -643,9 +652,9 @@ curl -X PATCH \
 |---------------------------------------|--------------------|-----------------------------------------------------------|
 | `storageAutoscaling`                  | boolean            | Enable automatic storage growth                          |
 | `storageAutoscalingThresholdPercent`  | 50 - 95            | Usage percentage that triggers an expansion (default 85) |
-| `storageAutoscalingMaxGb`             | integer, 0 = no cap | Upper bound for automatic growth                        |
+| `storageAutoscalingMaxGb`             | 0 - 16384          | Upper bound for automatic growth, in GB. `0` means no cap |
 
-Set a cap if you want a hard ceiling on storage cost; without one, autoscaling grows storage as needed and the overage is billed per GB.
+A cap has to be larger than the database's current storage, otherwise the request is rejected. Once storage reaches the cap, autoscaling stops and the disk can fill, so leave the cap off unless you have a reason to bound growth.
 
 # Picking a specification {% #picking %}
 

@@ -10,6 +10,7 @@ import {
   resolveAndPrefetchDefaultOrganization,
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
@@ -36,9 +37,28 @@ const AUTH_PAGE_PATHS = [
   '/auth/magic-url',
 ] as const
 
-export function isValidRelativeRedirect(url: string): boolean {
-  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
-  return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
+export function isValidRelativeRedirect(value: string): boolean {
+  if (
+    !value.startsWith('/') ||
+    value.startsWith('//') ||
+    /[\\\u0000-\u001f\u007f]/.test(value)
+  ) {
+    return false
+  }
+  try {
+    // Validate destination structure, not URLs embedded in query values.
+    // Callers must retain the original bytes rather than the normalized URL.
+    const origin = 'https://console.invalid'
+    const destination = new URL(value, origin)
+    const pathname = decodeURIComponent(destination.pathname)
+    return (
+      destination.origin === origin &&
+      !pathname.startsWith('//') &&
+      !/[\\\u0000-\u001f\u007f]/.test(pathname)
+    )
+  } catch {
+    return false
+  }
 }
 
 function normalizeRedirectPathname(redirect: string): string {
@@ -86,11 +106,22 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
  * search params - which would lose OAuth2 params like `client_id` (consent) or
  * `user_code` (device) when returning to the flow after sign-up / verification.
  */
-export function toRedirectNavigateOptions(redirect: string): {
-  to: string
-  search: Record<string, string>
-} {
+export function toRedirectNavigateOptions(
+  redirect: string,
+):
+  | { to: string; search: Record<string, string> }
+  | { href: string; reloadDocument: true } {
   const url = new URL(redirect, 'http://localhost')
+  if (
+    isValidRelativeRedirect(redirect) &&
+    url.origin === 'http://localhost' &&
+    url.pathname === '/oauth2/consent'
+  ) {
+    // Native raw requests must not pass through parsed search serialization:
+    // it collapses repeated resources and quotes JSON-like state/RAR strings.
+    // href without to uses the installed router's direct document navigation.
+    return { href: redirect, reloadDocument: true }
+  }
   return {
     to: url.pathname,
     search: Object.fromEntries(url.searchParams),
@@ -120,6 +151,10 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  // Education enrollment provisions its own organization after verifying GitHub.
+  if (redirect && normalizeRedirectPathname(redirect) === EDUCATION_JOIN_PATH) {
+    return
+  }
   if (isPreLaunchModeEnabled()) return
 
   const resolvedRedirect = resolvePostAuthRedirect(redirect)

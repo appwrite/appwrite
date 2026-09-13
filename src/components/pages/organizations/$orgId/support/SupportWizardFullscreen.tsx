@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
@@ -45,8 +45,6 @@ const SUBJECT_MAX = 128
 const SUBJECT_PLACEHOLDER = 'Brief summary of your issue'
 const MESSAGE_PLACEHOLDER =
   'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.'
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 const SUPPORT_DISCORD_URL = '/discord'
 const SUPPORT_GITHUB_ISSUES_URL =
   'https://github.com/appwrite/appwrite/issues/new/choose'
@@ -244,13 +242,7 @@ export function SupportWizardFullscreen() {
             {t('Get dedicated support and SLAs for your organization.')}
           </p>
           <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
-            <a
-              href={CONTACT_SALES_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('Contact sales')}
-            </a>
+            <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
           </Button>
         </div>
       </div>
@@ -400,14 +392,9 @@ export function SupportWizardFullscreen() {
               <div className="border-t border-border px-6 py-4 bg-muted/30">
                 <p className="text-[13px] text-muted-foreground">
                   {t('Need 24/7 or enterprise support?')}{' '}
-                  <a
-                    href={CONTACT_SALES_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-foreground underline hover:no-underline"
-                  >
+                  <ContactSalesLink className="font-medium text-foreground underline hover:no-underline">
                     {t('Contact sales')}
-                  </a>
+                  </ContactSalesLink>
                 </p>
               </div>
             </div>

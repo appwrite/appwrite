@@ -1,9 +1,12 @@
 /**
  * Screenshot mode - demo-friendly overlays for marketing captures.
  * Toggle by typing "smile" (see ScreenshotModeProvider).
+ * Replaces the signed-in user's name, email, and avatar, organization names,
+ * and hides the DEV construction stripe.
  */
 
 import type { Models } from '@appwrite.io/console'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 
 export const SCREENSHOT_MODE_OPEN_KEY = 'screenshot:modeOpen'
 export const SCREENSHOT_MODE_CHANGE_EVENT = 'screenshotModeChange'
@@ -12,14 +15,20 @@ export const SCREENSHOT_MODE_CHANGE_EVENT = 'screenshotModeChange'
 export const SCREENSHOT_MODE_TOGGLE_SEQUENCE = 'smile'
 
 export const SCREENSHOT_MODE_USER_NAME = "Walter O'Brien"
+export const SCREENSHOT_MODE_USER_EMAIL = 'walter@appwrite.io'
+export const SCREENSHOT_MODE_USER_AVATAR_URL =
+  '/images/community/avatars/walter.avif'
 export const SCREENSHOT_MODE_ORG_NAME = 'ACME Corps'
 
 export function readScreenshotModeOpen(): boolean {
-  if (typeof window === 'undefined') return false
+  const defaultOpen = getRuntimeConfig().screenshotMode === 'true'
+  if (typeof window === 'undefined') return defaultOpen
   try {
-    return localStorage.getItem(SCREENSHOT_MODE_OPEN_KEY) === 'true'
+    const stored = localStorage.getItem(SCREENSHOT_MODE_OPEN_KEY)
+    if (stored === 'true' || stored === 'false') return stored === 'true'
+    return defaultOpen
   } catch {
-    return false
+    return defaultOpen
   }
 }
 
@@ -67,11 +76,36 @@ export function subscribeScreenshotMode(
   }
 }
 
+export function resolveScreenshotModeUserPhotoSrc(options: {
+  userId?: string
+  useCurrentUser?: boolean
+  isCurrentUser?: boolean
+  currentUserId?: string | null
+}): string | null {
+  if (!isScreenshotModeActive()) return null
+
+  const trimmedUserId = options.userId?.trim() || ''
+  const currentUserId = options.currentUserId?.trim() || ''
+  const isCurrentUser =
+    options.isCurrentUser === true ||
+    options.useCurrentUser === true ||
+    (trimmedUserId.length > 0 &&
+      currentUserId.length > 0 &&
+      trimmedUserId === currentUserId)
+
+  if (!isCurrentUser) return null
+  return SCREENSHOT_MODE_USER_AVATAR_URL
+}
+
 export function applyScreenshotModeAccount<
   T extends Models.User | null | undefined,
 >(account: T): T {
   if (!account || !isScreenshotModeActive()) return account
-  return { ...account, name: SCREENSHOT_MODE_USER_NAME }
+  return {
+    ...account,
+    name: SCREENSHOT_MODE_USER_NAME,
+    email: SCREENSHOT_MODE_USER_EMAIL,
+  }
 }
 
 export function applyScreenshotModeOrganizationName<

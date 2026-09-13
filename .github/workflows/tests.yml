@@ -9,21 +9,32 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7i/spot=price-capacity-optimized/retry=when-interrupted/extras=otel
+    runs-on: runs-on=${{ github.run_id }}/runner=checks
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check deployment scripts
+        run: |
+          bash -n .github/scripts/extract-assets.sh
+          sh -n .github/scripts/publish-assets.sh
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4
 
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
       - name: Check connect snippet line width
         run: bun run lint:snippets
+
+      - name: Check content for hidden Unicode
+        run: bun run lint:content
+
+      - name: Check for native browser dialogs
+        run: bun run lint:native-dialogs
 
       - name: Build
         run: bun run build

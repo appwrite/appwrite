@@ -1,4 +1,5 @@
 import { fetchInitRaffleParticipants } from '@/lib/init/fetch-init-raffle-participants'
+import type { InitGrandPrizeEntriesParseResult } from '@/lib/init/grand-prize-entries'
 import { isInitDailyPrizeRevealed } from '@/lib/init/prize-visibility'
 import { scrollToInitPrizesSection } from '@/lib/init/scroll-to-day-card'
 import type { InitDisplayEvent, LaunchEventDailyPrize, LaunchEventGrandPrize } from '@/lib/init/types'
@@ -40,6 +41,12 @@ export function useInitGiveawayRaffle(
     ReturnType<typeof fetchInitRaffleParticipants>
   >>([])
   const [loadingParticipants, setLoadingParticipants] = useState(false)
+  /**
+   * Day 5 draws only from the host-uploaded verified entries CSV. Kept here
+   * (not in the flip card) so closing and reopening the reveal keeps the upload.
+   */
+  const [grandPrizeEntries, setGrandPrizeEntries] =
+    useState<InitGrandPrizeEntriesParseResult | null>(null)
 
   const enabled = Boolean(
     event.presenceEnabled && !event.isRecapMode && dailyGiveaways.length > 0,
@@ -95,11 +102,13 @@ export function useInitGiveawayRaffle(
       return
     }
 
+    // Never load presences here: the grand prize wheel is fed by the CSV alone.
     setActiveDay(null)
+    setParticipants([])
+    setLoadingParticipants(false)
     setIsGrandPrizeRevealOpen(true)
     scrollToInitPrizesSection()
-    await loadParticipants()
-  }, [close, event.currentDay, grandPrize, isGrandPrizeRevealOpen, loadParticipants])
+  }, [close, event.currentDay, grandPrize, isGrandPrizeRevealOpen])
 
   const activeGiveaway =
     activeDay == null
@@ -157,8 +166,11 @@ export function useInitGiveawayRaffle(
     grandPrize,
     participants,
     loadingParticipants,
+    grandPrizeEntries,
+    setGrandPrizeEntries,
     openForDay,
     openGrandPrizeReveal,
+    reloadParticipants: loadParticipants,
     close,
     raffleDays: GIVEAWAY_RAFFLE_DAYS,
   }

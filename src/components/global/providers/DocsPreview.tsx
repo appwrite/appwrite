@@ -36,6 +36,8 @@ import {
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
+import { isDatabaseTypeDocsSlugHidden } from '@/lib/docs/database-docs-feature'
+import { isDomainsDocsSlug } from '@/lib/docs/domains-docs-feature'
 import { isFirewallDocsSlug } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
@@ -45,6 +47,7 @@ import {
   openInNewTab,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { useDocsPreview } from './DocsPreviewContext'
@@ -60,7 +63,8 @@ export function DocsPreviewContent() {
   const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
-  const firewallDocsEnabled = features.firewall
+  const domainsDocsEnabled = isCloudProfile()
+  const firewallDocsEnabled = isCloudProfile()
   const agentDocsEnabled = features.agent
 
   const showMenu =
@@ -69,8 +73,10 @@ export function DocsPreviewContent() {
     view === 'menu' &&
     canShowDocsPreviewMenu(slug) &&
     (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
+    (!isDomainsDocsSlug(slug) || domainsDocsEnabled) &&
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
-    (!isAgentDocsSlug(slug) || agentDocsEnabled)
+    (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
+    !isDatabaseTypeDocsSlugHidden(slug)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -81,8 +87,10 @@ export function DocsPreviewContent() {
       slug !== '' &&
       !showMenu &&
       (!isPartnersDocsSlug(slug!) || partnersDocsEnabled) &&
+      (!isDomainsDocsSlug(slug!) || domainsDocsEnabled) &&
       (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
+      !isDatabaseTypeDocsSlugHidden(slug!) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -98,11 +106,19 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isDomainsDocsSlug(nextSlug) && !domainsDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       if (isFirewallDocsSlug(nextSlug) && !firewallDocsEnabled) {
         openDocsPreview('', { view: 'article' })
         return
       }
       if (isAgentDocsSlug(nextSlug) && !agentDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
+      if (isDatabaseTypeDocsSlugHidden(nextSlug)) {
         openDocsPreview('', { view: 'article' })
         return
       }
@@ -112,6 +128,7 @@ export function DocsPreviewContent() {
     },
     [
       agentDocsEnabled,
+      domainsDocsEnabled,
       firewallDocsEnabled,
       openDocsPreview,
       partnersDocsEnabled,
@@ -126,15 +143,24 @@ export function DocsPreviewContent() {
       openDocsPreview('', { view: 'article' })
       return
     }
+    if (!domainsDocsEnabled && isDomainsDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+      return
+    }
     if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
       return
     }
     if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
+      return
+    }
+    if (isDatabaseTypeDocsSlugHidden(slug)) {
+      openDocsPreview('', { view: 'article' })
     }
   }, [
     agentDocsEnabled,
+    domainsDocsEnabled,
     firewallDocsEnabled,
     isOpen,
     openDocsPreview,
@@ -196,7 +222,19 @@ export function DocsPreviewContent() {
     return null
   }
 
+  if (!domainsDocsEnabled && isDomainsDocsSlug(slug)) {
+    return null
+  }
+
   if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
+    return null
+  }
+
+  if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
+    return null
+  }
+
+  if (isDatabaseTypeDocsSlugHidden(slug)) {
     return null
   }
 

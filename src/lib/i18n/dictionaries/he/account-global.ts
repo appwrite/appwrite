@@ -4,6 +4,9 @@
  */
 export const heAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': 'הצטרפו לארגון',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
   '123 Main St': 'הרצל 1',
   Account: 'חשבון',
   'Account ID': 'מזהה חשבון',
@@ -185,6 +188,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Current: 'נוכחי',
   Delete: 'מחיקה',
   'Delete account': 'מחיקת חשבון',
+  'Delete identity': 'מחיקת זהות',
   'Delete all sessions': 'מחיקת כל הסשנים',
   'Delete authenticator app': 'מחיקת אפליקציית האימות',
   'Delete billing address': 'מחיקת כתובת חיוב',
@@ -354,7 +358,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אין לכם סשנים פעילים כרגע.',
   'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.':
     'החשבון שלכם יימחק לצמיתות ותאבדו גישה לכל הצוותים והנתונים שלכם. פעולה זו אינה הפיכה.',
+  'Your email': 'האימייל שלכם',
   'Your name': 'השם שלכם',
+  'Your password': 'הסיסמה שלכם',
 
   // Auth (sign in, sign up, recovery, reset, verify, MFA, OAuth consent)
   'A 6-digit verification code was sent to your email. Enter it below.':
@@ -394,7 +400,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Go to console': 'מעבר לקונסולה',
   'Login to your account': 'התחברות לחשבון שלכם',
   'Login with Bitbucket': 'התחברות עם Bitbucket',
-  'Login with Cursor': 'התחברות עם Cursor',
   'Login with GitHub': 'התחברות עם GitHub',
   'Login with GitLab': 'התחברות עם GitLab',
   'Login with Google': 'התחברות עם Google',
@@ -425,7 +430,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Sign in': 'התחברות',
   'Sign up': 'הירשמו',
   'Sign up with Bitbucket': 'הרשמה עם Bitbucket',
-  'Sign up with Cursor': 'הרשמה עם Cursor',
   'Sign up with GitHub': 'הרשמה עם GitHub',
   'Sign up with GitLab': 'הרשמה עם GitLab',
   'Sign up with Google': 'הרשמה עם Google',
@@ -493,6 +497,41 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אפשרו התראות דפדפן כדי לדעת על סיום בנייה גם כשהלשונית הזו ברקע.',
   'Not now': 'לא עכשיו',
   Enable: 'הפעלה',
+  'Browser alerts': 'התראות דפדפן',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'קבלו התראות שולחן עבודה מה-Console כשהלשונית הזו ברקע או שאפליקציה אחרת בפוקוס.',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'תקבלו התראות שולחן עבודה מה-Console בזמן שהלשונית הזו ברקע.',
+  'Browser alerts are turned off in the Console.':
+    'התראות הדפדפן כבויות ב-Console.',
+  'Console alerts': 'התראות Console',
+  'Included alerts': 'התראות כלולות',
+  'Build completion': 'סיום בנייה',
+  'Site and function builds that finish while you are away.':
+    'בניות אתרים ופונקציות שמסתיימות בזמן שאתם לא ליד המסך.',
+  'Browser alerts test': 'בדיקת התראות דפדפן',
+  'If you can read this, browser alerts are working correctly.':
+    'אם אתם קוראים את זה, התראות הדפדפן עובדות כראוי.',
+  'Send test notification': 'שליחת התראת בדיקה',
+  'Test notification sent': 'התראת הבדיקה נשלחה',
+  'Could not send a test notification. Check browser permissions.':
+    'לא ניתן היה לשלוח התראת בדיקה. בדקו את הרשאות הדפדפן.',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'אפשרו התראות עבור האתר הזה בהגדרות הדפדפן, ואז חזרו לכאן.',
+  'Browser permission': 'הרשאת דפדפן',
+  'Console preference': 'העדפת Console',
+  'Waiting for browser permission': 'ממתין להרשאת דפדפן',
+  'Not supported': 'לא נתמך',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'פתחו את הגדרות הדפדפן, מצאו הרשאות התראות עבור האתר הזה, אפשרו התראות, ואז רעננו את העמוד.',
+  'This browser does not support desktop notifications.':
+    'הדפדפן הזה לא תומך בהתראות שולחן עבודה.',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ההתראות חסומות על ידי הדפדפן. אפשרו אותן בהגדרות הדפדפן עבור האתר הזה.',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    'הפעילו התראות ואשרו התראות כשהדפדפן מבקש מכם.',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'אם לא הופיע באנר, בדקו את מרכז ההתראות של המערכת או את הגדרות "נא לא להפריע".',
 
   // Build notification titles/bodies (dynamic combinations)
   'Site build ready': 'בניית האתר מוכנה',
@@ -1075,6 +1114,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
   'Switch account': 'החלפת חשבון',
   'Use a different account': 'שימוש בחשבון אחר',
+  'Could not sign out. Try switching accounts again.':
+    'לא הצלחנו לנתק את החשבון. נסו שוב להחליף חשבון.',
   'Signing out...': 'מתנתקים...',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',
@@ -1091,7 +1132,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'בלחיצה על המשך, אתם מקבלים את',
   'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
   'Failed to initiate Bitbucket login': 'התחלת ההתחברות עם Bitbucket נכשלה',
-  'Failed to initiate Cursor login': 'התחלת ההתחברות עם Cursor נכשלה',
   'Failed to initiate GitHub login': 'התחלת ההתחברות עם GitHub נכשלה',
   'Failed to initiate GitLab login': 'התחלת ההתחברות עם GitLab נכשלה',
   'Failed to initiate Google login': 'התחלת ההתחברות עם Google נכשלה',
@@ -1210,4 +1250,30 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Switch to dark mode': 'מעבר למצב כהה',
   'Switch to light mode': 'מעבר למצב בהיר',
   'Use system theme': 'שימוש בערכת הנושא של המערכת',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
+  'Read about the program': 'מידע על התוכנית',
+  'Checking your account...': 'בודקים את החשבון שלכם...',
+  'Setting up your Education plan organization...':
+    'מגדירים את הארגון שלכם בתוכנית Education...',
+  'Continue to Appwrite': 'המשך אל Appwrite',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub לא השלים את ההתחברות. נסו שוב כדי להצטרף לתוכנית.',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    'נראה שאינכם זכאים כרגע ל-GitHub Student Developer Pack.',
+  'You can still use Appwrite without an Education plan.':
+    'עדיין תוכלו להשתמש ב-Appwrite ללא תוכנית Education.',
+  "You've already joined the Education program.": 'כבר הצטרפתם לתוכנית Education.',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
+  'We could not check your GitHub connection':
+    'לא הצלחנו לבדוק את החיבור שלכם ל-GitHub',
+  'We could not set up your Education plan':
+    'לא הצלחנו להגדיר את תוכנית ה-Education שלכם',
+  'We could not reach GitHub': 'לא הצלחנו להתחבר ל-GitHub',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    'נסו שוב בעוד רגע, או התחברו והתנסו ב-Appwrite.',
 }

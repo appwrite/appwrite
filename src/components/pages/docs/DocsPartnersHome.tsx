@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { DocsHomeSectionHeading } from './_components/DocsHomeSectionHeading'
 import { DocsPartnersHubBento } from './_components/DocsPartnersHubBento'
@@ -11,9 +12,10 @@ import {
 import {
   DOCS_PARTNERS_HOME_APIS,
   DOCS_PARTNERS_HOME_AUDIENCES,
-  DOCS_PARTNERS_HOME_GUIDES,
   DOCS_PARTNERS_HOME_INTEGRATIONS,
 } from '@/lib/docs/partners-home-content'
+import { isCloudProfile } from '@/lib/console-profiles'
+import { isDomainsDocsHref } from '@/lib/docs/domains-docs-feature'
 import { cn } from '@/lib/utils'
 import { DocsPartnersHeroSection } from './DocsPartnersHeroSection'
 import { DocsPartnersPreviewHeroSection } from './DocsPartnersPreviewHeroSection'
@@ -59,6 +61,14 @@ type DocsPartnersHomeProps = {
 }
 
 export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
+  const partnerApis = useMemo(
+    () =>
+      DOCS_PARTNERS_HOME_APIS.filter(
+        (item) => isCloudProfile() || !isDomainsDocsHref(item.href),
+      ),
+    [],
+  )
+
   return (
     <>
       {variant === 'preview' ? (
@@ -117,17 +127,9 @@ export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
         variant={variant}
         title="Partners APIs"
         description="Use the Console SDK to manage infrastructure-level resources across organizations and projects."
-      >
-        <DocsPartnersHubBento items={DOCS_PARTNERS_HOME_APIS} />
-      </DocsPartnersHomeSection>
-
-      <DocsPartnersHomeSection
-        variant={variant}
-        title="Guides for your use case"
-        description="Follow end-to-end workflows for provisioning, app marketplaces, and multi-tenant platform design."
         className="border-b-0"
       >
-        <DocsPartnersHubBento items={DOCS_PARTNERS_HOME_GUIDES} />
+        <DocsPartnersHubBento items={partnerApis} />
       </DocsPartnersHomeSection>
     </>
   )

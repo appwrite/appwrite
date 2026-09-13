@@ -19,7 +19,6 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Key,
   AlertCircle,
   AlertTriangle,
   UserCog,
@@ -29,9 +28,7 @@ import {
   CreditCard,
   Settings,
   KeyRound,
-  Info,
-  ExternalLink,
-  ChevronRight,
+  Handshake,
   Pin,
   PinOff} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -80,6 +77,7 @@ import {
   reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { resolveAndPrefetchDefaultOrganization, prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -99,7 +97,8 @@ import {
   canAccessOrgOverviewTab,
   getFirstAllowedOrgOverviewPath,
   canShowOrgBillingNav,
-  canShowOrgComplianceNav} from '@/lib/console-access-checks'
+  canShowOrgComplianceNav,
+  canSwitchOrganizations} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import {
@@ -157,6 +156,8 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -171,6 +172,7 @@ import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
+import { Partners } from '../settings/Partners'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -192,6 +194,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -219,6 +222,18 @@ import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
+
+/** Organization routes the overview navigates between; keeps `navigate` and `Link` typed. */
+type OrgRoutePath =
+  | '/organizations/$orgId'
+  | '/organizations/$orgId/marketplace'
+  | '/organizations/$orgId/domains'
+  | '/organizations/$orgId/settings'
+  | '/organizations/$orgId/settings/members'
+  | '/organizations/$orgId/settings/billing'
+  | '/organizations/$orgId/settings/compliance'
+  | '/organizations/$orgId/settings/oauth-apps'
+  | '/organizations/$orgId/settings/partners'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
@@ -299,6 +314,10 @@ function OrgRoleBadge({ role }: { role: string }) {
 /** Header avatar stack beside Invite: fixed width fits this many md avatars. */
 const HEADER_MEMBER_AVATAR_SLOTS = 2
 
+/** Shared frame so photo, initials, overflow, and empty slots stay the same size. */
+const HEADER_MEMBER_AVATAR_FRAME =
+  'relative h-8 w-8 shrink-0 rounded-full ring-2 ring-background'
+
 function EmptyMemberAvatarSlot({
   zIndex,
   onClick,
@@ -317,16 +336,15 @@ function EmptyMemberAvatarSlot({
       onClick={onClick}
       {...analyticsAttrs('invite-org-member')}
       className={cn(
-        'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        HEADER_MEMBER_AVATAR_FRAME,
+        'flex items-center justify-center border border-dashed border-muted-foreground/35 bg-muted/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
       )}
       style={{ zIndex }}
       title={disabled ? undefined : t('Invite member')}
       aria-label={t('Invite member')}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25">
-        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-      </div>
+      <Plus className="h-3.5 w-3.5 text-muted-foreground" />
     </button>
   )
 
@@ -338,7 +356,7 @@ function EmptyMemberAvatarSlot({
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="relative inline-flex shrink-0" style={{ zIndex }}>
+          <span className="relative flex h-8 w-8 shrink-0" style={{ zIndex }}>
             {button}
           </span>
         </TooltipTrigger>
@@ -350,8 +368,6 @@ function EmptyMemberAvatarSlot({
   )
 }
 
-import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
-import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'marketplace' | 'domains' | 'settings'
@@ -375,7 +391,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     null,
   )
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
-  const { features, isCloud } = useConsoleProfile()
+  const leavingOrganizationRef = useRef(false)
+  const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
@@ -422,6 +439,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 3]
     ) {
       const domainId = pathParts[orgIndex + 3]
+      // Wizard segments are not domain detail routes (transfer-in is long enough to
+      // look like an id if we only check length).
+      if (domainId === 'buy' || domainId === 'transfer-in') {
+        return false
+      }
       // If the domainId looks like an ID (long alphanumeric), we're on a detail route
       if (domainId && domainId.length > 10) {
         return true
@@ -483,6 +505,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       pathParts[orgIndex + 2] === 'domains' &&
       !pathParts[orgIndex + 3] // No domainId means we're on the index route
 
+    // Pathname updates to /domains/buy|transfer-in before the wizard match commits.
+    // Keep the Outlet children slot so the list stays visible until then.
+    const isDomainsWizardPendingByPath =
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'domains' &&
+      (pathParts[orgIndex + 3] === 'buy' ||
+        pathParts[orgIndex + 3] === 'transfer-in')
+
     const isMarketplaceRouteByPath =
       orgIndex >= 0 &&
       pathParts[orgIndex + 2] === 'marketplace' &&
@@ -492,6 +522,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return (
       isDomainsIndexRoute ||
       isDomainsRouteByPath ||
+      isDomainsWizardPendingByPath ||
       isMarketplaceIndexRoute ||
       isMarketplaceRouteByPath
     )
@@ -530,7 +561,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return 'projects'
   }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
 
-  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'api-keys'
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
   const settingsSubTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -540,7 +571,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'billing') return 'billing'
       if (subTab === 'compliance') return 'compliance'
       if (subTab === 'oauth-apps') return 'oauth-apps'
-      if (subTab === 'api-keys') return 'api-keys'
+      if (subTab === 'partners') return 'partners'
       return 'overview'
     }
     return 'overview'
@@ -587,7 +618,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               ]},
           ]
         : []),
-      ...(features.oauthApps
+      ...(canShowOrgOAuthAppsSettings(access, features)
         ? [
             {
               id: 'oauth-apps',
@@ -600,11 +631,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ...(features.orgApiKeys
         ? [
             {
-              id: 'api-keys',
-              label: t('API keys'),
-              to: '/organizations/$orgId/settings/api-keys',
-              icon: Key,
-              keywords: ['api', 'keys', 'credentials']},
+              id: 'partners',
+              label: t('Partners'),
+              to: '/organizations/$orgId/settings/partners',
+              icon: Handshake,
+              keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
           ]
         : []),
     ]
@@ -619,7 +650,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
             return canShowOrgOAuthAppsSettings(access, features)
-          if (item.id === 'api-keys')
+          if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
           return true
         })
@@ -680,6 +711,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false)
   const [removeMemberDialogOpen, setRemoveMemberDialogOpen] = useState(false)
+  const [leavingOrganization, setLeavingOrganization] = useState(false)
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
   const [selectedRole, setSelectedRole] = useState<
     'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
@@ -715,8 +747,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
     if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
-      (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
-      (settingsSubTab === 'api-keys' && !features.orgApiKeys)
+      (settingsSubTab === 'oauth-apps' &&
+        !canShowOrgOAuthAppsSettings(access, features)) ||
+      (settingsSubTab === 'partners' && !features.orgApiKeys)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -734,7 +767,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
           canShowOrgOAuthAppsSettings(access, features)) ||
-        (settingsSubTab === 'api-keys' &&
+        (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features))
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
@@ -752,21 +785,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handleOrgNavigate = useCallback(
     (tab: string) => {
-      const tabRoutes: Record<string, string> = {
+      const tabRoutes = {
         projects: '/organizations/$orgId',
-        marketplace: '/organizations/$orgId/marketplace/',
-        domains: '/organizations/$orgId/domains/',
+        marketplace: '/organizations/$orgId/marketplace',
+        domains: '/organizations/$orgId/domains',
         settings: '/organizations/$orgId/settings',
         'settings/members': '/organizations/$orgId/settings/members',
         'settings/billing': '/organizations/$orgId/settings/billing',
         'settings/compliance': '/organizations/$orgId/settings/compliance',
-        'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps'}
+        'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+        'settings/partners': '/organizations/$orgId/settings/partners',
+      } as const satisfies Record<string, OrgRoutePath>
 
-      const route = tabRoutes[tab]
-      if (route) {
+      const route = tabRoutes[tab as keyof typeof tabRoutes]
+      if (route && orgId) {
         navigate({
-          to: route as unknown,
-          params: { orgId: orgId! } as unknown,
+          to: route,
+          params: { orgId },
           replace: true})
       }
     },
@@ -950,6 +985,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
     isOrganizationBillingReadonlyStatus(selectedOrg?.status)
+  const canSwitchOrgs = canSwitchOrganizations(features, organizations.length)
 
   const showBudgetLimitAlert =
     features.billing && isBudgetLimitReached(organizationDetail)
@@ -1056,8 +1092,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     location.pathname,
   ])
 
+  useEffect(() => {
+    if (!leavingOrganizationRef.current) return
+    leavingOrganizationRef.current = false
+    setLeavingOrganization(false)
+    setRemoveMemberDialogOpen(false)
+    setSelectedMember(null)
+  }, [orgId])
+
   // Handle missing organization: redirect to next org or open creation wizard
   useEffect(() => {
+    // Leaving this org (e.g. removing yourself) goes through `/` instead.
+    if (leavingOrganizationRef.current) return
     // Only act if organizations have finished loading and we have an orgId in the URL
     if (organizationsLoading || !orgId) return
 
@@ -1754,7 +1800,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    const tabs: { id: string; label: string; to: string }[] = []
+    const tabs: { id: string; label: string; to: OrgRoutePath }[] = []
     if (canSeeProjects(access, features)) {
       tabs.push({
         id: 'projects',
@@ -1765,13 +1811,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       tabs.push({
         id: 'marketplace',
         label: 'Marketplace',
-        to: '/organizations/$orgId/marketplace/'})
+        to: '/organizations/$orgId/marketplace'})
     }
     if (canShowOrgDomainsTab(access, features)) {
       tabs.push({
         id: 'domains',
         label: 'Domains',
-        to: '/organizations/$orgId/domains/'})
+        to: '/organizations/$orgId/domains'})
     }
     if (canShowOrgSettingsTab(access)) {
       tabs.push({
@@ -1799,7 +1845,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const showProjectUsageCharts = features.usageStats
+  const showProjectUsageCharts =
+    features.usageStats ||
+    (isSelfHosted && !isUsageStatsCapabilityResolved())
   // Budget-locked projects cannot load platform/usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
@@ -1823,7 +1871,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
     visibleProjectIds,
-    showProjectUsageCharts && !skipProjectCardExtras,
+    features.usageStats && !skipProjectCardExtras,
+    organizationPlan,
   )
 
   const projectListPlatformIds = useMemo(() => {
@@ -1999,23 +2048,28 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setOrgSwitcherOpen(false)
 
     // Navigate to the new organization route, preserving the current tab
-    const tabRoutes: Record<string, string> = {
+    const tabRoutes = {
       projects: '/organizations/$orgId',
-      marketplace: '/organizations/$orgId/marketplace/',
-      domains: '/organizations/$orgId/domains/',
-      settings: '/organizations/$orgId/settings'}
+      marketplace: '/organizations/$orgId/marketplace',
+      domains: '/organizations/$orgId/domains',
+      settings: '/organizations/$orgId/settings',
+    } as const satisfies Record<string, OrgRoutePath>
 
     // Preserve settings sub-tab when switching orgs
+    const settingsSubRoutes = {
+      members: '/organizations/$orgId/settings/members',
+      billing: '/organizations/$orgId/settings/billing',
+      compliance: '/organizations/$orgId/settings/compliance',
+      'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+      partners: '/organizations/$orgId/settings/partners',
+    } as const satisfies Record<string, OrgRoutePath>
     const settingsSubRoute =
-      activeTab === 'settings' &&
-      ['members', 'billing', 'compliance', 'oauth-apps', 'api-keys'].includes(
-        settingsSubTab,
-      )
-        ? `/organizations/$orgId/settings/${settingsSubTab}`
-        : null
-    const route =
-      settingsSubRoute ||
-      (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
+      activeTab === 'settings'
+        ? settingsSubRoutes[settingsSubTab as keyof typeof settingsSubRoutes]
+        : undefined
+    const route: OrgRoutePath =
+      settingsSubRoute ??
+      tabRoutes[activeTab as keyof typeof tabRoutes] ??
       '/organizations/$orgId'
 
     try {
@@ -2025,8 +2079,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
 
     navigate({
-      to: route as unknown,
-      params: { orgId: org.$id } as unknown,
+      to: route,
+      params: { orgId: org.$id },
       replace: true})
 
     // Update user prefs with the selected organization
@@ -2061,7 +2115,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
             <div className="flex h-8 min-h-8 max-h-8 min-w-0 flex-1 items-center gap-2">
               {selectedOrg ? (
-                supportsMultiTenancy ? (
+                canSwitchOrgs ? (
                   <Popover
                     open={orgSwitcherOpen}
                     onOpenChange={setOrgSwitcherOpen}
@@ -2146,20 +2200,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </button>
                         ))}
                       </div>
-                      <div className="border-t border-border p-2">
-                        <button
-                          type="button"
-                          {...analyticsAttrs('create-organization')}
-                          onClick={() => {
-                            setOrgSwitcherOpen(false)
-                            handleOpenCreateOrganization()
-                          }}
-                          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {t('Create organization')}
-                        </button>
-                      </div>
+                      {supportsMultiTenancy && (
+                        <div className="border-t border-border p-2">
+                          <button
+                            type="button"
+                            {...analyticsAttrs('create-organization')}
+                            onClick={() => {
+                              setOrgSwitcherOpen(false)
+                              handleOpenCreateOrganization()
+                            }}
+                            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <Plus className="h-4 w-4" />
+                            {t('Create organization')}
+                          </button>
+                        </div>
+                      )}
                     </PopoverContent>
                   </Popover>
                 ) : (
@@ -2180,7 +2236,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {isCloud && (
                     <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
                   )}
-                  {supportsMultiTenancy && (
+                  {canSwitchOrgs && (
                     <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
                   )}
                 </div>
@@ -2207,23 +2263,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             </div>
 
             {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
-            <div className="hidden h-8 min-h-8 max-h-8 shrink-0 items-center gap-3 sm:flex">
+            <div className="hidden h-8 shrink-0 items-center gap-3 overflow-visible sm:flex">
               {orgId && (
-                <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
+                <div className="flex h-8 w-[5.5rem] shrink-0 items-center justify-start overflow-visible">
                   {!selectedOrg || membershipsLoading ? (
                     <div className="flex -space-x-2" aria-hidden>
                       <div
-                        className="relative rounded-full border-2 border-background"
+                        className={cn(
+                          HEADER_MEMBER_AVATAR_FRAME,
+                          'bg-muted animate-pulse',
+                        )}
                         style={{ zIndex: 2 }}
-                      >
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
-                      </div>
+                      />
                       <div
-                        className="relative rounded-full border-2 border-background"
+                        className={cn(
+                          HEADER_MEMBER_AVATAR_FRAME,
+                          'bg-muted animate-pulse',
+                        )}
                         style={{ zIndex: 1 }}
-                      >
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
-                      </div>
+                      />
                     </div>
                   ) : (
                     (() => {
@@ -2245,7 +2303,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       return (
                         <div
                           className={cn(
-                            'flex h-8 min-h-8 items-center',
+                            'flex h-8 items-center overflow-visible',
                             slotCount > 1 && '-space-x-2',
                           )}
                         >
@@ -2254,7 +2312,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               to="/organizations/$orgId/settings/members"
                               params={{ orgId: orgId! }}
                               className={cn(
-                                'flex h-8 min-h-8 items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
+                                'flex h-8 items-center overflow-visible rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
                                 (displayMembers.length > 1 ||
                                   (displayMembers.length > 0 &&
                                     showOverflow)) &&
@@ -2266,7 +2324,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 (member: TeamMember, index: number) => (
                                   <div
                                     key={member.$id}
-                                    className="relative rounded-full border-2 border-background"
+                                    className={HEADER_MEMBER_AVATAR_FRAME}
                                     style={{
                                       zIndex:
                                         emptySlotCount +
@@ -2277,13 +2335,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       userId={member.userId}
                                       name={member.userName}
                                       size="md"
+                                      className="h-full w-full"
                                     />
                                   </div>
                                 ),
                               )}
                               {showOverflow && (
                                 <div
-                                  className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-foreground/80"
+                                  className={cn(
+                                    HEADER_MEMBER_AVATAR_FRAME,
+                                    'flex items-center justify-center bg-muted text-[11px] font-medium leading-none text-foreground/80',
+                                  )}
                                   style={{ zIndex: 0 }}
                                 >
                                   +{totalCount - HEADER_MEMBER_AVATAR_SLOTS}
@@ -2348,8 +2410,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   return (
                   <Link
                     key={tab.id}
-                    to={tab.to as unknown}
-                    params={{ orgId: orgId! } as unknown}
+                    to={tab.to}
+                    params={{ orgId: orgId ?? '' }}
                     replace
                     role="tab"
                     aria-selected={activeTab === tab.id}
@@ -3260,180 +3322,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <ComplianceTab />
                     ) : settingsSubTab === 'oauth-apps' ? (
                       <OrgAppsView />
-                    ) : settingsSubTab === 'api-keys' ? (
-                      <SettingsCardsList
-                        className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"
-                        cards={[
-                          {
-                            id: 'api-key-types',
-                            search: {
-                              title: 'API key types',
-                              description:
-                                'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
-                              keywords: [
-                                'api',
-                                'keys',
-                                'scopes',
-                                'credentials',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                                <div className="px-6 py-4">
-                                  <h3 className="text-[15px] font-semibold text-foreground">
-                                    {t('API key types')}
-                                  </h3>
-                                  <p className="mt-1 text-[13px] text-muted-foreground">
-                                    {t(
-                                      'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'project-keys',
-                            search: {
-                              title: 'Project keys',
-                              keywords: [
-                                'database',
-                                'storage',
-                                'functions',
-                                'project',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Project keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Databases, storage, users, functions. One project per key.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  {activeProjects.length > 0 ? (
-                                    <ProjectSelector
-                                      orgTeamId={orgTeamId}
-                                      getProjectLink={(projectId) => ({
-                                        to: '/projects/$projectId/api-keys',
-                                        params: { projectId }})}
-                                      showApiKeysCount
-                                    />
-                                  ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 w-full justify-between text-[13px] font-normal"
-                                      asChild
-                                    >
-                                      <Link
-                                        to="/organizations/$orgId"
-                                        params={{ orgId: orgId ?? '' }}
-                                        className="inline-flex items-center gap-1.5"
-                                      >
-                                        {t('Create a project first')}
-                                        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                                      </Link>
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'account-keys',
-                            search: {
-                              title: 'Account keys',
-                              keywords: ['cli', 'sessions', 'user', 'account']},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Account keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Account-level ops, CLI auth, sessions. Per-user credentials.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 w-full justify-between text-[13px] font-normal"
-                                    asChild
-                                  >
-                                    <Link
-                                      to="/account"
-                                      className="inline-flex items-center gap-1.5"
-                                    >
-                                      {t('Account settings')}
-                                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                                    </Link>
-                                  </Button>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'org-keys',
-                            search: {
-                              title: 'Org keys',
-                              keywords: [
-                                'billing',
-                                'team',
-                                'organization',
-                                'org',
-                              ]},
-                            node: (
-                              <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
-                                <div className="px-4 py-3">
-                                  <h3 className="text-[13px] font-semibold text-foreground">
-                                    {t('Org keys')}
-                                  </h3>
-                                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    {t(
-                                      'Billing, team, cross-project. One key for the whole org.',
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 w-full justify-between text-[13px] font-normal"
-                                    asChild
-                                  >
-                                    <DocsRouteLink className="inline-flex items-center gap-1.5" href="/docs/advanced/platform/api-keys">
-                                      {t('Docs')}
-                                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                    </DocsRouteLink>
-                                  </Button>
-                                </div>
-                              </div>
-                            )},
-                          {
-                            id: 'api-keys-info',
-                            search: {
-                              title: 'API key types',
-                              keywords: [
-                                'organization-level',
-                                'server-side',
-                                'manageable',
-                              ]},
-                            node: (
-                              <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
-                                <p className="text-[12px] text-muted-foreground">
-                                  <Info className="mb-0.5 me-2 inline-block h-4 w-4 align-middle" />
-                                  {t(
-                                    'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.',
-                                  )}
-                                </p>
-                              </div>
-                            )},
-                        ]}
-                      />
+                    ) : settingsSubTab === 'partners' ? (
+                      <Partners />
                     ) : settingsSubTab === 'members' ? (
                       <>
                         {/* Error State */}
@@ -3552,6 +3442,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           projectId
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
+                                        const isCurrentMember =
+                                          !!account &&
+                                          ((!!member.userId &&
+                                            member.userId === account.$id) ||
+                                            member.userEmail.toLowerCase() ===
+                                              account.email.toLowerCase())
+                                        const canRemoveThisMember =
+                                          canManageMembers ||
+                                          (isCurrentMember &&
+                                            member.status !== 'pending')
+                                        const openRemoveMember = () => {
+                                          setSelectedMember(member)
+                                          setRemoveMemberDialogOpen(true)
+                                        }
                                         return (
                                           <OrgMemberContextMenu
                                             key={member.$id}
@@ -3587,13 +3491,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 : undefined
                                             }
                                             onRemove={
-                                              canManageMembers
-                                                ? () => {
-                                                    setSelectedMember(member)
-                                                    setRemoveMemberDialogOpen(
-                                                      true,
-                                                    )
-                                                  }
+                                              canRemoveThisMember
+                                                ? openRemoveMember
                                                 : undefined
                                             }
                                           >
@@ -3778,7 +3677,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center justify-end">
-                                                {member.status === 'pending' ? (
+                                                {!canRemoveThisMember ? (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <span className="inline-flex">
+                                                        <RowActionsMenuTrigger
+                                                          disabled
+                                                        />
+                                                      </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      {t(
+                                                        "You don't have permission to manage members.",
+                                                      )}
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                ) : member.status ===
+                                                  'pending' ? (
                                                   <DropdownMenu>
                                                     <DropdownMenuTrigger
                                                       asChild
@@ -3814,10 +3729,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             )
                                                           } catch (error: unknown) {
                                                             toast.error(
-                                                              error?.message ||
+                                                              getErrorMessage(
+                                                                error,
                                                                 t(
                                                                   'Failed to resend invitation',
                                                                 ),
+                                                              ),
                                                             )
                                                           }
                                                         }}
@@ -3833,14 +3750,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </DropdownMenuItem>
                                                       <DropdownMenuSeparator />
                                                       <DropdownMenuItem
-                                                        onClick={() => {
-                                                          setSelectedMember(
-                                                            member,
-                                                          )
-                                                          setRemoveMemberDialogOpen(
-                                                            true,
-                                                          )
-                                                        }}
+                                                        onClick={
+                                                          openRemoveMember
+                                                        }
                                                       >
                                                         <MenuItemContent icon={Trash2}>
                                                           {t('Remove')}
@@ -3859,10 +3771,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       align="end"
                                                       className="w-48"
                                                     >
-                                                      {canInviteOrgMember(
-                                                        access,
-                                                        features,
-                                                      ) && (
+                                                      {canManageMembers && (
                                                         <>
                                                           <DropdownMenuItem
                                                             onClick={() => {
@@ -3891,25 +3800,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           <DropdownMenuSeparator />
                                                         </>
                                                       )}
-                                                      {canInviteOrgMember(
-                                                        access,
-                                                        features,
-                                                      ) && (
-                                                        <DropdownMenuItem
-                                                          onClick={() => {
-                                                            setSelectedMember(
-                                                              member,
-                                                            )
-                                                            setRemoveMemberDialogOpen(
-                                                              true,
-                                                            )
-                                                          }}
-                                                        >
-                                                          <MenuItemContent icon={Trash2}>
-                                                            {t('Remove')}
-                                                          </MenuItemContent>
-                                                        </DropdownMenuItem>
-                                                      )}
+                                                      <DropdownMenuItem
+                                                        onClick={
+                                                          openRemoveMember
+                                                        }
+                                                      >
+                                                        <MenuItemContent icon={Trash2}>
+                                                          {t('Remove')}
+                                                        </MenuItemContent>
+                                                      </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                   </DropdownMenu>
                                                 )}
@@ -4125,7 +4024,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       ) => (
                                                         <div
                                                           key={member.$id}
-                                                          className="relative rounded-full border-2 border-background"
+                                                          className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full ring-2 ring-background"
                                                           style={{
                                                             zIndex: 4 - index}}
                                                           title={
@@ -4140,13 +4039,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               member.userName
                                                             }
                                                             size="sm"
+                                                            className="h-full w-full"
                                                           />
                                                         </div>
                                                       ),
                                                     )}
                                                   {membershipsTotal > 4 && (
                                                     <div
-                                                      className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
+                                                      className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[10px] font-medium leading-none text-muted-foreground ring-2 ring-background"
                                                       style={{ zIndex: 0 }}
                                                     >
                                                       +{membershipsTotal - 4}
@@ -4574,7 +4474,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(error?.message || t('Failed to update role'))
+                  toast.error(getErrorMessage(error, t('Failed to update role')))
                 }
               }}
             >
@@ -4588,6 +4488,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <Dialog
         open={removeMemberDialogOpen}
         onOpenChange={(open) => {
+          if (leavingOrganizationRef.current) return
           setRemoveMemberDialogOpen(open)
           if (!open) {
             setSelectedMember(null)
@@ -4628,6 +4529,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               variant="outline"
               size="sm"
               className="h-9 text-[13px]"
+              disabled={
+                removeMemberMutation.isPending || leavingOrganization
+              }
               onClick={() => {
                 setRemoveMemberDialogOpen(false)
                 setSelectedMember(null)
@@ -4639,13 +4543,34 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               variant="destructive"
               size="sm"
               className="h-9 text-[13px]"
-              disabled={!selectedMember || removeMemberMutation.isPending}
+              disabled={
+                !selectedMember ||
+                removeMemberMutation.isPending ||
+                leavingOrganization
+              }
               onClick={async () => {
                 if (!selectedMember) return
+                const leavingSelf =
+                  !!account &&
+                  ((!!selectedMember.userId &&
+                    selectedMember.userId === account.$id) ||
+                    selectedMember.userEmail.toLowerCase() ===
+                      account.email.toLowerCase())
                 try {
                   await removeMemberMutation.mutateAsync(
                     selectedMember.membershipId || selectedMember.$id,
                   )
+                } catch (error: unknown) {
+                  toast.error(
+                    getErrorMessage(error, t('Failed to remove member')),
+                  )
+                  return
+                }
+
+                if (!leavingSelf || !orgId) {
+                  await queryClient.refetchQueries({
+                    queryKey: ['memberships', 'organization', orgId],
+                  })
                   toast.success(
                     selectedMember.status === 'pending'
                       ? t('Invitation cancelled successfully')
@@ -4653,8 +4578,93 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
-                } catch (error: unknown) {
-                  toast.error(error?.message || t('Failed to remove member'))
+                  return
+                }
+
+                leavingOrganizationRef.current = true
+                setLeavingOrganization(true)
+                toast.success(t('Member removed successfully'))
+
+                const closeLeaveDialog = () => {
+                  setRemoveMemberDialogOpen(false)
+                  setSelectedMember(null)
+                  setLeavingOrganization(false)
+                }
+
+                try {
+                  const nextPrefs = {
+                    ...((account as { prefs?: Record<string, unknown> } | null)
+                      ?.prefs ?? {}),
+                  }
+                  if (nextPrefs.organization === orgId) {
+                    delete nextPrefs.organization
+                  }
+                  const updatedAccount = await updateAccountPrefs(nextPrefs)
+                  queryClient.setQueriesData<{
+                    prefs?: Record<string, unknown>
+                  }>({ queryKey: ['account', 'console'] }, (current) => {
+                    if (!current) return current
+                    return { ...current, prefs: nextPrefs }
+                  })
+                  syncConsoleAccountAfterMutation(queryClient, {
+                    apiResult: updatedAccount,
+                  })
+
+                  await queryClient.refetchQueries({
+                    queryKey: ['organizations', 'console'],
+                  })
+                  const remainingOrgs =
+                    queryClient
+                      .getQueryData(organizationsQueryOptions().queryKey)
+                      ?.teams?.filter((team) => team.$id !== orgId) ?? []
+                  queryClient.setQueryData(
+                    organizationsQueryOptions().queryKey,
+                    (current) => {
+                      if (!current) return current
+                      return {
+                        ...current,
+                        teams: remainingOrgs,
+                        total: remainingOrgs.length,
+                      }
+                    },
+                  )
+
+                  let nextOrgId = remainingOrgs[0]?.$id
+                  if (nextOrgId) {
+                    await prefetchOrganizationOverviewData(
+                      queryClient,
+                      nextOrgId,
+                    )
+                  } else {
+                    const nextAccount = {
+                      ...(updatedAccount &&
+                      typeof updatedAccount === 'object' &&
+                      '$id' in updatedAccount
+                        ? updatedAccount
+                        : account),
+                      prefs: nextPrefs,
+                    }
+                    nextOrgId = await resolveAndPrefetchDefaultOrganization(
+                      queryClient,
+                      nextAccount,
+                    )
+                  }
+
+                  if (!nextOrgId || nextOrgId === orgId) {
+                    closeLeaveDialog()
+                    await navigate({ to: '/account', replace: true })
+                    return
+                  }
+
+                  closeLeaveDialog()
+                  await navigate({
+                    to: '/organizations/$orgId',
+                    params: { orgId: nextOrgId },
+                    replace: true,
+                  })
+                } catch {
+                  closeLeaveDialog()
+                  await navigate({ to: '/account', replace: true })
                 }
               }}
             >
@@ -4673,6 +4683,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           onCreate={async (orgData) => {
             try {
               const newOrg = await createOrgMutation.mutateAsync(orgData)
+              if (isPaymentAuthentication(newOrg)) {
+                throw new Error(t('Payment authentication is required'))
+              }
               toast.success(t('Organization created successfully'))
               setCreateOrgDialogOpen(false)
               // Navigate to the newly created organization
@@ -4681,7 +4694,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 params: { orgId: newOrg.$id },
                 replace: true})
             } catch (error: unknown) {
-              toast.error(error?.message || t('Failed to create organization'))
+              toast.error(
+                getErrorMessage(error, t('Failed to create organization')),
+              )
             }
           }}
           isLoading={createOrgMutation.isPending}

@@ -4,10 +4,10 @@ import { Link, useLocation } from '@tanstack/react-router'
 import type { ComponentProps, MouseEvent, ReactNode } from 'react'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
-import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
+import { docsHrefToPreviewSlug, docsHrefToRoute } from '@/lib/docs/docs-href'
 import type { DocsPreviewView } from '@/lib/docs/docs-preview-menu'
 import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
-import { getDocsPageUrl, splitHrefHash } from '@/lib/marketing/urls'
+import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
@@ -36,24 +36,6 @@ type DocsRouteLinkProps = Omit<ComponentProps<'a'>, 'href' | 'children'> & {
   children: ReactNode
   /** Preview pane view when opened from the console (defaults to article). */
   previewView?: DocsPreviewView
-}
-
-export function docsHrefToRoute(href: string) {
-  const { pathname, hash } = splitHrefHash(href)
-
-  if (pathname === '/docs' || pathname === '/docs/') {
-    return { to: '/docs' as const, params: undefined, hash: hash || undefined }
-  }
-
-  if (pathname.startsWith('/docs/')) {
-    return {
-      to: '/docs/$' as const,
-      params: { _splat: pathname.slice('/docs/'.length) },
-      hash: hash || undefined,
-    }
-  }
-
-  return null
 }
 
 function openDocsInNewTab(href: string, marketingEnabled: boolean) {

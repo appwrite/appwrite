@@ -6,7 +6,7 @@ cover: /images/blog/appwrite-realtime-with-flutter/cover.avif
 timeToRead: 6
 date: 2024-09-02
 author: damodar-lohani
-category: tutorial
+category: tutorials
 lastUpdated: 2026-06-29
 faqs:
   - question: "What is Appwrite Realtime, and how does it work?"
@@ -39,13 +39,13 @@ On the databases page, click on the **Create database** button.
 
 In the dialog that pops up, enter a name and database ID, and click **Create to create the database and show the database page**. Make sure to note down the database ID next to the database name as we will need that later in our code.
 
-Once on the database page, click on the **Create table** button.
+Once on the database page, click on the **Create table** button.
 
 ![Create table](/images/blog/appwrite-realtime-with-flutter/2.avif)
 
-In the dialog that pops up, set the table name to **Items** and click on the **Create** button to create the table, and you will be redirected to the new table's page.
+In the dialog that pops up, set the table name to **Items** and click on the **Create** button to create the table, and you will be redirected to the new table's page.
 
-Switch to the Columns tab and create the following column. Also note down the **Table ID** from the top of the page next to the table name.
+Switch to the Columns tab and create the following column. Also note down the **Table ID** from the top of the page next to the table name.
 
 - Type: Text
 - Column Key: name
@@ -77,17 +77,17 @@ flutter pub add appwrite
 
 This command will add Appwrite's latest Flutter SDK with real-time service as a dependency to your Flutter project.
 
-Once you have installed the dependency and run `flutter pub get` you should be ready to use it.
+Once you have installed the dependency and run `flutter pub get` you should be ready to use it.
 
 # Add Flutter platforms
 
-To initialize the Appwrite SDK and start interacting with Appwrite services, you first need to add a new Flutter platform to your project. To add a new platform, go to the Appwrite Console, select your project, and click the **Add Platform** button on the project Overview. Click on the Flutter app to register a Flutter platform.
+To initialize the Appwrite SDK and start interacting with Appwrite services, you first need to add a new Flutter platform to your project. To add a new platform, go to the Appwrite Console, select your project, and click the **Add Platform** button on the project Overview. Click on the Flutter app to register a Flutter platform.
 
 In the wizard that appears, choose the platform you plan to run on.  If you want to run on another platform, add another platform
 
-If you choose to add an Android platform, on the dialog box, add the details. Add your app name and package name. Your package name is generally the `applicationId` in your app-level `build.gradle`
+If you choose to add an Android platform, on the dialog box, add the details. Add your app name and package name. Your package name is generally the `applicationId` in your app-level `build.gradle`
 
-file. You may also find your package name in your `AndroidManifest.xml` file.
+file. You may also find your package name in your `AndroidManifest.xml` file.
 
 ![Add the Flutter platform](/images/blog/appwrite-realtime-with-flutter/5.avif)
 
@@ -95,7 +95,7 @@ By registering a new platform, you are allowing your app to communicate with the
 
 # Home page
 
-We will start by creating a simple stateful widget that will list all the items from our items table and allow adding new items and deleting existing items. Our home page will also connect to Appwrite's Realtime service and display changes in the table of items by updating the UI as they happen. So, let's create our **HomePage** widget. Modify the code in **lib/main.dart** as follows:
+We will start by creating a simple stateful widget that will list all the items from our items table and allow adding new items and deleting existing items. Our home page will also connect to Appwrite's Realtime service and display changes in the table of items by updating the UI as they happen. So, let's create our **HomePage** widget. Modify the code in **lib/main.dart** as follows:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -183,7 +183,7 @@ class _HomePageState extends State<HomePage> {
 
 ```
 
-In the **initState** function of the HomePage, we will create and initialize our Appwrite client, as well as subscribe to real-time changes in rows in our **items** table.
+In the **initState** function of the HomePage, we will create and initialize our Appwrite client, as well as subscribe to real-time changes in rows in our **items** table.
 
 ```dart
   RealtimeSubscription? subscription;
@@ -196,7 +196,7 @@ In the **initState** function of the HomePage, we will create and initialize o
   }
 ```
 
-And in **dispose** method, close the subscription.
+And in **dispose** method, close the subscription.
 
 ```dart
 dispose(){
@@ -285,7 +285,7 @@ Finally, let's modify our `_addItem` function to add items to Appwrite's table a
   }
 ```
 
-Let us also modify our `ListTile` widget to add a delete button that will allow us to delete the item.
+Let us also modify our `ListTile` widget to add a delete button that will allow us to delete the item.
 
 ```dart
             ListTile(

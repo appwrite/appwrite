@@ -14,6 +14,10 @@ Unlike a spreadsheet, the set of columns is declared up front and enforced; ever
 
 The examples on this page build up pieces of a small store schema: customers, products, and orders.
 
+{% info title="Standard MySQL types" %}
+Column types are standard MySQL types, not Appwrite-specific ones. This page covers the types most schemas need; the full list is in the [MySQL data types documentation](https://dev.mysql.com/doc/refman/8.4/en/data-types.html).
+{% /info %}
+
 # Create a table {% #create %}
 
 `CREATE TABLE` names the table and declares each column with its type and the rules it must obey:

@@ -1,18 +1,23 @@
 import { useId, useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer } from 'recharts'
-import { DATABASE_CLUSTER_PREVIEW_HEIGHT } from './DatabaseClusterPreview'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   useDatabaseReadsForDatabaseChart,
   useDatabaseWritesForDatabaseChart,
 } from '@/lib/react-query/hooks'
 import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
 import { sumUsageChartPoints } from '@/lib/usage/database-usage'
+import { DATABASE_CLUSTER_PREVIEW_HEIGHT } from './DatabaseClusterPreview'
 
 const READ_COLOR = 'var(--chart-brand)'
 const WRITE_COLOR = 'var(--chart-2)'
+
+/** Legend row: `pt-2.5` (10) + `h-5` (20). Chart uses the rest of the card body. */
+const LEGEND_HEIGHT_PX = 30
+const CHART_HEIGHT_PX = DATABASE_CLUSTER_PREVIEW_HEIGHT - LEGEND_HEIGHT_PX
 
 type OperationsPoint = {
   index: number
@@ -63,7 +68,16 @@ export function DatabaseOperationsChartPreview({
     enabled,
   )
 
+  const usageReady =
+    !enabled ||
+    ((readsQuery.isFetched || readsQuery.isError) &&
+      (writesQuery.isFetched || writesQuery.isError))
+
   const chartData = useMemo((): OperationsPoint[] => {
+    if (!usageReady) {
+      return buildEmptyOperationsSeries()
+    }
+
     const readsPoints = readsQuery.data?.chartPoints ?? []
     const writesPoints = writesQuery.data?.chartPoints ?? []
     if (readsPoints.length === 0 && writesPoints.length === 0) {
@@ -88,129 +102,152 @@ export function DatabaseOperationsChartPreview({
       reads: readsByTime.get(timestamp) ?? 0,
       writes: writesByTime.get(timestamp) ?? 0,
     }))
-  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
+  }, [
+    readsQuery.data?.chartPoints,
+    usageReady,
+    writesQuery.data?.chartPoints,
+  ])
 
   const totals = useMemo(() => {
+    if (!usageReady) {
+      return { reads: 0, writes: 0 }
+    }
     return {
       reads: sumUsageChartPoints(readsQuery.data?.chartPoints ?? []),
       writes: sumUsageChartPoints(writesQuery.data?.chartPoints ?? []),
     }
-  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
+  }, [
+    readsQuery.data?.chartPoints,
+    usageReady,
+    writesQuery.data?.chartPoints,
+  ])
 
   return (
     <div
       className={cn(
-        '-mx-4 mt-2 min-w-0 shrink-0 border-t border-border',
+        'flex h-full min-h-0 min-w-0 flex-col overflow-hidden',
         className,
       )}
     >
       <div
-        className="flex min-h-0 min-w-0 flex-col"
-        style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
+        className="shrink-0 overflow-hidden px-4 pt-2.5"
+        style={{ height: LEGEND_HEIGHT_PX }}
       >
-        <div className="shrink-0 px-4 pt-2.5 pb-16">
-          <div className="flex h-5 min-w-0 items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
-                <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: READ_COLOR }}
-                  aria-hidden
-                />
-                {t('Reads')}
-                <span className="font-mono tabular-nums text-foreground">
-                  {totals.reads.toLocaleString()}
-                </span>
+        <div className="flex h-5 min-w-0 items-center justify-between gap-3 overflow-hidden whitespace-nowrap">
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: READ_COLOR }}
+                aria-hidden
+              />
+              {t('Reads')}
+              <span className="font-mono tabular-nums text-foreground">
+                {totals.reads.toLocaleString()}
               </span>
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
-                <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: WRITE_COLOR }}
-                  aria-hidden
-                />
-                {t('Writes')}
-                <span className="font-mono tabular-nums text-foreground">
-                  {totals.writes.toLocaleString()}
-                </span>
+            </span>
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: WRITE_COLOR }}
+                aria-hidden
+              />
+              {t('Writes')}
+              <span className="font-mono tabular-nums text-foreground">
+                {totals.writes.toLocaleString()}
               </span>
-            </div>
-            <span className="shrink-0 text-[11px] font-medium leading-none text-muted-foreground/80">
-              {t('Last 24 hours')}
             </span>
           </div>
+          <span className="shrink-0 text-[11px] font-medium leading-none text-muted-foreground/80">
+            {t('Last 24 hours')}
+          </span>
         </div>
+      </div>
 
-        <div
-          className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden"
-          role="img"
-          aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}
+      <div
+        className={cn(
+          'relative min-h-0 w-full min-w-0 shrink-0 overflow-hidden',
+          FORCE_LTR_CLASS,
+        )}
+        style={{ height: CHART_HEIGHT_PX }}
+        role="img"
+        aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}
+      >
+        <ResponsiveContainer
+          width="100%"
+          height={CHART_HEIGHT_PX}
+          minWidth={0}
+          minHeight={CHART_HEIGHT_PX}
+          debounce={0}
+          initialDimension={{
+            width: 320,
+            height: CHART_HEIGHT_PX,
+          }}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={chartData}
-              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id={`reads-${gradientId}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stopColor={READ_COLOR}
-                    stopOpacity={0.28}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor={READ_COLOR}
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-                <linearGradient
-                  id={`writes-${gradientId}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stopColor={WRITE_COLOR}
-                    stopOpacity={0.18}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor={WRITE_COLOR}
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="reads"
-                stroke={READ_COLOR}
-                strokeWidth={1.5}
-                fill={`url(#reads-${gradientId})`}
-                isAnimationActive={!CHART_ANIMATION_DISABLED}
-                dot={false}
-                activeDot={false}
-              />
-              <Area
-                type="monotone"
-                dataKey="writes"
-                stroke={WRITE_COLOR}
-                strokeWidth={1.5}
-                fill={`url(#writes-${gradientId})`}
-                isAnimationActive={!CHART_ANIMATION_DISABLED}
-                dot={false}
-                activeDot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient
+                id={`reads-${gradientId}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stopColor={READ_COLOR}
+                  stopOpacity={0.28}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={READ_COLOR}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+              <linearGradient
+                id={`writes-${gradientId}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stopColor={WRITE_COLOR}
+                  stopOpacity={0.18}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={WRITE_COLOR}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+            <Area
+              type="monotone"
+              dataKey="reads"
+              stroke={READ_COLOR}
+              strokeWidth={1.5}
+              fill={`url(#reads-${gradientId})`}
+              dot={false}
+              activeDot={false}
+              {...CHART_ANIMATION_DISABLED}
+            />
+            <Area
+              type="monotone"
+              dataKey="writes"
+              stroke={WRITE_COLOR}
+              strokeWidth={1.5}
+              fill={`url(#writes-${gradientId})`}
+              dot={false}
+              activeDot={false}
+              {...CHART_ANIMATION_DISABLED}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   )

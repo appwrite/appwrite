@@ -6,22 +6,25 @@
  */
 
 import {
-  useQueries,
   useQuery,
+  useQueries,
   useMutation,
   useQueryClient,
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Query, DomainRegistrationType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isPendingDomainTransferStatus } from '@/lib/domains/transfer-status'
+import { batchDomainPriceRequests } from '@/lib/domains/prices'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
+
+export { DOMAIN_PRICES_BATCH_SIZE } from '@/lib/domains/prices'
 
 const DOMAIN_TRANSFER_STATUS_POLL_MS = 15_000
 
@@ -90,54 +93,102 @@ export async function fetchDomain(domainId: string) {
 }
 
 /**
- * Registration quote from getPrice plus optional renewal quote (same period rules).
- * Renewal uses registrationType `renewal`; if the API returns an error, renewal fields are omitted.
+ * Prices for the domains that could be fetched, and the domains whose batch failed.
  */
-export type DomainPriceQuote = Models.DomainPrice & {
-  renewalPrice?: number
-  renewalPeriodYears?: number
+export type DomainPricesResult = {
+  prices: Map<string, Models.DomainPrice>
+  failed: string[]
 }
 
 /**
- * Query function to fetch new-registration and renewal prices (getPrice API).
+ * Fetches availability and price for many domains with as few `listPrices` calls as
+ * possible: one request per (period, batch of 50). The period is a request-level
+ * parameter, so domains that need a non-default term go in their own request.
+ * Batches settle independently: a failed request only marks its own domains as
+ * `failed`, so a transient error on one batch cannot discard the others. Throws
+ * only when every batch failed. Domains the registrar cannot price come back
+ * with `price` undefined.
+ */
+export async function fetchDomainPrices(
+  domains: string[],
+  registrationType: DomainRegistrationType,
+): Promise<DomainPricesResult> {
+  const batches = batchDomainPriceRequests(domains)
+  const requests = batches.map(({ domains, periodYears }) =>
+    sdk.forConsole.domains.listPrices({
+      domains,
+      registrationType,
+      ...(periodYears != null && { periodYears }),
+    }),
+  )
+
+  const prices = new Map<string, Models.DomainPrice>()
+  const failed: string[] = []
+  let firstError: unknown
+  const settled = await Promise.allSettled(requests)
+  settled.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      for (const price of result.value.prices) {
+        prices.set(price.domain, price)
+      }
+      return
+    }
+    firstError ??= result.reason
+    failed.push(...batches[index].domains)
+  })
+
+  if (requests.length > 0 && prices.size === 0 && failed.length > 0) {
+    throw firstError
+  }
+  return { prices, failed }
+}
+
+/**
+ * Quote from listPrices. Every priced domain carries its renewal price for the same period.
+ */
+export type DomainPriceQuote = Models.DomainPrice
+
+/**
+ * Quotes for the domains that could be priced, and the domains whose batch failed.
+ */
+export type DomainPriceQuotesResult = {
+  quotes: Map<string, DomainPriceQuote>
+  failed: string[]
+}
+
+/**
+ * Fetches quotes for many domains in one request per batch of 50.
+ */
+export async function fetchDomainPriceQuotes(
+  domains: string[],
+  registrationType: DomainRegistrationType = DomainRegistrationType.New,
+): Promise<DomainPriceQuotesResult> {
+  if (domains.length === 0) return { quotes: new Map(), failed: [] }
+
+  const { prices, failed } = await fetchDomainPrices(domains, registrationType)
+  return { quotes: prices, failed }
+}
+
+/**
+ * Query function to fetch new-registration and renewal prices for one domain.
  * For .ai TLD always requests 2-year price; otherwise uses API default (typically 1 year).
  */
 export async function fetchDomainPrice(
   domain: string,
 ): Promise<DomainPriceQuote> {
-  const normalized = domain.toLowerCase()
-  const periodYears = normalized.endsWith('.ai') ? 2 : undefined
-  const params = {
-    domain: normalized,
-    ...(periodYears != null && { periodYears }),
+  const normalized = domain.trim().toLowerCase()
+  const { quotes } = await fetchDomainPriceQuotes([normalized])
+  const quote = quotes.get(normalized)
+  if (!quote) {
+    throw new Error(`No price returned for ${normalized}`)
   }
-  const [registration, renewal] = await Promise.all([
-    sdk.forConsole.domains.getPrice({
-      ...params,
-      registrationType: DomainRegistrationType.New,
-    }),
-    sdk.forConsole.domains
-      .getPrice({
-        ...params,
-        registrationType: DomainRegistrationType.Renewal,
-      })
-      .catch(() => null),
-  ])
-
-  return {
-    ...registration,
-    renewalPrice: renewal?.price,
-    renewalPeriodYears: renewal?.periodYears,
-  }
+  return quote
 }
 
 /**
- * Transfer-in quote from getPrice (registrationType transfer) plus optional renewal quote.
+ * Transfer-in quote from listPrices (registrationType transfer) plus optional renewal quote.
  */
-export type DomainTransferPriceQuote = Models.DomainPrice & {
-  renewalPrice?: number
-  renewalPeriodYears?: number
-}
+export type DomainTransferPriceQuote = DomainPriceQuote
 
 /**
  * Fetches transfer and renewal prices for an inbound transfer (same period rules as registration).
@@ -145,30 +196,16 @@ export type DomainTransferPriceQuote = Models.DomainPrice & {
 export async function fetchDomainTransferPriceQuote(
   domain: string,
 ): Promise<DomainTransferPriceQuote> {
-  const normalized = domain.toLowerCase().trim()
-  const periodYears = normalized.endsWith('.ai') ? 2 : undefined
-  const params = {
-    domain: normalized,
-    ...(periodYears != null && { periodYears }),
+  const normalized = domain.trim().toLowerCase()
+  const { quotes } = await fetchDomainPriceQuotes(
+    [normalized],
+    DomainRegistrationType.Transfer,
+  )
+  const quote = quotes.get(normalized)
+  if (!quote) {
+    throw new Error(`No price returned for ${normalized}`)
   }
-  const [transfer, renewal] = await Promise.all([
-    sdk.forConsole.domains.getPrice({
-      ...params,
-      registrationType: DomainRegistrationType.Transfer,
-    }),
-    sdk.forConsole.domains
-      .getPrice({
-        ...params,
-        registrationType: DomainRegistrationType.Renewal,
-      })
-      .catch(() => null),
-  ])
-
-  return {
-    ...transfer,
-    renewalPrice: renewal?.price,
-    renewalPeriodYears: renewal?.periodYears,
-  }
+  return quote
 }
 
 /**
@@ -726,7 +763,8 @@ export function domainTransferStatusQueryOptions(
   domainId: string | null | undefined,
   transferStatusFromDomain?: string | null,
 ) {
-  const enabled = !!domainId && isPendingDomainTransferStatus(transferStatusFromDomain)
+  const enabled =
+    !!domainId && isPendingDomainTransferStatus(transferStatusFromDomain)
 
   return queryOptions({
     queryKey: ['domain', domainId, 'transfer-status'],
@@ -749,11 +787,17 @@ export function domainTransferStatusQueryOptions(
  */
 export function domainPriceQueryOptions(domain: string | null | undefined) {
   return queryOptions({
-    queryKey: ['domain-price', domain, 'renewal'],
+    queryKey: domainPriceQueryKey(domain ?? ''),
     queryFn: () => fetchDomainPrice(domain!),
     enabled: !!domain && domain.length >= 4,
-    staleTime: 60 * 1000,
+    staleTime: DOMAIN_PRICE_STALE_TIME,
   })
+}
+
+const DOMAIN_PRICE_STALE_TIME = 60 * 1000
+
+function domainPriceQueryKey(domain: string) {
+  return ['domain-price', domain] as const
 }
 
 /**
@@ -862,10 +906,9 @@ export function useOrganizationDomains(
 }
 
 /**
- * Hook to fetch domain prices via batched getPrice calls
+ * Hook to fetch domain prices via batched listPrices calls
  *
- * Fires one getPrice request per TLD in parallel. Results stream in as each
- * completes for fast perceived performance.
+ * One request per batch of 50 domains; each result carries its renewal price.
  *
  * @param baseName - Base name (e.g. "myapp")
  * @param tlds - TLDs to fetch prices for
@@ -875,58 +918,152 @@ export function useOrganizationDomains(
 export function useDomainPrices(
   baseName: string | null | undefined,
   tlds: string[] = [],
+  priorityTlds: string[] = ['com', 'dev', 'app', 'io'],
 ) {
+  const queryClient = useQueryClient()
+  const inFlight = useRef(new Map<string, Promise<DomainPriceQuotesResult>>())
   const domains = useMemo(
     () =>
-      baseName && baseName.length >= 1
-        ? tlds.map((tld) => `${baseName}.${tld}`)
+      baseName
+        ? Array.from(new Set([...priorityTlds, ...tlds])).map(
+            (tld) => `${baseName}.${tld}`,
+          )
         : [],
-    [baseName, tlds],
+    [baseName, tlds, priorityTlds],
   )
+  const priorityDomains = baseName
+    ? priorityTlds.map((tld) => `${baseName}.${tld}`)
+    : []
 
-  const queries = useQueries({
-    queries: domains.map((domain) => domainPriceQueryOptions(domain)),
+  // Cards reveal TLDs incrementally, so the key changes as the user scrolls. Quotes
+  // already in the per-domain cache are reused and only the new domains are requested,
+  // in one batched call per registration term instead of one call per card. A batch
+  // that failed leaves its domains out of the result and marks the query stale, so
+  // they are requested again on the next reveal instead of staying unpriced.
+  const batchOptions = (batch: string[]) =>
+    queryOptions({
+      queryKey: ['domain-prices', baseName, batch],
+      queryFn: async (): Promise<DomainPriceQuotesResult> => {
+        const quotes = new Map<string, DomainPriceQuote>()
+        const missing: string[] = []
+        const requests = new Set<Promise<DomainPriceQuotesResult>>()
+        for (const domain of batch) {
+          const state = queryClient.getQueryState<DomainPriceQuote>(
+            domainPriceQueryKey(domain),
+          )
+          const fresh =
+            state?.data != null &&
+            Date.now() - state.dataUpdatedAt < DOMAIN_PRICE_STALE_TIME
+          if (fresh) {
+            quotes.set(domain, state.data!)
+          } else {
+            const pending = inFlight.current.get(domain)
+            if (pending) requests.add(pending)
+            else missing.push(domain)
+          }
+        }
+
+        if (missing.length > 0) {
+          // A growing viewport batch can join pending work rather than sending
+          // those domains again. Register it before yielding to another query.
+          const request = fetchDomainPriceQuotes(missing)
+            .then((result) => {
+              result.quotes.forEach((quote, domain) => {
+                queryClient.setQueryData(domainPriceQueryKey(domain), quote)
+              })
+              return result
+            })
+            .finally(() => {
+              for (const domain of missing) inFlight.current.delete(domain)
+            })
+          for (const domain of missing) inFlight.current.set(domain, request)
+          requests.add(request)
+        }
+
+        const settled = await Promise.allSettled(requests)
+        let firstError: unknown
+        for (const result of settled) {
+          if (result.status === 'rejected') {
+            firstError ??= result.reason
+            continue
+          }
+          result.value.quotes.forEach((quote, domain) => {
+            if (batch.includes(domain)) quotes.set(domain, quote)
+          })
+        }
+        if (quotes.size === 0 && firstError) throw firstError
+        return { quotes, failed: batch.filter((domain) => !quotes.has(domain)) }
+      },
+      enabled: batch.length > 0,
+      staleTime: (query) =>
+        query.state.data?.failed.length ? 0 : DOMAIN_PRICE_STALE_TIME,
+      retry: false,
+    })
+
+  // Keep the exact match (or top four) in a small, independent request, but
+  // start viewport batches alongside it so the rest of the grid doesn't wait.
+  // Each period/batch publishes its results as soon as its request completes.
+  const priority = useQuery(batchOptions(priorityDomains))
+  const batches = batchDomainPriceRequests(
+    domains.filter((domain) => !priorityDomains.includes(domain)),
+  )
+  const remaining = useQueries({
+    queries: batches.map((batch) => batchOptions(batch.domains)),
   })
+  const queries = [priority, ...remaining]
 
-  const pricesByDomain = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        price: number
-        available: boolean
-        periodYears?: number
-        premium?: boolean
-        renewalPrice?: number
-        renewalPeriodYears?: number
-      }
-    >()
-    for (let i = 0; i < domains.length; i++) {
-      const { data } = queries[i]
-      if (data) {
-        const quote = data as DomainPriceQuote
-        map.set(domains[i], {
-          price: quote.price,
-          available: quote.available,
-          periodYears:
-            typeof quote.periodYears === 'number' ? quote.periodYears : 1,
-          premium: quote.premium,
-          renewalPrice: quote.renewalPrice,
-          renewalPeriodYears: quote.renewalPeriodYears,
-        })
-      }
+  const pricesByDomain = new Map<
+    string,
+    {
+      price?: number
+      available: boolean
+      periodYears?: number
+      premium?: boolean
+      renewalPrice?: number
+      renewalPeriodYears?: number
     }
-    return map
-  }, [domains, queries])
+  >()
+  // Preserve already loaded cards when scrolling changes a viewport batch.
+  for (const domain of domains) {
+    const cached = queryClient.getQueryState<DomainPriceQuote>(
+      domainPriceQueryKey(domain),
+    )
+    const quote =
+      queries.map((query) => query.data?.quotes.get(domain)).find(Boolean) ??
+      (cached && Date.now() - cached.dataUpdatedAt < DOMAIN_PRICE_STALE_TIME
+        ? cached.data
+        : undefined)
+    if (!quote) continue
+    pricesByDomain.set(domain, {
+      price: quote.price,
+      available: quote.available,
+      periodYears:
+        typeof quote.periodYears === 'number' ? quote.periodYears : 1,
+      premium: quote.premium,
+      renewalPrice: quote.renewalPrice,
+      renewalPeriodYears: quote.renewalPeriodYears,
+    })
+  }
 
-  const hasError = queries.some((q: { error: unknown }) => q.error)
-  const isFetching = queries.some((q: { isFetching: boolean }) => q.isFetching)
+  // Keep successful cards usable, but expose failures even when other batches
+  // succeeded. Retrying only failed batches preserves prices already on screen.
+  const failedQueries = queries.filter(
+    (query) => query.isError || (query.data?.failed.length ?? 0) > 0,
+  )
 
   return {
     pricesByDomain,
-    isFetching,
-    error: hasError
-      ? queries.find((q: { error: unknown }) => q.error)?.error
-      : undefined,
+    isFetching: queries.some((query) => query.isFetching),
+    isRetrying: failedQueries.some((query) => query.isFetching),
+    retry: () =>
+      Promise.all(
+        failedQueries.map((query) => query.refetch({ cancelRefetch: false })),
+      ),
+    error:
+      failedQueries.length > 0
+        ? (failedQueries.find((query) => query.error)?.error ??
+          new Error('Failed to load domain prices'))
+        : undefined,
   }
 }
 
@@ -959,7 +1096,9 @@ export function useDomainTransferStatus(
     if (!status || !domainId) return
 
     const endpointPending = isPendingDomainTransferStatus(status)
-    const domainPending = isPendingDomainTransferStatus(transferStatusFromDomain)
+    const domainPending = isPendingDomainTransferStatus(
+      transferStatusFromDomain,
+    )
 
     if (endpointPending && !domainPending) {
       void queryClient.invalidateQueries({ queryKey: ['domain', domainId] })

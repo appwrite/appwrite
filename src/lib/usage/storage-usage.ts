@@ -18,7 +18,6 @@ import {
 } from '@/lib/usage/usage-gauges-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
-import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
   resolveOverviewUsagePeriod,
@@ -272,8 +271,7 @@ export async function fetchProjectOverviewStorageOverview(
     }
   }
 
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
 
   const { from, to } = resolveOverviewUsagePeriod(dateRange, interval)
@@ -343,8 +341,7 @@ export async function fetchProjectStorageResourceTypeUsageOverview(
     return { changePercent: 0, chartPoints: [], topConsumers: [] }
   }
 
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const { from, to } = resolveOverviewUsagePeriod(dateRange, interval)
   const option = getOverviewStorageBreakdownOption(breakdownType)
 
@@ -417,8 +414,7 @@ export async function fetchProjectImageTransformationsUsageOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<StorageImageTransformationsOverview> {
-  const includeBreakdown =
-    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
 
   const [chartOverview, snapshotOverview] = await Promise.all([

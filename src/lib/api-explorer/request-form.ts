@@ -88,7 +88,9 @@ export function getFormFieldTypeLabel(kind: RequestFormFieldKind): string {
 }
 
 /** Base OpenAPI primitive for API reference type badges and tables. */
-export function getFormFieldOpenApiTypeLabel(kind: RequestFormFieldKind): string {
+export function getFormFieldOpenApiTypeLabel(
+  kind: RequestFormFieldKind,
+): string {
   switch (kind) {
     case 'boolean':
       return 'boolean'
@@ -137,7 +139,9 @@ export function getFormFieldPlaceholder(
     case 'ip':
       return '// 127.0.0.1'
     case 'id':
-      return options?.required ? '// required custom ID' : '// optional custom ID'
+      return options?.required
+        ? '// required custom ID'
+        : '// optional custom ID'
     case 'json':
       return '// enter JSON object'
     case 'integer':
@@ -316,7 +320,7 @@ function schemaToFormField(
     label: name,
     description: paramDescription?.trim() || schema.description,
     required,
-    nullable: schema['x-nullable'] === true,
+    nullable: (schema.nullable ?? schema['x-nullable']) === true,
   }
 
   if (isCreatableIdField(schema, paramIn)) {
@@ -373,7 +377,10 @@ function schemaToFormField(
   return { ...base, kind: 'string' }
 }
 
-function defaultValueForField(field: RequestFormField, schema?: OpenApiSchema): FormValue {
+function defaultValueForField(
+  field: RequestFormField,
+  schema?: OpenApiSchema,
+): FormValue {
   if (schema) {
     const sample = buildSampleValue(schema)
     return valueFromParsed(field, sample)
@@ -426,9 +433,7 @@ function valueFromParsed(field: RequestFormField, value: unknown): FormValue {
     case 'array-number':
       return Array.isArray(value) ? value.map(String) : []
     case 'json':
-      return typeof value === 'string'
-        ? value
-        : JSON.stringify(value, null, 2)
+      return typeof value === 'string' ? value : JSON.stringify(value, null, 2)
     default:
       return String(value)
   }
@@ -440,7 +445,10 @@ export function buildDefaultFormValues(
 ): Record<string, FormValue> {
   const values: Record<string, FormValue> = {}
   for (const field of fields) {
-    values[field.name] = defaultValueForField(field, schemaProperties?.[field.name])
+    values[field.name] = defaultValueForField(
+      field,
+      schemaProperties?.[field.name],
+    )
   }
   return values
 }
@@ -568,10 +576,7 @@ export function buildMultipartFormData(
         formData.append(field.name, String(value))
         break
       case 'datetime':
-        formData.append(
-          field.name,
-          serializeDatetimeApiValue(String(value)),
-        )
+        formData.append(field.name, serializeDatetimeApiValue(String(value)))
         break
       default:
         formData.append(field.name, String(value))
@@ -587,14 +592,19 @@ function parseJsonFieldValue(raw: string): unknown {
   return JSON.parse(trimmed)
 }
 
-function serializeFieldValue(field: RequestFormField, value: FormValue): unknown {
+function serializeFieldValue(
+  field: RequestFormField,
+  value: FormValue,
+): unknown {
   if (value === null) return null
 
   switch (field.kind) {
     case 'boolean':
       return Boolean(value)
     case 'integer':
-      return typeof value === 'number' ? Math.trunc(value) : parseInt(String(value), 10) || 0
+      return typeof value === 'number'
+        ? Math.trunc(value)
+        : parseInt(String(value), 10) || 0
     case 'number':
       return typeof value === 'number' ? value : Number(value) || 0
     case 'array-string':
@@ -625,7 +635,10 @@ export function serializeBodyFromForm(
         continue
       }
       if (field.required) {
-        payload[field.name] = serializeFieldValue(field, value ?? defaultValueForField(field))
+        payload[field.name] = serializeFieldValue(
+          field,
+          value ?? defaultValueForField(field),
+        )
       }
       continue
     }
@@ -723,9 +736,7 @@ export function buildInitialParamFormValues(
   const values: Record<string, FormValue> = {}
   for (const param of parameters) {
     const field = parameterToFormField(param, method)
-    const raw = param.schema
-      ? getSchemaDefaultString(param.schema)
-      : ''
+    const raw = param.schema ? getSchemaDefaultString(param.schema) : ''
     values[param.name] = raw
       ? parseParamFormValue(field, raw)
       : defaultValueForField(field, param.schema)

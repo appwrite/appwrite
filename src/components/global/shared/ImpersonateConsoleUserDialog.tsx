@@ -24,16 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  applyConsoleImpersonateUserId,
-  clearConsoleImpersonateUser,
-} from '@/lib/appwrite/sdk'
+import { clearConsoleImpersonateUser } from '@/lib/appwrite/sdk'
 import {
   clearConsoleImpersonationSession,
   hardNavigateToAccountAfterImpersonation,
-  persistConsoleImpersonationSession,
   readConsoleImpersonationOperatorSnapshot,
+  resolveConsoleImpersonationOperator,
 } from '@/lib/console-impersonation'
+import { beginConsoleImpersonation } from '@/lib/console-impersonation-start'
 import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
 import { consoleUsersImpersonationSearchQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import {
@@ -152,33 +150,20 @@ export function ImpersonateConsoleUserDialog({
       return
     }
 
-    let operator: { $id: string; name: string; email: string } | undefined
+    const operator = resolveConsoleImpersonationOperator(account)
 
-    if (isImpersonating) {
-      operator = readConsoleImpersonationOperatorSnapshot()
-      if (!operator) {
+    if (!operator) {
+      if (isImpersonating) {
         toast.error(
           t('Operator context was lost. Stop impersonating, then start again.'),
         )
-        return
       }
-    } else if (account) {
-      operator = {
-        $id: account.$id,
-        name: account.name ?? '',
-        email: account.email ?? '',
-      }
+      return
     }
-
-    if (!operator) return
 
     try {
       persistRecentImpersonation(user)
-      applyConsoleImpersonateUserId(targetId)
-      persistConsoleImpersonationSession(targetId, operator, {
-        skipNotify: true,
-      })
-      hardNavigateToAccountAfterImpersonation()
+      beginConsoleImpersonation(targetId, operator)
     } catch (e) {
       console.error(e)
       const message =
@@ -289,9 +274,7 @@ export function ImpersonateConsoleUserDialog({
                       value={cmdkValue}
                       disabled={disabled}
                       onSelect={() =>
-                        handleSelectUser(
-                          recentImpersonationUserToModel(recent),
-                        )
+                        handleSelectUser(recentImpersonationUserToModel(recent))
                       }
                       className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
                     >

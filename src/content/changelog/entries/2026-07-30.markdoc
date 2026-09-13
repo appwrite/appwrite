@@ -2,6 +2,7 @@
 layout: changelog
 title: Non-destructive column updates and renames in the Appwrite CLI
 date: 2026-07-30
+tags: cli, databases
 ---
 
 Running `appwrite push tables` no longer deletes and recreates a column when the change is one the API can apply in place, so the column keeps its data.

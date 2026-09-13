@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -15,7 +16,6 @@ import {
 import {
   ComparisonCellValue,
   ComparisonRowLabel,
-  getPlanCtaHref,
   getPlanCtaLabel,
   outlineTierButtonClassName,
 } from './_components/PricingShared'
@@ -192,7 +192,6 @@ export function ComparePlansSection() {
 
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:hidden">
           {PRICING_PLAN_COLUMNS.map((column) => {
-            const href = getPlanCtaHref(column.id)
             const label = getPlanCtaLabel(column.id)
             const isEnterprise = column.id === 'enterprise'
 
@@ -204,12 +203,11 @@ export function ComparePlansSection() {
                   className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
                   asChild
                 >
-                  <Link
-                    to={href}
+                  <ContactSalesLink
                     {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
                   >
                     {t(label)}
-                  </Link>
+                  </ContactSalesLink>
                 </Button>
               )
             }

@@ -33,11 +33,11 @@ To implement the FCM provider in Appwrite Messaging, there are several steps you
 
 ## Step 1: Sign up on Firebase
 
-First, you must [sign up for a Firebase account](https://firebase.google.com/) and create a new project. Head to the **Project settings** page, click on the **Service accounts** tab, and **generate new private key**. Download the JSON file for later use.
+First, you must [sign up for a Firebase account](https://firebase.google.com/) and create a new project. Head to the **Project settings** page, click on the **Service accounts** tab, and **generate new private key**. Download the JSON file for later use.
 
 ![Firebase service account private key](/images/integrations/push-fcm/private-key.avif)
 
-You must also verify that FCM has been enabled on your project by visiting the **Cloud Messaging** tab. If FCM is disabled, click the three-dots menu, open the link, and click **Enable**.
+You must also verify that FCM has been enabled on your project by visiting the **Cloud Messaging** tab. If FCM is disabled, click the three-dots menu, open the link, and click **Enable**.
 
 ## Step 2: Add FCM provider to your Appwrite project
 
@@ -53,13 +53,13 @@ To test the provider on mobile apps, there are some additional configuration ste
 
 {% tabs %}
 {% tabsitem #android title="Android with FCM" %}
-1. Install the `com.google.firebase:firebase-messaging` Firebase SDK.
-2. In your Firebase console, navigate to **Settings** > **General** > **Your apps** > add an **Android** app.
-3. Register and download your `google-services.json` config file.
-4. Add `google-services.json` at the root of your project.
-5. Add Google Services class path to your app-level Gradle dependencies block `"com.google.gms:google-services:4.4.0"`.
-6. Add the Google Services plugin to your app-level Gradle in the plugins block as `"com.google.gms.google-services"`.
-7. Add notification handler service to `AndroidManifest.xml` inside the application tag, alongside other activities. Find an example of this service in the [Send push notification](https://appwrite.io/docs/products/messaging/send-push-notifications#add-targets) journey.
+1. Install the `com.google.firebase:firebase-messaging` Firebase SDK.
+2. In your Firebase console, navigate to **Settings** > **General** > **Your apps** > add an **Android** app.
+3. Register and download your `google-services.json` config file.
+4. Add `google-services.json` at the root of your project.
+5. Add Google Services class path to your app-level Gradle dependencies block `"com.google.gms:google-services:4.4.0"`.
+6. Add the Google Services plugin to your app-level Gradle in the plugins block as `"com.google.gms.google-services"`.
+7. Add notification handler service to `AndroidManifest.xml` inside the application tag, alongside other activities. Find an example of this service in the [Send push notification](https://appwrite.io/docs/products/messaging/send-push-notifications#add-targets) journey.
 
 ```xml
 <service android:name="<YOUR_NOTIFICATION_HANDLER_SERVICE>" android:exported="false">
@@ -72,17 +72,17 @@ To test the provider on mobile apps, there are some additional configuration ste
 {% /tabsitem %}
 
 {% tabsitem #ios title="iOS with FCM" %}
-1. In your Firebase console, navigate to **Settings** > **General** > **Your apps** > add an **iOS** app.
-2. Register and download your `GoogleService-Info.plist` and add it to the root of your project.
-3. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
+1. In your Firebase console, navigate to **Settings** > **General** > **Your apps** > add an **iOS** app.
+2. Register and download your `GoogleService-Info.plist` and add it to the root of your project.
+3. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 4. Create a new key, note down the key ID, and download your key.
-5. In the Firebase console, go to *Settings*> **Cloud Messaging** > **APNs authentication key** > click **Upload**. Then, upload your key here.
-6. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > + Capabilities > Search for **Push Notifications**.
-7. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
+5. In the Firebase console, go to *Settings*> **Cloud Messaging** > **APNs authentication key** > click **Upload**. Then, upload your key here.
+6. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > + Capabilities > Search for **Push Notifications**.
+7. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 {% /tabsitem %}
 {% /tabs %}
 
-After that, you can follow the [Send push notifications](https://appwrite.io/docs/products/messaging/send-push-notifications) flow to test your provider.
+After that, you can follow the [Send push notifications](https://appwrite.io/docs/products/messaging/send-push-notifications) flow to test your provider.
 
 # Read more about FCM and Appwrite Messaging
 

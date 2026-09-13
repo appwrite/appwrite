@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { ImageFormat } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { cn } from '@/lib/utils'
 import { useAvifSupport } from '@/lib/avif-support'
 
@@ -76,12 +77,8 @@ export function isStorageVideoPreviewSupportedMimeType(
   return supported.has(t)
 }
 
-function withStoragePreviewAdminMode(previewUrl: string): string {
-  return (
-    previewUrl +
-    (previewUrl.includes('?') ? '&' : '?') +
-    'mode=admin'
-  )
+function withStoragePreviewAdminMode(previewUrl: unknown): string {
+  return withAdminMode(previewUrl)
 }
 
 export type StorageFilePreviewThumbVariant = 'table' | 'grid'

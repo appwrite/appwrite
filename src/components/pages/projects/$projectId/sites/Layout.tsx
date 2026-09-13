@@ -57,7 +57,15 @@ import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 import { useT } from '@/lib/i18n/translate'
-import { getRedeploySourceDeploymentId } from '@/lib/utils/deployment-status'
+import {
+  getRedeploySourceDeploymentId,
+  shouldShowBuildingInsteadOfSettingsAlert,
+} from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+  useSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -82,11 +90,6 @@ function SiteLayoutContent() {
     useIsFetching({
       queryKey: ['logs', 'site', projectId, siteId],
     }) > 0
-  const siteUsageRefreshing =
-    useIsFetching({
-      queryKey: ['usage-events'],
-      predicate: (query) => query.queryKey.includes(siteId),
-    }) > 0
   const { data: site } = useProjectSite(projectId, siteId)
 
   const activeTab = useMemo(() => {
@@ -96,14 +99,9 @@ function SiteLayoutContent() {
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
       if (
-        [
-          'deployments',
-          'logs',
-          'domains',
-          'usage',
-          'variables',
-          'settings',
-        ].includes(tab)
+        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
+          tab,
+        )
       ) {
         return tab
       }
@@ -136,27 +134,12 @@ function SiteLayoutContent() {
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
 
-  const cancelBuildMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment?.$id) {
-        throw new Error('Project ID, Site ID, and Deployment ID are required')
-      }
-      return await cancelSiteDeployment(projectId, siteId, activeDeployment.$id)
-    },
-    onSuccess: async () => {
-      setCancelBuildDialogOpen(false)
-      await queryClient.refetchQueries({
-        queryKey: ['deployments', 'site', projectId, siteId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
-      toast.success(t('Build cancelled'))
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to cancel build'))
-    },
-  })
+  const settingsRedeployPending = useSettingsRedeployPending(
+    'site',
+    projectId,
+    siteId,
+    site,
+  )
 
   const redeployMutation = useMutation({
     mutationFn: async () => {
@@ -169,17 +152,28 @@ function SiteLayoutContent() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['deployments', 'site', projectId, siteId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !siteId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'site',
+        projectId,
+        resourceId: siteId,
+        resourceQueryKey: ['site', 'project', projectId, siteId],
+        deploymentQueryKey: siteDeploymentQueryOptions(
+          projectId,
+          siteId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'site', projectId, siteId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -188,10 +182,38 @@ function SiteLayoutContent() {
 
   const isBuilding = useMemo(
     () =>
-      activeDeployment?.status === 'building' ||
-      activeDeployment?.status === 'processing',
-    [activeDeployment?.status],
+      shouldShowBuildingInsteadOfSettingsAlert(
+        site,
+        activeDeployment,
+        settingsRedeployPending,
+      ),
+    [settingsRedeployPending, site, activeDeployment],
   )
+
+  const cancelBuildMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment?.$id) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      return await cancelSiteDeployment(projectId, siteId, activeDeployment.$id)
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success(t('Build cancelled'))
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
 
   const handleBack = () => {
     navigate({
@@ -292,16 +314,6 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
-      ...(features.usageStats
-        ? [
-            {
-              id: 'usage' as const,
-              label: t('Usage'),
-              to: '/projects/$projectId/sites/$siteId/usage',
-              params: { projectId: projectId!, siteId: siteId! },
-            },
-          ]
-        : []),
       ...(showSettingsTab
         ? [
             {
@@ -319,7 +331,7 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [features.usageStats, projectId, siteId, showSettingsTab, t],
+    [projectId, siteId, showSettingsTab, t],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -476,20 +488,9 @@ function SiteLayoutContent() {
                 />
               ) : undefined
             }
-            showRefresh={
-              (activeTab === 'logs' || activeTab === 'usage') &&
-              hasRefreshHandler
-            }
-            onRefresh={
-              activeTab === 'logs' || activeTab === 'usage'
-                ? triggerRefresh
-                : undefined
-            }
-            isRefreshing={
-              activeTab === 'usage'
-                ? siteUsageRefreshing
-                : siteLogsListRefreshing
-            }
+            showRefresh={activeTab === 'logs' && hasRefreshHandler}
+            onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
+            isRefreshing={siteLogsListRefreshing}
             createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
             createAnalyticsAction={
               activeTab === 'domains' ? 'create-site-domain' : undefined

@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/marketplace')(
   {
     beforeLoad: ({ params }) => {
-      if (!getActiveProfileFeatures().marketplace) {
+      if (!isCloudProfile()) {
         throw redirect({
           to: '/organizations/$orgId',
           params: { orgId: params.orgId },

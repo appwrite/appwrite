@@ -120,8 +120,9 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  features: { agent: boolean },
+  options: { agent: boolean; isCloud: boolean },
 ): readonly ExpandedFooterGroup[] {
+  const { agent, isCloud } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -153,6 +154,15 @@ function getExpandedFooterGroups(
     links: [
       productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
       productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
+      {
+        ...docsFooterLink(
+          footerCopy.expanded.products.postgresql,
+          '/docs/products/databases/postgresql',
+          marketing,
+        ),
+        analyticsAction: getMarketingProductAnalyticsAction('databases'),
+        isNew: isProductNavItemNew('databases'),
+      },
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
@@ -160,7 +170,7 @@ function getExpandedFooterGroups(
         ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
         analyticsAction: getMarketingProductAnalyticsAction('realtime'),
       },
-      ...(features.agent
+      ...(agent
         ? [
             {
               ...docsFooterLink(
@@ -174,14 +184,27 @@ function getExpandedFooterGroups(
           ]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
-      marketingProductFooterLink(
-        footerCopy.expanded.products.domains,
-        '/domains',
-        marketing,
-        'domains',
-      ),
+      ...(isCloud
+        ? [
+            marketingProductFooterLink(
+              footerCopy.expanded.products.domains,
+              '/domains',
+              marketing,
+              'domains',
+            ),
+          ]
+        : []),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
-      productFooterLink(footerCopy.expanded.products.firewall, '/products/firewall', marketing, 'firewall'),
+      ...(isCloud
+        ? [
+            productFooterLink(
+              footerCopy.expanded.products.firewall,
+              '/products/firewall',
+              marketing,
+              'firewall',
+            ),
+          ]
+        : []),
     ],
   },
   {
@@ -272,6 +295,11 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
+      docsFooterLink(
+        footerCopy.expanded.compare.postgresqlHosting,
+        '/docs/products/databases/postgresql',
+        marketing,
+      ),
       blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
@@ -345,7 +373,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    features,
+    { agent: features.agent, isCloud },
   )
 
   const resourceLinks = [

@@ -9,21 +9,21 @@ const OAUTH_PROVIDERS = [
     label: 'Google',
     icon: '/icons/google.svg',
     hoverClass:
-      'group-hover:border-blue-500/35 group-hover:bg-blue-500/[0.06] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+      'group-hover:bg-blue-500/[0.06] motion-reduce:group-hover:bg-background',
   },
   {
     id: 'github',
     label: 'GitHub',
     icon: '/icons/github.svg',
     hoverClass:
-      'group-hover:border-foreground/25 group-hover:bg-foreground/[0.04] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+      'group-hover:bg-foreground/[0.04] motion-reduce:group-hover:bg-background',
   },
   {
     id: 'apple',
     label: 'Apple',
     icon: '/icons/apple.svg',
     hoverClass:
-      'group-hover:border-foreground/30 group-hover:bg-foreground/[0.05] motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+      'group-hover:bg-foreground/[0.05] motion-reduce:group-hover:bg-background',
   },
 ] as const
 
@@ -78,7 +78,7 @@ function OAuthButton({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] transition-[border-color,background-color,transform,box-shadow,color] duration-300',
+        'flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] transition-[background-color,transform,box-shadow,color] duration-300',
         productBentoIdle.text,
         provider.hoverClass,
         highlighted &&
@@ -96,7 +96,7 @@ export function AuthProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col">
+      <div className="relative flex h-full min-h-0 w-full flex-col">
         <div className={cn('flex min-h-0 flex-1 flex-col', productBentoContainer.shell)}>
           <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
             <div className="flex items-center gap-1.5">
@@ -142,7 +142,7 @@ export function AuthProductVisual() {
             </div>
 
             <div
-              className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[12px] font-medium text-muted-foreground transition-[border-color,background-color,color] duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_12%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted/30 motion-reduce:group-hover:text-muted-foreground"
+              className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors duration-300 group-hover:bg-[color-mix(in_srgb,var(--brand-cta)_12%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-muted/30 motion-reduce:group-hover:text-muted-foreground"
               style={{ transitionDelay: '480ms' }}
             >
               <Mail className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />

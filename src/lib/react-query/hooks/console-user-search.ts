@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import { Query } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import {
@@ -43,6 +43,42 @@ export function consoleUsersImpersonationSearchQueryOptions(
   return queryOptions({
     queryKey: ['console', 'users', 'impersonation-search', trimmed],
     queryFn: () => fetchConsoleUsersSearch(debouncedSearch),
+    staleTime: 30 * 1000,
+    retry: false,
+  })
+}
+
+/** How a `/impersonate` deep link identifies the target: console user id or email. */
+export type ConsoleImpersonationTargetLookup =
+  | { userId: string; email?: undefined }
+  | { email: string; userId?: undefined }
+
+/**
+ * Target console user for the `/impersonate` deep links. Support notes usually
+ * carry the requester's email rather than their console user id, so both are
+ * accepted. Shared by the route loaders and the View so the first paint has data.
+ * Resolves to `null` when no console user matches an email.
+ */
+export function consoleImpersonationTargetQueryOptions(
+  lookup: ConsoleImpersonationTargetLookup,
+) {
+  const email = lookup.email?.trim().toLowerCase() ?? ''
+  const userId = lookup.userId ?? ''
+  return queryOptions({
+    queryKey: [
+      'console',
+      'users',
+      'impersonation-target',
+      userId ? 'id' : 'email',
+      userId || email,
+    ],
+    queryFn: async (): Promise<Models.User | null> => {
+      if (userId) return sdk.forConsole.users.get(userId)
+      const list = await sdk.forConsole.users.list({
+        queries: [Query.equal('email', [email]), Query.limit(1)],
+      })
+      return list.users[0] ?? null
+    },
     staleTime: 30 * 1000,
     retry: false,
   })

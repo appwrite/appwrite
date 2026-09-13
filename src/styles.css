@@ -156,7 +156,7 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.93 0.0035 286.32);
   --sidebar-ring: oklch(0.898 0.004 286.286);
-  /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
+  /* Cloud profile - matches appwrite/website; files in src/assets/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   /* Long-form content body copy - matches appwrite/website (--web-font-family-inter) */
@@ -1124,6 +1124,202 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
   background-color: var(--editor-bg, var(--background)) !important;
 }
 
+/* Suggest/hover widgets are portaled here so overflow-hidden SQL panes cannot clip them. */
+.monaco-overflow-widgets-root {
+  position: relative;
+  z-index: 10050;
+  pointer-events: none;
+}
+
+.monaco-overflow-widgets-root .overflowingContentWidgets,
+.monaco-overflow-widgets-root .overflowingOverlayWidgets,
+.monaco-overflow-widgets-root .editor-widget,
+.monaco-overflow-widgets-root .suggest-details,
+.monaco-overflow-widgets-root .monaco-hover {
+  pointer-events: auto;
+}
+
+/*
+ * Suggest / hover / parameter-hint overlays: match shadcn popover + command menus.
+ * Colors also come from monaco-app-theme.ts. Layout overrides Monaco's VS Code
+ * defaults (empty file-icon gutter, details only on the focused row, mixed fonts).
+ */
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget,
+.monaco-editor .suggest-details,
+.suggest-details,
+.monaco-editor .parameter-hints-widget,
+.editor-widget.parameter-hints-widget,
+.monaco-editor .monaco-hover,
+.monaco-hover {
+  overflow: hidden;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Extra inset around the list. content-box so Monaco's fixed height still fits every row. */
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget,
+.monaco-editor .suggest-details,
+.suggest-details {
+  box-sizing: content-box !important;
+  padding: 4px;
+}
+
+.monaco-editor .suggest-widget,
+.editor-widget.suggest-widget {
+  z-index: 10050;
+}
+
+.monaco-editor .suggest-widget.docs-side,
+.editor-widget.suggest-widget.docs-side {
+  overflow: visible;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row {
+  display: flex;
+  align-items: center;
+  padding: 0 8px !important;
+  border-radius: var(--radius-sm);
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  padding-left: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main {
+  display: flex;
+  align-items: center !important;
+  width: 100%;
+  min-width: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+  font-size: 13px;
+  letter-spacing: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left {
+  gap: 0;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .left > .monaco-icon-label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-icon-label > .monaco-icon-label-container,
+.editor-widget.suggest-widget .monaco-icon-label > .monaco-icon-label-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Monaco always reserves a 16×22 file-icon ::before slot, even when empty. */
+.monaco-editor .suggest-widget .monaco-icon-label::before,
+.editor-widget.suggest-widget .monaco-icon-label::before,
+.monaco-editor .suggest-widget .monaco-icon-label::after,
+.editor-widget.suggest-widget .monaco-icon-label::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px !important;
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--muted-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon::before,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row .suggest-icon::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row > .contents > .main > .right > .details-label {
+  display: inline !important;
+  margin-left: 8px !important;
+  overflow: hidden;
+  font-size: 12px !important;
+  line-height: 16px;
+  color: var(--muted-foreground) !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1 !important;
+}
+
+.monaco-editor .suggest-widget .monaco-icon-description-container,
+.editor-widget.suggest-widget .monaco-icon-description-container,
+.suggest-details .type,
+.suggest-details .docs,
+.parameter-hints-widget .signature,
+.monaco-hover .hover-row .hover-contents .value {
+  color: var(--muted-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .details-label,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .details-label,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .codicon,
+.editor-widget.suggest-widget .monaco-list .monaco-list-row.focused .codicon {
+  color: var(--accent-foreground) !important;
+}
+
+.monaco-hover .monaco-hover-content,
+.parameter-hints-widget {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+}
+
 /* Find in file highlight in Monaco editor */
 .find-in-file-highlight {
   background-color: rgba(255, 235, 0, 0.35);
@@ -1645,7 +1841,6 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: calc(0.75rem - 1px);
 }
 
 /* Skip layout/paint for off-screen bento tiles while scrolling the home page. */

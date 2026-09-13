@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing: Document imports from CSV files"
 date: 2025-07-01
 cover: /images/changelog/2025-07-01.avif
+tags: databases
 ---
 
 We're introducing a new way to populate your Appwrite databases: **document imports from CSV files**.

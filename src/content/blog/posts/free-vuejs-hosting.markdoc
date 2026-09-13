@@ -6,7 +6,7 @@ date: 2025-05-20
 cover: /images/blog/free-vuejs-hosting/cover.avif
 timeToRead: 6
 author: eldad-fux
-category: tutorial
+category: tutorials
 unlisted: true
 faqs:
   - question: "Can I host a Vue.js app for free on Appwrite Sites?"

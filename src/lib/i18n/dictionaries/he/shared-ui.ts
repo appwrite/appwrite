@@ -75,6 +75,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Add variable': 'הוספת משתנה',
   All: 'הכול',
   'All shortcuts': 'כל הקיצורים',
+  'All timezones': 'כל אזורי הזמן',
   'All variable keys are required': 'כל מפתחות המשתנים נדרשים',
   'Always active': 'פעילות תמיד',
   Amount: 'כמות',
@@ -144,6 +145,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Content: 'תוכן',
   'Cookie preferences': 'העדפות עוגיות',
   'Cookies Policy': 'מדיניות העוגיות',
+  'We use cookies to improve Appwrite.':
+    'אנחנו משתמשים בעוגיות כדי לשפר את Appwrite.',
   'Copied line': 'השורה הועתקה',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',
@@ -221,6 +224,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Execution ID': 'מזהה הרצה',
   Exit: 'יציאה',
   'Exit impersonation': 'יציאה מהתחזות',
+  Share: 'שיתוף',
+  'Copy impersonation link': 'העתקת קישור התחזות',
   'Expanded image': 'תמונה מוגדלת',
 
   // Errors and failures
@@ -262,7 +267,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.':
     'התחילו ביצירת הפריט הראשון שלכם.',
-  'Organization': 'ארגון',
+  Organization: 'ארגון',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',
@@ -416,6 +421,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'אין עדיין סינונים שמורים. הוסיפו סינונים בלשונית הסינונים ושמרו אותם כאן לגישה מהירה.',
   'No scopes match your search.': 'אין הרשאות התואמות את החיפוש.',
   'No types': 'אין סוגים',
+  'No timezones found': 'לא נמצאו אזורי זמן',
   'No units found': 'לא נמצאו יחידות',
   'No users to show': 'אין משתמשים להצגה',
   'No values found': 'לא נמצאו ערכים',
@@ -536,6 +542,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search repositories...': 'חיפוש repos...',
   'Search scopes...': 'חיפוש הרשאות…',
   'Search templates...': 'חיפוש תבניות...',
+  'Search timezones...': 'חיפוש אזורי זמן…',
   'Search units...': 'חיפוש יחידות…',
   'Search values...': 'חיפוש ערכים…',
   'Searching resources…': 'מחפש משאבים…',
@@ -550,6 +557,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',
   'Select function to execute...': 'בחרו פונקציה להרצה...',
@@ -669,7 +677,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
   // pragma: allowlist secret
-  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
@@ -839,6 +848,11 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Table filters: column titles from filter configs
   'Resource type': 'סוג משאב',
+  'Resource ID': 'מזהה משאב',
+  'Resource path': 'נתיב משאב',
+  'Resource parent': 'משאב אב',
+  'Actor email': 'אימייל מבצע',
+  'Event ID': 'מזהה אירוע',
   'Event path': 'נתיב אירוע',
   Signature: 'חתימה',
   'Deployment status': 'סטטוס פריסה',
@@ -848,6 +862,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   // Table filters: enum value labels from filter configs
   'User / key': 'משתמש / מפתח',
   'User (client API)': 'משתמש (Client API)',
+  Hidden: 'מוסתר',
+  'App installation': 'התקנת אפליקציה',
+  Subscriber: 'מנוי',
+  Report: 'דיווח',
   Verifying: 'באימות',
   Relationship: 'קשר',
   Point: 'נקודה',
@@ -1237,4 +1255,14 @@ export const heSharedUiDictionary: Record<string, string> = {
   Red: 'אדום',
   Blue: 'כחול',
   Slate: 'אפור',
+  'Increase time': 'העלאת זמן',
+  'Decrease time': 'הורדת זמן',
+  'Start impersonation': 'התחלת התחזות',
+  'Could not load this user.': 'לא ניתן היה לטעון את המשתמש הזה.',
+  "The Console will run with this user's access until you exit impersonation. Actions stay attributed to your operator account.":
+    'המסוף יפעל עם ההרשאות של המשתמש הזה עד שתצאו ממצב ההתחזות. הפעולות יישארו משויכות לחשבון האופרטור שלכם.',
+  'Operator access': 'גישת אופרטור',
+  'Operator account': 'חשבון אופרטור',
+  'After you confirm, the Console will open this page.':
+    'אחרי שתאשרו, המסוף ייפתח בעמוד הזה.',
 }

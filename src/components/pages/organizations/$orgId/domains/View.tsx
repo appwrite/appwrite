@@ -71,6 +71,9 @@ import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canBuyOrTransferOrgDomain } from '@/lib/console-access-checks'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 
 type DomainsListSearch = {
   search?: string
@@ -87,6 +90,9 @@ export function View() {
   const location = useLocation()
   const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(orgId)
+  const showBuyAndTransfer = canBuyOrTransferOrgDomain(access, features)
   const [isCreateDomainSubmitting, setIsCreateDomainSubmitting] =
     useState(false)
 
@@ -590,57 +596,61 @@ export function View() {
         </div>
         <div className="ms-auto flex items-center gap-2">
           <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <Button
-                    variant="outline"
-                    disabled={isDomainLimitReached}
-                    onClick={() =>
-                      navigate({
-                        to: '/organizations/$orgId/domains/transfer-in',
-                        params: { orgId: orgId! },
-                      })
-                    }
-                    className="h-9 gap-1.5 text-[13px] font-medium"
-                  >
-                    <ArrowLeftRight className="h-4 w-4" />
-                    {t('Transfer in')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {domainLimitTooltip ? (
-                <TooltipContent className="max-w-xs text-xs">
-                  {domainLimitTooltip}
-                </TooltipContent>
-              ) : null}
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <Button
-                    variant="outline"
-                    disabled={isDomainLimitReached}
-                    onClick={() =>
-                      navigate({
-                        to: '/organizations/$orgId/domains/buy',
-                        params: { orgId: orgId! },
-                      })
-                    }
-                    className="h-9 gap-1.5 text-[13px] font-medium"
-                    {...analyticsAttrs('buy-domain')}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {t('Buy domain')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {domainLimitTooltip ? (
-                <TooltipContent className="max-w-xs text-xs">
-                  {domainLimitTooltip}
-                </TooltipContent>
-              ) : null}
-            </Tooltip>
+            {showBuyAndTransfer ? (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        variant="outline"
+                        disabled={isDomainLimitReached}
+                        onClick={() =>
+                          navigate({
+                            to: '/organizations/$orgId/domains/transfer-in',
+                            params: { orgId: orgId! },
+                          })
+                        }
+                        className="h-9 gap-1.5 text-[13px] font-medium"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                        {t('Transfer in')}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {domainLimitTooltip ? (
+                    <TooltipContent className="max-w-xs text-xs">
+                      {domainLimitTooltip}
+                    </TooltipContent>
+                  ) : null}
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        variant="outline"
+                        disabled={isDomainLimitReached}
+                        onClick={() =>
+                          navigate({
+                            to: '/organizations/$orgId/domains/buy',
+                            params: { orgId: orgId! },
+                          })
+                        }
+                        className="h-9 gap-1.5 text-[13px] font-medium"
+                        {...analyticsAttrs('buy-domain')}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        {t('Buy domain')}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {domainLimitTooltip ? (
+                    <TooltipContent className="max-w-xs text-xs">
+                      {domainLimitTooltip}
+                    </TooltipContent>
+                  ) : null}
+                </Tooltip>
+              </>
+            ) : null}
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">

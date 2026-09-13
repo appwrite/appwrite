@@ -13,6 +13,28 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'At-rest protection': '保存時保護',
   'Auth overview': '認証の概要',
   'Auth user delivery': '認証ユーザーへの配信',
+  'AutoGravity does not crop this file. It returns a focal point that the preview crop should keep visible.':
+    'AutoGravity はこのファイル自体をクロップしません。プレビューのクロップが見え続けるべき焦点を返します。',
+  'AutoGravity focal point': 'AutoGravity の焦点',
+  'Automatic crop gravity': '自動クロップ gravity',
+  'Face bounding box, if confidence is high': '信頼度が高い場合の顔バウンディングボックス',
+  'It asks AutoGravity to pick a crop focus. YuNet runs first and uses a face bounding box when confidence is high enough. Otherwise U²-Net saliency finds the strongest connected region and returns its weighted centroid as a normalized (x, y) point. The preview endpoint crops around that point. Fixed gravity values still work as before.':
+    'AutoGravity にクロップの焦点を選ばせます。まず YuNet が動き、信頼度が十分なら顔のバウンディングボックスを使います。そうでなければ U²-Net の saliency が最も強い連結領域を見つけ、重み付き重心を正規化 (x, y) として返します。preview エンドポイントはその点を中心にクロップします。固定の gravity 値はこれまでどおり使えます。',
+  'Normalized focal point for the crop': 'クロップ用の正規化焦点',
+  'Pass gravity=auto on file preview and Appwrite picks a focal point from the image. YuNet looks for a face first. If none is confident enough, U²-Net saliency finds the strongest subject. The service returns a normalized (x, y) coordinate. Existing values like center and top-right stay unchanged.':
+    'file preview で gravity=auto を渡すと、Appwrite が画像から焦点を選びます。YuNet が先に顔を探します。十分な確度がなければ、U²-Net の saliency が最も目立つ被写体を見つけます。サービスは正規化された (x, y) 座標を返します。center や top-right などの既存値はそのままです。',
+  'Saliency map, then strongest connected region': 'saliency マップ、その後に最も強い連結領域',
+  'Square crop using gravity=auto, subject kept in view': 'gravity=auto の正方形クロップ。被写体が残る',
+  'Square crop using gravity=center, mostly empty field': 'gravity=center の正方形クロップ。ほぼ空の草地',
+  'The middle of the frame is empty grass.': 'フレーム中央は空の草地です。',
+  'The same 400×400 request keeps the subject.': '同じ 400×400 のリクエストで被写体が残ります。',
+  'Keeps the subject.': '被写体が残ります。',
+  'Misses the subject.': '被写体が切れます。',
+  'What does gravity=auto do on image previews?': 'gravity=auto は画像プレビューで何をしますか?',
+  'Wide source photograph with the subject on the left': '被写体が左にある横長の元写真',
+  'YuNet looks for a face, then U²-Net saliency. AutoGravity returns a normalized (x, y) point. The uploaded file is not cropped.':
+    'YuNet が顔を探し、次に U²-Net の saliency です。AutoGravity は正規化された (x, y) を返します。アップロードしたファイル自体はクロップされません。',
+  'YuNet, then U²-Net. File is not cropped.': 'YuNet、次に U²-Net。ファイルはクロップしません。',
   'Branch URLs': 'Branch URL',
   'Bring your own providers': '独自のプロバイダーを利用',
   'Broadcast messaging': 'ブロードキャストメッセージング',
@@ -255,7 +277,10 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Turn on bucket encryption from Settings so new uploads are stored encrypted at rest. If files are exposed, encrypted objects stay unreadable without your project keys.': 'Settings からバケットの暗号化を有効にすると、新しいアップロードは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトはプロジェクトの鍵がなければ読み取れません。',
   'Use Git for automatic builds on push, the Appwrite CLI in CI, or a manual tarball upload from the Console. Every path runs through the same build pipeline, logs, domains, and rollbacks.': 'push 時の自動ビルドには Git を、CI では Appwrite CLI を、あるいはコンソールから手動で tarball をアップロードすることもできます。どの方法でも、同じビルドパイプライン、ログ、ドメイン、ロールバックの仕組みを利用できます。',
   'Use the Appwrite CLI and Docker to run functions on localhost with hot reload. Test with production-style headers, impersonate users, and deploy when you are ready.': 'Appwrite CLI と Docker を使って、ホットリロード付きで関数をローカルホストで実行できます。本番相当のヘッダーでテストしたり、ユーザーになりすましたりでき、準備が整ったらデプロイできます。',
-  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.': 'プレビューエンドポイントを使えば、画像のリサイズ、切り抜き、フォーマット変換、画質設定、枠線の追加、回転をオンデマンドで行えます。事前処理のパイプラインや重複ファイルは不要です。',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate from a single upload. Pass gravity=auto and YuNet looks for a face first. If none is confident enough, U²-Net saliency returns a normalized (x, y) crop focus. Fixed gravity values still work.':
+    'preview エンドポイントで、1 回のアップロードからリサイズ、クロップ、フォーマット変換、画質、枠線、回転ができます。gravity=auto を渡すと、YuNet が先に顔を探します。十分な確度がなければ、U²-Net の saliency が正規化された (x, y) のクロップ焦点を返します。固定の gravity 値はそのまま使えます。',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.':
+    'プレビューエンドポイントを使えば、画像のリサイズ、切り抜き、フォーマット変換、画質設定、枠線の追加、回転をオンデマンドで行えます。事前処理のパイプラインや重複ファイルは不要です。',
   'Verify sessions from Next.js, Nuxt, SvelteKit, and other server-rendered apps. Issue session cookies from your backend with dedicated guides and tutorials.': 'Next.js、Nuxt、SvelteKit などのサーバーレンダリングアプリからセッションを検証できます。専用ガイドとチュートリアルに沿って、バックエンドからセッション Cookie を発行できます。',
   'When you push to a branch other than your production branch, Appwrite builds a deployment but does not activate it on your primary domain. Instead, a preview URL is generated for org members to review. Pull requests can also receive preview links and optional PR comments unless silent mode is enabled.': '本番ブランチ以外のブランチに push すると、Appwrite はデプロイをビルドしますが、メインドメインでは有効化しません。代わりに、組織のメンバーがレビューできるプレビュー URL が生成されます。サイレントモードが有効でない限り、プルリクエストにもプレビューリンクとオプションの PR コメントが付与されます。',
   'Yes. Add multiple domain rules on a site: point one hostname to the active production deployment, map another to a specific Git branch for staging, or configure redirects. Branch and commit preview URLs are also generated automatically for Git deployments.': 'はい。1 つのサイトに複数のドメインルールを追加できます。あるホスト名をアクティブな本番デプロイに向けたり、別のホスト名をステージング用の特定の Git ブランチに割り当てたり、リダイレクトを設定したりできます。Git デプロイでは、ブランチやコミットごとのプレビュー URL も自動的に生成されます。',
@@ -310,6 +335,26 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Create a database, choose your engine and compute model, and query your first data in minutes.':
     'データベースを作成し、エンジンとコンピュートモデルを選んで、数分で最初のデータをクエリできます。',
   'Databases docs': 'データベースのドキュメント',
+  'Does Appwrite offer managed PostgreSQL?': 'Appwrite はマネージド PostgreSQL を提供していますか?',
+  'Managed PostgreSQL and databases for every model':
+    'マネージド PostgreSQL とあらゆるモデル向けのデータベース',
+  'Managed PostgreSQL and MySQL': 'マネージド PostgreSQL と MySQL',
+  'Managed PostgreSQL hosting and app databases':
+    'マネージド PostgreSQL ホスティングとアプリ向けデータベース',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'フル SQL、pgvector、Prisma や Drizzle などの既存ツール向けの移植可能なスキーマを備えたマネージド PostgreSQL ホスティング。',
+  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
+    'pgvector 対応のマネージド PostgreSQL ホスティングに加え、TablesDB、DocumentsDB、VectorsDB。専用コンピュート、バックアップ、レプリカ、PITR。',
+  'PostgreSQL docs': 'PostgreSQL のドキュメント',
+  'PostgreSQL quick start': 'PostgreSQL のクイックスタート',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    '標準の SQL クライアントで接続する専用マネージド PostgreSQL および MySQL エンジン。',
+  'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.':
+    '標準クライアントとコンソール内 SQL エディタで使えるホスト型 PostgreSQL と MySQL。pgvector、PostGIS、移植可能なスキーマ、既存の ORM をそのまま使えます。',
+  'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
+    'テーブル、ドキュメント、ベクトルと並べてマネージド PostgreSQL を実行します。Prisma または psql で接続し、pgvector をインストールし、バックアップ、レプリカ、PITR 付きの専用コンピュートをスケールできます。',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
+    'はい。ネイティブ PostgreSQL データベースは、プロジェクトのリージョンにプロビジョニングされる専用のマネージド PostgreSQL インスタンスです。psql、Prisma、Drizzle、または任意の PostgreSQL ドライバーで TLS 経由で接続します。Appwrite がコンピュート、バックアップ、レプリカ、コネクションプーラー、ポイントインタイムリカバリを用意します。既定は PostgreSQL 18 で、17 もサポートされます。',
   'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
   'Do Appwrite DBs integrate with Auth permissions?': 'Appwrite DBs は認証の権限と連携しますか?',
   'Embeddings and similarity search for semantic retrieval and AI features.':

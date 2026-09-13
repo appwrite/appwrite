@@ -771,7 +771,10 @@ export function FileSecurity({
           }
         }}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>{t('Create file token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -884,7 +887,10 @@ export function FileSecurity({
         open={viewingTokenId !== null}
         onOpenChange={(open) => !open && setViewingTokenId(null)}
       >
-        <DialogContent className="sm:max-w-[600px] p-0">
+        <DialogContent
+          className="sm:max-w-[600px] p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>{t('File Token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -948,7 +954,10 @@ export function FileSecurity({
           }
         }}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>{t('Delete token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -998,7 +1007,10 @@ export function FileSecurity({
           }
         }}
       >
-        <DialogContent className="sm:max-w-[600px] p-0 max-h-[90dvh] overflow-hidden flex flex-col">
+        <DialogContent
+          className="sm:max-w-[600px] p-0 max-h-[90dvh] overflow-hidden flex flex-col z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 text-start shrink-0">
             <DialogTitle>{t('Copy File URL')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

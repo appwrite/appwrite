@@ -4,6 +4,9 @@
  */
 export const jaAccountGlobalDictionary: Record<string, string> = {
   // Account pages
+  'Join an organization': '組織に参加する',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
   '123 Main St': '大手町 1-1-1',
   'Account ID': 'アカウント ID',
   'Account was deleted': 'アカウントを削除しました',
@@ -152,6 +155,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Billing addresses': '請求先住所',
   'Created At': '作成日時',
   'Delete account': 'アカウントを削除',
+  'Delete identity': 'ID を削除',
   'Delete all sessions': 'すべてのセッションを削除',
   'Delete authenticator app': '認証アプリを削除',
   'Delete billing address': '請求先住所を削除',
@@ -253,7 +257,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Update your billing address information.': '請求先住所の情報を更新します。',
   'Use a recovery code instead': 'リカバリーコードを使用',
   'Use recovery code': 'リカバリーコードを使用',
+  'Your email': 'メールアドレス',
   'Your name': 'お名前',
+  'Your password': 'パスワード',
   'Already have an account?': '既にアカウントをお持ちですか?',
   'Already verified?': '既に確認済みですか?',
   'Authorizing…': '承認中…',
@@ -274,7 +280,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Go to console': 'コンソールへ',
   'Login to your account': 'アカウントにログイン',
   'Login with Bitbucket': 'Bitbucket でログイン',
-  'Login with Cursor': 'Cursor でログイン',
   'Login with GitHub': 'GitHub でログイン',
   'Login with GitLab': 'GitLab でログイン',
   'Login with Google': 'Google でログイン',
@@ -298,7 +303,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Sign in': 'サインイン',
   'Sign up': 'サインアップ',
   'Sign up with Bitbucket': 'Bitbucket でサインアップ',
-  'Sign up with Cursor': 'Cursor でサインアップ',
   'Sign up with GitHub': 'GitHub でサインアップ',
   'Sign up with GitLab': 'GitLab でサインアップ',
   'Sign up with Google': 'Google でサインアップ',
@@ -330,6 +334,41 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Notifications blocked': '通知がブロックされています',
   'Get notified when builds finish': 'ビルド完了時に通知を受け取る',
   'Not now': '後で',
+  'Browser alerts': 'ブラウザ通知',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'このタブがバックグラウンドにあるとき、または別のアプリがフォーカスされているときに、コンソールからデスクトップ通知を受け取ります。',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'このタブがバックグラウンドの間、コンソールからデスクトップ通知を受け取ります。',
+  'Browser alerts are turned off in the Console.':
+    'コンソールでブラウザ通知がオフになっています。',
+  'Console alerts': 'コンソール通知',
+  'Included alerts': '含まれる通知',
+  'Build completion': 'ビルド完了',
+  'Site and function builds that finish while you are away.':
+    '離席中に完了したサイトまたは Functions のビルド。',
+  'Browser alerts test': 'ブラウザ通知のテスト',
+  'If you can read this, browser alerts are working correctly.':
+    'このメッセージが表示されれば、ブラウザ通知は正常に動作しています。',
+  'Send test notification': 'テスト通知を送信',
+  'Test notification sent': 'テスト通知を送信しました',
+  'Could not send a test notification. Check browser permissions.':
+    'テスト通知を送信できませんでした。ブラウザの権限を確認してください。',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'ブラウザ設定でこのサイトの通知を許可してから、ここに戻ってください。',
+  'Browser permission': 'ブラウザの権限',
+  'Console preference': 'コンソールの設定',
+  'Waiting for browser permission': 'ブラウザの権限待ち',
+  'Not supported': '非対応',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'ブラウザ設定を開き、このサイトの通知権限を見つけて許可し、このページを更新してください。',
+  'This browser does not support desktop notifications.':
+    'このブラウザはデスクトップ通知に対応していません。',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ブラウザによって通知がブロックされています。このサイトのブラウザ設定で通知を許可してください。',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    '通知をオンにし、ブラウザから求められたら通知を許可してください。',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'バナーが表示されない場合は、システムの通知センターまたはおやすみモードの設定を確認してください。',
   // Build notification titles/bodies (dynamic combinations)
   'Site build ready': 'サイトのビルドが完了しました',
   'Site build failed': 'サイトのビルドに失敗しました',
@@ -676,6 +715,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     '招待を承認するには、招待が送信されたアカウントに切り替えてください。',
   'Switch account': 'アカウントを切り替え',
   'Use a different account': '別のアカウントを使用',
+  'Could not sign out. Try switching accounts again.':
+    'サインアウトできませんでした。もう一度アカウントを切り替えてください。',
   'Signing out...': 'サインアウト中...',
   'Go to dashboard': 'ダッシュボードへ',
   'Invalid invitation link': '招待リンクが無効です',
@@ -684,7 +725,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Accept the invitation to get started.': '招待を承認して開始してください。',
   'By continuing, you agree to our': '続行すると、次に同意したことになります',
   'Failed to initiate Bitbucket login': 'Bitbucket ログインの開始に失敗しました',
-  'Failed to initiate Cursor login': 'Cursor ログインの開始に失敗しました',
   'Failed to initiate GitHub login': 'GitHub ログインの開始に失敗しました',
   'Failed to initiate GitLab login': 'GitLab ログインの開始に失敗しました',
   'Failed to initiate Google login': 'Google ログインの開始に失敗しました',
@@ -1094,4 +1134,30 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Switch to dark mode': 'ダークモードに切り替え',
   'Switch to light mode': 'ライトモードに切り替え',
   'Use system theme': 'システムテーマを使用',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
+  'Read about the program': 'プログラムについて読む',
+  'Checking your account...': 'アカウントを確認しています...',
+  'Setting up your Education plan organization...':
+    'Education プランの組織を設定しています...',
+  'Continue to Appwrite': 'Appwrite に進む',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub でのサインインが完了しませんでした。もう一度お試しのうえ、プログラムにご参加ください。',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    '現在、GitHub Student Developer Pack の対象ではないようです。',
+  'You can still use Appwrite without an Education plan.':
+    'Education プランがなくても、引き続き Appwrite をご利用いただけます。',
+  "You've already joined the Education program.":
+    'すでに Education プログラムに参加しています。',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
+  'We could not check your GitHub connection':
+    'GitHub との接続を確認できませんでした',
+  'We could not set up your Education plan': 'Education プランを設定できませんでした',
+  'We could not reach GitHub': 'GitHub に接続できませんでした',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    '少し時間をおいてもう一度お試しいただくか、サインインして Appwrite をご覧ください。',
 }

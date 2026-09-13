@@ -39,8 +39,12 @@ const EMPTY_CONFIG: RuntimeConfig = {
   plausibleScriptSrc: '',
   userVerification: '',
   cookieBanner: '',
+  browserApi: '',
+  browserAlerts: '',
   blogDrafts: '',
-  extraOAuthLogin: '',
+  screenshotMode: '',
+  databasePitrRestore: '',
+  extraVcsOAuth: '',
   usageStats: '',
   preLaunch: '',
 }

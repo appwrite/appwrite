@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Encrypted string attribute support: Built-in encryption for sensitive fields"
 date: 2025-07-10
 cover: /images/changelog/2025-07-10.avif
+tags: databases, security
 ---
 
 We’re adding another layer of security to the Appwrite database: Encrypted string attribute support.

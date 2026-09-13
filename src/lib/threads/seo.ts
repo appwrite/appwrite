@@ -1,6 +1,7 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
+import { sanitizeJsonLdText } from '@/lib/seo/json-ld'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
 import { getAuthorDescription } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
@@ -132,37 +133,113 @@ function toIso8601DateTime(value: string): string {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString()
 }
 
-function nonEmptyText(value: string, fallback: string): string {
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? value : fallback
+function toSchemaInteger(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.trunc(value))
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.trunc(parsed))
+    }
+  }
+  return undefined
+}
+
+function schemaText(value: string, fallback: string): string {
+  const sanitized = sanitizeJsonLdText(value)
+  const trimmed = sanitized.trim()
+  return trimmed.length > 0 ? sanitized : sanitizeJsonLdText(fallback)
+}
+
+function authorNameSlug(name: string): string {
+  const slug = schemaText(name, 'anonymous')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+  return slug || 'anonymous'
+}
+
+/**
+ * Older synced messages often have `author_id: null` but a custom Discord
+ * avatar URL that still contains the user snowflake.
+ */
+function extractDiscordUserIdFromAvatar(
+  avatar?: string | null,
+): string | undefined {
+  if (!avatar) return undefined
+  const customAvatar = avatar.match(
+    /cdn\.discordapp\.com\/avatars\/(\d{5,32})\//i,
+  )
+  if (customAvatar?.[1]) return customAvatar[1]
+  const guildAvatar = avatar.match(
+    /cdn\.discordapp\.com\/guilds\/\d+\/users\/(\d{5,32})\//i,
+  )
+  return guildAvatar?.[1]
+}
+
+function getThreadAuthorPersonSchema(
+  name: string,
+  options: {
+    authorId?: string | null
+    avatar?: string | null
+    canonicalUrl: string
+  },
+): Record<string, unknown> {
+  const trimmedAuthorId = options.authorId?.trim()
+  const avatarUserId = extractDiscordUserIdFromAvatar(options.avatar)
+  const url = trimmedAuthorId
+    ? getThreadsCanonicalUrl(`/threads/authors/${trimmedAuthorId}`)
+    : avatarUserId
+      ? `https://discord.com/users/${avatarUserId}`
+      : `${options.canonicalUrl}#author-${authorNameSlug(name)}`
+
+  return {
+    '@type': 'Person',
+    name: schemaText(name, 'Anonymous'),
+    url,
+  }
 }
 
 export function getDiscussionForumPageSchema(options: {
   canonicalUrl: string
   thread: Pick<
     DiscordThread,
-    'title' | 'content' | 'author' | '$createdAt' | 'vote_count'
+    | 'title'
+    | 'content'
+    | 'author'
+    | 'author_id'
+    | 'author_avatar'
+    | '$createdAt'
+    | 'vote_count'
   >
-  messages: Pick<DiscordMessage, 'author' | 'message' | 'timestamp' | '$id'>[]
+  messages: Pick<
+    DiscordMessage,
+    'author' | 'author_id' | 'author_avatar' | 'message' | 'timestamp' | '$id'
+  >[]
 }) {
   const { canonicalUrl, thread, messages } = options
   const first = messages[0]
-  const opText = nonEmptyText(
+  const opText = schemaText(
     first?.message ?? '',
-    nonEmptyText(thread.content, thread.title),
+    schemaText(thread.content, thread.title),
   )
   const opAuthor = (first?.author ?? thread.author).trim() || 'Anonymous'
+  const opAuthorId = first?.author_id ?? thread.author_id
+  const opAvatar = first?.author_avatar ?? thread.author_avatar
   const opDate = toIso8601DateTime(first?.timestamp ?? thread.$createdAt)
 
   const comments = messages.slice(1).map((message) => {
-    const text = nonEmptyText(message.message, '(No text)')
+    const text = schemaText(message.message, '(No text)')
     const comment: Record<string, unknown> = {
       '@type': 'Comment',
       text,
-      author: {
-        '@type': 'Person',
-        name: message.author.trim() || 'Anonymous',
-      },
+      author: getThreadAuthorPersonSchema(message.author, {
+        authorId: message.author_id,
+        avatar: message.author_avatar,
+        canonicalUrl,
+      }),
       datePublished: toIso8601DateTime(message.timestamp),
     }
     if (message.$id) {
@@ -173,27 +250,29 @@ export function getDiscussionForumPageSchema(options: {
 
   const mainEntity: Record<string, unknown> = {
     '@type': 'DiscussionForumPosting',
-    headline: thread.title,
+    headline: schemaText(thread.title, 'Thread'),
     url: canonicalUrl,
     mainEntityOfPage: canonicalUrl,
     text: opText,
-    author: {
-      '@type': 'Person',
-      name: opAuthor,
-    },
+    author: getThreadAuthorPersonSchema(opAuthor, {
+      authorId: opAuthorId,
+      avatar: opAvatar,
+      canonicalUrl,
+    }),
     datePublished: opDate,
   }
 
-  if (typeof thread.vote_count === 'number' && thread.vote_count >= 0) {
+  const voteCount = toSchemaInteger(thread.vote_count)
+  if (voteCount !== undefined) {
     mainEntity.interactionStatistic = {
       '@type': 'InteractionCounter',
       interactionType: 'https://schema.org/LikeAction',
-      userInteractionCount: thread.vote_count,
+      userInteractionCount: voteCount,
     }
   }
 
-  const replyCount = Math.max(0, messages.length - 1)
-  if (replyCount > 0) {
+  const replyCount = toSchemaInteger(Math.max(0, messages.length - 1))
+  if (replyCount !== undefined && replyCount > 0) {
     mainEntity.commentCount = replyCount
     mainEntity.comment = comments
   }
@@ -216,14 +295,19 @@ export function getThreadsAuthorPageSchema(
     url: canonicalUrl,
     mainEntity: {
       '@type': 'Person',
-      name: author.display_name,
-      alternateName: author.username,
-      ...(author.bio ? { description: author.bio } : {}),
+      name: schemaText(author.display_name, 'Author'),
+      alternateName: schemaText(author.username, 'Author'),
+      url: canonicalUrl,
+      ...(author.bio?.trim()
+        ? { description: sanitizeJsonLdText(author.bio) }
+        : {}),
       interactionStatistic: [
         {
           '@type': 'InteractionCounter',
           interactionType: 'https://schema.org/WriteAction',
-          userInteractionCount: author.thread_count + author.reply_count,
+          userInteractionCount:
+            (toSchemaInteger(author.thread_count) ?? 0) +
+            (toSchemaInteger(author.reply_count) ?? 0),
         },
       ],
     },
@@ -255,7 +339,7 @@ export function getThreadsBreadcrumbSchema(
     itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      name: item.name,
+      name: schemaText(item.name, 'Threads'),
       item: getThreadsCanonicalUrl(item.path),
     })),
   }

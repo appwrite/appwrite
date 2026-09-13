@@ -563,8 +563,6 @@ export function useUpdateMembershipRole(
  * @returns Mutation object with mutate function
  */
 export function useRemoveTeamMember(organizationId: string | null | undefined) {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: async (membershipId: string) => {
       if (!organizationId) {
@@ -575,12 +573,6 @@ export function useRemoveTeamMember(organizationId: string | null | undefined) {
         organizationId,
         membershipId,
       )
-    },
-    onSuccess: () => {
-      // Invalidate memberships query to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: ['memberships', 'organization', organizationId],
-      })
     },
   })
 }

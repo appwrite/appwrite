@@ -9,6 +9,7 @@ import { execSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { load as loadYaml } from 'js-yaml'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -25,33 +26,155 @@ const APPWRITE_REPO =
 const OUTPUT_DIR = join(VIBES_ROOT, 'src', 'lib', 'docs', 'compose-generator')
 const OUTPUT_FILE = join(OUTPUT_DIR, 'composeData.ts')
 
-// Mirrors TOPOLOGY_SERVICE_GROUPS in src/Appwrite/Docker/Compose/Generator.php.
-const TOPOLOGY_SERVICES: Record<string, string[]> = {
-  combined: ['appwrite-worker', 'appwrite-task-scheduler'],
-  separate: [
-    'appwrite-worker-webhooks',
-    'appwrite-worker-deletes',
-    'appwrite-worker-databases',
-    'appwrite-worker-builds',
-    'appwrite-worker-jobs',
-    'appwrite-worker-screenshots',
-    'appwrite-worker-certificates',
-    'appwrite-worker-executions',
-    'appwrite-worker-functions',
-    'appwrite-worker-mails',
-    'appwrite-worker-notifications',
-    'appwrite-worker-messaging',
-    'appwrite-worker-migrations',
-    'appwrite-task-scheduler-functions',
-    'appwrite-task-scheduler-executions',
-    'appwrite-task-scheduler-messages',
-  ],
-}
+// Mirrors TOPOLOGY_SERVICE_GROUPS in src/Appwrite/Docker/Compose/Generator.php,
+// which names the combined services and selects the separate ones by Compose
+// profile. The separate list is read off the parsed profiles for the same reason,
+// so a service added to the profile upstream cannot drift out of this list.
+const COMBINED_TOPOLOGY_SERVICES = [
+  'appwrite-worker',
+  'appwrite-task-scheduler',
+]
+const SEPARATE_TOPOLOGY_PROFILE = 'separate'
+// Every Compose profile the appwrite compose file is allowed to use. Any other
+// profile aborts generation, because the docs generator would not know which
+// topology or database option it belongs to.
+const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
 const ASSISTANT_SERVICE = 'appwrite-assistant'
 
+// The appwrite repo's .env is a development file. These keys are dropped from the
+// .env the docs hand to a self-hoster:
+//   - COMPOSE_PROFILES selects services by Compose profile, and stripProfiles()
+//     removes every profile from the docs compose, so the key does nothing here.
+//   - The DocumentsDB and VectorsDB keys point at engines a self-hosted install
+//     does not deploy. Both products ship disabled, so the keys have no effect.
+const OMITTED_ENV_KEYS = [
+  'COMPOSE_PROFILES',
+  '_APP_DOCUMENTSDB',
+  '_APP_VECTORSDB',
+  '_APP_DB_ADAPTER_DOCUMENTSDB',
+  '_APP_DB_HOST_DOCUMENTSDB',
+  '_APP_DB_PORT_DOCUMENTSDB',
+  '_APP_DB_SCHEMA_DOCUMENTSDB',
+  '_APP_DB_USER_DOCUMENTSDB',
+  '_APP_DB_PASS_DOCUMENTSDB',
+  '_APP_DB_ADAPTER_VECTORSDB',
+  '_APP_DB_HOST_VECTORSDB',
+  '_APP_DB_PORT_VECTORSDB',
+  '_APP_DB_SCHEMA_VECTORSDB',
+  '_APP_DB_USER_VECTORSDB',
+  '_APP_DB_PASS_VECTORSDB',
+  '_APP_CONNECTIONS_DATABASE_DOCUMENTSDB',
+  '_APP_CONNECTIONS_DATABASE_VECTORSDB',
+]
+
+/**
+ * Removes the OMITTED_ENV_KEYS pass-through entries from a service's
+ * `environment:` list. Compose passes an unset key through as unset, and both
+ * products default to disabled, so dropping the entries changes no behaviour.
+ */
+function stripOmittedServiceEnv(block: string): string {
+  const omitted = new Set(OMITTED_ENV_KEYS)
+  return block
+    .split('\n')
+    .filter((line) => {
+      const match = line.match(/^      - ([A-Z0-9_]+)$/)
+      return match === null || !omitted.has(match[1])
+    })
+    .join('\n')
+}
+
+/**
+ * Drops the keys in OMITTED_ENV_KEYS, and the comment lines directly above them,
+ * from the .env template.
+ */
+function filterEnv(env: string): string {
+  const omitted = new Set(OMITTED_ENV_KEYS)
+  const kept: string[] = []
+  let pendingComments: string[] = []
+  for (const line of env.split('\n')) {
+    if (line.startsWith('#')) {
+      pendingComments.push(line)
+      continue
+    }
+    const key = line.split('=', 1)[0]
+    if (omitted.has(key)) {
+      pendingComments = []
+      continue
+    }
+    kept.push(...pendingComments, line)
+    pendingComments = []
+  }
+  kept.push(...pendingComments)
+  return kept.join('\n')
+}
+
 async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(join(APPWRITE_REPO, relativePath), 'utf-8')
+}
+
+type ServiceDefinition = Record<string, unknown>
+
+/** Compose profiles of a parsed service definition. */
+function profilesOf(service: ServiceDefinition): string[] {
+  const profiles = service.profiles
+  return Array.isArray(profiles) ? profiles.map(String) : []
+}
+
+/** Name of the service a parsed service definition extends, if any. */
+function extendsOf(service: ServiceDefinition): string | null {
+  const ext = service.extends
+  if (typeof ext === 'string') return ext
+  if (ext && typeof ext === 'object' && 'service' in ext) {
+    return String((ext as { service: unknown }).service)
+  }
+  return null
+}
+
+/**
+ * Inlines a service that `extends` one of the combined containers, the way the
+ * PHP generator does with array_replace_recursive() before it drops the base
+ * service from a separate-topology compose. The text of the base block is kept
+ * and each top-level key the child sets replaces the same key in the base.
+ *
+ * Only scalar overrides are supported. A child that overrides a mapping would
+ * need a deep merge, and the generator aborts rather than guess.
+ */
+function resolveExtends(
+  child: Block,
+  childDef: ServiceDefinition,
+  base: Block,
+  baseDef: ServiceDefinition,
+): string {
+  const childKeys = splitBlocks(
+    child.block.split('\n').slice(1).join('\n'),
+    '    ',
+    true,
+  ).filter((k) => k.name !== 'extends' && k.name !== 'profiles')
+  const baseKeys = splitBlocks(
+    base.block.split('\n').slice(1).join('\n'),
+    '    ',
+    true,
+  )
+  for (const key of childKeys) {
+    const childValue = childDef[key.name]
+    const baseValue = baseDef[key.name]
+    if (
+      (childValue !== null && typeof childValue === 'object') ||
+      (baseValue !== null && typeof baseValue === 'object')
+    ) {
+      throw new Error(
+        `Service "${child.name}" overrides "${key.name}" of "${base.name}" with a non-scalar value; add a deep merge before regenerating`,
+      )
+    }
+  }
+  const merged = baseKeys.map(
+    (k) => childKeys.find((c) => c.name === k.name) ?? k,
+  )
+  for (const key of childKeys) {
+    if (!baseKeys.some((k) => k.name === key.name)) merged.push(key)
+  }
+  return [`  ${child.name}:`, ...merged.map((k) => k.block)].join('\n')
 }
 
 function stripProfiles(block: string): string {
@@ -128,17 +251,94 @@ async function main() {
       `appwrite/appwrite:${version}`,
     )
 
-  const services = splitBlocks(servicesSection, '  ').map((s) => ({
-    name: s.name,
-    block: pinImage(stripProfiles(s.block)),
-  }))
+  // The text blocks below preserve the upstream file's comments and formatting
+  // for the generated output. Structure (profiles, extends) is read from the
+  // parsed document so a formatting change upstream cannot misclassify a service.
+  const parsed = loadYaml(compose) as { services?: Record<string, unknown> }
+  const definitions = new Map<string, ServiceDefinition>(
+    Object.entries(parsed.services ?? {}).map(([name, def]) => [
+      name,
+      (def ?? {}) as ServiceDefinition,
+    ]),
+  )
+
+  const rawServices = splitBlocks(servicesSection, '  ')
+  const rawByName = new Map(rawServices.map((s) => [s.name, s]))
+  if (rawServices.length !== definitions.size) {
+    throw new Error(
+      `Text split found ${rawServices.length} services but the YAML parser found ${definitions.size}`,
+    )
+  }
+  for (const s of rawServices) {
+    if (!definitions.has(s.name)) {
+      throw new Error(
+        `Service "${s.name}" split from text is not in the parsed YAML`,
+      )
+    }
+  }
+
+  const definitionOf = (name: string): ServiceDefinition => {
+    const def = definitions.get(name)
+    if (def === undefined)
+      throw new Error(`Service "${name}" not found in docker-compose.yml`)
+    return def
+  }
+
+  for (const [name, def] of definitions) {
+    for (const profile of profilesOf(def)) {
+      if (!KNOWN_PROFILES.includes(profile)) {
+        throw new Error(
+          `Service "${name}" uses unknown Compose profile "${profile}"`,
+        )
+      }
+    }
+  }
+
+  const separateServices = rawServices
+    .filter((s) =>
+      profilesOf(definitionOf(s.name)).includes(SEPARATE_TOPOLOGY_PROFILE),
+    )
+    .map((s) => s.name)
+  const TOPOLOGY_SERVICES: Record<string, string[]> = {
+    combined: COMBINED_TOPOLOGY_SERVICES,
+    separate: separateServices,
+  }
+
+  if (separateServices.length === 0) {
+    throw new Error(
+      `No service carries the "${SEPARATE_TOPOLOGY_PROFILE}" Compose profile`,
+    )
+  }
+
+  const services = rawServices.map((s) => {
+    const def = definitionOf(s.name)
+    const base = extendsOf(def)
+    let block = s.block
+    if (base !== null) {
+      // A separate-topology compose drops the combined containers, so a child
+      // that extends one of them must carry the full definition itself.
+      if (!COMBINED_TOPOLOGY_SERVICES.includes(base)) {
+        throw new Error(
+          `Service "${s.name}" extends "${base}", which is not a combined topology service`,
+        )
+      }
+      const baseBlock = rawByName.get(base)
+      if (baseBlock === undefined) {
+        throw new Error(`Service "${s.name}" extends missing service "${base}"`)
+      }
+      block = resolveExtends(s, def, baseBlock, definitionOf(base))
+    }
+    return {
+      name: s.name,
+      block: pinImage(stripOmittedServiceEnv(stripProfiles(block))),
+    }
+  })
   const volumes = splitBlocks(volumesSection, '  ', true)
 
   const knownNames = new Set(services.map((s) => s.name))
   const expected = [
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
-    ...TOPOLOGY_SERVICES.separate,
     ASSISTANT_SERVICE,
   ]
   for (const name of expected) {
@@ -147,7 +347,7 @@ async function main() {
     }
   }
 
-  const env = await readRepoFile('.env')
+  const env = filterEnv(await readRepoFile('.env'))
   const mongoInit = await readRepoFile('mongo-init.js')
   const mongoEntrypoint = await readRepoFile('mongo-entrypoint.sh')
 

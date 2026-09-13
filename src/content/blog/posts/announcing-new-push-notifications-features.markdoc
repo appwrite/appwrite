@@ -6,7 +6,7 @@ date: 2025-01-22
 cover: /images/blog/announcing-new-push-notifications-features/cover.avif
 timeToRead: 5
 author: jake-barnby
-category: product
+category: products
 callToAction: true
 faqs:
   - question: "How do I send push notifications with Appwrite?"

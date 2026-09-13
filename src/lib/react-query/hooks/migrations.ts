@@ -23,6 +23,12 @@ import {
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  APPWRITE_RESOURCES,
+  FIREBASE_RESOURCES,
+  NHOST_RESOURCES,
+  SUPABASE_NHOST_RESOURCES,
+} from '@/lib/migrations/resource-selection'
 import { migrationMatchesDatabaseTables } from '@/lib/migrations/csv-resource'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -187,25 +193,15 @@ export function useProjectMigrations(
   }
 }
 
-const IN_PROGRESS_MIGRATION_STATUSES = new Set([
-  'pending',
-  'processing',
-  'uploading',
-  'downloading',
-])
-
 /**
  * Query options for a single migration (`migrations.get`).
- * Polls while the migration is in progress so restore/CSV-style progress stays live
- * even if a realtime event is missed.
+ * Progress updates come from realtime (`migrations.*` and restoration events).
  */
 export function projectMigrationQueryOptions(
   projectId: string | null | undefined,
   region: string | undefined,
   migrationId: string | null | undefined,
-  options?: { pollWhileInProgress?: boolean },
 ) {
-  const pollWhileInProgress = options?.pollWhileInProgress ?? false
   return queryOptions({
     queryKey: ['migration', 'project', projectId, region, migrationId],
     queryFn: async () => {
@@ -216,16 +212,7 @@ export function projectMigrationQueryOptions(
       return await projectSdk.migrations.get({ migrationId })
     },
     enabled: !!projectId && !!migrationId,
-    staleTime: pollWhileInProgress ? 0 : DEFAULT_STALE_TIME,
-    refetchInterval: pollWhileInProgress
-      ? (query) => {
-          const status = query.state.data?.status
-          if (status && IN_PROGRESS_MIGRATION_STATUSES.has(status)) {
-            return 2000
-          }
-          return false
-        }
-      : false,
+    staleTime: DEFAULT_STALE_TIME,
     refetchOnWindowFocus: false,
   })
 }
@@ -236,16 +223,14 @@ export function projectMigrationQueryOptions(
  * @param projectId - The project ID
  * @param region - The project region
  * @param migrationId - The migration ID
- * @param options.pollWhileInProgress - Poll every 2s while status is in progress
  */
 export function useProjectMigration(
   projectId: string | null | undefined,
   region: string | undefined,
   migrationId: string | null | undefined,
-  options?: { pollWhileInProgress?: boolean },
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    projectMigrationQueryOptions(projectId, region, migrationId, options),
+    projectMigrationQueryOptions(projectId, region, migrationId),
   )
 
   return {
@@ -500,55 +485,12 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
 // PROVIDER MIGRATIONS (Appwrite, Supabase, Firebase, NHost)
 // ============================================================================
 
-/** All Appwrite resources for report and migration. */
-export const APPWRITE_RESOURCES: AppwriteMigrationResource[] = [
-  AppwriteMigrationResource.User,
-  AppwriteMigrationResource.Database,
-  AppwriteMigrationResource.Table,
-  AppwriteMigrationResource.Column,
-  AppwriteMigrationResource.Index,
-  AppwriteMigrationResource.Row,
-  AppwriteMigrationResource.Document,
-  AppwriteMigrationResource.Attribute,
-  AppwriteMigrationResource.Collection,
-  AppwriteMigrationResource.Bucket,
-  AppwriteMigrationResource.File,
-]
-
-/** Resources supported by Supabase migrations (Document/Attribute/Collection). */
-export const SUPABASE_NHOST_RESOURCES: SupabaseMigrationResource[] = [
-  SupabaseMigrationResource.User,
-  SupabaseMigrationResource.Database,
-  SupabaseMigrationResource.Collection,
-  SupabaseMigrationResource.Attribute,
-  SupabaseMigrationResource.Index,
-  SupabaseMigrationResource.Document,
-  SupabaseMigrationResource.Bucket,
-  SupabaseMigrationResource.File,
-]
-
-/** Resources supported by NHost migrations (same shape as Supabase report). */
-export const NHOST_RESOURCES: NHostMigrationResource[] = [
-  NHostMigrationResource.User,
-  NHostMigrationResource.Database,
-  NHostMigrationResource.Collection,
-  NHostMigrationResource.Attribute,
-  NHostMigrationResource.Index,
-  NHostMigrationResource.Document,
-  NHostMigrationResource.Bucket,
-  NHostMigrationResource.File,
-]
-
-/** Resources supported by Firebase (same as Supabase but no Index per prompt). */
-export const FIREBASE_RESOURCES: FirebaseMigrationResource[] = [
-  FirebaseMigrationResource.User,
-  FirebaseMigrationResource.Database,
-  FirebaseMigrationResource.Collection,
-  FirebaseMigrationResource.Attribute,
-  FirebaseMigrationResource.Document,
-  FirebaseMigrationResource.Bucket,
-  FirebaseMigrationResource.File,
-]
+export {
+  APPWRITE_RESOURCES,
+  SUPABASE_NHOST_RESOURCES,
+  NHOST_RESOURCES,
+  FIREBASE_RESOURCES,
+}
 
 export interface AppwriteReportParams {
   endpoint: string

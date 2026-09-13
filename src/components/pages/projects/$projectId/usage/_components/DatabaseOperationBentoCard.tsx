@@ -53,6 +53,7 @@ type DatabaseOperationBentoCardProps = {
   total: number
   changePercent: number
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   queryError?: unknown
   showBreakdown: boolean
@@ -66,6 +67,8 @@ type DatabaseOperationBentoCardProps = {
   docsHref?: string
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
+  onDateRangeChange?: (dateRange: DateRange | undefined) => void
+  emptyMessage?: string
 }
 
 function breakdownDrawerTitle(
@@ -93,6 +96,7 @@ export function DatabaseOperationBentoCard({
   total,
   changePercent,
   isLoading,
+  isRefreshing = false,
   isError,
   queryError,
   showBreakdown,
@@ -106,6 +110,8 @@ export function DatabaseOperationBentoCard({
   docsHref,
   dateRange,
   chartInterval,
+  onDateRangeChange,
+  emptyMessage,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
   const breakdownHeadingId = useId()
@@ -130,6 +136,7 @@ export function DatabaseOperationBentoCard({
         changePercent={changePercent}
         chartPoints={chartPoints}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
         isError={isError}
         queryError={queryError}
         errorTitle={DATABASE_USAGE_ERROR.title}
@@ -140,6 +147,8 @@ export function DatabaseOperationBentoCard({
         docsHref={docsHref}
         dateRange={dateRange}
         chartInterval={chartInterval}
+        onDateRangeChange={onDateRangeChange}
+        emptyMessage={emptyMessage}
       />
 
       {showBreakdown ? (

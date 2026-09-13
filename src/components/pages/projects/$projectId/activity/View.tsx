@@ -51,6 +51,7 @@ import {
   useProjectActivity,
   useProject,
   useOrganizationPlan,
+  type ActivitiesResult,
 } from '@/lib/react-query/hooks'
 import {
   inferActivityUiResourceTypeFromPath,
@@ -73,6 +74,7 @@ import {
   getActivityLogRetentionDaysFromPlan,
   getActivityLogRetentionHoursFromPlan,
   getDefaultActivityDateRangeFromRetentionDays,
+  hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
@@ -88,6 +90,9 @@ import {
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 import { McpIcon } from '@/components/global/shared/McpIcon'
+import {
+  clampDateRangeToRetentionFloor,
+} from '@/lib/date-range-retention'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
@@ -463,17 +468,20 @@ function toDisplayActivity(
 
 interface ViewProps {
   projectId: string
+  /** First-page list from the route loader so client navigations paint with data. */
+  initialData?: ActivitiesResult
 }
 
-export function View({ projectId }: ViewProps) {
+export function View({ projectId, initialData }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const navigate = activityRouteApi.useNavigate()
   const { event: eventIdFromUrl, query: queryFromSearch } =
     activityRouteApi.useSearch()
 
-  const { project } = useProject(projectId)
-  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { project, isLoading: projectLoading } = useProject(projectId)
+  const { plan: organizationPlan, isFetched: planFetched } =
+    useOrganizationPlan(project?.teamId)
   const { showActivityChart } = useDebugOverrides()
   const { lookups: countryLookups, countries } = useCountryLookups()
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -534,14 +542,43 @@ export function View({ projectId }: ViewProps) {
     return getActivitiesFilterColumns(countryElements)
   }, [countries])
 
-  const { events, hasMore, isLoading, refetch } = useProjectActivities({
+  const activityListEnabled =
+    !!projectId &&
+    !projectLoading &&
+    (!project?.teamId || planFetched || !!organizationPlan)
+
+  const {
+    events: eventsFromHook,
+    hasMore: hasMoreFromHook,
+    isLoading,
+    isFetching,
+    isPending,
+    refetch,
+  } = useProjectActivities({
     projectId,
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
     cursorBefore: listCursor.cursorBefore,
     planRetentionHours: activityLogRetentionHours,
     filterQueryKey: queryFromSearch ?? null,
+    enabled: activityListEnabled,
   })
+
+  const isFirstPage =
+    currentPage === 1 &&
+    listCursor.cursorAfter == null &&
+    listCursor.cursorBefore == null
+  const useLoaderList =
+    isFirstPage &&
+    !!initialData &&
+    eventsFromHook.length === 0 &&
+    (isLoading || isFetching || isPending)
+  const events =
+    useLoaderList && initialData ? initialData.events : eventsFromHook
+  const hasMore =
+    useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
+  const showListLoading =
+    events.length === 0 && (isLoading || isFetching || isPending)
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -573,7 +610,18 @@ export function View({ projectId }: ViewProps) {
     return undefined
   }, [filterMap])
 
-  const dateRangeForPicker = dateRangeFromFilters ?? defaultActivityDateRange
+  const dateRangeForPicker = useMemo(() => {
+    const base = dateRangeFromFilters ?? defaultActivityDateRange
+    if (!hasFiniteActivityLogRetention(organizationPlan)) return base
+    return (
+      clampDateRangeToRetentionFloor(base, activityLogRetentionHours) ?? base
+    )
+  }, [
+    activityLogRetentionHours,
+    dateRangeFromFilters,
+    defaultActivityDateRange,
+    organizationPlan,
+  ])
 
   const volumeChartRange = useMemo(() => {
     const from = dateRangeFromFilters?.from ?? defaultActivityDateRange.from
@@ -648,12 +696,17 @@ export function View({ projectId }: ViewProps) {
 
   const handleDateRangeChange = useCallback(
     (range: DateRange | undefined) => {
+      const clampedRange =
+        hasFiniteActivityLogRetention(organizationPlan) && range
+          ? clampDateRangeToRetentionFloor(range, activityLogRetentionHours)
+          : range
+
       const next = new Map(filterMap)
       for (const key of [...next.keys()]) {
         if (key.c === 'time') next.delete(key)
       }
-      if (range?.from && range?.to) {
-        const v = `${range.from.toISOString()},${range.to.toISOString()}`
+      if (clampedRange?.from && clampedRange?.to) {
+        const v = `${clampedRange.from.toISOString()},${clampedRange.to.toISOString()}`
         const compactKey: CompactFilterKey = { c: 'time', o: 'between', v }
         next.set(
           compactKey,
@@ -668,7 +721,12 @@ export function View({ projectId }: ViewProps) {
         replace: true,
       })
     },
-    [filterMap, navigate],
+    [
+      activityLogRetentionHours,
+      filterMap,
+      navigate,
+      organizationPlan,
+    ],
   )
 
   const activeResourceTypeFilter = useMemo(() => {
@@ -886,6 +944,11 @@ export function View({ projectId }: ViewProps) {
                 onDateRangeChange={handleDateRangeChange}
                 className="h-9 min-w-[200px]"
                 popoverContentAlign="start"
+                retentionHours={
+                  hasFiniteActivityLogRetention(organizationPlan)
+                    ? activityLogRetentionHours
+                    : null
+                }
               />
             </div>
           }
@@ -1000,7 +1063,7 @@ export function View({ projectId }: ViewProps) {
           </div>
         )}
 
-        {isLoading && events.length === 0 ? (
+        {showListLoading ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
         ) : events.length > 0 ? (
           <>

@@ -6,7 +6,7 @@ date: 2024-10-08
 cover: /images/blog/go-function-benchmarks/cover.avif
 timeToRead: 8
 author: matej-baco
-category: product
+category: products
 faqs:
   - question: "Does Appwrite Functions support Go?"
     answer: "Yes. [Appwrite Functions](/docs/products/functions) added a Go runtime, so you can write serverless functions in Go alongside Node.js, Python, PHP, Ruby, Dart, and other supported languages. The runtime is built on Open Runtimes, the same open source project that powers all Appwrite Functions runtimes."

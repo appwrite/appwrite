@@ -1,13 +1,5 @@
 import { DOCS_SEARCH_INDEX } from './generated/search-index'
-import {
-  isAgentDocsEnabled,
-  isAgentDocsSlug,
-} from './agent-docs-feature'
-import {
-  isFirewallDocsEnabled,
-  isFirewallDocsSlug,
-} from './firewall-docs-feature'
-import { isPartnersDocsEnabled, isPartnersDocsSlug } from './partners-docs-feature'
+import { isFeatureGatedDocsSlugHidden } from './feature-gated-docs'
 
 export type DocsSearchEntry = {
   slug: string
@@ -66,15 +58,8 @@ function scoreEntry(entry: DocsSearchEntry, query: string): number {
   return score
 }
 
-function isHiddenDocsSearchSlug(slug: string): boolean {
-  if (!isPartnersDocsEnabled() && isPartnersDocsSlug(slug)) return true
-  if (!isFirewallDocsEnabled() && isFirewallDocsSlug(slug)) return true
-  if (!isAgentDocsEnabled() && isAgentDocsSlug(slug)) return true
-  return false
-}
-
 function getVisibleSearchIndex(index: DocsSearchEntry[] = DOCS_SEARCH_INDEX): DocsSearchEntry[] {
-  return index.filter((entry) => !isHiddenDocsSearchSlug(entry.slug))
+  return index.filter((entry) => !isFeatureGatedDocsSlugHidden(entry.slug))
 }
 
 export function searchDocs(

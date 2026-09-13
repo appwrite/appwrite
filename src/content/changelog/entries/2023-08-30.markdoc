@@ -3,6 +3,7 @@ layout: changelog
 title: Appwrite 1.4
 date: 2023-08-30
 cover: /images/changelog/2023-08-30.avif
+tags: functions, security
 ---
 
 We’ve just released Appwrite 1.4 with the goals to eliminate barriers to get started, maximize flexibility to grow, and deliver improved security for peace of mind.

@@ -22,13 +22,13 @@ import {
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
 import { useT } from '@/lib/i18n/translate'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
-  DEFAULT_USAGE_CHART_INTERVAL,
-  resolveUsageChartIntervalForRange,
+  DEFAULT_MONITOR_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
 import { DatabaseMonitorNodeSelect } from './DatabaseMonitorNodeSelect'
+import { DedicatedDatabaseDebugMetricsSection } from './DedicatedDatabaseDebugMetricsSection'
 import { UsageTimeSeriesChartCard } from '@/components/pages/projects/$projectId/usage/_components/UsageTimeSeriesChartCard'
 import { DatabaseOperationBentoCard } from '@/components/pages/projects/$projectId/usage/_components/DatabaseOperationBentoCard'
 import { UsageBreakdownDrawer } from '@/components/pages/projects/$projectId/usage/_components/UsageBreakdownDrawer'
@@ -40,14 +40,19 @@ import {
   sumUsageChartPoints,
 } from '@/lib/usage/database-usage'
 import {
+  DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION,
+  DEDICATED_DATABASE_COMPUTE_DESCRIPTION,
   DEDICATED_DATABASE_CONNECTIONS_DESCRIPTION,
   DEDICATED_DATABASE_CPU_DESCRIPTION,
   DEDICATED_DATABASE_IOPS_DESCRIPTION,
   DEDICATED_DATABASE_MEMORY_DESCRIPTION,
+  DEDICATED_DATABASE_NETWORK_DESCRIPTION,
   DEDICATED_DATABASE_QPS_DESCRIPTION,
   DEDICATED_DATABASE_STORAGE_DESCRIPTION,
   formatDedicatedDatabaseCountTotal,
   formatDedicatedDatabaseCountValue,
+  formatDedicatedDatabaseNetworkTotal,
+  formatDedicatedDatabaseNetworkValue,
   formatDedicatedDatabasePercentTotal,
   formatDedicatedDatabasePercentValue,
   formatDedicatedDatabaseStorageTotal,
@@ -56,12 +61,15 @@ import {
   getDedicatedDatabaseRateHeadline,
   mergeDualUsageChartSeries,
 } from '@/lib/usage/dedicated-databases-usage'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
   collectUsageResourceBreakdownItems,
 } from '@/lib/usage/usage-resources-breakdown'
 import { useUsageResourceBreakdownLookups } from '@/lib/react-query/hooks'
+import {
+  getDatabaseMonitorEmptyMessage,
+  resolveDatabaseCreatedAt,
+} from '@/lib/databases/database-monitor-empty-state'
 
 type MonitorSection = { id: string; label: string }
 
@@ -136,33 +144,31 @@ export type DatabaseMonitorViewProps = {
   databaseId: string
   dbKind: DatabaseRouteKind
   dateRange: DateRange
+  chartInterval?: UsageChartInterval
   chartTick: number
+  onDateRangeChange: (dateRange: DateRange | undefined) => void
 }
 
 export function DatabaseMonitorView({
   databaseId,
   dbKind,
   dateRange,
+  chartInterval = DEFAULT_MONITOR_CHART_INTERVAL,
   chartTick,
+  onDateRangeChange,
 }: DatabaseMonitorViewProps) {
   const t = useT()
+  const { isDebugModeOpen } = useDebugMode()
   const queryClient = useQueryClient()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
 
-  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_USAGE_CHART_INTERVAL,
-  )
   const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BreakdownDrawerState | null>(null)
 
-  const resolvedInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
-    [chartInterval, dateRange],
-  )
+  const resolvedInterval = chartInterval
 
   const { database } = useProjectDatabase(projectId, databaseId, dbKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
@@ -192,6 +198,13 @@ export function DatabaseMonitorView({
     (database as { replicas?: number | null } | null)?.replicas ?? null
   const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
+  const databaseCreatedAt = resolveDatabaseCreatedAt(
+    (database as { createdAt?: string | null } | null) ?? dedicated,
+  )
+  const usageChartEmptyMessage = getDatabaseMonitorEmptyMessage(
+    databaseCreatedAt,
+    'No data for this date range',
+  )
 
   useEffect(() => {
     if (selectedOrdinal > replicaCount) {
@@ -233,6 +246,7 @@ export function DatabaseMonitorView({
     !serverless,
     resolvedInterval,
     metricsOrdinal,
+    { includeDebugMetrics: isDebugModeOpen },
   )
 
   const resourceBreakdownItems = useMemo(
@@ -274,6 +288,7 @@ export function DatabaseMonitorView({
         { id: 'connections', label: 'Connections' },
         { id: 'qps', label: 'Queries per second' },
         { id: 'iops', label: 'Disk IOPS' },
+        { id: 'network', label: 'Network' },
       ]
 
   const scrollToChart = useCallback((id: string) => {
@@ -311,10 +326,26 @@ export function DatabaseMonitorView({
   const iopsWritePoints = dedicatedMetrics.iopsWrite.isError
     ? []
     : (dedicatedMetrics.iopsWrite.data?.chartPoints ?? [])
+  const networkInboundPoints = dedicatedMetrics.networkInbound.isError
+    ? []
+    : (dedicatedMetrics.networkInbound.data?.chartPoints ?? [])
+  const networkOutboundPoints = dedicatedMetrics.networkOutbound.isError
+    ? []
+    : (dedicatedMetrics.networkOutbound.data?.chartPoints ?? [])
+  const networkComputePoints = dedicatedMetrics.networkCompute.isError
+    ? []
+    : (dedicatedMetrics.networkCompute.data?.chartPoints ?? [])
+  const coldStartsPoints = dedicatedMetrics.coldStarts.isError
+    ? []
+    : (dedicatedMetrics.coldStarts.data?.chartPoints ?? [])
 
   const iopsDualPoints = useMemo(
     () => mergeDualUsageChartSeries(iopsReadPoints, iopsWritePoints),
     [iopsReadPoints, iopsWritePoints],
+  )
+  const networkDualPoints = useMemo(
+    () => mergeDualUsageChartSeries(networkInboundPoints, networkOutboundPoints),
+    [networkInboundPoints, networkOutboundPoints],
   )
 
   return (
@@ -343,12 +374,6 @@ export function DatabaseMonitorView({
                     : t('Instance metrics for this dedicated database.')}
                 </p>
               </div>
-              <UsageChartIntervalToggle
-                value={resolvedInterval}
-                onValueChange={setChartInterval}
-                dateRange={dateRange}
-                className="h-7"
-              />
             </div>
 
             {serverless ? (
@@ -382,6 +407,8 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -414,6 +441,8 @@ export function DatabaseMonitorView({
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
               </>
@@ -442,6 +471,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -470,6 +501,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -499,6 +532,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -527,6 +562,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -553,6 +590,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                 </MonitorChartAnchor>
 
@@ -592,6 +631,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     dateRange={dateRange}
                     chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
                   />
                   {iopsDualPoints.length > 0 ? (
                     <p className="mt-2 text-[12px] text-muted-foreground">
@@ -602,6 +643,119 @@ export function DatabaseMonitorView({
                     </p>
                   ) : null}
                 </MonitorChartAnchor>
+
+                <MonitorChartAnchor id="network">
+                  <UsageTimeSeriesChartCard
+                    title="Network"
+                    description={DEDICATED_DATABASE_NETWORK_DESCRIPTION}
+                    unitLabel="inbound"
+                    chartGradientId="monitor-dedicated-network-gradient"
+                    total={sumUsageChartPoints(networkInboundPoints)}
+                    changePercent={
+                      dedicatedMetrics.networkInbound.data?.changePercent ?? 0
+                    }
+                    chartPoints={networkInboundPoints}
+                    isLoading={shouldShowUsageChartSkeleton(
+                      dedicatedMetrics.networkInbound.isError ||
+                        dedicatedMetrics.networkOutbound.isError,
+                      dedicatedMetrics.networkInbound.isLoading ||
+                        dedicatedMetrics.networkOutbound.isLoading,
+                      dedicatedMetrics.networkInbound.isPlaceholderData ||
+                        dedicatedMetrics.networkOutbound.isPlaceholderData,
+                    )}
+                    isError={
+                      dedicatedMetrics.networkInbound.isError ||
+                      dedicatedMetrics.networkOutbound.isError
+                    }
+                    queryError={
+                      dedicatedMetrics.networkInbound.error ??
+                      dedicatedMetrics.networkOutbound.error
+                    }
+                    errorTitle={MONITOR_USAGE_ERROR.title}
+                    errorMessage={MONITOR_USAGE_ERROR.message}
+                    formatTotal={formatDedicatedDatabaseNetworkTotal}
+                    formatValue={formatDedicatedDatabaseNetworkValue}
+                    onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
+                    onDateRangeChange={onDateRangeChange}
+                    emptyMessage={usageChartEmptyMessage}
+                  />
+                  {networkDualPoints.length > 0 ? (
+                    <p className="mt-2 text-[12px] text-muted-foreground">
+                      {t('Outbound total')}:{' '}
+                      {formatDedicatedDatabaseNetworkTotal(
+                        sumUsageChartPoints(networkOutboundPoints),
+                      )}
+                    </p>
+                  ) : null}
+                </MonitorChartAnchor>
+
+                <DedicatedDatabaseDebugMetricsSection>
+                  <MonitorChartAnchor id="network-compute">
+                    <div className="overflow-hidden rounded-lg border border-purple-500/20">
+                      <UsageTimeSeriesChartCard
+                        title="Compute"
+                        description={DEDICATED_DATABASE_COMPUTE_DESCRIPTION}
+                        unitLabel="total"
+                        chartGradientId="monitor-dedicated-network-compute-gradient"
+                        total={sumUsageChartPoints(networkComputePoints)}
+                        changePercent={
+                          dedicatedMetrics.networkCompute.data?.changePercent ?? 0
+                        }
+                        chartPoints={networkComputePoints}
+                        isLoading={shouldShowUsageChartSkeleton(
+                          dedicatedMetrics.networkCompute.isError,
+                          dedicatedMetrics.networkCompute.isLoading,
+                          dedicatedMetrics.networkCompute.isPlaceholderData,
+                        )}
+                        isError={dedicatedMetrics.networkCompute.isError}
+                        queryError={dedicatedMetrics.networkCompute.error}
+                        errorTitle={MONITOR_USAGE_ERROR.title}
+                        errorMessage={MONITOR_USAGE_ERROR.message}
+                        formatTotal={formatDedicatedDatabaseNetworkTotal}
+                        formatValue={formatDedicatedDatabaseNetworkValue}
+                        onRetry={() => void refetchMonitor()}
+                        dateRange={dateRange}
+                        chartInterval={resolvedInterval}
+                        onDateRangeChange={onDateRangeChange}
+                        emptyMessage={usageChartEmptyMessage}
+                      />
+                    </div>
+                  </MonitorChartAnchor>
+
+                  <MonitorChartAnchor id="cold-starts">
+                    <div className="overflow-hidden rounded-lg border border-purple-500/20">
+                      <UsageTimeSeriesChartCard
+                        title="Cold starts"
+                        description={DEDICATED_DATABASE_COLD_STARTS_DESCRIPTION}
+                        unitLabel="starts"
+                        chartGradientId="monitor-dedicated-cold-starts-gradient"
+                        total={sumUsageChartPoints(coldStartsPoints)}
+                        changePercent={
+                          dedicatedMetrics.coldStarts.data?.changePercent ?? 0
+                        }
+                        chartPoints={coldStartsPoints}
+                        isLoading={shouldShowUsageChartSkeleton(
+                          dedicatedMetrics.coldStarts.isError,
+                          dedicatedMetrics.coldStarts.isLoading,
+                          dedicatedMetrics.coldStarts.isPlaceholderData,
+                        )}
+                        isError={dedicatedMetrics.coldStarts.isError}
+                        queryError={dedicatedMetrics.coldStarts.error}
+                        errorTitle={MONITOR_USAGE_ERROR.title}
+                        errorMessage={MONITOR_USAGE_ERROR.message}
+                        formatTotal={formatDedicatedDatabaseCountTotal}
+                        formatValue={formatDedicatedDatabaseCountValue}
+                        onRetry={() => void refetchMonitor()}
+                        dateRange={dateRange}
+                        chartInterval={resolvedInterval}
+                        onDateRangeChange={onDateRangeChange}
+                        emptyMessage={usageChartEmptyMessage}
+                      />
+                    </div>
+                  </MonitorChartAnchor>
+                </DedicatedDatabaseDebugMetricsSection>
               </>
             )}
           </div>

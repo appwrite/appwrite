@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -41,6 +41,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useT } from '@/lib/i18n/translate'
+import {
+  databaseRowFieldOverlayClass,
+  databaseRowTextareaPadding,
+  DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING,
+  DATABASE_ROW_TEXTAREA_CLASS,
+} from '@/components/pages/projects/$projectId/databases/_components/DatabaseArrayItemTextField'
+import { isSpreadsheetRtlText } from '@/lib/spreadsheet-cell-formatting'
 
 type MysqlRowEditDrawerProps = {
   open: boolean
@@ -121,6 +128,16 @@ export function MysqlRowEditDrawer({
   const isCreate = row == null
   const [draft, setDraft] = useState<Record<string, MysqlRowFieldDraft>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const fieldRefs = useRef<
+    Record<
+      string,
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLButtonElement
+      | null
+    >
+  >({})
+  const lastFocusedSessionRef = useRef<string | null>(null)
 
   const createMutation = useCreateMysqlTableRow(
     projectId,
@@ -142,6 +159,15 @@ export function MysqlRowEditDrawer({
     [columns, isCreate],
   )
 
+  const rowSessionKey = useMemo(() => {
+    if (!identity) return 'create'
+    if (identity.ctid) return `ctid:${identity.ctid}`
+    if (identity.primaryKeyValues) {
+      return JSON.stringify(identity.primaryKeyValues)
+    }
+    return 'edit'
+  }, [identity])
+
   useEffect(() => {
     if (!open) return
     const nextDraft: Record<string, MysqlRowFieldDraft> = {}
@@ -161,6 +187,58 @@ export function MysqlRowEditDrawer({
     setDraft(nextDraft)
     setErrors({})
   }, [editableColumns, open, row])
+
+  // Focus the clicked cell's field after open. BaseDrawer disableAutoFocus
+  // blurs on open, so React autoFocus alone is not enough (same as TablesDB).
+  useEffect(() => {
+    if (!open || !focusedField) return
+    const sessionKey = `${rowSessionKey}::${focusedField}`
+    if (lastFocusedSessionRef.current === sessionKey) return
+
+    let cancelled = false
+    let attempt = 0
+    const MAX_ATTEMPTS = 6
+
+    const tryPlaceCaret = () => {
+      if (cancelled) return
+      const el = fieldRefs.current[focusedField]
+      if (!el) {
+        if (attempt++ < MAX_ATTEMPTS) requestAnimationFrame(tryPlaceCaret)
+        return
+      }
+      el.focus({ preventScroll: true })
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement
+      ) {
+        const len = el.value.length
+        if (len === 0 && attempt++ < MAX_ATTEMPTS) {
+          requestAnimationFrame(tryPlaceCaret)
+          return
+        }
+        if (len > 0) {
+          try {
+            el.setSelectionRange(len, len)
+          } catch {
+            // Number/email/etc. may reject selection APIs; ignore.
+          }
+        }
+      }
+      lastFocusedSessionRef.current = sessionKey
+    }
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(tryPlaceCaret)
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, focusedField, rowSessionKey])
+
+  useEffect(() => {
+    if (!open) lastFocusedSessionRef.current = null
+  }, [open])
 
   const handleFieldChange = (columnName: string, value: MysqlRowFieldDraft) => {
     setDraft((prev) => ({ ...prev, [columnName]: value }))
@@ -308,6 +386,13 @@ export function MysqlRowEditDrawer({
                     !readOnly && column.is_nullable === 'YES'
                   const useTextarea =
                     isJsonType(meta.typeId) || isLongTextType(meta.typeId)
+                  const isRTLContent = isSpreadsheetRtlText(stringValue)
+                  const textareaPadding = databaseRowTextareaPadding({
+                    showNullCheckbox: showNullToggle,
+                  })
+                  const inputSidePadding = showNullToggle
+                    ? DATABASE_ROW_FIELD_INLINE_COUNTER_PADDING
+                    : ''
 
                   return (
                     <div key={column.column_name} className="space-y-1.5">
@@ -331,6 +416,10 @@ export function MysqlRowEditDrawer({
                           id={inputId}
                           value={stringValue}
                           readOnly
+                          ref={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
+                          autoFocus={focusedField === column.column_name}
                           className="h-9 bg-muted/30 text-[13px]"
                         />
                       ) : fieldType === 'boolean' ? (
@@ -338,6 +427,10 @@ export function MysqlRowEditDrawer({
                           <Switch
                             id={inputId}
                             checked={stringValue === 'true'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
+                            autoFocus={focusedField === column.column_name}
                             onCheckedChange={(checked) =>
                               handleFieldChange(
                                 column.column_name,
@@ -361,6 +454,10 @@ export function MysqlRowEditDrawer({
                             id={inputId}
                             className="h-9 w-full text-[13px]"
                             aria-invalid={error ? true : undefined}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
+                            autoFocus={focusedField === column.column_name}
                           >
                             <SelectValue
                               placeholder={
@@ -395,6 +492,9 @@ export function MysqlRowEditDrawer({
                               : emptyPlaceholder
                           }
                           className="w-full"
+                          triggerRef={(el) => {
+                            fieldRefs.current[column.column_name] = el
+                          }}
                           autoFocus={focusedField === column.column_name}
                         />
                       ) : isNumericInlineFieldType(fieldType) ? (
@@ -404,6 +504,9 @@ export function MysqlRowEditDrawer({
                             type="number"
                             inputMode="numeric"
                             value={stringValue}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) => {
                               const next = event.target.value
                               handleFieldChange(
@@ -427,11 +530,18 @@ export function MysqlRowEditDrawer({
                           ) : null}
                         </div>
                       ) : useTextarea ? (
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          dir={isRTLContent ? 'rtl' : 'ltr'}
+                        >
                           <Textarea
                             id={inputId}
                             value={stringValue}
                             disabled={isNull}
+                            dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -443,9 +553,10 @@ export function MysqlRowEditDrawer({
                               required ? undefined : emptyPlaceholder
                             }
                             className={cn(
-                              'min-h-[36px] max-h-[600px] resize-none text-[13px] font-mono',
+                              DATABASE_ROW_TEXTAREA_CLASS,
+                              isJsonType(meta.typeId) && 'font-mono',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle ? 'pb-8 pe-28' : 'pb-2',
+                              textareaPadding,
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -457,17 +568,24 @@ export function MysqlRowEditDrawer({
                               onCheckedChange={(checked) =>
                                 handleNullToggle(column.column_name, checked)
                               }
-                              className="bottom-2 end-2"
+                              className={databaseRowFieldOverlayClass('textarea')}
                             />
                           ) : null}
                         </div>
                       ) : (
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          dir={isRTLContent ? 'rtl' : 'ltr'}
+                        >
                           <Input
                             id={inputId}
                             type="text"
                             value={stringValue}
                             disabled={isNull}
+                            dir={isRTLContent ? 'rtl' : 'ltr'}
+                            ref={(el) => {
+                              fieldRefs.current[column.column_name] = el
+                            }}
                             onChange={(event) =>
                               handleFieldChange(
                                 column.column_name,
@@ -478,9 +596,9 @@ export function MysqlRowEditDrawer({
                               required ? undefined : emptyPlaceholder
                             }
                             className={cn(
-                              'h-9 text-[13px]',
+                              'field-sizing-fixed h-9 w-full text-[13px] text-start',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle && 'pe-28',
+                              inputSidePadding,
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -492,7 +610,7 @@ export function MysqlRowEditDrawer({
                               onCheckedChange={(checked) =>
                                 handleNullToggle(column.column_name, checked)
                               }
-                              className="top-1/2 end-2 -translate-y-1/2"
+                              className={databaseRowFieldOverlayClass('input')}
                             />
                           ) : null}
                         </div>

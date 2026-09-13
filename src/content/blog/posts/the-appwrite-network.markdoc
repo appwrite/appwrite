@@ -6,7 +6,7 @@ date: 2025-04-16
 cover: /images/blog/the-appwrite-network/network-cover-image.avif
 timeToRead: 05
 author: christy-jacob
-category: product
+category: products
 featured: false
 callToAction: true
 faqs:
@@ -49,7 +49,7 @@ The Appwrite Cloud beta journey began with a single region in Frankfurt, which a
 
 # Addressing the latency problem
 
-Latency is a critical factor in the performance of both web and mobile applications. High latency can lead to slow response times, poor user experience, and ultimately, loss of revenue. There are several primary causes of latency:
+Latency is a critical factor in the performance of both web and mobile applications. High latency can lead to slow response times, poor user experience, and ultimately, loss of revenue. There are several primary causes of latency:
 
 - **Physical distance:** The further the data has to travel, the longer it takes. This is known as propagation delay.
 - **Network congestion:** Overloaded networks can slow down data transmission.

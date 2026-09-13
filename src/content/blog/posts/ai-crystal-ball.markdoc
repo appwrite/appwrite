@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/ai-crystal-ball/cover.avif
 timeToRead: 9
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "How does the AI Crystal Ball app work?"
     answer: "It signs the user in with GitHub OAuth via [Appwrite Auth](/docs/products/auth), fetches their public GitHub data (followers, repos, top languages), sends that context to GPT-4 with a prompt asking for a developer destiny, and stores the result in Appwrite Databases so it can be shared via a public link."
@@ -40,11 +40,11 @@ In order to build this application, we have a few prerequisites. We must set up 
 
 Since we are using GPT-4 to generate developer destinies, we will need an OpenAI API key to communicate with their platform.
 
-To create an OpenAI API key, we must first create an account on the [OpenAI platform](https://platform.openai.com/). Once the account is set up and a project is created, we can visit their [API keys](https://platform.openai.com/account/api-keys) page and create an API key. Ensure you copy and save this key in a safe place, as the OpenAI platform will not let you view the key after it is created.
+To create an OpenAI API key, we must first create an account on the [OpenAI platform](https://platform.openai.com/). Once the account is set up and a project is created, we can visit their [API keys](https://platform.openai.com/account/api-keys) page and create an API key. Ensure you copy and save this key in a safe place, as the OpenAI platform will not let you view the key after it is created.
 
 ![OpenAI API Keys](/images/blog/ai-crystal-ball/openai.avif)
 
-> Note: To use the GPT-4 API, your account must be upgraded to the Usage tier 1. To learn more, visit their [Usage tiers documentation](https://platform.openai.com/docs/guides/rate-limits/usage-tiers?context=tier-one).
+> Note: To use the GPT-4 API, your account must be upgraded to the Usage tier 1. To learn more, visit their [Usage tiers documentation](https://platform.openai.com/docs/guides/rate-limits/usage-tiers?context=tier-one).
 >
 
 ## GitHub
@@ -63,7 +63,7 @@ In this app, we primarily need Appwrite for the following:
 - Saving the information we get from the GitHub API, so we don’t need to call it repeatedly
 - Saving developer destinies if a user wants to create a shareable link
 
-The only prerequisite here was creating an [Appwrite Cloud account](https://cloud.appwrite.io/), followed by creating a new project and adding your hostname as a web app to the project.
+The only prerequisite here was creating an [Appwrite Cloud account](https://cloud.appwrite.io/), followed by creating a new project and adding your hostname as a web app to the project.
 
 ### GitHub OAuth
 
@@ -617,6 +617,6 @@ And with that, our AI Crystal Ball project is ready! So far, since launching thi
 
 The web app is still live and can be tried at the following link: [aicrystalball.oberai.dev](https://aicrystalball.oberai.dev/)
 
-You can find the application’s complete source code at this [GitHub Repo](https://github.com/adityaoberai/AI-Crystal-Ball/).
+You can find the application’s complete source code at this [GitHub Repo](https://github.com/adityaoberai/AI-Crystal-Ball/).
 
-[Join us on Discord](https://appwrite.io/discord) to be the first to get updates and to be part of a vibrant community!
+[Join us on Discord](https://appwrite.io/discord) to be the first to get updates and to be part of a vibrant community!

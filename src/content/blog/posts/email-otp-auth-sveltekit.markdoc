@@ -22,13 +22,13 @@ faqs:
     answer: "Appwrite Auth supports email OTP, phone OTP via SMS, magic URLs, OAuth providers, passkeys, and anonymous sessions. You can combine them with MFA factors like TOTP or email codes for a layered auth strategy. See the [Appwrite Auth docs](/docs/products/auth) for the full list."
 ---
 
-To discover a balance between security and user convenience, one growing trend we have seen recently is the implementation of passwordless authentication. Today, both small and large companies are transitioning to using passwordless authentication methods over traditional password-based ones, such as Expensify (whose transition was also covered in a Forbes [article](https://www.forbes.com/sites/quickerbettertech/2023/05/29/on-technology-expensify-forces-passwordless-on-its-users-and-good-for-them/?sh=397a7b017cac) in 2023). Appwrite has always maintained support for both types of authentication, featuring phone-based OTPs (one-time passwords) and magic URLs in our list of authentication methods.
+To discover a balance between security and user convenience, one growing trend we have seen recently is the implementation of passwordless authentication. Today, both small and large companies are transitioning to using passwordless authentication methods over traditional password-based ones, such as Expensify (whose transition was also covered in a Forbes [article](https://www.forbes.com/sites/quickerbettertech/2023/05/29/on-technology-expensify-forces-passwordless-on-its-users-and-good-for-them/?sh=397a7b017cac) in 2023). Appwrite has always maintained support for both types of authentication, featuring phone-based OTPs (one-time passwords) and magic URLs in our list of authentication methods.
 
 With the recent Appwrite 1.5 release, we added a new passwordless authentication method: email OTPs. In this blog, you’ll learn how email OTP authentication works and how you can implement it in a SvelteKit application.
 
 # What is email OTP authentication?
 
-[Email OTP authentication](https://appwrite.io/docs/products/auth/email-otp) lets users create accounts using their email address and sign in using a 6-digit code delivered to their email inbox. This method is similar to [Magic URL login](https://appwrite.io/docs/products/auth/magic-url) but can provide a better user experience in some scenarios.
+[Email OTP authentication](https://appwrite.io/docs/products/auth/email-otp) lets users create accounts using their email address and sign in using a 6-digit code delivered to their email inbox. This method is similar to [Magic URL login](https://appwrite.io/docs/products/auth/magic-url) but can provide a better user experience in some scenarios.
 
 ## Email OTP vs magic URL
 

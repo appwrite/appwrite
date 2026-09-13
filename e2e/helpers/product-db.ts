@@ -425,7 +425,9 @@ function isSchemaNotReadyIndexError(status: number, body: string): boolean {
 }
 
 async function submitCreateIndexForm(page: Page): Promise<void> {
-  const submit = page.getByRole('button', { name: 'Create Index' })
+  const submit = page
+    .getByRole('dialog', { name: 'Create Index', exact: true })
+    .getByRole('button', { name: 'Create Index', exact: true })
   await expect(submit).toBeEnabled({ timeout: 15_000 })
   const deadline = Date.now() + 60_000
   let lastError = 'Create index did not reach the API'
@@ -445,7 +447,7 @@ async function submitCreateIndexForm(page: Page): Promise<void> {
       },
       { timeout: 30_000 },
     )
-    await clickInPage(submit)
+    await submit.click()
     const createResponse = await createResponsePromise.catch(() => null)
     if (!createResponse) {
       throw new Error(lastError)
@@ -502,6 +504,12 @@ export async function addTablesDbIndexViaUi(
     .filter({ hasText: /Select column/i })
   await expect(columnTrigger).toBeVisible({ timeout: 10_000 })
   await openSelectAndChoose(page, columnTrigger, options.column)
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Create Index', exact: true })
+      .getByRole('combobox')
+      .filter({ hasText: new RegExp(`^${escapeRegExp(options.column)}$`) }),
+  ).toBeVisible()
 
   const keyInput = page.locator('#index-key')
   await keyInput.fill(options.key)
@@ -588,7 +596,7 @@ export async function addCollectionIndexViaUi(
     hasText: /Select attribute/i,
   })
   await expect(attributeTrigger).toBeVisible({ timeout: 10_000 })
-  await attributeTrigger.click({ force: true })
+  await attributeTrigger.click()
 
   const attributeSearch = page.getByPlaceholder('Search attributes...')
   await expect(attributeSearch).toBeVisible({ timeout: 10_000 })
@@ -604,9 +612,9 @@ export async function addCollectionIndexViaUi(
   await expect(customAttribute).toBeVisible({ timeout: 10_000 })
 
   if (await existingAttribute.isVisible().catch(() => false)) {
-    await existingAttribute.click({ force: true })
+    await existingAttribute.click()
   } else {
-    await clickInPage(customAttribute)
+    await customAttribute.click()
     const nameInput = page.getByPlaceholder('e.g. email, score, tags')
     await expect(nameInput).toBeVisible({ timeout: 10_000 })
     await nameInput.fill(options.attribute)

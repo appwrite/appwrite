@@ -29,6 +29,7 @@ type StorageMetricBentoCardProps = {
   total: number
   changePercent: number
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
   queryError?: unknown
   formatTotal: (value: number) => string
@@ -54,6 +55,7 @@ export function StorageMetricBentoCard({
   total,
   changePercent,
   isLoading,
+  isRefreshing = false,
   isError,
   queryError,
   formatTotal,
@@ -85,6 +87,7 @@ export function StorageMetricBentoCard({
             changePercent={changePercent}
             chartPoints={chartPoints}
             isLoading={isLoading}
+            isRefreshing={isRefreshing}
             isError={isError}
             queryError={queryError}
             errorTitle={STORAGE_USAGE_ERROR.title}

@@ -50,8 +50,6 @@ export interface ProjectSelectorProps {
   placeholder?: string
   /** Max projects to fetch per request */
   limit?: number
-  /** Whether to show API keys count next to each project */
-  showApiKeysCount?: boolean
   /** Custom class for the trigger button */
   triggerClassName?: string
   /** Custom class for the popover content */
@@ -70,7 +68,6 @@ export function ProjectSelector({
   getProjectLink,
   placeholder = 'Select project',
   limit = DEFAULT_PROJECT_LIMIT,
-  showApiKeysCount = false,
   triggerClassName,
   contentClassName,
   listClassName,
@@ -121,7 +118,6 @@ export function ProjectSelector({
     const mapped = projects.map((project) => {
       const name = formatProjectNameForDisplay(project.name)
       const paused = project.paused === true
-      const apiKeysCount = 0
 
       return {
         value: project.$id,
@@ -129,12 +125,7 @@ export function ProjectSelector({
         // Includes the id so the value stays unique: names are not, and cmdk
         // keys rows by it, so duplicates would highlight and navigate as one.
         searchText: `${project.name} ${project.$id}`,
-        description:
-          showApiKeysCount && apiKeysCount > 0
-            ? `${apiKeysCount} API key${apiKeysCount === 1 ? '' : 's'}`
-            : showProjectId
-              ? project.$id
-              : undefined,
+        description: showProjectId ? project.$id : undefined,
       }
     })
 
@@ -151,7 +142,7 @@ export function ProjectSelector({
     }
 
     return mapped
-  }, [projects, showApiKeysCount, showProjectId, t, value, selectedProject])
+  }, [projects, showProjectId, t, value, selectedProject])
 
   const handleSelectProject = (projectId: string) => {
     const link = getProjectLink?.(projectId)

@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Ghost } from 'lucide-react'
 
 import { sdk } from '@/lib/appwrite/sdk'
+import { useAvatarEmailHash } from '@/lib/avatar-email-hash'
+import { getConsoleAccountFromSingleton } from '@/lib/console-account-get'
+import {
+  resolveScreenshotModeUserPhotoSrc,
+  subscribeScreenshotMode,
+} from '@/lib/screenshot-mode'
 import { cn } from '@/lib/utils'
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
@@ -24,7 +30,18 @@ interface PhotoAvatarProps {
    * the account ID is not available yet; prefer `userId` when you have it.
    */
   useCurrentUser?: boolean
+  /** When true, screenshot mode replaces this avatar with the demo user photo. */
+  isCurrentUser?: boolean
   /** Used only for initials fallback when the photo is unavailable. */
+  name?: string
+  size?: AvatarSize
+  className?: string
+}
+
+interface EmailAvatarProps {
+  /** Raw email address; hashed client-side so only the SHA-256 hash reaches the API. */
+  email?: string
+  /** Used for server-side initials and the local initials fallback. */
   name?: string
   size?: AvatarSize
   className?: string
@@ -44,6 +61,8 @@ const sizePixels: Record<AvatarSize, number> = {
   md: 64,
   lg: 80,
 }
+
+const loadedPhotoSrcs = new Set<string>()
 
 function getInitials(name?: string): string {
   if (!name) return '?'
@@ -84,7 +103,7 @@ export function InitialsAvatar({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-medium text-zinc-600 dark:bg-accent dark:text-muted-foreground',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 font-medium leading-none text-zinc-600 dark:bg-accent dark:text-muted-foreground',
         sizeClasses[size],
         className,
       )}
@@ -103,15 +122,31 @@ export function InitialsAvatar({
 export function PhotoAvatar({
   userId,
   useCurrentUser = false,
+  isCurrentUser = false,
   name,
   size = 'md',
   className,
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
+  const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
   const trimmedUserId = userId?.trim() || ''
   const pixels = sizePixels[size]
 
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
+
   const src = useMemo(() => {
+    const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
+      userId: trimmedUserId,
+      useCurrentUser,
+      isCurrentUser,
+      currentUserId: getConsoleAccountFromSingleton()?.$id,
+    })
+    if (screenshotSrc) return screenshotSrc
+
     if (trimmedUserId) {
       return sdk.forConsole.avatars.getPhoto({
         width: pixels,
@@ -128,18 +163,100 @@ export function PhotoAvatar({
     }
 
     return null
-  }, [pixels, trimmedUserId, useCurrentUser])
+  }, [pixels, trimmedUserId, useCurrentUser, isCurrentUser, screenshotModeEpoch])
+
+  const [loaded, setLoaded] = useState(() =>
+    src ? loadedPhotoSrcs.has(src) : false,
+  )
+  const [activeSrc, setActiveSrc] = useState(src)
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  if (src !== activeSrc) {
+    setActiveSrc(src)
+    setFailed(false)
+    setLoaded(src ? loadedPhotoSrcs.has(src) : false)
+  }
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (image?.complete && image.naturalWidth > 0 && src) {
+      loadedPhotoSrcs.add(src)
+      setLoaded(true)
+    }
+  }, [src])
+
+  if (failed || !src) {
+    return <InitialsAvatar name={name} size={size} className={className} />
+  }
+
+  return (
+    <span
+      className={cn(
+        'relative flex shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-accent',
+        sizeClasses[size],
+        className,
+      )}
+    >
+      <InitialsAvatar
+        name={name}
+        size={size}
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
+      <img
+        ref={imageRef}
+        src={src}
+        alt=""
+        width={pixels}
+        height={pixels}
+        decoding="async"
+        onLoad={(event) => {
+          if (event.currentTarget.naturalWidth > 0) {
+            loadedPhotoSrcs.add(src)
+            setLoaded(true)
+          }
+        }}
+        onError={() => setFailed(true)}
+        className={cn(
+          'relative z-[1] h-full w-full min-h-0 min-w-0 rounded-full object-cover motion-reduce:transition-none',
+          'transition-opacity duration-300 ease-out',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+    </span>
+  )
+}
+
+/**
+ * Avatar for an email address without a known user ID, via
+ * `avatars.getPhoto({ emailHash })` (Gravatar/Libravatar lookup).
+ */
+export function EmailAvatar({
+  email,
+  name,
+  size = 'md',
+  className,
+}: EmailAvatarProps) {
+  const [failed, setFailed] = useState(false)
+  const emailHash = useAvatarEmailHash(email)
+  const pixels = sizePixels[size]
+
+  const src = useMemo(() => {
+    if (!emailHash) return null
+    return sdk.forConsole.avatars.getPhoto({
+      width: pixels,
+      height: pixels,
+      emailHash,
+      ...(name?.trim() ? { name: name.trim() } : {}),
+    })
+  }, [emailHash, name, pixels])
 
   useEffect(() => {
     setFailed(false)
   }, [src])
 
-  if (failed) {
-    return null
-  }
-
-  if (!src) {
-    return <InitialsAvatar name={name} size={size} className={className} />
+  if (failed || !src) {
+    return (
+      <InitialsAvatar name={name || email} size={size} className={className} />
+    )
   }
 
   return (

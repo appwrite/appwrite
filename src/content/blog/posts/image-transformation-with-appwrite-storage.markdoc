@@ -6,7 +6,7 @@ date: 2025-03-10
 cover: /images/blog/image-transformation-with-appwrite-storage/cover.avif
 timeToRead: 6
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "How does Appwrite transform images on the fly?"
     answer: "Appwrite uses the Storage preview endpoint to apply transformations dynamically when retrieving an image. The original file stays untouched, and Appwrite generates and caches the modified version on demand. See [Appwrite Storage](/docs/products/storage) for the full list of supported parameters."

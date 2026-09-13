@@ -71,13 +71,20 @@ The roles used are API strings that can be found in the [permissions documentati
 
 # Run the export {% #run-export %}
 
-Start an export with `POST /v1/migrations/csv/exports` and an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the `databaseId` and `collectionId` you are exporting, plus a `filename` for the file it writes. The `columns`, `queries`, `delimiter`, `enclosure`, `escape`, and `header` parameters described above are all optional.
+Exports can only be started from the Console. Open the collection, click **Export CSV** in the toolbar, choose the columns, filters, delimiter, and header options described above, and start the export. Exports cannot be started with an API key or a server SDK.
 
 # Background processing {% #background-processing %}
 
 Exports run as background jobs, so a large collection doesn't block your workflow. Appwrite emails you a download link when the export finishes, unless you pass `notify` as `false`.
 
 Open the database and select the **Export / Import** tab to watch the job and download the file once it completes.
+
+{% only_dark %}
+![Export / Import page of a database](/images/docs/products/databases/vectorsdb/dark/import-export.avif)
+{% /only_dark %}
+{% only_light %}
+![Export / Import page of a database](/images/docs/products/databases/vectorsdb/import-export.avif)
+{% /only_light %}
 
 # Use cases {% #use-cases %}
 

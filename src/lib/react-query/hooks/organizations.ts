@@ -1,3 +1,4 @@
+import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 /**
  * React Query hooks for Organizations
  *
@@ -21,6 +22,8 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { confirmPayment } from '@/lib/utils/stripe'
+import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import {
   hasProjectSpecificRoles,
@@ -193,6 +196,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     activityLogs: Number.MAX_SAFE_INTEGER,
     usageLogs: Number.MAX_SAFE_INTEGER,
     usageLogsIntervals: ['15m', '1h', '1d'],
+    usageAggregateOnlyMetrics: [],
     projectInactivityDays: 0,
     alertLimit: 0,
     usage: {} as Models.UsageBillingPlan,
@@ -239,7 +243,11 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsCorporateEmailValidation: false,
     backupsEnabled: false,
     usagePerProject: false,
-    supportedAddons: { baa: false, premiumGeoDB: false, premiumGeoDBOrg: false },
+    supportedAddons: {
+      baa: false,
+      premiumGeoDB: false,
+      premiumGeoDBOrg: false,
+    },
     backupPolicies: 0,
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
@@ -748,6 +756,9 @@ export async function fetchOrganizationProjects(
         Query.offset(page * limit),
       ],
     })
+    // Project-scoped SDK calls resolve their endpoint from this map; without
+    // it every list and delete for a non-default region hits the wrong host.
+    registerProjectRegionsFromProjects(response.projects ?? [])
     return {
       projects: response.projects || [],
       total: response.total || 0,
@@ -1181,12 +1192,47 @@ export async function retryInvoicePayment(params: {
   organizationId: string
   invoiceId: string
   paymentMethodId: string
+  providerMethodId?: string
 }) {
-  return await sdk.forConsole.organizations.createInvoicePayment({
+  const invoice = await sdk.forConsole.organizations.createInvoicePayment({
     organizationId: params.organizationId,
     invoiceId: params.invoiceId,
     paymentMethodId: params.paymentMethodId,
   })
+
+  const status = invoice.status?.toLowerCase() ?? ''
+  if (status !== 'succeeded' && status !== 'paid' && status !== 'cancelled') {
+    if (invoice.clientSecret) {
+      let stripePaymentMethodId = params.providerMethodId
+      if (!stripePaymentMethodId) {
+        try {
+          stripePaymentMethodId = await resolveStripeProviderMethodId({
+            organizationId: params.organizationId,
+            paymentMethodId: params.paymentMethodId,
+          })
+        } catch {
+          try {
+            const method = await sdk.forConsole.account.getPaymentMethod({
+              paymentMethodId: params.paymentMethodId,
+            })
+            stripePaymentMethodId = method.providerMethodId || undefined
+          } catch {
+            stripePaymentMethodId = undefined
+          }
+        }
+      }
+      await confirmPayment({
+        clientSecret: invoice.clientSecret,
+        paymentMethod: stripePaymentMethodId,
+      })
+    }
+    await sdk.forConsole.organizations.validateInvoice({
+      organizationId: params.organizationId,
+      invoiceId: params.invoiceId,
+    })
+  }
+
+  return invoice
 }
 
 /**
@@ -1482,7 +1528,7 @@ export function organizationScopesQueryOptions(
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
     queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
     enabled,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -1577,7 +1623,9 @@ export async function prefetchOrganizationInvoiceDataIfAllowed(
   const access = await resolveOrganizationAccess(queryClient, organizationId)
   if (!canSeeOrganizationBilling(access)) return
   await queryClient
-    .ensureQueryData(organizationFailedInvoicePresenceQueryOptions(organizationId))
+    .ensureQueryData(
+      organizationFailedInvoicePresenceQueryOptions(organizationId),
+    )
     .catch(() => {})
 }
 
@@ -1617,8 +1665,7 @@ export function organizationUsageQueryOptions(
       startDate ?? null,
       endDate ?? null,
     ],
-    queryFn: () =>
-      fetchOrganizationUsage(organizationId!, startDate, endDate),
+    queryFn: () => fetchOrganizationUsage(organizationId!, startDate, endDate),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -2508,13 +2555,16 @@ export function useRetryInvoicePayment() {
   return useMutation({
     mutationFn: retryInvoicePayment,
     onSuccess: (_, variables) => {
-      // Invalidate invoices query
       queryClient.invalidateQueries({
         queryKey: ['invoices', 'organization', variables.organizationId],
       })
-      // Invalidate organization query
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: organizationFailedInvoicePresenceQueryOptions(
+          variables.organizationId,
+        ).queryKey,
       })
     },
   })

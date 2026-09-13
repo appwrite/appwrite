@@ -10,6 +10,7 @@ function getIntervalEndExclusive(
   start: Date,
   interval: UsageChartInterval,
 ): Date {
+  if (interval === '1m') return addMinutes(start, 1)
   if (interval === '15m') return addMinutes(start, 15)
   if (interval === '1h') return addHours(start, 1)
   return addDays(start, 1)

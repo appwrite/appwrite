@@ -15,10 +15,6 @@ export type ConsoleProfileId = 'cloud' | 'self-hosted'
 export type ConsoleProfileFeatures = {
   /** Billing and subscription management */
   billing: boolean
-  /** Organization-level custom domains (DNS, verification, buy domain, transfer in) */
-  domains: boolean
-  /** Organization marketplace (browse and publish apps) */
-  marketplace: boolean
   /** Project usage statistics, charts, and project overview main chart */
   usageStats: boolean
   /** Activity logs and audit trail */
@@ -40,34 +36,25 @@ export type ConsoleProfileFeatures = {
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
   /**
-   * Extra console OAuth login/signup providers (Google, GitLab, Bitbucket,
-   * Cursor). GitHub is always shown.
+   * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
+   * Bitbucket are always shown. Existing installations of a hidden provider
+   * still render; only new connect actions are gated.
    */
-  extraOAuthLogin: boolean
+  extraVcsOAuth: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
-  /** Organization OAuth apps */
-  oauthApps: boolean
-  /** Project-level OAuth2 authorization server settings */
-  oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
   /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
   agent: boolean
   /** Console notifications center (header bell and inbox popover) */
   notifications: boolean
+  /** Account browser alerts and build-completion desktop notifications */
+  browserAlerts: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
-  /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
-  dedicatedDbsSupport: boolean
-  /** Dedicated DBs support for Documents DB. */
-  dedicatedDbsDocumentsDB: boolean
-  /** Dedicated DBs support for Vectors DB. */
-  dedicatedDbsVectorsDB: boolean
-  /** Native Postgres databases via the `postgresql` SDK service. */
-  nativeDbsPostgres: boolean
-  /** Native MySQL databases via the `mysql` SDK service. */
-  nativeDbsMySQL: boolean
+  /** Dedicated database PITR restore UI (backups restore button and settings restore card). */
+  databasePitrRestore: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -80,8 +67,6 @@ export type ConsoleProfileFeatures = {
   edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
   userVerification: boolean
-  /** Project Firewall (rules, analytics, logs) under Protect */
-  firewall: boolean
   /** Account affiliates program (referral codes, rewards, credit claims) */
   affiliates: boolean
   /**
@@ -105,8 +90,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   string
 > = {
   billing: 'Billing',
-  domains: 'Domains',
-  marketplace: 'Marketplace',
   usageStats: 'Usage stats',
   activity: 'Activity',
   init: 'Init',
@@ -117,24 +100,18 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
-  extraOAuthLogin: 'Extra OAuth login',
+  extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
-  oauthApps: 'OAuth apps',
-  oauth2Server: 'OAuth2 server',
-  orgApiKeys: 'Org API keys',
+  orgApiKeys: 'Partners keys',
   agent: 'Agent',
   notifications: 'Notifications',
+  browserAlerts: 'Browser alerts',
   databaseBackups: 'Database backups',
-  dedicatedDbsSupport: 'Dedicated DBs (global)',
-  dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
-  dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
-  nativeDbsPostgres: 'Native DBs: PostgreSQL',
-  nativeDbsMySQL: 'Native DBs: MySQL',
+  databasePitrRestore: 'Database PITR restore',
   nativeDbsMongo: 'Native DBs: MongoDB',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
-  firewall: 'Firewall',
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
@@ -159,8 +136,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Appwrite Cloud - full feature set',
     features: {
       billing: true,
-      domains: true,
-      marketplace: false,
       usageStats: true,
       activity: true,
       init: true,
@@ -171,24 +146,18 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: true,
-      oauthApps: false,
-      oauth2Server: true,
       orgApiKeys: false,
-      agent: true,
+      agent: false,
       notifications: false,
+      browserAlerts: false,
       databaseBackups: true,
-      dedicatedDbsSupport: true,
-      dedicatedDbsDocumentsDB: false,
-      dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: true,
-      nativeDbsMySQL: true,
+      databasePitrRestore: false,
       nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: true,
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
@@ -203,9 +172,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
     description: 'Self-hosted Appwrite - cloud-only features disabled',
     features: {
       billing: false,
-      domains: false,
-      marketplace: false,
-      usageStats: false,
+      usageStats: true,
       activity: false,
       init: false,
       marketing: false,
@@ -215,24 +182,18 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      extraOAuthLogin: false,
+      extraVcsOAuth: false,
       compliance: false,
-      oauthApps: false,
-      oauth2Server: false,
       orgApiKeys: false,
       agent: false,
       notifications: false,
+      browserAlerts: false,
       databaseBackups: false,
-      dedicatedDbsSupport: false,
-      dedicatedDbsDocumentsDB: false,
-      dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: false,
-      nativeDbsMySQL: false,
+      databasePitrRestore: false,
       nativeDbsMongo: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
-      firewall: false,
       affiliates: false,
       cookieBanner: false,
       blogDrafts: false,
@@ -328,6 +289,23 @@ const DEBUG_PROFILE_COOKIE = 'debug_console_profile'
 const DEBUG_PROFILE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 /** Map legacy stored feature keys onto the current schema. */
+const REMOVED_PROFILE_FEATURE_KEYS = [
+  'domains',
+  'marketplace',
+  'oauthApps',
+  'oauth2Server',
+  'dedicatedDbsSupport',
+  'dedicatedDbsDocumentsDB',
+  'dedicatedDbsVectorsDB',
+  'nativeDbsPostgres',
+  'nativeDbsMySQL',
+  'firewall',
+  'storageS3',
+  'aiAssistant',
+  'executionLogs',
+  'extraOAuthLogin',
+] as const
+
 function migrateStoredProfileFeatures(
   features: Partial<ConsoleProfileFeatures> & Record<string, unknown>,
 ): Partial<ConsoleProfileFeatures> {
@@ -336,8 +314,9 @@ function migrateStoredProfileFeatures(
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
   }
-  delete next.aiAssistant
-  delete next.executionLogs
+  for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
+    delete next[key]
+  }
   return next
 }
 
@@ -413,6 +392,11 @@ function getStoredProfile(): StoredConsoleProfile | null {
   return stored
 }
 
+/** Snapshot of explicitly stored feature overrides for the active profile. */
+export function getDebugProfileFeatureOverrides(): Partial<ConsoleProfileFeatures> {
+  return { ...getStoredProfile()?.features }
+}
+
 /** Whether a debug localStorage profile override is active (vs env). */
 export function hasDebugProfileOverride(): boolean {
   return getStoredProfile() !== null
@@ -426,6 +410,13 @@ export function getActiveProfileId(): ConsoleProfileId {
   const stored = getStoredProfile()
   if (stored) return stored.id
   return getProfileFromEnv()
+}
+
+/** True when the active console profile is Cloud (not self-hosted). */
+export function isCloudProfile(
+  profileId: ConsoleProfileId = getActiveProfileId(),
+): boolean {
+  return profileId === 'cloud'
 }
 
 /**
@@ -460,6 +451,18 @@ export function setBackendUsageStatsAvailability(
   }
 }
 
+/**
+ * Self-hosted usage follows `_APP_USAGE_STATS` after console variables load.
+ * Cloud and explicit env overrides are known immediately.
+ */
+export function isUsageStatsCapabilityResolved(): boolean {
+  const profileId = getActiveProfileId()
+  if (profileId !== 'self-hosted') return true
+  const override = parseEnvFeatureOverride(getRuntimeConfig().usageStats)
+  if (override !== null) return true
+  return backendUsageStatsAvailability !== null
+}
+
 function applyCloudOnlyFeatureGates(
   profileId: ConsoleProfileId,
   features: ConsoleProfileFeatures,
@@ -467,11 +470,9 @@ function applyCloudOnlyFeatureGates(
   if (profileId === 'self-hosted') {
     return {
       ...features,
-      marketplace: false,
       init: false,
       marketing: false,
       multiTenancy: false,
-      oauth2Server: false,
     }
   }
   return features
@@ -490,7 +491,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_OAUTH_LOGIN), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE,
+ * VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -511,9 +513,19 @@ function applyEnvFeatureOverrides(
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
   }
-  const extraOAuthLogin = parseEnvFeatureOverride(config.extraOAuthLogin)
-  if (extraOAuthLogin !== null) {
-    next = { ...next, extraOAuthLogin }
+  const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
+  if (extraVcsOAuth !== null) {
+    next = { ...next, extraVcsOAuth }
+  }
+  const databasePitrRestore = parseEnvFeatureOverride(
+    config.databasePitrRestore,
+  )
+  if (databasePitrRestore !== null) {
+    next = { ...next, databasePitrRestore }
+  }
+  const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
+  if (browserAlerts !== null) {
+    next = { ...next, browserAlerts }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {
@@ -527,18 +539,25 @@ function applyEnvFeatureOverrides(
   return next
 }
 
+/** Profile from env (and backend vars), without debug localStorage overrides. Matches SSR. */
+export function getActiveProfileWithoutDebugOverride(): ConsoleProfile {
+  const profileId = getProfileFromEnv()
+  const canonical = CONSOLE_PROFILES[profileId]
+  return {
+    ...canonical,
+    features: applyEnvFeatureOverrides(
+      profileId,
+      applyCloudOnlyFeatureGates(profileId, canonical.features),
+    ),
+  }
+}
+
 export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
   const profileId = stored?.id ?? getProfileFromEnv()
   const canonical = CONSOLE_PROFILES[profileId]
   if (!stored) {
-    return {
-      ...canonical,
-      features: applyEnvFeatureOverrides(
-        profileId,
-        applyCloudOnlyFeatureGates(profileId, canonical.features),
-      ),
-    }
+    return getActiveProfileWithoutDebugOverride()
   }
   const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
     ...applyEnvFeatureOverrides(profileId, canonical.features),

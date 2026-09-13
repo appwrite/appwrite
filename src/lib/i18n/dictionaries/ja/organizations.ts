@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaOrganizationsDictionary: Record<string, string> = {
+  'A valid transfer price is required to continue.':
+    '続行するには有効な移管料金が必要です。',
+  "We couldn't load a transfer price. Try again to continue.":
+    '移管料金を読み込めませんでした。続行するには、もう一度お試しください。',
+  'Transfer pricing is unavailable for this domain. Try another domain or contact support.':
+    'このドメインの移管料金は取得できません。別のドメインを試すか、サポートにお問い合わせください。',
+
   '(optional)': '(任意)',
   ', on': '、',
   ', or on': '、または',
@@ -21,6 +28,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Add alert': 'アラートを追加',
   'Add another member': '別のメンバーを追加',
   'Add app': 'アプリを追加',
+  'Create app': 'アプリを作成',
+  Team: 'チーム',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'アプリは現在のチームに作成されます。別のチームに作成するには、チームを切り替えてください。',
   'Add at least one project to grant access.': 'アクセスを許可するには、プロジェクトを1つ以上追加してください。',
   'Add backup': 'バックアップを追加',
   'Add billing address': '請求先住所を追加',
@@ -54,14 +65,15 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Specific projects': '特定のプロジェクト',
   'An error occurred': 'エラーが発生しました',
   'App ID': 'アプリ ID',
-  'App created as draft': 'アプリを下書きとして作成しました',
+  'App created': 'アプリを作成しました',
   'App deleted': 'アプリを削除しました',
   'App logo preview': 'アプリロゴのプレビュー',
   'App not found': 'アプリが見つかりません',
-  'App published': 'アプリを公開しました',
+  'App enabled': 'アプリを有効にしました',
+  'App disabled': 'アプリを無効にしました',
+  'App status': 'アプリのステータス',
   'App settings': 'アプリ設定',
   'App settings sections': 'アプリ設定セクション',
-  'App unpublished': 'アプリの公開を取り消しました',
   'Apply coupon': 'クーポンを適用',
   'Approaching member limit': 'メンバー上限に近づいています',
   'Apps in ai & ml.': 'AI と ML カテゴリのアプリ。',
@@ -86,7 +98,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Auto renewal has been enabled': '自動更新を有効にしました',
   'Available balance': '利用可能残高',
   'Available credits': '利用可能なクレジット',
-  'Back to OAuth apps': 'OAuth アプリに戻る',
+  'Back to apps': 'アプリに戻る',
   'Back to domains': 'ドメインに戻る',
   'Backup methods': 'バックアップの支払い方法',
   'Backup payment method updated': 'バックアップの支払い方法を更新しました',
@@ -122,7 +134,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Choose existing card': '既存のカードを選択',
   'Choose members to keep': '保持するメンバーを選択',
   'Choose projects to keep': '保持するプロジェクトを選択',
-  'Choose which organization to keep': '保持する組織を選択',
   'Clear search': '検索をクリア',
   'Click to upload or drag and drop': 'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client type': 'クライアントタイプ',
@@ -135,6 +146,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Contact emails': '連絡先メール',
   'Contact for price': '価格はお問い合わせください',
   'Contact sales': '営業に連絡',
+  'Continue in the old console': '旧コンソールで続行',
   'Copied to clipboard': 'クリップボードにコピーしました',
   'Copy ID': 'ID をコピー',
   'Copy as JSON': 'JSON としてコピー',
@@ -203,6 +215,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Domain transfer started': 'ドメイン移管を開始しました',
   'Domain verification successful': 'ドメインの検証に成功しました',
   'Downgrade impact': 'ダウングレードの影響',
+  'Downgrade to Free': 'Free へのダウングレード',
+  'Downgrade to Free is temporarily unavailable here. Continue in the old console.':
+    'Free へのダウングレードはここでは一時的に利用できません。旧コンソールで続行してください。',
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
+    '体験を改善している間、Free プランへのダウングレードはここでは一時的に利用できません。この変更は旧コンソールで完了できます。',
   'Downgrading to Free Plan': 'Free プランにダウングレード',
   'Downgrading your plan': 'プランをダウングレード中',
   'Download DPA': 'DPA をダウンロード',
@@ -291,6 +308,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Go to next page': '次のページへ',
   'Go to previous page': '前のページへ',
   'Hide code': 'コードを非表示',
+  Homepage: 'ホームページ',
   'Homepage URL': 'ホームページ URL',
   'Homepage:': 'ホームページ:',
   'Image URLs': '画像 URL',
@@ -374,7 +392,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name is required': '名前は必須です',
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?': '24時間365日またはエンタープライズサポートが必要ですか?',
-  'New organization': '新しい組織',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -425,11 +442,28 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Organization is required': '組織は必須です',
   'Organization name': '組織名',
   'Organization name updated successfully': '組織名を更新しました',
+  'Partners keys': 'パートナーキー',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'バックエンドから Console API を認証します。この組織全体でプロジェクト、メンバー、ドメインを作成および管理できます。',
+  'Project keys vs Partners keys': 'プロジェクトキーとパートナーキー',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'パートナーキーではプロジェクト内のデータにアクセスできません。データベース、ストレージ、ユーザー、Functions には、代わりにプロジェクトキーを作成してください。',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'プロジェクトを開き、プロジェクトサイドバーの API キー から、バックエンドに必要なスコープでキーを作成してください。',
+  'No Partners keys yet': 'パートナーキーはまだありません',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'バックエンドから Console API を認証するために、最初のパートナーキーを作成してください。',
+  'Learn more about Partners key scopes': 'パートナーキーのスコープについて',
+  'Create Partners key': 'パートナーキーを作成',
+  'Create a Partners key for Console automation':
+    'Console 自動化用のパートナーキーを作成',
+  'Partners keys for partner platforms': 'パートナープラットフォーム向けのパートナーキー',
   'Pay and register': '支払って登録',
   'Payment authorized': '支払いを承認しました',
   'Payment confirmed': '支払いを確認しました',
   'Payment confirmed successfully': '支払いを確認しました',
   'Payment failed': '支払いに失敗しました',
+  'Payment has been successfully processed': '支払いが正常に処理されました',
   'Payment history': '支払い履歴',
   'Payment method': '支払い方法',
   'Payment method failed': '支払い方法に失敗しました',
@@ -496,6 +530,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Resources in kept projects': '保持するプロジェクトのリソース',
   'Retry Verification': '検証を再試行',
   'Retry payment': '支払いを再試行',
+  'Retry your payment to avoid service interruptions with your projects.':
+    'プロジェクトのサービス中断を避けるため、支払いを再試行してください。',
   'Retry verification': '検証を再試行',
   'Retrying...': '再試行中...',
   'Role updated successfully': 'ロールを更新しました',
@@ -535,6 +571,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Served by Appwrite': 'Appwrite が提供',
   'Server-side only': 'サーバーサイドのみ',
   'Set a monthly spending limit': '月間支出上限を設定',
+  'Set as default payment method': 'デフォルトの支払い方法に設定',
   'Setting up your organization': '組織をセットアップ中',
   'Short description': '短い説明',
   'Show code': 'コードを表示',
@@ -553,11 +590,16 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Tax ID': '税務 ID',
   'Tax ID (Optional)': '税務 ID (任意)',
   'Tax ID updated': '税務 ID を更新しました',
+  'Temporarily available in the old console':
+    '旧コンソールで一時的に利用できます',
   'Team ID is required': 'チーム ID は必須です',
   'Terms of service': '利用規約',
   'The target plan allows': '対象プランでは次が許可されます',
   'This action cannot be undone.': 'この操作は元に戻せません。',
-  'This app is visible in the marketplace.': 'このアプリはマーケットプレイスで公開されています。',
+  'This app is enabled and can authorize users.':
+    'このアプリは有効で、ユーザーを認可できます。',
+  'This app is disabled and cannot authorize users.':
+    'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.': 'この組織にはプロジェクトがありません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
@@ -603,6 +645,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Use existing card': '既存のカードを使用',
   'Use this address': 'この住所を使用',
   'View all apps': 'すべてのアプリを表示',
+  'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
   'View invoice': '請求書を表示',
@@ -716,7 +759,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Can modify most resources but not critical backend.': 'ほとんどのリソースを変更できますが、重要なバックエンドは変更できません。',
   'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.': '未払いの請求書が支払われるまで、プロジェクトとサービスへの変更は制限されます。支払いを完了すると、フルアクセスが復元されます。',
   'Choose a PNG from the app assets bucket or upload a new one.': 'app assets バケットから PNG を選択するか、新しいファイルをアップロードしてください。',
-  'Choose a paid plan for the new organization instead.': '代わりに新しい組織用の有料プランを選択してください。',
   'Choose the plan that best fits your needs.': 'ニーズに最も合ったプランを選択してください。',
   'Choose whether this domain should renew automatically before it expires.': 'このドメインの有効期限が切れる前に自動更新するかどうかを選択してください。',
   'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': 'Appwrite トークンを集めて雷の危険を避けましょう。デバッグセッション用の持久力ミニゲームです。',
@@ -729,7 +771,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Coupon not found. Please check the code and try again.': 'クーポンが見つかりません。コードを確認してもう一度お試しください。',
   'Create a new organization to manage your projects and organization members.': 'プロジェクトと組織メンバーを管理する新しい組織を作成します。',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.': 'サーバーサイドでのトークン交換を伴う認可コードなど、機密の OAuth フロー用のシークレットを作成します。',
-  'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.': 'マーケットプレイス用の OAuth2 アプリを作成します。公開するまでは下書きとして保存されます。',
+  'Create an OAuth2 app listing for the marketplace.':
+    'マーケットプレイス用の OAuth2 アプリを作成します。',
   'Create an app to share it with other organizations on the marketplace.': 'マーケットプレイスで他の組織と共有するアプリを作成します。',
   'Create your first domain to get started': '開始するには最初のドメインを作成してください',
   'Create your first project to get started': '開始するには最初のプロジェクトを作成してください',
@@ -756,6 +799,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
   'Failed to mount payment form. Please try again.': '支払いフォームの読み込みに失敗しました。もう一度お試しください。',
   'Featured apps, popular integrations, and browse by category.': '注目のアプリ、人気のインテグレーション、カテゴリ別閲覧。',
+  'Browse official apps, or explore by category.':
+    '公式アプリを閲覧、またはカテゴリ別に探索。',
   'Find integrations grouped by what they help you build.': '構築内容に応じてグループ分けされたインテグレーションを見つけましょう。',
   'For business accounts, enter your tax identification number': '法人アカウントの場合は、税務識別番号を入力してください',
   'For more details on our plans, visit our': 'プランの詳細については、次をご覧ください:',
@@ -808,7 +853,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.': '料金は支払いを送信した時点で確定します。プレミアムおよび特殊なドメイン名はレジストリによる手動審査が必要になる場合があります。',
   'Public clients require PKCE. Confidential clients use a client secret.': 'パブリッククライアントには PKCE が必要です。機密クライアントはクライアントシークレットを使用します。',
   'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.': 'パブリッククライアントは PKCE を使用し、OAuth シークレットは不要です。サーバーサイドのシークレット認証が必要な場合は、OAuth クライアントタブで機密クライアントに切り替えてください。',
-  'Published apps appear in the marketplace catalog for other organizations.': '公開されたアプリは、他の組織向けのマーケットプレイスカタログに表示されます。',
+  'Marketplace page': 'マーケットプレイスページ',
+  'Public listing page for this app in the marketplace.':
+    'マーケットプレイスにおけるこのアプリの公開ページ。',
+  'Control whether this app can be used to authorize users.':
+    'このアプリでユーザーを認可できるかを設定します。',
   'Published apps from other organizations will appear here.': '他の組織が公開したアプリがここに表示されます。',
   'Purchase could not be completed. Please try again.': '購入を完了できませんでした。もう一度お試しください。',
   'Redirect URIs and client type for OAuth2 and OpenID Connect.': 'OAuth2 と OpenID Connect のリダイレクト URI とクライアントタイプ。',
@@ -840,7 +889,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'The card was declined or authentication was cancelled. Please try again or use a different card.': 'カードが拒否されたか、認証がキャンセルされました。もう一度お試しいただくか、別のカードをお使いください。',
   'There are no billing addresses on your account. Add one below.': 'アカウントに請求先住所がありません。以下から追加してください。',
   'They will not be able to join the organization.': 'この組織に参加できなくなります。',
-  'This app is a draft and not listed publicly.': 'このアプリは下書きであり、一般公開されていません。',
   'This app may have been deleted or you do not have access.': 'このアプリは削除されたか、アクセス権がない可能性があります。',
   'This entire organization will be deleted, including all of its projects and resources.': 'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.': 'この請求書には認証情報がありません。',
@@ -886,6 +934,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   "You don't have any credits. Credits can be used to offset your monthly charges.": 'クレジットがありません。クレジットは月々の料金の相殺に使用できます。',
   "You don't have permission to create projects.": 'プロジェクトを作成する権限がありません。',
   "You don't have permission to invite members.": 'メンバーを招待する権限がありません。',
+  "You don't have permission to manage members.": 'メンバーを管理する権限がありません。',
   'You will be charged for each organization member beyond the plan limit.': 'プランの上限を超える組織メンバーごとに料金が請求されます。',
   'You will lose access to premium features and organization members beyond the free limit will be removed.': 'プレミアム機能へのアクセスを失い、無料プランの上限を超える組織メンバーは削除されます。',
   "You've reached the limit for projects on your plan": 'プランのプロジェクト上限に達しました',
@@ -913,6 +962,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Add: '追加',
   Address: '住所',
   Amount: '金額',
+  'Amount due': '請求金額',
   Analyst: 'アナリスト',
   Analytics: 'アナリティクス',
   Apps: 'アプリ',
@@ -938,12 +988,15 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Compliance: 'コンプライアンス',
   Compute: 'コンピュート',
   Confidential: '機密',
+  'Client ID': 'クライアント ID',
+  'Last used': '最終使用',
+  'Never used': '未使用',
   Copy: 'コピー',
   Cost: 'コスト',
   Country: '国',
   Create: '作成',
   Created: '作成日',
-  Creators: 'クリエイター',
+  Contacts: '連絡先',
   Credits: 'クレジット',
   Current: '現在',
   Databases: 'データベース',
@@ -998,6 +1051,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   No: 'いいえ',
   None: 'なし',
   Official: '公式',
+  'We invite app makers to contact us and get your integrations published.':
+    'アプリ開発者の方は、ぜひお問い合わせのうえインテグレーションを公開してください。',
+  'Add your first app to get started.':
+    '最初のアプリを追加して始めましょう。',
   Offline: 'オフライン',
   Online: 'オンライン',
   Open: '開く',
@@ -1005,6 +1062,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Overview: '概要',
   Owner: 'オーナー',
   Page: 'ページ',
+  Partners: 'パートナー',
   Paused: '一時停止',
   Locked: 'ロック中',
   Payment: '支払い',
@@ -1020,12 +1078,12 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Primary: '主要',
   Priority: '優先度',
   Project: 'プロジェクト',
-  Projects: 'プロジェクト',
   Public: '公開',
-  Publish: '公開',
-  Published: '公開済み',
   Realtime: 'Realtime',
   Recap: 'まとめ',
+  'Catch up on Init': 'Init のまとめを見る',
+  'Rewatch sessions and explore every launch from Init week.':
+    'セッションのリプレイと Init week の発表をチェック。',
   Recommended: '推奨',
   Region: 'リージョン',
   Registrar: 'レジストラ',
@@ -1094,7 +1152,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   page: 'ページ',
   plan: 'プラン',
   project: 'プロジェクト',
-  projects: 'プロジェクト',
   record: 'レコード',
   records: 'レコード',
   removed: '削除済み',
@@ -1141,4 +1198,89 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Addons: 'アドオン',
   'Premium Geo DB': 'Premium Geo DB',
   'Dedicated DB compute credit': '専用 DB コンピュートクレジット',
+  'Organization resources': '組織のリソース',
+  'Project resources': 'プロジェクトのリソース',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '組織の使用量を選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    '残っている各プロジェクトを選択したプランと比較します。削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    '削除したい超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'The selected plan allows': '選択したプランで利用できるのは',
+  'Still over the plan limit.': 'まだプラン上限を超えています。',
+  'Delete at least': '少なくとも次を削除してください:',
+  'to fit the selected plan.': '選択したプランに合わせるために必要です。',
+  'Delete selected projects': '選択したプロジェクトを削除',
+  'Delete selected members': '選択したメンバーを削除',
+  'Delete selected domains': '選択したドメインを削除',
+  'Only the selected items will be deleted.': '選択した項目だけが削除されます。',
+  'Finish deleting project resources that exceed the selected plan.':
+    '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
+  'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'プランを変更できませんでした。残りの使用量がまだ選択したプランを超えています。',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    '選択したプランをまだ超えている超過分です。それ以外は削除されません。',
+  'Usage fits the selected plan. No further deletions are required.':
+    '使用量は選択したプランに収まっています。これ以上の削除は不要です。',
+  'Calculating remaining extras...': '残っている超過分を計算しています...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    '選択したプランをまだ超えている超過分です。マークした項目だけを削除します。',
+  'still over limit': 'まだ上限超過',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    '各プロジェクトで削除する超過分をマークしてください。確認後に選択した項目だけが削除されます。',
+  'Over limit': '上限超過',
+  Marked: 'マーク済み',
+  'This resource type fits the selected plan.':
+    'このリソースタイプは選択したプランに収まっています。',
+  'Confirm selection': '選択を確定',
+  'marked for deletion': '削除対象としてマーク済み',
+  'Edit selection': '選択を編集',
+  'Will be deleted': '削除される項目',
+  'and all its resources': 'とそのすべてのリソース',
+  'Removing the items you marked for deletion.':
+    '削除対象としてマークした項目を削除しています。',
+  'Choose which organization to delete': '削除する組織を選択してください',
+  'Choose which organization to delete.': '削除する組織を選択してください。',
+  'You may hit limits on the selected plan':
+    '選択したプランの上限に達する可能性があります',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    '過去 30 日間の使用量がこれらの上限を超えていました。これは請求サイクルではなく、直近 30 日間の移動ウィンドウです。',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'プランの上限を超えると、影響を受けるプロジェクトが次の請求サイクルまでブロックされる可能性があります。',
+  '1 organization marked for deletion': '1 件の組織を削除対象としてマーク済み',
+  'Confirm which organization to delete.': '削除する組織を確定してください。',
+  'Confirm plan change': 'プラン変更の確認',
+  'Confirm organization deletion': '組織削除の確認',
+  'Your organization will move to the {plan} plan.':
+    '組織は {plan} プランに移行します。',
+  'Delete and change plan': '削除してプランを変更',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'まず削除するプロジェクトを確定してください。残したプロジェクトは、その後で選択したプランと照合されます。',
+  'Could not load': '読み込めませんでした:',
+  'for this project.': '(このプロジェクト)',
+  'Some project resources could not be loaded. Reload and try again.':
+    '一部のプロジェクトリソースを読み込めませんでした。再読み込みしてやり直してください。',
+  'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
+  'They stay active until the end of your current billing cycle, then they are removed.':
+    '現在の請求サイクルの終了までは有効なままで、その後に削除されます。',
+  'What changes in the projects you are keeping': '残すプロジェクトで変わること',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
+  'Backups stop running': 'バックアップが停止します',
+  'At the end of your current billing cycle these backup policies are turned off and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    '現在の請求サイクルの終了時に、これらのバックアップポリシーは無効化され、バックアップの作成を停止します。ポリシー自体は削除されませんが、選択したプランにはバックアップ画面がないため、確認も管理もできなくなります。',
+  'Dedicated databases are spun down': '専用データベースが停止されます',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
+  'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
+  'The deletions happen now. Your organization moves to the {plan} plan on {date}, when the current billing cycle ends.':
+    '削除はただちに実行されます。組織は現在の請求サイクルが終了する {date} に {plan} プランへ移行します。',
+  'Deleted data cannot be recovered.': '削除されたデータは復元できません。',
+  'Could not load which backup policies stop running when your plan changes.':
+    'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
 }

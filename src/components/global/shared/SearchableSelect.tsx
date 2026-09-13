@@ -19,6 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -136,6 +137,8 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  const { rootRef, portalContainer, modal, handleOpenChange } =
+    useModalAwarePopover()
   const listScrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const allItems = useMemo(
@@ -174,9 +177,12 @@ export function SearchableSelect({
   }, [hasNextPage, isFetchingNextPage, onLoadMore, open, items.length])
 
   return (
+    <div ref={rootRef} className="contents">
     <Popover
       open={open}
+      modal={modal}
       onOpenChange={(nextOpen) => {
+        handleOpenChange(nextOpen)
         setOpen(nextOpen)
         onOpenChange?.(nextOpen)
         if (!nextOpen && onSearchChange) {
@@ -215,6 +221,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent
+        container={portalContainer}
         className={cn(
           'max-h-[min(320px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0',
           contentClassName,
@@ -223,6 +230,9 @@ export function SearchableSelect({
         onWheelCapture={(event) => {
           event.stopPropagation()
         }}
+        onCloseAutoFocus={(event) => {
+          if (portalContainer) event.preventDefault()
+        }}
       >
         <Command shouldFilter={!onSearchChange} className="overflow-hidden">
           <div className="relative">
@@ -230,6 +240,7 @@ export function SearchableSelect({
               placeholder={t(searchPlaceholder)}
               className={cn('h-9 text-[13px]', isFetching && 'pe-8')}
               onValueChange={onSearchChange}
+              onKeyDown={(event) => event.stopPropagation()}
             />
             <div
               className={cn(
@@ -307,5 +318,6 @@ export function SearchableSelect({
         </Command>
       </PopoverContent>
     </Popover>
+    </div>
   )
 }

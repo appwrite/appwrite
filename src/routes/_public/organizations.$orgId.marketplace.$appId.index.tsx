@@ -1,5 +1,5 @@
 import { View } from '@/components/pages/organizations/$orgId/marketplace/$appId/View'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { organizationAppQueryOptions } from '@/lib/react-query/hooks'
 
@@ -20,15 +20,9 @@ export const Route = createFileRoute(
     const { queryClient } = context
     if (!orgId || !appId) return undefined
 
+    // The public detail page is reachable for every app, own-org apps and
+    // unlabeled ones included — no redirect to settings here.
     const app = await queryClient.fetchQuery(organizationAppQueryOptions(appId))
-
-    if (app.teamId === orgId) {
-      throw redirect({
-        to: '/organizations/$orgId/apps/$appId',
-        params: { orgId, appId },
-        replace: true,
-      })
-    }
 
     return { app }
   },

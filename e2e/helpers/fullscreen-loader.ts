@@ -2,7 +2,6 @@ import type { Page } from '@playwright/test'
 
 function pathnameUsesFullscreenLoader(pathname: string): boolean {
   return (
-    pathname === '/' ||
     pathname.startsWith('/account') ||
     pathname.startsWith('/organizations') ||
     pathname.startsWith('/projects') ||

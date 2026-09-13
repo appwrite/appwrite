@@ -1,16 +1,25 @@
 import { INIT_PRIZES_SECTION_ID } from '@/lib/init/init-section-ids'
-import type { InitDisplayEvent, LaunchEventLiveBanner } from '@/lib/init/types'
+import { formatInitCappedCount } from '@/lib/init/presence'
+import type {
+  InitDisplayEvent,
+  LaunchEventLiveBanner,
+  LaunchEventOnlineUser,
+} from '@/lib/init/types'
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
   INIT_COLLAPSED_HEADER_HEIGHT_PX,
   useInitScrollSpyDay,
 } from '@/lib/init/use-init-scroll-spy-day'
-import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
+import {
+  useInitPresence,
+  useInitPresenceActivity,
+} from '@/lib/init/init-presence-context'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { buildInitPlayingWithJoolActivity } from '@/lib/init/init-presence-activity'
-import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { InitPresenceUserAvatar } from '@/components/pages/init/_components/InitPresenceUserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -21,10 +30,89 @@ import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
 import { useInitHref } from '@/lib/init/use-init-href'
+import { useT } from '@/lib/i18n/translate'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 
 /** Tailwind `sm` - skip sticky-header Jool on phones for performance. */
 const STICKY_JOOL_MIN_WIDTH_PX = 640
+const HERO_ONLINE_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
+/** `size-6` avatar minus `-space-x-2` overlap. */
+const HERO_AVATAR_UNFOLD_PX = 16
+const HERO_AVATAR_UNFOLD_SPRING = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 28,
+  mass: 0.75,
+}
+
+const HeroOnlineAvatarStack = forwardRef<
+  HTMLDivElement,
+  {
+    users: LaunchEventOnlineUser[]
+    count: number
+    countCapped: boolean
+    reduceMotion: boolean | null
+  }
+>(function HeroOnlineAvatarStack(
+  { users, count, countCapped, reduceMotion },
+  ref,
+) {
+  const faces = users.slice(0, 4)
+
+  return (
+    <motion.div
+      ref={ref}
+      className="flex items-center justify-center gap-3"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
+      transition={{ duration: 0.28, ease: HERO_ONLINE_EASE }}
+    >
+      <div className="flex -space-x-2">
+        {faces.map((user, index) => (
+          <motion.span
+            key={user.id}
+            className="relative inline-flex origin-left [transform:translateZ(0)] [backface-visibility:hidden]"
+            style={{ zIndex: index }}
+            initial={
+              reduceMotion
+                ? false
+                : {
+                    opacity: 0,
+                    scale: 0.55,
+                    x: -index * HERO_AVATAR_UNFOLD_PX,
+                  }
+            }
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{
+              ...HERO_AVATAR_UNFOLD_SPRING,
+              delay: 0.05 + index * 0.09,
+            }}
+          >
+            <InitPresenceUserAvatar
+              user={user}
+              displayName={user.name}
+              size="sm"
+              className="ring-2 ring-background"
+            />
+          </motion.span>
+        ))}
+      </div>
+      <motion.span
+        className="text-[12px] tabular-nums text-muted-foreground"
+        initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{
+          duration: 0.38,
+          ease: HERO_ONLINE_EASE,
+          delay: reduceMotion ? 0 : 0.12 + faces.length * 0.09,
+        }}
+      >
+        {formatInitCappedCount(count, countCapped)} online now
+      </motion.span>
+    </motion.div>
+  )
+})
 
 interface EventHeroProps {
   event: InitDisplayEvent
@@ -59,11 +147,13 @@ function CollapsedHeroBar({
   particlesActive: boolean
   days: InitDisplayEvent['days']
 }) {
+  const t = useT()
   const barRef = useRef<HTMLDivElement>(null)
   const showDayNav = dayNumbers.length > 0
   const showStickyJool = useMediaMinWidth(STICKY_JOOL_MIN_WIDTH_PX)
   const { setTransientActivity } = useInitPresenceActivity()
   const resolvedLiveHref = useInitHref(liveBanner?.href)
+  const isStartingSoon = liveBanner?.mode === 'startingSoon'
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
   }, [setTransientActivity])
@@ -75,6 +165,10 @@ function CollapsedHeroBar({
     <div
       ref={barRef}
       aria-hidden={!visible}
+      // opacity + translate leave the day buttons and Watch link in the tab
+      // order, so keyboard users hit six invisible stops on a fixed bar the
+      // browser cannot scroll into view. aria-hidden alone does not remove them.
+      inert={!visible ? true : undefined}
       className={cn(
         'fixed z-[15] overflow-hidden border-b border-border',
         'bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',
@@ -114,13 +208,15 @@ function CollapsedHeroBar({
 
             <div
               className={cn(
-                'pointer-events-none absolute inset-0 flex items-center justify-center px-4',
-                liveBanner
-                  ? 'pe-[5.75rem] sm:px-28 sm:pe-36 md:px-36'
-                  : 'sm:px-28 md:px-36',
+                // Keep the nav in flow until the bar is wide enough to center it
+                // over the row: the fixed insets that reserved space for the
+                // wordmark/date and the live badge + Watch button were smaller
+                // than those columns, so the day buttons rendered underneath.
+                'flex min-w-0 flex-1 items-center justify-center',
+                'lg:pointer-events-none lg:absolute lg:inset-0 lg:flex-none lg:px-36',
               )}
             >
-              <div className="pointer-events-auto w-full max-w-full sm:max-w-none">
+              <div className="pointer-events-auto w-full min-w-0 max-w-full sm:max-w-none">
                 <InitCollapsedDayNav
                   days={days}
                   activeDay={activeDay}
@@ -132,8 +228,11 @@ function CollapsedHeroBar({
             <div className="relative z-10 ms-auto flex shrink-0 justify-end">
               {liveBanner ? (
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Badge variant="error" className="text-[10px] shrink-0">
-                    Live
+                  <Badge
+                    variant={isStartingSoon ? 'warning' : 'error'}
+                    className="text-[10px] shrink-0"
+                  >
+                    {isStartingSoon ? t('Starting soon') : t('Live')}
                   </Badge>
                   {resolvedLiveHref ? (
                     <Button
@@ -148,13 +247,13 @@ function CollapsedHeroBar({
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
                       >
-                        Watch
+                        {t('Watch')}
                         <ChevronRight className="size-3.5" />
                       </a>
                     </Button>
                   ) : (
                     <span className="hidden max-w-[120px] truncate text-[12px] font-medium text-foreground sm:inline">
-                      {liveBanner.title}
+                      {t(liveBanner.title)}
                     </span>
                   )}
                 </div>
@@ -167,11 +266,14 @@ function CollapsedHeroBar({
             {liveBanner ? (
               <>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <Badge variant="error" className="text-[10px] shrink-0">
-                    Live now
+                  <Badge
+                    variant={isStartingSoon ? 'warning' : 'error'}
+                    className="text-[10px] shrink-0"
+                  >
+                    {isStartingSoon ? t('Starting soon') : t('Live now')}
                   </Badge>
                   <span className="truncate text-[13px] font-medium text-foreground">
-                    {liveBanner.title}
+                    {t(liveBanner.title)}
                   </span>
                 </div>
                 {resolvedLiveHref ? (
@@ -182,7 +284,7 @@ function CollapsedHeroBar({
                         ? { target: '_blank', rel: 'noopener noreferrer' }
                         : {})}
                     >
-                      Watch
+                      {t('Watch')}
                       <ChevronRight className="size-3.5" />
                     </a>
                   </Button>
@@ -201,6 +303,7 @@ function CollapsedHeroBar({
 }
 
 export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
+  const t = useT()
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const heroRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -210,6 +313,8 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
+  const { isReady: isPresenceReady } = useInitPresence()
+  const reduceMotion = useReducedMotion()
   const { setTransientActivity } = useInitPresenceActivity()
   const handleJoolInteractionStart = useCallback(() => {
     setTransientActivity(buildInitPlayingWithJoolActivity())
@@ -217,6 +322,15 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const handleJoolInteractionEnd = useCallback(() => {
     setTransientActivity(null)
   }, [setTransientActivity])
+
+  const giveawayDiscordCta = useMemo(() => {
+    if (!event.giveaway?.secondaryCtaHref) return null
+    return {
+      label: t(event.giveaway.secondaryCtaLabel ?? 'Join on Discord'),
+      href: event.giveaway.secondaryCtaHref,
+      external: true,
+    }
+  }, [event.giveaway, t])
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -327,33 +441,36 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
               {!account ? (
                 <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
               ) : event.prizes ? (
-                <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                  <a href={`#${INIT_PRIZES_SECTION_ID}`}>
-                    {event.giveaway?.ctaLabel ?? 'View prizes'}
-                  </a>
-                </Button>
+                <>
+                  <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+                    <a href={`#${INIT_PRIZES_SECTION_ID}`}>
+                      {event.giveaway?.ctaLabel ?? 'View prizes'}
+                    </a>
+                  </Button>
+                  {giveawayDiscordCta ? (
+                    <EventCtaButton
+                      cta={giveawayDiscordCta}
+                      variant="outline"
+                      size="lg"
+                    />
+                  ) : null}
+                </>
               ) : null}
             </div>
           ) : null}
           {!event.isRecapMode && event.presenceEnabled ? (
             <div className="mt-8 flex min-h-8 items-center justify-center gap-3">
-              {event.onlineCount > 0 ? (
-                <>
-                  <div className="flex -space-x-2">
-                    {event.onlineUsers.slice(0, 4).map((user) => (
-                      <PhotoAvatar
-                        key={user.id}
-                        userId={user.id}
-                        size="sm"
-                        className="ring-2 ring-background"
-                      />
-                    ))}
-                  </div>
-                  <span className="text-[12px] text-muted-foreground">
-                    {event.onlineCount.toLocaleString()} online now
-                  </span>
-                </>
-              ) : null}
+              <AnimatePresence>
+                {isPresenceReady && event.onlineCount > 0 ? (
+                  <HeroOnlineAvatarStack
+                    key="online-now"
+                    users={event.onlineUsers}
+                    count={event.onlineCount}
+                    countCapped={event.onlineCountCapped}
+                    reduceMotion={reduceMotion}
+                  />
+                ) : null}
+              </AnimatePresence>
             </div>
           ) : null}
         </div>

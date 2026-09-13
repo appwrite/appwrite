@@ -146,6 +146,7 @@ export const heCatalog: EnCatalog = {
           ...enCatalog.app.footer.expanded.products,
           auth: 'אימות',
           databases: 'מסדי נתונים',
+          postgresql: 'PostgreSQL',
           storage: 'אחסון',
           functions: 'פונקציות',
           messaging: 'הודעות',
@@ -192,6 +193,7 @@ export const heCatalog: EnCatalog = {
           vsSupabase: 'Appwrite מול Supabase', // pragma: allowlist secret
           vsFirebase: 'Appwrite מול Firebase', // pragma: allowlist secret
           vsNeon: 'Appwrite מול Neon', // pragma: allowlist secret
+          postgresqlHosting: 'אירוח PostgreSQL',
           vsVercel: 'Appwrite מול Vercel', // pragma: allowlist secret
           vsNetlify: 'Appwrite מול Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite מול Cloudinary', // pragma: allowlist secret
@@ -239,6 +241,7 @@ export const heCatalog: EnCatalog = {
       badges: {
         ...enCatalog.app.sidebar.badges,
         soon: 'בקרוב',
+        new: 'חדש',
       },
       accessibility: {
         ...enCatalog.app.sidebar.accessibility,
@@ -267,11 +270,6 @@ export const heCatalog: EnCatalog = {
       noRecentPages: 'אין עמודים אחרונים',
       searchPlaceholder: 'חיפוש...',
     },
-    consoleBanner: {
-      ...enCatalog.app.consoleBanner,
-      messagePrefix: 'הפכו רעיונות למוצרים פעילים. Vibe coding מופעל על ידי',
-      dismiss: 'הסתר באנר',
-    },
     debugMenu: enCatalog.app.debugMenu,
   },
   website: {
@@ -294,7 +292,8 @@ export const heCatalog: EnCatalog = {
       heroImageAlt:
         'תצוגת הקונסול של Appwrite עם גרפי שימוש, אפליקציות ומפתחות API', // pragma: allowlist secret
       startProject: 'התחילו פרויקט',
-      requestDemo: 'בקשו דמו',
+      viewDocs: 'צפו בדוקומנטציה',
+      mcpIncluded: 'MCP כלול',
       toolsHeading: 'מותאם לפריימוורקים, לשפות ולסוכני ה-AI שאתם אוהבים',
       productsHeadingLineOne: 'כל השירותים שאתם צריכים',
       productsHeadingLineTwo: 'בפלטפורמה אחת',
@@ -343,7 +342,7 @@ export const heCatalog: EnCatalog = {
         authDescription:
           'אימות מאובטח של משתמשים עם אימייל, SMS, OAuth, סשנים אנונימיים ו-Magic URLs.',
         databasesDescription:
-          'מודלים, שאילתות וסקייל עם מסדי הנתונים של Appwrite או עם PostgreSQL ו-MySQL ייעודיים, כדי להתאים לתרחיש העבודה ולצורכי הצוות.', // pragma: allowlist secret
+          'מודלים, שאילתות וסקייל עם מסדי הנתונים של Appwrite או עם PostgreSQL מנוהל ו-MySQL, כדי להתאים לתרחיש העבודה ולצורכי הצוות.', // pragma: allowlist secret
         storageDescription:
           'אחסון קבצים עם דחיסה, הצפנה, המרות תמונה ובקרת גישה.',
         functionsDescription:
@@ -397,7 +396,7 @@ export const heCatalog: EnCatalog = {
         items: {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'אימייל, OAuth, SMS, אימות דו-שלבי, צוותים וסשנים.',
-          databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
+          databasesTagline: 'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB, MySQL.',
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',

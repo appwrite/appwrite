@@ -6,6 +6,8 @@ description: Create, read, update, and delete documents in Appwrite VectorsDB. L
 Each piece of data in Appwrite VectorsDB is a document.
 A document's data follows the fixed schema provisioned by its collection: an `embeddings` vector and an optional `metadata` object.
 
+An embedding is a list of numbers that represents the meaning of a piece of content, so similar content gets similar numbers. You can bring your own vectors or [generate embeddings from text](/docs/products/databases/vectorsdb/embeddings) with Appwrite's built-in models.
+
 The `embeddings` array is required, and its length must equal the `dimension` you set when [creating the collection](/docs/products/databases/vectorsdb/collections).
 The `metadata` field is free-form JSON, so you can attach any data you want to keep alongside each vector.
 

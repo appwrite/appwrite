@@ -27,6 +27,28 @@ export const heProductPagesDictionary: Record<string, string> = {
     'אימות כלול בכל פריסת Appwrite. התקנות self-hosted משתמשות באותם Auth APIs, SDKs, ספקי OAuth, מדיניות והתנהגות סשן כמו Appwrite Cloud. הגדירו שיטות אימות, כללי סיסמה ומדיניות אבטחה מהקונסולה באותו אופן.',
   'Auth overview': 'סקירת אימות',
   'Auth user delivery': 'משלוח למשתמשי אימות',
+  'AutoGravity does not crop this file. It returns a focal point that the preview crop should keep visible.':
+    'AutoGravity לא חותכת את הקובץ הזה. היא מחזירה נקודת מוקד שחיתוך ה-preview צריך להשאיר גלויה.',
+  'AutoGravity focal point': 'נקודת מוקד של AutoGravity',
+  'Automatic crop gravity': 'מוקד חיתוך אוטומטי',
+  'Face bounding box, if confidence is high': 'תיבת פנים, אם רמת הביטחון גבוהה',
+  'It asks AutoGravity to pick a crop focus. YuNet runs first and uses a face bounding box when confidence is high enough. Otherwise U²-Net saliency finds the strongest connected region and returns its weighted centroid as a normalized (x, y) point. The preview endpoint crops around that point. Fixed gravity values still work as before.':
+    'זה מבקש מ-AutoGravity לבחור מוקד חיתוך. YuNet רץ קודם ומשתמש בתיבת פנים כשהביטחון מספיק גבוה. אחרת סאליינס של U²-Net מוצא את האזור המחובר החזק ביותר ומחזיר את מרכז המשקל שלו כנקודה מנורמלת (x, y). ה-preview חותך סביב הנקודה הזו. ערכי gravity קבועים ממשיכים לעבוד כמו קודם.',
+  'Normalized focal point for the crop': 'נקודת מוקד מנורמלת לחיתוך',
+  'Pass gravity=auto on file preview and Appwrite picks a focal point from the image. YuNet looks for a face first. If none is confident enough, U²-Net saliency finds the strongest subject. The service returns a normalized (x, y) coordinate. Existing values like center and top-right stay unchanged.':
+    'העבירו gravity=auto ב-preview של הקובץ, ו-Appwrite בוחרת נקודת מוקד מהתמונה. YuNet מחפש פנים קודם. אם אין זיהוי מספיק בטוח, סאליינס של U²-Net מוצא את הנושא הבולט ביותר. השירות מחזיר קואורדינטה מנורמלת (x, y). ערכים קיימים כמו center ו-top-right נשארים ללא שינוי.',
+  'Saliency map, then strongest connected region': 'מפת סאליינס, ואז האזור המחובר החזק ביותר',
+  'Square crop using gravity=auto, subject kept in view': 'חיתוך ריבועי עם gravity=auto, הנושא נשאר בתמונה',
+  'Square crop using gravity=center, mostly empty field': 'חיתוך ריבועי עם gravity=center, בעיקר שדה ריק',
+  'The middle of the frame is empty grass.': 'אמצע הפריים הוא דשא ריק.',
+  'The same 400×400 request keeps the subject.': 'אותה בקשת 400×400 משאירה את הנושא.',
+  'Keeps the subject.': 'משאיר את הנושא.',
+  'Misses the subject.': 'מפספס את הנושא.',
+  'What does gravity=auto do on image previews?': 'מה gravity=auto עושה בתצוגות מקדימות של תמונות?',
+  'Wide source photograph with the subject on the left': 'צילום מקור רחב עם הנושא בצד שמאל',
+  'YuNet looks for a face, then U²-Net saliency. AutoGravity returns a normalized (x, y) point. The uploaded file is not cropped.':
+    'YuNet מחפש פנים, ואז סאליינס של U²-Net. AutoGravity מחזירה נקודה מנורמלת (x, y). הקובץ שהועלה לא נחתך.',
+  'YuNet, then U²-Net. File is not cropped.': 'YuNet, ואז U²-Net. הקובץ לא נחתך.',
   'Backup features depend on your plan and database engine. Cloud plans include backup options for supported engines.':
     'יכולות גיבוי תלויות בתוכנית ובמנוע מסד הנתונים. תוכניות Cloud כוללות אפשרויות גיבוי למנועים נתמכים.',
   'Branch URLs': 'כתובות Branch',
@@ -314,6 +336,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'השתמשו ב-Git ל-Builds אוטומטיים ב-push, ב-Appwrite CLI ב-CI, או בהעלאת tarball ידנית מהקונסולה. כל מסלול עובר דרך אותו צינור Build, לוגים, דומיינים והחזרות.',
   'Use the Appwrite CLI and Docker to run functions on localhost with hot reload. Test with production-style headers, impersonate users, and deploy when you are ready.':
     'השתמשו ב-Appwrite CLI ו-Docker להריץ פונקציות על localhost עם hot reload. בדקו עם headers בסגנון פרודקשן, התחזו למשתמשים ופרסו כשאתם מוכנים.',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate from a single upload. Pass gravity=auto and YuNet looks for a face first. If none is confident enough, U²-Net saliency returns a normalized (x, y) crop focus. Fixed gravity values still work.':
+    'השתמשו ב-preview endpoint לשינוי גודל, חיתוך, המרת פורמט, איכות, מסגרות וסיבוב מהעלאה אחת. העבירו gravity=auto ו-YuNet מחפש פנים קודם. אם אין זיהוי מספיק בטוח, סאליינס של U²-Net מחזיר מוקד חיתוך מנורמל (x, y). ערכי gravity קבועים ממשיכים לעבוד.',
   'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.':
     'השתמשו ב-Endpoint התצוגה המקדימה לשנות גודל, לחתוך, להמיר פורמט, להגדיר איכות, להוסיף מסגרות ולסובב תמונות לפי דרישה. בלי צינור עיבוד מוקדם או קבצים כפולים.',
   'Verify sessions from Next.js, Nuxt, SvelteKit, and other server-rendered apps. Issue session cookies from your backend with dedicated guides and tutorials.':
@@ -404,7 +428,26 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Create a database, choose your engine and compute model, and query your first data in minutes.':
     'צרו מסד נתונים, בחרו מנוע ומודל Compute, ושאלו את הנתונים הראשונים שלכם תוך דקות.',
   'Databases docs': 'תיעוד מסדי נתונים',
-  'Databases for every data model': 'מסדי נתונים לכל מודל נתונים',
+  'Does Appwrite offer managed PostgreSQL?': 'האם Appwrite מציעה PostgreSQL מנוהל?',
+  'Managed PostgreSQL and databases for every model':
+    'PostgreSQL מנוהל ומסדי נתונים לכל מודל',
+  'Managed PostgreSQL and MySQL': 'PostgreSQL ו-MySQL מנוהלים',
+  'Managed PostgreSQL hosting and app databases':
+    'אירוח PostgreSQL מנוהל ומסדי נתוני אפליקציה',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
+    'אירוח PostgreSQL מנוהל עם SQL מלא, pgvector וסכמות ניידות ל-Prisma, Drizzle ולכלים קיימים.',
+  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
+    'אירוח PostgreSQL מנוהל עם pgvector, לצד TablesDB, DocumentsDB ו-VectorsDB. Compute ייעודי, גיבויים, replicas ו-PITR.',
+  'PostgreSQL docs': 'תיעוד PostgreSQL',
+  'PostgreSQL quick start': 'Quick start ל-PostgreSQL',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
+    'מנועי PostgreSQL ו-MySQL מנוהלים ייעודיים שמתחברים אליהם עם לקוחות SQL סטנדרטיים.',
+  'Hosted PostgreSQL and MySQL with standard clients and the in-console SQL editor. Use pgvector, PostGIS, portable schemas, and the ORMs you already run.':
+    'PostgreSQL ו-MySQL מתארחים עם לקוחות סטנדרטיים ועורך SQL בקונסולה. השתמשו ב-pgvector, PostGIS, סכמות ניידות וב-ORMs שכבר רצים אצלכם.',
+  'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
+    'הריצו PostgreSQL מנוהל לצד טבלאות, מסמכים ווקטורים. התחברו עם Prisma או psql, התקינו pgvector, והגדילו Compute ייעודי עם גיבויים, replicas ו-PITR.',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
+    'כן. מסדי PostgreSQL מקוריים הם מופעי PostgreSQL מנוהלים ייעודיים באזור הפרויקט שלכם. מתחברים עם psql, Prisma, Drizzle או כל דרייבר PostgreSQL מעל TLS. Appwrite מקצה Compute, גיבויים, replicas, מאגר חיבורים ו-point-in-time recovery. PostgreSQL 18 הוא ברירת המחדל, וגם 17 נתמך.',
   'Do Appwrite DBs integrate with Auth permissions?': 'האם Appwrite DBs משתלבים עם הרשאות אימות?',
   'Embeddings and similarity search for semantic retrieval and AI features.':
     'Embeddings וחיפוש דמיון לשליפה סמנטית וליכולות AI.',
@@ -432,6 +475,7 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Link related tables without custom joins.': 'קשרו טבלאות קשורות בלי joins מותאמים.',
   'Native DBs': 'Native DBs',
   'Native SQL for PostgreSQL and MySQL': 'SQL מקורי ל-PostgreSQL ו-MySQL',
+  'Managed PostgreSQL': 'PostgreSQL מנוהל',
   'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
     'במסדי נתונים ייעודיים אפשר להוסיף read replicas כדי להרחיב תעבורת שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. הגדירו מצב סנכרון ו-failover מהגדרות Replication בקונסולה למנועים נתמכים.',
   'Permissions wired to Auth': 'הרשאות שמחוברות לאימות',

@@ -7,7 +7,7 @@ timeToRead: 5
 date: 2023-11-08
 lastUpdated: 2026-06-29
 author: haimantika-mitra
-category: tutorial
+category: tutorials
 featured: false
 faqs:
   - question: "What does the URL Shortener function template do?"
@@ -31,10 +31,10 @@ For e.g https://dev.to/appwrite/introducing-appwrite-migrations-effortless-data-
 
 In this blog, we’ll learn to build a URL shortener using Appwrite Functions template. The template benefits from the built-in scalability, reliability, and security of Appwrite Functions.
 
-You can find the source code on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/url-shortener).
+You can find the source code on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/url-shortener).
 
 # Setting up the Template
-To get started, you need to navigate to the functions page on the **[Appwrite](https://cloud.appwrite.io/)** console. From there, we will select the **Templates** tab, search for and select the **URL Shortener** function template.
+To get started, you need to navigate to the functions page on the **[Appwrite](https://cloud.appwrite.io/)** console. From there, we will select the **Templates** tab, search for and select the **URL Shortener** function template.
 
 ![Function template](/images/blog/adding-url-shortener/functions.avif)
 
@@ -48,11 +48,11 @@ Once you have populated those, you can go straight to the **Connect** step.
 
 ![Connecting repository](/images/blog/adding-url-shortener/connect.avif)
 
-Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
+Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
 
 # Using the Function
 
-Visit the **Domains** tab on the function page and copy the domain URL to test the function.
+Visit the **Domains** tab on the function page and copy the domain URL to test the function.
 
 ![Domains](/images/blog/adding-url-shortener/shortener.avif)
 

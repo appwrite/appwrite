@@ -2,6 +2,7 @@
 layout: changelog
 title: Easier project discovery and targeting in the Appwrite CLI
 date: 2026-08-03
+tags: cli
 ---
 
 The latest Appwrite CLI makes it easier to find and manage projects from any directory. Use `appwrite list-projects` and `appwrite list-organizations` to see what your current session can access, then pass `--project-id` or `--organization-id` to project and organization commands without first linking a local directory. The same IDs can be supplied with `APPWRITE_PROJECT_ID` and `APPWRITE_ORGANIZATION_ID` in scripts.

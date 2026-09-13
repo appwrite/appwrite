@@ -6,7 +6,7 @@ date: 2024-01-08
 cover: /images/blog/the-subtle-art-of-hackathon ideation/cover.avif
 timeToRead: 4
 author: aditya-oberai
-category: hackathon
+category: hackathons
 faqs:
   - question: "What is a hackathon?"
     answer: "A hackathon is a development marathon where teams build innovative products or solutions within a limited timeframe. It pushes participants to combine creativity, problem-solving, and technical skills, usually around an externally provided or self-chosen problem."
@@ -39,7 +39,7 @@ Simply put, a hackathon is a race to build the best solution to an externally-pr
 
 # Flow of a hacker’s journey
 
-Typically, hackers go through a similar flow every time they participate in a hackathon. They form a **team**, **ideate** the problem and solution they want to focus on, **design** their solution, **develop** their project, **test** whether it works, and finish with a **demonstration** of the work.
+Typically, hackers go through a similar flow every time they participate in a hackathon. They form a **team**, **ideate** the problem and solution they want to focus on, **design** their solution, **develop** their project, **test** whether it works, and finish with a **demonstration** of the work.
 
 # How does ideation fit in the puzzle?
 

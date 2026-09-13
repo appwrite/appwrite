@@ -3,6 +3,7 @@ layout: changelog
 title: 'Bun 1.4 is now available for Functions and Sites'
 date: 2026-08-21
 cover: /images/blog/announcing-bun-1-4-runtime/cover.avif
+tags: functions, sites, performance
 ---
 
 Bun 1.4 is now available on Appwrite Cloud as a runtime for [Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites). Pick `bun-1.4` when creating a function, or select Bun 1.4 as the build runtime for any Node-based Sites framework.

@@ -103,7 +103,7 @@ export function InitSection() {
   const { mockInitCurrentDay } = useDebugOverrides()
 
   const visible = useMemo(
-    () => isInitEventDuring({ mockCurrentDay: mockInitCurrentDay }),
+    () => isInitEventDuring({ currentDay: mockInitCurrentDay }),
     [mockInitCurrentDay],
   )
 
@@ -113,7 +113,7 @@ export function InitSection() {
     const active = getActiveLaunchEvent()
     if (!active) return null
 
-    return applyInitEventVisibility(active, { mockCurrentDay: mockInitCurrentDay })
+    return applyInitEventVisibility(active, { currentDay: mockInitCurrentDay })
   }, [visible, mockInitCurrentDay])
 
   if (!visible || !event) return null

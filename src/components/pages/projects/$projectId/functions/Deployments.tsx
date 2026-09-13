@@ -47,8 +47,14 @@ import {
   canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
+  isLatestBuildAfterResourceUpdate,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  cacheUpdatedFunctionOrSite,
+  clearSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
@@ -106,6 +112,7 @@ import {
   useFunctionDomains,
   useProjectRuntimes,
   useFunctionSpecifications,
+  functionDeploymentQueryOptions,
   Dependencies,
   deleteFunctionDeployment,
   cancelFunctionDeployment,
@@ -121,6 +128,7 @@ import {
   SpecificationType,
 } from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -469,10 +477,15 @@ export function View() {
         }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Runtime limits updated successfully'))
+      cacheUpdatedFunctionOrSite(
+        queryClient,
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+        queryKey: ['functions', 'project', projectId],
       })
       setRuntimeLimitsDialogOpen(false)
     },
@@ -506,7 +519,7 @@ export function View() {
         deploymentId: activeDeployment.$id,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -524,7 +537,7 @@ export function View() {
         deploymentId: activeDeployment.$id,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -546,17 +559,33 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !functionId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'function',
+        projectId,
+        resourceId: functionId,
+        resourceQueryKey: ['function', 'project', projectId, functionId],
+        deploymentQueryKey: functionDeploymentQueryOptions(
+          projectId,
+          functionId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'function', projectId, functionId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && functionId) {
+        clearSettingsRedeployPending(
+          queryClient,
+          'function',
+          projectId,
+          functionId,
+        )
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -577,7 +606,7 @@ export function View() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -606,7 +635,7 @@ export function View() {
       setCancelBuildDialogOpen(false)
       setCancelTargetDeploymentId(null)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -627,7 +656,7 @@ export function View() {
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -656,7 +685,7 @@ export function View() {
     onSuccess: async () => {
       // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId],
+        queryKey: ['deployments', 'function', projectId, functionId],
       })
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
@@ -797,7 +826,9 @@ export function View() {
     <div ref={scrollContainerRef} className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
         <div className="space-y-6">
-          {isBuilding && (
+          {isBuilding &&
+            (func?.live !== false ||
+              isLatestBuildAfterResourceUpdate(func, activeDeployment)) && (
             <div className="border-b border-border bg-blue-500/5">
               <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
                 <Alert
@@ -1303,14 +1334,19 @@ export function View() {
         </div>
 
         {/* Deployments filter + create (below active deployment card) */}
-        {deploymentsToolbar ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
-            {deploymentsToolbar}
-          </div>
-        ) : null}
+        <div
+          className={cn(
+            'mt-6',
+            deploymentsToolbar && 'space-y-4',
+          )}
+        >
+          {deploymentsToolbar ? (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {deploymentsToolbar}
+            </div>
+          ) : null}
 
-        {/* Deployments Table */}
-        <div className="mt-6">
+          {/* Deployments Table */}
           {deployments.length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card">

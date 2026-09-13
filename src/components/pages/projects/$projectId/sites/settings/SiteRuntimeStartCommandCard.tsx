@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -24,13 +24,9 @@ export function SiteRuntimeStartCommandCard({
   const t = useT()
   const queryClient = useQueryClient()
 
-  const [startCommand, setStartCommand] = useState('')
-
-  useEffect(() => {
-    if (site) {
-      setStartCommand(site.startCommand ?? '')
-    }
-  }, [site])
+  const [startCommand, setStartCommand] = useSyncStateFromServer(
+    site?.startCommand ?? '',
+  )
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {

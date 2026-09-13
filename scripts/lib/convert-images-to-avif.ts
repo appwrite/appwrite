@@ -26,15 +26,31 @@ export const CONVERTIBLE_RASTER_EXTENSIONS = new Set([
 
 const SKIP_DIR_NAMES = new Set(['node_modules', '.git'])
 
+/**
+ * Images that stay in their original format. Paths are relative to
+ * `public/images/`. Re-encoding these animated demos to AVIF drops most of
+ * their frames (the encoder falls back to 15 of several hundred), so they are
+ * left as GIFs and their content references are never rewritten.
+ */
+export const CONVERSION_EXCLUDED_PATHS = new Set([
+  'blog/rewriting-the-appwrite-cli-in-go/footprint.gif',
+  'blog/rewriting-the-appwrite-cli-in-go/install.gif',
+  'blog/rewriting-the-appwrite-cli-in-go/startup.gif',
+])
+
+function isExcluded(absPath: string): boolean {
+  return CONVERSION_EXCLUDED_PATHS.has(
+    toPosix(relative(PUBLIC_IMAGES_ROOT, absPath)),
+  )
+}
+
 const TEXT_EXTENSIONS = new Set(['.markdoc', '.md', '.mdx'])
 
 const CONTENT_REFERENCE_ROOTS = [
   join(VIBES_ROOT, 'src', 'content', 'docs'),
   join(VIBES_ROOT, 'src', 'content', 'docs-partials'),
   join(VIBES_ROOT, 'src', 'content', 'blog'),
-  join(VIBES_ROOT, 'src', 'content', 'blog-local'),
   join(VIBES_ROOT, 'src', 'content', 'changelog'),
-  join(VIBES_ROOT, 'src', 'content', 'changelog-local'),
   join(VIBES_ROOT, 'src', 'content', 'integrations'),
 ]
 
@@ -253,6 +269,8 @@ export async function convertImagesToAvif(options?: {
     if (!existsSync(sectionRoot)) continue
 
     for (const oldAbs of walkRasterFiles(sectionRoot)) {
+      if (isExcluded(oldAbs)) continue
+
       const ext = oldAbs.slice(oldAbs.lastIndexOf('.')).toLowerCase()
       const newAbs = `${oldAbs.slice(0, -ext.length)}.avif`
 

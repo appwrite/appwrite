@@ -124,10 +124,10 @@ export async function fetchProjectRealtimeConnectionsOverview(
       REALTIME_CONNECTIONS_METRICS,
       interval,
       options?.queries,
-      0,
+      options?.logRetentionHours,
       options?.resourceId,
       options?.resourceType,
-      undefined,
+      options?.ordinal,
       'max',
     )
 

@@ -19,16 +19,13 @@ import {
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
-import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import {
   analyticsAttrs,
   getUpgradePlanSelectAnalyticsAction,
 } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-
-const CONTACT_SALES_URL =
-  import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
 
 const ENTERPRISE_INTRO =
   'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.'
@@ -70,6 +67,16 @@ interface PlanSelectionProps {
   variant?: 'card' | 'inline'
 }
 
+type PlanRecord = {
+  $id?: string
+  name?: string
+  order?: number
+  price?: number
+  /** The API returns `desc`; `description` is the older field name. */
+  desc?: string
+  description?: string
+}
+
 export function PlanSelection({
   plans,
   currentPlan,
@@ -83,12 +90,11 @@ export function PlanSelection({
   const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
-    plans && typeof plans === 'object' ? Object.entries(plans) : []
+    plans && typeof plans === 'object'
+      ? (Object.entries(plans) as [string, PlanRecord | undefined][])
+      : []
 
-  const planCatalog = plans as Record<
-    string,
-    { $id?: string; name?: string; order?: number; price?: number }
->
+  const planCatalog = plans as Record<string, PlanRecord>
 
   const isOrganizationOnFreePlan =
     !isCreateMode && isFreePlanRef(currentPlan as string, planCatalog)
@@ -169,14 +175,9 @@ export function PlanSelection({
       className="h-8 shrink-0 text-[13px]"
       asChild
     >
-      <a
-        href={CONTACT_SALES_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...analyticsAttrs('upgrade-contact-sales')}
-      >
+      <ContactSalesLink {...analyticsAttrs('upgrade-contact-sales')}>
         {t('Contact sales')}
-      </a>
+      </ContactSalesLink>
     </Button>
   )
 
@@ -273,29 +274,24 @@ export function PlanSelection({
         value={selectedPlan || undefined}
         onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
         className={planListClassName}
->
+      >
         {availablePlans.map(([planTier, planData]) => {
             // Use plan name from API response, fallback to derived name
             const planName = resolveOrganizationPlanDisplayLabel({
               billingPlan: planTier,
-              planName:
-                (planData as { name?: string } | undefined)?.name ?? null,
-              planId: (planData as { $id?: string } | undefined)?.$id,
+              planName: planData?.name ?? null,
+              planId: planData?.$id,
             })
             const disabled = isDisabled(planTier)
             const isCurrent = isCurrentPlan(planTier)
             const price = planData?.price || 0
-            // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
             const planDescription = hasFreePlanConflict(planTier)
               ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
               : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
-              getPlanCanonicalFromRecord(
-                planTier,
-                plans as Record<string, { $id?: string; name?: string; order?: number; price?: number }>,
-              ) === 'pro'
+              getPlanCanonicalFromRecord(planTier, planCatalog) === 'pro'
 
             const handleSelect = () => {
               if (disabled) return

@@ -117,6 +117,7 @@ interface SidebarCopy {
   }
   badges: {
     soon: string
+    new: string
   }
   accessibility: {
     mainNavigation: string
@@ -310,7 +311,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
@@ -332,14 +333,14 @@ export function ConsoleSidebar({
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
-            return features.firewall && canSeeProjectNavItem(access, features, item.id)
+            return isCloud && canSeeProjectNavItem(access, features, item.id)
           if (item.id === 'analytics')
             return features.analytics && canSeeProjectNavItem(access, features, item.id)
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features, access, sidebarCopy])
+  }, [projectId, isDebugModeOpen, features, access, sidebarCopy, isCloud])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).
@@ -400,6 +401,7 @@ export function ConsoleSidebar({
     const isActive = activeSection === item.id
     const isImagineIcon = item.icon === 'imagine'
     const navAnalytics = getSidebarNavAnalyticsAction(item.id)
+    const showLabel = !collapsed || isMobile
 
     // Render the appropriate icon
     const renderIcon = () => {
@@ -440,12 +442,12 @@ export function ConsoleSidebar({
           <Icon
             className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
           />
-          {(!collapsed || isMobile) && (
+          {showLabel && (
             <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
               {item.label}
             </span>
           )}
-          {(!collapsed || isMobile) && (
+          {showLabel && (
             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               {sidebarCopy.badges.soon}
             </span>
@@ -486,7 +488,7 @@ export function ConsoleSidebar({
         )}
       >
         {renderIcon()}
-        {(!collapsed || isMobile) && (
+        {showLabel && (
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
             {item.label}
           </span>

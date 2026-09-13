@@ -10,10 +10,10 @@ const packageRoot = path.resolve(
   '../../../..',
 )
 
-const changelogEntryDirectories = [
-  path.join(packageRoot, 'src/content/changelog/entries'),
-  path.join(packageRoot, 'src/content/changelog-local/entries'),
-]
+const changelogEntriesDirectory = path.join(
+  packageRoot,
+  'src/content/changelog/entries',
+)
 
 function toIsoDate(value: string | undefined): string | undefined {
   if (!value) return undefined
@@ -25,17 +25,18 @@ function toIsoDate(value: string | undefined): string | undefined {
 function readEntryLastmodBySlug(): Map<string, string> {
   const lastmodBySlug = new Map<string, string>()
 
-  for (const directory of changelogEntryDirectories) {
-    if (!fs.existsSync(directory)) continue
+  if (!fs.existsSync(changelogEntriesDirectory)) return lastmodBySlug
 
-    for (const filename of fs.readdirSync(directory)) {
-      if (!filename.endsWith('.markdoc')) continue
-      const slug = filename.replace(/\.markdoc$/, '')
-      const raw = fs.readFileSync(path.join(directory, filename), 'utf8')
-      const { frontmatter } = parseChangelogFrontmatter(raw)
-      const lastmod = toIsoDate(frontmatter.date)
-      if (lastmod) lastmodBySlug.set(slug, lastmod)
-    }
+  for (const filename of fs.readdirSync(changelogEntriesDirectory)) {
+    if (!filename.endsWith('.markdoc')) continue
+    const slug = filename.replace(/\.markdoc$/, '')
+    const raw = fs.readFileSync(
+      path.join(changelogEntriesDirectory, filename),
+      'utf8',
+    )
+    const { frontmatter } = parseChangelogFrontmatter(raw)
+    const lastmod = toIsoDate(frontmatter.date)
+    if (lastmod) lastmodBySlug.set(slug, lastmod)
   }
 
   return lastmodBySlug

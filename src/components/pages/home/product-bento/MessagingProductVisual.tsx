@@ -43,8 +43,8 @@ function ChannelPill({
   return (
     <div
       className={cn(
-        'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-[border-color,background-color,color] duration-300 sm:text-[12px]',
-        'group-hover:border-[color-mix(in_srgb,var(--channel-color)_48%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--channel-color)_16%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+        'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors duration-300 sm:text-[12px]',
+        'group-hover:bg-[color-mix(in_srgb,var(--channel-color)_16%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
       )}
       style={channelColorStyle(color, { transitionDelay: `${index * 60}ms` })}
     >
@@ -70,9 +70,9 @@ function DeliveryChip({
   return (
     <div
       className={cn(
-        'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 px-2 py-1.5 text-muted-foreground transition-[border-color,background-color,color] duration-300',
+        'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 px-2 py-1.5 text-muted-foreground transition-colors duration-300',
         productBentoContainer.panelMd,
-        'group-hover:border-[color-mix(in_srgb,var(--channel-color)_42%,var(--border))] group-hover:bg-[color-mix(in_srgb,var(--channel-color)_10%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:border-border/80 motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
+        'group-hover:bg-[color-mix(in_srgb,var(--channel-color)_10%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
       )}
       style={channelColorStyle(color, { transitionDelay: `${delayMs}ms` })}
     >
@@ -92,7 +92,7 @@ export function MessagingProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+      <div className={cn('flex h-full min-h-0 w-full flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
             {t('Campaign message')}
@@ -118,9 +118,9 @@ export function MessagingProductVisual() {
 
             <div
               className={cn(
-                'mt-2.5 px-3 py-2.5 transition-[border-color,background-color] duration-300',
+                'mt-2.5 px-3 py-2.5 transition-colors duration-300',
                 productBentoContainer.panelMd,
-                'group-hover:border-[color-mix(in_srgb,var(--channel-color)_28%,var(--border))] group-hover:bg-background',
+                'group-hover:bg-background',
               )}
               style={channelColorStyle(BRAND.pink)}
             >

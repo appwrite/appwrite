@@ -12,12 +12,25 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, Runtime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
+import {
+  Query,
+  Runtime,
+  FunctionTemplateUseCase,
+  ID,
+} from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
+import {
+  buildAttributePrefixSearchQueries,
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+} from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
 import { SpecificationType } from '@/lib/specifications'
-import { getVariableValueError, validateVariables } from '@/lib/variables'
+import {
+  fetchAllVariables,
+  getVariableValueError,
+  validateVariables,
+} from '@/lib/variables'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -25,6 +38,7 @@ import {
   SMALL_PAGE_SIZE,
 } from './constants'
 import { Dependencies } from './dependencies'
+import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
 
@@ -102,23 +116,14 @@ export async function fetchProjectFunctionsByIds(
     return { functions: [] }
   }
 
-  const validIds = [
-    ...new Set(functionIds.filter((id) => typeof id === 'string' && id.trim())),
-  ]
-  if (validIds.length === 0) {
-    return { functions: [] }
-  }
+  const projectSdk = sdk.forProject(projectId)
+  const functions = await fetchLookupBatches(
+    buildIdLookupQueryBatches(functionIds),
+    async (queries) =>
+      (await projectSdk.functions.list({ queries })).functions ?? [],
+  )
 
-  const idQuery =
-    validIds.length === 1
-      ? Query.equal('$id', validIds[0])
-      : Query.or(validIds.map((id) => Query.equal('$id', id)))
-
-  const response = await sdk.forProject(projectId).functions.list({
-    queries: [idQuery, Query.limit(validIds.length)],
-  })
-
-  return { functions: response.functions ?? [] }
+  return { functions }
 }
 
 // Object form of functions.update() params (SDK has overloads; avoid string | object union)
@@ -244,9 +249,7 @@ function listTemplatesFilterPayload(
   useCases: string[] | undefined,
 ): { runtimes?: Runtime[]; useCases?: FunctionTemplateUseCase[] } {
   return {
-    runtimes: runtimes?.length
-      ? (runtimes as unknown as Runtime[])
-      : undefined,
+    runtimes: runtimes?.length ? (runtimes as unknown as Runtime[]) : undefined,
     useCases: useCases?.length
       ? (useCases as unknown as FunctionTemplateUseCase[])
       : undefined,
@@ -305,13 +308,7 @@ export function functionTemplatesPageQueryOptions(
       templatesSortKey(uc),
     ],
     queryFn: () =>
-      fetchFunctionTemplatesPage(
-        projectId!,
-        offset,
-        limit,
-        rt,
-        uc,
-      ),
+      fetchFunctionTemplatesPage(projectId!, offset, limit, rt, uc),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     refetchOnMount: false,
@@ -473,8 +470,8 @@ export async function fetchFunctionExecution(
 }
 
 /**
- * Query function to fetch all function variables (API is not paginated).
- * Sort by `$createdAt` descending; UI paginates via `useFunctionVariables`.
+ * Query function to fetch all function variables.
+ * The API defaults to 25 per page; we page through the rest. UI paginates via `useFunctionVariables`.
  */
 export async function fetchFunctionVariables(
   projectId: string,
@@ -485,18 +482,9 @@ export async function fetchFunctionVariables(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.functions.listVariables({ functionId })
-  const raw = response.variables || []
-  const variables = [...raw].sort((a, b) => {
-    const aTime = new Date(a.$createdAt || 0).getTime()
-    const bTime = new Date(b.$createdAt || 0).getTime()
-    return bTime - aTime
-  })
-
-  return {
-    variables,
-    total: variables.length,
-  }
+  return await fetchAllVariables((queries) =>
+    projectSdk.functions.listVariables({ functionId, queries }),
+  )
 }
 
 /**
@@ -673,6 +661,8 @@ export function projectFunctionQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    structuralSharing: (oldData, newData) =>
+      keepNewerLatestDeployment(oldData, newData),
   })
 }
 
@@ -1462,21 +1452,22 @@ export function useCreateFunctionDomainRule(
         if (!redirectUrl?.trim() || !statusCode) {
           throw new Error('Redirect URL and status code are required')
         }
-        const { ProxyResourceType, StatusCode } =
-          await import('@appwrite.io/console')
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
         const codeMap: Record<
           string,
           (typeof StatusCode)[keyof typeof StatusCode]
         > = {
-          '301': StatusCode.MovedPermanently301,
-          '302': StatusCode.Found302,
-          '307': StatusCode.TemporaryRedirect307,
-          '308': StatusCode.PermanentRedirect308,
+          '301': StatusCode.MovedPermanently,
+          '302': StatusCode.Found,
+          '307': StatusCode.TemporaryRedirect,
+          '308': StatusCode.PermanentRedirect,
         }
         return await projectSdk.proxy.createRedirectRule({
           domain: domainNorm,
           url: redirectUrl.trim(),
-          statusCode: codeMap[statusCode] ?? StatusCode.Found302,
+          statusCode: codeMap[statusCode] ?? StatusCode.Found,
           resourceId: functionId,
           resourceType: ProxyResourceType.Function,
         })

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { BLOG_COVER_ASPECT_CLASS } from '@/lib/blog/constants'
 import type { BlogAuthor } from '@/lib/blog/types'
+import { BLOG_COVER_OG_HEIGHT, BLOG_COVER_OG_WIDTH } from '@/lib/seo/cover-constants'
 import { cn } from '@/lib/utils'
 
 type BlogCoverPlaceholderProps = {
@@ -29,9 +30,11 @@ type BlogCoverProps = {
   title: string
   cover?: string
   className?: string
+  /** Above-the-fold post detail: eager load with high fetch priority. */
+  priority?: boolean
 }
 
-export function BlogCover({ title, cover, className }: BlogCoverProps) {
+export function BlogCover({ title, cover, className, priority = false }: BlogCoverProps) {
   if (!cover) {
     return <BlogCoverPlaceholder title={title} className={className} />
   }
@@ -47,7 +50,10 @@ export function BlogCover({ title, cover, className }: BlogCoverProps) {
       <img
         src={cover}
         alt=""
-        loading="lazy"
+        width={BLOG_COVER_OG_WIDTH}
+        height={BLOG_COVER_OG_HEIGHT}
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : undefined}
         decoding="async"
         className="size-full object-cover"
       />

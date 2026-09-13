@@ -9,14 +9,22 @@ import {
 import { z } from 'zod'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { CheckCircle, XCircle, Loader2, UserRoundX } from 'lucide-react'
+import {
+  CheckCircle,
+  Loader2,
+  Lock,
+  UserRoundX,
+  XCircle,
+} from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
+import { unescapeInviteTeamName } from '@/lib/auth/invite-team-name'
 import {
   refreshConsoleAccountAfterAuth,
   performConsoleSignOut,
@@ -33,7 +41,7 @@ const searchSchema = z.object({
   membershipId: z.string().optional(),
   userId: z.string().optional(),
   secret: z.string().optional(),
-  teamName: z.string().optional(), // Optional team name from URL (not trusted)
+  teamName: z.string().optional(),
 })
 
 export const Route = createFileRoute('/_auth/join')({
@@ -42,7 +50,6 @@ export const Route = createFileRoute('/_auth/join')({
   head: () => ({ meta: [{ title: pageTitle('Accept invite') }] }),
   loader: async () => {
     // Authentication check is handled by RequireAuth component
-    // Team name verification happens client-side in the component
     return {}
   },
 })
@@ -100,8 +107,8 @@ function AcceptInviteContent() {
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errorIsAccountMismatch, setErrorIsAccountMismatch] = useState(false)
-  const [teamName, setTeamName] = useState<string | null>(null)
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
+  const teamName = unescapeInviteTeamName(search.teamName)
 
   // Check if we have all required parameters
   const hasAllParams =
@@ -120,37 +127,6 @@ function AcceptInviteContent() {
       redirect: getJoinRedirectUrl(),
     })
   }
-
-  // Verify the invitation and get team name (client-side). Skipped when the
-  // signed-in account can't accept this invite anyway.
-  useEffect(() => {
-    if (hasAllParams && !isWrongAccount) {
-      sdk.forConsole.teams
-        .get(search.teamId!)
-        .then((team) => {
-          return sdk.forConsole.teams
-            .listMemberships(search.teamId!, [])
-            .then((membershipsResponse) => {
-              const matchingMembership = membershipsResponse.memberships?.find(
-                (m: unknown) =>
-                  m.$id === search.membershipId && m.userId === search.userId,
-              )
-              if (matchingMembership) {
-                setTeamName(team.name || null)
-              }
-            })
-        })
-        .catch((err) => {
-          console.warn('Failed to verify invitation:', err)
-        })
-    }
-  }, [
-    hasAllParams,
-    isWrongAccount,
-    search.teamId,
-    search.membershipId,
-    search.userId,
-  ])
 
   const acceptMutation = useMutation({
     mutationFn: async () => {
@@ -199,186 +175,210 @@ function AcceptInviteContent() {
     acceptMutation.mutate()
   }
 
+  const accountLabel = account?.email || account?.name || undefined
+  const isBusy = acceptMutation.isPending || isSwitchingAccount
+
+  const inviteDescription = teamName ? (
+    <>
+      {t("You've been invited to join")}{' '}
+      <span className="text-foreground font-medium break-words">{teamName}</span>
+      {'. '}
+      {t('Accept the invitation to get started.')}
+    </>
+  ) : (
+    t(
+      "You've been invited to join an organization. Accept the invitation to get started.",
+    )
+  )
+
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <Card className="overflow-hidden py-0">
-          <div className="grid md:grid-cols-2">
-            <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
+    <div className="bg-background h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full min-w-0 max-w-md">
+          <Card className="w-full min-w-0 overflow-hidden p-6 md:p-8">
+            <div className="space-y-6">
               {accepted ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-                    <CheckCircle className="h-8 w-8 text-green-500" />
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
+                    <CheckCircle className="size-6 text-green-500" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <h1 className="text-2xl font-semibold tracking-tight">
                       {t('Welcome to the organization!')}
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-[13px] leading-relaxed">
                       {t("You've successfully joined. Redirecting you now...")}
                     </p>
                   </div>
+                  {accountLabel ? (
+                    <AuthAccountChip accountLabel={accountLabel} />
+                  ) : null}
                 </div>
               ) : isWrongAccount ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-                    <UserRoundX className="h-8 w-8 text-amber-500" />
+                <>
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
+                      <UserRoundX className="size-6 text-amber-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t("You're signed in with a different account")}
+                      </h1>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {t('This invitation was sent to a different account.')}{' '}
+                        {t(
+                          'Switch to the account the invitation was sent to in order to accept it.',
+                        )}
+                      </p>
+                    </div>
+                    {accountLabel ? (
+                      <AuthAccountChip
+                        accountLabel={accountLabel}
+                        onSwitchAccount={handleSwitchAccount}
+                        disabled={isBusy}
+                      />
+                    ) : null}
                   </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t("You're signed in with a different account")}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t('This invitation was sent to a different account.')}{' '}
-                      {t("You're currently signed in as")}{' '}
-                      <span className="font-medium text-foreground">
-                        {account?.email}
-                      </span>
-                      {'. '}
-                      {t(
-                        'Switch to the account the invitation was sent to in order to accept it.',
-                      )}
-                    </p>
-                  </div>
-                  <div className="mt-4 w-full space-y-3">
+                  <div className="flex flex-col gap-2">
                     <Button
+                      variant="brandCta"
+                      className="w-full"
                       onClick={handleSwitchAccount}
-                      disabled={isSwitchingAccount}
-                      className="w-full"
+                      disabled={isBusy}
                     >
-                      {t('Switch account')}
+                      {t('Use a different account')}
                     </Button>
                     <Button
-                      onClick={() => navigate({ to: '/' })}
-                      disabled={isSwitchingAccount}
-                      variant="ghost"
+                      variant="outline"
                       className="w-full"
+                      onClick={() => navigate({ to: '/' })}
+                      disabled={isBusy}
                     >
                       {t('Go to dashboard')}
                     </Button>
                   </div>
-                </div>
+                </>
               ) : error ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
-                    <XCircle className="h-8 w-8 text-red-500" />
+                <>
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
+                      <XCircle className="size-6 text-destructive" />
+                    </div>
+                    <div className="space-y-1">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Unable to accept invitation')}
+                      </h1>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {error}
+                      </p>
+                    </div>
+                    {accountLabel ? (
+                      <AuthAccountChip
+                        accountLabel={accountLabel}
+                        onSwitchAccount={
+                          errorIsAccountMismatch
+                            ? handleSwitchAccount
+                            : undefined
+                        }
+                        disabled={isBusy}
+                      />
+                    ) : null}
                   </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Unable to accept invitation')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">{error}</p>
-                  </div>
-                  <div className="mt-4 w-full space-y-3">
-                    {errorIsAccountMismatch && (
+                  <div className="flex flex-col gap-2">
+                    {errorIsAccountMismatch ? (
                       <Button
-                        onClick={handleSwitchAccount}
-                        disabled={isSwitchingAccount}
-                        variant="outline"
+                        variant="brandCta"
                         className="w-full"
+                        onClick={handleSwitchAccount}
+                        disabled={isBusy}
                       >
-                        {t('Switch account')}
+                        {t('Use a different account')}
                       </Button>
-                    )}
+                    ) : null}
                     <Button
-                      onClick={() => navigate({ to: '/' })}
-                      disabled={isSwitchingAccount}
-                      variant={errorIsAccountMismatch ? 'ghost' : 'outline'}
+                      variant="outline"
                       className="w-full"
+                      onClick={() => navigate({ to: '/' })}
+                      disabled={isBusy}
                     >
                       {t('Go to dashboard')}
                     </Button>
                   </div>
-                </div>
+                </>
               ) : !hasAllParams ? (
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-                    <XCircle className="h-8 w-8 text-amber-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Invalid invitation link')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        'This invitation link is missing required parameters. Please use the link from your invitation email.',
-                      )}
-                    </p>
+                <>
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl ring-1 ring-border/50">
+                      <XCircle className="size-6 text-amber-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Invalid invitation link')}
+                      </h1>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {t(
+                          'This invitation link is missing required parameters. Please use the link from your invitation email.',
+                        )}
+                      </p>
+                    </div>
+                    {accountLabel ? (
+                      <AuthAccountChip accountLabel={accountLabel} />
+                    ) : null}
                   </div>
                   <Button
-                    onClick={() => navigate({ to: '/' })}
                     variant="outline"
-                    className="mt-4"
+                    className="w-full"
+                    onClick={() => navigate({ to: '/' })}
                   >
                     {t('Go to dashboard')}
                   </Button>
-                </div>
+                </>
               ) : (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                      {t('Accept invitation')}
-                    </h1>
-                    {teamName ? (
-                      <p className="text-sm text-muted-foreground">
-                        {t("You've been invited to join")}{' '}
-                        <span className="font-medium text-foreground">
-                          {teamName}
-                        </span>
-                        {'. '}
-                        {t('Accept the invitation to get started.')}
+                <>
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="space-y-1">
+                      <h1 className="text-2xl font-semibold tracking-tight">
+                        {t('Accept invitation')}
+                      </h1>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {inviteDescription}
                       </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          "You've been invited to join an organization. Accept the invitation to get started.",
-                        )}
-                      </p>
-                    )}
+                    </div>
+                    {accountLabel ? (
+                      <AuthAccountChip
+                        accountLabel={accountLabel}
+                        onSwitchAccount={handleSwitchAccount}
+                        disabled={isBusy}
+                      />
+                    ) : null}
                   </div>
-
-                  <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
                     <Button
-                      onClick={handleAccept}
-                      disabled={acceptMutation.isPending || !hasAllParams}
+                      variant="brandCta"
                       className="w-full"
+                      onClick={handleAccept}
+                      disabled={isBusy || !hasAllParams}
                     >
                       {t('Accept invitation')}
                     </Button>
                   </div>
-                </div>
+                  <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-[12px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Lock className="size-3.5" />
+                      {t('By accepting this invitation, you agree to our')}
+                    </span>
+                    <MarketingSiteLink className="link-neutral" href="/terms">
+                      {t('Terms of Service')}
+                    </MarketingSiteLink>
+                    <span>{t('and')}</span>
+                    <MarketingSiteLink className="link-neutral" href="/privacy">
+                      {t('Privacy Policy')}
+                    </MarketingSiteLink>
+                  </p>
+                </>
               )}
             </div>
-            <div className="hidden bg-background md:block min-h-[600px]">
-              <img
-                alt="Image"
-                className="h-full w-full object-cover"
-                height="600"
-                src="/cover.avif"
-                width="600"
-              />
-            </div>
-          </div>
-        </Card>
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          {t('By accepting this invitation, you agree to our')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
-            {t('Terms of Service')}
-          </a>{' '}
-          {t('and')}{' '}
-          <a
-            href="#"
-            className="link-neutral"
-          >
-            {t('Privacy Policy')}
-          </a>
-          .
-        </p>
-        <div className="mt-10 md:mt-16 flex justify-center">
-          <AppwriteLogo className="h-6 w-auto" />
+          </Card>
         </div>
       </div>
     </div>

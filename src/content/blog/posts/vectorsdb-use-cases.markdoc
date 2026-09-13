@@ -2,13 +2,12 @@
 layout: post
 title: Four things you can build with Appwrite VectorsDB
 description: "Appwrite VectorsDB finds documents by meaning, not by words. This post builds four features with it: a help article search, a filtered search, a recommendation from user history, and an answer cache."
-date: 2026-08-17
+date: 2026-09-02
 cover: /images/blog/vectorsdb-use-cases/cover.avif
 timeToRead: 8
 author: atharva
 category: ai
 featured: false
-draft: true
 faqs:
   - question: "What is the difference between a keyword search and a vector search?"
     answer: "A keyword search matches words. A document must contain the word that the user typed. A vector search matches meaning. It finds a document that has the same meaning in different words."

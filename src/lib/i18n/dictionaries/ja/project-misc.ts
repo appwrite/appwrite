@@ -397,7 +397,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Org key': '組織キー',
   'Project API key': 'プロジェクト API キー',
   'Account API key': 'アカウント API キー',
-  'Organization API key': '組織 API キー',
+  'Partners API key': 'パートナー API キー',
   'No activities yet': 'アクティビティがまだありません',
   'Activity log': 'アクティビティログ',
   'Details for activity': 'アクティビティの詳細',
@@ -406,6 +406,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このアクティビティへのリンクをコピーしました',
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
+  'Actor email': 'アクターのメール',
   'Actor type': 'アクタータイプ',
   'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',
@@ -1135,15 +1136,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '関数フォルダー内で次のコマンドを実行し、Appwrite CLI を使用して関数をデプロイしてください。',
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'サイトフォルダー内で次のコマンドを実行し、Appwrite CLI を使用してサイトをデプロイしてください。',
-  'Historic data is not available through the new usage API.':
-    '新しい使用量 API では履歴データは利用できません。',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+ 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'provider {} ブロックの一般的なファイル名。例: Appwrite が cloud.appwrite.io にない場合のカスタムエンドポイントと self_signed。シークレットは .tf ファイルではなく、tfvars、env、または CI に保持します。ルートモジュールごとに 1 つの required_providers ブロック (main.tf を参照)。',
   'About GBH': 'GBH について',
   Bandwidth: '帯域幅',
   'Bandwidth over time': '経時的な帯域幅',
   Buckets: 'バケット',
   'Chart interval': 'チャート間隔',
+  '1m': '1 分',
   '15m': '15 分',
   '1h': '1 時間',
   '1d': '1 日',
@@ -1392,6 +1392,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化されたリクエスト量。',
   'Request volume grouped by caller city.':
     '呼び出し元の都市別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化されたリクエスト量。',
   'Request volume grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化されたリクエスト量。',
   'Request volume grouped by caller IP address.':
@@ -1422,6 +1434,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '呼び出し元の国別にグループ化された帯域幅。',
   'Bandwidth grouped by caller city.':
     '呼び出し元の都市別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller internet service provider.':
+    '呼び出し元の ISP 別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system number.':
+    '呼び出し元の AS 番号別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller autonomous system organization.':
+    '呼び出し元の AS 組織別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection type.':
+    '呼び出し元の接続タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection usage type.':
+    '呼び出し元の接続用途タイプ別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller connection organization.':
+    '呼び出し元の接続組織別にグループ化された帯域幅。',
   'Bandwidth grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化された帯域幅。',
   'Bandwidth grouped by caller IP address.':
@@ -1443,6 +1467,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SDK: 'SDK',
   'SDK version': 'SDK バージョン',
   'Caller city': '呼び出し元の都市',
+  'AS number': 'AS 番号',
+  'AS organization': 'AS 組織',
+  'Connection usage type': '接続用途タイプ',
+  'Connection organization': '接続組織',
+  ISPs: 'ISP',
+  'AS numbers': 'AS 番号',
+  'AS organizations': 'AS 組織',
+  'Connection types': '接続タイプ',
+  'Connection usage types': '接続用途タイプ',
+  'Connection organizations': '接続組織',
   'API paths': 'API パス',
   'Operations grouped by database.': 'データベース別にグループ化された操作。',
   'Operations grouped by resource.': 'リソース別にグループ化された操作。',
@@ -1888,6 +1922,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Summary: '概要',
   'Supabase endpoint': 'Supabase エンドポイント',
   TablesDB: 'TablesDB',
+  Embeddings: 'Embeddings',
   Teams: 'チーム',
   'Test email sent to': 'テストメールの送信先',
   'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
@@ -2063,6 +2098,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Draft updated': '下書きを更新しました',
   'EU region': 'EU リージョン',
   'Email content': 'メールコンテンツ',
+  'Email preview': 'メールプレビュー',
   'Email subject': 'メール件名',
   'Enable for development builds, disable for production.':
     '開発ビルドでは有効、本番では無効にしてください。',
@@ -2152,6 +2188,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このメッセージを完全に削除します。この操作は元に戻せません。',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'このトピックとすべてのサブスクライバーを完全に削除します。この操作は元に戻せません。',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    '先頭の + と国コードを含む電話番号、または英数字の Sender ID。',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'ストレージからバケットとファイルを選択してください。メッセージでは bucketId:fileId として参照されます。',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2220,6 +2258,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Resend 経由でトランザクションメールを送信します。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
+  Sender: '送信元',
   'Sender ID': 'Sender ID',
   'Sender Name': '送信者名',
   'Sender phone': '送信元電話番号',
@@ -2803,6 +2842,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Enable Premium Geo DB': 'Premium Geo DB を有効にする',
   'Upgrade plan': 'プランのアップグレード',
   'Premium Geo DB': 'Premium Geo DB',
+  'Strengthen security with precise Firewall rules and improve observability across sessions, activity, and usage analytics.':
+    'Firewall ルールを精密化してセキュリティを強化し、セッション、アクティビティ、使用状況分析のオブザーバビリティを向上させます。',
+  'How this affects your app': 'アプリへの影響',
+  'Stronger firewall rules': 'より強力な Firewall ルール',
+  'Block or allow traffic by city, state, ISP, ASN, and connection type for precise access control.':
+    '都市、州、ISP、ASN、接続タイプでトラフィックをブロックまたは許可し、きめ細かなアクセス制御を実現します。',
+  'Richer session and request context': 'より詳細なセッションとリクエストのコンテキスト',
+  'Attach detailed geolocation to Auth sessions, activity logs, and audit trails on every request.':
+    'すべてのリクエストで Auth セッション、アクティビティログ、監査証跡に詳細な位置情報を付与します。',
+  'Deeper usage insights': 'より深い使用状況の分析',
+  'Break down API traffic by city, ISP, and network attributes to spot abuse and regional patterns.':
+    '都市、ISP、ネットワーク属性別に API トラフィックを分析し、不正利用や地域パターンを把握します。',
+  'Geolocation attributes': '位置情報の属性',
+  'Included on every plan': 'すべてのプランに含まれる',
+  'Added with Premium Geo DB': 'Premium Geo DB で追加',
+  'Location details': '位置情報の詳細',
+  'Network details': 'ネットワークの詳細',
   'Enrich sessions, activity, and usage with detailed geolocation from every request.':
     'セッション、アクティビティ、使用状況を、リクエストごとの詳細な位置情報で補強します。',
   'Not enabled': '未有効',
@@ -2876,4 +2932,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Merge request': 'マージリクエスト',
   'Pull request': 'プルリクエスト',
   'Failed to approve deployment': 'デプロイの承認に失敗しました',
+  'Pause live updates': 'ライブ更新を一時停止',
+  'Pause live updates to refresh manually':
+    '手動で更新するにはライブ更新を一時停止してください',
+  'Resume live updates': 'ライブ更新を再開',
+  'Updating…': '更新中…',
+  Paused: '一時停止',
 }

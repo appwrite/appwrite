@@ -7,12 +7,17 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
 import { docsContentHmrPlugin } from './src/lib/docs/vite-docs-content-hmr-plugin'
+import { silenceAbortedSsrPlugin } from './src/lib/vite/silence-aborted-ssr-plugin'
 import {
   getAllMarketingPrerenderPaths,
   getSitesPrerenderBuildSummary,
   isMarketingPrerenderPath,
 } from './src/lib/marketing/marketing-build-paths'
 import { getSitesPrerenderConcurrency } from './src/lib/marketing/sites-prerender-scope'
+import {
+  INIT_PRERENDER_PATHS,
+  isInitPrerenderPath,
+} from './src/lib/init/init-prerender-paths'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const decimalJsLightShim = path.resolve(
@@ -58,6 +63,13 @@ function rejectEmptyBuildAssetsPlugin() {
     },
   }
 }
+function getInitPrerenderPageEntries() {
+  return INIT_PRERENDER_PATHS.map((path) => ({
+    path,
+    prerender: { enabled: true },
+  }))
+}
+
 function getTanstackStartSitesOptions() {
   const prerenderConcurrency = getSitesPrerenderConcurrency()
   console.log(
@@ -70,12 +82,29 @@ function getTanstackStartSitesOptions() {
       crawlLinks: false,
       concurrency: prerenderConcurrency,
       failOnError: true,
-      filter: ({ path }: { path: string }) => isMarketingPrerenderPath(path),
+      filter: ({ path }: { path: string }) =>
+        isMarketingPrerenderPath(path) || isInitPrerenderPath(path),
     },
-    pages: getAllMarketingPrerenderPaths().map((path) => ({
-      path,
-      prerender: { enabled: true },
-    })),
+    pages: [
+      ...getAllMarketingPrerenderPaths().map((path) => ({
+        path,
+        prerender: { enabled: true },
+      })),
+      ...getInitPrerenderPageEntries(),
+    ],
+  }
+}
+
+function getTanstackStartCloudOptions() {
+  return {
+    prerender: {
+      enabled: true,
+      crawlLinks: false,
+      filter: ({ path }: { path: string }) => isInitPrerenderPath(path),
+      concurrency: 1,
+      failOnError: true,
+    },
+    pages: getInitPrerenderPageEntries(),
   }
 }
 
@@ -94,13 +123,22 @@ export default defineConfig(async () => {
     : []
 
   return {
+    base: process.env.CDN_ORIGIN
+      ? `${process.env.CDN_ORIGIN.replace(/\/$/, '')}/`
+      : '/',
     plugins: [
+      silenceAbortedSsrPlugin(),
       // this is the plugin that enables path aliases
       viteTsConfigPaths({
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(isSitesBuild ? getTanstackStartSitesOptions() : undefined),
+      tanstackStart({
+        router: { basepath: '/' },
+        ...(isSitesBuild
+          ? getTanstackStartSitesOptions()
+          : getTanstackStartCloudOptions()),
+      }),
       devtoolsJson(),
       viteReact(),
       docsContentHmrPlugin(),
@@ -155,11 +193,14 @@ export default defineConfig(async () => {
         '@appwrite.io/console',
         'json-bigint',
       ],
-      // Serve TanStack store packages as native ESM. Pre-bundling cached an older
-      // @tanstack/react-store without createAtom when router upgraded first.
+      // Serve TanStack store/router packages as native ESM. Pre-bundling cached an
+      // older @tanstack/react-store without createAtom when router upgraded first, and
+      // discovering @tanstack/router-core mid-session rewrites hashed React chunks.
       exclude: [
         '@tanstack/react-store',
         '@tanstack/store',
+        '@tanstack/router-core',
+        '@tanstack/history',
         'sharp',
         // Pre-bundling inlines nested @radix-ui copies and can load a second React
         // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
@@ -171,7 +212,14 @@ export default defineConfig(async () => {
       // Keep native/heavy packages external; bundle recharts + its Redux chain so
       // Appwrite Sites ModClean cannot strip @reduxjs/toolkit's .mjs files from
       // node_modules (runtime then fails with Cannot find module …modern.mjs).
-      external: ['sharp', 'prismjs'],
+      external: [
+        'sharp',
+        'prismjs',
+        'three',
+        'three-globe',
+        '@react-three/fiber',
+        '@react-three/drei',
+      ],
       noExternal: [
         'recharts',
         '@reduxjs/toolkit',

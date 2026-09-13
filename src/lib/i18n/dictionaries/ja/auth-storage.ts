@@ -33,6 +33,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'App enabled': 'アプリを有効にしました',
   'App updated': 'アプリを更新しました',
   'Activity': 'アクティビティ',
+  'Auto crops around the main subject when both width and height are set.':
+    '幅と高さの両方を指定すると、Auto は主要な被写体を中心にクロップします。',
   'Back to apps': 'アプリ一覧に戻る',
   'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
     '無効なアプリは新しい認可フローを開始できません。既存のトークンは取り消されるまで有効です。',
@@ -605,6 +607,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
+  'Connect with S3': 'S3 と接続',
   'Connect with this project': 'このプロジェクトへの接続',
   'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
     '他のプロダクトからユーザーをこのプロジェクトへ接続させたい場合は、ここに OAuth2 クライアントを登録します。組織アプリの用途は異なります。ユーザーが Appwrite アカウントをあなたのアプリケーションに接続できるようにしたい場合は、組織側で作成します。',

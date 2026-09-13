@@ -23,6 +23,7 @@ import {
   horizontalResizeDeltaPx,
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
+import { areColumnWidthRecordsEqual } from '@/lib/resizable-layout'
 import {
   POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX,
   POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX,
@@ -64,7 +65,7 @@ export function usePostgresRowsColumnResize(
       next[key] = clampColumnWidth(n)
     }
     return next
-  }, [account, databaseId, tableId])
+  }, [account?.prefs, databaseId, tableId])
 
   const [columnWidths, setColumnWidths] =
     useState<Record<string, number>>(widthsFromPrefs)
@@ -83,7 +84,9 @@ export function usePostgresRowsColumnResize(
   const railRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
 
   useLayoutEffect(() => {
-    setColumnWidths(widthsFromPrefs)
+    setColumnWidths((prev) =>
+      areColumnWidthRecordsEqual(prev, widthsFromPrefs) ? prev : widthsFromPrefs,
+    )
   }, [databaseId, tableId, widthsFromPrefs])
 
   const getColumnWidthPx = useCallback(

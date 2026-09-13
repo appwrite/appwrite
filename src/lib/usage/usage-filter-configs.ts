@@ -21,9 +21,33 @@ export const USAGE_EVENT_FILTER_ATTRIBUTES = [
   'clientType',
   'clientName',
   'deviceName',
+  'isp',
+  'autonomousSystemNumber',
+  'autonomousSystemOrganization',
+  'connectionType',
+  'connectionUsageType',
+  'connectionOrganization',
   'sdk',
   'sdkVersion',
 ] as const
+
+/**
+ * Premium Geo DB listEvents attributes. Hidden on self-hosted (and from the
+ * filter picker) alongside `city` so breakdowns and filters stay aligned.
+ */
+export const PREMIUM_GEO_USAGE_EVENT_ATTRIBUTES = [
+  'city',
+  'isp',
+  'autonomousSystemNumber',
+  'autonomousSystemOrganization',
+  'connectionType',
+  'connectionUsageType',
+  'connectionOrganization',
+] as const
+
+export const PREMIUM_GEO_REQUEST_DIMENSIONS = new Set<string>(
+  PREMIUM_GEO_USAGE_EVENT_ATTRIBUTES,
+)
 
 /** listGauges filter attributes (teamId excluded from console UI). */
 export const USAGE_GAUGE_FILTER_ATTRIBUTES = [
@@ -69,7 +93,10 @@ export const USAGE_FILTER_EXCLUDED_ATTRIBUTES = new Set(['teamId'])
 export type UsageFilterQuerySurface = 'events' | 'gauges' | 'mixed'
 
 export type UsageFilterAvailability = {
-  /** Cloud supports city filtering; the current self-hosted endpoint does not. */
+  /**
+   * Cloud supports premium geo filters (city, ISP, ASN, connection*).
+   * The current self-hosted endpoint does not.
+   */
   allowCity?: boolean
 }
 
@@ -155,6 +182,12 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('city', 'Caller city'),
   stringColumn('hostname', 'Hostname'),
   stringColumn('ip', 'IP address'),
+  stringColumn('isp', 'ISP'),
+  stringColumn('autonomousSystemNumber', 'AS number'),
+  stringColumn('autonomousSystemOrganization', 'AS organization'),
+  stringColumn('connectionType', 'Connection type'),
+  stringColumn('connectionUsageType', 'Connection usage type'),
+  stringColumn('connectionOrganization', 'Connection organization'),
   stringColumn('osName', 'Operating system'),
   stringColumn('clientType', 'Client type'),
   stringColumn('clientName', 'Client name'),
@@ -296,7 +329,9 @@ export function getUsageFilterColumnsForCategory(
 ): FilterColumn[] {
   const columns = CATEGORY_FILTER_COLUMNS[categoryId] ?? []
   return availability.allowCity === false
-    ? columns.filter((column) => column.id !== 'city')
+    ? columns.filter(
+        (column) => !PREMIUM_GEO_REQUEST_DIMENSIONS.has(column.id),
+      )
     : columns
 }
 
@@ -320,6 +355,25 @@ export function isUsageFilterDimensionAllowed(
   return getUsageFilterColumnIdsForCategory(categoryId, availability).has(
     dimension,
   )
+}
+
+/** True when clicking a breakdown row can apply a usage filter for this dimension. */
+export function isUsageBreakdownDimensionFilterable(
+  dimension: string,
+  columns: FilterColumn[],
+): boolean {
+  if (columns.length === 0) return false
+  if (dimension === 'resource') {
+    return columns.some(
+      (column) => column.id === 'resourceId' || column.id === 'resourceType',
+    )
+  }
+  if (dimension === 'sdk') {
+    return columns.some(
+      (column) => column.id === 'sdk' || column.id === 'sdkVersion',
+    )
+  }
+  return columns.some((column) => column.id === dimension)
 }
 
 export function getUsageSavedFilterScope(categoryId: string): string {

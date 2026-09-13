@@ -9,14 +9,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import type { BlogFaq } from '@/lib/blog/types'
 import { DOCS_BODY_TEXT_CLASS } from '@/lib/docs/prose-typography'
 import { cn } from '@/lib/utils'
 import { ChevronDownIcon } from 'lucide-react'
 import { BlogMarkdown } from './BlogMarkdown'
 
 type BlogFaqSectionProps = {
-  faqs: BlogFaq[]
+  faqs: Array<{ question: string; html: string }>
 }
 
 export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
@@ -51,7 +50,7 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className={cn(DOCS_BODY_TEXT_CLASS, 'px-4 pb-4')}>
-                    <BlogMarkdown content={faq.answer} />
+                    <BlogMarkdown html={faq.html} />
                   </AccordionContent>
                 </AccordionItem>
               ))}

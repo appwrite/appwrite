@@ -3,6 +3,7 @@ layout: changelog
 title: "Appwrite Sites now live for everyone."
 date: 2025-07-24
 cover: /images/changelog/2025-07-24.avif
+tags: integrations, sites, firewall, performance
 ---
 
 We’re excited to announce that Appwrite Sites is now available for everyone to use.
@@ -18,7 +19,7 @@ Here is a recap of everything we’ve added to Sites:
 * Global CDN: Distribute your content worldwide with a powerful content delivery network to ensure low-latency access from anywhere.
 * DDoS protection: Built-in protection mechanisms to help safeguard your apps from denial-of-service attacks.
 * The Appwrite Network: Take advantage of many cloud regions, Points of Presence (PoPs), and edge network capabilities, reducing latency and enhancing performance globally.
-* The Appwrite DNS: Appwrite provides a dedicated DNS (Domain Name System) service through its appwrite.zone nameservers to help you manage domain records for your applications.
+* The Appwrite DNS: Appwrite provides a dedicated DNS (Domain Name System) service through its appwrite.zone nameservers to help you manage domain records for your applications.
 * Sites templates: We created ready-to-use customizable templates that you can deploy with one click, directly from Appwrite.
 
 {% arrow_link href="/blog/post/announcing-appwrite-sites" %}

@@ -23,10 +23,9 @@ import {
   useProjectStorageResourceTypeUsage,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
 const STORAGE_CHART_GRADIENT_IDS: Record<OverviewStorageBreakdownType, string> =
   {
@@ -49,8 +48,7 @@ export function StorageSection({
 }: StorageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
-  const showBreakdown = !disableUsageBreakdownQueries
+  const showBreakdown = true
 
   // One query per resource family of the unified `storage` gauge. Listed
   // explicitly rather than mapped so hook order stays fixed.
@@ -104,11 +102,13 @@ export function StorageSection({
       OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option) => {
         const query = storageQueries[option.value]
         const chartPoints = query.isError ? [] : (query.data?.chartPoints ?? [])
+        const loading = getUsageChartLoadingProps(query, chartPoints)
 
         return {
           option,
           query,
           chartPoints,
+          loading,
           breakdownItems: query.isError
             ? []
             : topConsumersToBreakdownItems(query.data?.topConsumers ?? []),
@@ -120,6 +120,10 @@ export function StorageSection({
   const imageTransformationsPoints = imageTransformationsQuery.isError
     ? []
     : (imageTransformationsQuery.data?.chartPoints ?? [])
+  const imageTransformationsLoading = getUsageChartLoadingProps(
+    imageTransformationsQuery,
+    imageTransformationsPoints,
+  )
   const imageTransformationsBreakdownItems = useMemo(
     () =>
       imageTransformationsQuery.isError
@@ -165,7 +169,7 @@ export function StorageSection({
 
   return (
     <div className="space-y-6">
-      {storageCards.map(({ option, query, chartPoints, breakdownItems }) => (
+      {storageCards.map(({ option, query, chartPoints, loading, breakdownItems }) => (
         <StorageMetricBentoCard
           key={option.value}
           projectId={projectId}
@@ -176,11 +180,8 @@ export function StorageSection({
           chartPoints={chartPoints}
           total={getStorageGaugeDisplayTotal(chartPoints)}
           changePercent={query.data?.changePercent ?? 0}
-          isLoading={shouldShowUsageChartSkeleton(
-            query.isError,
-            query.isLoading,
-            query.isPlaceholderData,
-          )}
+          isLoading={loading.isLoading}
+          isRefreshing={loading.isRefreshing}
           isError={query.isError}
           queryError={query.error}
           formatTotal={formatStorageBytesTotal}
@@ -205,11 +206,8 @@ export function StorageSection({
         chartPoints={imageTransformationsPoints}
         total={getStorageGaugeDisplayTotal(imageTransformationsPoints)}
         changePercent={imageTransformationsQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          imageTransformationsQuery.isError,
-          imageTransformationsQuery.isLoading,
-          imageTransformationsQuery.isPlaceholderData,
-        )}
+        isLoading={imageTransformationsLoading.isLoading}
+        isRefreshing={imageTransformationsLoading.isRefreshing}
         isError={imageTransformationsQuery.isError}
         queryError={imageTransformationsQuery.error}
         formatTotal={formatImageTransformationsTotal}

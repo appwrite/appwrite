@@ -41,6 +41,7 @@ import {
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
   ensureProjectRegion,
@@ -172,10 +173,10 @@ function ProjectRouteErrorComponent({
   error,
   reset,
 }: {
-  error: Error
+  error: unknown
   reset: () => void
 }) {
-  return <ProjectAccessErrorView error={error} reset={reset} />
+  return <ProjectAccessErrorView error={error instanceof Error ? error : new Error(String(error))} reset={reset} />
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -366,11 +367,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           retry: false,
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
-        features.multiTenancy
-          ? queryClient
-              .ensureQueryData(organizationsQueryOptions())
-              .catch(() => {})
-          : Promise.resolve(),
+        queryClient
+          .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
       ])
 
       registerProjectRegionFromProject(projectData)
@@ -670,19 +669,6 @@ function ProjectLayout() {
     isFunctionExecutionsTab ||
     isSiteLogsTab
 
-  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, functions editor, and storage workspace
-  const hideFooter =
-    isDatabaseSpreadsheetView ||
-    isDatabaseVisualizerView ||
-    activeSection === 'usage' ||
-    isFunctionExecutionsTab ||
-    isSiteLogsTab ||
-    activeSection === 'activity' ||
-    activeSection === 'realtime' ||
-    activeSection === 'storage' ||
-    activeSection === 'explorer' ||
-    isFunctionsEditorView
-
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false)
@@ -773,7 +759,9 @@ function ProjectLayout() {
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
-          <BuildNotificationsProvider projectId={projectId} />
+          {features.browserAlerts ? (
+            <BuildNotificationsProvider projectId={projectId} />
+          ) : null}
           <ProjectCliShellLayout
             projectId={projectId}
             sidebar={{
@@ -784,11 +772,14 @@ function ProjectLayout() {
               onMenuClick: () => setSidebarOpen(true),
             }}
             headerBanner={
-              <OrganizationFailedInvoiceHeaderBanner
-                organizationId={teamIdForBilling}
-                show={showFailedInvoiceBanner}
-                orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
-              />
+              <>
+                <PostgresPromoBanner />
+                <OrganizationFailedInvoiceHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showFailedInvoiceBanner}
+                  orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
+                />
+              </>
             }
             fixedLayout={isFixedLayoutView}
           >

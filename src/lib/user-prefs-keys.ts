@@ -60,6 +60,62 @@ export const USER_PREFS_KEY_ORGANIZATION = 'organization'
 export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
 
 /**
+ * Comma-separated console banner IDs the user has dismissed.
+ * Value: string (legacy array format may still appear until rewritten).
+ */
+export const USER_PREFS_KEY_DISMISSED_BANNERS = 'console.dismissedBanners'
+
+export function parseDismissedBannerIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_DISMISSED_BANNERS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string')
+  }
+  return []
+}
+
+export function isConsoleBannerDismissed(
+  prefs: UserPrefs | null | undefined,
+  bannerId: string,
+): boolean {
+  return parseDismissedBannerIds(prefs).includes(bannerId)
+}
+
+export function mergeDismissedBannerPrefs(
+  prefs: UserPrefs | null | undefined,
+  bannerId: string,
+): UserPrefs {
+  const current = parseDismissedBannerIds(prefs)
+  if (current.includes(bannerId)) {
+    return {
+      ...(prefs ?? {}),
+      [USER_PREFS_KEY_DISMISSED_BANNERS]: current.join(','),
+    }
+  }
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_DISMISSED_BANNERS]: [...current, bannerId].join(','),
+  }
+}
+
+export function clearDismissedBannerPrefs(
+  prefs: UserPrefs | null | undefined,
+  bannerId: string,
+): UserPrefs {
+  const next = parseDismissedBannerIds(prefs).filter((id) => id !== bannerId)
+  const base = { ...(prefs ?? {}) } as UserPrefs
+  if (next.length === 0) {
+    const { [USER_PREFS_KEY_DISMISSED_BANNERS]: _removed, ...rest } = base
+    return rest as UserPrefs
+  }
+  return { ...base, [USER_PREFS_KEY_DISMISSED_BANNERS]: next.join(',') }
+}
+
+/**
  * Appwrite `Assoc` prefs validator (`new Assoc()`): max JSON body size in bytes.
  * Oversized payloads fail with the same message as a non-object prefs value:
  * "Invalid `prefs` param: Value must be a valid object."
@@ -2388,6 +2444,34 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: admin nav collapsed (Credentials, Monitor, Connections, …)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.databases.adminNavCollapsed` - admin links hidden when true. */
+export const USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED =
+  'console.databases.adminNavCollapsed'
+
+export function parseDatabaseAdminNavCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED],
+    ) ?? false
+  )
+}
+
+export function mergeDatabaseAdminNavCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED]: collapsed,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Connect project dialog tab (account prefs)
 // ---------------------------------------------------------------------------
 
@@ -3295,7 +3379,7 @@ export function mergeApiExplorerExpandedProductGroupIntoPrefs(
 export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 
 // ---------------------------------------------------------------------------
-// Build completion browser notifications (account prefs)
+// Browser alerts (account prefs) — master toggle for desktop notifications
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */
@@ -3434,10 +3518,10 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
   'console.usageChart.dateRange'
 
-/** Full key: `console.usageChart.interval` - `"15m"`, `"1h"`, or `"1d"`. */
+/** Full key: `console.usageChart.interval` - `"1m"`, `"15m"`, `"1h"`, or `"1d"`. */
 export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
 
-const USAGE_CHART_INTERVAL_PREF_VALUES = ['15m', '1h', '1d'] as const
+const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '15m', '1h', '1d'] as const
 
 export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
 
@@ -3511,6 +3595,28 @@ export function mergeUsageChartFiltersIntoPrefs(
     ...prefs,
     [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]: JSON.stringify(serializedDateRange),
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+/** Full key: `console.firewall.trafficLive` - live traffic chart polling when true. */
+export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE = 'console.firewall.trafficLive'
+
+export function parseFirewallTrafficLiveUpdatesEnabled(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]) ??
+    true
+  )
+}
+
+export function mergeFirewallTrafficLiveUpdatesIntoPrefs(
+  prefs: UserPrefs,
+  enabled: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE]: enabled,
   }
 }
 

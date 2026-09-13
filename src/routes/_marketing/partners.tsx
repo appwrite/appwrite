@@ -1,10 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/partners/View'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_marketing/partners')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({

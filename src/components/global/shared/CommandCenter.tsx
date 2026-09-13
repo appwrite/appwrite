@@ -89,6 +89,7 @@ import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
+import { BlogSearchView } from '@/components/pages/blog/BlogSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
@@ -96,6 +97,7 @@ import { useRecentResourcesSafe } from '@/components/global/providers/RecentReso
 import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
+import { docsHrefToRoute } from '@/lib/docs/docs-href'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
 import type {
@@ -306,6 +308,7 @@ export function CommandCenter({
   const [searchScope, setSearchScope] = useState<ResourceScope | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const docsInputRef = useRef<HTMLInputElement | null>(null)
+  const blogInputRef = useRef<HTMLInputElement | null>(null)
   const focusReturnRef = useRef<HTMLElement | null>(null)
   const wasOpenRef = useRef(false)
   const displayedResourceCommandsRef = useRef<RuntimeCommand[]>([])
@@ -355,6 +358,10 @@ export function CommandCenter({
     () => setPages((p) => [...p, 'docs']),
     [],
   )
+  const openBlogSearchPage = useCallback(
+    () => setPages((p) => [...p, 'blog']),
+    [],
+  )
   const openFeedbackPage = useCallback(
     () => setPages((p) => [...p, 'feedback']),
     [],
@@ -384,7 +391,17 @@ export function CommandCenter({
         navigate({ to: '/docs/' })
         return
       }
-      navigate({ to: '/docs/$', params: { _splat: slug } })
+      const route = docsHrefToRoute(`/docs/${slug}`)
+      if (!route) return
+      if (route.params) {
+        navigate({
+          to: route.to,
+          params: route.params,
+          hash: route.hash,
+        })
+        return
+      }
+      navigate({ to: route.to, hash: route.hash })
     },
     [
       navigate,
@@ -411,6 +428,7 @@ export function CommandCenter({
       closeCommandCenter,
       openShortcutsPage,
       openDocsSearchPage,
+      openBlogSearchPage,
       openFeedbackPage,
       openSupportPage,
       handlers: {
@@ -435,6 +453,7 @@ export function CommandCenter({
       closeCommandCenter,
       openShortcutsPage,
       openDocsSearchPage,
+      openBlogSearchPage,
       openFeedbackPage,
       openSupportPage,
       onCreateResource,
@@ -461,6 +480,10 @@ export function CommandCenter({
       docsInputRef.current?.focus()
       return
     }
+    if (currentPage === 'blog') {
+      blogInputRef.current?.focus()
+      return
+    }
     inputRef.current?.focus()
   }, [currentPage])
 
@@ -482,6 +505,7 @@ export function CommandCenter({
         open &&
         currentPage !== 'shortcuts' &&
         currentPage !== 'docs' &&
+        currentPage !== 'blog' &&
         currentPage !== 'sql-tabs' &&
         currentPage !== 'feedback' &&
         currentPage !== 'support',
@@ -811,11 +835,14 @@ export function CommandCenter({
     }
   }, [open])
 
-  useEffect(() => {
+  const onInitialSubPageConsumedRef = useRef(onInitialSubPageConsumed)
+  onInitialSubPageConsumedRef.current = onInitialSubPageConsumed
+
+  useLayoutEffect(() => {
     if (!open || !initialSubPage) return
     setPages([initialSubPage])
-    onInitialSubPageConsumed?.()
-  }, [open, initialSubPage, onInitialSubPageConsumed])
+    onInitialSubPageConsumedRef.current?.()
+  }, [open, initialSubPage])
 
   const isScopeLoading = useMemo(() => {
     if (!searchScope) return false
@@ -1562,6 +1589,15 @@ export function CommandCenter({
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}
             onSelect={handleDocsSelect}
+            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+          />
+        ) : currentPage === 'blog' ? (
+          <BlogSearchView
+            isMobile={isMobile}
+            inputRef={blogInputRef}
+            onBack={() => setPages([])}
+            onClose={() => onOpenChange(false)}
+            onKeyDown={handleKeyDown}
             onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
           />
         ) : currentPage === 'feedback' ? (

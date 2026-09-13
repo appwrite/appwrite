@@ -37,7 +37,7 @@ export interface FetchActivitiesParams {
   mergedSince: string
   /** Optional upper bound for `time` (ISO 8601). */
   until?: string | null
-  /** Additional Query strings from the URL filter map (resource type, userId, event, …). */
+  /** Additional Query strings from the URL filter map (ActivityEvents allowed attributes only). */
   extraQueries?: string[]
 }
 
@@ -52,8 +52,8 @@ export interface ActivitiesResult {
  *
  * Uses [cursor pagination](https://appwrite.io/docs/products/databases/pagination)
  * (`Query.cursorAfter` / `Query.cursorBefore`) with `orderDesc('time')`, not offset.
- * Used by `activitiesQueryOptions` / `useProjectActivities` (activity list uses a
- * table skeleton; no route prefetch required).
+ * Used by `activitiesQueryOptions` / `useProjectActivities` (route loader and
+ * the activity View must share this function so query keys match).
  */
 export async function fetchProjectActivities({
   projectId,
@@ -117,6 +117,8 @@ export function activitiesQueryOptions(params: {
   planRetentionHours: number
   /** Raw URL `query` param (encoded filter keys), or null when unset. */
   filterQueryKey: string | null
+  /** When false, skip fetching (e.g. wait for plan retention so the query key matches the loader). */
+  enabled?: boolean
 }) {
   const {
     projectId,
@@ -125,6 +127,7 @@ export function activitiesQueryOptions(params: {
     cursorBefore = null,
     planRetentionHours,
     filterQueryKey,
+    enabled = true,
   } = params
 
   return queryOptions({
@@ -157,11 +160,14 @@ export function activitiesQueryOptions(params: {
         extraQueries,
       })
     },
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
     retry: false,
-    refetchOnMount: false,
+    // Global QueryClient defaults to refetchOnMount: false (for prefetched lists).
+    // Still load when this key has never resolved, including client navigations
+    // where the loader did not populate the cache.
+    refetchOnMount: (query) => query.state.data === undefined,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -200,8 +206,9 @@ export function useProjectActivities(params: {
   cursorBefore?: string | null
   planRetentionHours: number
   filterQueryKey: string | null
+  enabled?: boolean
 }) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery(
     activitiesQueryOptions(params),
   )
 
@@ -210,6 +217,7 @@ export function useProjectActivities(params: {
     hasMore: data?.hasMore ?? false,
     isLoading,
     isFetching,
+    isPending,
     error,
     refetch,
   }

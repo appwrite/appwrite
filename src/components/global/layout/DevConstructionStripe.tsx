@@ -1,5 +1,6 @@
 'use client'
 
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
 /**
@@ -11,7 +12,14 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
  */
 export function DevConstructionStripe() {
   const { showConstruction } = useDebugOverrides()
-  if (!import.meta.env.DEV || !showConstruction) return null
+  const { isScreenshotModeActive } = useScreenshotMode()
+  if (
+    !import.meta.env.DEV ||
+    !showConstruction ||
+    isScreenshotModeActive
+  ) {
+    return null
+  }
 
   return (
     <div

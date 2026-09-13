@@ -105,6 +105,31 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   },
 }
 
+/** Fallback provider for display when a value is unknown or legacy. */
+export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
+
+/** Always available for Git connect, regardless of profile flags. */
+const ALWAYS_ENABLED_VCS_PROVIDERS = new Set<VcsProviderId>([
+  'github',
+  'gitlab',
+  'bitbucket',
+])
+
+/**
+ * Connect/authorize providers shown in Git installation UI.
+ * Existing installations of a hidden provider still render; only new OAuth
+ * connect actions are filtered.
+ *
+ * `extraVcsOAuth` gates Origin; every other provider is always visible.
+ */
+export function getVisibleVcsOAuthProviders(
+  extraVcsOAuth: boolean,
+): VcsProviderMeta[] {
+  return Object.values(VCS_PROVIDERS).filter(
+    (provider) => ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
+  )
+}
+
 /**
  * Resolve provider metadata for display (icon, label), defaulting to GitHub
  * for unknown/legacy values. Safe for cosmetic rendering, but never use this

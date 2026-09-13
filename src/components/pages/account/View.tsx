@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   CreditCard,
   Gift,
@@ -9,6 +11,7 @@ import {
   Package,
   Settings,
   Shield,
+  Bell,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -24,6 +27,7 @@ import { useT } from '@/lib/i18n/translate'
 
 export type AccountSectionId =
   | 'overview'
+  | 'notifications'
   | 'security'
   | 'sessions'
   | 'applications'
@@ -38,11 +42,20 @@ const BILLING_SECTIONS = new Set<AccountSectionId>([
 
 const AFFILIATES_SECTIONS = new Set<AccountSectionId>(['affiliates'])
 
+const NOTIFICATIONS_SECTIONS = new Set<AccountSectionId>(['notifications'])
+
 export function View() {
   const location = useLocation()
   const navigate = useNavigate()
   const { account, signOut } = useAuth()
-  const { features } = useConsoleProfile()
+  const { features, isSelfHosted } = useConsoleProfile()
+  const { data: organizations, isSuccess } = useQuery({
+    ...organizationsQueryOptions(),
+    enabled: isSelfHosted && !!account,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
   const t = useT()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
@@ -58,6 +71,7 @@ export function View() {
     if (accountIndex >= 0) {
       const section = pathParts[accountIndex + 1]
       if (section === 'security') return 'security'
+      if (section === 'notifications') return 'notifications'
       if (section === 'sessions') return 'sessions'
       if (section === 'applications') return 'applications'
       if (section === 'affiliates') return 'affiliates'
@@ -77,6 +91,24 @@ export function View() {
         icon: Settings,
         keywords: ['general', 'overview', 'profile', 'name', 'email', 'delete'],
       },
+      ...(features.browserAlerts
+        ? [
+            {
+              id: 'notifications',
+              label: t('Notifications'),
+              to: '/account/notifications',
+              icon: Bell,
+              keywords: [
+                'notifications',
+                'alerts',
+                'browser',
+                'desktop',
+                'build',
+                'deployment',
+              ],
+            },
+          ]
+        : []),
       {
         id: 'security',
         label: t('Security'),
@@ -141,10 +173,13 @@ export function View() {
     ]
 
     return items
-  }, [features.affiliates, features.billing, t])
+  }, [features.affiliates, features.billing, features.browserAlerts, t])
 
   const accountSettingsCardIndex = useMemo(() => {
     return ACCOUNT_SETTINGS_CARD_INDEX.filter((entry) => {
+      if (entry.sectionId === 'notifications') {
+        return features.browserAlerts
+      }
       if (entry.sectionId === 'affiliates') {
         return features.affiliates
       }
@@ -165,6 +200,7 @@ export function View() {
   }, [
     features.affiliates,
     features.billing,
+    features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
   ])
@@ -174,6 +210,12 @@ export function View() {
       navigate({ to: '/account', replace: true })
     }
   }, [activeSection, features.billing, navigate])
+
+  useEffect(() => {
+    if (!features.browserAlerts && NOTIFICATIONS_SECTIONS.has(activeSection)) {
+      navigate({ to: '/account', replace: true })
+    }
+  }, [activeSection, features.browserAlerts, navigate])
 
   useEffect(() => {
     if (!features.affiliates && AFFILIATES_SECTIONS.has(activeSection)) {
@@ -233,6 +275,21 @@ export function View() {
 
         <div className="min-w-0 flex-1">
           <div className="mx-auto min-w-0 max-w-7xl px-4 py-4 sm:px-6">
+            {isSelfHosted && isSuccess && organizations.teams.length === 0 && (
+              <section
+                role="status"
+                className="mb-6 rounded-lg border border-border bg-card p-4"
+              >
+                <h2 className="text-sm font-medium text-foreground">
+                  {t('Join an organization')}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(
+                    'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.',
+                  )}
+                </p>
+              </section>
+            )}
             <SettingsLayoutShell
               navItems={accountNavItems}
               activeSectionId={activeSection}

@@ -6,11 +6,14 @@ import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { useDocsPrompt } from '@/components/pages/docs/DocsPromptContext'
 import { Cards, CardsItem } from './markdoc/Cards'
 import { ComposeGenerator } from './markdoc/ComposeGenerator'
+import { FeatureGate } from './markdoc/FeatureGate'
 import { Fence } from './markdoc/Fence'
 import { MarkdocIcon, MarkdocIconImage } from './markdoc/Icon'
 import { Info } from './markdoc/Info'
 import { MultiCode } from './markdoc/MultiCode'
 import { DocsImage } from './markdoc/DocsImage'
+import { IndexLookupAnimation } from './markdoc/IndexLookupAnimation'
+import { RateLimitStrategyAnimation } from './markdoc/RateLimitStrategyAnimation'
 import {
   Blockquote,
   DocsLink,
@@ -37,6 +40,7 @@ function PromptContentMarkdoc() {
 
 const baseMarkdocComponents = {
   ComposeGenerator,
+  FeatureGate,
   MultiCode,
   Fence,
   Tabs,
@@ -70,6 +74,8 @@ const baseMarkdocComponents = {
     </div>
   ),
   PromptContent: PromptContentMarkdoc,
+  IndexLookupAnimation,
+  RateLimitStrategyAnimation,
   Video: ({ src, title }: { src?: string; title?: string }) => (
     <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
       <video src={src} controls className="w-full" title={title} />

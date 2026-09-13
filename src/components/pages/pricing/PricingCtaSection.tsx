@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
 import {
@@ -83,7 +84,13 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
           )}
           asChild
         >
-          {plan.internal ? (
+          {plan.id === 'enterprise' ? (
+            <ContactSalesLink
+              {...analyticsAttrs(PRICING_PROMO_CTA_ACTIONS[plan.id])}
+            >
+              {t(getPlanPromoCtaLabel(plan.id))}
+            </ContactSalesLink>
+          ) : plan.internal ? (
             <Link
               to={plan.href}
               {...(plan.id === 'enterprise' ? {} : { search: { redirect: '/' } })}

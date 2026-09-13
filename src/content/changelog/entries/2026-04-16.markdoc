@@ -3,6 +3,7 @@ layout: changelog
 title: "Keys API: manage API keys with Server SDKs"
 date: 2026-04-16
 cover: /images/blog/improve-devex-dev-keys/cover.avif
+tags: api, sdk
 ---
 
 API keys can now be created, updated, and deleted programmatically using the Appwrite server SDKs. Two new API key scopes, `keys.read` and `keys.write`, control access to the new endpoints.

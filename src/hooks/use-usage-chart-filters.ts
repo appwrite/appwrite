@@ -4,6 +4,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
+  clampDateRangeToRetentionFloor,
+  hasFiniteLogRetentionHours,
+} from '@/lib/date-range-retention'
+import {
   resolveUsageChartInterval,
   type UsageChartInterval,
   type UsageChartIntervalPlan,
@@ -14,7 +18,6 @@ import {
 } from '@/lib/usage/usage-chart-filters'
 import {
   getStableUsageChartDateRange,
-  isRollingUsageDateRangePresetId,
   normalizeUsageDateRangeSelection,
   resetStableUsageChartDateRange,
 } from '@/lib/usage/usage-date-range'
@@ -30,7 +33,10 @@ import {
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
-export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
+export function useUsageChartFilters(
+  plan?: UsageChartIntervalPlan,
+  logRetentionHours?: number,
+) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const accountId = (account as Models.User | undefined)?.$id
@@ -67,22 +73,34 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
   const { dateRange, chartInterval } = useMemo(() => {
     const filters = resolveUsageChartFiltersFromPrefs(accountPrefs, plan)
 
+    let resolvedDateRange = filters.dateRange
+    let resolvedChartInterval = filters.chartInterval
+
     if (dateRangePresetId) {
       const preset = getUsageDateRangePresetByValue(dateRangePresetId)
       if (preset) {
-        const range = preset.getRange()
-        return {
-          dateRange: range,
-          chartInterval: resolveUsageChartInterval(
-            filters.chartInterval,
-            range,
-            plan,
-          ),
-        }
+        resolvedDateRange = preset.getRange()
+        resolvedChartInterval = resolveUsageChartInterval(
+          filters.chartInterval,
+          resolvedDateRange,
+          plan,
+        )
       }
     }
 
-    return filters
+    const clampedDateRange =
+      logRetentionHours != null &&
+      hasFiniteLogRetentionHours(logRetentionHours)
+        ? clampDateRangeToRetentionFloor(
+            resolvedDateRange,
+            logRetentionHours,
+          ) ?? resolvedDateRange
+        : resolvedDateRange
+
+    return {
+      dateRange: clampedDateRange,
+      chartInterval: resolvedChartInterval,
+    }
   }, [
     usageFiltersPrefsKey,
     dateRangePresetId,
@@ -90,13 +108,12 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
     accountPrefs,
     plan,
     planIntervalsKey,
+    logRetentionHours,
   ])
 
   const refreshRollingDateRange = useCallback(() => {
-    if (dateRangePresetId && isRollingUsageDateRangePresetId(dateRangePresetId)) {
-      setRollingRangeNonce((nonce) => nonce + 1)
-    }
-  }, [dateRangePresetId])
+    setRollingRangeNonce((nonce) => nonce + 1)
+  }, [])
 
   const updateMutation = useMutation({
     mutationFn: async (next: {
@@ -153,33 +170,44 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
       if (!account) return
 
       const normalizedSelection = normalizeUsageDateRangeSelection(nextDateRange)
-      const resolvedDateRange = normalizedSelection?.from
+      let nextResolvedDateRange = normalizedSelection?.from
         ? {
             from: normalizedSelection.from,
             to: normalizedSelection.to ?? normalizedSelection.from,
           }
         : getStableUsageChartDateRange()
 
+      if (
+        logRetentionHours != null &&
+        hasFiniteLogRetentionHours(logRetentionHours)
+      ) {
+        nextResolvedDateRange =
+          clampDateRangeToRetentionFloor(
+            nextResolvedDateRange,
+            logRetentionHours,
+          ) ?? nextResolvedDateRange
+      }
+
       const nextInterval = resolveUsageChartInterval(
         chartInterval,
-        resolvedDateRange,
+        nextResolvedDateRange,
         plan,
       )
 
       if (
-        resolvedDateRange.from?.getTime() === dateRange.from?.getTime() &&
-        resolvedDateRange.to?.getTime() === dateRange.to?.getTime() &&
+        nextResolvedDateRange.from?.getTime() === dateRange.from?.getTime() &&
+        nextResolvedDateRange.to?.getTime() === dateRange.to?.getTime() &&
         nextInterval === chartInterval
       ) {
         return
       }
 
       updateMutation.mutate({
-        dateRange: resolvedDateRange,
+        dateRange: nextResolvedDateRange,
         chartInterval: nextInterval,
       })
     },
-    [account, chartInterval, dateRange, plan, updateMutation],
+    [account, chartInterval, dateRange, logRetentionHours, plan, updateMutation],
   )
 
   const setChartInterval = useCallback(

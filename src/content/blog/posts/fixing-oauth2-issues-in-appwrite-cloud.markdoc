@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/fixing-oauth2-issues-in-appwrite-cloud/cover.avif
 timeToRead: 5
 author: ebenezer-don
-category: tutorial
+category: tutorials
 faqs:
   - question: "Why does my OAuth2 login in Appwrite work in some browsers but not others?"
     answer: "It is a third-party cookie issue. When your app domain differs from Appwrite's domain, the browser treats Appwrite's session cookie as third-party. Browsers like Brave and Safari block these by default, and Chrome is moving in the same direction. The OAuth redirect succeeds, but the session cookie never gets stored."

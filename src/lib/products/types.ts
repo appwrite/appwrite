@@ -49,6 +49,8 @@ export type ProductRegistryItem = {
 export type ProductPageContent = {
   id: ProductId
   metaDescription: string
+  /** Browser and Open Graph title without the Appwrite suffix. Falls back to the product name. */
+  metaTitle?: string
   hero: {
     title: string
     description: string

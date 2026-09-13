@@ -26,9 +26,90 @@ export function getConsoleAccountQueryRevision(): number {
 /** Safe landing after impersonation starts or ends (avoids staying on org/project routes the new session may not access). */
 export const ACCOUNT_PATH_AFTER_IMPERSONATION = '/account'
 
-export function hardNavigateToAccountAfterImpersonation() {
+function pathnameFromRedirect(redirect: string): string {
+  const pathname = redirect.split('?')[0]?.split('#')[0] ?? redirect
+  return pathname.replace(/\/+$/, '') || '/'
+}
+
+function isImpersonateConfirmPath(pathname: string): boolean {
+  return pathname === '/impersonate' || pathname.startsWith('/impersonate/')
+}
+
+const AUTH_REDIRECT_PATHS = new Set([
+  '/sign-in',
+  '/sign-up',
+  '/recovery',
+  '/reset',
+  '/mfa',
+  '/verify-email',
+  '/auth/magic-url',
+])
+
+function isSafeConsoleRedirect(redirect: string): boolean {
+  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
+  return (
+    redirect.startsWith('/') &&
+    !redirect.startsWith('//') &&
+    !redirect.includes('://')
+  )
+}
+
+/**
+ * Same-origin console path after confirm. Rejects open redirects, auth pages,
+ * and the impersonate confirm routes themselves.
+ */
+export function resolveConsoleImpersonationRedirect(
+  redirect?: string | null,
+): string {
+  const value = redirect?.trim()
+  if (!value || !isSafeConsoleRedirect(value)) {
+    return ACCOUNT_PATH_AFTER_IMPERSONATION
+  }
+  const pathname = pathnameFromRedirect(value)
+  if (isImpersonateConfirmPath(pathname) || AUTH_REDIRECT_PATHS.has(pathname)) {
+    return ACCOUNT_PATH_AFTER_IMPERSONATION
+  }
+  return value
+}
+
+export function hardNavigateAfterConsoleImpersonation(
+  redirect?: string | null,
+) {
   if (typeof window === 'undefined') return
-  window.location.replace(ACCOUNT_PATH_AFTER_IMPERSONATION)
+  window.location.replace(resolveConsoleImpersonationRedirect(redirect))
+}
+
+export function hardNavigateToAccountAfterImpersonation() {
+  hardNavigateAfterConsoleImpersonation()
+}
+
+export type ConsoleImpersonationShareLocation = {
+  origin: string
+  pathname: string
+  search: string
+  hash: string
+}
+
+/**
+ * `/impersonate?email=…&redirect=…` for the active header. Recipients confirm on
+ * `/impersonate`, then land on the shared console page as that user.
+ */
+export function buildConsoleImpersonationShareUrl(
+  email: string,
+  location: ConsoleImpersonationShareLocation,
+): string | undefined {
+  const trimmed = email.trim()
+  if (!trimmed || !location.origin) return undefined
+
+  const params = new URLSearchParams()
+  params.set('email', trimmed)
+  params.set(
+    'redirect',
+    resolveConsoleImpersonationRedirect(
+      `${location.pathname}${location.search}${location.hash}`,
+    ),
+  )
+  return `${location.origin}/impersonate?${params.toString()}`
 }
 
 export type ConsoleImpersonationOperatorSnapshot = {
@@ -121,4 +202,30 @@ export function isConsoleImpersonationActive(
 /** Session-only check - no `account.get` required (e.g. blocked-account UI, exit FAB). */
 export function hasConsoleImpersonationSessionTarget(): boolean {
   return !!readConsoleImpersonationTargetUserId()
+}
+
+/**
+ * Operator snapshot to persist for a new impersonation session. While already
+ * impersonating, the original operator is kept instead of the current (target) account.
+ */
+export function resolveConsoleImpersonationOperator(
+  account:
+    | {
+        $id: string
+        name?: string
+        email?: string
+        impersonatorUserId?: string
+      }
+    | null
+    | undefined,
+): ConsoleImpersonationOperatorSnapshot | undefined {
+  if (account?.impersonatorUserId) {
+    return readConsoleImpersonationOperatorSnapshot()
+  }
+  if (!account) return undefined
+  return {
+    $id: account.$id,
+    name: account.name ?? '',
+    email: account.email ?? '',
+  }
 }

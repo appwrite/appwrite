@@ -2,6 +2,7 @@
 layout: changelog
 title: "Build timeouts increased to 45 minutes (Pro and above)"
 date: 2026-04-25
+tags: functions, sites, performance, infrastructure
 ---
 
 We have raised the **maximum build duration** for [Sites](/docs/products/sites) and [Functions](/docs/products/functions) on Appwrite Cloud from **15 minutes to 45 minutes** for organizations on the **Pro plan and above**. Free plan organizations keep the **15-minute** build limit, so the longer window is an explicit benefit of upgrading when your workloads need it.

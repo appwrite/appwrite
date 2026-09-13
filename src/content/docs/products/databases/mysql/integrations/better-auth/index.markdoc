@@ -7,26 +7,26 @@ description: Use an Appwrite native MySQL database as the database for Better Au
 [Better Auth](https://www.better-auth.com/) is a framework-agnostic authentication library for TypeScript that stores users, sessions, accounts, and verification records in your database. An Appwrite [native MySQL database](/docs/products/databases/mysql) gives Better Auth a standard MySQL engine, so you can use `mysql2`, run the Better Auth CLI, and keep auth data in your Appwrite project.
 
 {% info title="Before you start" %}
-You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
 {% /info %}
 
 # Set the connection strings {% #connection-strings %}
 
-Better Auth uses one database URL at runtime and another for schema work. Use the pooler URL for application traffic when your specification includes the pooler, and use the direct engine URL for schema generation and migrations.
+Better Auth uses one database URL at runtime and another for schema work. Use the pooler URL for application traffic, and use the direct engine URL for schema generation and migrations.
 
 ```env
 # Runtime: pooled, transaction mode
-DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
 
 # Schema generation and migrations: direct connection to the engine
-DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
 
 MYSQL_SSL="true"
 BETTER_AUTH_URL="https://example.com"
 BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
 ```
 
-The MySQL pooler runs on port `6033`, and the engine runs on port `3306`. The smallest shared-capacity specifications do not include the pooler, so use the direct URL for runtime traffic on those specifications. Connections on Appwrite Cloud are encrypted with TLS. The `MYSQL_SSL` variable below lets local development use an unencrypted port-forward while Cloud uses TLS verification. See [Connections](/docs/products/databases/mysql/connections) for connection fields and [Connection pooling](/docs/products/databases/mysql/connection-pooling#modes) for pool modes.
+The MySQL pooler runs on port `6033`, and the engine runs on port `3306`. Connections on Appwrite Cloud are encrypted with TLS. The `MYSQL_SSL` variable below lets local development use an unencrypted port-forward while Cloud uses TLS verification. See [Connections](/docs/products/databases/mysql/connections) for connection fields and [Connection pooling](/docs/products/databases/mysql/connection-pooling#modes) for pool modes.
 
 # Install Better Auth and mysql2 {% #install %}
 

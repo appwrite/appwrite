@@ -4,6 +4,10 @@ import {
 } from '@/lib/postgres-database-routes'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import {
+  buildPostgresColumnTypeSql,
+  parsePostgresColumnTypeFromRow,
+} from '@/lib/postgres-column-types'
+import {
   isPostgresPrimaryKeyColumn,
   prefixPostgresSqlComment,
   quotePostgresStringLiteral,
@@ -11,8 +15,47 @@ import {
 import type { RowCellValue } from '@/lib/database-row-inline-edits'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
-export function formatPostgresSqlLiteral(value: RowCellValue): string {
+type PostgresColumnLiteralMeta = Pick<
+  PostgresTableColumnRow,
+  | 'data_type'
+  | 'udt_name'
+  | 'character_maximum_length'
+  | 'numeric_precision'
+  | 'numeric_scale'
+  | 'datetime_precision'
+>
+
+function formatPostgresArraySqlLiteral(
+  items: RowCellValue[],
+  column: PostgresColumnLiteralMeta,
+): string {
+  const typeSql = buildPostgresColumnTypeSql(parsePostgresColumnTypeFromRow(column))
+  if (items.length === 0) {
+    return `'{}'::${typeSql}`
+  }
+
+  const elements = items.map((item) => {
+    if (item === null) return 'NULL'
+    if (typeof item === 'boolean') return item ? 'TRUE' : 'FALSE'
+    if (typeof item === 'number') return String(item)
+    if (typeof item === 'bigint') return String(item)
+    return quotePostgresStringLiteral(String(item))
+  })
+
+  return `ARRAY[${elements.join(', ')}]::${typeSql}`
+}
+
+export function formatPostgresSqlLiteral(
+  value: RowCellValue,
+  column?: PostgresColumnLiteralMeta,
+): string {
   if (value === null || value === undefined) return 'NULL'
+  if (Array.isArray(value)) {
+    if (!column) {
+      throw new Error('Column metadata is required for array values.')
+    }
+    return formatPostgresArraySqlLiteral(value as RowCellValue[], column)
+  }
   if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE'
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new Error('Invalid numeric value.')
@@ -160,14 +203,21 @@ export function buildPostgresUpdateRowSql(
   tableId: string,
   identity: PostgresRowIdentity,
   changes: Record<string, RowCellValue>,
+  columns?: PostgresTableColumnRow[],
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
-  const assignments = Object.entries(changes).map(([column, value]) => {
+  const columnByName = columns
+    ? new Map(columns.map((column) => [column.column_name, column]))
+    : undefined
+  const assignments = Object.entries(changes).map(([columnName, value]) => {
     if (value === null || value === undefined) {
-      return `${quotePostgresIdentifier(column)} = NULL`
+      return `${quotePostgresIdentifier(columnName)} = NULL`
     }
-    return `${quotePostgresIdentifier(column)} = ${formatPostgresSqlLiteral(value)}`
+    return `${quotePostgresIdentifier(columnName)} = ${formatPostgresSqlLiteral(
+      value,
+      columnByName?.get(columnName),
+    )}`
   })
 
   if (assignments.length === 0) {
@@ -282,9 +332,13 @@ export function isPostgresDuplicatePrimaryKeyError(error: unknown): boolean {
 export function buildPostgresInsertRowSql(
   tableId: string,
   values: Record<string, RowCellValue>,
+  columns?: PostgresTableColumnRow[],
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
+  const columnByName = columns
+    ? new Map(columns.map((column) => [column.column_name, column]))
+    : undefined
   const entries = Object.entries(values).filter(
     ([, value]) => value !== undefined,
   )
@@ -297,8 +351,10 @@ export function buildPostgresInsertRowSql(
   }
 
   const columnNames = entries.map(([column]) => quotePostgresIdentifier(column))
-  const valueLiterals = entries.map(([, value]) =>
-    value === null ? 'NULL' : formatPostgresSqlLiteral(value),
+  const valueLiterals = entries.map(([column, value]) =>
+    value === null
+      ? 'NULL'
+      : formatPostgresSqlLiteral(value, columnByName?.get(column)),
   )
 
   return prefixPostgresSqlComment(

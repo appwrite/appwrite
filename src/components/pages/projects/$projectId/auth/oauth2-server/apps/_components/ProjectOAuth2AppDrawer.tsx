@@ -230,7 +230,7 @@ export function ProjectOAuth2AppDrawer({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const uris = nonEmptyList(redirectUris)
-    if (!name.trim() || uris.length === 0 || isPending) return
+    if (!name.trim() || isPending) return
 
     const consentPayload = {
       tagline: tagline.trim(),
@@ -345,7 +345,7 @@ export function ProjectOAuth2AppDrawer({
     window.setTimeout(() => onDelete(source), 0)
   }
 
-  const canSubmit = !!name.trim() && nonEmptyList(redirectUris).length > 0
+  const canSubmit = !!name.trim()
 
   return (
     <>
@@ -410,8 +410,7 @@ export function ProjectOAuth2AppDrawer({
 
                   <div className="space-y-2">
                     <Label className="text-[12px] font-medium">
-                      {t('Redirect URIs')}{' '}
-                      <span className="text-destructive">*</span>
+                      {t('Redirect URIs')}
                     </Label>
                     <InputTags
                       value={redirectUris}
@@ -852,7 +851,10 @@ export function ProjectOAuth2AppDrawer({
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden">
+        <DialogContent
+          className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('OAuth secret created')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -929,7 +931,10 @@ export function ProjectOAuth2AppDrawer({
           if (!next) setDeleteSecretId(null)
         }}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete OAuth secret')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -958,7 +963,10 @@ export function ProjectOAuth2AppDrawer({
       </Dialog>
 
       <Dialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Revoke all tokens')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

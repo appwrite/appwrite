@@ -2,6 +2,7 @@
 layout: changelog
 title: "Performance improvements to Appwrite Cloud"
 date: 2024-11-16
+tags: functions, performance, infrastructure
 ---
 
 We've made several updates to improve performance on Appwrite Cloud:

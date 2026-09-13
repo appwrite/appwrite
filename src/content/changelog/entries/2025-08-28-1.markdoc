@@ -3,6 +3,7 @@ layout: changelog
 title: "Announcing Opt-in relationship loading: Granular control for smarter data fetching"
 date: 2025-08-28
 cover: /images/blog/announcing-opt-in-relationship-loading/cover.avif
+tags: databases, performance
 ---
 Announcing Opt-in relationship loading for Appwrite Databases.
 

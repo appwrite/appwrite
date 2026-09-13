@@ -6,6 +6,7 @@ import {
 import { coverRenderDataToSearchParams } from '@/lib/cover-generator/parse-params'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { COVER_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/template-config'
+import { randomUUID } from '@/lib/random-uuid'
 
 export const USER_PREFS_KEY_COVER_GENERATIONS = 'console.coverGenerator.generations'
 
@@ -196,7 +197,7 @@ export function readLegacyCoverEditorGeneration(): SavedCoverGeneration | null {
   if (!persisted) return null
 
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     name: getCoverGenerationDisplayName(persisted.data),
     updatedAt: Date.now(),
     templateId: persisted.data.template,

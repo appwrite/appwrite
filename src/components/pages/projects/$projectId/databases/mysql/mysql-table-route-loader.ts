@@ -14,7 +14,7 @@ import {
   normalizeMysqlTableRouteId,
   mysqlNav,
 } from '@/lib/mysql-database-routes'
-import { queryParamToMap } from '@/lib/table-filters'
+import { parseSort, queryParamToMap } from '@/lib/table-filters'
 
 export async function prefetchMysqlTableLayoutData(
   _queryClient: QueryClient,
@@ -44,6 +44,19 @@ export async function prefetchMysqlTableRowsRouteData(
   const filterKeys =
     filterMap.size > 0 ? Array.from(filterMap.keys()) : undefined
   const hasFilters = filterMap.size > 0
+  const rowsSort = parseSort(
+    typeof routeSearch?.sort === 'string' ? routeSearch.sort : undefined,
+  )
+  const rowsListParams = {
+    search,
+    filterKeys,
+    ...(rowsSort
+      ? {
+          orderBy: rowsSort.sortBy,
+          orderDirection: rowsSort.sortOrder,
+        }
+      : {}),
+  }
 
   const rowColumnsPromise = queryClient.ensureQueryData(
     mysqlTableRowColumnsQueryOptions(
@@ -65,10 +78,7 @@ export async function prefetchMysqlTableRowsRouteData(
               normalizedTableId,
               0,
               ROWS_DEFAULT_PAGE_SIZE,
-              {
-                search,
-                filterKeys,
-              },
+              rowsListParams,
             ),
           ),
         ]),

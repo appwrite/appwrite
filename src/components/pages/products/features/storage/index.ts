@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { StorageAutoGravityVisual } from '@/components/pages/products/features/storage/StorageAutoGravityVisual'
 import { StorageBucketsVisual } from '@/components/pages/products/features/storage/StorageBucketsVisual'
 import { StorageCdnVisual } from '@/components/pages/products/features/storage/StorageCdnVisual'
 import { StorageCompressionVisual } from '@/components/pages/products/features/storage/StorageCompressionVisual'
@@ -7,10 +8,9 @@ import { StorageFileTokensVisual } from '@/components/pages/products/features/st
 import { StoragePermissionsVisual } from '@/components/pages/products/features/storage/StoragePermissionsVisual'
 import { StorageS3Visual } from '@/components/pages/products/features/storage/StorageS3Visual'
 import { StorageTransformWizardVisual } from '@/components/pages/products/features/storage/StorageTransformWizardVisual'
-import { StorageTransformsVisual } from '@/components/pages/products/features/storage/StorageTransformsVisual'
 
 export const STORAGE_FEATURE_VISUALS: Record<string, ComponentType> = {
-  transforms: StorageTransformsVisual,
+  transforms: StorageAutoGravityVisual,
   cdn: StorageCdnVisual,
   compression: StorageCompressionVisual,
   permissions: StoragePermissionsVisual,

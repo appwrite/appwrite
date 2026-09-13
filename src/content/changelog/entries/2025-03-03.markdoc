@@ -2,6 +2,7 @@
 layout: changelog
 title: "Introducing pricing for image transformations"
 date: 2025-03-03
+tags: infrastructure
 ---
 
 To ensure the sustainability of Appwrite Cloud as it continues to scale, we're introducing pricing for image transformations starting April 1st, 2025.

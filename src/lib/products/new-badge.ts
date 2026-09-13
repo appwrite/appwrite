@@ -1,3 +1,4 @@
+import { isCloudProfile } from '@/lib/console-profiles'
 import type { ProductNavItemId } from '@/lib/products/types'
 
 /** How long a product stays marked as new after its launch date. */
@@ -16,6 +17,7 @@ export const PRODUCT_LAUNCH_DATES: Partial<Record<ProductNavItemId, string>> = {
 
 const DOCS_PRODUCT_NEW_HREFS: Partial<Record<string, ProductNavItemId>> = {
   '/docs/products/databases': 'databases',
+  '/docs/products/databases/postgresql': 'databases',
   '/docs/products/domains': 'domains',
   '/docs/products/firewall': 'firewall',
   '/docs/products/agent': 'agent',
@@ -36,6 +38,11 @@ export function isProductNavItemNew(
   id: ProductNavItemId,
   now: Date = new Date(),
 ): boolean {
+  // Databases "New" marks native Postgres and related DB launches.
+  if (id === 'databases' && !isCloudProfile()) {
+    return false
+  }
+
   const launchedAt = PRODUCT_LAUNCH_DATES[id]
   if (!launchedAt) return false
 

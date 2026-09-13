@@ -388,7 +388,7 @@ export function ConnectProject({
   }, [sdkId])
 
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const noCreatePermission = !canCreateKey(access, features)
   const createMutation = useCreateApiKey(projectId)
@@ -423,6 +423,13 @@ export function ConnectProject({
   )
   const { account } = useAuth()
   const { setTab: persistConnectTab } = useConnectProjectTab(account)
+  const connectTabIds = useMemo(
+    () =>
+      CONNECT_PROJECT_TAB_IDS.filter(
+        (tabId) => tabId !== 's3' || isCloud,
+      ),
+    [isCloud],
+  )
 
   const selectConnectTab = useCallback(
     (tab: ConnectProjectTab) => {
@@ -434,8 +441,12 @@ export function ConnectProject({
 
   useEffect(() => {
     if (!open) return
-    setConnectTab(initialConnectTab)
-  }, [open, initialConnectTab])
+    const nextTab =
+      initialConnectTab === 's3' && !isCloud
+        ? DEFAULT_CONNECT_PROJECT_TAB
+        : initialConnectTab
+    setConnectTab(nextTab)
+  }, [open, initialConnectTab, isCloud])
 
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
@@ -574,7 +585,7 @@ export function ConnectProject({
               className="shrink-0 flex gap-0 overflow-x-auto border-b border-border px-6"
               role="tablist"
             >
-              {CONNECT_PROJECT_TAB_IDS.map((tabId) => {
+              {connectTabIds.map((tabId) => {
                 const isActive = connectTab === tabId
                 const label =
                   tabId === 'app'
@@ -1060,6 +1071,7 @@ export function ConnectProject({
                 onViewApiKeys={handleViewApiKeys}
               />
             </TabsContent>
+            {isCloud ? (
             <TabsContent
               value="s3"
               className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
@@ -1069,6 +1081,7 @@ export function ConnectProject({
                 onViewApiKeys={handleViewApiKeys}
               />
             </TabsContent>
+            ) : null}
           </Tabs>
           <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button

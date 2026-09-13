@@ -1,12 +1,5 @@
 import type { SettingsLayoutNavItem } from '@/components/global/shared/settings-search/SettingsLayoutShell'
-import {
-  FileText,
-  Key,
-  KeyRound,
-  LifeBuoy,
-  Rocket,
-  Scale,
-} from 'lucide-react'
+import { FileText, Key, KeyRound, LifeBuoy, Palette, Scale } from 'lucide-react'
 
 export type OrgAppSettingsSectionId =
   | 'general'
@@ -29,7 +22,16 @@ export function buildOrgAppSettingsNavItems(
       icon: FileText,
       to: '/organizations/$orgId/apps/$appId',
       params,
-      keywords: ['name', 'description', 'tagline', 'category', 'listing', 'delete'],
+      keywords: [
+        'name',
+        'description',
+        'tagline',
+        'category',
+        'listing',
+        'enabled',
+        'status',
+        'delete',
+      ],
     },
     {
       id: 'oauth',
@@ -71,11 +73,18 @@ export function buildOrgAppSettingsNavItems(
     },
     {
       id: 'settings',
-      label: 'Publish',
-      icon: Rocket,
+      label: 'Branding',
+      icon: Palette,
       to: '/organizations/$orgId/apps/$appId/settings',
       params,
-      keywords: ['publish', 'enabled', 'draft', 'branding', 'logo', 'homepage', 'images'],
+      keywords: [
+        'branding',
+        'logo',
+        'homepage',
+        'images',
+        'marketplace',
+        'url',
+      ],
     },
   )
 

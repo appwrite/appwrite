@@ -74,7 +74,7 @@ export function CoverTemplateCard({
     >
       <div
         ref={previewRef}
-        className="relative aspect-[1200/630] w-full overflow-hidden border-b border-border"
+        className="relative aspect-video w-full overflow-hidden border-b border-border"
         style={{ backgroundColor: previewBackground }}
       >
         {previewWidth > 0 ? (

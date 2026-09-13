@@ -9,6 +9,7 @@ import { SiteBuildCommandsCard } from './SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './SiteBuildSpecificationCard'
 import { SiteDeploymentRetentionCard } from './SiteDeploymentRetentionCard'
 import { SiteBuildTriggersCard } from './SiteBuildTriggersCard'
+import { SiteScopesCard } from './SiteScopesCard'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -103,6 +104,25 @@ export function View() {
           siteId={siteId}
           site={site}
         />
+      ),
+    },
+    {
+      id: 'scopes',
+      search: {
+        title: 'Scopes',
+        description:
+          'Choose what the API key generated for each build and SSR execution is allowed to do.',
+        keywords: [
+          'scope',
+          'permission',
+          'api key',
+          'dynamic key',
+          'ssr',
+          'access',
+        ],
+      },
+      node: (
+        <SiteScopesCard projectId={projectId} siteId={siteId} site={site} />
       ),
     },
     {

@@ -28,7 +28,7 @@ type MarketplaceSidebarProps = {
   onNavChange: (id: MarketplaceNavId) => void
   searchValue: string
   onSearchChange: (value: string) => void
-  getItemCount?: (id: MarketplaceNavId) => number
+  getItemCount?: (id: MarketplaceNavId) => number | string
   onLinkAction?: (link: MarketplaceLinkItem) => void
   children: ReactNode
 }
@@ -78,7 +78,7 @@ function NavButton({
   onClick: () => void
   icon: MarketplaceNavItem['icon']
   label: string
-  count?: number
+  count?: number | string
 }) {
   return (
     <button
@@ -93,7 +93,7 @@ function NavButton({
     >
       <Icon className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {count !== undefined && count > 0 && (
+      {count !== undefined && count !== 0 && count !== '' && count !== '0' && (
         <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
           {count}
         </span>
@@ -202,7 +202,10 @@ export function MarketplaceSidebar({
   const t = useT()
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
-      <div className="lg:hidden space-y-2" aria-label={t('Marketplace section')}>
+      <div
+        className="lg:hidden space-y-2"
+        aria-label={t('Marketplace section')}
+      >
         <SidebarSearch value={searchValue} onChange={onSearchChange} />
         <Select
           value={activeNavId}

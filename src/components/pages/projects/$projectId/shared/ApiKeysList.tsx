@@ -19,6 +19,7 @@ import {
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { ApiKeyContextMenu } from '../api-keys/_components/ApiKeyContextMenu'
+import { OrgApiKeyContextMenu } from '@/components/pages/organizations/$orgId/settings/_components/OrgApiKeyContextMenu'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -43,6 +44,10 @@ interface ApiKeysListProps {
   showActions?: boolean
   /** When set, wrap each row with a right-click context menu */
   projectId?: string
+  /** Organization API keys: wrap each row with the org key context menu */
+  organizationId?: string
+  /** Nested in a settings card: no outer border or empty-state chrome */
+  embedded?: boolean
 }
 
 function getExpirationStatus(expire: string | null) {
@@ -67,7 +72,10 @@ export function ApiKeysList({
   onCopy,
   copiedField,
   showActions = true,
-  projectId}: ApiKeysListProps) {
+  projectId,
+  organizationId,
+  embedded = false,
+}: ApiKeysListProps) {
   const t = useT()
   const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
 
@@ -119,9 +127,14 @@ export function ApiKeysList({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
-        <div className="divide-y divide-border">
-          {apiKeys.map((apiKey) => {
+      <div
+        className={cn(
+          'divide-y divide-border',
+          !embedded &&
+            'overflow-hidden rounded-xl border border-border bg-card/50',
+        )}
+      >
+        {apiKeys.map((apiKey) => {
             const expirationStatus = getExpirationStatus(apiKey.expire)
             const row = (
               <div
@@ -296,9 +309,26 @@ export function ApiKeysList({
                 </ApiKeyContextMenu>
               )
             }
+            if (organizationId) {
+              return (
+                <OrgApiKeyContextMenu
+                  key={apiKey.id}
+                  organizationId={organizationId}
+                  apiKey={{
+                    id: apiKey.id,
+                    name: apiKey.name,
+                    key: apiKey.key,
+                    scopes: apiKey.scopes,
+                    expire: apiKey.expire,
+                  }}
+                  onUpdate={onUpdate}
+                >
+                  {row}
+                </OrgApiKeyContextMenu>
+              )
+            }
             return <Fragment key={apiKey.id}>{row}</Fragment>
           })}
-        </div>
       </div>
 
       {/* API Key View Modal */}

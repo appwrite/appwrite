@@ -18,7 +18,7 @@ Authorization is the step where a user allows a client to act on their behalf. A
 
 1. The client sends the user to the **authorization endpoint** with its client ID, a registered redirect URI, `response_type=code`, and the scopes it wants.
 2. Appwrite checks whether the user has a session on your project. If they are signed in, Appwrite creates a pending authorization request called a **grant**. The grant connects the user, client, requested scopes, and redirect URI.
-3. Appwrite sends the browser to your **authorization URL**, which hosts your consent screen. The URL contains the grant ID for a signed-in user or the original authorization parameters for a signed-out user.
+3. Appwrite sends the browser to your **authorization URL**, which hosts your consent screen. The URL contains the grant ID for a signed-in user or the original authorization parameters for a signed-out user. Appwrite skips this step when the user already approved these scopes for this client and that consent is still valid, sending the browser straight to step 5.
 4. Your consent screen signs the user in when needed, loads the grant, and lets the user approve or reject it.
 5. On approval, Appwrite redirects the browser to the client's redirect URI with a short-lived authorization `code`.
 6. The client exchanges the code for tokens at the token endpoint. See [Tokens](/docs/products/auth/oauth-server/tokens).
@@ -29,7 +29,7 @@ PKCE (Proof Key for Code Exchange) binds an authorization request to the client 
 
 The client creates a random `code_verifier`, hashes it with SHA-256 to produce a `code_challenge`, and sends both `code_challenge` and `code_challenge_method=S256` in the authorization request. Appwrite supports `S256` only.
 
-PKCE is always required for **public clients**, which cannot safely keep a client secret. **Confidential clients** authenticate with a client secret and do not require PKCE by default. To require both protections for confidential clients, enable **Require PKCE** in your OAuth2 server settings. This setting is represented as `confidentialPkce` in the API.
+PKCE is always required for **public clients**, which cannot safely keep a client secret. **Confidential clients** authenticate with a client secret and do not require PKCE by default. To require both protections for confidential clients, enable **Require PKCE** in the **Token lifetimes** card under **Auth > OAuth2 server > Server**. This setting is represented as `confidentialPkce` in the API.
 
 # 1. Send the user to the authorization endpoint {% #authorize %}
 
@@ -138,7 +138,7 @@ A grant is Appwrite's record of one pending authorization request. It identifies
 
 Handle the incoming URL in this order:
 
-1. Look for `grant_id` in the URL. If it is present, save the value and pass it to `oauth2.getGrant()` in [Load the request](#load-grant). The returned grant tells the consent screen which client is requesting access and which scopes and resources to show the user.
+1. Look for `grant_id` in the URL. If it is present, save the value and pass it to `oauth2.getGrant()` in [Load the request](#load-grant). The returned grant carries the requesting client's ID along with the scopes and resources to show the user.
 2. If `grant_id` is missing, call `account.get()` to check whether the user has a project session.
 3. If the user is signed out, build a return URL from the consent page's current path and query string. Send the user to your normal sign-in or sign-up page with that value in a `redirect` search parameter.
 4. After authentication, read `redirect` and return the user to it. The original authorization parameters are now available alongside the user's session.
@@ -208,17 +208,17 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Authorize = try await oauth2.authorize(
-    client_id: "<CLIENT_ID>",
-    redirect_uri: "https://example.com",
-    response_type: "code",
+    clientId: "<CLIENT_ID>",
+    redirectUri: "https://example.com",
+    responseType: "code",
     scope: "<SCOPE>", // optional
     state: "<STATE>", // optional
     nonce: "<NONCE>", // optional
-    code_challenge: "<CODE_CHALLENGE>", // optional
-    code_challenge_method: "S256", // optional
+    codeChallenge: "<CODE_CHALLENGE>", // optional
+    codeChallengeMethod: "S256", // optional
     prompt: "<PROMPT>", // optional
-    max_age: 0, // optional
-    authorization_details: "<AUTHORIZATION_DETAILS>", // optional
+    maxAge: 0, // optional
+    authorizationDetails: "<AUTHORIZATION_DETAILS>", // optional
     resource: "" // optional
 )
 ```
@@ -234,17 +234,17 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.authorize(
-    client_id = "<CLIENT_ID>", 
-    redirect_uri = "https://example.com", 
-    response_type = "code", 
+    clientId = "<CLIENT_ID>", 
+    redirectUri = "https://example.com", 
+    responseType = "code", 
     scope = "<SCOPE>", // (optional)
     state = "<STATE>", // (optional)
     nonce = "<NONCE>", // (optional)
-    code_challenge = "<CODE_CHALLENGE>", // (optional)
-    code_challenge_method = "S256", // (optional)
+    codeChallenge = "<CODE_CHALLENGE>", // (optional)
+    codeChallengeMethod = "S256", // (optional)
     prompt = "<PROMPT>", // (optional)
-    max_age = 0, // (optional)
-    authorization_details = "<AUTHORIZATION_DETAILS>", // (optional)
+    maxAge = 0, // (optional)
+    authorizationDetails = "<AUTHORIZATION_DETAILS>", // (optional)
     resource = "", // (optional)
 )
 ```
@@ -314,7 +314,9 @@ For a PAR request, send the browser back to the authorization endpoint with only
 
 ## Load the request {% #load-grant %}
 
-Pass the grant ID to `oauth2.getGrant()`. Use the returned client details, scopes, and resources to explain the request on the consent screen. Keep the same grant ID for the approve or reject call after the user decides.
+Pass the grant ID to `oauth2.getGrant()`. Use the returned scopes and resources to explain the request on the consent screen, and keep the same grant ID for the approve or reject call after the user decides.
+
+The grant identifies the client by `appId` only. To show its name, logo, and tagline, pass that ID to [`apps.get()`](/docs/products/auth/oauth-server/clients#get).
 
 {% multicode %}
 ```client-web
@@ -355,7 +357,7 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Grant = try await oauth2.getGrant(
-    grant_id: "<GRANT_ID>"
+    grantId: "<GRANT_ID>"
 )
 ```
 ```client-android-kotlin
@@ -370,7 +372,7 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.getGrant(
-    grant_id = "<GRANT_ID>", 
+    grantId = "<GRANT_ID>", 
 )
 ```
 ```client-android-java
@@ -415,7 +417,7 @@ console.log(result);
 
 ## Record the user's decision {% #decision %}
 
-When the user approves the request, you can pass the scopes they kept selected. Omit `scope` to approve every scope in the grant.
+When the user approves the request, you can pass the scopes they kept selected. Omit `scope` to approve every scope in the grant. Narrowing only works downward. A scope that was not in the grant is rejected, and `openid` is added back if the user dropped it, because it is the sign-in itself.
 
 {% multicode %}
 ```client-web
@@ -460,8 +462,8 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Approve = try await oauth2.approve(
-    grant_id: "<GRANT_ID>",
-    authorization_details: "<AUTHORIZATION_DETAILS>", // optional
+    grantId: "<GRANT_ID>",
+    authorizationDetails: "<AUTHORIZATION_DETAILS>", // optional
     scope: "<SCOPE>" // optional
 )
 ```
@@ -477,8 +479,8 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.approve(
-    grant_id = "<GRANT_ID>", 
-    authorization_details = "<AUTHORIZATION_DETAILS>", // (optional)
+    grantId = "<GRANT_ID>", 
+    authorizationDetails = "<AUTHORIZATION_DETAILS>", // (optional)
     scope = "<SCOPE>", // (optional)
 )
 ```
@@ -569,7 +571,7 @@ let client = Client()
 let oauth2 = Oauth2(client)
 
 let oauth2Reject = try await oauth2.reject(
-    grant_id: "<GRANT_ID>"
+    grantId: "<GRANT_ID>"
 )
 ```
 ```client-android-kotlin
@@ -584,7 +586,7 @@ val client = Client(context)
 val oauth2 = Oauth2(client)
 
 val result = oauth2.reject(
-    grant_id = "<GRANT_ID>", 
+    grantId = "<GRANT_ID>", 
 )
 ```
 ```client-android-java
@@ -627,7 +629,7 @@ console.log(result);
 ```
 {% /multicode %}
 
-The SDK requests JSON responses so it can behave consistently with other SDK methods. The approve and reject methods therefore return `redirectUrl`, and your browser code must navigate to it. A direct HTTP request without an `Accept: application/json` header receives a `302` redirect automatically.
+The SDK requests JSON responses so it can behave consistently with other SDK methods. The approve and reject methods therefore return `redirectUrl`, and your browser code must navigate to it. A direct HTTP request without an `Accept: application/json` header receives a `303` redirect automatically.
 
 ## Consent screen best practices {% #consent-best-practices %}
 

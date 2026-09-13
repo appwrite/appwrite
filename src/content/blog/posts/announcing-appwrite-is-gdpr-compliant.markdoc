@@ -6,7 +6,7 @@ date: 2024-01-09
 cover: /images/blog/announcing-appwrite-is-gdpr-compliant/GDPR-Announcement.avif
 timeToRead: 3
 author: may-ender
-category: security, announcement
+category: security, announcements
 faqs:
   - question: "What is GDPR and who does it apply to?"
     answer: "The General Data Protection Regulation is the European Union's data protection law. It applies to any organization that processes the personal data of people in the EU, regardless of where the organization itself is based. GDPR sets requirements around lawful basis, consent, data subject rights, breach notification, and the use of processors and sub-processors."

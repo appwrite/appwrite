@@ -6,7 +6,7 @@ date: 2026-06-11
 cover: /images/blog/may-product-update-presences-api-rust-runtime-7x-faster-storage-uploads-and-more/cover.avif
 timeToRead: 5
 author: aishwari
-category: product
+category: products
 featured: false
 faqs:
   - question: What is Appwrite Presences API used for?
@@ -168,4 +168,4 @@ If you would like to participate in next month's Community Recognitions, [join o
 
 We are continuing to improve Appwrite across realtime collaboration, deployments, performance, databases, Auth, and AI-assisted workflows.
 
-Follow us on [X](https://x.com/appwrite) and check our [Changelog](/changelog) regularly, as we will release more information in the coming weeks.
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](/changelog) regularly, as we will release more information in the coming weeks.

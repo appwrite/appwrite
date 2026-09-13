@@ -1,4 +1,5 @@
 import type { Models } from '@appwrite.io/console'
+import { stringifyJsonForDisplay } from '@/lib/json-display'
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 import {
   executionResultRows,
@@ -206,7 +207,7 @@ export function formatPostgresExecutionCellValue(value: unknown): string {
     try {
       return typeof taggedValue === 'string'
         ? taggedValue
-        : JSON.stringify(taggedValue)
+        : stringifyJsonForDisplay(taggedValue)
     } catch {
       return String(taggedValue)
     }
@@ -217,7 +218,7 @@ export function formatPostgresExecutionCellValue(value: unknown): string {
   }
 
   try {
-    return JSON.stringify(value)
+    return stringifyJsonForDisplay(value)
   } catch {
     return String(value)
   }

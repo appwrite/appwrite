@@ -8,6 +8,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
   '.env entry copied': '.env エントリをコピーしました',
   '1 backup deleted': '1 件のバックアップを削除しました',
   'About this algorithm': 'このアルゴリズムについて',
+  'Appwrite now speaks PostgreSQL': 'Appwrite が PostgreSQL に対応しました',
+  'Dismiss banner': 'バナーを閉じる',
+  'New': '新規',
+  'PostgreSQL announcement banner': 'PostgreSQL お知らせバナー',
+  'Read more': '詳しく見る',
+  'Setup': 'セットアップ',
   'Active client connections.': 'アクティブなクライアント接続。',
   'Active client sessions connected to this database.': 'このデータベースに接続されているアクティブなクライアントセッション。',
   'active over 10s': '10 秒以上アクティブ',
@@ -20,6 +26,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Add at least one non-relationship attribute to create indexes.': 'インデックスを作成するには、リレーション以外の属性を少なくとも 1 つ追加してください。',
   'Add at least one non-relationship column to create indexes.': 'インデックスを作成するには、リレーション以外の列を少なくとも 1 つ追加してください。',
   'Add at least one non-relationship column to suggest indexes.': 'インデックスを提案するには、リレーション以外の列を少なくとも 1 つ追加してください。',
+  'A partial index may reduce the amount of data scanned.': '部分インデックスはスキャンするデータ量を減らせる場合があります。',
   'Add column': '列の追加',
   'Add custom policy': 'カスタムポリシーの追加',
   'Add element': '要素の追加',
@@ -42,6 +49,15 @@ export const jaDatabasesDictionary: Record<string, string> = {
     '値が指定されない場合に列を NULL にできます。',
   'A literal or SQL expression, for example now() or gen_random_uuid().':
     'リテラルまたは SQL 式。例: now() や gen_random_uuid()。',
+  'A value or SQL expression, for example CURRENT_TIMESTAMP.':
+    '値または SQL 式。例: CURRENT_TIMESTAMP。',
+  'Document permissions grant extra access on top of collection permissions, they are not required in addition to them.': 'ドキュメント権限はコレクション権限に追加のアクセスを付与するものであり、コレクション権限と併せて必要になるわけではありません。',
+  'either document permissions or collection permissions': 'ドキュメント権限またはコレクション権限のいずれかがあれば十分です',
+  'either row permissions or table permissions': '行権限またはテーブル権限のいずれかがあれば十分です',
+  'Enter a value as-is, or a SQL expression such as CURRENT_TIMESTAMP.':
+    '値をそのまま入力するか、CURRENT_TIMESTAMP のような SQL 式を入力してください。',
+  'Enter a value as-is, or a SQL expression such as now() or gen_random_uuid().':
+    '値をそのまま入力するか、now() や gen_random_uuid() のような SQL 式を入力してください。',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _': '使用可能な文字: a-z、A-Z、0-9、-、.、_',
   'Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.': '使用可能な文字: a-z、A-Z、0-9、-、.、_。作成後はデータ整合性を保つため、列キーは変更できません。',
   'always require collection-level permissions, regardless of document security settings.': 'ドキュメントセキュリティ設定に関係なく、常にコレクションレベルの権限が必要です。',
@@ -89,8 +105,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'backups selected': 'バックアップを選択',
   'Beta': 'ベータ',
   'Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.': '1 分あたりのディスクからのブロック読み取り数。キャッシュヒット率の低下とともにディスク読み取りが増加すると、メモリ不足の兆候となる場合があります。',
-  'both collection permissions and document permissions': 'コレクション権限とドキュメント権限の両方',
-  'both table permissions and row permissions': 'テーブル権限と行権限の両方',
   'Bucket': 'バケット',
   'Buckets': 'バケット',
   'Buffer cache effectiveness from pg_stat_database block reads and hits.': 'pg_stat_database のブロック読み取りとヒットから算出したバッファキャッシュの効率。',
@@ -192,6 +206,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   "Couldn't refresh databases": 'データベースを更新できませんでした',
   "Couldn't refresh dedicated databases": '専用データベースを更新できませんでした',
   'Covering index columns stored in the index but not used for lookups.': 'インデックスに格納されているがルックアップには使用されないカバリングインデックス列。',
+  'Optional WHERE predicate, for example deleted_at IS NULL.': '任意の WHERE 条件。例: deleted_at IS NULL。',
   'CPU usage': 'CPU 使用率',
   'Create': '作成',
   'Create a collection to store JSON documents with flexible schemas.': '柔軟なスキーマで JSON ドキュメントを保存するコレクションを作成します。',
@@ -209,6 +224,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'まず列を作成',
   'Create database': 'データベースの作成',
   'Creating database': 'データベースを作成中',
+  'Creating an index scans existing rows. Expect extended write blocking on this table until the build completes.': 'インデックスの作成は既存行をスキャンします。ビルドが完了するまで、このテーブルへの書き込みは長時間ブロックされる可能性があります。',
+  'Creating an index scans existing rows. Even with online DDL, builds on tables of this size can run for an extended period.': 'インデックスの作成は既存行をスキャンします。online DDL でも、このサイズのテーブルではビルドに長時間かかる場合があります。',
+  'Creating an index scans existing rows. The build runs online but may consume significant resources and take considerable time.': 'インデックスの作成は既存行をスキャンします。ビルドは online で実行されますが、リソースを大量に消費し、相当の時間がかかる場合があります。',
+  'Creating an index scans existing rows. The build runs online but may still take noticeable time on larger tables.': 'インデックスの作成は既存行をスキャンします。ビルドは online で実行されますが、大きなテーブルでは時間がかかる場合があります。',
+  'Creating an index scans existing rows. Writes to this table are blocked until the build finishes.': 'インデックスの作成は既存行をスキャンします。ビルドが完了するまで、このテーブルへの書き込みはブロックされます。',
+  'Creating an index scans existing rows. Writes to this table remain blocked for the full duration, which can be substantial on large tables.': 'インデックスの作成は既存行をスキャンします。ビルド中は書き込みがブロックされたままになり、大きなテーブルでは相当の時間になる場合があります。',
   'Allocating dedicated compute for your database.':
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
@@ -223,6 +244,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Preparing workspace': 'ワークスペースを準備中',
   'Preparing your database workspace.': 'データベースワークスペースを準備中です。',
   'Provisioning compute': 'コンピュートをプロビジョニング中',
+  'Row permissions grant extra access on top of table permissions, they are not required in addition to them.': '行権限はテーブル権限に追加のアクセスを付与するものであり、テーブル権限と併せて必要になるわけではありません。',
   'Setting up backups': 'バックアップを設定中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
@@ -362,6 +384,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Dead tuples': 'デッドタプル',
   'Decrease replica count': 'レプリカ数を減らす',
   'Dedicated': '専用',
+  'Dedicated database': '専用データベース',
   'Dedicated databases': '専用データベース',
   'Default': 'デフォルト',
   'Leave empty for': '空欄の場合',
@@ -396,6 +419,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Date and time with time zone': 'タイムゾーン付き日時',
   'Time span': '時間間隔',
   'Unique identifier': '一意の識別子',
+  'Unique indexes verify every row, which adds time on large tables.': '一意インデックスはすべての行を検証するため、大きなテーブルでは時間がかかります。',
   'JSON stored as text': 'テキストとして保存された JSON',
   'Binary JSON': 'バイナリ JSON',
   'Binary data': 'バイナリデータ',
@@ -587,6 +611,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'has been created': 'を作成しました',
   'has been deleted': 'を削除しました',
   'Hash indexes support one key column.': 'ハッシュインデックスは 1 つのキー列のみサポートします。',
+  'Hide database tools': 'データベースツールを非表示',
   'Hide encrypted values': '暗号化された値を非表示',
   'Hide password': 'パスワードを非表示',
   'Host': 'ホスト',
@@ -603,12 +628,18 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Include header row - Column names as the first row.': 'ヘッダー行を含める: 最初の行に列名を含めます。',
   'Increase replica count': 'レプリカ数を増やす',
   'Index': 'インデックス',
+  'Index build may take a few minutes on this table': 'このテーブルではインデックスのビルドに数分かかる場合があります',
+  'Index build may take considerable time on this table': 'このテーブルではインデックスのビルドに相当の時間がかかる場合があります',
+  'Index build may take a long time on this table': 'このテーブルではインデックスのビルドに長時間かかる場合があります',
   'Index created': 'インデックスを作成しました',
   'Index created successfully': 'インデックスを作成しました',
   'Index deleted': 'インデックスを削除しました',
   'Index updated successfully': 'インデックスを更新しました',
   'Indexes': 'インデックス',
   'indexes': 'インデックス',
+  'indexes take longer to build than B-tree.': 'インデックスは B-tree よりビルドに時間がかかります。',
+  'item': '件',
+  'items': '件',
   'Ingress and egress for this database instance.': 'このデータベースインスタンスの受信と送信。',
   'Ingress and egress throughput for this database instance.': 'このデータベースインスタンスの受信と送信のスループット。',
   'Insights': 'インサイト',
@@ -882,16 +913,31 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Policy limit reached. Upgrade to create more.': 'ポリシーの上限に達しました。さらに作成するにはアップグレードしてください。',
   'Policy Name': 'ポリシー名',
   'Port': 'ポート',
+  'PostgreSQL is here!': 'PostgreSQL が登場！',
+  'MySQL is here!': 'MySQL が登場！',
+  'DocumentsDB is here!': 'DocumentsDB が登場！',
+  'VectorsDB is here!': 'VectorsDB が登場！',
   'PostgreSQL connection URI for clients that accept a single connection string.': '単一の接続文字列を受け付けるクライアント向けの PostgreSQL 接続 URI。',
   'Preset Policies': 'プリセットポリシー',
   'Prettify JSON': 'JSON を整形',
   'Previous': '前へ',
   'Previous page': '前のページ',
   'Price': '価格',
+  'PK': 'PK',
   'Primary key': 'プライマリキー',
   'Optional SQL expression, for example': '任意の SQL 式。例:',
+  'Must be valid SQL for this column type, for example':
+    'この列型に対して有効な SQL である必要があります。例:',
   'Require values in this column to be unique across rows.':
     'この列の値を行間で一意にします。',
+  'MySQL indexes on TEXT and BLOB use the first 255 characters.':
+    'TEXT および BLOB のインデックスは先頭 255 文字を使います。',
+  'JSON columns cannot be uniquely indexed. Use VARCHAR, or store a unique key in a separate column.':
+    'JSON 列には一意インデックスを作成できません。VARCHAR を使うか、別の列に一意キーを保存してください。',
+  'MySQL cannot uniquely index TEXT or BLOB columns without a key length. Use VARCHAR with a defined length, or create a prefix index.':
+    'MySQL はキー長なしでは TEXT または BLOB 列を一意インデックスにできません。長さを指定した VARCHAR を使うか、プレフィックス インデックスを作成してください。',
+  'Existing rows were filled with an empty value, which is not unique. Allow NULL, or add the column first and fill distinct values.':
+    '既存の行が空の値で埋められ、一意になりませんでした。NULL を許可するか、先に列を追加してから異なる値を入れてください。',
   'Store multiple values of this type in a single column.':
     'この型の値を 1 つの列に複数格納します。',
   'Use lowercase letters and underscores, for example column_name.':
@@ -1045,6 +1091,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Share of blocks served from memory instead of disk.': 'ディスクではなくメモリから提供されたブロックの割合。',
   'Show less': '表示を減らす',
   'Show more': 'もっと表示',
+  'Show database tools': 'データベースツールを表示',
   'Show encrypted values': '暗号化された値を表示',
   'Show password': 'パスワードを表示',
   'Show, hide, and reorder table columns': 'テーブル列の表示、非表示、並べ替え',
@@ -1059,6 +1106,14 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Specifications': '仕様',
   'Rename query tab': 'クエリタブの名前を変更',
   'SQL editor': 'SQL エディター',
+  'Expression': '式',
+  'Expression': '式',
+  'Stored as data. Quotes and escaping are applied for you.':
+    'データとして保存されます。引用符とエスケープは自動で適用されます。',
+  'Passed to the database as SQL, for example CURRENT_TIMESTAMP.':
+    'データベースに SQL として渡されます。例: CURRENT_TIMESTAMP。',
+  'Passed to the database as SQL, for example now() or gen_random_uuid().':
+    'データベースに SQL として渡されます。例: now() や gen_random_uuid()。',
   'Started': '開始',
   'Connection state': '接続状態',
   'State change': '状態変更',
@@ -1124,6 +1179,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'The table will be permanently deleted, including all the rows within it. This action is irreversible.': 'テーブル内のすべての行を含め、テーブルは完全に削除されます。この操作は元に戻せません。',
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'This column has multiple check constraints. Saving replaces them with a single check.': 'この列には複数の CHECK 制約があります。保存すると単一の CHECK に置き換えられます。',
+  'This check compares text to a number.': 'このチェックはテキストと数値を比較しています。',
   'This column has multiple foreign keys. Saving replaces them with a single foreign key.': 'この列には複数の外部キーがあります。保存すると単一の外部キーに置き換えられます。',
   'This console does not create collection attributes from the grid. Use the Appwrite Documents API or your preferred SDK.': 'このコンソールはグリッドからコレクション属性を作成しません。Appwrite Documents API またはお好みの SDK を使用してください。',
   'This console does not create collection attributes from the grid. Use the Appwrite Vectors API or your preferred SDK.': 'このコンソールはグリッドからコレクション属性を作成しません。Appwrite Vectors API またはお好みの SDK を使用してください。',
@@ -1141,8 +1197,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Thursday': '木曜日',
   'Tier': 'ティア',
   'Time': '時間',
-  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.': 'ドキュメントにアクセスするために必要です。ドキュメント権限はコレクション権限の代替ではなく、追加のレイヤーです。',
-  'to access rows. Row permissions are an additional layer, not an alternative to table permissions.': '行にアクセスするために必要です。行権限はテーブル権限の代替ではなく、追加のレイヤーです。',
   'to enable automated backups.': '自動バックアップを有効にするには。',
   'Top tables by on-disk size, including indexes and TOAST data.': 'インデックスと TOAST データを含む、オンディスクサイズ別の上位テーブル。',
   'Total': '合計',
@@ -1199,14 +1253,15 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Visual': 'ビジュアル',
   'Visualizer': 'ビジュアライザー',
   'Wait': '待機',
+  'When document security is enabled, users can access a document if they have': 'ドキュメントセキュリティが有効な場合、ユーザーがドキュメントにアクセスするには、',
+  'When row security is enabled, users can access a row if they have': '行セキュリティが有効な場合、ユーザーが行にアクセスするには、',
+  'Will be stored as': '次のように保存されます',
   'Wait event': '待機イベント',
   'Wednesday': '水曜日',
   'Weekly': '毎週',
   'Weeks': '週',
   'What is a DSN?': 'DSN とは?',
   'What is psql?': 'psql とは?',
-  'When document security is enabled, users need': 'ドキュメントセキュリティが有効な場合、ユーザーには',
-  'When row security is enabled, users need': '行セキュリティが有効な場合、ユーザーには',
   'Workload': 'ワークロード',
   'Write operations': '書き込み操作',
   'Write SQL before explaining a query.': 'クエリを説明する前に SQL を記述してください。',
@@ -1363,6 +1418,16 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Select a schema to visualize': '可視化するスキーマを選択',
   'Run': '実行',
   'Explain': '説明',
+  'Analyze': 'Analyze',
+  'Analyzing query…': 'クエリを分析中…',
+  'Analyze failed': '分析に失敗しました',
+  'Explain failed': '説明に失敗しました',
+  'Query failed': 'クエリに失敗しました',
+  'Explaining query…': 'クエリを説明中…',
+  'Write SQL before analyzing a query.': '分析する前に SQL を記述してください。',
+  'Executes the query and shows actual timings.': 'クエリを実行し、実際の実行時間を表示します。',
+  'Estimated plan only. The query was not executed.': '推定プランのみです。クエリは実行されていません。',
+  'Query was executed. Timings show actual performance.': 'クエリを実行しました。時間は実際のパフォーマンスを示します。',
   'Format SQL': 'SQL のフォーマット',
   'Off': 'オフ',
   'Billed at': '課金額',
@@ -1430,6 +1495,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Removing': '削除予定',
   'Restoring': '復元中',
   'Scaling': 'スケーリング中',
+  'Failing over': 'フェイルオーバー中',
   'Upgrading': 'アップグレード中',
   'Migrating': '移行中',
   'Pausing': '一時停止中',
@@ -1510,6 +1576,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'All columns must have a value and order selected': 'すべての列で値と順序を選択する必要があります',
   'Managed databases built into Appwrite for app data, documents, and AI workloads.': 'アプリデータ、ドキュメント、AI ワークロード向けに Appwrite に組み込まれたマネージドデータベースです。',
   'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.': '直接的な SQL 互換性が必要なチーム向けの専用 PostgreSQL および MySQL エンジンです。',
+  'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.': '標準の SQL クライアントで接続する専用マネージド PostgreSQL および MySQL エンジン。',
+  'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.': 'フル SQL、pgvector、Prisma や Drizzle などの既存ツール向けの移植可能なスキーマを備えたマネージド PostgreSQL ホスティング。',
   'A dedicated PostgreSQL engine for teams that need direct SQL compatibility.': '直接的な SQL 互換性が必要なチーム向けの専用 PostgreSQL エンジンです。',
   'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.': 'テーブル、列、インデックスを備えたリレーショナル形式のデータベースです。構造化データや複雑なクエリに最適です。',
   'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.': '柔軟なスキーマを備えたドキュメントベースのストレージです。JSON ドキュメントを保存し、フィルターや全文検索でクエリできます。',
@@ -1553,6 +1621,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Compute tier update started': 'コンピュートティアの更新を開始しました',
   'Failed to update compute tier': 'コンピュートティアの更新に失敗しました',
   'Database is scaling': 'データベースをスケーリング中',
+  'Database is failing over': 'データベースはフェイルオーバー中',
   'Database is provisioning': 'データベースをプロビジョニング中',
   'Database is restoring': 'データベースを復元中',
   'Database is paused': 'データベースは一時停止中',
@@ -1565,6 +1634,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current status': '現在のステータス',
   'A compute tier change is in progress. Your cluster remains available during this operation.':
     'コンピュートティアの変更を実行中です。この操作中もクラスターは利用可能なままです。',
+  'A failover is in progress. Your cluster remains available during this operation.':
+    'フェイルオーバーを実行中です。この操作中もクラスターは利用可能なままです。',
   'Dedicated compute is being provisioned for this database.':
     'このデータベース用の専用コンピュートをプロビジョニングしています。',
   'This database is being restored. Some operations may be unavailable until it is ready again.':
@@ -1609,8 +1680,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
     '現在のプライマリは {instance} です。書き込みトラフィックを移すには、読み取りレプリカを選択して昇格してください。',
   'Refreshing cluster members…': 'クラスタメンバーを更新中…',
   'Promote to primary': 'プライマリに昇格',
-  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
-    '{instance} をプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。フェイルオーバー完了まで書き込みが一時的に利用できない場合があります。',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes will still be available here while failover completes.':
+    '{instance} をプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。フェイルオーバー完了まで、書き込みは引き続きこちらで利用できます。',
   'Promote the selected read replica to primary? The current primary will become a read replica.':
     '選択した読み取りレプリカをプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。',
   'Failover started': 'フェイルオーバーを開始しました',
@@ -1918,6 +1989,18 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Disk IOPS': 'ディスク IOPS',
   'Disk read and write operations per second for instance storage.':
     'インスタンスストレージの1秒あたりのディスク読み取り/書き込み操作。',
+  'Inbound and outbound data transferred by this database instance during the selected period.':
+    '選択した期間中にこのデータベースインスタンスで転送された受信および送信データ。',
+  'Compute resources consumed by this database instance during the selected period.':
+    '選択した期間中にこのデータベースインスタンスが消費したコンピュートリソース。',
+  'Cold starts for this database instance during the selected period.':
+    '選択した期間中のこのデータベースインスタンスのコールドスタート。',
+  'Debug metrics': 'デバッグメトリクス',
+  'Cold starts': 'コールドスタート',
+  'No compute metrics for this date range':
+    'この期間のコンピュートメトリクスはありません',
+  'No cold start metrics for this date range':
+    'この期間のコールドスタートメトリクスはありません',
   'Disk read operations per second for instance storage.':
     'インスタンスストレージの1秒あたりのディスク読み取り操作。',
   'Disk write operations per second for instance storage.':
@@ -1930,11 +2013,14 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'この期間の接続メトリクスはありません',
   'No CPU metrics for this date range': 'この期間の CPU メトリクスはありません',
   'No IOPS metrics for this date range': 'この期間の IOPS メトリクスはありません',
+  'No network metrics for this date range': 'この期間のネットワークメトリクスはありません',
   'No memory metrics for this date range':
     'この期間のメモリメトリクスはありません',
   'No QPS metrics for this date range': 'この期間の QPS メトリクスはありません',
   'No storage metrics for this date range':
     'この期間のストレージメトリクスはありません',
+  'Metrics are still being collected for this newly created database. Charts will populate within a few minutes once the instance is ready.':
+    '新しく作成したデータベースのメトリクスを収集中です。インスタンスの準備が整うと、数分以内にチャートにデータが表示されます。',
   'qps': 'qps',
   'Queries per second': '1秒あたりのクエリ数',
   'Queries per second handled by this database instance.':
@@ -1951,6 +2037,61 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'utilization': '使用率',
   'read': '読み取り',
   'write': '書き込み',
+  'inbound': '受信',
+  'outbound': '送信',
+  'Inbound': '受信',
+  'Outbound': '送信',
+  'Outbound total': '送信合計',
   'used': '使用中',
   'Write IOPS latest': '最新の書き込み IOPS',
+  'Restore to a point in time': '特定時点への復元',
+  'Choose a moment inside the recovery window. The target database is unavailable while restoring, and everything after that moment is discarded.':
+    'リカバリウィンドウ内の時点を選びます。復元中は対象データベースを利用できず、その時点より後のデータは破棄されます。',
+  'Recovery window': 'リカバリウィンドウ',
+  'Earliest': '最も早い時点',
+  'Latest': '最も遅い時点',
+  'No recovery window is available yet. Continuous archiving has to capture its first segment after PITR is enabled.':
+    'まだリカバリウィンドウはありません。PITR を有効にしたあと、連続アーカイブが最初のセグメントを取り込む必要があります。',
+  'Restore time': '復元時刻',
+  'Use latest': '最新を使う',
+  'Choose a time between the earliest and latest recovery points.':
+    '最も早いリカバリポイントと最も遅いリカバリポイントの間の時刻を選んでください。',
+  'Overwrite this database in place. This cannot be undone.':
+    'このデータベースをその場で上書きします。この操作は元に戻せません。',
+  'Another database': '別のデータベース',
+  'Restore into a ready database with the same engine and version.':
+    '同じエンジンとバージョンの準備済みデータベースへ復元します。',
+  'Target database': '復元先データベース',
+  'No other ready database with the same engine and version is available.':
+    '同じエンジンとバージョンの準備済みデータベースはほかにありません。',
+  'Select a database': 'データベースを選択',
+  'I understand that the selected database will be permanently replaced with data from this point in time.':
+    '選択したデータベースがこの時点のデータで完全に置き換えられることを理解しています。',
+  'I understand that all current database data will be permanently replaced, and everything after this time will be discarded.':
+    '現在のデータベースデータが完全に置き換えられ、この時刻より後のデータは破棄されることを理解しています。',
+  'Failed to restore to this point in time': 'この時点への復元に失敗しました',
+  'Choose a restore time inside the recovery window.':
+    'リカバリウィンドウ内の復元時刻を選んでください。',
+  'Restore PITR': 'PITR 復元',
+  'Enable PITR first to restore to a specific moment.':
+    '特定の時点へ復元するには、先に PITR を有効にしてください。',
+  'Could not load the recovery window. Try again in a moment.':
+    'リカバリウィンドウを読み込めませんでした。しばらくしてから再試行してください。',
+  'Loading recovery window...': 'リカバリウィンドウを読み込み中...',
+  'Target time': '対象時刻',
+  'Backup': 'バックアップ',
+  'Start restore': '復元を開始',
+  'Database changes are recorded continuously, so you can restore to any moment in the recovery window.':
+    'データベースの変更は継続的に記録されるため、リカバリウィンドウ内の任意の時点へ復元できます。',
+  'Restore available from': '復元可能な開始時点',
+  'Latest restore available at': '復元可能な最新時点',
+  'Time zone': 'タイムゾーン',
+  "You'll pick the date and time when you start.":
+    '開始後に日付と時刻を選べます。',
+  'Time of recovery': '復元の時刻',
+  'Recovery available': '復元可能',
+  'This time is before the earliest recovery point.':
+    'この時刻は最も早いリカバリポイントより前です。',
+  'This time is after the latest recovery point.':
+    'この時刻は最も遅いリカバリポイントより後です。',
 }

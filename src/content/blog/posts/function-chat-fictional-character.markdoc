@@ -6,7 +6,7 @@ date: 2024-04-04
 cover: /images/blog/function-chat-fictional-character/cover.avif
 timeToRead: 6
 author: aditya-oberai
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is an Appwrite Function?"
     answer: "An Appwrite Function is a serverless function that runs on Appwrite's infrastructure, triggered by HTTP requests, events, schedules, or the SDKs. They are useful for backend logic you do not want in your client app, like calling external APIs with secrets. See [Appwrite Functions](/docs/products/functions) for details."
@@ -30,15 +30,15 @@ In this blog, let’s learn how you can build this Appwrite Function using OpenA
 
 # Setting up the OpenAI platform
 
-To develop this project, you first need an OpenAI API Key, for which you must create an account on the [OpenAI platform](https://platform.openai.com/). Once your account is set up, visit their [API keys](https://platform.openai.com/account/api-keys) page and create an API Key. Ensure you copy and save this key in a safe place, as the OpenAI platform will not let you view the key after it is created.
+To develop this project, you first need an OpenAI API Key, for which you must create an account on the [OpenAI platform](https://platform.openai.com/). Once your account is set up, visit their [API keys](https://platform.openai.com/account/api-keys) page and create an API Key. Ensure you copy and save this key in a safe place, as the OpenAI platform will not let you view the key after it is created.
 
 ![OpenAI API Keys](/images/blog/function-chat-fictional-character/openai.avif)
 
-> Note: To use the GPT-4 API, your account must be upgraded to the Usage tier 1. To learn more, visit their [Usage tiers documentation](https://platform.openai.com/docs/guides/rate-limits/usage-tiers?context=tier-one).
+> Note: To use the GPT-4 API, your account must be upgraded to the Usage tier 1. To learn more, visit their [Usage tiers documentation](https://platform.openai.com/docs/guides/rate-limits/usage-tiers?context=tier-one).
 
 # Initializing the Appwrite Function
 
-Now that we have our OpenAI API Key, let us get the function ready on [Appwrite](https://cloud.appwrite.io/). Head over to your Appwrite project and visit the Functions page. From there, we will use the Node.js starter template and create a function.
+Now that we have our OpenAI API Key, let us get the function ready on [Appwrite](https://cloud.appwrite.io/). Head over to your Appwrite project and visit the Functions page. From there, we will use the Node.js starter template and create a function.
 
 ![Appwrite Functions](/images/blog/function-chat-fictional-character/functions.avif)
 
@@ -111,7 +111,7 @@ curl --location '<YOUR_FUNCTION_URL>' \
 
 # Next steps
 
-And with that, our fictional character chat function is ready! If you liked this project and/or want to investigate the function code, visit the [GitHub repository](https://github.com/adityaoberai/CharacterChat).
+And with that, our fictional character chat function is ready! If you liked this project and/or want to investigate the function code, visit the [GitHub repository](https://github.com/adityaoberai/CharacterChat).
 
 For more information about Appwrite Functions, visit the following resources:
 

@@ -1,5 +1,5 @@
 import { cssColorToHex, getCssColorExpression } from '@/lib/css-theme-colors'
-import type { GlobeConfig } from '@/components/ui/globe'
+import type { GlobeConfig } from '@/components/ui/globe-types'
 
 /** Brand CTA as `rgb(...)` for arc alpha blending. */
 export function getInitGlobeBrandRgb(): string {

@@ -14,8 +14,13 @@
  */
 import * as Sentry from '@sentry/bun'
 import { readRuntimeConfigFromEnv } from '../runtime-config-shared.ts'
+import {
+  isLocalDevelopmentHost,
+  isLocalDevelopmentServerEnv,
+} from './environment-shared.ts'
 
-let initialized = false
+let initAttempted = false
+let sentryActive = false
 
 function getServerSentryEnvironment(): string {
   const explicit = process.env.SENTRY_ENVIRONMENT?.trim()
@@ -25,13 +30,7 @@ function getServerSentryEnvironment(): string {
   if (siteOrigin) {
     try {
       const host = new URL(siteOrigin).hostname.toLowerCase()
-      if (
-        host === 'localhost' ||
-        host === '127.0.0.1' ||
-        host === '[::1]' ||
-        host === '::1' ||
-        host.endsWith('.local')
-      ) {
+      if (isLocalDevelopmentHost(host)) {
         return 'development'
       }
       if (
@@ -63,7 +62,7 @@ function getServerSentryDsn(): string {
 }
 
 export function isServerSentryEnabled(): boolean {
-  return Boolean(getServerSentryDsn())
+  return sentryActive
 }
 
 /**
@@ -71,11 +70,12 @@ export function isServerSentryEnabled(): boolean {
  * Returns true when a DSN was present and init ran (or already ran).
  */
 export function initSentryServer(): boolean {
-  if (initialized) return isServerSentryEnabled()
-  initialized = true
+  if (initAttempted) return sentryActive
+  initAttempted = true
 
   const dsn = getServerSentryDsn()
   if (!dsn) return false
+  if (isLocalDevelopmentServerEnv()) return false
 
   Sentry.init({
     dsn,
@@ -91,6 +91,7 @@ export function initSentryServer(): boolean {
     },
   })
 
+  sentryActive = true
   return true
 }
 
@@ -132,7 +133,7 @@ export function captureServerException(
 export async function flushSentryServer(
   timeoutMs: number = 2000,
 ): Promise<void> {
-  if (!initialized || !isServerSentryEnabled()) return
+  if (!sentryActive) return
   await Sentry.flush(timeoutMs)
 }
 

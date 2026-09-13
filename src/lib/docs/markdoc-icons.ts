@@ -186,6 +186,8 @@ const CARD_TITLE_ICON_KEYS: Record<string, string> = {
   zed: 'zed',
   'amazon web services': 'amazon',
   digitalocean: 'digitalocean',
+  'akamai compute': 'akamai',
+  akamai: 'akamai',
   coolify: 'coolify',
   rxdb: 'rxdb',
   'google cloud': 'google',

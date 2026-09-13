@@ -1,0 +1,179 @@
+---
+layout: article
+title: Conditions
+description: Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.
+---
+
+**Conditions** define which requests a Firewall rule matches. A condition compares one attribute of the request, such as its path or the client's country, against a value you choose.
+
+Every condition on a rule must match for the rule to apply. Two conditions on one rule mean "this **and** that", never "this or that". To match either of two values, create one rule for each.
+
+{% info title="A rule with no conditions matches everything" %}
+The Console requires at least one condition. Through the API, a rule with no conditions matches every request in its scope, and the rules list shows **All requests** in its conditions column.
+{% /info %}
+
+# Attributes {% #attributes %}
+
+The condition builder groups attributes by what they describe. A further 13 attributes need the [premium Geo DB addon](#premium-geo-db).
+
+## Request {% #request-attributes %}
+
+| Attribute | Matches | Typical use |
+|-----------|---------|-------------|
+| **Hostname** | Host serving the request | Separate policies per domain |
+| **Path** | URL path only, query string stripped | Protect `/v1/...` prefixes or sensitive routes |
+| **Method** | Method enum (`GET`, `POST`, and others), uppercased | Restrict mutating methods on a path |
+| **Protocol** | `http` or `https` | Treat plaintext traffic differently |
+| **Header** | A named request header | Require, block, or match custom headers |
+| **Query parameter** | A named query string parameter | Match tokens or flags passed in the URL |
+| **Query parameter name** | The parameter names present, ignoring their values | Match on the presence of a parameter |
+| **Accept** | Raw `Accept` header | Tell browser navigation from API calls |
+| **Accept-Language** | Raw `Accept-Language` header | Filter by the languages a client asks for |
+| **Cookie** | Raw `Cookie` header | Match a cookie your application sets |
+
+**Accept**, **Accept-Language**, and **Cookie** carry a value only for Functions and Sites traffic. On an API rule they are always empty.
+
+## Client {% #client-attributes %}
+
+| Attribute | Matches | Typical use |
+|-----------|---------|-------------|
+| **IP address** | Client IP as seen by Appwrite. Single IPs or CIDR blocks | Block or allowlist addresses and ranges |
+| **Operating system** | Operating system derived from the user agent | Filter traffic by client platform |
+| **Browser** | Browser derived from the user agent | Filter specific browsers or embedded clients |
+| **User agent** | Raw `User-Agent` header | Filter bots, scripts, or known clients |
+
+## Location {% #location-attributes %}
+
+| Attribute | Matches | Typical use |
+|-----------|---------|-------------|
+| **Country** | ISO country code from geo lookup, uppercased | Geo allow or deny lists |
+| **Continent** | Continent code from geo lookup, uppercased | Broad geo policies |
+
+## Premium Geo DB {% #premium-geo-db %}
+
+With the premium Geo DB addon you can also match on **City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization**. The network attributes tell data center traffic apart from residential and mobile connections.
+
+{% info title="Operator limits on premium attributes" %}
+**Latitude**, **Longitude**, and **AS number** support only equals, not equal, is empty, and is not empty. See [Operators](#operators) for the full list.
+{% /info %}
+
+Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error.
+
+If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **Not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
+
+# Header and query parameter keys {% #header-and-query-parameter-keys %}
+
+**Header** and **Query parameter** conditions target a named key. Enter the header name (for example `x-api-client`) or parameter name (for example `token`) together with the operator and value.
+
+Keys must be lowercase to match. The Console lowercases the key when it saves the rule. Through the API, write the key in lowercase yourself, or the condition never matches.
+
+Appwrite strips these headers before it evaluates conditions. A **Header** condition on any of them never matches, even though you can save the rule:
+
+`cookie`, `authorization`, `x-appwrite-key`, `x-appwrite-jwt`, `x-appwrite-user-jwt`, `x-appwrite-session`, and any `x-forwarded-*` header.
+
+To match a cookie on Functions or Sites traffic, use the **Cookie** attribute instead.
+
+# Matching details {% #matching-details %}
+
+- **IP address** accepts single IPs (`203.0.113.10`) and CIDR blocks (`10.0.0.0/8`). CIDR blocks match only with **Equals** and **Not equal**.
+- **Path** conditions work best with **Starts with**, for prefixes such as `/v1/account`.
+- **Operating system** and **Browser** are derived from the user agent and may not resolve for unusual clients. Match **User agent** directly instead.
+
+Text comparison ignores case.
+
+## When Appwrite cannot resolve a location {% #unresolved-location %}
+
+Geo lookup fails for some addresses. **Country** and **Continent** then hold `unresolved` on an API rule, and are unset on a Functions or Sites rule.
+
+Either way they match every **Not equal** condition, so a rule that allows only certain countries denies that traffic too. On an API rule, add **Country** **Not equal** `unresolved` to let it through.
+
+# Operators {% #operators %}
+
+| Operator | Meaning | Needs a value |
+|----------|---------|---------------|
+| Equals | Exact match | Yes |
+| Not equal | Does not equal | Yes |
+| Contains | Value contains the text | Yes |
+| Does not contain | Value does not contain the text | Yes |
+| Starts with | Value begins with the text | Yes |
+| Ends with | Value ends with the text | Yes |
+| Is empty | Attribute is unset | No |
+| Is not empty | Attribute is set | No |
+
+Which operators appear depends on the attribute:
+
+| Attribute | Operators |
+|-----------|-----------|
+| Most attributes | Equals, not equal, contains, starts with, ends with, is empty, is not empty |
+| **Method** | Equals, not equal, is empty, is not empty |
+| **Country**, **Continent** | Equals, not equal, contains, does not contain |
+| **Latitude**, **Longitude**, **AS number** (Premium Geo DB) | Equals, not equal, is empty, is not empty |
+
+{% info title="Premium Geo DB attributes" %}
+**City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization** require the [premium Geo DB addon](#premium-geo-db). All other attributes in this table are available on every plan.
+
+**Latitude**, **Longitude**, and **AS number** support only equality and presence operators (equals, not equal, is empty, is not empty). The other premium attributes use the full operator set under **Most attributes**.
+{% /info %}
+
+**Is empty** matches attributes the request did not send, such as a missing header. It does not match **User agent**: when that header is absent, Appwrite stores an empty string rather than leaving it unset.
+
+{% info title="Operators the Console cannot show" %}
+The API accepts more operators than the Console shows. When you open such a rule in the Console, it shows **Equals** in place of the unsupported operator. If you save, it writes **Equals** to the rule. Edit those rules through the API.
+{% /info %}
+
+# Multiple conditions {% #multiple-conditions %}
+
+Add several conditions on one rule when you need a narrow match. Examples:
+
+- Path starts with `/v1/users` **and** method equals `DELETE`
+- Country equals `US` **and** path starts with `/v1`
+- IP not equal to your office range (`198.51.100.0/24`) **and** path starts with `/v1`
+- Header `x-api-client` is empty **and** user agent contains `bot`
+
+A rule holds at most 100 conditions.
+
+The Console previews how many recent requests a rule would match. See [Impact preview](/docs/products/firewall/monitor#impact-preview).
+
+# Attribute names for the API {% #api-attribute-names %}
+
+The Console sends these names for you. Use them when you create rules through the API. Any other name returns a `400` error.
+
+{% info title="Premium Geo DB API names" %}
+From **City** through **Connection organization**, the API names in this table require the [premium Geo DB addon](#premium-geo-db).
+{% /info %}
+
+| Console label | API name |
+|---------------|----------|
+| Hostname | `host` |
+| Path | `path` |
+| Method | `method` |
+| Protocol | `protocol` |
+| Header | `headers.<name>` |
+| Query parameter | `query.<key>` |
+| Query parameter name | `queryKeys` |
+| Accept | `accept` |
+| Accept-Language | `acceptLanguage` |
+| Cookie | `cookie` |
+| IP address | `ip` |
+| Operating system | `os` |
+| Browser | `browser` |
+| User agent | `userAgent` |
+| Country | `country` |
+| Continent | `continent` |
+| City | `city` |
+| State | `state` |
+| Postal code | `postalCode` |
+| Latitude | `latitude` |
+| Longitude | `longitude` |
+| Time zone | `timeZone` |
+| Weather code | `weatherCode` |
+| ISP | `isp` |
+| AS number | `autonomousSystemNumber` |
+| AS organization | `autonomousSystemOrganization` |
+| Connection type | `connectionType` |
+| Connection usage type | `connectionUsageType` |
+| Connection organization | `connectionOrganization` |
+
+{% arrow_link href="/docs/products/firewall/block-countries" %}
+Block traffic by country
+{% /arrow_link %}

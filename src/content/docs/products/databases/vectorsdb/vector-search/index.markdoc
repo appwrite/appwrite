@@ -532,7 +532,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb list-documents \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' '{"method":"limit","values":[3]}'
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' \
+    --queries '{"method":"limit","values":[3]}'
 ```
 {% /multicode %}
 
@@ -820,7 +821,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 appwrite vectorsdb create-query \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
-    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' '{"method":"limit","values":[3]}'
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' \
+    --queries '{"method":"limit","values":[3]}'
 ```
 {% /multicode %}
 

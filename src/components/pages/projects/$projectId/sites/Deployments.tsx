@@ -51,6 +51,10 @@ import {
   isDeploymentTimeout,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
+import {
+  applySettingsRedeploySuccess,
+  clearSettingsRedeployPending,
+} from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
@@ -109,11 +113,13 @@ import {
   useSiteDomains,
   deleteSiteDeployment,
   cancelSiteDeployment,
+  siteDeploymentQueryOptions,
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
@@ -513,7 +519,7 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -532,7 +538,7 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
-      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      const urlWithMode = withAdminMode(url)
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
     } catch {
@@ -552,17 +558,28 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
+    onSuccess: async (deployment) => {
+      if (!projectId || !siteId) return
+      await applySettingsRedeploySuccess(queryClient, {
+        resourceType: 'site',
+        projectId,
+        resourceId: siteId,
+        resourceQueryKey: ['site', 'project', projectId, siteId],
+        deploymentQueryKey: siteDeploymentQueryOptions(
+          projectId,
+          siteId,
+          deployment.$id,
+        ).queryKey,
+        deploymentsQueryKey: ['deployments', 'site', projectId, siteId],
+        deployment,
       })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
+      if (projectId && siteId) {
+        clearSettingsRedeployPending(queryClient, 'site', projectId, siteId)
+      }
       toast.error(error.message || t('Failed to redeploy'))
     },
   })
@@ -1378,14 +1395,19 @@ export function View() {
         </div>
 
         {/* Deployments filter + create (below active deployment card) */}
-        {deploymentsToolbar ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
-            {deploymentsToolbar}
-          </div>
-        ) : null}
+        <div
+          className={cn(
+            'mt-6',
+            deploymentsToolbar && 'space-y-4',
+          )}
+        >
+          {deploymentsToolbar ? (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {deploymentsToolbar}
+            </div>
+          ) : null}
 
-        {/* Deployments Table */}
-        <div className="mt-6">
+          {/* Deployments Table */}
           {deployments.length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card">

@@ -7,6 +7,8 @@ import {
   loadCliTerminalCacheSummary,
   type CliTerminalCacheSummary,
 } from '@/lib/cli-shell/clear-terminal-cache'
+import { useConfirmDialog } from '@/hooks/use-confirm-dialog'
+import { DEBUG_MENU_DIALOG_LAYER } from '@/lib/debug-menu-position'
 
 function formatCacheSavedAt(savedAt: number): string {
   return new Date(savedAt).toLocaleString()
@@ -16,6 +18,7 @@ export function DebugMenuTerminalPanel() {
   const [summary, setSummary] = useState<CliTerminalCacheSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [clearing, setClearing] = useState(false)
+  const { confirm, confirmDialog } = useConfirmDialog(DEBUG_MENU_DIALOG_LAYER)
 
   const refreshSummary = useCallback(async () => {
     setLoading(true)
@@ -31,13 +34,14 @@ export function DebugMenuTerminalPanel() {
   }, [refreshSummary])
 
   const handleClearCache = async () => {
-    if (
-      !window.confirm(
+    const confirmed = await confirm({
+      title: 'Clear terminal cache',
+      description:
         'Clear the local terminal cache? The Appwrite CLI will be reinstalled on the next command.',
-      )
-    ) {
-      return
-    }
+      confirmLabel: 'Clear cache',
+      confirmVariant: 'destructive',
+    })
+    if (!confirmed) return
 
     setClearing(true)
     try {
@@ -125,6 +129,7 @@ export function DebugMenuTerminalPanel() {
           terminals will reinstall the CLI on the next command.
         </p>
       </div>
+      {confirmDialog}
     </div>
   )
 }

@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/day1-cover.avif
 timeToRead: 5
 author: binyamin-yawitz
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What's new in the latest Appwrite CLI?"

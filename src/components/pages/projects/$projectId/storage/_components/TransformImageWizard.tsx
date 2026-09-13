@@ -27,6 +27,7 @@ import {
   Maximize2,
   Redo2,
   RotateCcw,
+  Sparkles,
   Undo2,
   ZoomIn,
   ZoomOut,
@@ -76,6 +77,7 @@ import {
   resetImageTransformQualitySection,
   resetImageTransformSizeSection,
   resetImageTransformStyleSection,
+  IMAGE_GRAVITY_AUTO,
   TRANSFORM_IMAGE_GRAVITY_GRID_ROWS,
   type ImageTransformState,
   type StorageInspectorPreviewDefaults,
@@ -812,7 +814,7 @@ export function TransformImageWizard({
         return
       }
       const mod = e.metaKey || e.ctrlKey
-      if (!mod || e.key.toLowerCase() !== 'z') return
+      if (!mod || e.key?.toLowerCase() !== 'z') return
       e.preventDefault()
       if (e.shiftKey) redo()
       else undo()
@@ -1394,11 +1396,7 @@ export function TransformImageWizard({
                                 ? 'rounded-ss-[calc(var(--radius-lg)_-_1px)]'
                                 : i === 2
                                   ? 'rounded-se-[calc(var(--radius-lg)_-_1px)]'
-                                  : i === 6
-                                    ? 'rounded-es-[calc(var(--radius-lg)_-_1px)]'
-                                    : i === 8
-                                      ? 'rounded-ee-[calc(var(--radius-lg)_-_1px)]'
-                                      : ''
+                                  : ''
                             return (
                               <button
                                 key={g}
@@ -1433,8 +1431,53 @@ export function TransformImageWizard({
                             )
                           }),
                         )}
+                        {(() => {
+                          const autoSelected = state.gravity === IMAGE_GRAVITY_AUTO
+                          return (
+                            <button
+                              key={IMAGE_GRAVITY_AUTO}
+                              type="button"
+                              className={cn(
+                                'relative col-span-3 flex min-h-10 w-full min-w-0 items-center justify-center gap-1.5',
+                                'rounded-es-[calc(var(--radius-lg)_-_1px)] rounded-ee-[calc(var(--radius-lg)_-_1px)]',
+                                'bg-background/90 transition-colors duration-150',
+                                'hover:bg-muted/70 hover:text-foreground',
+                                'focus-visible:z-[2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                autoSelected
+                                  ? 'z-[1] bg-primary/[0.12] text-primary ring-1 ring-inset ring-primary/40 dark:bg-primary/18 dark:ring-primary/55'
+                                  : 'text-muted-foreground',
+                              )}
+                              aria-label={IMAGE_GRAVITY_AUTO}
+                              aria-pressed={autoSelected}
+                              title={IMAGE_GRAVITY_AUTO}
+                              onClick={() =>
+                                setState((s) => ({
+                                  ...s,
+                                  gravity: IMAGE_GRAVITY_AUTO,
+                                }))
+                              }
+                            >
+                              <Sparkles
+                                className={cn(
+                                  'size-[15px] shrink-0',
+                                  autoSelected ? 'opacity-100' : 'opacity-[0.72]',
+                                )}
+                                strokeWidth={autoSelected ? 2.25 : 1.85}
+                                aria-hidden
+                              />
+                              <span className="font-mono text-[11px] leading-none tracking-wide">
+                                {IMAGE_GRAVITY_AUTO}
+                              </span>
+                            </button>
+                          )
+                        })()}
                       </div>
                     </div>
+                    <p className="text-[11px] leading-snug text-muted-foreground">
+                      {t(
+                        'Auto crops around the main subject when both width and height are set.',
+                      )}
+                    </p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
