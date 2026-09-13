@@ -219,19 +219,12 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\Transaction;
 use Appwrite\Utopia\Response\Model\UsageDataPoint;
-use Appwrite\Utopia\Response\Model\UsageDocumentsDB;
-use Appwrite\Utopia\Response\Model\UsageDocumentsDBs;
 use Appwrite\Utopia\Response\Model\UsageEventList;
-use Appwrite\Utopia\Response\Model\UsageFunction;
-use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageGaugeList;
 use Appwrite\Utopia\Response\Model\UsageMetric;
 use Appwrite\Utopia\Response\Model\UsagePresence;
 use Appwrite\Utopia\Response\Model\UsageProject;
-use Appwrite\Utopia\Response\Model\UsageSite;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\UsageVectorsDB;
-use Appwrite\Utopia\Response\Model\UsageVectorsDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
@@ -340,16 +333,10 @@ Response::setModel(new AttributeText());
 Response::setModel(new AttributeMediumtext());
 Response::setModel(new AttributeLongtext());
 
-// DocumentsDB API Models
-Response::setModel(new UsageDocumentsDBs());
-Response::setModel(new UsageDocumentsDB());
-
 // VectorsDB API Models
 Response::setModel(new VectorsDBCollection());
 Response::setModel(new AttributeObject());
 Response::setModel(new AttributeVector());
-Response::setModel(new UsageVectorsDBs());
-Response::setModel(new UsageVectorsDB());
 
 // Table API Models
 Response::setModel(new Table());
@@ -512,9 +499,6 @@ Response::setModel(new Metric());
 Response::setModel(new MetricBreakdown());
 Response::setModel(new UsageUsers());
 Response::setModel(new UsagePresence());
-Response::setModel(new UsageFunctions());
-Response::setModel(new UsageFunction());
-Response::setModel(new UsageSite());
 Response::setModel(new UsageProject());
 Response::setModel(new UsageDataPoint());
 Response::setModel(new UsageMetric());
