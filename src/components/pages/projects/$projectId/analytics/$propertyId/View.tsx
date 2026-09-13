@@ -52,7 +52,6 @@ import {
   TechnologyPanel,
   TrafficCompositionPanel,
   TrafficSourcesPanel,
-  VisitorTypesPanel,
 } from '../_components/DimensionPanels'
 import {
   formatDuration,
@@ -632,7 +631,6 @@ export function View({
                       propertyId={propertyId}
                       range={range}
                     />
-                    <VisitorTypesPanel stats={stats} />
                     <TrafficSourcesPanel
                       projectId={projectId}
                       propertyId={propertyId}

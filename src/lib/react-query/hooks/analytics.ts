@@ -157,6 +157,9 @@ export function analyticsRangeKey(range: AnalyticsRange): string {
 /** Zero-filled metric used while loading or when a property has no data yet. */
 export const EMPTY_ANALYTICS_METRIC: Models.AnalyticsMetric = {
   visitors: 0,
+  // The API stopped returning these when the new-vs-returning split was
+  // withdrawn; they stay only to satisfy the console SDK type, which has
+  // not been regenerated since. Drop both once it is.
   newVisitors: 0,
   returningVisitors: 0,
   sessions: 0,

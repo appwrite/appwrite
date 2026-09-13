@@ -1,10 +1,7 @@
-import { useMemo } from 'react'
-import { AnalyticsDimension, type Models } from '@appwrite.io/console'
-import { useT } from '@/lib/i18n/translate'
+import { AnalyticsDimension } from '@appwrite.io/console'
 import type { AnalyticsRange } from '@/lib/react-query/hooks'
 import { BreakdownPanel, type BreakdownTab } from './BreakdownPanel'
-import { BreakdownRow, CountryFlag, RowDot, RowRank } from './BreakdownRow'
-import { formatNumber } from './format'
+import { CountryFlag, RowDot, RowRank } from './BreakdownRow'
 
 /** Chart palette, reused so categorical panels stay consistent. */
 const SERIES_COLORS = [
@@ -164,67 +161,5 @@ export function BotsPanel(props: PanelProps) {
       tabs={BOT_TABS}
       emptyLabel="No bot traffic in this range"
     />
-  )
-}
-
-/**
- * Visitor types come straight from the metric response. `newVisitors` and
- * `returningVisitors` sum to `visitors`, so the share is computed against that
- * denominator rather than issuing another request.
- */
-export function VisitorTypesPanel({
-  stats,
-}: {
-  stats: Models.AnalyticsMetric
-}) {
-  const t = useT()
-
-  const rows = useMemo(
-    () => [
-      { label: 'New visitors', value: stats.newVisitors },
-      { label: 'Returning visitors', value: stats.returningVisitors },
-    ],
-    [stats.newVisitors, stats.returningVisitors],
-  )
-
-  const denominator = stats.visitors
-  const max = Math.max(...rows.map((row) => row.value), 0)
-  const hasData = denominator > 0 || max > 0
-
-  return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="border-b border-border px-4 py-2.5">
-        <h3 className="text-[13px] font-semibold text-foreground">
-          {t('Visitor types')}
-        </h3>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">
-          {t('Returning visitors were also seen in the preceding 180 days')}
-        </p>
-      </div>
-      <div className="p-4">
-        {!hasData ? (
-          <p className="py-6 text-center text-[13px] text-muted-foreground">
-            {t('No data in this range')}
-          </p>
-        ) : (
-          <div className="space-y-0.5">
-            {rows.map((row, index) => (
-              <BreakdownRow
-                key={row.label}
-                label={t(row.label)}
-                value={row.value}
-                share={denominator > 0 ? (row.value / denominator) * 100 : 0}
-                barPercent={max > 0 ? (row.value / max) * 100 : 0}
-                leading={<RowDot color={colorAt(index)} />}
-                color={colorAt(index)}
-              />
-            ))}
-            <p className="pt-2 text-[11px] text-muted-foreground">
-              {formatNumber(denominator)} {t('unique visitors in total')}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
   )
 }
