@@ -2,7 +2,7 @@ import { Clock, Database, Mail } from 'lucide-react'
 import type { CSSProperties, LucideIcon } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { productBentoContainer, productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle, productBentoLightAngle, productBentoLightStyle, productBentoSoftFillHover } from './MockSyntax'
 
 /** Brand supporting palette (orange, mint, purple) plus primary CTA pink. */
 const BRAND = {
@@ -52,10 +52,6 @@ const USE_CASES: UseCase[] = [
   },
 ]
 
-function rowColorStyle(color: string, extra?: CSSProperties): CSSProperties {
-  return { '--row-color': color, ...extra } as CSSProperties
-}
-
 function UseCaseRow({ useCase, index }: { useCase: UseCase; index: number }) {
   const t = useT()
   const Icon = useCase.icon
@@ -63,15 +59,18 @@ function UseCaseRow({ useCase, index }: { useCase: UseCase; index: number }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-2 rounded-md border border-border/80 bg-background px-2 py-1.5 transition-colors duration-300',
-        'group-hover:bg-[color-mix(in_srgb,var(--row-color)_12%,var(--background))] motion-reduce:group-hover:bg-background',
+        'flex items-start gap-2 rounded-md border border-border/80 bg-background px-2 py-1.5',
+        productBentoSoftFillHover,
       )}
-      style={rowColorStyle(useCase.color, { transitionDelay: `${index * 70}ms` })}
+      style={productBentoLightStyle(
+        useCase.color,
+        productBentoLightAngle(index),
+        { '--row-color': useCase.color, transitionDelay: `${index * 70}ms` } as CSSProperties,
+      )}
     >
       <span
         className={cn(
-          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background transition-colors duration-300',
-          'group-hover:bg-[color-mix(in_srgb,var(--row-color)_14%,var(--background))] motion-reduce:group-hover:bg-background',
+          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background',
         )}
       >
         {useCase.iconSrc ? (

@@ -170,11 +170,13 @@ function FirewallRuleRow({
       className={cn(
         'flex items-center gap-2 rounded-md border border-border/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300',
         productBentoContainer.panelMd,
-        enabled
+        enabled && !highlightOnHover
           ? 'group-hover:bg-background motion-reduce:group-hover:bg-card/70'
-          : 'opacity-60',
+          : !enabled
+            ? 'opacity-60'
+            : '',
         highlightOnHover &&
-          'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
+          'product-bento-pink-cta group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
       )}
       style={{ animationDelay: highlightOnHover ? `${120 + index * 70}ms` : `${index * 50}ms` }}
     >
