@@ -1190,7 +1190,7 @@ Http::shutdown()
          * cannot suppress RequestCompleted or usage metrics on the same request.
          */
         $statusCode = $response->getStatusCode();
-        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+        if ($statusCode < 200 || $statusCode >= 300) {
             return;
         }
 
@@ -1226,6 +1226,19 @@ Http::shutdown()
 
         if ($method === null) {
             return;
+        }
+
+        // Organization routes act on the project named in the path, not on the console project.
+        if ($project->getId() === 'console') {
+            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            if ($projectId === '') {
+                return;
+            }
+
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                return;
+            }
         }
 
         $byMethod = $project->getAttribute('onboarding', []);

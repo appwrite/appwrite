@@ -196,6 +196,8 @@ final class ConsoleConsoleClientTest extends Scope
         // Well-known scopes must be present
         $this->assertContains('projects.read', $scopeIds);
         $this->assertContains('projects.write', $scopeIds);
+        $this->assertContains('organization.projects.keys.read', $scopeIds);
+        $this->assertContains('organization.projects.keys.write', $scopeIds);
 
         // Every scope has the expected shape
         foreach ($response['body']['scopes'] as $scope) {

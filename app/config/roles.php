@@ -92,6 +92,8 @@ $admins = [
     'projects.write',
     'keys.read',
     'keys.write',
+    'organization.projects.keys.read',
+    'organization.projects.keys.write',
     'devKeys.read',
     'devKeys.write',
     'webhooks.read',
