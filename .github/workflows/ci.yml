@@ -348,7 +348,7 @@ jobs:
         run: >-
           docker compose exec
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/unit
+          appwrite test /usr/src/code/tests/unit --stop-on-failure
 
   e2e_general:
     name: Tests / E2E / General
@@ -411,7 +411,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/General
+          appwrite test /usr/src/code/tests/e2e/General --stop-on-failure
 
       - name: Failure Logs
         if: failure()
@@ -555,7 +555,7 @@ jobs:
           done
           docker compose exec -T -e _APP_E2E_FRESH_INSTANCE=enabled \
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
+            appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization --stop-on-failure
 
       - name: Run tests
         timeout-minutes: 15
@@ -576,7 +576,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --stop-on-failure --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -726,7 +726,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
+          appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }} --stop-on-failure
 
       - name: Failure Logs
         if: failure()
