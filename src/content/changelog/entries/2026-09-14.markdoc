@@ -27,3 +27,7 @@ Read the announcement
 {% arrow_link href="/docs/advanced/self-hosting/installation" %}
 Install Appwrite 2.1
 {% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-2-1" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}

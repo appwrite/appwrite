@@ -148,6 +148,8 @@ docker compose exec appwrite migrate
 
 The upgrade keeps your database and your worker topology, adds the `appwrite-autogravity` container, and leaves `_APP_AUTOGRAVITY_HOST` empty until you set it.
 
+One setting to check before you upgrade: error reporting is Sentry-only from 2.1.0. The deprecated `_APP_LOGGING_PROVIDER` variable is removed, and `_APP_LOGGING_CONFIG` accepts only a `sentry://` DSN. Raygun, AppSignal, and LogOwl are no longer supported, and a DSN for any of them is rejected at startup and turns error reporting off. Replace it with a Sentry DSN or leave the variable empty.
+
 # Resources
 
 - [Installation guide](/docs/advanced/self-hosting/installation)
