@@ -10,9 +10,11 @@ use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 final class MigrationVersionsTest extends TestCase
@@ -75,8 +77,6 @@ final class MigrationVersionsTest extends TestCase
         $this->assertArrayHasKey('parentResourceInternalId', $attributes);
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
-        $this->assertArrayHasKey('teamId', $attributes);
-        $this->assertArrayHasKey('teamInternalId', $attributes);
 
         $indexes = [];
         foreach ($collection->getAttribute('indexes', []) as $index) {
@@ -93,7 +93,6 @@ final class MigrationVersionsTest extends TestCase
             '_key_project_parent_resource',
         ], \array_keys($indexes));
         $this->assertSame(['projectId', 'projectInternalId'], $indexes['_key_project']);
-        $this->assertSame(['teamId', 'teamInternalId'], $indexes['_key_team']);
         $this->assertSame(['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], $indexes['_key_project_resource']);
         $this->assertSame(['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], $indexes['_key_project_parent_resource']);
     }
@@ -136,6 +135,97 @@ final class MigrationVersionsTest extends TestCase
 
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
+    }
+
+    /**
+     * An install that already has notifications has it without the team columns.
+     * Drives V25 over that shape and then does the thing the columns exist for:
+     * store a notification against a team and read it back by team.
+     */
+    public function testV25LetsAnUpgradedInstallStoreAndQueryTeamScopedNotifications(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25TeamNotifications')
+            ->setNamespace('migration_team_notifications_' . \uniqid());
+        $database->create();
+
+        // The pre-V25 shape: everything the collection had before the team
+        // columns were introduced.
+        $collections = Config::getParam('collections', [])['console']['notifications'];
+        $teamColumns = ['teamId', 'teamInternalId'];
+
+        $database->createCollection(
+            'notifications',
+            \array_values(\array_map(
+                fn (array $attribute): Document => new Document($attribute),
+                \array_filter(
+                    $collections['attributes'],
+                    fn (array $attribute): bool => !\in_array($attribute['$id'], $teamColumns, true)
+                )
+            )),
+            \array_values(\array_map(
+                fn (array $index): Document => new Document($index),
+                \array_filter(
+                    $collections['indexes'],
+                    fn (array $index): bool => $index['$id'] !== '_key_team'
+                )
+            ))
+        );
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('notifications', new Document([
+            '$id' => 'domain-expiry',
+            'messageId' => 'domain-expiry',
+            'recipientHash' => \md5('owner@example.com'),
+            'type' => 'warning',
+            'channel' => 'email',
+            'projectId' => 'console',
+            'projectInternalId' => 'console',
+            'teamId' => 'team-a',
+            'teamInternalId' => '1',
+            'resourceType' => 'domains',
+            'resourceId' => 'domain-a',
+            'resourceInternalId' => '1',
+            'parentResourceType' => '',
+            'parentResourceId' => '',
+            'parentResourceInternalId' => '',
+            'title' => 'example.com expires in 30 days',
+            'body' => '',
+            'read' => false,
+        ])));
+
+        $mine = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-a']),
+        ]));
+
+        $this->assertCount(1, $mine);
+        $this->assertSame('domain-a', $mine[0]->getAttribute('resourceId'));
+
+        $theirs = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-b']),
+        ]));
+
+        $this->assertCount(0, $theirs);
     }
 
     public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void
