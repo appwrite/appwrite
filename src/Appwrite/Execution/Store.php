@@ -587,6 +587,20 @@ class Store
                 : Query::orderAsc('$sequence');
         }
 
+        $hasId = false;
+        foreach ($order as $query) {
+            if ($query->getAttribute() === '$id') {
+                $hasId = true;
+                break;
+            }
+        }
+        if (!$hasId) {
+            $last = $order[\array_key_last($order)];
+            $order[] = $last->getMethod() === Query::TYPE_ORDER_ASC
+                ? Query::orderAsc('$id')
+                : Query::orderDesc('$id');
+        }
+
         return [$filters, $order, $limit, $offset, $cursor];
     }
 

@@ -123,7 +123,7 @@ final class StoreTest extends TestCase
         $find = (string) $client->requests[0]->getBody();
         $this->assertStringContainsString('resourceType IN', $find);
         $this->assertStringContainsString('status IN', $find);
-        $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC', $find);
+        $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC, id DESC', $find);
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
@@ -188,11 +188,35 @@ final class StoreTest extends TestCase
         ]);
 
         $body = (string) $client->requests[0]->getBody();
-        $this->assertStringContainsString('ORDER BY status DESC, createdAt ASC, sequence DESC', $body);
+        $this->assertStringContainsString('ORDER BY status DESC, createdAt ASC, sequence DESC, id DESC', $body);
         $this->assertStringContainsString('status <', $body);
         $this->assertStringContainsString('status =', $body);
         $this->assertStringContainsString('createdAt >', $body);
         $this->assertStringContainsString('sequence <', $body);
+        $this->assertStringContainsString('id <', $body);
+    }
+
+    public function testOrdersByIdWhenSequenceIsAlreadyUnique(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [Query::orderDesc('$sequence')]);
+
+        $this->assertStringContainsString(
+            'ORDER BY sequence DESC, id DESC',
+            (string) $client->requests[0]->getBody()
+        );
+    }
+
+    public function testDoesNotDuplicateExistingIdOrder(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [Query::orderAsc('$id')]);
+
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('ORDER BY id ASC', $body);
+        $this->assertStringNotContainsString('id ASC, id ASC', $body);
     }
 
     public function testCompilesStringQueryOperators(): void
@@ -245,20 +269,46 @@ final class StoreTest extends TestCase
     public function testAssignsSequenceFromCreatedAtWhenMissing(): void
     {
         $client = new CapturingClient();
+        $store = $this->store($client);
+        $createdAt = '2026-08-25T10:00:00.123456+00:00';
 
-        $this->store($client)->create('project', new Document([
-            '$id' => 'execution',
-            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
-            '$updatedAt' => '2026-08-25T10:00:00.000+00:00',
+        $store->create('project', new Document([
+            '$id' => 'execution-a',
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-b',
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-c',
+            '$createdAt' => '2026-08-25T10:00:01.000000+00:00',
+            '$updatedAt' => '2026-08-25T10:00:01.000000+00:00',
+            'status' => 'waiting',
+        ]));
+        $store->create('project', new Document([
+            '$id' => 'execution-d',
+            '$sequence' => 42,
+            '$createdAt' => $createdAt,
+            '$updatedAt' => $createdAt,
             'status' => 'waiting',
         ]));
 
-        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
-        $createdAt = new \DateTime('2026-08-25T10:00:00.000+00:00');
-        $sequence = ((int) $createdAt->format('U') * 1_000_000) + (int) $createdAt->format('u');
-        $this->assertSame($sequence, $row['sequence']);
-        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
-        $this->assertSame($sequence, $document['$sequence']);
+        $first = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $sameCreatedAt = \json_decode((string) $client->requests[1]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $later = \json_decode((string) $client->requests[2]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $preserved = \json_decode((string) $client->requests[3]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $first['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertGreaterThan(0, $first['sequence']);
+        $this->assertSame($first['sequence'], $document['$sequence']);
+        $this->assertSame($first['sequence'], $sameCreatedAt['sequence']);
+        $this->assertNotSame($first['sequence'], $later['sequence']);
+        $this->assertSame(42, $preserved['sequence']);
     }
 
     public function testWriteFailuresPropagate(): void
