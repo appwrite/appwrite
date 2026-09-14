@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "well-known-change-password-url",
+    "href": "/blog/post/well-known-change-password-url",
+    "title": "Support the well-known change password URL with Appwrite Auth",
+    "description": "Password managers open /.well-known/change-password when they find a leaked or weak password. Add the redirect and a change password page backed by Appwrite Auth.",
+    "date": "2026-09-15",
+    "lastUpdated": "2026-09-15",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/well-known-change-password-url/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-2-1-self-hosted",
     "href": "/blog/post/appwrite-2-1-self-hosted",
     "title": "Appwrite 2.1 is now available for self-hosting",

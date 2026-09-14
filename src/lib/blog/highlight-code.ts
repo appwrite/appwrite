@@ -15,6 +15,9 @@
 import Prism from 'prismjs'
 import 'prismjs/components/prism-markup'
 import 'prismjs/components/prism-markup-templating'
+import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-jsx'
+import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-bash'
 import 'prismjs/components/prism-json'
 import 'prismjs/components/prism-dart'
@@ -53,6 +56,10 @@ const RUNTIME_TO_PRISM: Record<string, string> = {
   bun: 'javascript',
   web: 'javascript',
   dotnet: 'csharp',
+  // The shared resolver folds these into javascript/typescript for labels;
+  // Prism has dedicated grammars that also tokenise the JSX.
+  jsx: 'jsx',
+  tsx: 'tsx',
 }
 
 function resolvePrismLanguage(fenceLanguage: string): string | null {
