@@ -13,8 +13,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
-use Utopia\Span\Span;
-use Utopia\Span\Storage\Memory;
 
 final class StoreTest extends TestCase
 {
@@ -43,6 +41,7 @@ final class StoreTest extends TestCase
         $this->assertSame(['user:abc'], $row['readRoles']);
         $this->assertSame('waiting', $row['status']);
         $this->assertSame(0, $row['deleted']);
+        $this->assertSame(42, $row['sequence']);
         $this->assertGreaterThan(0, $row['version']);
         $this->assertSame('2026-09-08 10:00:00.000', $row['expiresAt']);
     }
@@ -243,7 +242,26 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('resourceInternalId', (string) $client->requests[1]->getBody());
     }
 
-    public function testMirrorWriteFailuresAreBestEffort(): void
+    public function testAssignsSequenceFromCreatedAtWhenMissing(): void
+    {
+        $client = new CapturingClient();
+
+        $this->store($client)->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            '$updatedAt' => '2026-08-25T10:00:00.000+00:00',
+            'status' => 'waiting',
+        ]));
+
+        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $createdAt = new \DateTime('2026-08-25T10:00:00.000+00:00');
+        $sequence = ((int) $createdAt->format('U') * 1_000_000) + (int) $createdAt->format('u');
+        $this->assertSame($sequence, $row['sequence']);
+        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame($sequence, $document['$sequence']);
+    }
+
+    public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
         $execution = new Document([
@@ -253,12 +271,36 @@ final class StoreTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $store->create('project', $execution);
-        $store->update('project', $execution);
-        $store->delete('project', $execution);
-        $store->deleteProject('project');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('ClickHouse execution insert failed');
 
-        $this->addToAssertionCount(1);
+        $store->create('project', $execution);
+    }
+
+    public function testDeleteFailuresPropagate(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('ClickHouse execution query failed');
+
+        $this->store(new FailingClient())->deleteProject('project');
+    }
+
+    public function testDisabledStoreRejectsWrites(): void
+    {
+        $store = new Store(
+            enabled: false,
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: new CapturingClient(),
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Execution ClickHouse persistence is not configured');
+
+        $store->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
+            'status' => 'completed',
+        ]));
     }
 
     public function testSetupFailuresRemainVisible(): void
@@ -267,26 +309,6 @@ final class StoreTest extends TestCase
         $this->expectExceptionMessage('ClickHouse execution query failed');
 
         $this->store(new FailingClient())->setup();
-    }
-
-    public function testMirrorFailuresAreRecordedOnTheCurrentSpan(): void
-    {
-        Span::setStorage(new Memory());
-        $span = Span::init('test.executions');
-
-        try {
-            $this->store(new FailingClient())->create('project', new Document([
-                '$id' => 'execution',
-                '$createdAt' => '2026-08-25T10:00:00.000+00:00',
-                'status' => 'completed',
-            ]));
-
-            $this->assertSame('upsert', $span->get('executions.mirror.operation'));
-            $this->assertStringContainsString('ClickHouse unavailable', (string) $span->get('executions.mirror.error'));
-            $this->assertNotInstanceOf(\Throwable::class, $span->getError(), 'a failed mirror must not fail the request span');
-        } finally {
-            Span::setStorage(null);
-        }
     }
 
     private function store(ClientInterface $client): Store

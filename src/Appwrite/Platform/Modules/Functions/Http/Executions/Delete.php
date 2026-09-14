@@ -91,7 +91,7 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
+        $execution = $executionStore->get($project->getId(), $executionId);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
             // been persisted by the executions worker. Remove the schedule and
@@ -198,9 +198,6 @@ class Delete extends Base
             ));
         } else {
             $executionStore->delete($project->getId(), $execution);
-            if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
-            }
         }
 
         $queueForEvents
