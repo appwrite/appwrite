@@ -38,9 +38,7 @@ use Utopia\System\System;
 
 require_once __DIR__ . '/init.php';
 
-if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    require_once __DIR__ . '/init/span.php';
-}
+require_once __DIR__ . '/init/span.php';
 
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
