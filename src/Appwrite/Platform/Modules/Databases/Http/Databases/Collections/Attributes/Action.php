@@ -640,7 +640,7 @@ abstract class Action extends DatabasesAction
             }
         } else {
             try {
-                $dbForProject->updateAttribute(
+                $definition = $dbForProject->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -649,6 +649,16 @@ abstract class Action extends DatabasesAction
                     formatOptions: $options,
                     newKey: $newKey ?? null
                 );
+
+                // updateAttribute treats null as an unchanged default. The API
+                // uses null to clear it, including when the key was renamed.
+                if ($default === null && $definition->getAttribute('default') !== null) {
+                    $dbForProject->updateAttributeDefault(
+                        collection: $collectionId,
+                        id: $definition->getId(),
+                        default: null
+                    );
+                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
