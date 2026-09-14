@@ -35,23 +35,23 @@ const CookieConsentContext = createContext<CookieConsentContextValue | null>(
 )
 
 function applyAnalyticsConsent(analytics: boolean) {
+  if (analytics) {
+    loadTrackingScriptsAfterConsent()
+  }
   setCookieConsentState({
     resolved: true,
     bannerRequired: true,
     analyticsGranted: analytics,
   })
-  if (analytics) {
-    loadTrackingScriptsAfterConsent()
-  }
 }
 
 function applyNonRegulatedRegion() {
+  loadTrackingScriptsAfterConsent()
   setCookieConsentState({
     resolved: true,
     bannerRequired: false,
     analyticsGranted: true,
   })
-  loadTrackingScriptsAfterConsent()
 }
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
