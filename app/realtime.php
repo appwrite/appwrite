@@ -398,7 +398,10 @@ if (!function_exists('logError')) {
     }
 }
 
-$server->error(logError(...));
+$server->error(function (Throwable $error): void {
+    $span = Span::current() ?? Span::init('realtime.error');
+    $span->finish(error: $error);
+});
 
 $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
@@ -446,6 +449,7 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
                 return;
             }
 
+            $span = Span::init('realtime.stats.persist');
             try {
                 $database = getConsoleDB();
 
@@ -458,7 +462,9 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
                     'value' => $statsDocument->getAttribute('value')
                 ])));
             } catch (Throwable $th) {
-                logError($th, "updateWorkerDocument");
+                $span->setError($th);
+            } finally {
+                $span->finish();
             }
         });
     }
@@ -589,6 +595,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     });
 
     while ($attempts < 300) {
+        $span = Span::init('realtime.pubsub');
         try {
             if ($attempts > 0) {
                 Console::error('Pub/sub connection lost (lasted ' . (time() - $start) . ' seconds, worker: ' . $workerId . ').
@@ -802,12 +809,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (Throwable $th) {
-            logError($th, "pubSubConnection");
+            $span->setError($th);
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
+        } finally {
+            $span->finish();
         }
     }
 
@@ -1086,7 +1095,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
         }
 
-        logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
+        $error = $th;
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
@@ -1306,7 +1315,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $th = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $th);
         }
 
-        logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
+        $error = $th;
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
@@ -1388,8 +1397,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
-                    Span::add('realtime.projectId', $projectId);
-                    Span::add('realtime.presenceCount', \count($presencesById));
+                    Span::add('project.id', $projectId);
+                    Span::add('realtime.presence_count', \count($presencesById));
                     Span::add('user.id', $userId ?? null);
 
                     try {
@@ -1437,14 +1446,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::current()?->setError($th);
-                            logError($th, 'realtimeOnClosePresenceDeletion', tags: [
-                                'projectId' => $projectId,
-                                'userId' => $userId ?? '',
-                                'presences' => \count($presenceIds),
-                                // Bounded sample; total is carried by `presences` above so the
-                                // tag cannot blow past telemetry length limits on a busy connection.
-                                'presenceIds' => \implode(',', \array_slice($presenceIds, 0, 10)),
-                            ]);
+                            Span::add('presence.delete_count', \count($presenceIds));
+                            Span::add('presence.delete_ids', \implode(',', \array_slice($presenceIds, 0, 10)));
                         }
 
                         $queueForEvents = getQueueForEvents();
@@ -1470,9 +1473,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         }
                     } catch (Throwable $th) {
                         Span::current()?->setError($th);
-                        logError($th, 'realtimeOnClosePresenceCleanup', tags: [
-                            'projectId' => $projectId,
-                        ]);
                     } finally {
                         Span::current()?->finish();
                     }
