@@ -79,8 +79,6 @@ import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/c
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
-import { Route as ApiRERouteImport } from './routes/_api/r/e'
-import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
 import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
 import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
 import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
@@ -779,16 +777,6 @@ const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
 const ApiOgInitDotpngRoute = ApiOgInitDotpngRouteImport.update({
   id: '/_api/og/init.png',
   path: '/og/init.png',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRERoute = ApiRERouteImport.update({
-  id: '/_api/r/e',
-  path: '/r/e',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
-  id: '/_api/r/v.js',
-  path: '/r/v.js',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
@@ -3162,8 +3150,6 @@ export interface FileRoutesByFullPath {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
@@ -3580,8 +3566,6 @@ export interface FileRoutesByTo {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
@@ -3961,8 +3945,6 @@ export interface FileRoutesById {
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
-  '/_api/r/e': typeof ApiRERoute
-  '/_api/r/v.js': typeof ApiRVDotjsRoute
   '/_api/references-api/model': typeof ApiReferencesApiModelRoute
   '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
@@ -4385,8 +4367,6 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
@@ -4803,8 +4783,6 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
@@ -5183,8 +5161,6 @@ export interface FileRouteTypes {
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
-    | '/_api/r/e'
-    | '/_api/r/v.js'
     | '/_api/references-api/model'
     | '/_api/references-api/nav-counts'
     | '/_api/references-api/open-api-spec'
@@ -5569,8 +5545,6 @@ export interface RootRouteChildren {
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
-  ApiRERoute: typeof ApiRERoute
-  ApiRVDotjsRoute: typeof ApiRVDotjsRoute
   ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
   ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
   ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
@@ -6073,20 +6047,6 @@ declare module '@tanstack/react-router' {
       path: '/og/init.png'
       fullPath: '/og/init.png'
       preLoaderRoute: typeof ApiOgInitDotpngRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/r/e': {
-      id: '/_api/r/e'
-      path: '/r/e'
-      fullPath: '/r/e'
-      preLoaderRoute: typeof ApiRERouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/r/v.js': {
-      id: '/_api/r/v.js'
-      path: '/r/v.js'
-      fullPath: '/r/v.js'
-      preLoaderRoute: typeof ApiRVDotjsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/references-api/model': {
@@ -10422,8 +10382,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
-  ApiRERoute: ApiRERoute,
-  ApiRVDotjsRoute: ApiRVDotjsRoute,
   ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,
   ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
   ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,

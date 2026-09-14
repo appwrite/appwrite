@@ -1,6 +1,6 @@
 import {
-  PLAUSIBLE_INIT_SCRIPT,
-  PLAUSIBLE_SCRIPT_SRC,
+  getPlausibleInitScript,
+  getPlausibleScriptSrc,
 } from '@/lib/analytics'
 import { deferAfterPaint } from '@/lib/defer-after-paint'
 import { initSentryClient } from '@/lib/sentry/init-client'
@@ -34,9 +34,10 @@ export function loadTrackingScriptsAfterConsent() {
     if (!trackingScriptsLoaded) {
       trackingScriptsLoaded = true
 
-      if (PLAUSIBLE_SCRIPT_SRC) {
-        appendScript({}, PLAUSIBLE_INIT_SCRIPT)
-        appendScript({ src: PLAUSIBLE_SCRIPT_SRC, async: 'true' })
+      const plausibleScriptSrc = getPlausibleScriptSrc()
+      if (plausibleScriptSrc) {
+        appendScript({}, getPlausibleInitScript())
+        appendScript({ src: plausibleScriptSrc, defer: 'true' })
       }
     }
 

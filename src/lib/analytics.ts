@@ -4,10 +4,6 @@ import {
 } from '@/lib/analytics-route'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
-import {
-  PLAUSIBLE_PROXY_EVENT_PATH,
-  buildPlausibleProxyScriptSrc,
-} from '@/lib/plausible-proxy'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   getPlanNameFromTier,
@@ -20,23 +16,35 @@ export {
   type AnalyticsSurface,
 } from '@/lib/analytics-route'
 
-/** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
-export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
-  getRuntimeConfig().plausibleScriptSrc
+const PLAUSIBLE_EVENT_PATH = '/api/event'
+const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
 
-export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
-
-/** First-party script URL loaded in the browser (proxied + cache-busted). */
-export const PLAUSIBLE_SCRIPT_SRC = ANALYTICS_ENABLED
-  ? buildPlausibleProxyScriptSrc(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
-  : ''
-
-function isAnalyticsAllowed() {
-  return ANALYTICS_ENABLED && canTrackAnalytics()
+/** Plausible script URL from runtime config (read at call time, not import). */
+export function getPlausibleScriptSrc() {
+  return getRuntimeConfig().plausibleScriptSrc
 }
 
-export const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init({ autoCapturePageviews: false, endpoint: ${JSON.stringify(PLAUSIBLE_PROXY_EVENT_PATH)} })`
+export function getPlausibleEventUrl(scriptSrc = getPlausibleScriptSrc()) {
+  try {
+    return new URL(PLAUSIBLE_EVENT_PATH, new URL(scriptSrc).origin).toString()
+  } catch {
+    return `${PLAUSIBLE_ORIGIN_FALLBACK}${PLAUSIBLE_EVENT_PATH}`
+  }
+}
+
+export const ANALYTICS_ENABLED = Boolean(getPlausibleScriptSrc())
+
+function isAnalyticsAllowed() {
+  return Boolean(getPlausibleScriptSrc()) && canTrackAnalytics()
+}
+
+export function getPlausibleInitScript() {
+  const endpoint = JSON.stringify(getPlausibleEventUrl())
+  const logging = import.meta.env.DEV ? 'true' : 'false'
+
+  return `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+plausible.init({autoCapturePageviews:false,endpoint:${endpoint},captureOnLocalhost:/^(localhost|127(?:\\.\\d+){0,2}\\.\\d+|\\[::1\\])$/.test(location.hostname),logging:${logging}})`
+}
 
 export type AnalyticsEventName =
   | 'Button Clicked'
