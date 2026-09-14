@@ -4,6 +4,7 @@ namespace Appwrite\Mqtt;
 
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
 
 /**
@@ -22,6 +23,13 @@ class Metrics
     public Counter $messagesDelivered;
     public Counter $messagesDropped;
     public Counter $messagesAcked;
+    public Counter $pubacksReceived;
+    public Counter $reauth;
+    public Counter $bytesReceived;
+    public Counter $bytesSent;
+    public Histogram $authDuration;
+    public Histogram $connectionDuration;
+    public Histogram $messageSize;
 
     public function __construct(Telemetry $telemetry)
     {
@@ -32,5 +40,12 @@ class Metrics
         $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
         $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
+        $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
+        $this->reauth = $telemetry->createCounter('mqtt.reauth');
+        $this->bytesReceived = $telemetry->createCounter('mqtt.bytes.received', 'By');
+        $this->bytesSent = $telemetry->createCounter('mqtt.bytes.sent', 'By');
+        $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
+        $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
+        $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');
     }
 }
