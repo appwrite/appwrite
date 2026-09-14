@@ -1733,7 +1733,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - mariadb-admin ping --protocol=tcp -h127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent
+        - mariadb --protocol=tcp -h127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent -e "SELECT 1"
       interval: 5s
       timeout: 5s
       retries: 12
