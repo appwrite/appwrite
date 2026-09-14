@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\Project;
+namespace Tests\E2E\Services\Organization;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -37,7 +37,7 @@ final class KeysIntegrationTest extends Scope
         // Step 1: Create an ephemeral key scoped to users.read only.
         $ephemeralKey = $this->client->call(
             Client::METHOD_POST,
-            '/project/keys/ephemeral',
+            '/organization/projects/' . $projectId . '/keys/ephemeral',
             $serverHeaders,
             [
                 'scopes' => ['users.read'],

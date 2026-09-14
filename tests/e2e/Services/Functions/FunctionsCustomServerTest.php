@@ -12,6 +12,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -1138,8 +1139,16 @@ final class FunctionsCustomServerTest extends Scope
          * Test for Large Code File SUCCESS
          */
         $folder = 'large';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$folder";
+        $code = "$folderPath/code.tar.gz";
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($code)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($code, "rb");
@@ -1322,7 +1331,13 @@ final class FunctionsCustomServerTest extends Scope
             file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
 
             $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
-            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+            $tar = (new Command('tar'))
+                ->option('--exclude', 'code.tar.gz')
+                ->flag('-czf')
+                ->argument($source)
+                ->option('-C', $tmpDirectory)
+                ->argument('.');
+            Console::execute($tar, '', $this->stdout, $this->stderr);
 
             $totalSize = filesize($source);
             $chunkSize = 5 * 1024 * 1024;
@@ -1659,7 +1674,14 @@ final class FunctionsCustomServerTest extends Scope
         $folder = 'large';
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$folder";
         $code = "$folderPath/code.tar.gz";
-        Console::execute('cd ' . $folderPath . ' && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($code)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         $totalSize = \filesize($code);
         $chunkSize = 5 * 1024 * 1024;

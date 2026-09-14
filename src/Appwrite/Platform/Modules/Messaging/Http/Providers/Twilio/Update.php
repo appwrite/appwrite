@@ -55,7 +55,7 @@ class Update extends Action
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
             ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
-            ->param('from', '', new Text(256), 'Sender number.', true)
+            ->param('from', '', new Text(256), 'Sender phone number or alphanumeric sender ID. Format phone numbers with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')

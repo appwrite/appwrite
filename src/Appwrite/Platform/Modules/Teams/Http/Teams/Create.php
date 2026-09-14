@@ -79,11 +79,12 @@ class Create extends Action
         $isAppUser = $user->isKey($authorization->getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
+        $limited = $this->isOrganizationLimited($project);
 
-        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $project) {
+        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
             // The seeded total only holds if the owner membership lands with the team.
-            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $project) {
-                if ($project->getId() === 'console') {
+            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
+                if ($limited) {
                     $organization = $authorization->skip(fn () => $dbForProject->findOne('teams'));
 
                     if (!$organization->isEmpty()) {
@@ -141,7 +142,7 @@ class Create extends Action
         };
 
         try {
-            if ($project->getId() === 'console') {
+            if ($limited) {
                 if ($user->isEmpty()) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
@@ -170,5 +171,15 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($team, Response::MODEL_TEAM);
+    }
+
+    /**
+     * Whether this instance allows only a single console organization.
+     * Self-hosted enforces it for every console request; editions that govern
+     * organizations elsewhere (cloud through its billing plans) override this.
+     */
+    protected function isOrganizationLimited(Document $project): bool
+    {
+        return $project->getId() === 'console';
     }
 }

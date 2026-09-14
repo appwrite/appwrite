@@ -69,6 +69,30 @@ abstract class Scope extends TestCase
 
         // Read console fixtures as their owner, not in project admin mode.
         unset($headers['x-appwrite-mode']);
+
+        // The first organization of a self-hosted instance, and every organization on an
+        // edition without the instance limit, comes from the public API. Only a refusal
+        // falls through to seeding the rows directly. Creation is serialized behind an
+        // instance-wide lock, and parallel test processes contend for it, so a 409 asks
+        // for a retry rather than answering whether the organization was allowed.
+        $deadline = \microtime(true) + 10.0;
+        do {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $locked = $team['headers']['status-code'] === 409
+                && ($team['body']['type'] ?? '') === 'general_resource_locked';
+            if ($locked) {
+                \usleep(200_000);
+            }
+        } while ($locked && \microtime(true) < $deadline);
+
+        if ($team['headers']['status-code'] === 201) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            return $response;
+        }
+        $this->assertSame(403, $team['headers']['status-code']);
+        $this->assertSame('organization_creation_prohibited', $team['body']['type']);
+
         $account = [];
         $this->assertEventually(function () use ($headers, &$account) {
             $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
