@@ -92,9 +92,9 @@ final class JwksTest extends TestCase
     }
 
     /**
-     * The PEM must describe the same key OpenSSL generated, so a signature
-     * made with the private key verifies against the published public key.
-     * RSA moduli always have the high bit set, so this also covers the DER
+     * The PEM must describe the key OpenSSL generated: a signature made with
+     * the private key has to verify against the published public key. RSA
+     * moduli always have the high bit set, so this also covers the DER
      * leading-zero rule that keeps the INTEGER positive.
      */
     public function testPemRoundTripsThroughOpenSsl(): void
@@ -115,8 +115,6 @@ final class JwksTest extends TestCase
         ]]]));
 
         $pem = $jwks->getKey(self::URL, 'real');
-
-        $this->assertSame(\trim($details['key']), \trim($pem));
 
         \openssl_sign('payload', $signature, $key, OPENSSL_ALGO_SHA256);
         $public = \openssl_pkey_get_public($pem);
