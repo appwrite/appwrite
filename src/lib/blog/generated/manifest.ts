@@ -12,7 +12,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 5,
     "author": "atharva",
     "category": "products, announcements",
-    "hasCover": false
+    "cover": "/images/blog/appwrite-2-1-self-hosted/cover.avif",
+    "hasCover": true
   },
   {
     "slug": "introducing-the-affiliates-program",

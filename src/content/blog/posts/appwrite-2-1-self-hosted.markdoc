@@ -3,7 +3,7 @@ layout: post
 title: "Appwrite 2.1 is now available for self-hosting"
 description: Appwrite 2.1 brings the S3 API and AutoGravity to self-hosted instances, adds TikTok and Kakao sign-in, and fixes for Appwrite Console.
 date: 2026-09-14
-cover:
+cover: /images/blog/appwrite-2-1-self-hosted/cover.avif
 timeToRead: 5
 author: atharva
 category: products, announcements
