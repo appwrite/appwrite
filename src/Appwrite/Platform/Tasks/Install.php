@@ -36,6 +36,9 @@ class Install extends Action
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
 
+    public const string CHANNEL_STABLE = 'stable';
+    public const string CHANNEL_NIGHTLY = 'nightly';
+
     private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
@@ -64,6 +67,7 @@ class Install extends Action
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
             ->callback($this->action(...));
     }
 
@@ -75,7 +79,8 @@ class Install extends Action
         string $interactive,
         bool $noStart,
         string $database,
-        string $topology
+        string $topology,
+        string $channel = self::CHANNEL_STABLE
     ): void {
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
@@ -562,6 +567,14 @@ class Install extends Action
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
+
+        // The nightly channel tracks the minor line rather than one release, so the
+        // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
+        // single build. See the Releases section of AGENTS.md.
+        if ($channel === self::CHANNEL_NIGHTLY) {
+            $version = $this->nightlyTag($version);
+        }
+
         if ($isLocalInstall) {
             $version = 'local';
         }
@@ -821,6 +834,21 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    /**
+     * The rolling nightly tag for the minor line a stable version belongs to,
+     * e.g. 2.0.1 -> 2.0-nightly.
+     */
+    private function nightlyTag(string $version): string
+    {
+        if (\preg_match('/^(\d+)\.(\d+)\./', $version, $matches) !== 1) {
+            Console::warning("Cannot derive a nightly tag from '{$version}'; using the bare nightly tag.");
+
+            return 'nightly';
+        }
+
+        return "{$matches[1]}.{$matches[2]}-nightly";
     }
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
