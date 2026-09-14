@@ -58,7 +58,11 @@ class Auth extends Action
                 $mqtt->metrics->authDuration->record(microtime(true) - $start);
             }
 
-            if ($identity === []) {
+            // Reauth only refreshes the credential for the identity resolved at CONNECT — it
+            // must not switch the user (or project). Allowing a switch would keep the previous
+            // user's subscriptions on this connection, leaking their fan-out to the new user
+            // and breaking PUBACK ownership checks. A mismatch (or failure) drops the connection.
+            if ($identity === [] || ($identity['userId'] ?? '') !== ($connection->identity['userId'] ?? '')) {
                 $mqtt->metrics->reauth->add(1, ['result' => 'rejected']);
                 Span::add('mqtt.result', 'rejected');
                 $reply(V5::disconnect(V5::REASON_NOT_AUTHORIZED), true);
