@@ -243,6 +243,90 @@ final class MigrationVersionsTest extends TestCase
         $this->assertCount(0, $theirs);
     }
 
+    /**
+     * A notification about a team-scoped resource has no project and no parent
+     * resource. The legacy fixture below still demands both, as installs do
+     * today; after the migration the row stores without them.
+     */
+    public function testV25LetsALegacyInstallStoreANotificationWithNoProjectOrParent(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25OptionalProject')
+            ->setNamespace('migration_optional_project_' . \uniqid());
+        $database->create();
+
+        $attribute = fn (string $id, string $type, bool $required, int $size = Database::LENGTH_KEY): Document => new Document([
+            '$id' => $id,
+            'type' => $type,
+            'format' => '',
+            'size' => $type === Database::VAR_STRING ? $size : 0,
+            'signed' => true,
+            'required' => $required,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $database->createCollection('notifications', [
+            $attribute('recipientHash', Database::VAR_STRING, true, 64),
+            $attribute('channel', Database::VAR_STRING, true, 64),
+            $attribute('resourceType', Database::VAR_STRING, true, 64),
+            $attribute('resourceId', Database::VAR_STRING, true),
+            $attribute('resourceInternalId', Database::VAR_ID, true),
+            $attribute('teamId', Database::VAR_STRING, false),
+            $attribute('teamInternalId', Database::VAR_ID, false),
+            $attribute('title', Database::VAR_STRING, true, 256),
+            $attribute('body', Database::VAR_STRING, true, 256),
+            // Required on a legacy install, which is the point of the test.
+            $attribute('projectId', Database::VAR_STRING, true),
+            $attribute('projectInternalId', Database::VAR_ID, true),
+            $attribute('parentResourceType', Database::VAR_STRING, true, 64),
+            $attribute('parentResourceId', Database::VAR_STRING, true),
+            $attribute('parentResourceInternalId', Database::VAR_ID, true),
+        ]);
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('notifications', new Document([
+            '$id' => 'domain-expiry',
+            'recipientHash' => \md5('owner@example.com'),
+            'channel' => 'email',
+            'teamId' => 'team-a',
+            'teamInternalId' => '1',
+            'resourceType' => 'domains',
+            'resourceId' => 'domain-a',
+            'resourceInternalId' => '1',
+            'title' => 'example.com expires in 30 days',
+            'body' => '',
+        ])));
+
+        $stored = $authorization->skip(fn () => $database->getDocument('notifications', 'domain-expiry'));
+
+        $this->assertFalse($stored->isEmpty());
+        $this->assertSame('team-a', $stored->getAttribute('teamId'));
+        $this->assertNull($stored->getAttribute('projectId'));
+        $this->assertNull($stored->getAttribute('parentResourceId'));
+    }
+
     public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void
     {
         require_once __DIR__ . '/../../../app/init.php';

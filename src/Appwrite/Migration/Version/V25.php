@@ -119,6 +119,23 @@ class V25 extends Migration
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
                         }
+
+                        // A notification about a team-scoped resource has no
+                        // project and no parent, so these stop being required.
+                        $optional = [
+                            'projectId',
+                            'projectInternalId',
+                            'parentResourceType',
+                            'parentResourceId',
+                            'parentResourceInternalId',
+                        ];
+                        foreach ($optional as $attribute) {
+                            try {
+                                $this->dbForProject->updateAttributeRequired($id, $attribute, false);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to make attribute \"{$attribute}\" optional in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
