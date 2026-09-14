@@ -246,7 +246,6 @@ class Deletes extends Action
         $deleteMessage = DeleteMessage::fromArray($payload);
         $type = $deleteMessage->type;
         $datetime = $deleteMessage->datetime;
-        $hourlyUsageRetentionDatetime = $deleteMessage->hourlyUsageRetentionDatetime;
         $resource = $deleteMessage->resource;
         $resourceType = $deleteMessage->resourceType;
         $document = $deleteMessage->document ?? new Document();
@@ -318,9 +317,6 @@ class Deletes extends Action
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
-            case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
-                break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
                 break;
@@ -348,7 +344,6 @@ class Deletes extends Action
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
-                $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
                 $this->deleteExpiredChallenges($project, $getProjectDB);
@@ -706,47 +701,6 @@ class Deletes extends Action
                 }
             }
         );
-    }
-
-    /**
-     * @param callable $getProjectDB
-     * @param string $hourlyUsageRetentionDatetime
-     * @return void
-     * @throws Exception
-     */
-    private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
-    {
-        if ($project->getId() === 'console') {
-            return;
-        }
-
-        Console::info('Delete usage stats');
-
-        /** @var Database $dbForProject */
-        $dbForProject = $getProjectDB($project);
-
-        $selects = [...$this->selects, 'time'];
-
-        // Delete Usage stats from projectDB
-        $this->deleteByGroup('stats', [
-            Query::select($selects),
-            Query::equal('period', ['1h']),
-            Query::lessThan('time', $hourlyUsageRetentionDatetime),
-            Query::orderDesc('time'),
-            Query::orderDesc(),
-        ], $dbForProject);
-
-        /** @var Database $dbForLogs */
-        $dbForLogs = call_user_func($getLogsDB, $project);
-
-        // Delete Usage stats from logsDB
-        $this->deleteByGroup('stats', [
-            Query::select($selects),
-            Query::equal('period', ['1h']),
-            Query::lessThan('time', $hourlyUsageRetentionDatetime),
-            Query::orderDesc('time'),
-            Query::orderDesc(),
-        ], $dbForLogs);
     }
 
     /**
