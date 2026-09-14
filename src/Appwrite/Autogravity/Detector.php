@@ -40,9 +40,61 @@ class Detector
             return new Gravity((float) $cached['x'], (float) $cached['y']);
         }
 
-        $gravity = $this->client->analyze($source);
+        $gravity = $this->client->analyze($this->prepare($source));
         $this->cache->save($key, $gravity->getArrayCopy());
 
         return $gravity;
+    }
+
+    /**
+     * Autogravity decodes JPEG, PNG, and WebP. Convert GIF and HEIC so analysis can still run.
+     */
+    private function prepare(string $source): string
+    {
+        if (!$this->needsConversion($source)) {
+            return $source;
+        }
+
+        $image = new \Imagick();
+        $image->readImageBlob($source);
+        $image->setFirstIterator();
+        $frame = $image->getImage();
+
+        $orientation = $frame->getImageProperties()['exif:Orientation'] ?? null;
+        $rotation = match ($orientation) {
+            '3' => 180,
+            '6' => 90,
+            '8' => -90,
+            default => 0,
+        };
+        if ($rotation !== 0) {
+            $frame->rotateImage(new \ImagickPixel('transparent'), $rotation);
+        }
+        $frame->setImageFormat('png');
+        $frame->stripImage();
+
+        return $frame->getImageBlob();
+    }
+
+    private function needsConversion(string $source): bool
+    {
+        return \str_starts_with($source, 'GIF87a')
+            || \str_starts_with($source, 'GIF89a')
+            || $this->isHeic($source);
+    }
+
+    private function isHeic(string $source): bool
+    {
+        if (\strlen($source) < 12 || \substr($source, 4, 4) !== 'ftyp') {
+            return false;
+        }
+
+        $brand = \substr($source, 8, 4);
+
+        return $brand === 'heic'
+            || $brand === 'heix'
+            || $brand === 'heif'
+            || $brand === 'mif1'
+            || $brand === 'msf1';
     }
 }

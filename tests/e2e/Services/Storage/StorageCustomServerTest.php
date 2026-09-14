@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -56,7 +57,17 @@ final class StorageCustomServerTest extends Scope
         return self::$cachedBucket[$cacheKey];
     }
 
-    public function testGetFilePreviewWithAutomaticGravity(): void
+    /**
+     * @return \Iterator<string, array{string, string, string}>
+     */
+    public static function automaticGravityFormats(): \Iterator
+    {
+        yield 'png' => ['png', 'image/png', 'autogravity.png'];
+        yield 'gif' => ['gif', 'image/gif', 'autogravity.gif'];
+    }
+
+    #[DataProvider('automaticGravityFormats')]
+    public function testGetFilePreviewWithAutomaticGravity(string $format, string $mime, string $filename): void
     {
         $bucketId = $this->setupBucket()['bucketId'];
         $source = \tempnam(\sys_get_temp_dir(), 'appwrite-autogravity-');
@@ -66,7 +77,7 @@ final class StorageCustomServerTest extends Scope
         $subject = new \Imagick(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
         $subject->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
         $canvas = new \Imagick();
-        $canvas->newImage(2400, 1920, 'white', 'png');
+        $canvas->newImage(2400, 1920, 'white', $format);
         $canvas->compositeImage($subject, \Imagick::COMPOSITE_OVER, 1450, 0);
         $canvas->writeImage($source);
 
@@ -75,7 +86,7 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile($source, 'image/png', 'autogravity.png'),
+            'file' => new CURLFile($source, $mime, $filename),
         ]);
         \unlink($source);
 

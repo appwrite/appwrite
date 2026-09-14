@@ -62,6 +62,47 @@ final class DetectorTest extends TestCase
 
         $this->assertSame(2, $http->requests);
     }
+
+    public function testLeavesPngUnchanged(): void
+    {
+        $png = "\x89PNG\r\n\x1A\nsupported-image";
+        $http = new CountingClient(new Response(
+            200,
+            body: new Stream('{"gravity":{"x":0.5,"y":0.5},"confidence":0.9}')
+        ));
+        $detector = new Detector(new Client($http), new Cache(new Memory()));
+
+        $detector->get($png);
+
+        $this->assertSame($png, $http->lastBody);
+    }
+
+    public function testConvertsGifBeforeAnalysis(): void
+    {
+        if (!\extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick is required to convert GIFs for Autogravity');
+        }
+
+        $gif = new \Imagick();
+        $gif->newImage(16, 16, 'red', 'gif');
+        $source = $gif->getImagesBlob();
+        $this->assertTrue(\str_starts_with($source, 'GIF87a') || \str_starts_with($source, 'GIF89a'));
+
+        $http = new CountingClient(new Response(
+            200,
+            body: new Stream('{"gravity":{"x":0.6,"y":0.3},"confidence":0.9}')
+        ));
+        $detector = new Detector(new Client($http), new Cache(new Memory()));
+
+        $first = $detector->get($source);
+        $second = $detector->get($source);
+
+        $this->assertEqualsWithDelta(0.6, $first->x, PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(0.3, $first->y, PHP_FLOAT_EPSILON);
+        $this->assertSame($first->getArrayCopy(), $second->getArrayCopy());
+        $this->assertSame(1, $http->requests);
+        $this->assertTrue(\str_starts_with($http->lastBody, "\x89PNG\r\n\x1A\n"));
+    }
 }
 
 final class CountingClient implements ClientInterface
