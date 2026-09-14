@@ -332,18 +332,6 @@ class Create extends Action
             }
         }
 
-        // The replaced session goes last, once its successor exists and every
-        // write that could still fail is done, so no failure leaves the caller
-        // without a session.
-        if ($current) {
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-            }
-        }
-
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
         $encoded = $store
             ->setProperty('id', $user->getId())
             ->setProperty('secret', $secret)
@@ -381,6 +369,18 @@ class Create extends Action
             session: $session->getArrayCopy(),
             locale: $locale->default,
         ));
+
+        // The replaced session goes last, once its successor exists and
+        // everything that could still throw has run, so no failure leaves the
+        // caller without a session.
+        if ($current) {
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if (!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+            }
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     }
