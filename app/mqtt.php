@@ -10,6 +10,7 @@ use Appwrite\Mqtt\Handlers\Puback as PubackHandler;
 use Appwrite\Mqtt\Handlers\Subscribe as SubscribeHandler;
 use Appwrite\Mqtt\Handlers\Unsubscribe as UnsubscribeHandler;
 use Appwrite\Mqtt\KeepAlive;
+use Appwrite\Mqtt\Response;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
@@ -44,7 +45,7 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
 
-$registerMqttConnectionResources ??= require __DIR__ . '/init/mqtt/connection.php';
+$registerConnectionResources ??= require __DIR__ . '/init/mqtt/connection.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -224,7 +225,7 @@ if (!function_exists('getRedis')) {
 // Register the CONNECT authenticator and per-SUBSCRIBE authorizer on the global container
 // (see app/init/mqtt/connection.php). The CONNECT/SUBSCRIBE handlers inject them by name,
 // resolved through the packet container that inherits from this one.
-$registerMqttConnectionResources($container);
+$registerConnectionResources($container);
 
 /** @var \Utopia\Telemetry\Adapter $telemetry */
 $telemetry = $container->get('telemetry');
@@ -365,22 +366,14 @@ $server->onReceive(function (int $fd, string $data) use (
         $span->set('mqtt.is_broker', false); // an inbound packet from a client
         $span->set('mqtt.bytes', \strlen($data));
 
-        $reply = function (string $packet = '', bool $close = false) use ($server, $mqtt, $fd): void {
-            if ($packet !== '') {
-                $server->send($fd, $packet);
-                $mqtt->metrics->bytesSent->add(\strlen($packet));
-            }
-            if ($close) {
-                $server->close($fd);
-            }
-        };
+        $response = new Response($server, $fd, $mqtt->metrics->bytesSent);
 
         // authenticator/authorizer are inherited from the global container (registered above).
         $packetContainer = new Container($container);
         $packetContainer->set('mqtt', fn () => $mqtt);
         $packetContainer->set('connection', fn () => $connection);
         $packetContainer->set('packet', fn () => $packet);
-        $packetContainer->set('reply', fn () => $reply);
+        $packetContainer->set('response', fn () => $response);
 
         $dispatcher->dispatch($packetContainer, $packet->type);
 

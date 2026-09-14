@@ -5,6 +5,7 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Response;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
@@ -26,15 +27,14 @@ class Subscribe extends Action
             ->inject('mqtt')
             ->inject('connection')
             ->inject('packet')
-            ->inject('reply')
+            ->inject('response')
             ->callback($this->action(...));
     }
 
     /**
      * @param (callable(array<string, string>, string): bool)|null $authorizer
-     * @param callable(string, bool): void $reply writes a packet back to this connection (and optionally closes it)
      */
-    public function action(?callable $authorizer, Mqtt $mqtt, Connection $connection, Packet $packet, callable $reply): void
+    public function action(?callable $authorizer, Mqtt $mqtt, Connection $connection, Packet $packet, Response $response): void
     {
         $body = $packet->body;
         $offset = 0;
@@ -126,11 +126,10 @@ class Subscribe extends Action
             $grantedQosByTopic[$filter] = $grantedQos;
         }
 
-        $reply(
+        $response->send(
             $connection->protocol >= 5
                 ? V5::suback($packetId, $granted)
                 : V3::suback($packetId, $granted),
-            false,
         );
 
         if ($topicDocuments === []) {
@@ -207,7 +206,7 @@ class Subscribe extends Action
                 $publish = $connection->protocol >= 5
                     ? V5::publish($topic, $data, Packet::QOS_1, $packetId, dup: true)
                     : V3::publish($topic, $data, Packet::QOS_1, $packetId, dup: true);
-                $reply($publish, false);
+                $response->send($publish);
                 $connection->track($packetId, $topic, (int) $message->getAttribute('sequence'));
             }
         }

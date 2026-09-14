@@ -5,6 +5,7 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Mqtt\Packet;
@@ -27,15 +28,14 @@ class Connect extends Action
             ->inject('mqtt')
             ->inject('connection')
             ->inject('packet')
-            ->inject('reply')
+            ->inject('response')
             ->callback($this->action(...));
     }
 
     /**
      * @param (callable(string, string, string): array<string, string>)|null $authenticator
-     * @param callable(string, bool): void $reply writes a packet back to this connection (and optionally closes it)
      */
-    public function action(?callable $authenticator, Mqtt $mqtt, Connection $connection, Packet $packet, callable $reply): void
+    public function action(?callable $authenticator, Mqtt $mqtt, Connection $connection, Packet $packet, Response $response): void
     {
         $body = $packet->body;
         $offset = 0;
@@ -77,7 +77,8 @@ class Connect extends Action
             if ($identity === []) {
                 $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
                 Span::add('mqtt.result', 'rejected');
-                $reply($this->connack($level, false), true);
+                $response->send($this->connack($level, false));
+                $response->close();
                 return;
             }
 
@@ -94,7 +95,8 @@ class Connect extends Action
                 if ((new Abuse($timeLimit))->check()) {
                     $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'abuse']);
                     Span::add('mqtt.result', 'abuse');
-                    $reply($this->connack($level, false), true);
+                    $response->send($this->connack($level, false));
+                    $response->close();
                     return;
                 }
             }
@@ -107,7 +109,7 @@ class Connect extends Action
         $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
         $mqtt->metrics->connectionsActive->add(1);
         $connection->active = true;
-        $reply($this->connack($level, true), false);
+        $response->send($this->connack($level, true));
     }
 
     /** CONNACK, with the acknowledgement code in each version's own vocabulary. */

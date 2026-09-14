@@ -5,6 +5,7 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Response;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V5;
 use Utopia\Platform\Action;
@@ -26,11 +27,11 @@ class Puback extends Action
             ->inject('mqtt')
             ->inject('connection')
             ->inject('packet')
-            ->inject('reply')
+            ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(Mqtt $mqtt, Connection $connection, Packet $packet, callable $reply): void
+    public function action(Mqtt $mqtt, Connection $connection, Packet $packet, Response $response): void
     {
         $body = $packet->body;
 
@@ -40,7 +41,8 @@ class Puback extends Action
 
         $connectionMetdata = $mqtt->getConnection($connection->fd);
         if ($connectionMetdata['userId'] !== $connection->identity['userId'] || $connectionMetdata['projectId'] !== $connection->projectId) {
-            $reply(V5::disconnect(V5::REASON_NOT_AUTHORIZED), true);
+            $response->send(V5::disconnect(V5::REASON_NOT_AUTHORIZED));
+            $response->close();
             return;
         }
 

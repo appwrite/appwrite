@@ -3,6 +3,7 @@
 namespace Appwrite\Mqtt\Handlers;
 
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Response;
 use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
 
@@ -13,15 +14,12 @@ class Ping extends Action
         $this
             ->desc('Reply to a client heartbeat')
             ->label(Dispatcher::LABEL_TYPE, Packet::PINGREQ)
-            ->inject('reply')
+            ->inject('response')
             ->callback($this->action(...));
     }
 
-    /**
-     * @param callable(string, bool): void $reply writes a packet back to this connection (and optionally closes it)
-     */
-    public function action(callable $reply): void
+    public function action(Response $response): void
     {
-        $reply(Packet::pingresp(), false);
+        $response->send(Packet::pingresp());
     }
 }

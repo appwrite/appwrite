@@ -5,6 +5,7 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Mqtt\Response;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -21,14 +22,11 @@ class Unsubscribe extends Action
             ->inject('mqtt')
             ->inject('connection')
             ->inject('packet')
-            ->inject('reply')
+            ->inject('response')
             ->callback($this->action(...));
     }
 
-    /**
-     * @param callable(string, bool): void $reply writes a packet back to this connection (and optionally closes it)
-     */
-    public function action(Mqtt $mqtt, Connection $connection, Packet $packet, callable $reply): void
+    public function action(Mqtt $mqtt, Connection $connection, Packet $packet, Response $response): void
     {
         $body = $packet->body;
         $offset = 0;
@@ -48,11 +46,10 @@ class Unsubscribe extends Action
         }
 
         // 5.0 carries a Success reason code per filter; 3.1.1 UNSUBACK is bare.
-        $reply(
+        $response->send(
             $connection->protocol >= 5
                 ? V5::unsuback($packetId, $count)
                 : V3::unsuback($packetId),
-            false,
         );
     }
 }
