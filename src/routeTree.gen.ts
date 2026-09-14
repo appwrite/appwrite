@@ -85,6 +85,8 @@ import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/referen
 import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
 import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
 import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
+import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
+import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
@@ -131,6 +133,7 @@ import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/gener
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
+import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
 import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
@@ -810,6 +813,16 @@ const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
   path: '/references-api/service',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResendApiKeysRoute = ApiResendApiKeysRouteImport.update({
+  id: '/_api/resend/api-keys',
+  path: '/resend/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResendDomainsRoute = ApiResendDomainsRouteImport.update({
+  id: '/_api/resend/domains',
+  path: '/resend/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
   id: '/_api/sitemap/news.xml',
   path: '/sitemap/news.xml',
@@ -1057,6 +1070,12 @@ const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   path: '/init/ticket/$eventSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResendApiKeysApiKeyIdRoute =
+  ApiResendApiKeysApiKeyIdRouteImport.update({
+    id: '/$apiKeyId',
+    path: '/$apiKeyId',
+    getParentRoute: () => ApiResendApiKeysRoute,
+  } as any)
 const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
   id: '/agent/mcp/callback',
   path: '/agent/mcp/callback',
@@ -3149,6 +3168,8 @@ export interface FileRoutesByFullPath {
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3195,6 +3216,7 @@ export interface FileRoutesByFullPath {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3564,6 +3586,8 @@ export interface FileRoutesByTo {
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3606,6 +3630,7 @@ export interface FileRoutesByTo {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3942,6 +3967,8 @@ export interface FileRoutesById {
   '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/_api/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/education/join': typeof AuthEducationJoinRoute
@@ -3988,6 +4015,7 @@ export interface FileRoutesById {
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -4363,6 +4391,8 @@ export interface FileRouteTypes {
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4409,6 +4439,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4778,6 +4809,8 @@ export interface FileRouteTypes {
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4820,6 +4853,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -5155,6 +5189,8 @@ export interface FileRouteTypes {
     | '/_api/references-api/nav-counts'
     | '/_api/references-api/open-api-spec'
     | '/_api/references-api/service'
+    | '/_api/resend/api-keys'
+    | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
     | '/_auth/education/join'
@@ -5201,6 +5237,7 @@ export interface FileRouteTypes {
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
@@ -5538,6 +5575,8 @@ export interface RootRouteChildren {
   ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
   ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
   ApiReferencesApiServiceRoute: typeof ApiReferencesApiServiceRoute
+  ApiResendApiKeysRoute: typeof ApiResendApiKeysRouteWithChildren
+  ApiResendDomainsRoute: typeof ApiResendDomainsRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -6078,6 +6117,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_api/resend/api-keys': {
+      id: '/_api/resend/api-keys'
+      path: '/resend/api-keys'
+      fullPath: '/resend/api-keys'
+      preLoaderRoute: typeof ApiResendApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/domains': {
+      id: '/_api/resend/domains'
+      path: '/resend/domains'
+      fullPath: '/resend/domains'
+      preLoaderRoute: typeof ApiResendDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_api/sitemap/news.xml': {
       id: '/_api/sitemap/news.xml'
       path: '/sitemap/news.xml'
@@ -6399,6 +6452,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/init/ticket/$eventSlug'
       preLoaderRoute: typeof ApiInitTicketEventSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/api-keys/$apiKeyId': {
+      id: '/_api/resend/api-keys/$apiKeyId'
+      path: '/$apiKeyId'
+      fullPath: '/resend/api-keys/$apiKeyId'
+      preLoaderRoute: typeof ApiResendApiKeysApiKeyIdRouteImport
+      parentRoute: typeof ApiResendApiKeysRoute
     }
     '/_auth/agent/mcp/callback': {
       id: '/_auth/agent/mcp/callback'
@@ -10321,6 +10381,17 @@ const ApiGeneratorCoverRouteChildren: ApiGeneratorCoverRouteChildren = {
 const ApiGeneratorCoverRouteWithChildren =
   ApiGeneratorCoverRoute._addFileChildren(ApiGeneratorCoverRouteChildren)
 
+interface ApiResendApiKeysRouteChildren {
+  ApiResendApiKeysApiKeyIdRoute: typeof ApiResendApiKeysApiKeyIdRoute
+}
+
+const ApiResendApiKeysRouteChildren: ApiResendApiKeysRouteChildren = {
+  ApiResendApiKeysApiKeyIdRoute: ApiResendApiKeysApiKeyIdRoute,
+}
+
+const ApiResendApiKeysRouteWithChildren =
+  ApiResendApiKeysRoute._addFileChildren(ApiResendApiKeysRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
@@ -10357,6 +10428,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
   ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,
   ApiReferencesApiServiceRoute: ApiReferencesApiServiceRoute,
+  ApiResendApiKeysRoute: ApiResendApiKeysRouteWithChildren,
+  ApiResendDomainsRoute: ApiResendDomainsRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,

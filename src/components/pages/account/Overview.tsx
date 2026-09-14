@@ -479,6 +479,7 @@ export function IdentitiesSection({
       cursor: 'cursor-ai.svg',
       gitlab: 'gitlab.svg',
       bitbucket: 'bitbucket.svg',
+      resend: 'resend.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -492,6 +493,7 @@ export function IdentitiesSection({
       cursor: 'Cursor',
       gitlab: 'GitLab',
       bitbucket: 'Bitbucket',
+      resend: 'Resend',
     }
     return nameMap[provider.toLowerCase()] || provider
   }

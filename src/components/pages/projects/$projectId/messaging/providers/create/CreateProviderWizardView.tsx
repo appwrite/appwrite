@@ -4,8 +4,8 @@
  * Stage 2: configure the provider's specific fields.
  */
 
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, SmtpEncryption } from '@appwrite.io/console'
 import { ChevronRight, Mail, Phone, Bell } from 'lucide-react'
@@ -29,7 +29,17 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DEFAULT_AWS_SES_REGION } from '@/lib/messaging/aws-ses-regions'
+import { isCloudProfile } from '@/lib/console-profiles'
+import { useProject } from '@/lib/react-query/hooks'
+import {
+  parseQuickSetupReturn,
+  stripQuickSetupReturn,
+} from '@/lib/smtp/quick-setup'
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
+import {
+  ResendOneClickSetup,
+  type ResendOneClickSetupHandle,
+} from './_components/ResendOneClickSetup'
 
 type ProviderType = 'email' | 'sms' | 'push'
 
@@ -113,7 +123,13 @@ const PROVIDERS: ProviderConfig[] = [
     description: 'Connect any SMTP server.',
     fields: [
       COMMON_NAME_FIELD,
-      { key: 'host', label: 'Host', type: 'text', required: true, placeholder: 'smtp.example.com' },
+      {
+        key: 'host',
+        label: 'Host',
+        type: 'text',
+        required: true,
+        placeholder: 'smtp.example.com',
+      },
       { key: 'port', label: 'Port', type: 'number', defaultValue: 587 },
       {
         key: 'encryption',
@@ -198,7 +214,13 @@ const PROVIDERS: ProviderConfig[] = [
     fields: [
       COMMON_NAME_FIELD,
       { key: 'apiKey', label: 'API key', type: 'password', required: true },
-      { key: 'domain', label: 'Domain', type: 'text', required: true, placeholder: 'mg.example.com' },
+      {
+        key: 'domain',
+        label: 'Domain',
+        type: 'text',
+        required: true,
+        placeholder: 'mg.example.com',
+      },
       {
         key: 'isEuRegion',
         label: 'EU region',
@@ -229,7 +251,12 @@ const PROVIDERS: ProviderConfig[] = [
     fields: [
       COMMON_NAME_FIELD,
       { key: 'accessKey', label: 'Access key', type: 'text', required: true },
-      { key: 'secretKey', label: 'Secret key', type: 'password', required: true },
+      {
+        key: 'secretKey',
+        label: 'Secret key',
+        type: 'password',
+        required: true,
+      },
       {
         key: 'region',
         label: 'Region',
@@ -262,7 +289,12 @@ const PROVIDERS: ProviderConfig[] = [
     fields: [
       COMMON_NAME_FIELD,
       { key: 'accountSid', label: 'Account SID', type: 'text', required: true },
-      { key: 'authToken', label: 'Auth token', type: 'password', required: true },
+      {
+        key: 'authToken',
+        label: 'Auth token',
+        type: 'password',
+        required: true,
+      },
       {
         key: 'from',
         label: 'Sender',
@@ -291,7 +323,12 @@ const PROVIDERS: ProviderConfig[] = [
     fields: [
       COMMON_NAME_FIELD,
       { key: 'apiKey', label: 'API key', type: 'text', required: true },
-      { key: 'apiSecret', label: 'API secret', type: 'password', required: true },
+      {
+        key: 'apiSecret',
+        label: 'API secret',
+        type: 'password',
+        required: true,
+      },
       PHONE_FROM_FIELD,
     ],
     submit: (projectSdk, providerId, v) =>
@@ -411,7 +448,8 @@ const PROVIDERS: ProviderConfig[] = [
         label: 'Auth key',
         type: 'textarea',
         required: true,
-        placeholder: '-----BEGIN PRIVATE KEY-----\n…\n-----END PRIVATE KEY-----',
+        placeholder:
+          '-----BEGIN PRIVATE KEY-----\n…\n-----END PRIVATE KEY-----',
       },
       { key: 'authKeyId', label: 'Auth key ID', type: 'text', required: true },
       { key: 'teamId', label: 'Team ID', type: 'text', required: true },
@@ -477,7 +515,8 @@ function defaultsForProvider(p: ProviderConfig): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const f of p.fields) {
     out[f.key] =
-      f.defaultValue ?? (f.type === 'switch' ? false : f.type === 'number' ? '' : '')
+      f.defaultValue ??
+      (f.type === 'switch' ? false : f.type === 'number' ? '' : '')
   }
   return out
 }
@@ -501,6 +540,16 @@ export function CreateProviderWizardView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
 
+  const { project } = useProject(pid)
+  const search = useSearch({ strict: false })
+  const quickSetupReturn = useMemo(
+    () => parseQuickSetupReturn(search),
+    [search],
+  )
+  const handledReturnRef = useRef(false)
+  const [autoStartOneClick, setAutoStartOneClick] = useState(false)
+  const oneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
+
   const selected = useMemo(
     () => PROVIDERS.find((p) => p.id === selectedId) ?? null,
     [selectedId],
@@ -523,17 +572,51 @@ export function CreateProviderWizardView() {
     }
   }, [step, selected])
 
+  // Returning from a provider authorization: the redirect wiped this wizard's
+  // state, so reopen the Resend step. On success the one-click panel picks
+  // the flow back up and fills the fields; on failure the user is back on the
+  // empty form, minus the connection, and can retry or type the key by hand.
+  useEffect(() => {
+    if (!quickSetupReturn || handledReturnRef.current) return
+    handledReturnRef.current = true
+
+    const resend = PROVIDERS.find((p) => p.id === 'resend')
+    if (quickSetupReturn.providerId !== 'resend' || !resend) return
+
+    navigate({
+      search: ((prev: unknown) => stripQuickSetupReturn(prev)) as never,
+      replace: true,
+    })
+
+    setSelectedId(resend.id)
+    setValues(defaultsForProvider(resend))
+    setStep('configure')
+
+    if (quickSetupReturn.status === 'failed') {
+      setAutoStartOneClick(false)
+      toast.error(quickSetupReturn.message ?? t('Authorization failed'))
+      return
+    }
+    setAutoStartOneClick(true)
+  }, [quickSetupReturn, navigate, t])
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error('No provider selected')
       const projectSdk = sdk.forProject(pid)
-      return selected.submit(projectSdk, ID.unique(), values)
+      const request = selected.submit(projectSdk, ID.unique(), values)
+      // Whether a minted key stays or goes is decided by this request alone,
+      // even if the wizard is closed before it settles.
+      oneClickRef.current?.settleCredential(values.apiKey, request)
+      return await request
     },
     onSuccess: async (provider) => {
       await queryClient.refetchQueries({
         queryKey: ['providers', 'project', pid],
       })
-      toast.success(`${t('Provider')} ${selected?.name} ${t('created successfully')}`)
+      toast.success(
+        `${t('Provider')} ${selected?.name} ${t('created successfully')}`,
+      )
       navigate({
         to: '/projects/$projectId/messaging/providers/$providerId',
         params: { projectId: pid, providerId: provider.$id },
@@ -547,6 +630,7 @@ export function CreateProviderWizardView() {
     setSelectedId(p.id)
     setValues(defaultsForProvider(p))
     setStep('configure')
+    setAutoStartOneClick(false)
   }
 
   const handleBackToPick = () => {
@@ -560,9 +644,10 @@ export function CreateProviderWizardView() {
     !mutation.isPending &&
     selected.fields.every((f) => isFieldFilled(f, values[f.key]))
 
-  const title = selected && step === 'configure'
-    ? `${t('Configure')} ${selected.name}`
-    : t('Add provider')
+  const title =
+    selected && step === 'configure'
+      ? `${t('Configure')} ${selected.name}`
+      : t('Add provider')
 
   const footer =
     step === 'configure' && selected ? (
@@ -593,13 +678,33 @@ export function CreateProviderWizardView() {
         <ProviderPicker grouped={grouped} onPick={handlePickProvider} />
       )}
       {step === 'configure' && selected && (
-        <ProviderForm
-          provider={selected}
-          values={values}
-          onChange={(key, value) =>
-            setValues((prev) => ({ ...prev, [key]: value }))
-          }
-        />
+        <div className="w-full space-y-6">
+          {/* Needs the console's Resend OAuth2 provider, which only cloud has. */}
+          {selected.id === 'resend' && isCloudProfile() ? (
+            <ResendOneClickSetup
+              ref={oneClickRef}
+              projectName={project?.name ?? ''}
+              values={values}
+              autoStart={autoStartOneClick}
+              onFill={(fields) =>
+                setValues((prev) => ({
+                  ...prev,
+                  apiKey: fields.apiKey,
+                  ...(fields.name ? { name: fields.name } : {}),
+                  ...(fields.fromName ? { fromName: fields.fromName } : {}),
+                  ...(fields.fromEmail ? { fromEmail: fields.fromEmail } : {}),
+                }))
+              }
+            />
+          ) : null}
+          <ProviderForm
+            provider={selected}
+            values={values}
+            onChange={(key, value) =>
+              setValues((prev) => ({ ...prev, [key]: value }))
+            }
+          />
+        </div>
       )}
     </WizardLayout>
   )
@@ -721,7 +826,9 @@ function FieldRenderer({
         <div className="min-w-0 space-y-0.5">
           <Label htmlFor={id}>{t(field.label)}</Label>
           {field.helper && (
-            <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
+            <p className="text-[12px] text-muted-foreground">
+              {t(field.helper)}
+            </p>
           )}
         </div>
         <Switch
@@ -820,7 +927,9 @@ function FieldRenderer({
                 ? 'number'
                 : 'text'
         }
-        value={typeof value === 'string' || typeof value === 'number' ? value : ''}
+        value={
+          typeof value === 'string' || typeof value === 'number' ? value : ''
+        }
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
       />
