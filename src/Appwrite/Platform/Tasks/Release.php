@@ -13,8 +13,8 @@ class Release extends Action
     /**
      * Release metadata lives in four files that have to agree. Editing them by
      * hand is how a published version ends up disagreeing with the repo, so this
-     * writes all four from one version number and tests/unit/Release/MetadataTest.php
-     * fails when they drift apart again.
+     * writes all four from one version number, and the Check release metadata
+     * step in ci.yml fails when they drift apart again.
      */
     private const string CONSTANTS = 'app/init/constants.php';
     private const string MIGRATION = 'src/Appwrite/Migration/Migration.php';

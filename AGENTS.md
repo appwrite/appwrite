@@ -341,7 +341,7 @@ When bumping a patch (e.g. `1.9.0` → `1.9.1`):
 - [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
 - [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
 
-`docker compose exec appwrite release X.Y.Z` writes all four in one pass; `tests/unit/Release/MetadataTest.php` fails when they disagree. Edit them by hand only when the task cannot express the change.
+`docker compose exec appwrite release X.Y.Z` writes all four in one pass, and the `Check release metadata` step in [`ci.yml`](.github/workflows/ci.yml) fails when they disagree. Edit them by hand only when the task cannot express the change.
 
 Ask the user to review, publish notes on the [Appwrite changelog](https://appwrite.io/changelog), generate specs if the API changed, and add request/response filters if needed.
 

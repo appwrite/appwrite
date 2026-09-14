@@ -35,6 +35,28 @@ final class MigrationVersionsTest extends TestCase
         }
     }
 
+    /**
+     * A mapping newer than APP_VERSION_STABLE means a version was given a
+     * migration but never marked stable, which is how 1.9.1 through 1.9.4 came
+     * to exist in this map with no release behind them.
+     */
+    public function testNoVersionIsMappedAheadOfStable(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        if (\str_contains(APP_VERSION_STABLE, 'RC') || \str_contains(APP_VERSION_STABLE, '-rc.')) {
+            $this->markTestSkipped('Release candidates are mapped when the final version is cut.');
+        }
+
+        foreach (\array_keys(Migration::$versions) as $mapped) {
+            $this->assertLessThanOrEqual(
+                0,
+                \version_compare((string) $mapped, APP_VERSION_STABLE),
+                "Migration::\$versions maps {$mapped}, which is newer than APP_VERSION_STABLE " . APP_VERSION_STABLE . '.'
+            );
+        }
+    }
+
     public function testV24CreatesAlertsCollectionForConsoleProject(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
