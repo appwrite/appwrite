@@ -98,12 +98,6 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['postgresql'],
         ],
-        'logs' => [
-            'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
-            'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
-        ],
         'publisher' => [
             'type' => 'publisher',
             'dsns' => $fallbackForRedis,
