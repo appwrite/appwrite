@@ -37,11 +37,18 @@ final class Func extends Base
         array $platform = [],
         ?Document $database = null,
     ): static {
+        // Queue decoders turn nested JSON objects into associative arrays.
+        // Keep the original body only when that conversion changes its shape.
+        $body = \json_encode($payload) ?: '';
+        $decoded = \json_decode($body, true);
+        $preserveBody = $body !== \json_encode($decoded);
+
         return new self(
             project: $project,
             user: $user,
             userId: $userId,
             payload: $payload,
+            body: $preserveBody ? $body : '',
             events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
         );
