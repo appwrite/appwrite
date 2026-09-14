@@ -28,13 +28,13 @@ function mockDaySliderLabel(day: number): string {
 
 function mockDayPreviewCopy(day: number): string {
   if (day === INIT_MOCK_DAY_BEFORE) {
-    return 'Before the event - all days stay locked. This is the default until you advance the slider.'
+    return 'Before the event - all days stay locked.'
   }
   if (day === MOCK_DAY_AFTER) {
     return 'Simulates after the event. Recap mode with all days unlocked.'
   }
   if (day === MOCK_DAY_BANNER_EXPIRED) {
-    return 'Simulates 7+ days after the event. Org promo banner is hidden.'
+    return 'Simulates 7+ days after the event. Org promo banner is hidden. This is the default.'
   }
   return `Simulates day ${day} - unlocks days 1-${day} (schedule, detail cards, Discord sessions, live badges).`
 }
