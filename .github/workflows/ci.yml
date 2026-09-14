@@ -15,7 +15,9 @@ on:
   push:
     branches:
       - main
-      - 1.9.x
+      # Every release branch, so the nightly channel always has green commits to
+      # resolve on the active line without anyone remembering to add it here.
+      - '*.x'
   workflow_dispatch:
     inputs:
       response_format:
@@ -923,3 +925,209 @@ jobs:
       - name: Fail benchmark
         if: always() && steps.benchmark_after.outcome != 'success'
         run: exit 1
+
+  # The two release gates AGENTS.md requires. They run on release branches and on
+  # demand, not on every PR to main: a fresh install plus an upgrade from the
+  # previous stable is what a release is blocked on, and it is the work we used to
+  # pay a person to repeat by hand before every patch.
+  install:
+    name: Release / Fresh install
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref != 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref != 'main')
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 25
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_FILE: docker-compose.yml
+      COMPOSE_PROJECT_NAME: install-gate
+      COMPOSE_PROFILES: ''
+      _APP_IMAGE: appwrite-dev
+      _APP_VERSION: latest
+      _APP_HTTP_PORT: '8080'
+      _APP_HTTPS_PORT: '8443'
+      ENDPOINT: http://localhost:8080/v1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull the candidate image
+        run: |
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} appwrite-dev:latest
+
+      - name: Start from clean
+        timeout-minutes: 10
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Report version
+        run: |
+          set -euo pipefail
+          curl --silent --fail --retry 10 --retry-all-errors --retry-delay 3 \
+            "${ENDPOINT}/health/version" | tee /dev/stderr | jq -e '.version'
+
+      # A stack that answers /health/version can still be unusable, so drive the
+      # console and project APIs a self-hoster actually starts with.
+      - name: Exercise the public API
+        timeout-minutes: 10
+        env:
+          MANIFEST: ${{ runner.temp }}/install-gate.json
+        run: .github/scripts/upgrade-seed.sh
+
+      - name: Check for crash loops
+        if: always()
+        run: |
+          docker compose ps
+          # compose emits NDJSON on some versions and a JSON array on others;
+          # flatten handles both.
+          docker compose ps --format json \
+            | jq -e -s 'flatten | map(select(.State != "running" and .State != "exited")) | length == 0' \
+            || { echo "::error::Some containers are not running."; docker compose logs --tail=200; exit 1; }
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v || true
+
+  upgrade:
+    name: Release / Upgrade from previous stable
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref != 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref != 'main')
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 45
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_PROJECT_NAME: upgrade-gate
+      COMPOSE_PROFILES: ''
+      _APP_HTTP_PORT: '8080'
+      _APP_HTTPS_PORT: '8443'
+      ENDPOINT: http://localhost:8080/v1
+      MANIFEST: ${{ github.workspace }}/upgrade-seed.json
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Previous baseline = highest published stable strictly below this branch's
+      # APP_VERSION_STABLE. Docker Hub rather than git tags, because the image has
+      # to exist for the test to run at all.
+      - name: Resolve the previous stable
+        id: previous
+        run: |
+          set -euo pipefail
+          target=$(sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p" app/init/constants.php)
+          previous=$(.github/scripts/previous-stable.py "${target}")
+
+          echo "Upgrading ${previous} -> ${target}"
+          echo "previous=${previous}" >> "$GITHUB_OUTPUT"
+          echo "target=${target}" >> "$GITHUB_OUTPUT"
+
+      # An upgrade starts from the compose file and env the old version shipped,
+      # not from this checkout's -- that is what the installation being upgraded
+      # was actually started from.
+      - name: Materialise the previous release's compose
+        env:
+          PREVIOUS: ${{ steps.previous.outputs.previous }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth 1 origin "refs/tags/${PREVIOUS}:refs/tags/${PREVIOUS}"
+          git show "${PREVIOUS}:docker-compose.yml" > docker-compose.previous.yml
+          git show "${PREVIOUS}:.env" > .env.previous
+
+      - name: Start the previous stable
+        timeout-minutes: 10
+        env:
+          COMPOSE_FILE: docker-compose.previous.yml
+          _APP_IMAGE: appwrite/appwrite
+          _APP_VERSION: ${{ steps.previous.outputs.previous }}
+        run: docker compose --env-file .env.previous up -d --quiet-pull --wait
+
+      - name: Seed through the public API
+        timeout-minutes: 10
+        run: .github/scripts/upgrade-seed.sh
+
+      - name: Stop the previous stable, keeping volumes
+        env:
+          COMPOSE_FILE: docker-compose.previous.yml
+          _APP_IMAGE: appwrite/appwrite
+          _APP_VERSION: ${{ steps.previous.outputs.previous }}
+        run: docker compose --env-file .env.previous down
+
+      - name: Pull the candidate image
+        run: |
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} appwrite-dev:latest
+
+      - name: Start the candidate on the same volumes
+        timeout-minutes: 10
+        env:
+          COMPOSE_FILE: docker-compose.yml
+          _APP_IMAGE: appwrite-dev
+          _APP_VERSION: latest
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Migrate
+        timeout-minutes: 20
+        env:
+          COMPOSE_FILE: docker-compose.yml
+          _APP_IMAGE: appwrite-dev
+          _APP_VERSION: latest
+        run: docker compose exec -T appwrite migrate
+
+      - name: Verify the seeded data survived
+        timeout-minutes: 10
+        run: .github/scripts/upgrade-verify.sh
+
+      # A migration that is not idempotent breaks every retried or resumed
+      # upgrade, so run it again and re-assert.
+      - name: Migrate again and re-verify
+        timeout-minutes: 25
+        env:
+          COMPOSE_FILE: docker-compose.yml
+          _APP_IMAGE: appwrite-dev
+          _APP_VERSION: latest
+        run: |
+          set -euo pipefail
+          docker compose exec -T appwrite migrate
+          .github/scripts/upgrade-verify.sh
+
+      - name: Collect logs on failure
+        if: failure()
+        env:
+          COMPOSE_FILE: docker-compose.yml
+          _APP_IMAGE: appwrite-dev
+          _APP_VERSION: latest
+        run: |
+          docker compose ps || true
+          docker compose logs --tail=400 appwrite || true
+
+      - name: Stop
+        if: always()
+        env:
+          COMPOSE_FILE: docker-compose.yml
+          _APP_IMAGE: appwrite-dev
+          _APP_VERSION: latest
+        run: docker compose down -v || true
