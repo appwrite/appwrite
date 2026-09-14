@@ -10,7 +10,6 @@ use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -138,11 +137,18 @@ final class MigrationVersionsTest extends TestCase
     }
 
     /**
-     * An install that already has notifications has it without the team columns.
-     * Drives V25 over that shape and then does the thing the columns exist for:
-     * store a notification against a team and read it back by team.
+     * A legacy install has notifications without the team columns. The fixture
+     * below is a frozen snapshot of that shape, written out rather than derived
+     * from the current config, so it keeps describing the old install even as
+     * the config moves on.
+     *
+     * Drives migrateCollections, as the other migration tests here do:
+     * execute() also walks every document in every console collection, which
+     * needs a full install rather than a fixture. Then does the thing the
+     * columns exist for: store a notification against a team, read it back by
+     * team, and check another team does not see it.
      */
-    public function testV25LetsAnUpgradedInstallStoreAndQueryTeamScopedNotifications(): void
+    public function testV25LetsALegacyInstallStoreAndQueryTeamScopedNotifications(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
 
@@ -154,28 +160,41 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_team_notifications_' . \uniqid());
         $database->create();
 
-        // The pre-V25 shape: everything the collection had before the team
-        // columns were introduced.
-        $collections = Config::getParam('collections', [])['console']['notifications'];
-        $teamColumns = ['teamId', 'teamInternalId'];
+        $string = fn (string $id, int $size = Database::LENGTH_KEY): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_STRING,
+            'format' => '',
+            'size' => $size,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
 
-        $database->createCollection(
-            'notifications',
-            \array_values(\array_map(
-                fn (array $attribute): Document => new Document($attribute),
-                \array_filter(
-                    $collections['attributes'],
-                    fn (array $attribute): bool => !\in_array($attribute['$id'], $teamColumns, true)
-                )
-            )),
-            \array_values(\array_map(
-                fn (array $index): Document => new Document($index),
-                \array_filter(
-                    $collections['indexes'],
-                    fn (array $index): bool => $index['$id'] !== '_key_team'
-                )
-            ))
-        );
+        $database->createCollection('notifications', [
+            $string('messageId'),
+            $string('recipientHash', 64),
+            $string('type', 100),
+            $string('channel', 64),
+            $string('projectId'),
+            $string('projectInternalId'),
+            $string('resourceType', 64),
+            $string('resourceId'),
+            $string('resourceInternalId'),
+            $string('title', 256),
+            new Document([
+                '$id' => 'read',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]),
+        ]);
 
         $migration = new V25();
         $migration->setProject(
@@ -206,11 +225,7 @@ final class MigrationVersionsTest extends TestCase
             'resourceType' => 'domains',
             'resourceId' => 'domain-a',
             'resourceInternalId' => '1',
-            'parentResourceType' => '',
-            'parentResourceId' => '',
-            'parentResourceInternalId' => '',
             'title' => 'example.com expires in 30 days',
-            'body' => '',
             'read' => false,
         ])));
 
