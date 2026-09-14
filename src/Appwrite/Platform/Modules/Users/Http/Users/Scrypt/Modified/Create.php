@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -58,7 +59,7 @@ class Create extends Base
             ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
             ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
             ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
-            ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+            ->param('name', '', new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
