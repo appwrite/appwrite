@@ -1820,15 +1820,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
-                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
-                'introduction' => '',
-                'default' => 'enabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_CONNECTIONS_DB_EXECUTIONS',
                 'description' => 'ClickHouse HTTP DSN used for execution storage. Defaults to _APP_CONNECTIONS_DB_USAGE.',
                 'introduction' => '',

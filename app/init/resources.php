@@ -213,8 +213,6 @@ $container->set('executionStore', function () {
     }
 
     return new ExecutionStore(
-        enabled: System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted'
-            && System::getEnv('_APP_EXECUTIONS_DUAL_WRITE', 'enabled') !== 'disabled',
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
