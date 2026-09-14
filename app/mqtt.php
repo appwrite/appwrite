@@ -350,34 +350,38 @@ $server->onReceive(function (int $fd, string $data) use (
     $dispatcher,
     $container
 ): void {
-    $packet = Packet::parse($data);
-    $connection = $mqtt->open($fd);
-
-    $mqtt->metrics->bytesReceived->add(\strlen($data));
-
-    $span = Span::init('mqtt.' . $packet->name());
-    $span->set('mqtt.fd', $fd);
-    $span->set('mqtt.is_broker', false); // an inbound packet from a client
-    $span->set('mqtt.bytes', \strlen($data));
-
-    $reply = function (string $packet = '', bool $close = false) use ($server, $mqtt, $fd): void {
-        if ($packet !== '') {
-            $server->send($fd, $packet);
-            $mqtt->metrics->bytesSent->add(\strlen($packet));
-        }
-        if ($close) {
-            $server->close($fd);
-        }
-    };
-
-    // authenticator/authorizer are inherited from the global container (registered above).
-    $packetContainer = new Container($container);
-    $packetContainer->set('mqtt', fn () => $mqtt);
-    $packetContainer->set('connection', fn () => $connection);
-    $packetContainer->set('packet', fn () => $packet);
-    $packetContainer->set('reply', fn () => $reply);
-
+    // The whole packet lifecycle is wrapped: a malformed packet or a handler failure must
+    // drop only this connection, never bubble up and take down the worker (and every other
+    // connection it holds).
+    $span = null;
     try {
+        $packet = Packet::parse($data);
+        $connection = $mqtt->open($fd);
+
+        $mqtt->metrics->bytesReceived->add(\strlen($data));
+
+        $span = Span::init('mqtt.' . $packet->name());
+        $span->set('mqtt.fd', $fd);
+        $span->set('mqtt.is_broker', false); // an inbound packet from a client
+        $span->set('mqtt.bytes', \strlen($data));
+
+        $reply = function (string $packet = '', bool $close = false) use ($server, $mqtt, $fd): void {
+            if ($packet !== '') {
+                $server->send($fd, $packet);
+                $mqtt->metrics->bytesSent->add(\strlen($packet));
+            }
+            if ($close) {
+                $server->close($fd);
+            }
+        };
+
+        // authenticator/authorizer are inherited from the global container (registered above).
+        $packetContainer = new Container($container);
+        $packetContainer->set('mqtt', fn () => $mqtt);
+        $packetContainer->set('connection', fn () => $connection);
+        $packetContainer->set('packet', fn () => $packet);
+        $packetContainer->set('reply', fn () => $reply);
+
         $dispatcher->dispatch($packetContainer, $packet->type);
 
         // Every inbound packet is liveness: push the deadline forward (O(1), no wheel touch).
@@ -395,10 +399,9 @@ $server->onReceive(function (int $fd, string $data) use (
         $span->set('mqtt.clean_start', $connection->cleanStart);
         $span->finish();
     } catch (\Throwable $error) {
-        $span->set('project.id', $connection->projectId);
-        $span->set('user.id', $connection->identity['userId'] ?? '');
-        $span->finish(error: $error);
-        throw $error;
+        Console::error('MQTT packet error on fd ' . $fd . ': ' . $error->getMessage());
+        $span?->finish(error: $error);
+        $server->close($fd);
     }
 });
 
