@@ -370,9 +370,11 @@ class Create extends Action
             locale: $locale->default,
         ));
 
-        // The replaced session goes last, once its successor exists and
-        // everything that could still throw has run, so no failure leaves the
-        // caller without a session.
+        $response->dynamic($session, Response::MODEL_SESSION);
+
+        // The response has been sent by now, so the caller already holds the
+        // replacement session. Only then is the replaced one removed: a failure
+        // here is logged, but it can no longer log the caller out.
         if ($current) {
             $currentDocument = $dbForProject->getDocument('sessions', $current);
             if (!$currentDocument->isEmpty()) {
@@ -381,8 +383,6 @@ class Create extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
-
-        $response->dynamic($session, Response::MODEL_SESSION);
     }
 
     /**
