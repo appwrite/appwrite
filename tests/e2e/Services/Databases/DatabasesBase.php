@@ -1493,6 +1493,99 @@ trait DatabasesBase
         $this->assertStringContainsString('Index length is longer than the maximum:', $attribute['body']['message']);
     }
 
+    public function testUpdateEncryptedAttributeSize(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Encrypted sizes',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        foreach (['string', 'varchar'] as $type) {
+            /**
+             * Test for SUCCESS
+             */
+            $attribute = $this->createAttribute($databaseId, $collectionId, $type, [
+                'key' => $type,
+                'required' => false,
+                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN + 50,
+                'encrypt' => true,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $type);
+
+            /**
+             * Test for FAILURE
+             */
+            $invalid = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1,
+                'newKey' => 'invalid',
+            ]);
+            $this->assertEquals(400, $invalid['headers']['status-code']);
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $invalid['body']['type']);
+            $this->assertStringContainsString('Encrypted strings require a minimum size', $invalid['body']['message']);
+
+            $unchanged = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $collectionId) . '/' . $type, $headers);
+            $this->assertEquals(200, $unchanged['headers']['status-code']);
+            $this->assertEquals(APP_DATABASE_ENCRYPT_SIZE_MIN + 50, $unchanged['body']['size']);
+            $this->assertTrue($unchanged['body']['encrypt']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN,
+            ]);
+            $this->assertEquals(200, $updated['headers']['status-code']);
+            $this->assertEquals(APP_DATABASE_ENCRYPT_SIZE_MIN, $updated['body']['size']);
+
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [$type => 'a'],
+                'permissions' => [Permission::read(Role::user($this->getUser()['$id']))],
+            ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
+            $this->assertSame('a', $document['body'][$type]);
+
+            $persisted = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']), $headers);
+            $this->assertEquals(200, $persisted['headers']['status-code']);
+            $this->assertSame('a', $persisted['body'][$type]);
+
+            $plain = $this->createAttribute($databaseId, $collectionId, $type, [
+                'key' => $type . 'Plain',
+                'required' => false,
+                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN,
+            ]);
+            $this->assertEquals(202, $plain['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $type . 'Plain');
+
+            $plain = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type . 'Plain'), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 10,
+            ]);
+            $this->assertEquals(200, $plain['headers']['status-code']);
+            $this->assertEquals(10, $plain['body']['size']);
+        }
+    }
+
     public function testUpdateAttributeEnum(): void
     {
         if (!$this->getSupportForAttributes()) {
