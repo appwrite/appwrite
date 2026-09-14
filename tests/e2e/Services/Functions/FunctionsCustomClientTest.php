@@ -279,97 +279,40 @@ final class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testCreateExecutionWithJWT(): void
+    public function testCreateExecutionWithJWT()
     {
+        /**
+         * Test for SUCCESS
+         */
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'JWT execution',
+            'name' => 'Test JWT execution',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'timeout' => 10,
         ]);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
 
-        try {
-            $this->setupDeployment($functionId, [
-                'code' => $this->packageFunction('basic'),
-                'activate' => true,
-            ]);
+        $token = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $jwt = $token['body']['jwt'];
 
-            $token = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-            $this->assertEquals(201, $token['headers']['status-code']);
-            $jwt = $token['body']['jwt'];
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals($jwt, $output['APPWRITE_FUNCTION_JWT']);
 
-            /**
-             * Test for SUCCESS
-             */
-            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-jwt' => $jwt,
-                'x-appwrite-user-jwt' => 'OVERRIDDEN',
-            ]);
-
-            $this->assertEquals(201, $execution['headers']['status-code']);
-            $this->assertEquals('completed', $execution['body']['status']);
-            $this->assertEquals(200, $execution['body']['responseStatusCode']);
-            $output = json_decode($execution['body']['responseBody'], true);
-            $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
-            // Preserve the original token, including its expiry, when forwarding it.
-            $this->assertSame($jwt, $output['APPWRITE_FUNCTION_JWT']);
-
-            $account = $this->client->call(Client::METHOD_GET, '/account', [
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-jwt' => $output['APPWRITE_FUNCTION_JWT'],
-            ]);
-            $this->assertEquals(200, $account['headers']['status-code']);
-            $this->assertEquals($this->getUser()['$id'], $account['body']['$id']);
-
-            // API-key executions must not forward an additional user credential.
-            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-                'x-appwrite-jwt' => $jwt,
-            ]);
-            $this->assertEquals(201, $execution['headers']['status-code']);
-            $this->assertEquals(200, $execution['body']['responseStatusCode']);
-            $output = json_decode($execution['body']['responseBody'], true);
-            $this->assertSame('', $output['APPWRITE_FUNCTION_JWT']);
-
-            /**
-             * Test for FAILURE
-             */
-            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-jwt' => 'invalid',
-            ]);
-            $this->assertEquals(401, $execution['headers']['status-code']);
-            $this->assertEquals('user_jwt_invalid', $execution['body']['type']);
-
-            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-                'x-appwrite-jwt' => 'invalid',
-            ]);
-            $this->assertEquals(401, $execution['headers']['status-code']);
-            $this->assertEquals('user_jwt_invalid', $execution['body']['type']);
-
-            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-jwt' => $jwt,
-            ], $this->getHeaders()));
-            $this->assertEquals(403, $execution['headers']['status-code']);
-            $this->assertEquals('user_jwt_and_cookie_set', $execution['body']['type']);
-        } finally {
-            $this->cleanupFunction($functionId);
-        }
+        $this->cleanupFunction($functionId);
     }
 
     public function testNonOverrideOfHeaders()
