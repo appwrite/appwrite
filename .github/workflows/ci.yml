@@ -16,6 +16,8 @@ on:
     branches:
       - main
       - 1.9.x
+  schedule:
+    - cron: '0 3 * * 1'
   workflow_dispatch:
     inputs:
       response_format:
@@ -141,6 +143,10 @@ jobs:
               COMPOSER_NO_AUDIT: 0
             run: composer audit
 
+          - name: Check PHPUnit matrix behavior
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: node --test tests/tools/matrix.test.cjs
+
           - name: Run Linter
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer lint
@@ -178,52 +184,58 @@ jobs:
 
   matrix:
     name: Tests / Matrix
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    needs: build
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
       services: ${{ steps.generate.outputs.services }}
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Read and validate PHPUnit suites from the test image
+        id: suites
+        run: |
+          docker pull "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}"
+          suites=$(docker run --rm -v "$PWD/tests:/usr/src/code/tests:ro" -v "$PWD/phpunit.xml:/usr/src/code/phpunit.xml:ro" "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}" php tests/tools/suites.php phpunit.xml --groups)
+          echo "names=$suites" >> "$GITHUB_OUTPUT"
+
       - name: Generate matrix
         id: generate
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PHPUNIT_SUITES: ${{ steps.suites.outputs.names }}
         with:
           script: |
             const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
             const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
 
-            const services = [
-              { name: 'Account',           runner: runner4, functional: true,  processes: null },
-              { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
-              { name: 'Console',           runner: runner4, functional: true,  processes: null },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true, embedding: true },
-              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
-              { name: 'Functions',         runner: runner4, functional: false, processes: null },
-              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
-              { name: 'GraphQL',           runner: runner4, functional: false, processes: null },
-              { name: 'Health',            runner: runner4, functional: true,  processes: null },
-              { name: 'Advisor',           runner: runner4, functional: true,  processes: null },
-              { name: 'Locale',            runner: runner4, functional: true,  processes: null },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null, documentsdb: true },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null, documentsdb: true },
-              { name: 'Sites',             runner: runner4, functional: true,  processes: null },
-              { name: 'Proxy',             runner: runner4, functional: true,  processes: null },
-              { name: 'Storage',           runner: runner4, functional: true,  processes: null },
-              { name: 'Tokens',            runner: runner4, functional: true,  processes: null },
-              { name: 'Teams',             runner: runner4, functional: true,  processes: null },
-              { name: 'Usage',             runner: runner4, functional: true,  processes: null },
-              { name: 'Users',             runner: runner4, functional: true,  processes: null },
-              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
-              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
-              { name: 'VCSGitHub',         runner: runner4, functional: true,  processes: null },
-              { name: 'VCSGitea',          runner: runner4, functional: false, processes: null },
-              { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
-              { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1, documentsdb: true },
-              { name: 'Project',           runner: runner4, functional: true,  processes: null },
-              { name: 'Organization',      runner: runner4, functional: true,  processes: null },
-              { name: 'Presences',         runner: runner4, functional: true,  processes: null },
-            ];
+            const suiteGroups = JSON.parse(process.env.PHPUNIT_SUITES);
+            const allNames = Object.keys(suiteGroups);
+            for (const name of allNames) {
+              if (name !== 'unit' && !name.startsWith('e2e-')) throw new Error(`Unassigned suite: ${name}`);
+            }
+            const names = allNames.filter(name => name.startsWith('e2e-'));
+            const execution = {
+              'e2e-databases': { runner: runner8, functional: false, processes: 3 },
+              'e2e-tablesdb': { runner: runner8, functional: false, processes: 3 },
+              'e2e-functions': { functional: false },
+              'e2e-graphql': { functional: false },
+              'e2e-realtime': { functional: false },
+              'e2e-projectwebhooks': { functional: false },
+              'e2e-vcsgitea': { functional: false },
+              'e2e-migrations': { processes: 1 },
+            };
+            for (const name of Object.keys(execution)) {
+              if (!names.includes(name)) throw new Error(`Stale suite override: ${name}`);
+            }
+            const services = names.filter(name => name !== 'e2e-general').map(suite => ({
+              name: suite.slice(4), suite, runner: runner4, functional: true, processes: null,
+              ...execution[suite],
+              documentsdb: suiteGroups[suite].includes('documentsdb'),
+              embedding: suiteGroups[suite].includes('embedding'),
+            }));
             core.setOutput('services', JSON.stringify(services));
 
             const pr = context.payload.pull_request;
@@ -236,7 +248,10 @@ jobs:
                 ref,
               });
 
-              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+              const getDbVersion = (lock) => {
+                const pkg = lock.packages?.find(p => p.name === 'utopia-php/database');
+                return JSON.stringify([pkg?.version, pkg?.source?.reference, pkg?.dist?.reference]);
+              };
               const [{ data: base }, { data: head }] = await Promise.all([
                 getContent(pr.base.sha),
                 getContent(pr.head.sha),
@@ -246,7 +261,7 @@ jobs:
               return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
             };
 
-            const fullMatrix = context.eventName === 'workflow_dispatch'
+            const fullMatrix = context.eventName === 'workflow_dispatch' || context.eventName === 'schedule'
               || (pr && await isDatabaseVersionChanged());
 
             if (fullMatrix) {
@@ -348,7 +363,7 @@ jobs:
         run: >-
           docker compose exec
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/unit
+          appwrite test --testsuite unit
 
   e2e_general:
     name: Tests / E2E / General
@@ -411,7 +426,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/General
+          appwrite test --testsuite e2e-general
 
       - name: Failure Logs
         if: failure()
@@ -442,7 +457,7 @@ jobs:
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
           # Exercise empty functions-domain entries through the existing Proxy API tests.
-          if [ "${{ matrix.service.name }}" = "Proxy" ]; then
+          if [ "${{ matrix.service.name }}" = "proxy" ]; then
             echo "_APP_DOMAIN_FUNCTIONS=functions.localhost," >> $GITHUB_ENV
           fi
 
@@ -471,7 +486,7 @@ jobs:
           fi
 
           # Gitea runs alongside Appwrite only where VCS tests need it.
-          if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
+          if [ "${{ matrix.service.name }}" = "vcsgitea" ]; then
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 
@@ -515,7 +530,7 @@ jobs:
               done
 
       - name: Provision Gitea
-        if: matrix.service.name == 'VCSGitea'
+        if: matrix.service.name == 'vcsgitea'
         timeout-minutes: 5
         run: |
           docker compose up -d --wait gitea
@@ -546,7 +561,7 @@ jobs:
           done
 
       - name: Test first organization creation
-        if: matrix.service.name == 'Teams'
+        if: matrix.service.name == 'teams'
         timeout-minutes: 2
         run: |
           # Health/version can respond before the platform schema is initialized.
@@ -560,7 +575,8 @@ jobs:
       - name: Run tests
         timeout-minutes: 15
         run: |
-          SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
+          selection=(--testsuite "${{ matrix.service.suite }}" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group s3)
+          docker compose exec -T appwrite vendor/bin/phpunit "${selection[@]}" --list-tests-xml /tmp/expected.xml
 
           FUNCTIONAL_FLAG=""
           if [ "${{ matrix.service.functional }}" = "true" ]; then
@@ -576,7 +592,22 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "${selection[@]}" --log-junit /tmp/junit.xml
+          docker compose exec -T appwrite php tests/tools/results.php /tmp/expected.xml /tmp/junit.xml
+
+      - name: Collect test reports
+        if: always()
+        run: |
+          mkdir -p test-results
+          docker compose cp appwrite:/tmp/expected.xml test-results/expected.xml || true
+          docker compose cp appwrite:/tmp/junit.xml test-results/junit.xml || true
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tests-${{ matrix.database }}-${{ matrix.mode }}-${{ matrix.service.name }}
+          path: test-results
 
       - name: Failure Logs
         if: failure()
@@ -599,28 +630,28 @@ jobs:
         config:
           - label: Abuse
             group: abuseEnabled
-            path: /usr/src/code/tests/e2e
+            suite: all
             options_abuse: enabled
             storage_antivirus: disabled
             compose_profiles: ''
             wait: ''
           - label: Screenshots
             group: screenshots
-            path: /usr/src/code/tests/e2e/Services/Sites
+            suite: e2e-sites
             options_abuse: disabled
             storage_antivirus: disabled
             compose_profiles: ''
             wait: executor
           - label: Antivirus
             group: antivirus
-            path: /usr/src/code/tests/e2e/Services/Storage
+            suite: e2e-storage
             options_abuse: disabled
             storage_antivirus: enabled
             compose_profiles: antivirus
             wait: clamav
           - label: S3 Storage
             group: s3
-            path: /usr/src/code/tests/e2e/Services
+            suite: all
             options_abuse: disabled
             storage_antivirus: disabled
             compose_profiles: s3
@@ -723,10 +754,29 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        run: >-
-          docker compose exec -T
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
+        run: |
+          selection=(--exclude-testsuite unit --group "${{ matrix.config.group }}")
+          if [ "${{ matrix.config.suite }}" != all ]; then
+            selection+=(--testsuite "${{ matrix.config.suite }}")
+          fi
+          docker compose exec -T appwrite vendor/bin/phpunit "${selection[@]}" --list-tests-xml /tmp/expected.xml
+          docker compose exec -T -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test "${selection[@]}" --log-junit /tmp/junit.xml --fail-on-skipped --fail-on-incomplete
+          docker compose exec -T appwrite php tests/tools/results.php /tmp/expected.xml /tmp/junit.xml --fail-on-skipped
+
+      - name: Collect test reports
+        if: always()
+        run: |
+          mkdir -p test-results
+          docker compose cp appwrite:/tmp/expected.xml test-results/expected.xml || true
+          docker compose cp appwrite:/tmp/junit.xml test-results/junit.xml || true
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tests-${{ matrix.config.group }}-${{ matrix.mode }}
+          path: test-results
 
       - name: Failure Logs
         if: failure()
@@ -936,3 +986,26 @@ jobs:
       - name: Fail benchmark
         if: always() && steps.benchmark_after.outcome != 'success'
         run: exit 1
+
+  tests_complete:
+    name: Tests / Complete
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [matrix, unit, e2e_general, e2e_service, e2e_grouped]
+    steps:
+      - name: Require every selected test job to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+
+          results = json.loads(os.environ['RESULTS'])
+          allowed_skips = set()
+          failures = [name for name, job in results.items()
+                      if job['result'] != 'success'
+                      and not (name in allowed_skips and job['result'] == 'skipped')]
+          if failures:
+              raise SystemExit('Tests not verified: ' + ', '.join(failures))
+          PYTHON

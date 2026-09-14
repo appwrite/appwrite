@@ -131,7 +131,8 @@
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
         "rector/rector": "^2.4",
-        "shipmonk/dead-code-detector": "^0.13"
+        "shipmonk/dead-code-detector": "^0.13",
+        "nikic/php-parser": "^5.8"
     },
     "provide": {
         "ext-phpiredis": "*"
