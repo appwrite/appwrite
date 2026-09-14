@@ -27,6 +27,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Cloudflare\Update as UpdateOAuth2Cloudflare;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Dailymotion\Update as UpdateOAuth2Dailymotion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord\Update as UpdateOAuth2Discord;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Disqus\Update as UpdateOAuth2Disqus;
@@ -39,6 +40,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Get as GetOAuth2Provid
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\GitHub\Update as UpdateOAuth2GitHub;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Gitlab\Update as UpdateOAuth2Gitlab;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Google\Update as UpdateOAuth2Google;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as UpdateOAuth2HuggingFace;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as UpdateOAuth2Kakao;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
@@ -49,10 +52,12 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateO
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as UpdateOAuth2Paypal;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Resend\Update as UpdateOAuth2Resend;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
@@ -78,6 +83,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as U
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
@@ -135,6 +141,7 @@ class Http extends Service
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
 
         // Keys
+        // TODO: Remove once the Console, CLI and SDKs use the Organization API instead
         $this->addAction(CreateKey::getName(), new CreateKey());
         $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
         $this->addAction(ListKeys::getName(), new ListKeys());
@@ -168,6 +175,7 @@ class Http extends Service
         $this->addAction(ListPolicies::getName(), new ListPolicies());
         $this->addAction(GetPolicy::getName(), new GetPolicy());
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
+        $this->addAction(UpdateMFAFactorsPolicy::getName(), new UpdateMFAFactorsPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
         $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
@@ -227,5 +235,10 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Kick::getName(), new UpdateOAuth2Kick());
         $this->addAction(UpdateOAuth2Apple::getName(), new UpdateOAuth2Apple());
         $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
+        $this->addAction(UpdateOAuth2HuggingFace::getName(), new UpdateOAuth2HuggingFace());
+        $this->addAction(UpdateOAuth2Resend::getName(), new UpdateOAuth2Resend());
+        $this->addAction(UpdateOAuth2TikTok::getName(), new UpdateOAuth2TikTok());
+        $this->addAction(UpdateOAuth2Kakao::getName(), new UpdateOAuth2Kakao());
+        $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
     }
 }

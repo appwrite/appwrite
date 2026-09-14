@@ -185,6 +185,24 @@ class Github extends OAuth2
     }
 
     /**
+     * Return the user's GitHub avatar URL.
+     *
+     * GitHub includes `avatar_url` directly in the `GET /user` response that
+     * is already fetched and cached by getUser(), so this method costs no
+     * extra network round-trip.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['avatar_url'] ?? '';
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string
@@ -235,7 +253,7 @@ class Github extends OAuth2
         return $this->user;
     }
 
-    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
         $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
             'name' => $repositoryName,

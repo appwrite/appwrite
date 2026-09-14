@@ -33,14 +33,6 @@ class Dispatcher
     }
 
     /**
-     * @return array<string, Action>
-     */
-    public function getHandlers(): array
-    {
-        return $this->handlers;
-    }
-
-    /**
      * Routes a parsed websocket message to the handler that registered for its `type`,
      * runs param validation + dependency injection, and returns whatever the handler returns.
      * Errors propagate so the caller can render them as websocket error frames.

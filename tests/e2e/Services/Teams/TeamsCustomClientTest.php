@@ -165,4 +165,79 @@ final class TeamsCustomClientTest extends Scope
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testCreateTeamMembershipConfirmsPendingInvite(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $projectId = $this->getProject()['$id'];
+
+        $membershipData = $this->createPendingMembershipHelper($teamUid, $teamData['teamName']);
+
+        $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertEquals(1, $team['body']['total']); // A pending invite is not a member yet
+
+        /**
+         * Test for SUCCESS
+         * A server side invite confirms the pending membership, so it has to be counted
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => $membershipData['userUid'],
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($membershipData['membershipUid'], $response['body']['$id']);
+        $this->assertTrue($response['body']['confirm']);
+
+        $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertEquals(2, $team['body']['total']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $memberships['headers']['status-code']);
+        $this->assertEquals($team['body']['total'], $memberships['body']['total']);
+
+        /**
+         * Test for FAILURE
+         * Re-inviting a confirmed member must not count them twice
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => $membershipData['userUid'],
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertEquals(2, $team['body']['total']);
+    }
 }

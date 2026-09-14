@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Provider extends Model
 {
@@ -55,7 +56,7 @@ class Provider extends Model
             ->addRule('credentials', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Provider credentials.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => [
                     'key' => '123456789'
                 ],
@@ -63,12 +64,29 @@ class Provider extends Model
             ->addRule('options', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Provider options.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => [
                     'from' => 'sender-email@mydomain'
                 ],
             ]);
+    }
+
+    /**
+     * Process Document before returning it to the client
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['credentials', 'options'] as $attribute) {
+            $value = $document->getAttribute($attribute);
+            if (\is_array($value) && empty($value)) {
+                $document->setAttribute($attribute, new \stdClass());
+            }
+        }
+
+        return $document;
     }
 
     /**

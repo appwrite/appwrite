@@ -1840,9 +1840,9 @@ $platformCollections = [
             ],
             [
                 '$id' => ID::custom('personalAccessToken'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_TEXT,
                 'format' => '',
-                'size' => 2048,
+                'size' => 65535,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1862,9 +1862,9 @@ $platformCollections = [
             ],
             [
                 '$id' => ID::custom('personalRefreshToken'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_TEXT,
                 'format' => '',
-                'size' => 2048,
+                'size' => 65535,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

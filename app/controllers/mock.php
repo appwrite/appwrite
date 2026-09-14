@@ -102,6 +102,26 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
+/**
+ * Static profile picture for the mock OAuth2 user, served from the Appwrite
+ * container itself so the avatars OAuth2 provider can actually fetch it.
+ */
+Http::get('/v1/mock/tests/general/oauth2/photo')
+    ->desc('OAuth2 User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #00FF00 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
@@ -117,6 +137,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'User Name',
                 'email' => 'useroauth@localhost.test',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } elseif (\str_starts_with($token, 'canonical-')) {
             $id = \substr($token, \strlen('canonical-'));
@@ -125,6 +146,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'Canonical Email User',
                 'email' => 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
@@ -151,6 +173,25 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
             'name' => 'User Name Unverified',
             'email' => 'useroauthunverified@localhost.test',
             'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
         ]);
     });
 
@@ -289,62 +330,6 @@ Http::get('/v1/mock/github/callback')
         ]);
 
         $installation = $dbForPlatform->createDocument('installations', $installation);
-
-        $response->json([
-            'installationId' => $installation->getId(),
-        ]);
-    });
-
-Http::get('/v1/mock/gitea/callback')
-    ->desc('Create installation document using Gitea OAuth2 tokens')
-    ->groups(['mock', 'api', 'vcs'])
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->param('projectId', '', new UID(), 'Project ID of the project where Gitea is to be installed')
-    ->param('giteaUserId', '', new Text(256), 'Gitea user ID')
-    ->param('organization', '', new Text(256), 'Gitea username or organization')
-    ->param('accessToken', '', new Text(2048), 'Gitea access token')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $giteaUserId, string $organization, string $accessToken, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-
-        if (!$isDevelopment) {
-            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-        }
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project with the ID from state could not be found.');
-        }
-
-        if (empty($giteaUserId) || empty($organization) || empty($accessToken)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing Gitea installation details');
-        }
-
-        $projectInternalId = $project->getSequence();
-        $teamId = $project->getAttribute('teamId', '');
-
-        $installation = $dbForPlatform->createDocument('installations', new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'providerInstallationId' => $giteaUserId,
-            'projectId' => $projectId,
-            'projectInternalId' => $projectInternalId,
-            'provider' => 'gitea',
-            'organization' => $organization,
-            'personal' => true,
-            'personalAccessToken' => $accessToken,
-            'personalRefreshToken' => '',
-            'personalAccessTokenExpiry' => null,
-        ]));
 
         $response->json([
             'installationId' => $installation->getId(),

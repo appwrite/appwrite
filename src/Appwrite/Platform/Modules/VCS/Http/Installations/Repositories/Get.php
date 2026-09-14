@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
@@ -49,8 +50,10 @@ class Get extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -58,8 +61,10 @@ class Get extends Action
         string $installationId,
         string $providerRepositoryId,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
@@ -67,6 +72,11 @@ class Get extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 

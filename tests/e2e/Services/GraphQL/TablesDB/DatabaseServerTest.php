@@ -126,6 +126,26 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $table2['body']);
         $table2 = $table2['body']['data']['tablesDBCreateTable'];
 
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'tableId' => $table['_id'],
+                'key' => 'tags',
+                'size' => 64,
+                'required' => false,
+                'array' => true,
+            ]
+        ];
+        $column = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        $this->assertArrayNotHasKey('errors', $column['body']);
+
+        $this->assertEventually(function () use ($database, $table, $headers) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $database['_id'] . '/tables/' . $table['_id'] . '/columns/tags', $headers);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 240000, 500);
+
         self::$cachedTableData[$cacheKey] = [
             'database' => $database,
             'table' => $table,
@@ -651,42 +671,6 @@ final class DatabaseServerTest extends Scope
         return self::$cachedRelationshipColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedRelationshipColumn(): array
-    {
-        $data = $this->setupRelationshipColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table2']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/actors', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupIPColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -717,43 +701,6 @@ final class DatabaseServerTest extends Scope
         return self::$cachedIPColumnData[$cacheKey];
     }
 
-    protected function setupUpdatedIPColumn(): array
-    {
-        $data = $this->setupIPColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/ip', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_IP_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'ip',
-                'required' => false,
-                'default' => '127.0.0.1'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
-    }
-
     protected function setupURLColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -782,43 +729,6 @@ final class DatabaseServerTest extends Scope
 
         self::$cachedURLColumnData[$cacheKey] = $data;
         return self::$cachedURLColumnData[$cacheKey];
-    }
-
-    protected function setupUpdatedURLColumn(): array
-    {
-        $data = $this->setupURLColumn();
-        $projectId = $this->getProject()['$id'];
-
-        $databaseId = $data['database']['_id'];
-        $tableId = $data['table']['_id'];
-
-        $this->assertEventually(function () use ($databaseId, $tableId) {
-            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/url', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
-
-        $query = $this->getQuery(self::UPDATE_URL_COLUMN);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $databaseId,
-                'tableId' => $tableId,
-                'key' => 'url',
-                'required' => false,
-                'default' => 'https://cloud.appwrite.io'
-            ]
-        ];
-
-        $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        return $data;
     }
 
     protected function setupIndex(): array
@@ -919,6 +829,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1926,6 +1837,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1951,6 +1863,7 @@ final class DatabaseServerTest extends Scope
 
         $row = $row['body']['data']['tablesDBCreateRow'];
         $this->assertIsArray($row);
+        $this->assertSame(['first', 'second'], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -2212,7 +2125,7 @@ final class DatabaseServerTest extends Scope
      */
     public function testGetRows(): void
     {
-        $data = $this->setupTable();
+        $data = $this->setupRow();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ROWS);
         $gqlPayload = [
@@ -2231,6 +2144,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
         $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
+
+        $rows = array_column($rows['body']['data']['tablesDBListRows']['rows'], null, '_id');
+        $this->assertArrayHasKey($data['row']['_id'], $rows);
+        $this->assertSame(['first', 'second'], json_decode($rows[$data['row']['_id']]['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     /**
@@ -2259,6 +2176,11 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
         $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
+        $this->assertSame(['first', 'second'], json_decode($row['body']['data']['tablesDBGetRow']['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
+
+        $row = $row['body']['data']['tablesDBGetRow'];
+        $this->assertSame($data['row']['_permissions'], $row['_permissions']);
+        $this->assertArrayNotHasKey('$permissions', json_decode($row['data'], true));
     }
 
     //    /**
@@ -2379,6 +2301,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => $data['row']['_id'],
                 'data' => [
                     'name' => 'New Row Name',
+                    'tags' => [],
                 ],
             ]
         ];
@@ -2393,6 +2316,7 @@ final class DatabaseServerTest extends Scope
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
         $this->assertStringContainsString('New Row Name', (string) $row['data']);
+        $this->assertSame([], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**

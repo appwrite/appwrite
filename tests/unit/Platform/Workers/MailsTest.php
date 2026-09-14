@@ -7,7 +7,6 @@ namespace Tests\Unit\Platform\Workers;
 use Appwrite\Platform\Workers\Mails;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Queue\Message;
@@ -102,7 +101,6 @@ final class MailsTest extends TestCase
                 ]),
                 new Document(['$id' => 'project-x']),
                 $registry,
-                new Log(),
                 new None(),
             );
         } finally {
@@ -171,7 +169,6 @@ final class MailsTest extends TestCase
                 ]),
                 new Document(['$id' => 'project-x']),
                 $registry,
-                new Log(),
                 new None(),
             );
         } finally {

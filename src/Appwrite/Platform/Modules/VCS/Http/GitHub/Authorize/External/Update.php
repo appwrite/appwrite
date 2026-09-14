@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
-use Appwrite\Deployment\Backend;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -12,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -59,9 +58,9 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('getProjectDB')
-            ->inject('publisherForBuilds')
-            ->inject('deployments')
+            ->inject('deploymentsFactory')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -75,9 +74,9 @@ class Update extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
-        BuildPublisher $publisherForBuilds,
-        Backend $deployments,
+        callable $deploymentsFactory,
         array $platform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -137,7 +136,7 @@ class Update extends Action
             ...array_filter(array_column($prFiles, 'previous_filename'))
         ];
 
-        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $deployments);
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
 
         $response->noContent();
     }

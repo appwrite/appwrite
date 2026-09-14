@@ -182,6 +182,10 @@ return function (Container $container): void {
         }
 
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
+
+        $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
+        $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
+
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }
@@ -288,14 +292,16 @@ return function (Container $container): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (!empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
                 $user = new User([]);
             }
         }

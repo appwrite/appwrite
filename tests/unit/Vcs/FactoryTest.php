@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
+use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
@@ -13,12 +14,14 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git\GitLab;
 
 final class FactoryTest extends TestCase
 {
     protected function tearDown(): void
     {
         \putenv('_APP_VCS_TEST_TOKEN');
+        \putenv('_APP_VCS_TEST_ENDPOINT');
     }
 
     public function testRegistryEntries(): void
@@ -28,11 +31,53 @@ final class FactoryTest extends TestCase
 
         foreach ($registry as $key => $entry) {
             $this->assertTrue(\is_subclass_of($entry['adapter'], Git::class), "Adapter for '{$key}' must extend Git");
+            // A provider with an OAuth2 user flow registers a builder; an
+            // app-only provider (Origin) deliberately registers none.
+            if (isset($entry['oauth2'])) {
+                $this->assertIsCallable($entry['oauth2'], "OAuth2 builder for '{$key}' must be callable");
+            }
             $this->assertNotEmpty($entry['variables'], "Variables missing for '{$key}'");
             foreach ($entry['variables'] as $name => $variable) {
                 $this->assertStringStartsWith('_APP_VCS_', $variable['envVariable'] ?? '', "Env variable for '{$name}' missing or invalid for '{$key}'");
             }
         }
+    }
+
+    public function testOriginRegistersNoOAuth2(): void
+    {
+        // Origin has no OAuth2 user flow: installs are approved on Cursor and
+        // confirmed by a signed receipt the adapter verifies itself, so the
+        // registry deliberately carries no builder and oauth2FromProvider()
+        // fails loudly instead of handing out a half-configured client.
+        $registry = Config::getParam('vcs', []);
+        $this->assertArrayHasKey('origin', $registry);
+        $this->assertArrayNotHasKey('oauth2', $registry['origin']);
+
+        $factory = new Factory($this->cache(), $registry);
+        $this->expectException(Exception::class);
+        $factory->oauth2FromProvider('origin');
+    }
+
+    public function testOauth2FromProviderUnknownThrows(): void
+    {
+        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+
+        $this->expectException(Exception::class);
+        $factory->oauth2FromProvider('bitbucket');
+    }
+
+    public function testOauth2FromProviderBuildsClient(): void
+    {
+        \putenv('_APP_VCS_GITHUB_CLIENT_ID=client-id');
+        \putenv('_APP_VCS_GITHUB_CLIENT_SECRET=client-secret');
+
+        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $oauth2 = $factory->oauth2FromProvider('github');
+
+        $this->assertInstanceOf(OAuth2Github::class, $oauth2);
+
+        \putenv('_APP_VCS_GITHUB_CLIENT_ID');
+        \putenv('_APP_VCS_GITHUB_CLIENT_SECRET');
     }
 
     public function testFromProviderUnknownThrows(): void
@@ -89,6 +134,33 @@ final class FactoryTest extends TestCase
         $this->assertSame(['test'], $factory->getProviders());
     }
 
+    public function testFromProviderAppliesFixedEndpoint(): void
+    {
+        $entry = [
+            'adapter' => GitLab::class,
+            'endpoint' => 'https://gitlab.com',
+            'variables' => [],
+        ];
+        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+
+        $adapter = $factory->fromProvider('gitlab');
+        $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
+    }
+
+    public function testFromProviderFixedEndpointIgnoresEnv(): void
+    {
+        $entry = [
+            'adapter' => GitLab::class,
+            'endpoint' => 'https://gitlab.com',
+            'variables' => [],
+        ];
+        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+
+        \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
+        $adapter = $factory->fromProvider('gitlab');
+        $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
+    }
+
     public function testGetWebhookSecret(): void
     {
         $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
@@ -112,6 +184,7 @@ final class FactoryTest extends TestCase
     {
         return [
             'adapter' => GitHub::class,
+            'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($clientId, $clientSecret, ''),
             'variables' => [
                 'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
                 'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],

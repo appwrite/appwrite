@@ -13,7 +13,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -56,9 +55,6 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
-            ->inject('getLogsDB')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -68,9 +64,6 @@ class XList extends Action
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
-        Document $project,
-        callable $getLogsDB,
-        Authorization $authorization
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -111,48 +104,8 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($buckets)) {
-            $bucketByStatsId = [];
-
-            foreach ($buckets as $bucket) {
-                $metric = str_replace(
-                    '{bucketInternalId}',
-                    $bucket->getSequence(),
-                    METRIC_BUCKET_ID_FILES_STORAGE
-                );
-
-                $statId = md5('_inf_' . $metric);
-
-                $bucketByStatsId[$statId] = $bucket;
-
-                // set a default
-                $bucket->setAttribute('totalSize', 0);
-            }
-
-            try {
-                $dbForLogs = $getLogsDB($project);
-
-                /* @var array<Document> $stats */
-                $stats = $authorization->skip(function () use ($dbForLogs, $bucketByStatsId) {
-                    $statsIds = array_keys($bucketByStatsId);
-
-                    return $dbForLogs->find('stats', [
-                        Query::equal('$id', $statsIds),
-                        Query::select(['value']),
-                    ]);
-                });
-
-                foreach ($stats as $stat) {
-                    if (!isset($bucketByStatsId[$stat->getId()])) {
-                        continue;
-                    }
-
-                    $bucket = $bucketByStatsId[$stat->getId()];
-                    $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
-                }
-            } catch (\Throwable) {
-                // Stats may not be available, default to 0
-            }
+        foreach ($buckets as $bucket) {
+            $bucket->setAttribute('totalSize', 0);
         }
 
         $response->dynamic(new Document([

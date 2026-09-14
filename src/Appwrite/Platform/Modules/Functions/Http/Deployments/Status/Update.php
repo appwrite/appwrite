@@ -2,8 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
-use Appwrite\Deployment\Backend;
-use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -15,6 +14,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -61,6 +61,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -70,7 +71,8 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Backend $deployments,
+        Deployments $deployments,
+        callable $locks,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -84,6 +86,13 @@ class Update extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || $deployment->getAttribute('resourceType') !== 'functions'
+        ) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
@@ -92,22 +101,35 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
+        // Write under the Jobs worker's per-deployment lock: its handlers
+        // read-modify-write buildLogs, and an unserialized cancel write here
+        // loses the closing log line to an in-flight append.
+        $cancel = function () use ($dbForProject, $deployment, $duration) {
+            try {
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
+            } catch (TransactionException) {
+                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+                if ($deployment->isEmpty()) {
+                    throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                }
+
+                if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                    throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+                }
+
+                if ($deployment->getAttribute('status') !== 'canceled') {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
+                }
+
+                return $deployment;
+            }
+        };
+
         try {
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
-        } catch (TransactionException) {
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-
-            if ($deployment->isEmpty()) {
-                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-            }
-
-            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
-                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
-            }
-
-            if ($deployment->getAttribute('status') !== 'canceled') {
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
-            }
+            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
+        } catch (Contention) {
+            $deployment = $cancel();
         }
 
         // Best-effort cleanup — the deployment is already marked 'canceled'.
@@ -124,25 +146,20 @@ class Update extends Action
     }
 
     /**
-     * The sparse update marking a build canceled. Jobs-backed builds have no
-     * cancel worker to write the closing log line the executor's Builds worker
-     * adds, so it is appended here; executor deployments get it from their worker.
+     * The sparse update marking a build canceled. No worker writes the closing
+     * log line for a canceled build, so it is appended here.
      *
      * @return array<string, mixed>
      */
-    private function cancel(Document $deployment, int $duration, bool $appendLog): array
+    private function cancel(Document $deployment, int $duration): array
     {
-        $update = [
+        $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+        return [
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
             'status' => 'canceled',
+            'buildLogs' => \substr($logs, -APP_LOG_LENGTH_LIMIT),
         ];
-
-        if ($appendLog) {
-            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
-            $update['buildLogs'] = \substr($logs, -APP_LOG_LENGTH_LIMIT);
-        }
-
-        return $update;
     }
 }

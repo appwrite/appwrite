@@ -124,17 +124,17 @@ class Delete extends Action
 
         // This membership is primary for the team, update the primary to next member.
         if ($team->getAttribute('userInternalId') === $membership->getAttribute('userInternalId')) {
-            $membership = $dbForProject->findOne('memberships', [
+            $successor = $dbForProject->findOne('memberships', [
                 Query::equal('teamInternalId', [$team->getSequence()]),
                 Query::equal('confirm', [true]),
             ]);
 
-            if (!$membership->isEmpty()) {
-                $team->setAttribute('userId', $membership->getAttribute('userId'));
-                $team->setAttribute('userInternalId', $membership->getAttribute('userInternalId'));
+            if (!$successor->isEmpty()) {
+                $team->setAttribute('userId', $successor->getAttribute('userId'));
+                $team->setAttribute('userInternalId', $successor->getAttribute('userInternalId'));
                 $dbForProject->updateDocument('teams', $team->getId(), new Document([
-                    'userId' => $membership->getAttribute('userId'),
-                    'userInternalId' => $membership->getAttribute('userInternalId'),
+                    'userId' => $successor->getAttribute('userId'),
+                    'userInternalId' => $successor->getAttribute('userInternalId'),
                 ]));
             }
         }

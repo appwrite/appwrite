@@ -205,4 +205,185 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertFalse($membershipsByUser[$user2Id]['mfa']);
         $this->assertNotEmpty($membershipsByUser[$user2Id]['userAccessedAt']);
     }
+
+    public function testMembershipUserAccessedAtDefault(): void
+    {
+        // A project that never set the policy hides the last access time
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $serverHeaders);
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertFalse($policy['body']['userAccessedAt']);
+
+        $member = $this->createTeamWithMember($projectId, $serverHeaders);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertSame('', $response['body']['memberships'][0]['userAccessedAt']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['userAccessedAt']);
+
+        // The policy only applies to client requests, an API key still sees it
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $serverHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userAccessedAt']);
+    }
+
+    public function testMembershipUserAccessedAtPolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-response-format' => '1.9.4',
+        ];
+
+        $setAccessedAt = function (bool $visible) use ($serverHeaders): void {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $serverHeaders, [
+                'userAccessedAt' => $visible,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($visible, $response['body']['authMembershipsUserAccessedAt']);
+        };
+
+        $readPolicy = function () use ($serverHeaders): array {
+            $get = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $serverHeaders);
+            $this->assertSame(200, $get['headers']['status-code']);
+
+            $list = $this->client->call(Client::METHOD_GET, '/project/policies', $serverHeaders);
+            $this->assertSame(200, $list['headers']['status-code']);
+
+            $byId = [];
+            foreach ($list['body']['policies'] as $policy) {
+                $byId[$policy['$id']] = $policy;
+            }
+            $this->assertArrayHasKey('membership-privacy', $byId);
+
+            // Both endpoints report the same policy
+            $this->assertSame($get['body'], $byId['membership-privacy']);
+
+            return $get['body'];
+        };
+
+        // Only userAccessedAt is toggled below, the rest must survive untouched
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $serverHeaders, [
+            'userId' => true,
+            'userEmail' => true,
+            'userPhone' => true,
+            'userName' => true,
+            'userMFA' => true,
+            'userAccessedAt' => false,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $member = $this->createTeamWithMember($projectId, $serverHeaders);
+
+        $policy = $readPolicy();
+        $this->assertFalse($policy['userAccessedAt']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['userAccessedAt']);
+
+        $setAccessedAt(true);
+
+        $policy = $readPolicy();
+        $this->assertTrue($policy['userAccessedAt']);
+        $this->assertTrue($policy['userId']);
+        $this->assertTrue($policy['userEmail']);
+        $this->assertTrue($policy['userPhone']);
+        $this->assertTrue($policy['userName']);
+        $this->assertTrue($policy['userMFA']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userAccessedAt']);
+        $this->assertNotFalse(\strtotime($response['body']['userAccessedAt']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userAccessedAt']);
+
+        $setAccessedAt(false);
+
+        $this->assertFalse($readPolicy()['userAccessedAt']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['memberships'][0]['userAccessedAt']);
+    }
+
+    /**
+     * Create a team with a single member, signed in, whose accessedAt is populated.
+     *
+     * @param  array<string, string>  $serverHeaders
+     * @return array{teamId: string, membershipId: string, clientHeaders: array<string, string>}
+     */
+    private function createTeamWithMember(string $projectId, array $serverHeaders): array
+    {
+        $email = 'member_' . uniqid() . '@localhost.test';
+        $name = 'Casey Carter';
+        $password = 'password1234';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Access Team',
+            'roles' => ['member'],
+        ]);
+        $this->assertSame(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', $serverHeaders, [
+            'userId' => $user['body']['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $clientHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        // Populate accessedAt
+        $response = $this->client->call(Client::METHOD_GET, '/account', $clientHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        return [
+            'teamId' => $team['body']['$id'],
+            'membershipId' => $membership['body']['$id'],
+            'clientHeaders' => $clientHeaders,
+        ];
+    }
 }

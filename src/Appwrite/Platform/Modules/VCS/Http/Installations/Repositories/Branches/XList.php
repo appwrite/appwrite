@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Branches;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -55,8 +56,10 @@ class XList extends Action
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
             ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -66,8 +69,10 @@ class XList extends Action
         string $search,
         array $queries,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -81,6 +86,11 @@ class XList extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 

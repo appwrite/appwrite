@@ -2,11 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Certificates\Certificates;
+use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -24,14 +28,13 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -108,13 +111,13 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
-            ), 'Build specification for the function deployments.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
+            ), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
@@ -131,10 +134,13 @@ class Create extends Base
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('request')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -172,15 +178,18 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Backend $deployments,
+        Deployments $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
+        Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Request $request,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
 
@@ -372,33 +381,33 @@ class Create extends Base
                 );
 
             } elseif (!$template->isEmpty()) {
-                // Deploy non-VCS from template
-                $deploymentId = ID::unique();
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $function->getAttribute('entrypoint', ''),
-                    'buildCommands' => $function->getAttribute('commands', ''),
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'type' => 'manual',
-                    'activate' => true,
-                ]));
+                // Deploy non-VCS from the template's public GitHub repository.
+                $templateVersion = Base::resolveTemplateRef($vcsFactory, $templateOwner, $templateRepository, Git::CLONE_TYPE_TAG, $templateVersion);
 
-                $publisherForBuilds->enqueue(new BuildMessage(
-                    project: $project,
-                    resource: $function,
-                    deployment: $deployment,
-                    type: BUILD_TYPE_DEPLOYMENT,
-                    template: $template,
-                    platform: $platform,
-                ));
+                $deployment = $deployments->createFromRef(
+                    $function,
+                    new Document([
+                        '$id' => ID::unique(),
+                        'entrypoint' => $function->getAttribute('entrypoint', ''),
+                        'buildCommands' => $function->getAttribute('commands', ''),
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'providerRepositoryName' => $templateRepository,
+                        'providerRepositoryOwner' => $templateOwner,
+                        'providerRepositoryUrl' => "https://github.com/{$templateOwner}/{$templateRepository}",
+                        'providerBranchUrl' => "https://github.com/{$templateOwner}/{$templateRepository}/blob/{$templateVersion}",
+                        // The coordinates a redeploy needs: remote-source builds
+                        // never store a tarball.
+                        'providerBranch' => $templateVersion,
+                        'providerRootDirectory' => $templateRootDirectory,
+                        'type' => 'vcs',
+                        'activate' => true,
+                    ]),
+                    $templateOwner,
+                    $templateRepository,
+                    Git::CLONE_TYPE_TAG,
+                    $templateVersion,
+                    $templateRootDirectory,
+                );
             }
 
             $functionsDomain = $platform['functionsDomain'];
@@ -430,6 +439,7 @@ class Create extends Base
                         'region' => $project->getAttribute('region')
                     ]))
                 );
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                 $ruleModel = new Rule();
                 $ruleCreate =
@@ -460,6 +470,20 @@ class Create extends Base
                     ->setSubscribers(['console', $project->getId()])
                     ->from($ruleCreate)
                     ->trigger();
+
+                if ($certificateIssuer->isAutoIssueEnabled(new Document([
+                    'domain' => $domain,
+                    'owner' => 'Appwrite',
+                ]))) {
+                    $publisherForCertificates->enqueue(new CertificateMessage(
+                        project: $project,
+                        domain: new Document([
+                            'domain' => $domain,
+                            'domainType' => 'function',
+                        ]),
+                        action: CertificateEvent::ACTION_GENERATION,
+                    ));
+                }
             }
         }
 

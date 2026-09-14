@@ -73,7 +73,7 @@ class Get extends Action
 
         // Prepare default tempaltes
         $localeObj = new Locale($locale);
-        $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $localeObj->setFallback('en');
 
         $defaultSubject = $localeObj->getText('emails.' . $templateId . '.subject');
         $defaultMessage = $this->getDefaultMessage($templateId, $localeObj);

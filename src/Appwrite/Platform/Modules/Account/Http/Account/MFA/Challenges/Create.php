@@ -94,7 +94,7 @@ class Create extends Action
             ])
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.', enum: new Enum(name: 'AuthenticationFactor'))
+            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -131,6 +131,19 @@ class Create extends Action
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
     ): void {
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+        $factorEnabled = match ($factor) {
+            Type::TOTP => $mfaFactors['totp'] ?? true,
+            Type::EMAIL => $mfaFactors['email'] ?? true,
+            Type::PHONE => $mfaFactors['phone'] ?? true,
+            Type::CUSTOM => $mfaFactors['custom'] ?? false,
+            default => true, // Recovery codes always remain available as a fallback
+        };
+
+        if (!$factorEnabled) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
+        }
+
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
         $code = $proofForCode->generate();

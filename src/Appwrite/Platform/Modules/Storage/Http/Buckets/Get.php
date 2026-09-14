@@ -8,9 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -50,9 +47,6 @@ class Get extends Action
             ->param('bucketId', '', new UID(), 'Bucket unique ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
-            ->inject('getLogsDB')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -60,9 +54,6 @@ class Get extends Action
         string $bucketId,
         Response $response,
         Database $dbForProject,
-        Document $project,
-        callable $getLogsDB,
-        Authorization $authorization,
     ): void {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -70,30 +61,7 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $metric = str_replace(
-            '{bucketInternalId}',
-            $bucket->getSequence(),
-            METRIC_BUCKET_ID_FILES_STORAGE
-        );
-
-        $statsDocId = md5('_inf_' . $metric);
-
-        $totalSize = 0;
-
-        try {
-            $dbForLogs = $getLogsDB($project);
-            $storageStats = $authorization->skip(fn () => $dbForLogs->getDocument(
-                'stats',
-                $statsDocId,
-                [Query::select(['value'])]
-            ));
-
-            $totalSize = $storageStats->getAttribute('value', 0);
-        } catch (\Throwable) {
-            // Stats may not be available, default to 0
-        }
-
-        $bucket->setAttribute('totalSize', $totalSize);
+        $bucket->setAttribute('totalSize', 0);
 
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     }

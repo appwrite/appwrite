@@ -217,8 +217,10 @@ class Delete extends Action
         );
 
         $usage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
+            ->setResource('database')
+            ->setResourceId($database->getId())
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->addHeader('X-Debug-Operations', 1);
 

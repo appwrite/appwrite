@@ -115,7 +115,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -208,7 +210,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -824,7 +828,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ],
             ],
             'apns' => [
@@ -912,7 +918,9 @@ trait MessagingBase
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'apns' => [
@@ -959,6 +967,102 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+    }
+
+    public function testCreateFCMProviderInvalidCredentials(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Invalid FCM',
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request. or null", $response['body']['message']);
+    }
+
+    public function testUpdateFCMProviderInvalidCredentials(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'FCM',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/fcm/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
+    }
+
+    public function testCreateTwilioProviderAlphanumericSender(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Twilio',
+            'accountSid' => 'my-accountSid',
+            'authToken' => 'my-authToken',
+            'from' => 'Appwrite',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('Appwrite', $response['body']['options']['from']);
+    }
+
+    public function testUpdateTwilioProviderAlphanumericSender(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Twilio',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/twilio/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'from' => 'Appwrite',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Appwrite', $response['body']['options']['from']);
     }
 
     public function testUpdateProviderMissingCredentialsThrows(): void
@@ -1160,7 +1264,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response2['headers']['status-code']);
         $this->assertEquals('my-app2', $response2['body']['name']);
-        $this->assertEquals(1, \count($response2['body']['subscribe']));
+        $this->assertSame(1, \count($response2['body']['subscribe']));
     }
 
     public function testUpdateTopic(): void
@@ -1208,6 +1312,10 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, \count($response['body']['topics']));
 
+        foreach ($response['body']['topics'] as $topic) {
+            $this->assertArrayNotHasKey('targets', $topic);
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1221,7 +1329,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, \count($response['body']['topics']));
+        $this->assertSame(0, \count($response['body']['topics']));
 
         return $topicId;
     }
@@ -1240,6 +1348,7 @@ trait MessagingBase
         $this->assertEquals(0, $response['body']['emailTotal']);
         $this->assertEquals(0, $response['body']['smsTotal']);
         $this->assertEquals(0, $response['body']['pushTotal']);
+        $this->assertArrayNotHasKey('targets', $response['body']);
     }
 
     public function testCreateSubscriber(): void
@@ -1373,6 +1482,33 @@ trait MessagingBase
 
             $this->assertEquals(201, $response['headers']['status-code']);
         }
+
+        // The topic's `targets` sub-query is internal and capped far below the subscriber count,
+        // so it must never surface. Endpoints that load a topic without running the filter have to
+        // stay indistinguishable from those that run it.
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(101, $response['body']['emailTotal']);
+        $this->assertArrayNotHasKey('targets', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::equal('$id', [$topic['$id']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(1, \count($response['body']['topics']));
+        $this->assertArrayNotHasKey('targets', $response['body']['topics'][0]);
     }
 
     public function testGetSubscriber(): void
@@ -1571,7 +1707,7 @@ trait MessagingBase
 
         $targetList = $response['body'];
         $this->assertEquals(2, $targetList['total']);
-        $this->assertEquals(2, count($targetList['targets']));
+        $this->assertSame(2, count($targetList['targets']));
         $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
         $this->assertEquals($message['targets'][1], $targetList['targets'][1]['$id']);
 
@@ -1588,7 +1724,7 @@ trait MessagingBase
             ]
         ]);
         $this->assertEquals(2, $response['body']['total']);
-        $this->assertEquals(1, count($response['body']['targets']));
+        $this->assertSame(1, count($response['body']['targets']));
         $this->assertEquals($targetList['targets'][1]['$id'], $response['body']['targets'][0]['$id']);
 
         // Test for empty targets
@@ -1617,7 +1753,7 @@ trait MessagingBase
 
         $targetList = $response['body'];
         $this->assertEquals(0, $targetList['total']);
-        $this->assertEquals(0, count($targetList['targets']));
+        $this->assertSame(0, count($targetList['targets']));
     }
 
     public function testCreateDraftEmail(): void
@@ -1638,7 +1774,7 @@ trait MessagingBase
 
         $user1 = $response['body'];
 
-        $this->assertEquals(1, \count($user1['targets']));
+        $this->assertSame(1, \count($user1['targets']));
         $targetId1 = $user1['targets'][0]['$id'];
 
         // Create User 2
@@ -1656,7 +1792,7 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
         $user2 = $response['body'];
 
-        $this->assertEquals(1, \count($user2['targets']));
+        $this->assertSame(1, \count($user2['targets']));
         $targetId2 = $user2['targets'][0]['$id'];
 
         // Create Email
@@ -1692,7 +1828,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $user['headers']['status-code'], "Error creating user: " . var_export($user['body'], true));
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
 
         // Create push target
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
@@ -1785,6 +1921,45 @@ trait MessagingBase
         $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
+    }
+
+    public function testCreateDraftPushWithData(): void
+    {
+        // A nested `data` object is sent as a JSON object and must round-trip
+        // intact (the controller normalizes the decoded stdClass to an array).
+        $data = [
+            'route' => '/home',
+            'meta' => [
+                'count' => 2,
+                'flags' => ['a', 'b'],
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'data' => $data,
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        $this->assertEquals($data, $response['body']['data']['data']);
+
+        $messageId = $response['body']['$id'];
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals($data, $message['body']['data']['data']);
     }
 
     public function testScheduledMessage(): void
@@ -1939,7 +2114,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($scheduledAt))->getTimestamp(),
             (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
         );
@@ -1990,7 +2165,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($scheduledAt))->getTimestamp(),
             (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
         );
@@ -2007,7 +2182,7 @@ trait MessagingBase
             ]);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(MessageStatus::SCHEDULED, $response['body']['status']);
-            $this->assertEquals(
+            $this->assertSame(
                 (new \DateTime($scheduledAt))->getTimestamp(),
                 (new \DateTime($response['body']['scheduledAt']))->getTimestamp()
             );
@@ -2119,12 +2294,151 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
 
         return [
             'message' => $email['body'],
             'topic' => $topic['body'],
         ];
+    }
+
+    public function testSendEmailEncryptedAttachment(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Maildev',
+            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
+            'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'attachments@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Attachments',
+            'encryption' => true,
+            'compression' => 'gzip',
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $source = __DIR__ . '/../../../resources/csv/documents.csv';
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(\realpath($source), 'text/csv', 'documents.csv'),
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        // Without this the delivered bytes could match simply because nothing was encrypted.
+        $this->assertTrue($file['body']['encryption']);
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'attachments',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Attachment User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Without providerId the target binds to whichever email provider the project enabled first.
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => \uniqid() . '@appwrite.io',
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        $subject = 'Attachment ' . \uniqid();
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'topics' => [$topic['body']['$id']],
+            'subject' => $subject,
+            'content' => 'See attached',
+            'attachments' => [$bucket['body']['$id'] . ':' . $file['body']['$id']],
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        // An SMTP send moves every recipient into BCC, so the delivered mail carries no To header to match on.
+        $mail = $this->getLastEmail(1, fn (array $mail) => $this->assertSame($subject, $mail['subject']));
+
+        $delivered = \file_get_contents(
+            'http://maildev:1080/email/' . $mail['id'] . '/attachment/' . $mail['attachments'][0]['generatedFileName']
+        );
+
+        $this->assertSame(\file_get_contents($source), $delivered);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
     }
 
     public function testUpdateEmail(): void
@@ -2190,7 +2504,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendSMS(): void
@@ -2308,7 +2622,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testUpdateSMS(): void
@@ -2371,7 +2685,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendPushNotification(): void
@@ -2486,7 +2800,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testCreatePushNotificationWithUsersRecipients(): void
@@ -2663,7 +2977,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+        $this->assertSame(0, \count($message['body']['deliveryErrors']));
     }
 
     /**
@@ -2689,7 +3003,7 @@ trait MessagingBase
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // Test for FAILURE
+        // A message already handed to the worker stays deletable.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2701,14 +3015,17 @@ trait MessagingBase
             'content' => 'Test content',
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
+        // Test for FAILURE
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/does_not_exist', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -93,7 +93,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
         ]), [
             'userId' => ID::unique(),
             'email' => '',
@@ -107,7 +106,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => 'shortpass@appwrite.io',
@@ -125,7 +123,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => 'longpass@appwrite.io',
@@ -140,6 +137,31 @@ trait AccountBase
             'password' => $password,
             'name' => $name,
         ];
+    }
+
+    /**
+     * Regression: the abuse hook stringifies every request param into the
+     * rate-limit key. An empty JSON object in the body decodes to a stdClass,
+     * which used to be passed straight to the string-only setParam() and threw
+     * a TypeError before the action ran. The request must succeed instead of
+     * returning a 500.
+     */
+    public function testCreateAccountWithObjectParam(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'objectparam@localhost.test',
+            'password' => 'password',
+            'name' => 'User Name',
+            'metadata' => (object) [], // serializes to `{}`, decoded as stdClass
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
     }
 
     public function testEmailOTPSession(): void
@@ -302,7 +324,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => $email,

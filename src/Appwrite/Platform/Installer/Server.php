@@ -30,7 +30,6 @@ class Server
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
     public const string STEP_ACCOUNT_SETUP = 'account-setup';
     public const string STEP_MIGRATION = 'migration';
-    public const string STEP_SSL_CERTIFICATE = 'ssl-certificate';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';
     public const string STATUS_COMPLETED = 'completed';
@@ -202,15 +201,11 @@ class Server
 
     /**
      * Auto-detect upgrade mode by checking for existing config files.
-     * Sets isUpgrade and lockedDatabase on the config when an existing
-     * installation is found and these values aren't already set.
+     * Sets isUpgrade, lockedDatabase, and topology on the config when an
+     * existing installation is found and these values aren't already set.
      */
     private function autoDetectUpgrade(Config $config): void
     {
-        if ($config->isUpgrade()) {
-            return;
-        }
-
         $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
         if ($config->isLocal()) {
             $composePath = $basePath . '/' . self::LOCAL_COMPOSE_FILE;
@@ -224,16 +219,41 @@ class Server
             return;
         }
 
-        $config->setIsUpgrade(true);
-
-        if ($config->getLockedDatabase() !== null) {
-            return;
+        if (!$config->isUpgrade()) {
+            $config->setIsUpgrade(true);
         }
 
-        $database = $this->detectDatabaseFromFiles($composePath, $envPath);
-        if ($database !== null) {
-            $config->setLockedDatabase($database);
+        if ($config->getLockedDatabase() === null) {
+            $database = $this->detectDatabaseFromFiles($composePath, $envPath);
+            if ($database !== null) {
+                $config->setLockedDatabase($database);
+            }
         }
+
+        if (!$config->hasTopology()) {
+            $topology = $this->detectTopologyFromFiles($composePath);
+            if ($topology !== null) {
+                $config->setTopology($topology);
+            }
+        }
+    }
+
+    private function detectTopologyFromFiles(string $composePath): ?string
+    {
+        $composeData = @file_get_contents($composePath);
+        if ($composeData === false) {
+            return null;
+        }
+
+        if (preg_match('/^\s*appwrite-worker:\s*$/m', $composeData) === 1) {
+            return 'combined';
+        }
+
+        if (preg_match('/^\s*appwrite-worker-functions:\s*$/m', $composeData) === 1) {
+            return 'separate';
+        }
+
+        return null;
     }
 
     private function detectDatabaseFromFiles(string $composePath, string $envPath): ?string

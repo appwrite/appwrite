@@ -40,6 +40,7 @@ class PolicyList extends Model
             Response::MODEL_POLICY_SESSION_LIMIT,
             Response::MODEL_POLICY_USER_LIMIT,
             Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+            Response::MODEL_POLICY_MFA_FACTORS,
         ];
     }
 

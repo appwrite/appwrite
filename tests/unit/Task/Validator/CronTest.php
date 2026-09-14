@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Task\Validator;
 
 use Appwrite\Task\Validator\Cron;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CronTest extends TestCase
@@ -39,4 +40,23 @@ final class CronTest extends TestCase
         $this->assertFalse($this->object->isValid('bad expression'));
         $this->assertFalse($this->object->isValid('*/5 22-3 * * *'));
     }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function invalidRanges(): \Iterator
+    {
+        yield 'minutes' => ['22-3,5 * * * *'];
+        yield 'hours' => ['0 22-3,5 * * *'];
+        yield 'days' => ['0 0 22-3,5 * *'];
+        yield 'months' => ['0 0 1 12-3,5 *'];
+        yield 'weekdays' => ['0 0 * * 5-3,1'];
+    }
+
+    #[DataProvider('invalidRanges')]
+    public function testRejectsInvalidRangesInLists(string $expression): void
+    {
+        $this->assertFalse($this->object->isValid($expression));
+    }
+
 }

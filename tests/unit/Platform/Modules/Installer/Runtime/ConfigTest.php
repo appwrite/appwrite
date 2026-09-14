@@ -415,6 +415,7 @@ final class ConfigTest extends TestCase
             'isLocal',
             'hostPath',
             'lockedDatabase',
+            'topology',
             'enabledDatabases',
         ];
 
@@ -439,6 +440,7 @@ final class ConfigTest extends TestCase
         $this->assertFalse($array['isLocal']);
         $this->assertNull($array['hostPath']);
         $this->assertNull($array['lockedDatabase']);
+        $this->assertEquals('combined', $array['topology']);
         $this->assertEquals(['postgresql', 'mariadb', 'mongodb'], $array['enabledDatabases']);
     }
 

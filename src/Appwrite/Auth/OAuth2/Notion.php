@@ -137,9 +137,20 @@ class Notion extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
+        // Provider exposes no email verification signal, so treat as unverified until one is confirmed
+        return false;
+    }
 
-        return !empty($email);
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['bot']['owner']['user']['avatar_url'] ?? '';
     }
 
     /**
