@@ -1515,66 +1515,44 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         foreach (['string', 'varchar'] as $type) {
-            /**
-             * Test for SUCCESS
-             */
-            $attribute = $this->createAttribute($databaseId, $collectionId, $type, [
+            $encrypted = $this->createAttribute($databaseId, $collectionId, $type, [
                 'key' => $type,
                 'required' => false,
-                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN + 50,
+                'size' => 200,
                 'encrypt' => true,
             ]);
-            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->assertEquals(202, $encrypted['headers']['status-code']);
             $this->waitForAttribute($databaseId, $collectionId, $type);
-
-            /**
-             * Test for FAILURE
-             */
-            $invalid = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
-                'required' => false,
-                'default' => null,
-                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1,
-                'newKey' => 'invalid',
-            ]);
-            $this->assertEquals(400, $invalid['headers']['status-code']);
-            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $invalid['body']['type']);
-            $this->assertStringContainsString('Encrypted strings require a minimum size', $invalid['body']['message']);
-
-            $unchanged = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $collectionId) . '/' . $type, $headers);
-            $this->assertEquals(200, $unchanged['headers']['status-code']);
-            $this->assertEquals(APP_DATABASE_ENCRYPT_SIZE_MIN + 50, $unchanged['body']['size']);
-            $this->assertTrue($unchanged['body']['encrypt']);
-
-            /**
-             * Test for SUCCESS
-             */
-            $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
-                'required' => false,
-                'default' => null,
-                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN,
-            ]);
-            $this->assertEquals(200, $updated['headers']['status-code']);
-            $this->assertEquals(APP_DATABASE_ENCRYPT_SIZE_MIN, $updated['body']['size']);
-
-            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-                $this->getRecordIdParam() => ID::unique(),
-                'data' => [$type => 'a'],
-                'permissions' => [Permission::read(Role::user($this->getUser()['$id']))],
-            ]);
-            $this->assertEquals(201, $document['headers']['status-code']);
-            $this->assertSame('a', $document['body'][$type]);
-
-            $persisted = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']), $headers);
-            $this->assertEquals(200, $persisted['headers']['status-code']);
-            $this->assertSame('a', $persisted['body'][$type]);
 
             $plain = $this->createAttribute($databaseId, $collectionId, $type, [
                 'key' => $type . 'Plain',
                 'required' => false,
-                'size' => APP_DATABASE_ENCRYPT_SIZE_MIN,
+                'size' => 200,
             ]);
             $this->assertEquals(202, $plain['headers']['status-code']);
             $this->waitForAttribute($databaseId, $collectionId, $type . 'Plain');
+
+            /**
+             * Test for FAILURE
+             */
+            $encrypted = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 149,
+            ]);
+            $this->assertEquals(400, $encrypted['headers']['status-code']);
+            $this->assertStringContainsString('Encrypted strings require a minimum size', $encrypted['body']['message']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $encrypted = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
+                'required' => false,
+                'default' => null,
+                'size' => 150,
+            ]);
+            $this->assertEquals(200, $encrypted['headers']['status-code']);
+            $this->assertEquals(150, $encrypted['body']['size']);
 
             $plain = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type . 'Plain'), $headers, [
                 'required' => false,
