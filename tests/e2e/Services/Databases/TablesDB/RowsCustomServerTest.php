@@ -66,7 +66,7 @@ final class RowsCustomServerTest extends Scope
                 $this->assertSame('available', $column['body']['status']);
             }, 30_000, 100);
 
-            $ids = array_map(fn (int $index) => 'r' . $index, range(1, APP_DATABASE_QUERY_MAX_VALUES + 1));
+            $ids = array_map(fn (int $index) => 'r' . $index, range(1, 501));
             $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $restaurants . '/rows', $headers, [
                 'rowId' => $restaurantId,
                 'data' => ['items' => array_map(fn (string $id) => ['$id' => $id], $ids)],
@@ -96,7 +96,7 @@ final class RowsCustomServerTest extends Scope
                 ]);
                 $this->assertSame(400, $response['headers']['status-code']);
                 $this->assertSame(Exception::GENERAL_QUERY_INVALID, $response['body']['type']);
-                $this->assertSame('Invalid query: Query on attribute has greater than ' . APP_DATABASE_QUERY_MAX_VALUES . ' values: $id', $response['body']['message']);
+                $this->assertSame('Invalid query: Query on attribute has greater than 500 values: $id', $response['body']['message']);
             }
         } finally {
             $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
