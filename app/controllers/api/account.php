@@ -915,6 +915,16 @@ Http::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                 ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
 
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$session->getAttribute('providerUid', '')]),
+            ]);
+
+            if ($identity !== null && !$identity->isEmpty()) {
+                $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                    'photo' => $oauth2->getUserPhoto($oauth2->getAccessToken('')),
+                ]));
+            }
         }
 
         // Save changes
