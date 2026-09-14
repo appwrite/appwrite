@@ -354,6 +354,7 @@ class Deletes extends Action
                 $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -1999,6 +2000,20 @@ class Deletes extends Action
             Query::equal('transactionInternalId', $transactionInternalIds),
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
+        });
+    }
+
+    private function deleteExpiredPushLedger(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired push ledger messages');
+
+        $dbForProject = $getProjectDB($project);
+        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+
+        $dbForProject->deleteDocuments('appwritePushLedger', [
+            Query::lessThan('$createdAt', $expired),
+        ], onError: function (Throwable $th) {
+            // Swallow errors (e.g. projects without the push ledger collection).
         });
     }
 
