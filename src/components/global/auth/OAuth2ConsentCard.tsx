@@ -73,6 +73,8 @@ interface OAuth2ConsentCardProps {
   onDone?: (outcome: OAuth2Outcome, redirectUrl?: string) => void
   /** When provided, the account chip becomes a menu with "Use a different account". */
   onSwitchAccount?: () => void | Promise<void>
+  switchingAccount?: boolean
+  accountSwitchError?: string | null
   /** Debug preview: skip approve/reject API calls and invoke onDone instead. */
   preview?: boolean
 }
@@ -92,6 +94,8 @@ export function OAuth2ConsentCard({
   flow,
   onDone,
   onSwitchAccount,
+  switchingAccount = false,
+  accountSwitchError,
   preview = false,
 }: OAuth2ConsentCardProps) {
   const t = useT()
@@ -442,7 +446,8 @@ export function OAuth2ConsentCard({
     },
   })
 
-  const isBusy = approveMutation.isPending || rejectMutation.isPending
+  const isBusy =
+    switchingAccount || approveMutation.isPending || rejectMutation.isPending
 
   const editorGroup = (
     tierKey: 'project' | 'organization',
@@ -602,6 +607,19 @@ export function OAuth2ConsentCard({
             />
           ) : null}
         </div>
+
+        {accountSwitchError ? (
+          <div
+            role="alert"
+            className="border-destructive/20 bg-destructive/10 flex items-start gap-2 rounded-lg border p-3"
+          >
+            <TriangleAlert
+              aria-hidden="true"
+              className="text-destructive mt-0.5 size-4 shrink-0"
+            />
+            <p className="text-destructive text-[13px]">{accountSwitchError}</p>
+          </div>
+        ) : null}
 
         {canNarrow ? (
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

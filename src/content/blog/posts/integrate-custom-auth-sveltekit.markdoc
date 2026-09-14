@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/integrate-custom-auth-sveltekit/cover.avif
 timeToRead: 6
 author: aditya-oberai
-category: product
+category: products
 featured: false
 faqs:
   - question: "What is custom token authentication in Appwrite?"

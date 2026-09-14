@@ -14,7 +14,9 @@ import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
@@ -22,14 +24,6 @@ import {
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    return url.startsWith('/') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -104,7 +98,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
           replace: true,
         })
       }
-      throw redirect({ to: '/', replace: true })
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -148,7 +142,7 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
-        navigate({ to: '/' })
+        navigate({ to: CONSOLE_ENTRY_PATH })
       }
     },
     onError: async (error: unknown) => {
@@ -170,7 +164,7 @@ function VerifyEmailPage() {
               })
               return
             }
-            navigate({ to: '/' })
+            navigate({ to: CONSOLE_ENTRY_PATH })
             return
           }
         } catch {

@@ -4,9 +4,14 @@ import { getThreads } from '@/lib/threads/content'
 import { getThreadsIndexRouteMetaTags } from '@/lib/threads/route-meta'
 import { getThreadsIndexPageSchema } from '@/lib/threads/seo'
 import { parseThreadsTags, threadsSearchSchema } from '@/lib/threads/search'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/threads/')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   validateSearch: threadsSearchSchema,
@@ -33,7 +38,7 @@ export const Route = createFileRoute('/_marketing/threads/')({
     scripts: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify(getThreadsIndexPageSchema()),
+        children: stringifyJsonLd(getThreadsIndexPageSchema()),
       },
     ],
   }),

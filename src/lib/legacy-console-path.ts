@@ -45,7 +45,8 @@ const TYPED_RESOURCE_RE = new RegExp(
  * should be redirected before the SPA handles it.
  */
 export function isLegacyConsolePath(pathname: string): boolean {
-  if (pathname === '/console' || pathname.startsWith('/console/')) {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  if (normalized === '/console' || normalized.startsWith('/console/')) {
     return true
   }
 

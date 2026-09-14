@@ -13,6 +13,7 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
@@ -30,22 +31,13 @@ import {
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
 import {
+  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
-
-// Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
-function isValidRelativeRedirect(url: string): boolean {
-  try {
-    // Must start with / (but not // - protocol-relative) and not contain ://
-    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
-  } catch {
-    return false
-  }
-}
 
 const searchSchema = z.object({
   redirect: z
@@ -59,6 +51,8 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-in')({
   component: SignInPage,
   validateSearch: searchSchema,
+  // Keep the visible header stable while this link is hovered or focused.
+  preload: false,
   loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
@@ -80,7 +74,7 @@ export const Route = createFileRoute('/_auth/sign-in')({
       if (target) {
         throw redirect({ ...toRedirectNavigateOptions(target), replace: true })
       }
-      throw redirect({ to: '/', replace: true })
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Sign in') }] }),
@@ -104,7 +98,7 @@ function SignInPage() {
       const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
       const successUrl = resolvedRedirect
         ? `${window.location.origin}${resolvedRedirect}`
-        : `${window.location.origin}/`
+        : `${window.location.origin}${CONSOLE_ENTRY_PATH}`
       const failureUrl = `${window.location.origin}/sign-in${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       setLastLoginMethod(provider)

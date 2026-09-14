@@ -1,3 +1,4 @@
+import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 /**
  * React Query hooks for Organizations
  *
@@ -242,7 +243,11 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsCorporateEmailValidation: false,
     backupsEnabled: false,
     usagePerProject: false,
-    supportedAddons: { baa: false, premiumGeoDB: false, premiumGeoDBOrg: false },
+    supportedAddons: {
+      baa: false,
+      premiumGeoDB: false,
+      premiumGeoDBOrg: false,
+    },
     backupPolicies: 0,
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
@@ -751,6 +756,9 @@ export async function fetchOrganizationProjects(
         Query.offset(page * limit),
       ],
     })
+    // Project-scoped SDK calls resolve their endpoint from this map; without
+    // it every list and delete for a non-default region hits the wrong host.
+    registerProjectRegionsFromProjects(response.projects ?? [])
     return {
       projects: response.projects || [],
       total: response.total || 0,
@@ -1520,7 +1528,7 @@ export function organizationScopesQueryOptions(
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
     queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
     enabled,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: LONG_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -1615,7 +1623,9 @@ export async function prefetchOrganizationInvoiceDataIfAllowed(
   const access = await resolveOrganizationAccess(queryClient, organizationId)
   if (!canSeeOrganizationBilling(access)) return
   await queryClient
-    .ensureQueryData(organizationFailedInvoicePresenceQueryOptions(organizationId))
+    .ensureQueryData(
+      organizationFailedInvoicePresenceQueryOptions(organizationId),
+    )
     .catch(() => {})
 }
 
@@ -1655,8 +1665,7 @@ export function organizationUsageQueryOptions(
       startDate ?? null,
       endDate ?? null,
     ],
-    queryFn: () =>
-      fetchOrganizationUsage(organizationId!, startDate, endDate),
+    queryFn: () => fetchOrganizationUsage(organizationId!, startDate, endDate),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error

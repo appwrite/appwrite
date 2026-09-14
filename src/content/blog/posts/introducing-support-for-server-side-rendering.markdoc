@@ -6,7 +6,7 @@ date: 2024-02-27
 cover: /images/blog/ssr-announcement.avif
 timeToRead: 7
 author: dennis-ivy
-category: product, announcement
+category: products, announcements
 featured: false
 faqs:
   - question: "What is server side rendering (SSR)?"

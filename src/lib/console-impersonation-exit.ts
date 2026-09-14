@@ -4,7 +4,10 @@ import {
   hardNavigateToAccountAfterImpersonation,
   readConsoleImpersonationOperatorSnapshot,
 } from '@/lib/console-impersonation'
-import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
+import {
+  flushRecentImpersonationUsersToAccountPrefs,
+  waitForRecentImpersonationSync,
+} from '@/lib/react-query/hooks/auth'
 
 export type ExitConsoleImpersonationOptions = {
   /**
@@ -22,9 +25,10 @@ export async function performExitConsoleImpersonation(
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession({ skipNotify: true })
   if (opId && !options?.skipRecentImpersonationFlush) {
-    void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
-      console.error(e)
-    })
+    // The hard navigation below would cancel a write left in flight.
+    await waitForRecentImpersonationSync(
+      flushRecentImpersonationUsersToAccountPrefs(opId),
+    )
   }
   hardNavigateToAccountAfterImpersonation()
 }

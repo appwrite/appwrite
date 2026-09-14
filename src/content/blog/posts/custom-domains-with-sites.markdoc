@@ -6,7 +6,7 @@ date: 2025-07-31
 cover: /images/blog/custom-domains-with-sites/cover.avif
 timeToRead: 5
 author: dennis-ivy
-category: tutorial
+category: tutorials
 faqs:
   - question: "How do I add a custom domain to Appwrite Sites?"
     answer: "Open your site in the Appwrite Console, go to the Domains tab, and click Add domain. Enter your domain (for example example.com), then add the NS records Appwrite shows you (ns1.appwrite.zone and ns2.appwrite.zone) at your domain registrar. See [Appwrite Sites](/docs/products/sites)."

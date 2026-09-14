@@ -6,7 +6,7 @@ date: 2026-04-08
 cover: /images/blog/announcing-appwrite-rust-sdk/cover.avif
 timeToRead: 4
 author: chirag-aggarwal
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How do I install the Appwrite Rust SDK?"

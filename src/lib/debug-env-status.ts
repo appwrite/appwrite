@@ -34,6 +34,11 @@ function isNonEmpty(value: unknown): boolean {
  */
 export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
   {
+    key: 'VITE_CONSOLE_BROWSER_API',
+    group: 'Runtime',
+    description: 'Expose the Vibes browser flag API in production',
+  },
+  {
     key: 'VITE_APPWRITE_ENDPOINT',
     aliases: ['APPWRITE_ENDPOINT', 'PUBLIC_APPWRITE_ENDPOINT'],
     group: 'Runtime',
@@ -69,7 +74,7 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_PLAUSIBLE_SCRIPT_SRC',
     group: 'Runtime',
     description:
-      'Upstream Plausible script URL (proxied via /r/v.js?v=… and /r/e)',
+      'Plausible script URL loaded in the browser (SSR exports POST to /api/event)',
   },
   {
     key: 'VITE_CONSOLE_USER_VERIFICATION',
@@ -90,6 +95,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_CONSOLE_BLOG_DRAFTS',
     group: 'Runtime',
     description: 'Override draft blog post visibility',
+  },
+  {
+    key: 'VITE_CONSOLE_SCREENSHOT_MODE',
+    group: 'Runtime',
+    description: 'Default screenshot mode before a saved browser preference',
   },
   {
     key: 'VITE_CONSOLE_DATABASE_PITR_RESTORE',
@@ -240,8 +250,10 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
+    VITE_CONSOLE_BROWSER_API: isNonEmpty(config.browserApi),
     VITE_CONSOLE_BROWSER_ALERTS: isNonEmpty(config.browserAlerts),
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
+    VITE_CONSOLE_SCREENSHOT_MODE: isNonEmpty(config.screenshotMode),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),

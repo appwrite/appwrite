@@ -1416,7 +1416,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.',
     layout: 'article',
-    readingTimeMinutes: 4,
+    readingTimeMinutes: 5,
   },
   {
     slug: 'products/auth/oauth-server/authorization',
@@ -1424,7 +1424,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.',
     layout: 'article',
-    readingTimeMinutes: 7,
+    readingTimeMinutes: 8,
   },
   {
     slug: 'products/auth/oauth-server/clients',
@@ -1432,7 +1432,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
     layout: 'article',
-    readingTimeMinutes: 6,
+    readingTimeMinutes: 7,
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-1',
@@ -1469,7 +1469,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       "Verify incoming access tokens against your project's JWKS and read their scopes.",
     layout: 'tutorial',
-    readingTimeMinutes: 2,
+    readingTimeMinutes: 3,
     step: 4,
   },
   {
@@ -1528,7 +1528,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.',
     layout: 'article',
-    readingTimeMinutes: 5,
+    readingTimeMinutes: 6,
   },
   {
     slug: 'products/auth/oauth-server/sign-in-with-your-product/step-1',
@@ -1600,7 +1600,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
     layout: 'article',
-    readingTimeMinutes: 6,
+    readingTimeMinutes: 7,
   },
   {
     slug: 'products/auth/oauth2',
@@ -3030,7 +3030,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.',
     layout: 'article',
-    readingTimeMinutes: 7,
+    readingTimeMinutes: 6,
   },
   {
     slug: 'products/firewall/allowlist-ips',
@@ -3038,7 +3038,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.',
     layout: 'article',
-    readingTimeMinutes: 3,
+    readingTimeMinutes: 2,
   },
   {
     slug: 'products/firewall/attack-mode',
@@ -3046,7 +3046,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.',
     layout: 'article',
-    readingTimeMinutes: 3,
+    readingTimeMinutes: 2,
   },
   {
     slug: 'products/firewall/block-countries',
@@ -3070,13 +3070,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.',
     layout: 'article',
-    readingTimeMinutes: 5,
+    readingTimeMinutes: 7,
   },
   {
     slug: 'products/firewall/monitor',
-    title: 'Monitor traffic',
+    title: 'Traffic overview',
     description:
-      'Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.',
+      'The metrics Appwrite Firewall reports for project traffic, and what the rule impact preview can estimate.',
     layout: 'article',
     readingTimeMinutes: 3,
   },
@@ -4536,7 +4536,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     description:
       'Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).',
     layout: 'article',
-    readingTimeMinutes: 4,
+    readingTimeMinutes: 6,
   },
   {
     slug: 'tooling/command-line/teams',

@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/setting-up-google-signin/cover.avif
 timeToRead: 5
 author: atharva
-category: tutorial
+category: tutorials
 faqs:
   - question: "What do I need from Google Cloud Console to enable Sign in with Google?"
     answer: "You need an OAuth consent screen and an OAuth client ID and secret. The consent screen controls what users see when they sign in, and the client ID and secret identify your project to Google so it can issue tokens to your application."

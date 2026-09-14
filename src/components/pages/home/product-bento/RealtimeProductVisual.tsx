@@ -82,7 +82,7 @@ export function RealtimeProductVisual() {
   const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
+      <div className={cn('flex h-full min-h-0 w-full flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -136,8 +136,8 @@ export function RealtimeProductVisual() {
                 <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/8 px-2 py-1.5">
                   <span
                     className={cn(
-                      'flex size-3.5 shrink-0 items-center justify-center rounded border border-border bg-background transition-[border-color,background-color] duration-500 ease-out delay-500',
-                      'group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15 motion-reduce:delay-0 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-background',
+                      'flex size-3.5 shrink-0 items-center justify-center rounded border border-border bg-background transition-colors duration-500 ease-out delay-500',
+                      'group-hover:bg-emerald-500/15 motion-reduce:delay-0 motion-reduce:group-hover:bg-background',
                     )}
                   >
                     <Check

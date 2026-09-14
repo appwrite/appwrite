@@ -7,7 +7,7 @@ lastUpdated: 2026-06-29
 cover: /images/blog/announcing-database-ai-suggestions/cover.avif
 timeToRead: 5
 author: darshan-pandya
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "How do Database AI suggestions decide which columns and indexes to create?"

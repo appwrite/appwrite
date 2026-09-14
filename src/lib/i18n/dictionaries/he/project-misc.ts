@@ -2421,6 +2421,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Draft updated': 'הטיוטה עודכנה',
   'EU region': 'אזור האיחוד האירופי',
   'Email content': 'תוכן האימייל',
+  'Email preview': 'תצוגה מקדימה של האימייל',
   'Email subject': 'נושא האימייל',
   'Enable for development builds, disable for production.':
     'הפעילו עבור גרסאות פיתוח, השביתו עבור סביבת ייצור.',
@@ -2507,6 +2508,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    'מספר טלפון עם סימן ה-+ וקידומת המדינה, או מזהה שולח אלפאנומרי.',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2575,6 +2578,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Resend.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
+  Sender: 'שולח',
   'Sender ID': 'מזהה שולח',
   'Sender Name': 'שם שולח',
   'Sender phone': 'טלפון שולח',
@@ -2672,6 +2676,89 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
+  'Set up': 'הגדרה',
+  'Creates a sending-only API key for a verified domain.':
+    'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates a domain sending key for a verified domain.':
+    'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
+  'Creates a restricted API key with mail send access.':
+    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
+  'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
+  'Loading domains…': 'טוען דומיינים…',
+  'Failed to load domains from the email provider':
+    'טעינת הדומיינים מספק האימייל נכשלה',
+  'No verified domains': 'אין דומיינים מאומתים',
+  'Add and verify a sending domain, then check again.':
+    'הוסיפו ואמתו דומיין שליחה, ואז בדקו שוב.',
+  'Manage domains': 'ניהול דומיינים',
+  'Check again': 'בדיקה חוזרת',
+  'The credential is restricted to this domain and can only send email.':
+    'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
+  'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
+  'Enter a sender name.': 'הזינו שם שולח.',
+  'Enter a sender email on the selected domain.':
+    'הזינו אימייל שולח בדומיין שנבחר.',
+  'Authorization expired': 'ההרשאה פגה',
+  'Reconnect your provider account to continue.':
+    'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
+  'Failed to set up SMTP with the email provider':
+    'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
+  'Generate API key': 'יצירת מפתח API',
+  'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
+  'Failed to create the API key with the email provider':
+    'יצירת מפתח ה-API מול ספק האימייל נכשלה',
+  'API key created and filled in below. Review and create the provider.':
+    'מפתח ה-API נוצר ומולא למטה. בדקו ויצרו את הספק.',
+  'One-click setup': 'הגדרה בקליק אחד',
+  'Notify me': 'עדכנו אותי',
+  'You will be notified': 'נודיע לכם',
+  "You'll no longer be notified about this provider.":
+    'לא נודיע לכם יותר על הספק הזה.',
+  'Failed to update notification preferences': 'עדכון העדפות ההתראות נכשל',
+  "You'll be notified when this provider is available.":
+    'נודיע לכם כשהספק הזה יהיה זמין.',
+  'Sending domain': 'דומיין שליחה',
+  Sender: 'שולח',
+  'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Mailgun': 'ניתוק Mailgun',
+  'Disconnect SendGrid': 'ניתוק SendGrid',
+  'Provider actions': 'פעולות ספק',
+  'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
+  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
+  'Creating credential and saving SMTP settings…':
+    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
+  'Connect with Resend': 'התחברות עם Resend',
+  'Connect with Mailgun': 'התחברות עם Mailgun',
+  'Connect with SendGrid': 'התחברות עם SendGrid',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
+  'Provider disconnected': 'הספק נותק',
+  'Failed to disconnect the provider': 'ניתוק הספק נכשל',
+  'Confirm setup': 'אישור ההגדרה',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    'המשך יחבר אתכם לחשבון Appwrite שאישר את הספק הזה.',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהקונסולה.',
+  'Back to setup': 'חזרה להגדרה',
+  'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
+  'Finishing setup': 'משלים את ההגדרה',
+  'Restoring your session and returning to the setup.':
+    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרה.',
+  'This link is missing required parameters.':
+    'בקישור הזה חסרים פרמטרים נדרשים.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',

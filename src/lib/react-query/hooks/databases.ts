@@ -13,7 +13,17 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
-import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate, EmbeddingModel } from '@appwrite.io/console'
+import {
+  Query,
+  ID,
+  DocumentsDBIndexType,
+  TablesDBIndexType,
+  VectorsDBIndexType,
+  OrderBy,
+  RelationshipType,
+  RelationMutate,
+  EmbeddingModel,
+} from '@appwrite.io/console'
 import {
   DatabaseType,
   coerceDatabaseType,
@@ -30,8 +40,14 @@ import {
   isCloudProfile,
 } from '@/lib/console-profiles'
 import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
-import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
-import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
+import {
+  getDedicatedDatabaseIdError,
+  resolveDedicatedDatabaseId,
+} from '@/lib/dedicated-database-id'
+import {
+  SERVERLESS_DATABASE_SPEC_ID,
+  isServerlessDatabaseSpecId,
+} from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
@@ -73,7 +89,10 @@ import {
   serializeRowDataForApi,
   type PendingRowCellEdit,
 } from '@/lib/database-row-inline-edits'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+} from '@/lib/appwrite-id'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
@@ -135,10 +154,7 @@ function listProductDatabasesIfEnabled(
  * Failures are not cached. Mutations that change a database should call
  * `invalidateDatabaseModel(projectId, databaseId)` so the next call refetches.
  */
-const databaseModelInflight = new Map<
-  string,
-  Promise<Models.Database | null>
->()
+const databaseModelInflight = new Map<string, Promise<Models.Database | null>>()
 const databaseModelCache = new Map<
   string,
   { value: Models.Database | null; expiresAt: number }
@@ -319,7 +335,12 @@ export async function waitForCreatedDatabaseLifecycleReady(
   if (kind.type === 'native') {
     return waitForDedicatedDatabaseReady(projectId, databaseId, {
       type: 'engine',
-      engine: kind.engine === 'postgres' ? 'postgresql' : kind.engine === 'mongo' ? 'mongodb' : 'mysql',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
     })
   }
 
@@ -466,9 +487,7 @@ function seedDatabaseModelCache(
   databaseTypeCache.set(key, { value: backend, expiresAt })
 }
 
-function readProductDatabaseSpecification(
-  db: Models.Database,
-): string | null {
+function readProductDatabaseSpecification(db: Models.Database): string | null {
   const value = db.specification
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
@@ -851,6 +870,8 @@ export async function fetchProjectDatabases(
   return {
     databases: slice,
     total,
+    // Every product API rejected: 0 here means unknown, not "no databases".
+    failed: settled.every((result) => result.status === 'rejected'),
   }
 }
 
@@ -955,12 +976,7 @@ export async function fetchProjectConsoleDatabases(
   )
 
   for (const db of databases) {
-    seedDatabaseModelCache(
-      projectId,
-      db.$id,
-      db,
-      coerceDatabaseType(db.type),
-    )
+    seedDatabaseModelCache(projectId, db.$id, db, coerceDatabaseType(db.type))
   }
 
   return {
@@ -978,60 +994,47 @@ export async function fetchProjectDatabasesByIds(
     return { databases: [] }
   }
 
-  const validIds = [
-    ...new Set(
-      databaseIds.filter((id) => typeof id === 'string' && id.trim()),
-    ),
-  ].slice(0, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT)
-  if (validIds.length === 0) {
+  const batches = buildIdLookupQueryBatches(databaseIds)
+  if (batches.length === 0) {
     return { databases: [] }
   }
 
-  const idQuery =
-    validIds.length === 1
-      ? Query.equal('$id', validIds[0])
-      : Query.or(validIds.map((id) => Query.equal('$id', id)))
-
   const projectSdk = sdk.forProject(projectId)
-  const settled = await Promise.allSettled([
-    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Documentsdb, [
-      idQuery,
-      Query.limit(validIds.length),
-    ]),
-    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Vectorsdb, [
-      idQuery,
-      Query.limit(validIds.length),
-    ]),
-    projectSdk.tablesDB.list({
-      queries: [idQuery, Query.limit(validIds.length)],
-    }),
-  ])
+  const collect = (
+    list: (queries: string[]) => Promise<{ databases: Models.Database[] }>,
+  ): Promise<Models.Database[]> =>
+    fetchLookupBatches(
+      batches,
+      async (queries) => (await list(queries)).databases,
+    )
+
+  const [documentsDatabases, vectorsDatabases, tablesDatabases] =
+    await Promise.all([
+      collect((queries) =>
+        listProductDatabasesIfEnabled(
+          projectSdk,
+          DatabaseType.Documentsdb,
+          queries,
+        ),
+      ),
+      collect((queries) =>
+        listProductDatabasesIfEnabled(
+          projectSdk,
+          DatabaseType.Vectorsdb,
+          queries,
+        ),
+      ),
+      collect((queries) => projectSdk.tablesDB.list({ queries })),
+    ])
 
   const databases = mergeProjectDatabasesById([
-    {
-      databases:
-        settled[0].status === 'fulfilled' ? settled[0].value.databases : [],
-      defaultType: DatabaseType.Documentsdb,
-    },
-    {
-      databases:
-        settled[1].status === 'fulfilled' ? settled[1].value.databases : [],
-      defaultType: DatabaseType.Vectorsdb,
-    },
-    {
-      databases:
-        settled[2].status === 'fulfilled' ? settled[2].value.databases : [],
-      defaultType: DatabaseType.Tablesdb,
-    },
+    { databases: documentsDatabases, defaultType: DatabaseType.Documentsdb },
+    { databases: vectorsDatabases, defaultType: DatabaseType.Vectorsdb },
+    { databases: tablesDatabases, defaultType: DatabaseType.Tablesdb },
   ])
 
   for (const db of databases) {
-    seedDatabaseModelCache(
-      projectId,
-      db.$id,
-      db,
-      coerceDatabaseType(db.type),
-    )
+    seedDatabaseModelCache(projectId, db.$id, db, coerceDatabaseType(db.type))
   }
 
   return { databases }
@@ -1106,8 +1109,7 @@ function dedicatedComputeEngineForProductBackend(
 
 function requiresDedicatedCompute(backend: DatabaseType): boolean {
   return (
-    backend === DatabaseType.Documentsdb ||
-    backend === DatabaseType.Vectorsdb
+    backend === DatabaseType.Documentsdb || backend === DatabaseType.Vectorsdb
   )
 }
 
@@ -1127,8 +1129,10 @@ async function resolveDedicatedSpecification(
   )
   const specsSource =
     source ?? dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb)
-  const response =
-    await dedicatedDatabaseService(projectSdk, specsSource).listSpecifications()
+  const response = await dedicatedDatabaseService(
+    projectSdk,
+    specsSource,
+  ).listSpecifications()
   const specs = mapDedicatedDatabaseSpecifications(response.specifications)
   const defaultId = getDefaultEnabledSpecId(specs)
   if (!defaultId) {
@@ -1411,27 +1415,20 @@ export async function waitForCreatedDatabaseHaReady(
       return true
     }
     const status = typeof payload.status === 'string' ? payload.status : null
-    return (
-      typeof replicas !== 'number' &&
-      isDatabaseLifecycleReady(status)
-    )
+    return typeof replicas !== 'number' && isDatabaseLifecycleReady(status)
   }
 
   try {
     if (kind.type === 'native') {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        {
-          type: 'engine',
-          engine:
-            kind.engine === 'postgres'
-              ? 'postgresql'
-              : kind.engine === 'mongo'
-                ? 'mongodb'
-                : 'mysql',
-        },
-      )
+      const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      })
       if (database && matchesHaReady(database as Record<string, unknown>)) {
         return true
       }
@@ -1460,19 +1457,15 @@ export async function waitForCreatedDatabaseHaReady(
     })
 
     if (kind.type === 'native') {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        {
-          type: 'engine',
-          engine:
-            kind.engine === 'postgres'
-              ? 'postgresql'
-              : kind.engine === 'mongo'
-                ? 'mongodb'
-                : 'mysql',
-        },
-      ).catch(() => null)
+      const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      }).catch(() => null)
       return Boolean(
         database && matchesHaReady(database as Record<string, unknown>),
       )
@@ -1511,19 +1504,15 @@ export async function waitForCreatedDatabasePitrReady(
     payload.pitr === true
 
   try {
-    const database = await fetchDedicatedDatabaseById(
-      projectId,
-      databaseId,
-      {
-        type: 'engine',
-        engine:
-          kind.engine === 'postgres'
-            ? 'postgresql'
-            : kind.engine === 'mongo'
-              ? 'mongodb'
-              : 'mysql',
-      },
-    )
+    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+      type: 'engine',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
+    })
     if (database && matchesPitrReady(database as Record<string, unknown>)) {
       return true
     }
@@ -1539,19 +1528,15 @@ export async function waitForCreatedDatabasePitrReady(
       lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
     })
-    const database = await fetchDedicatedDatabaseById(
-      projectId,
-      databaseId,
-      {
-        type: 'engine',
-        engine:
-          kind.engine === 'postgres'
-            ? 'postgresql'
-            : kind.engine === 'mongo'
-              ? 'mongodb'
-              : 'mysql',
-      },
-    ).catch(() => null)
+    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+      type: 'engine',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
+    }).catch(() => null)
     return Boolean(
       database && matchesPitrReady(database as Record<string, unknown>),
     )
@@ -2046,11 +2031,7 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   // Seed routing so list cards never probe other product APIs by ID.
   for (const db of databases) {
     const api = db.api?.toLowerCase().trim()
-    if (
-      api === 'tablesdb' ||
-      api === 'documentsdb' ||
-      api === 'vectorsdb'
-    ) {
+    if (api === 'tablesdb' || api === 'documentsdb' || api === 'vectorsdb') {
       seedDatabaseProductRouteKind(projectId, db.$id, api)
     }
   }
@@ -2162,8 +2143,7 @@ export function dedicatedDatabaseByIdQueryOptions(
       databaseId,
       sourceKey,
     ],
-    queryFn: () =>
-      fetchDedicatedDatabaseById(projectId!, databaseId!, source!),
+    queryFn: () => fetchDedicatedDatabaseById(projectId!, databaseId!, source!),
     enabled:
       !!projectId &&
       !!databaseId &&
@@ -2616,10 +2596,7 @@ export async function fetchAllProjectTablesForVisualizer(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(1000),
-  ]
+  const queries = [Query.orderDesc('$createdAt'), Query.limit(1000)]
 
   const kind = resolveProjectDatabaseType(dbKind)
 
@@ -3134,8 +3111,7 @@ export async function fetchProjectTable(
       enabled: response.enabled !== false,
       rowSecurity,
       $permissions: (response.$permissions as string[]) || [],
-      $createdAt:
-        (response.$createdAt as string) || new Date().toISOString(),
+      $createdAt: (response.$createdAt as string) || new Date().toISOString(),
       $updatedAt:
         (response.$updatedAt as string) ||
         (response.$createdAt as string) ||
@@ -3450,8 +3426,7 @@ export async function createProjectTableRows(
       const rowsToInsert = rows.map((row) => {
         const rowRec = row as Record<string, unknown>
         const rowData = { ...rowRec }
-        const rowId =
-          typeof rowRec.$id === 'string' ? rowRec.$id : ID.unique()
+        const rowId = typeof rowRec.$id === 'string' ? rowRec.$id : ID.unique()
         if (rowData.$id) {
           delete rowData.$id
         }
@@ -3541,9 +3516,7 @@ export async function createProjectTableColumn(
     typeof data.xdefault === 'number' ? data.xdefault : undefined
   const boolDefault =
     typeof data.xdefault === 'boolean' ? data.xdefault : undefined
-  const elements = Array.isArray(data.elements)
-    ? data.elements.map(String)
-    : []
+  const elements = Array.isArray(data.elements) ? data.elements.map(String) : []
   const colKey =
     typeof data.key === 'string' ? data.key : String(data.key ?? '')
   if (!colKey) {
@@ -3764,24 +3737,20 @@ export async function updateProjectTableColumn(
   // Update column APIs require `xdefault` to be present. Pass `null` when there is
   // no default (SDK treats undefined as missing and throws).
   const stringDefault =
-    data.xdefault === undefined || data.xdefault === null || data.xdefault === ''
+    data.xdefault === undefined ||
+    data.xdefault === null ||
+    data.xdefault === ''
       ? null
       : String(data.xdefault)
   const numberDefault =
     typeof data.xdefault === 'number' || typeof data.xdefault === 'bigint'
       ? data.xdefault
       : null
-  const floatDefault =
-    typeof data.xdefault === 'number' ? data.xdefault : null
-  const boolDefault =
-    typeof data.xdefault === 'boolean' ? data.xdefault : null
+  const floatDefault = typeof data.xdefault === 'number' ? data.xdefault : null
+  const boolDefault = typeof data.xdefault === 'boolean' ? data.xdefault : null
   const spatialDefault =
-    data.xdefault === undefined || data.xdefault === null
-      ? null
-      : data.xdefault
-  const elements = Array.isArray(data.elements)
-    ? data.elements.map(String)
-    : []
+    data.xdefault === undefined || data.xdefault === null ? null : data.xdefault
+  const elements = Array.isArray(data.elements) ? data.elements.map(String) : []
   const formKey = typeof data.key === 'string' ? data.key.trim() : ''
   const explicitNewKey =
     typeof data.newKey === 'string' ? data.newKey.trim() : ''
@@ -4028,7 +3997,8 @@ export async function createProjectTableIndex(
   const raw = indexData as Record<string, unknown>
   const key = raw.key as string
   const type = raw.type
-  const columns = (raw.columns as string[]) || (raw.attributes as string[]) || []
+  const columns =
+    (raw.columns as string[]) || (raw.attributes as string[]) || []
   const orders = raw.orders as Array<string | null | undefined> | undefined
   const lengths = raw.lengths as number[] | undefined
 
@@ -4332,9 +4302,7 @@ export function consoleDatabasesQueryOptions(
 }
 
 function mapProjectDatabaseListItems(
-  databasesData:
-    | { databases?: Models.Database[]; total?: number }
-    | undefined,
+  databasesData: { databases?: Models.Database[]; total?: number } | undefined,
   limit: number,
 ) {
   const databases = (databasesData?.databases ?? []).map((db) => {
@@ -4528,13 +4496,7 @@ export function databaseQueryOptions(
   dbKind: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: [
-      'database',
-      'project',
-      projectId,
-      databaseId,
-      dbKind,
-    ],
+    queryKey: ['database', 'project', projectId, databaseId, dbKind],
     queryFn: () => fetchProjectDatabase(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -4907,13 +4869,7 @@ export function useProjectConsoleDatabases(
     error,
     refetch,
   } = useQuery(
-    consoleDatabasesQueryOptions(
-      projectId,
-      page,
-      limit,
-      search,
-      filterQueries,
-    ),
+    consoleDatabasesQueryOptions(projectId, page, limit, search, filterQueries),
   )
 
   const mapped = useMemo(
@@ -5332,9 +5288,7 @@ export function useProjectTable(
 /**
  * Hook to generate text embeddings via VectorsDB.
  */
-export function useCreateTextEmbeddings(
-  projectId: string | null | undefined,
-) {
+export function useCreateTextEmbeddings(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async ({
       texts,
@@ -5970,7 +5924,9 @@ async function stageRowEditTransactionOperations(
 
   const transactionSdk = getRowEditTransactionSdk(projectSdk, kind)
   if (typeof transactionSdk.createOperations !== 'function') {
-    throw new Error('Bulk transaction staging is not available in this environment')
+    throw new Error(
+      'Bulk transaction staging is not available in this environment',
+    )
   }
 
   await transactionSdk.createOperations({

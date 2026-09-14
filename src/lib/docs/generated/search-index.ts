@@ -376,7 +376,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.',
     excerpt:
-      'Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. If you are migrating from an older version of Appwrite, you need to follow the migration instructions Cloud vs Self-hosting Choose the deployment method that fits your needs. | Feature | Appwrite Cloud | Self-hosting |…',
+      'Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from an older version of Appwrite, you need to follow the migration…',
     breadcrumbs: ['Self-hosting', 'Getting started', 'Overview'],
   },
   {
@@ -1620,7 +1620,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.',
     excerpt:
       "The Sign in with your product guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need custom scopes: permissions you define, users approve, and your API enforces. This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard. What you will build…",
-    breadcrumbs: ['OAuth2 server', 'Guides', 'Custom scopes'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Introduction'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-2',
@@ -1629,7 +1629,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
     excerpt:
       "Scopes have to be defined on the OAuth2 server before a client can request them. Requesting a scope you have not defined fails the authorization request with . Add the scopes In the Console, open **Auth**, select the **OAuth2 server** tab, and find the **Scopes** field on the **Integration** card. Add two scopes and click **Update**: - grants read access to the user's tasks. - grants permission to create and update tasks. The , , , and scopes stay locked…",
-    breadcrumbs: ['OAuth2 server', 'custom scopes', 'Define the scopes'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Define the scopes'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-3',
@@ -1638,7 +1638,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Ask for the task scopes during authorization and let the user grant each one individually.',
     excerpt:
       "A client receives a scope by asking for it during authorization. Vantage requests both task scopes, and TaskFlow's consent screen lets the user decide which of them to grant. Add the scopes to the request In the consumer, extend the scope list in : already passes as the parameter, so nothing else changes on the consumer. The OAuth2 server carries the requested scopes into the grant and shows them to the user. Label the scopes on the consent screen TaskFlow's…",
-    breadcrumbs: ['OAuth2 server', 'custom scopes', 'Request the scopes'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Request the scopes'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-4',
@@ -1647,7 +1647,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Verify incoming access tokens against your project's JWKS and read their scopes.",
     excerpt:
       "TaskFlow's API is about to accept access tokens from the outside world, so it first needs a way to tell a token it issued from one somebody made up. Access tokens from your OAuth2 server are RS256-signed JWTs, and the matching public keys are published at your project's JWKS endpoint. That means TaskFlow can verify tokens locally, with no call back to the OAuth2 server on each request. Install jose jose handles the JWT verification and the JWKS fetching. Install…",
-    breadcrumbs: ['OAuth2 server', 'custom scopes', 'Validate access tokens'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Validate access tokens'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-5',
@@ -1655,7 +1655,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description: 'Serve tasks only to tokens that carry tasks.read.',
     excerpt:
       "With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule. The task data Create with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side: The guarded route Create . TanStack Start serves the and handlers at : Each handler applies the same two checks, in order: 1. **Authentication**: is the token real?…",
-    breadcrumbs: ['OAuth2 server', 'custom scopes', 'Protect the API route'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Protect the API route'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-6',
@@ -1664,11 +1664,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Read tasks with the granted access token and add a task composer that lives or dies by its scope.',
     excerpt:
       "Vantage already holds the access token in its session after the token exchange. Reading tasks is one authenticated fetch away, and a small composer will exercise the write path. Point Vantage at the API Add TaskFlow's API base to : The API client Create . Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest: does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes…",
-    breadcrumbs: [
-      'OAuth2 server',
-      'custom scopes',
-      'Call the API from Vantage',
-    ],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Call the API from Vantage'],
   },
   {
     slug: 'products/auth/oauth-server/custom-scopes/step-7',
@@ -1677,7 +1673,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.',
     excerpt:
       'Everything is wired up. Run the flow twice: once granting only read access, and once granting the write too. The same button on the dashboard behaves differently each time, and the only thing that changed is what the user agreed to. Start both apps In two terminals: Grant read, withhold write Open and click **Sign in with TaskFlow**. On the consent screen, switch **Create and update your tasks** off and authorize. The OAuth2 server narrows the grant to what was…',
-    breadcrumbs: ['OAuth2 server', 'custom scopes', 'Run the flow'],
+    breadcrumbs: ['Custom scopes', 'Steps', 'Run the flow'],
   },
   {
     slug: 'products/auth/oauth-server/device-flow',
@@ -1722,7 +1718,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Build an end-to-end "Sign in with your product" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.',
     excerpt:
       'Once your project\'s OAuth2 server is enabled, other apps can offer "Sign in with your product". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…',
-    breadcrumbs: ['OAuth2 server', 'Guides', 'Sign in with your product'],
+    breadcrumbs: ['Sign in with your product', 'Steps', 'Introduction'],
   },
   {
     slug: 'products/auth/oauth-server/sign-in-with-your-product/step-2',
@@ -1730,10 +1726,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Turn on the OAuth2 server on your Appwrite project and register the client app.',
     excerpt:
-      "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , and are always included, which…",
+      "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , , and are always included,…",
     breadcrumbs: [
-      'OAuth2 server',
-      'sign in with your product',
+      'Sign in with your product',
+      'Steps',
       'Enable the OAuth2 server',
     ],
   },
@@ -1744,11 +1740,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Scaffold the two TanStack Start apps and wire up their environment.',
     excerpt:
       "Both sides are TanStack Start apps. Scaffold them in a single folder. Scaffold the projects Create the consumer (Vantage) and the provider (TaskFlow): This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up. Give each a fixed port so the redirect URIs stay stable. In each app's , set the dev script: Configure the environment The apps read the OAuth values from environment variables. Add a to each. Vantage needs the…",
-    breadcrumbs: [
-      'OAuth2 server',
-      'sign in with your product',
-      'Create the apps',
-    ],
+    breadcrumbs: ['Sign in with your product', 'Steps', 'Create the apps'],
   },
   {
     slug: 'products/auth/oauth-server/sign-in-with-your-product/step-4',
@@ -1756,11 +1748,11 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
     excerpt:
-      'Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Import at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side. The start route Clicking the button navigates to . Its…',
+      'Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Only server functions import this module, and TanStack Start strips server function bodies out of the browser bundle, so the client secret stays on the server. Never import it from a component. The start route…',
     breadcrumbs: [
-      'OAuth2 server',
-      'sign in with your product',
-      'Add Sign in with your product',
+      'Sign in with your product',
+      'Steps',
+      'Add the sign-in button',
     ],
   },
   {
@@ -1771,8 +1763,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     excerpt:
       "The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session. Types for the consent card Create . It holds only client-safe values, so the browser can import it: The server helpers Create . Every function here calls the OAuth2 server on behalf…",
     breadcrumbs: [
-      'OAuth2 server',
-      'sign in with your product',
+      'Sign in with your product',
+      'Steps',
       'Build the consent screen',
     ],
   },
@@ -1784,8 +1776,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     excerpt:
       "The OAuth2 server redirects back to Vantage's redirect URI with a and the . Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in. Add the token functions Extend with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server. Handle the callback Create . Its loader runs on the server: it checks the against the session, exchanges…",
     breadcrumbs: [
-      'OAuth2 server',
-      'sign in with your product',
+      'Sign in with your product',
+      'Steps',
       'Exchange the code for tokens',
     ],
   },
@@ -1795,7 +1787,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description: 'Start both apps and sign in with your product end to end.',
     excerpt:
       "Everything is in place. Run both apps and sign in. Start both apps In two terminals: Vantage is at and TaskFlow's consent screen at . Sign in Open and click **Sign in with TaskFlow**. You will: 1. Land on TaskFlow's consent screen and sign in with a TaskFlow user. 2. See exactly what Vantage is requesting, and approve it. 3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard. That round trip is a complete…",
-    breadcrumbs: ['OAuth2 server', 'sign in with your product', 'Run the flow'],
+    breadcrumbs: ['Sign in with your product', 'Steps', 'Run the flow'],
   },
   {
     slug: 'products/auth/oauth-server/tokens',
@@ -2494,7 +2486,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Host a managed PostgreSQL database on Appwrite. Connect with psql, Prisma, or Drizzle, install pgvector, and get backups, replicas, pooling, and PITR.',
     excerpt:
-      "Appwrite managed PostgreSQL is a hosted PostgreSQL database provisioned for your project. You pick the compute specification, and Appwrite runs the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. A native PostgreSQL database gives you the raw engine: you connect with or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between.…",
+      "Appwrite managed PostgreSQL is a hosted PostgreSQL database provisioned for your project. You pick the compute specification, and Appwrite runs the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. A native PostgreSQL database gives you the raw engine: you connect with or any PostgreSQL driver, bring your own ORM and migrations, and use the full feature set of PostgreSQL, with no Appwrite layer in between. If you…",
     breadcrumbs: ['PostgreSQL', 'Getting started', 'Overview'],
   },
   {
@@ -3278,7 +3270,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.',
     excerpt:
       'Appwrite **Domains** is organization-level domain management on Appwrite Cloud. You can register new names, transfer existing registrations, delegate DNS for domains you own elsewhere, and connect hostnames to Sites, Functions, and custom API endpoints. Appwrite acts as your registrar for purchases and transfers. Billing, renewal, and registrant details are tied to your organization. You can also change organization to move a domain between orgs you control without transferring registration away from Appwrite. How it works Domain setup on Appwrite has…',
-    breadcrumbs: ['products', 'Domains'],
+    breadcrumbs: ['Domains', 'Getting started', 'Overview'],
   },
   {
     slug: 'products/domains/change-organization',
@@ -3287,7 +3279,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.',
     excerpt:
       'You can reassign a domain to a different Appwrite organization from the domain **Settings** tab. The domain keeps its DNS zone and registration state. Only which organization owns the domain in the Console changes. **Change organization** updates which Appwrite organization manages the domain. It does not move registration to or from Appwrite at the registry. For that, use Transfer a domain. Before you change organization - You must be a member of both the source and destination organizations. - The…',
-    breadcrumbs: ['products', 'Domains', 'Change organization'],
+    breadcrumbs: ['Domains', 'Guides', 'Change organization'],
   },
   {
     slug: 'products/domains/connect',
@@ -3296,7 +3288,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.',
     excerpt:
       'Custom domains on Appwrite work in two layers: 1. **Organization domain** (apex zone, for example ) proves your organization controls the name and can host its DNS zone. 2. **Product domain** (any hostname, for example or ) is a proxy rule that routes HTTPS traffic to a Site, Function, or project API. This guide walks through apex vs subdomain setup, what to configure in each product, and how organization **Domains** fits together with project-level **Add domain** flows. Before you connect…',
-    breadcrumbs: ['products', 'Domains', 'Connect to products'],
+    breadcrumbs: ['Domains', 'Guides', 'Connect to products'],
   },
   {
     slug: 'products/domains/delete',
@@ -3305,7 +3297,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.',
     excerpt:
       'Deleting a domain removes it from your organization and deletes all DNS records Appwrite hosted for that zone. This action cannot be undone. This guide covers single and bulk delete and what happens for Appwrite-registered versus external domains. Before you delete - Update or remove product connections (Sites, Functions, API custom domains) that use the hostname. - For **external domains**, plan nameserver changes at your registrar if DNS should continue elsewhere. Deleting in Appwrite does not cancel registration at your…',
-    breadcrumbs: ['products', 'Domains', 'Delete a domain'],
+    breadcrumbs: ['Domains', 'Guides', 'Delete a domain'],
   },
   {
     slug: 'products/domains/dns',
@@ -3314,7 +3306,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.',
     excerpt:
       'When a domain is verified with Appwrite nameservers, Appwrite hosts the authoritative DNS zone for that domain. The zone contains all records for that domain and is managed under **Organization** > **Domains**. This applies to Appwrite-registered domains and external domains alike. For platform-wide DNS behavior (apex domains, CNAME flattening, TLS), see Appwrite DNS service. Zones and verification A verified domain uses Appwrite nameservers ( and ). The **Records** tab on the domain shows the full zone Appwrite serves. Until verification…',
-    breadcrumbs: ['products', 'Domains', 'DNS records'],
+    breadcrumbs: ['Domains', 'Concepts', 'DNS records'],
   },
   {
     slug: 'products/domains/external',
@@ -3323,7 +3315,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.',
     excerpt:
       'If you already registered a domain elsewhere, you can add it to Appwrite and delegate DNS without transferring registration. The Console shows an external registrar for these domains. Appwrite manages DNS once nameservers are verified. This guide walks you through adding the domain, updating nameservers, and restoring DNS records. Add a domain 1. Open **Domains** in your organization. 2. Click **Add domain**. 3. Enter the domain name without a protocol (for example or ). 4. Click **Add domain** to create…',
-    breadcrumbs: ['products', 'Domains', 'Add external domain'],
+    breadcrumbs: ['Domains', 'Guides', 'Add external domain'],
   },
   {
     slug: 'products/domains/manage-dns',
@@ -3332,7 +3324,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Create, update, import, and filter DNS records for organization domains in Appwrite.',
     excerpt:
       'You manage DNS records for verified organization domains from the domain **Records** tab. This guide covers day-to-day record operations, zone import, and email provider presets. For record types and locked entries, see DNS records. Open the records table 1. Open **Organization** > **Domains**. 2. Select a verified domain. 3. Open the **DNS Records** tab. The table lists all records in the zone, including locked records Appwrite created for network routing. Use search filters to narrow by type, name, or value.…',
-    breadcrumbs: ['products', 'Domains', 'Manage DNS records'],
+    breadcrumbs: ['Domains', 'Guides', 'Manage DNS records'],
   },
   {
     slug: 'products/domains/presets',
@@ -3341,7 +3333,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.',
     excerpt:
       '**DNS presets** are curated record sets for common email providers. They add the MX (and in some cases TXT) records your provider expects at the apex of your domain (), so you can route mail without typing each record manually. Presets are available on verified organization domains where Appwrite hosts the DNS zone. They do not replace provider-specific setup such as domain verification TXT, DKIM, or DMARC. Add those records separately after applying a preset. For manual record operations, see…',
-    breadcrumbs: ['products', 'Domains', 'DNS presets'],
+    breadcrumbs: ['Domains', 'Concepts', 'DNS presets'],
   },
   {
     slug: 'products/domains/pricing',
@@ -3350,7 +3342,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.',
     excerpt:
       "Appwrite quotes domain prices before you register or transfer a domain. Prices depend on the TLD, whether the name is premium, and the registration period required by the registry. Registration and transfer quotes When you search for a domain in the Console buy flow or start a transfer in, Appwrite fetches a price quote for each name. Quotes include: - **Price**: total cost for the quoted registration or transfer period (in your organization's billing currency). - **Available**: whether the name…",
-    breadcrumbs: ['products', 'Domains', 'Pricing'],
+    breadcrumbs: ['Domains', 'Concepts', 'Pricing'],
   },
   {
     slug: 'products/domains/quick-start',
@@ -3359,7 +3351,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.',
     excerpt:
       'You can register a new domain or add one you already own in minutes. Both paths end with a verified domain in your organization that you can connect to Appwrite products. Open Domains 1. Sign in to Appwrite Cloud. 2. Select your organization. 3. Open **Domains** in the sidebar. If you do not see **Domains**, confirm your organization is on a Cloud plan that includes the feature. Register or add a domain Choose the path that matches how you want…',
-    breadcrumbs: ['products', 'Domains', 'Start with Domains'],
+    breadcrumbs: ['Domains', 'Getting started', 'Quick start'],
   },
   {
     slug: 'products/domains/register',
@@ -3368,7 +3360,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Search for available domain names and register them through Appwrite with transparent pricing and organization billing.',
     excerpt:
       'You can register domain names directly from the Appwrite Console. Appwrite is the registrar for these domains: registration, renewal, and billing run through your organization. This guide walks you through search, checkout, and payment. Search 1. In your organization, open **Domains**. 2. Click **Buy domain**. 3. Enter a name in the search field. The wizard shows suggestions across many TLDs (for example , , , ). Prices load as results appear. Each result indicates whether the name is available, the…',
-    breadcrumbs: ['products', 'Domains', 'Register a domain'],
+    breadcrumbs: ['Domains', 'Guides', 'Register a domain'],
   },
   {
     slug: 'products/domains/registration',
@@ -3377,7 +3369,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.',
     excerpt:
       'In Appwrite Domains, **registration** describes who holds the domain at the registry and how the domain is added to your organization. DNS management in Appwrite is separate from registration: you can delegate DNS to Appwrite for domains registered elsewhere. Domain types Appwrite distinguishes domains by how they are managed: | Type | How it is added | Registrar in Console | Auto-renewal | |------|-----------------|----------------------|--------------| | **Appwrite-registered** | Register or transfer in through Appwrite | Appwrite | Available | | **External**…',
-    breadcrumbs: ['products', 'Domains', 'Registration'],
+    breadcrumbs: ['Domains', 'Concepts', 'Registration'],
   },
   {
     slug: 'products/domains/renewal',
@@ -3386,7 +3378,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.',
     excerpt:
       'Renewal applies to domains where **Appwrite is the registrar** (registered or transferred in through Appwrite). External domains renew at your external registrar. Appwrite does not charge renewal for those names. Expiry and renewal dates On the domain detail page and **Settings** tab, Appwrite shows: - **Expiry date**: when the current registration period ends if not renewed - **Renewal date**: when the next renewal cycle applies (aligned with registry data) Track these dates for domains with auto-renewal disabled. Auto-renewal Auto-renewal is…',
-    breadcrumbs: ['products', 'Domains', 'Renewal'],
+    breadcrumbs: ['Domains', 'Concepts', 'Renewal'],
   },
   {
     slug: 'products/domains/transfer',
@@ -3395,7 +3387,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.',
     excerpt:
       'You can transfer domain registration **into** Appwrite from another registrar and **out** to another registrar when the domain is registered with Appwrite. This guide covers transfer in, transfer status, and transfer out. To reassign a domain between Appwrite organizations without changing registrar, see Change organization. Transfer in Use transfer in when you want Appwrite to become the registrar for a domain you already own elsewhere. Before you start - Unlock the domain at your current registrar. - Request an **authorization…',
-    breadcrumbs: ['products', 'Domains', 'Transfer a domain'],
+    breadcrumbs: ['Domains', 'Guides', 'Transfer a domain'],
   },
   {
     slug: 'products/firewall',
@@ -3403,8 +3395,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, challenge, rate limit, redirect, or bypass matching traffic from the Console.',
     excerpt:
-      'Appwrite **Firewall** is project-level traffic control on Appwrite Cloud. You define rules that match requests by attributes such as IP address, hostname, path, HTTP method, headers, query parameters, user agent, or location, then apply an action before traffic reaches your API, Functions, or Sites. Rules live on each project under **Firewall**. You can scope them to the project API or to a specific function or site, preview how many recent requests would match, and monitor request volume alongside denied, rate-limited,…',
-    breadcrumbs: ['products', 'Firewall'],
+      'Appwrite **Firewall** is project-level traffic control. You define rules that match requests by attributes such as IP address, hostname, path, HTTP method, headers, query parameters, user agent, or location, then apply an action before traffic reaches your API, Functions, or Sites. You manage rules under **Firewall** in your project. A rule applies to the project API, to one function, or to one site. Before you save, the Console previews how many recent requests would match. After, the traffic overview shows…',
+    breadcrumbs: ['Firewall', 'Getting started', 'Overview'],
   },
   {
     slug: 'products/firewall/actions',
@@ -3412,8 +3404,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.',
     excerpt:
-      "When a request matches a rule's conditions, Appwrite applies the rule **action**. Only one action runs per request: evaluation stops at the first matching enabled rule (see Priority). There is no separate **Allow** action. Use **Bypass** to allowlist traffic that should skip later deny or rate limit rules. Available actions | Action | Client outcome | Usage metric | |--------|----------------|--------------| | **Deny** | with an access-denied error | | | **Bypass** | Request continues; later Firewall rules are skipped |…",
-    breadcrumbs: ['products', 'Firewall', 'Actions'],
+      "When a request matches a rule's conditions, Appwrite applies the rule **action**. Only one action runs per request, because evaluation stops at the first matching enabled rule. See Priority. There is no separate **Allow** action. Use **Bypass** to allowlist traffic that should skip later deny or rate limit rules. Available actions | Action | Client outcome | |--------|----------------| | **Deny** | with an access-denied error | | **Bypass** | Request continues, and later Firewall rules are skipped | | **Challenge**…",
+    breadcrumbs: ['Firewall', 'Concepts', 'Actions'],
   },
   {
     slug: 'products/firewall/allowlist-ips',
@@ -3422,7 +3414,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       'Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.',
     excerpt:
       'An allowlist uses two rules. A **bypass** rule with a low priority number lets trusted traffic through. A **deny** rule with a higher priority number blocks all other traffic to the same path. The pair works because of priority. Appwrite evaluates rules with lower priority numbers first. A matching bypass rule stops evaluation, so the deny rule never runs for trusted traffic. Create the bypass rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a **Rule…',
-    breadcrumbs: ['products', 'Firewall', 'Allowlist trusted IP addresses'],
+    breadcrumbs: ['Firewall', 'Guides', 'Allowlist trusted IPs'],
   },
   {
     slug: 'products/firewall/attack-mode',
@@ -3430,8 +3422,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.',
     excerpt:
-      '**Attack mode** is a one-click challenge for a site you are viewing in Firewall. Use it when you need to put a proof-of-work challenge in front of all visitors quickly, for example during a traffic spike or abuse incident. Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource picker to see the **Attack mode** button. Turn it on 1. Open **Firewall** in your project.…',
-    breadcrumbs: ['products', 'Firewall', 'Attack mode'],
+      '**Attack mode** is a one-click challenge for the site selected in Firewall. Use it during a traffic spike or an abuse incident to put a proof-of-work challenge in front of every visitor. Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource selector to see the **Attack mode** button. Turn it on The first time you turn Attack mode on, Appwrite creates a rule. The…',
+    breadcrumbs: ['Firewall', 'Guides', 'Attack mode'],
   },
   {
     slug: 'products/firewall/block-countries',
@@ -3439,8 +3431,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Create Appwrite Firewall deny rules that block project API traffic from specific countries.',
     excerpt:
-      'A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region. Country conditions use the geo location of the client IP address. Country and continent conditions are available on every plan. City and state conditions require the premium Geo DB addon. See Conditions. Create the deny rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a…',
-    breadcrumbs: ['products', 'Firewall', 'Block traffic by country'],
+      'A deny rule with a country condition blocks all matching traffic from that country. Use this pattern to comply with regional restrictions or to stop abuse that comes from one region. Country conditions use the geo location of the client IP address, and work on every plan. Finer location attributes such as city need the premium Geo DB addon. Create the deny rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a **Rule name** (for example…',
+    breadcrumbs: ['Firewall', 'Guides', 'Block traffic by country'],
   },
   {
     slug: 'products/firewall/challenge-bots',
@@ -3448,8 +3440,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.',
     excerpt:
-      'A challenge rule verifies matching clients before their requests continue. Clients that pass the challenge continue to your application. Clients that fail do not. Use challenge instead of deny when automated traffic and normal users share the same paths. The interactive challenge page is served for **site** and **function** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a challenge-required error, because API clients cannot solve an interactive challenge. Scope challenge rules to a…',
-    breadcrumbs: ['products', 'Firewall', 'Challenge automated traffic'],
+      "A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Browsers solve it and pass, usually without the visitor noticing. Scripts do not. Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users. This guide puts a challenge in front of the sign-up page of a site. Create the challenge rule 1. Open **Firewall** in your project. 2. Click…",
+    breadcrumbs: ['Firewall', 'Guides', 'Challenge automated traffic'],
   },
   {
     slug: 'products/firewall/conditions',
@@ -3457,17 +3449,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.',
     excerpt:
-      "**Conditions** define which requests a Firewall rule matches. A rule must include **at least one** condition. Every condition on the rule must match for the rule to apply (logical AND). Incomplete conditions (operators that need a value but have an empty value) are not saved. The Console requires complete conditions before create or update. Attributes The condition builder groups attributes by what they describe: the request, the client, and the client's location. Request | Attribute | Matches | Typical use…",
-    breadcrumbs: ['products', 'Firewall', 'Conditions'],
+      '**Conditions** define which requests a Firewall rule matches. A condition compares one attribute of the request, such as its path or the client\'s country, against a value you choose. Every condition on a rule must match for the rule to apply. Two conditions on one rule mean "this **and** that", never "this or that". To match either of two values, create one rule for each. The Console requires at least one condition. Through the API, a rule with no conditions…',
+    breadcrumbs: ['Firewall', 'Concepts', 'Conditions'],
   },
   {
     slug: 'products/firewall/monitor',
-    title: 'Monitor traffic',
+    title: 'Traffic overview',
     description:
-      'Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.',
+      'The metrics Appwrite Firewall reports for project traffic, and what the rule impact preview can estimate.',
     excerpt:
-      'Firewall includes a **traffic overview** on the project Firewall page and an **impact preview** while creating rules. Together they help you validate policies before and after you enable them. Traffic overview Open **Firewall** in your project. Above the rules list, the overview chart and metrics summarize recent traffic for the selected date range and interval. Series include: | Series | Source | Meaning | |--------|--------|---------| | **Passed** | Project request volume () | Requests that got through to your application,…',
-    breadcrumbs: ['products', 'Firewall', 'Monitor traffic'],
+      'Firewall gives you two views of your rules. Use the **impact preview** to size a rule before you create it, and the **traffic overview** to see what it did after. Traffic overview Open **Firewall** in your project. Above the rules list, the overview chart and metrics summarize recent traffic for the selected date range and interval. Series include: | Series | Meaning | |--------|---------| | **Passed** | Every request that reached your project API, whatever Firewall then did with it,…',
+    breadcrumbs: ['Firewall', 'Concepts', 'Traffic overview'],
   },
   {
     slug: 'products/firewall/priority',
@@ -3475,8 +3467,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.',
     excerpt:
-      '**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. The Console accepts values from to ; the API also accepts negative values down to . The first matching enabled rule applies its action and evaluation stops for that request. How evaluation works 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example before ). 2. Rules that do not apply to the current resource scope are skipped. 3. For…',
-    breadcrumbs: ['products', 'Firewall', 'Priority'],
+      "**Priority** sets the order Appwrite evaluates rules in. Lower numbers run first. The first rule that matches applies its action, and no later rule runs for that request. Priority ranges from to . The Console's stepper stops at , so type a negative number to go below it. How evaluation works 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example before ). 2. Appwrite skips rules that do not apply to the request's resource type.…",
+    breadcrumbs: ['Firewall', 'Concepts', 'Priority'],
   },
   {
     slug: 'products/firewall/quick-start',
@@ -3484,8 +3476,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Create your first Appwrite Firewall rule and see how it affects project API traffic.',
     excerpt:
-      'You can protect a project API path or block a noisy IP in a few minutes. This quick start creates a deny rule scoped to the project **API**, then points you to traffic monitoring. Open Firewall 1. Sign in to Appwrite Cloud. 2. Open a project. 3. Open **Firewall** in the sidebar. If you do not see **Firewall**, confirm your Console profile includes the feature and that your role can view project navigation. Create a deny rule 1. Click **Create…',
-    breadcrumbs: ['products', 'Firewall', 'Start with Firewall'],
+      'In this quick start you create a deny rule on the project **API**, send a request that it blocks, and find that request in the traffic overview. Open Firewall 1. Sign in to Appwrite Cloud. 2. Open a project. 3. Open **Firewall** in the sidebar. Create a deny rule 1. Click **Create rule**. 2. Enter a **Rule name** (for example ). 3. Leave **Resource type** set to **API** so the rule applies to project API traffic (). 4. Under conditions,…',
+    breadcrumbs: ['Firewall', 'Getting started', 'Quick start'],
   },
   {
     slug: 'products/firewall/rate-limit-auth',
@@ -3493,8 +3485,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.',
     excerpt:
-      'A rate limit rule sets a request quota for matching traffic. Use it on authentication paths to slow brute-force attacks without blocking normal users. This guide limits session creation. Each client IP address can send matching requests per seconds. Requests over the quota receive a response with a header. Create the rate limit rule 1. Open **Firewall** in your project. 2. Click **Create rule**. 3. Enter a **Rule name** (for example ). 4. Keep **Resource type** set to **API**. 5.…',
-    breadcrumbs: ['products', 'Firewall', 'Rate limit authentication traffic'],
+      "A rate limit rule sets a request quota for matching traffic. Use it on authentication paths to slow brute-force attacks without blocking normal users. This guide limits session creation. Each client IP address can send matching requests per seconds. Requests over the quota receive a response with a header. You cannot change a rule's strategy after you create it. This guide uses **Fixed window**. Read Rate limit strategies first if you want another. Create the rate limit rule 1. Open…",
+    breadcrumbs: ['Firewall', 'Guides', 'Rate limit auth traffic'],
   },
   {
     slug: 'products/firewall/rules',
@@ -3502,8 +3494,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.',
     excerpt:
-      'A **Firewall rule** is a named policy that matches inbound requests and applies an action. Rules belong to a **project**. They are managed under **Project** > **Firewall**. What a rule contains | Field | Purpose | |-------|---------| | Name | Label shown in the rules list | | Description | Optional notes for your team | | Resource type | API, Functions, or Sites | | Resource ID | Required for Functions and Sites scopes | | Conditions | One…',
-    breadcrumbs: ['products', 'Firewall', 'Rules'],
+      'A **Firewall rule** is a named policy that matches inbound requests and applies an action. Rules belong to a **project**. You manage them under **Firewall** in your project. What a rule contains | Field | Purpose | |-------|---------| | Name | Label shown in the rules list | | Description | Optional notes for your team | | Resource type | API, Functions, or Sites | | Resource ID | Required for Functions and Sites scopes | | Conditions |…',
+    breadcrumbs: ['Firewall', 'Concepts', 'Rules'],
   },
   {
     slug: 'products/firewall/scopes',
@@ -3511,8 +3503,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Learn how Appwrite Firewall scopes rules to the project API, a Function, or a Site, and where each scope is enforced.',
     excerpt:
-      'Every Firewall rule has a **resource type** that limits which traffic the rule can match. Scopes keep API-wide policies separate from policies for a single function or site. Scope types | Resource type | Applies to | Resource ID | |---------------|------------|-------------| | **API** | Project Appwrite API traffic () | Not required (stored empty) | | **Functions** | Public/edge traffic for one function | Function ID required | | **Sites** | Public/edge traffic for one site | Site ID required…',
-    breadcrumbs: ['products', 'Firewall', 'Resource scopes'],
+      'Every Firewall rule has a **resource type** that limits which traffic the rule can match. Scopes keep API-wide policies separate from policies for a single function or site. Resource types | Resource type | Applies to | Resource ID | |---------------|------------|-------------| | **API** | Project Appwrite API traffic () | Not required (stored empty) | | **Functions** | Public traffic to one function, enforced at the edge | Function ID required | | **Sites** | Public traffic to one site,…',
+    breadcrumbs: ['Firewall', 'Concepts', 'Resource scopes'],
   },
   {
     slug: 'products/firewall/site-maintenance',
@@ -3520,8 +3512,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Create Appwrite Firewall rules that send visitors of a site to a maintenance page and back.',
     excerpt:
-      'A redirect rule sends matching visitors to another location. Use it to put a deployed site into maintenance without a new deployment. This guide uses two rules on one site. A **bypass** rule keeps the maintenance page itself reachable. A **redirect** rule sends every other path to the maintenance page. Without the bypass rule, requests to the maintenance page would match the redirect rule and loop. Create the bypass rule 1. Open **Firewall** in your project. 2. Click **Create rule**.…',
-    breadcrumbs: ['products', 'Firewall', 'Redirect a site for maintenance'],
+      'A redirect rule sends matching visitors to another location. Use it to put a deployed site into maintenance without a new deployment. This guide uses two rules on one site. A **bypass** rule keeps the maintenance page itself reachable. A **redirect** rule sends every other path to the maintenance page. Without the bypass rule, requests to the maintenance page would match the redirect rule and loop. The redirect rule also catches the CSS, JavaScript, fonts, and images your maintenance page…',
+    breadcrumbs: ['Firewall', 'Guides', 'Redirect for maintenance'],
   },
   {
     slug: 'products/functions',

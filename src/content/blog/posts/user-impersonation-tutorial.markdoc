@@ -6,7 +6,7 @@ date: 2026-03-31
 cover: /images/blog/user-impersonation-tutorial/cover.avif
 timeToRead: 12
 author: atharva
-category: tutorial, product
+category: tutorials, products
 featured: false
 faqs:
   - question: "What is user impersonation in Appwrite?"

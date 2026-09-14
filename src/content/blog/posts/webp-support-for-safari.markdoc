@@ -6,7 +6,7 @@ date: 2024-10-02
 cover: /images/blog/webp-support-for-safari/cover.avif
 timeToRead: 3
 author: eldad-fux
-category: product
+category: products
 faqs:
   - question: "What is WebP and why does it matter?"
     answer: "WebP is a modern image format that compresses better than JPEG and PNG while keeping similar quality. It typically reduces image size by around 25 to 35 percent, which means faster page loads, lower bandwidth bills, and a better experience on mobile networks."

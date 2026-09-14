@@ -5,9 +5,11 @@ export const storageProductFeatures: ProductFeatureContent[] = [
     id: 'transforms',
     title: 'On-the-fly image transformations',
     description:
-      'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.',
+      'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate from a single upload. Pass gravity=auto and YuNet looks for a face first. If none is confident enough, U²-Net saliency returns a normalized (x, y) crop focus. Fixed gravity values still work.',
     docsHref: '/docs/products/storage/images',
     docsLabel: 'Image transforms docs',
+    layout: 'stacked',
+    brandLight: 'teal',
   },
   {
     id: 'cdn',

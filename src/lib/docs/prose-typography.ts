@@ -44,6 +44,7 @@ export const DOCS_PROSE_DETAIL_CLASSES = [
   '[&_li]:my-0 [&_li]:leading-[1.7] @[640px]:[&_li]:leading-[1.65]',
   '[&_strong]:font-semibold [&_strong]:text-foreground/90',
   '[&_code]:rounded-md [&_code]:border [&_code]:border-border [&_code]:bg-muted/50 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-foreground/85',
+  '[&_pre_code]:rounded-none [&_pre_code]:border-0 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit',
   '[&_hr]:my-8 [&_hr]:border-border',
 ] as const
 

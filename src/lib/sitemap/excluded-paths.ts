@@ -35,8 +35,6 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/.well-known/ai-catalog.json',
   '/.well-known/agent-skills/index.json',
   '/upgrade',
-  '/r/v.js',
-  '/r/e',
 ] as const
 
 /** Path prefixes for authenticated console areas and non-indexable routes. */

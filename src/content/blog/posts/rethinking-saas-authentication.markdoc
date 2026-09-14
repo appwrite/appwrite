@@ -8,7 +8,7 @@ timeToRead: 6
 author: laura-du-ry
 callToAction: true
 unlisted: true
-category: product
+category: products
 faqs:
   - question: "What makes SaaS authentication different from a typical login system?"
     answer: "SaaS auth has to handle multi-tenancy, customer-managed roles, and enterprise expectations like SSO and audit logs in addition to standard login flows. It is less about authenticating one user base and more about isolating many customer organizations cleanly."

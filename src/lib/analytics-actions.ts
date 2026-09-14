@@ -118,7 +118,6 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-contact-sales': 'Upgrade Contact Sales Clicked',
   'upgrade-enterprise-learn-more': 'Upgrade Enterprise Learn More Clicked',
   'upgrade-view-pricing': 'Upgrade View Pricing Clicked',
-  'upgrade-legacy-console-downgrade': 'Upgrade Legacy Console Downgrade Clicked',
   'upgrade-cancel': 'Upgrade Cancel Clicked',
   'upgrade-submit': 'Upgrade Submit Clicked',
   'upgrade-create-org': 'Upgrade Create Org Clicked',
@@ -193,6 +192,14 @@ export const ANALYTICS_ACTIONS = {
   'docs-nav-tooling': 'Docs Tooling Nav Clicked',
   'docs-nav-advanced': 'Docs Advanced Nav Clicked',
   'docs-nav-partners': 'Docs Partners Nav Clicked',
+
+  // Project settings
+  'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
+  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
+
+  // Messaging
+  'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',

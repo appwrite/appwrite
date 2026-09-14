@@ -1,15 +1,16 @@
 'use client'
 
+import { lazy, Suspense, useRef } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-import { AiAgentWorkspace } from '@/components/pages/home/AiCodingChatVisual'
 import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
 import { getHomeMcpStackAvatarItems, getOfficialPlugins, type HomePluginConfig } from '@/lib/config/ide'
 import { AiChatSoftLight, AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
 import {
   Table,
   TableBody,
@@ -20,6 +21,11 @@ import {
 } from '@/components/ui/table'
 
 const OFFICIAL_PLUGINS = getOfficialPlugins()
+
+const LazyAiAgentWorkspace = lazy(async () => {
+  const module = await import('@/components/pages/home/AiCodingChatVisual')
+  return { default: module.AiAgentWorkspace }
+})
 
 type BenchmarkRow = {
   model: string
@@ -288,6 +294,26 @@ function BenchmarkTable() {
   )
 }
 
+function DeferredAiWorkspace() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { hasBeenVisible } = useIntersectionVisible(containerRef, {
+    rootMargin: '400px 0px',
+    once: true,
+  })
+
+  return (
+    <div ref={containerRef} className="min-h-[32rem]">
+      {hasBeenVisible ? (
+        <Suspense fallback={<div className="h-[32rem]" aria-hidden />}>
+          <LazyAiAgentWorkspace />
+        </Suspense>
+      ) : (
+        <div className="h-[32rem]" aria-hidden />
+      )}
+    </div>
+  )
+}
+
 export function AiSection() {
   const t = useT()
 
@@ -313,7 +339,7 @@ export function AiSection() {
         </div>
 
         <div className="mt-10 lg:mt-12">
-          <AiAgentWorkspace />
+          <DeferredAiWorkspace />
         </div>
 
         <AiPluginsSection />

@@ -6,7 +6,7 @@ date: 2025-08-28
 cover: /images/blog/announcing-opt-in-relationship-loading/cover.avif
 timeToRead: 5
 author: darshan-pandya
-category: announcement
+category: announcements
 featured: false
 faqs:
   - question: "What is opt-in relationship loading in Appwrite Databases?"

@@ -6,7 +6,9 @@ import {
   pageHasDocsPrompt,
   resolveDocsPagePrompt,
 } from '@/lib/docs/route-prompts'
-import { useEffect, useRef, useState } from 'react'
+import { docsArticlePathForSlug } from '@/lib/docs/docs-scroll'
+import { normalizeDocsRoutePathname } from '@/lib/docs/docs-slug'
+import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DocsLayout } from './DocsLayout'
 import { DocsMarkdown } from './DocsMarkdown'
 import { DocsPageHeaderActions } from './DocsPageHeaderActions'
@@ -48,16 +50,34 @@ export function View({ page: initialPage }: ViewProps) {
   const pageRef = useRef(page)
   pageRef.current = page
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isSameDocsPage(pageRef.current, initialPage)) return
+    if (pageRef.current.meta.slug === initialPage.meta.slug) return
+
+    // Swap destination article content before paint so hash scrolling does not
+    // run against stale markup or snap after the user already scrolled.
     setPage(initialPage)
   }, [initialPage])
 
   useEffect(() => {
-    // The loader can finish before View swaps its local page. Only scroll once
-    // the destination article (and its headings) is actually in the DOM.
-    if (pathname.replace(/\/+$/, '') !== `/docs/${page.meta.slug}` || !hash)
+    if (isSameDocsPage(pageRef.current, initialPage)) return
+    if (pageRef.current.meta.slug !== initialPage.meta.slug) return
+
+    startTransition(() => {
+      setPage(initialPage)
+    })
+  }, [initialPage])
+
+  useLayoutEffect(() => {
+    // Use loader data for the destination slug so hash scrolling does not wait
+    // on deferred local page state (which lets users scroll before a late snap).
+    if (
+      normalizeDocsRoutePathname(pathname) !==
+        docsArticlePathForSlug(initialPage.meta.slug) ||
+      !hash
+    ) {
       return
+    }
 
     const main = document.getElementById('main-content')
     if (!main) return
@@ -81,7 +101,7 @@ export function View({ page: initialPage }: ViewProps) {
         margin,
       behavior: 'instant',
     })
-  }, [pathname, hash, page.meta.slug])
+  }, [pathname, hash, initialPage.meta.slug])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -93,7 +113,9 @@ export function View({ page: initialPage }: ViewProps) {
       void getDocsPage(initialPage.meta.slug).then((next) => {
         if (cancelled || !next) return
         if (isSameDocsPage(pageRef.current, next)) return
-        setPage(next)
+        startTransition(() => {
+          setPage(next)
+        })
         // Restore scroll after layout so content swap does not jump to the bottom.
         requestAnimationFrame(() => {
           writeDocsScrollTop(scrollTop)

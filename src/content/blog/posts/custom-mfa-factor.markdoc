@@ -6,7 +6,7 @@ date: 2026-08-14
 cover: /images/blog/custom-mfa-factor/cover.avif
 timeToRead: 8
 author: atharva
-category: announcement, authentication
+category: announcements, authentication
 featured: false
 faqs:
   - question: "What is the custom MFA factor?"

@@ -42,6 +42,12 @@ export const preLaunchMiddleware = createMiddleware({
   }
 
   const path = resolvePathname(pathname, request.url)
+  // `/` is owned by rootGuestRedirectMiddleware (home vs console).
+  const normalized = path.replace(/\/+$/, '') || '/'
+  if (normalized === '/') {
+    return next()
+  }
+
   if (isPreLaunchAllowedPath(path)) {
     return next()
   }

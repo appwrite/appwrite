@@ -8,7 +8,7 @@ date: 2025-10-31
 author: veeresh-mulge
 callToAction: true
 unlisted: true
-category: tutorial
+category: tutorials
 faqs:
   - question: "What is meant by vibe coding?"
     answer: "Vibe coding means building software with the help of AI coding assistants that understand natural language. Instead of typing every line yourself, you guide the AI through context, intent, and feedback, almost like mentoring a junior developer."

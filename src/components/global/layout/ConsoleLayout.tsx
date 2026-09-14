@@ -9,6 +9,7 @@ import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
 import { cn } from '@/lib/utils'
 import {
+  getDefaultDebugOverrides,
   loadDebugOverrides,
   subscribeToDebugOverrides,
 } from '@/lib/debug-overrides'
@@ -129,8 +130,9 @@ export function ConsoleLayout({
       ? 'project-layout-container'
       : 'org-layout-container')
 
-  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  const [overrides, setOverrides] = useState(getDefaultDebugOverrides)
   useEffect(() => {
+    setOverrides(loadDebugOverrides())
     return subscribeToDebugOverrides(setOverrides)
   }, [])
 
