@@ -312,6 +312,26 @@ final class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals($jwt, $output['APPWRITE_FUNCTION_JWT']);
 
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt,
+        ], [
+            'async' => true,
+        ]);
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $executionId = $execution['body']['$id'];
+
+        // Async executions do not store the response body, so read the forwarded JWT from the logs
+        $this->assertEventually(function () use ($functionId, $executionId, $jwt) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertStringContainsString('user-jwt-is-' . $jwt, (string) $execution['body']['logs']);
+        }, 60000, 500);
+
         $this->cleanupFunction($functionId);
     }
 
