@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Psr7\Response;
@@ -329,13 +328,12 @@ final class StoreTest extends TestCase
 
         $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
         $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
-        $expected = DateTime::formatTz($stored);
 
-        $this->assertSame($expected, $document['$createdAt']);
-        $this->assertSame($expected, $document['$updatedAt']);
-        $this->assertSame($expected, $document['scheduledAt']);
-        $this->assertSame(DateTime::setTimezone($stored), $row['createdAt']);
-        $this->assertSame(DateTime::setTimezone($stored), $row['updatedAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$createdAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$updatedAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['scheduledAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['createdAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['updatedAt']);
     }
 
     public function testFillsMissingTimestampsAsIso8601(): void
@@ -350,10 +348,8 @@ final class StoreTest extends TestCase
         $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
         $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
 
-        $this->assertSame(DateTime::formatTz($document['$createdAt']), $document['$createdAt']);
-        $this->assertSame(DateTime::formatTz($document['$updatedAt']), $document['$updatedAt']);
-        $this->assertStringContainsString('T', $document['$createdAt']);
-        $this->assertStringContainsString('T', $document['$updatedAt']);
+        $this->assertRfc3339($document['$createdAt']);
+        $this->assertRfc3339($document['$updatedAt']);
     }
 
     public function testReadsStoredDbTimestampsAsIso8601(): void
@@ -371,11 +367,10 @@ final class StoreTest extends TestCase
         ]);
 
         $execution = $this->store($client)->get('project', 'execution');
-        $expected = DateTime::formatTz($stored);
 
-        $this->assertSame($expected, $execution->getCreatedAt());
-        $this->assertSame($expected, $execution->getUpdatedAt());
-        $this->assertSame($expected, $execution->getAttribute('scheduledAt'));
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getCreatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getUpdatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
     }
 
     public function testWriteFailuresPropagate(): void
@@ -416,6 +411,13 @@ final class StoreTest extends TestCase
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
         );
+    }
+
+    private function assertRfc3339(string $value): void
+    {
+        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $value);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $parsed, $value);
+        $this->assertSame($parsed->format(\DateTimeInterface::RFC3339_EXTENDED), $value);
     }
 
     /** @param list<array<string, mixed>> $rows */
