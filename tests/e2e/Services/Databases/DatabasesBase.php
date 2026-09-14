@@ -9155,6 +9155,31 @@ trait DatabasesBase
         $this->assertEquals([0, 0], $response['body']['location']); // Should use default value
         $this->assertEquals([[0, 0], [1, 1]], $response['body']['route']); // Should use default value
 
+        // Test 6: Update point attribute without sending default - clears the stored default
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId) . '/point/location', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'required' => false
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'name' => 'Test Location',
+                'location' => null
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNull($response['body']['location']);
+
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
