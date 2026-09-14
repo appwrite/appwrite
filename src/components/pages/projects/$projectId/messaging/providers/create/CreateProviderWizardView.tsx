@@ -38,8 +38,6 @@ import {
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import {
   ResendOneClickSetup,
-  clearResendDraft,
-  readResendDraft,
   type ResendOneClickSetupHandle,
 } from './_components/ResendOneClickSetup'
 
@@ -575,10 +573,9 @@ export function CreateProviderWizardView() {
   }, [step, selected])
 
   // Returning from a provider authorization: the redirect wiped this wizard's
-  // state, so reopen the Resend step with whatever the user had typed. On
-  // success the one-click panel picks the flow back up; on failure the user
-  // is back where they were, minus the connection, and can retry or type the
-  // key by hand.
+  // state, so reopen the Resend step. On success the one-click panel picks
+  // the flow back up and fills the fields; on failure the user is back on the
+  // empty form, minus the connection, and can retry or type the key by hand.
   useEffect(() => {
     if (!quickSetupReturn || handledReturnRef.current) return
     handledReturnRef.current = true
@@ -586,15 +583,13 @@ export function CreateProviderWizardView() {
     const resend = PROVIDERS.find((p) => p.id === 'resend')
     if (quickSetupReturn.providerId !== 'resend' || !resend) return
 
-    const draft = readResendDraft()
-    clearResendDraft()
     navigate({
       search: ((prev: unknown) => stripQuickSetupReturn(prev)) as never,
       replace: true,
     })
 
     setSelectedId(resend.id)
-    setValues({ ...defaultsForProvider(resend), ...(draft ?? {}) })
+    setValues(defaultsForProvider(resend))
     setStep('configure')
 
     if (quickSetupReturn.status === 'failed') {
@@ -609,11 +604,11 @@ export function CreateProviderWizardView() {
     mutationFn: async () => {
       if (!selected) throw new Error('No provider selected')
       const projectSdk = sdk.forProject(pid)
-      const provider = await selected.submit(projectSdk, ID.unique(), values)
-      // The provider now holds this key, so the one-click panel must not
-      // revoke it when the wizard unmounts after the redirect below.
-      oneClickRef.current?.keepCredential(values.apiKey)
-      return provider
+      const request = selected.submit(projectSdk, ID.unique(), values)
+      // Whether a minted key stays or goes is decided by this request alone,
+      // even if the wizard is closed before it settles.
+      oneClickRef.current?.settleCredential(values.apiKey, request)
+      return await request
     },
     onSuccess: async (provider) => {
       await queryClient.refetchQueries({

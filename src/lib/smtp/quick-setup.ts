@@ -207,20 +207,27 @@ export interface MintedCredentialTracker<
   /** Start tracking a fresh credential; the previous unused one is revoked. */
   track(credential: T): void
   /**
-   * Something now stores `secret` (the project's SMTP password, a messaging
-   * provider's API key), so the matching credential is in use and must
-   * survive. Any other tracked credential stays revocable: the user may have
-   * replaced the minted key with one of their own before saving.
+   * A save that stores `secret` on success is in flight. The matching
+   * credential is off limits until it settles: on success it is in use for
+   * good, on failure it is revocable again (or revoked right away when the
+   * flow was released or the key replaced in the meantime). A save that does
+   * not carry the minted secret changes nothing: the user replaced the key by
+   * hand, so the minted one stays revocable.
    */
-  keep(secret: unknown): void
-  /** Revoke whatever is still unused, when the flow is abandoned or failed. */
+  settle(secret: unknown, save: Promise<unknown>): void
+  /**
+   * The flow is over (abandoned, failed, unmounted): revoke whatever is still
+   * unused. A credential whose save is still in flight is decided by that
+   * save instead, so closing the flow mid-save cannot revoke a key that ends
+   * up stored.
+   */
   release(): void
 }
 
 /**
- * Shared by every surface that mints credentials, so the two rules live in
- * one place: revoke only while the credential is unused, and mint again only
- * after revoking the previous unused one.
+ * Shared by every surface that mints credentials, so the rules live in one
+ * place: revoke only while the credential is unused, never while a save is
+ * deciding it, and mint again only after revoking the previous unused one.
  *
  * `revoke` is best effort. Its failures are swallowed, because the caller has
  * already moved on from the credential and there is nothing left to retry.
@@ -228,7 +235,11 @@ export interface MintedCredentialTracker<
 export function createMintedCredentialTracker<
   T extends { id: string; secret: string },
 >(revoke: (credentialId: string) => Promise<void>): MintedCredentialTracker<T> {
+  /** Minted and unused, so revocable. */
   let minted: T | null = null
+  /** Handed to a save that has not settled yet. */
+  let saving: T | null = null
+  let released = false
   const revokeQuietly = (credential: T) => {
     void revoke(credential.id).catch(() => {})
   }
@@ -238,10 +249,27 @@ export function createMintedCredentialTracker<
       minted = credential
       if (previous) revokeQuietly(previous)
     },
-    keep(secret) {
-      if (minted && minted.secret === secret) minted = null
+    settle(secret, save) {
+      if (!minted || minted.secret !== secret) return
+      const credential = minted
+      minted = null
+      saving = credential
+      save.then(
+        () => {
+          if (saving === credential) saving = null
+        },
+        () => {
+          if (saving !== credential) return
+          saving = null
+          // Back to unused for a retry, unless the flow is gone or a newer
+          // credential took its place in the meantime.
+          if (released || minted) revokeQuietly(credential)
+          else minted = credential
+        },
+      )
     },
     release() {
+      released = true
       const current = minted
       minted = null
       if (current) revokeQuietly(current)

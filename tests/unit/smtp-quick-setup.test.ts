@@ -163,6 +163,8 @@ describe('sending domains and sender defaults', () => {
 
 describe('minted credentials', () => {
   type Credential = { id: string; secret: string }
+  const key1 = { id: 'key_1', secret: 's1' }
+  const key2 = { id: 'key_2', secret: 's2' }
 
   function tracked() {
     const revoked: string[] = []
@@ -174,54 +176,102 @@ describe('minted credentials', () => {
     return { minted, revoked }
   }
 
+  /** Lets a settled save run its handlers. */
+  const settled = () => new Promise((resolve) => setTimeout(resolve, 0))
+
   test('revokes a credential the flow abandons before anything stores it', () => {
     const { minted, revoked } = tracked()
-    minted.track({ id: 'key_1', secret: 's1' })
+    minted.track(key1)
     minted.release()
     expect(revoked).toEqual(['key_1'])
   })
 
-  test('leaves a credential alone once its secret was saved', () => {
-    // A failed refetch or a closed wizard after saving must not revoke the
-    // password the project now sends with.
+  test('keeps a credential once the save that stores it succeeds', async () => {
     const { minted, revoked } = tracked()
-    minted.track({ id: 'key_1', secret: 's1' })
-    minted.keep('s1')
+    minted.track(key1)
+    minted.settle('s1', Promise.resolve())
+    await settled()
     minted.release()
     expect(revoked).toEqual([])
   })
 
-  test('still revokes a minted credential the user replaced by hand', () => {
+  test('lets the save decide when the flow closes while it is in flight', async () => {
+    // Closing the wizard while the provider is still being created must not
+    // revoke a key that ends up stored in the provider.
     const { minted, revoked } = tracked()
-    minted.track({ id: 'key_1', secret: 's1' })
-    minted.keep('re_typed_by_the_user')
+    let finish!: () => void
+    const save = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    minted.track(key1)
+    minted.settle('s1', save)
+    minted.release()
+    expect(revoked).toEqual([])
+    finish()
+    await settled()
+    expect(revoked).toEqual([])
+  })
+
+  test('revokes a credential whose save fails after the flow closed', async () => {
+    const { minted, revoked } = tracked()
+    let fail!: (error: Error) => void
+    const save = new Promise<void>((_, reject) => {
+      fail = reject
+    })
+    minted.track(key1)
+    minted.settle('s1', save)
+    minted.release()
+    fail(new Error('boom'))
+    await settled()
+    expect(revoked).toEqual(['key_1'])
+  })
+
+  test('hands a credential back for a retry when its save fails', async () => {
+    const { minted, revoked } = tracked()
+    minted.track(key1)
+    minted.settle('s1', Promise.reject(new Error('boom')))
+    await settled()
+    expect(revoked).toEqual([])
+    minted.settle('s1', Promise.resolve())
+    await settled()
+    minted.release()
+    expect(revoked).toEqual([])
+  })
+
+  test('still revokes a minted credential the user replaced by hand', async () => {
+    const { minted, revoked } = tracked()
+    minted.track(key1)
+    minted.settle('typed_by_the_user', Promise.resolve())
+    await settled()
     minted.release()
     expect(revoked).toEqual(['key_1'])
   })
 
-  test('minting again revokes only the previous unused credential', () => {
+  test('minting again revokes only the previous unused credential', async () => {
     const { minted, revoked } = tracked()
-    minted.track({ id: 'key_1', secret: 's1' })
-    minted.track({ id: 'key_2', secret: 's2' })
+    minted.track(key1)
+    minted.track(key2)
     expect(revoked).toEqual(['key_1'])
-    minted.keep('s2')
+    minted.settle('s2', Promise.resolve())
+    await settled()
     minted.release()
     expect(revoked).toEqual(['key_1'])
   })
 
   test('does nothing without a credential and swallows revocation failures', async () => {
     const { minted, revoked } = tracked()
-    minted.keep('s1')
+    minted.settle('s1', Promise.resolve())
     minted.release()
+    await settled()
     expect(revoked).toEqual([])
 
     const failing = createMintedCredentialTracker<Credential>(async () => {
       throw new Error('offline')
     })
-    failing.track({ id: 'key_1', secret: 's1' })
+    failing.track(key1)
     expect(() => failing.release()).not.toThrow()
     // Let the rejected revocation settle; an unhandled rejection fails the run.
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await settled()
   })
 })
 

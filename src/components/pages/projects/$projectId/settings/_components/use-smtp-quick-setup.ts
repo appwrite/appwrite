@@ -181,7 +181,7 @@ export function useSmtpQuickSetup({
       )
       minted.track(created)
 
-      await updateSMTPMutation.mutateAsync({
+      const save = updateSMTPMutation.mutateAsync({
         enabled: true,
         senderName: name,
         senderEmail: email,
@@ -192,7 +192,8 @@ export function useSmtpQuickSetup({
         password: created.secret,
         secure: provider.smtp.secure,
       })
-      minted.keep(created.secret)
+      minted.settle(created.secret, save)
+      await save
     } catch (error) {
       // The project never stored the credential, so drop it at the provider
       // rather than let retries pile up unused credentials.
@@ -202,12 +203,14 @@ export function useSmtpQuickSetup({
     }
 
     // The project now sends through the new credential, so nothing past this
-    // point may revoke it. The refetch only brings the SMTP form behind the
-    // flow up to date with what was saved; if it fails the form is merely
-    // stale, not the setup.
-    await queryClient.refetchQueries({
-      queryKey: projectQueryOptions(projectId).queryKey,
-    })
+    // point may revoke it or report a failure. Refreshing the project only
+    // brings the SMTP form behind the flow up to date with what was saved:
+    // best effort, since a failed refetch leaves that form stale, not the
+    // setup broken. (`refetchQueries` only rejects when asked to via
+    // `throwOnError`; the catch keeps the wizard off the spinner regardless.)
+    await queryClient
+      .refetchQueries({ queryKey: projectQueryOptions(projectId).queryKey })
+      .catch(() => {})
     setPhase('success')
   }, [
     callProvider,

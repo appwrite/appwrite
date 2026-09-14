@@ -44,50 +44,6 @@ import {
 } from '@/lib/smtp/quick-setup-oauth'
 import { useProviderTokens } from '@/lib/smtp/use-provider-tokens'
 
-/** Wizard fields that survive the authorization round trip. No secrets. */
-export interface ResendDraft {
-  name?: string
-  fromName?: string
-  fromEmail?: string
-}
-
-const DRAFT_STORAGE_KEY = 'messaging.createProvider.resend'
-
-/**
- * Authorization navigates away from the wizard, so the few fields the user may
- * have typed are parked here first. Only names and the sender address: never
- * the API key, which does not exist yet at this point anyway.
- */
-export function rememberResendDraft(draft: ResendDraft): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
-  } catch {
-    // Private mode: the user retypes the name, nothing else breaks.
-  }
-}
-
-export function readResendDraft(): ResendDraft | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = window.sessionStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as ResendDraft
-    return parsed && typeof parsed === 'object' ? parsed : null
-  } catch {
-    return null
-  }
-}
-
-export function clearResendDraft(): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY)
-  } catch {
-    // Nothing to clean up.
-  }
-}
-
 type Phase =
   | 'idle'
   | 'loading'
@@ -115,12 +71,14 @@ interface ResendOneClickSetupProps {
 
 export interface ResendOneClickSetupHandle {
   /**
-   * The provider was created with `apiKey`. Call this before leaving the
-   * wizard: a key minted here is now in use and must survive the unmount,
-   * while a minted key the user replaced by hand is still unused and is
-   * revoked as usual.
+   * The wizard is creating the provider with `apiKey`, and `request` is that
+   * call. From here on a key minted here is decided by the request alone:
+   * kept once the provider exists, revoked when creation fails, and never
+   * touched by the unmount cleanup in between, even if the wizard is closed
+   * while the request is still in flight. A minted key the user replaced by
+   * hand is still unused and is revoked as usual.
    */
-  keepCredential(apiKey: unknown): void
+  settleCredential(apiKey: unknown, request: Promise<unknown>): void
 }
 
 /**
@@ -133,9 +91,10 @@ export interface ResendOneClickSetupHandle {
  * Resend's API rather than the SMTP relay.
  *
  * The key exists at Resend from the moment it is minted, but nothing depends
- * on it until the provider is created. Until the wizard reports that through
- * {@link ResendOneClickSetupHandle.keepCredential}, this panel owns the key
- * and revokes it when the user leaves without creating the provider.
+ * on it until the provider is created. Until the wizard hands that request
+ * over through {@link ResendOneClickSetupHandle.settleCredential}, this panel
+ * owns the key and revokes it when the user leaves without creating the
+ * provider.
  */
 export const ResendOneClickSetup = forwardRef<
   ResendOneClickSetupHandle,
@@ -224,7 +183,9 @@ export const ResendOneClickSetup = forwardRef<
 
   useImperativeHandle(
     ref,
-    () => ({ keepCredential: (apiKey) => minted.keep(apiKey) }),
+    () => ({
+      settleCredential: (apiKey, request) => minted.settle(apiKey, request),
+    }),
     [minted],
   )
 
@@ -232,17 +193,9 @@ export const ResendOneClickSetup = forwardRef<
 
   const authorize = () => {
     if (!accountId) return
-    rememberResendDraft({
-      name: typeof values.name === 'string' ? values.name : undefined,
-      fromName:
-        typeof values.fromName === 'string' ? values.fromName : undefined,
-      fromEmail:
-        typeof values.fromEmail === 'string' ? values.fromEmail : undefined,
-    })
     try {
       startProviderAuthorization(provider)
     } catch (error) {
-      clearResendDraft()
       failWith(error, 'Failed to connect the email provider')
     }
   }
