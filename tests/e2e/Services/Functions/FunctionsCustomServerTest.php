@@ -1945,28 +1945,46 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testGetDeployment(): void
     {
-        $data = $this->setupTestDeployment();
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Build duration',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            // Deliberate build work: reporting zero must fail this test.
+            'commands' => 'sleep 3',
+        ]);
 
-        /**
-         * Test for SUCCESS
-         */
-        $deployment = $this->getDeployment($data['functionId'], $data['deploymentId']);
+        try {
+            $startedAt = \microtime(true);
+            $deploymentId = $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
 
-        $this->assertEquals(200, $deployment['headers']['status-code']);
-        // A build that finishes within the measured second can report zero.
-        $this->assertIsInt($deployment['body']['buildDuration']);
-        $this->assertGreaterThanOrEqual(0, $deployment['body']['buildDuration']);
-        $this->assertNotEmpty($deployment['body']['status']);
-        $this->assertNotEmpty($deployment['body']['buildLogs']);
-        $this->assertArrayHasKey('sourceSize', $deployment['body']);
-        $this->assertArrayHasKey('buildSize', $deployment['body']);
+            /**
+             * Test for SUCCESS
+             */
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $elapsed = (int) \ceil(\microtime(true) - $startedAt);
 
-        /**
-         * Test for FAILURE
-         */
-        $deployment = $this->getDeployment($data['functionId'], 'x');
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            // Runtime must include the work, and cannot exceed submission-to-ready time.
+            $this->assertGreaterThanOrEqual(3, $deployment['body']['buildDuration']);
+            $this->assertLessThanOrEqual($elapsed, $deployment['body']['buildDuration']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+            $this->assertNotEmpty($deployment['body']['buildLogs']);
+            $this->assertArrayHasKey('sourceSize', $deployment['body']);
+            $this->assertArrayHasKey('buildSize', $deployment['body']);
 
-        $this->assertEquals(404, $deployment['headers']['status-code']);
+            /**
+             * Test for FAILURE
+             */
+            $deployment = $this->getDeployment($functionId, 'x');
+
+            $this->assertEquals(404, $deployment['headers']['status-code']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     public function testCreateExecution(): void
