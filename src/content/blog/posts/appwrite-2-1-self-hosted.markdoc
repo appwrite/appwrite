@@ -1,0 +1,159 @@
+---
+layout: post
+title: "Appwrite 2.1 is now available for self-hosting"
+description: Appwrite 2.1 brings the S3 API and AutoGravity to self-hosted instances, adds TikTok and Kakao sign-in, and fixes for Appwrite Console.
+date: 2026-09-14
+cover:
+timeToRead: 5
+author: atharva
+category: products, announcements
+faqs:
+  - question: "What is new in self-hosted Appwrite 2.1?"
+    answer: "The S3 API for Storage, AutoGravity for image previews, TikTok and Kakao as OAuth2 providers, Capacitor origins for web platforms, Dart 3.13 and Flutter 3.47 runtimes, and a Console build that serves every asset from your own instance."
+  - question: "How do I use the S3 API on my self-hosted instance?"
+    answer: "Point any S3 client at `http://<your-domain>/v1/s3` with your project ID as the access key ID and an API key secret as the secret access key. Use path-style addressing and AWS Signature Version 4. The bucket must have encryption and compression turned off."
+  - question: "How do I turn on AutoGravity?"
+    answer: "Set `_APP_AUTOGRAVITY_HOST=http://appwrite-autogravity:8080` in your `.env` file and run `docker compose up -d`. The `appwrite-autogravity` container is already part of the stack. Until the variable is set, `gravity=auto` returns a configuration error and the fixed gravity values keep working."
+  - question: "Do I need to run a migration when upgrading from 2.0.0?"
+    answer: "Yes. Run the upgrade command, then `docker compose exec appwrite migrate` from your `appwrite` directory."
+  - question: "Can I upgrade straight from 1.9.x to 2.1.0?"
+    answer: "No. Upgrade to 1.9.6 first, then to 2.0.0, then to 2.1.0. Back up your data before each step."
+---
+
+Appwrite 2.1 is available for self-hosting today. It is the first minor release of the 2.x line, and it brings two features that launched on Cloud first to your own instance: the S3 API for Storage and AutoGravity for image previews. It also adds TikTok and Kakao sign-in, and fixes for Appwrite Console.
+
+Upgrading from [Appwrite 2.0](/blog/post/appwrite-2-self-hosted) takes the same upgrade command and migration as every release.
+
+# The S3 API on your own instance
+
+![Announcing the S3 API for Appwrite Storage](/images/blog/announcing-s3-api/cover.avif)
+
+Earlier this month we [announced the S3 API](/blog/post/announcing-s3-api) for Appwrite Storage on Cloud. It is an S3-compatible API in front of your existing buckets, so the AWS CLI, the AWS SDKs, rclone, and any other S3 client can read and write Appwrite files. Appwrite 2.1 brings it to self-hosted instances.
+
+The API lives at `/v1/s3` on your instance. Clients authenticate with AWS Signature Version 4, using your project ID as the access key ID and an [API key](/docs/partners/project/api-keys) secret as the secret access key.
+
+| Setting | Value |
+| --- | --- |
+| Endpoint | `http://<your-domain>/v1/s3` |
+| Access key ID | Your Appwrite project ID |
+| Secret access key | An Appwrite API key secret |
+| Region | `auto` |
+| Signature version | AWS Signature Version 4 (SigV4) |
+| Addressing style | Path-style only |
+
+With those settings, listing your buckets from the AWS CLI looks like this:
+
+```bash
+aws s3 ls --endpoint-url http://localhost/v1/s3
+```
+
+Bucket operations, object operations, the full multipart upload flow, and presigned URLs are all supported. Every write over S3 goes through the same events, realtime channels, functions triggers, webhooks, audit logs, and usage metering as the native Storage API, so the rest of your project does not know the difference.
+
+The API key's scopes control what a client can do. Grant `buckets.read` and `files.read` for read-only workloads, and add `buckets.write` and `files.write` for uploads, deletes, and bucket creation. A bucket used over S3 must have encryption and compression turned off, since S3 clients expect to receive the exact bytes they uploaded.
+
+Full details, including folder listings, file name rules, and the list of unsupported operations, are in the [S3 API documentation](/docs/products/storage/s3).
+
+# AutoGravity
+
+![Automatic image cropping in Appwrite with AutoGravity](/images/blog/introducing-autogravity/cover.avif)
+
+Appwrite's file preview API has always let you pick a fixed crop position such as `center`, `top`, or `bottom-right`. That works when you know where the subject is in every image, and breaks when a person stands near one edge or a dog sits in a corner. [AutoGravity](/blog/post/introducing-autogravity) fixes this with one new value, `gravity=auto`, which finds the focal point of the image and crops around it. It looks for a face first, then falls back to saliency detection, and never stores or modifies the source image.
+
+Appwrite 2.1 ships the AutoGravity service as a new `appwrite-autogravity` container. Appwrite detects the focal point once per source file and caches it, so every preview size of the same image crops around the same point.
+
+The container runs after you install or upgrade, but Appwrite does not use it until you tell it where to find it. Set the host in your `.env` file:
+
+```bash
+_APP_AUTOGRAVITY_HOST=http://appwrite-autogravity:8080
+```
+
+Then recreate the stack:
+
+```bash
+docker compose up -d
+```
+
+From that point, any preview request with `gravity=auto` follows the subject. The fixed gravity values behave exactly as before. If the variable stays empty, `gravity=auto` returns a configuration error instead of a silently centered crop.
+
+# TikTok and Kakao sign-in
+
+Two OAuth2 providers join the list: TikTok and Kakao. Both are configured the same way as every other provider, under **Auth** > **Settings** in the Console, and both work with the [OAuth2 login flow](/docs/products/auth/oauth2) you already use. That brings the number of supported OAuth2 providers to 54.
+
+# Fixes to Appwrite Console
+
+We appreciate all the love the new Appwrite Console has received since 2.0. This release folds in a batch of fixes reported by self-hosters, with more coming soon:
+
+- Usage breakdowns show the name of every function and site, instead of truncated IDs past the eighth one.
+- Appwrite Terminal stays above the keyboard on phones.
+- A failed or stuck index shows a red status badge instead of the blue one used for indexes still building.
+- Indexes created from the Console keep the sort order you picked. Every index used to be stored as descending.
+- Relationship columns show their linked rows instead of the text `null`, and editing another column on the same row no longer fails with an invalid relationship error.
+- The user detail page no longer crashes when a preference holds a value that is not a string.
+- Function and site settings keep your unsaved edits when a deployment event refreshes the page.
+- The migration import wizard sends the teams, functions, and messaging selections to the server. Those checkboxes used to have no effect.
+- Confirmation and picker dialogs opened from a drawer stay above it and remain clickable.
+- Keyboard shortcuts no longer crash the Console on Android when Chrome sends a key event without a key.
+- Wrapped code blocks break at word boundaries instead of mid-word.
+- Deleting a linked identity on the account security page uses the Console's own confirmation dialog instead of the browser's.
+
+Appwrite 2.1 also ships Console `1.1.78` as a dedicated self-hosted build. Console IV on Cloud loads its assets from a CDN. The self-hosted build has no CDN origin, so your instance serves every script, stylesheet, and font itself. Nothing in the Console depends on a domain you do not control.
+
+# Also in this release
+
+- Capacitor apps can register `capacitor://` origins. Appwrite matches the hostname against your Web platforms, the same way it does for Tauri.
+- Runtimes for Dart 3.13 and Flutter 3.47.
+- The avatars API can fetch a user's profile photo from 27 more OAuth2 providers, on top of GitHub and Gravatar.
+- Around forty fixes across auth, TablesDB webhooks, GraphQL, realtime, VCS, and messaging. The full list is in the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.1.0).
+
+# Coming to self-hosted
+
+[Appwrite Firewall](/blog/post/announcing-appwrite-firewall) and the activity log for project events remain on Cloud for now. Both will be coming to self-hosted Appwrite in a future release. Watch the [release notes](https://github.com/appwrite/appwrite/releases) for the version that adds each.
+
+# Install Appwrite 2.1
+
+Run the installer. Then open `http://localhost:20080` and follow the wizard.
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.1.0
+```
+
+If you would rather write the Compose files yourself, the [installation guide](/docs/advanced/self-hosting/installation) has a generator that produces `docker-compose.yml` and `.env` for your database and topology.
+
+# Upgrade an existing instance
+
+Back up your data first. If you are still on 1.9.x, upgrade to 1.9.6 and then to 2.0.0 before you upgrade to 2.1.0.
+
+From the directory that contains your `appwrite` directory:
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:2.1.0
+```
+
+Then run the migration from inside the `appwrite` directory:
+
+```bash
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+The upgrade keeps your database and your worker topology, adds the `appwrite-autogravity` container, and leaves `_APP_AUTOGRAVITY_HOST` empty until you set it.
+
+# Resources
+
+- [Installation guide](/docs/advanced/self-hosting/installation)
+- [S3 API documentation](/docs/products/storage/s3)
+- [Image previews and transformations](/docs/products/storage/images)
+- [Environment variables](/docs/advanced/self-hosting/configuration/environment-variables)
+- [Updates and migrations](/docs/advanced/self-hosting/production/updates)
+- [Self-hosting docs](/docs/advanced/self-hosting)
+- [Discord community](https://appwrite.io/discord)

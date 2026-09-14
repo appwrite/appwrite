@@ -3,6 +3,18 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "appwrite-2-1-self-hosted",
+    "href": "/blog/post/appwrite-2-1-self-hosted",
+    "title": "Appwrite 2.1 is now available for self-hosting",
+    "description": "Appwrite 2.1 brings the S3 API and AutoGravity to self-hosted instances, adds TikTok and Kakao sign-in, and fixes for Appwrite Console.",
+    "date": "2026-09-14",
+    "lastUpdated": "2026-09-14",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "products, announcements",
+    "hasCover": false
+  },
+  {
     "slug": "introducing-the-affiliates-program",
     "href": "/blog/post/introducing-the-affiliates-program",
     "title": "Introducing the Affiliates program",
@@ -36,7 +48,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "phone-duo-whats-new-and-what-developers-can-build",
     "href": "/blog/post/phone-duo-whats-new-and-what-developers-can-build",
-    "title": "Iphone Duo: What’s new and what developers can build",
+    "title": "iPhone Duo: What’s new and what developers can build",
     "description": "See how iPhone Duo could change app development, from adaptive interfaces and testing to new experiences built for foldable screens.",
     "date": "2026-09-10",
     "lastUpdated": "2026-09-10",
