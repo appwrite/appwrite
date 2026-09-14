@@ -55,7 +55,7 @@ class Update extends Action
             ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
             ->param('name', null, new Nullable(new Text(128)), 'Topic Name.', true)
             ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-            ->param('qos', null, new Nullable(new Range(0, 1)), 'QoS for MQTT delivery on this topic (0 or 1). Null lets the subscriber choose.', true)
+            ->param('qos', null, new Nullable(new Range(0, 1)), 'MQTT delivery quality of service for this topic. 0 is fire-and-forget (delivered only to clients connected at publish time). 1 persists each message and replays it when a client reconnects without having acknowledged it. Null lets the subscriber choose.', true)
             ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Message retention in seconds for offline delivery. Max 7 days (604800).', true)
             ->inject('request')
             ->inject('queueForEvents')

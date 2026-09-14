@@ -2003,6 +2003,12 @@ class Deletes extends Action
         });
     }
 
+    /**
+     * The push ledger (appwritePushLedger) is the append-only record of QoS 1 push
+     * messages the MQTT broker keeps so it can replay any a client missed while offline.
+     * Replay only ever reaches back one week, so entries older than that are dead weight
+     * and are pruned here, mirroring how expired presences are cleaned up.
+     */
     private function deleteExpiredPushLedger(Document $project, callable $getProjectDB): void
     {
         Console::info('Delete expired push ledger messages');

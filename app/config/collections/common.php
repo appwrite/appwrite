@@ -2395,7 +2395,9 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            // null lets the subscriber choose.
+            // MQTT quality of service for delivery on this topic: 0 is fire-and-forget
+            // (only clients connected at publish time), 1 persists each message and replays
+            // it when a client reconnects unacknowledged. null lets the subscriber choose.
             [
                 '$id' => ID::custom('qos'),
                 'type' => Database::VAR_INTEGER,
