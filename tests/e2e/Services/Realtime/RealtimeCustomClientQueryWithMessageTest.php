@@ -16,7 +16,7 @@ use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
-final class RealtimeCustomClientQueryTestWithMessage extends Scope
+final class RealtimeCustomClientQueryWithMessageTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
