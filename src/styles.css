@@ -921,6 +921,48 @@ html:not([lang='en']):not([lang='he']) {
     height: 100dvh;
   }
 
+  /*
+    Marketing/docs scroll the document so Plausible can measure scroll depth.
+    The console shell is otherwise position:fixed with overflow on #main-content,
+    which makes document height === viewport and reports 100% depth on every visit.
+    API reference explorer keeps the nested scroller (class is not applied).
+  */
+  html.marketing-document-scroll {
+    height: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll body {
+    height: auto;
+    overflow: auto;
+    overscroll-behavior: auto;
+  }
+
+  html.marketing-document-scroll .root-container {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll .root-container > .flex,
+  html.marketing-document-scroll .root-scroll-container,
+  html.marketing-document-scroll .org-layout-container,
+  html.marketing-document-scroll .project-layout-container {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+
+  html.marketing-document-scroll #main-content {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 0 auto;
+  }
+
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
      these rules only need to ensure inner flex containers stay bounded and
      scroll regions claim remaining space. */
