@@ -1,81 +1,94 @@
 #!/usr/bin/env bash
-# Shared helpers for the upgrade gate scripts. Sourced, not executed.
+# Shared ground for the upgrade gate. Sourced, not executed.
 #
-# The upgrade gate talks to Appwrite the way a self-hoster does: over the public
-# HTTP API, with no access to the container internals. That is the point -- it
-# proves the data survives a version change through the surface users depend on.
+# The gate talks to Appwrite the way a self-hoster does -- over the public HTTP
+# API, with no access to container internals -- because that is the surface the
+# data has to survive a version change on.
+
+# The resource names and value shapes below are read by the scripts that source
+# this file, so shellcheck cannot see their use when linting it on its own.
+# shellcheck disable=SC2034
 
 set -euo pipefail
 
 : "${ENDPOINT:?ENDPOINT must be set, e.g. http://localhost:8080/v1}"
 
 MANIFEST="${MANIFEST:-upgrade-seed.json}"
-COOKIE_JAR="${COOKIE_JAR:-$(dirname "$MANIFEST")/upgrade-cookies.txt}"
+STATE="$(dirname "$MANIFEST")"
+COOKIE_JAR="${STATE}/upgrade-cookies.txt"
+SNAPSHOT="${STATE}/upgrade-snapshot.json"
+
+# Seeded resources. Fixed IDs so both scripts address the same rows without
+# passing them around.
+DATABASE="gate"
+AUTHORS="authors"
+POSTS="posts"
+BUCKET="gate"
+FILE_ID="gate-file"
+USER_ID="gate-user"
+AUTHOR="author-1"
+
+# The value shapes a migration is most likely to mangle.
+LONG_VALUE="$(printf 'l%.0s' {1..4000})"
+UNICODE_VALUE="ünïcødé — 日本語 — 🚂 — <script>alert(1)</script> — O'Brien \"quoted\""
 
 fail() {
     echo "::error::$*" >&2
     exit 1
 }
 
-# Waits for the stack to answer on the public port. A fresh install spends a
-# while on migrations and worker boot, so this is generous.
+# A fresh install spends a while on migrations and worker boot.
 wait_for_appwrite() {
-    local attempts="${1:-90}" i
+    local i
 
-    for ((i = 1; i <= attempts; i++)); do
+    for ((i = 1; i <= 120; i++)); do
         if curl --silent --fail --max-time 5 "${ENDPOINT}/health/version" >/dev/null 2>&1; then
-            echo "Appwrite answering at ${ENDPOINT} after ${i}s."
             return 0
         fi
         sleep 1
     done
 
-    fail "Appwrite did not answer at ${ENDPOINT}/health/version within ${attempts}s."
+    fail "Appwrite did not answer at ${ENDPOINT}/health/version within 120s."
 }
 
-server_version() {
+version() {
     curl --silent --fail --max-time 10 "${ENDPOINT}/health/version" | jq -r '.version'
 }
 
-# Console calls: cookie session, browser origin. Used to create the org and
-# project a self-hoster starts with.
+# Console session, browser origin: how the organization and project get made.
 console() {
     local method="$1" path="$2" body="${3:-}"
-    local args=(
-        --silent --show-error --fail-with-body --max-time 30
-        -X "$method"
-        -H 'content-type: application/json'
-        -H 'origin: http://localhost'
-        -H 'x-appwrite-project: console'
-        -c "$COOKIE_JAR" -b "$COOKIE_JAR"
-    )
-    [ -n "$body" ] && args+=(-d "$body")
 
-    curl "${args[@]}" "${ENDPOINT}${path}"
+    curl --silent --show-error --fail-with-body --max-time 30 \
+        -X "$method" \
+        -H 'content-type: application/json' \
+        -H 'origin: http://localhost' \
+        -H 'x-appwrite-project: console' \
+        -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
+        ${body:+-d "$body"} \
+        "${ENDPOINT}${path}"
 }
 
-# Project calls: API key, the way a server SDK talks to Appwrite.
+# API key: how a server SDK talks to a project.
 api() {
     local method="$1" path="$2" body="${3:-}"
-    local args=(
-        --silent --show-error --fail-with-body --max-time 60
-        -X "$method"
-        -H 'content-type: application/json'
-        -H "x-appwrite-project: ${PROJECT_ID:?PROJECT_ID not set}"
-        -H "x-appwrite-key: ${API_KEY:?API_KEY not set}"
-    )
-    [ -n "$body" ] && args+=(-d "$body")
 
-    curl "${args[@]}" "${ENDPOINT}${path}"
+    curl --silent --show-error --fail-with-body --max-time 60 \
+        -X "$method" \
+        -H 'content-type: application/json' \
+        -H "x-appwrite-project: ${PROJECT:?PROJECT not set}" \
+        -H "x-appwrite-key: ${KEY:?KEY not set}" \
+        ${body:+-d "$body"} \
+        "${ENDPOINT}${path}"
 }
 
-# Columns are processed asynchronously, so rows cannot be written until every
-# column on the table reports available.
+# Columns are processed asynchronously; rows cannot be written until they are all
+# available.
 wait_for_columns() {
-    local database="$1" table="$2" attempts="${3:-60}" i statuses
+    local table="$1" i statuses
 
-    for ((i = 1; i <= attempts; i++)); do
-        statuses=$(api GET "/tablesdb/${database}/tables/${table}/columns" \
+    for ((i = 1; i <= 60; i++)); do
+        statuses=$(api GET "/tablesdb/${DATABASE}/tables/${table}/columns" \
             | jq -r '.columns[].status' | sort -u | tr '\n' ' ')
 
         case "$statuses" in
@@ -85,25 +98,31 @@ wait_for_columns() {
         sleep 1
     done
 
-    fail "Columns on ${table} did not become available within ${attempts}s (last: ${statuses:-none})."
+    fail "Columns on ${table} did not become available within 60s (last: ${statuses:-none})."
 }
 
-manifest_get() {
-    jq -r "$1" "$MANIFEST"
-}
-
-# Asserts on values read back through the API. Prints every check so a failed
-# upgrade job reads as a list of what survived and what did not.
-assert_equals() {
-    local what="$1" expected="$2" actual="$3"
-
-    if [ "$expected" = "$actual" ]; then
-        echo "  ok    ${what}"
-        return 0
-    fi
-
-    echo "  FAIL  ${what}"
-    echo "        expected: ${expected}"
-    echo "        actual:   ${actual}"
-    FAILURES=$((${FAILURES:-0} + 1))
+# Everything the gate asserts on, projected to just the fields we seeded and
+# sorted for a stable comparison. Projecting rather than dumping whole responses
+# is deliberate: an upgrade is allowed to add fields to a model, and only the
+# values a user put in have to come back unchanged.
+snapshot() {
+    jq -nS \
+        --argjson rows "$(api GET "/tablesdb/${DATABASE}/tables/${POSTS}/rows")" \
+        --argjson table "$(api GET "/tablesdb/${DATABASE}/tables/${POSTS}")" \
+        --argjson user "$(api GET "/users/${USER_ID}")" \
+        --argjson file "$(api GET "/storage/buckets/${BUCKET}/files/${FILE_ID}")" \
+        '{
+            rows: [$rows.rows[] | {
+                id: .["$id"],
+                title: .title,
+                body: .body,
+                tag: .tag,
+                author: (if (.author | type) == "object" then .author["$id"] else .author end),
+                permissions: (.["$permissions"] | sort)
+            }] | sort_by(.id),
+            total: $rows.total,
+            table: { permissions: ($table["$permissions"] | sort), rowSecurity: $table.rowSecurity },
+            user: { email: $user.email, name: $user.name },
+            file: { id: $file["$id"], size: $file.sizeOriginal }
+        }'
 }

@@ -1011,9 +1011,14 @@ jobs:
     permissions:
       contents: read
       packages: read
+    # Defaults describe the candidate. The two steps that run the previous
+    # release override them; everything else is the version being tested.
     env:
+      COMPOSE_FILE: docker-compose.yml
       COMPOSE_PROJECT_NAME: upgrade-gate
       COMPOSE_PROFILES: ''
+      _APP_IMAGE: appwrite-dev
+      _APP_VERSION: latest
       _APP_HTTP_PORT: '8080'
       _APP_HTTPS_PORT: '8443'
       ENDPOINT: http://localhost:8080/v1
@@ -1031,23 +1036,38 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Previous baseline = highest published stable strictly below this branch's
-      # APP_VERSION_STABLE. Docker Hub rather than git tags, because the image has
-      # to exist for the test to run at all.
+      # Baseline = highest published stable below this branch's version. Docker
+      # Hub rather than git tags, because an image nobody can pull is not an
+      # upgrade anyone can perform.
       - name: Resolve the previous stable
         id: previous
         run: |
           set -euo pipefail
           target=$(sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p" app/init/constants.php)
-          previous=$(.github/scripts/previous-stable.py "${target}")
+
+          # Sort the published X.Y.Z tags together with the target, then take
+          # whatever lands immediately before it.
+          previous=$(
+            curl --silent --fail --retry 3 --retry-all-errors --max-time 60 \
+              'https://hub.docker.com/v2/repositories/appwrite/appwrite/tags/?page_size=100&ordering=last_updated' \
+              | jq -r '.results[].name' \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+              | { cat; echo "${target}"; } \
+              | sort -u -V \
+              | grep -B1 -x -- "${target}" \
+              | head -1
+          )
+
+          if [ -z "$previous" ] || [ "$previous" = "$target" ]; then
+            echo "::error::No published stable below ${target} in the 100 most recent Docker Hub tags."
+            exit 1
+          fi
 
           echo "Upgrading ${previous} -> ${target}"
           echo "previous=${previous}" >> "$GITHUB_OUTPUT"
-          echo "target=${target}" >> "$GITHUB_OUTPUT"
 
       # An upgrade starts from the compose file and env the old version shipped,
-      # not from this checkout's -- that is what the installation being upgraded
-      # was actually started from.
+      # which is what the installation being upgraded was actually started from.
       - name: Materialise the previous release's compose
         env:
           PREVIOUS: ${{ steps.previous.outputs.previous }}
@@ -1083,18 +1103,10 @@ jobs:
 
       - name: Start the candidate on the same volumes
         timeout-minutes: 10
-        env:
-          COMPOSE_FILE: docker-compose.yml
-          _APP_IMAGE: appwrite-dev
-          _APP_VERSION: latest
         run: docker compose up -d --quiet-pull --wait
 
       - name: Migrate
         timeout-minutes: 20
-        env:
-          COMPOSE_FILE: docker-compose.yml
-          _APP_IMAGE: appwrite-dev
-          _APP_VERSION: latest
         run: docker compose exec -T appwrite migrate
 
       - name: Verify the seeded data survived
@@ -1102,32 +1114,21 @@ jobs:
         run: .github/scripts/upgrade-verify.sh
 
       # A migration that is not idempotent breaks every retried or resumed
-      # upgrade, so run it again and re-assert.
-      - name: Migrate again and re-verify
-        timeout-minutes: 25
-        env:
-          COMPOSE_FILE: docker-compose.yml
-          _APP_IMAGE: appwrite-dev
-          _APP_VERSION: latest
-        run: |
-          set -euo pipefail
-          docker compose exec -T appwrite migrate
-          .github/scripts/upgrade-verify.sh
+      # upgrade.
+      - name: Migrate again
+        timeout-minutes: 20
+        run: docker compose exec -T appwrite migrate
+
+      - name: Verify again, and that writes still work
+        timeout-minutes: 10
+        run: .github/scripts/upgrade-verify.sh --write
 
       - name: Collect logs on failure
         if: failure()
-        env:
-          COMPOSE_FILE: docker-compose.yml
-          _APP_IMAGE: appwrite-dev
-          _APP_VERSION: latest
         run: |
           docker compose ps || true
           docker compose logs --tail=400 appwrite || true
 
       - name: Stop
         if: always()
-        env:
-          COMPOSE_FILE: docker-compose.yml
-          _APP_IMAGE: appwrite-dev
-          _APP_VERSION: latest
         run: docker compose down -v || true
