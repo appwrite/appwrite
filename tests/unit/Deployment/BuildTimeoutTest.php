@@ -25,7 +25,7 @@ final class BuildTimeoutTest extends TestCase
     }
 
     #[DataProvider('budgets')]
-    public function testSelfHostedSubmissionUsesOperatorBudget(int $configured): void
+    public function testSubmissionUsesConstructorBudget(int $configured): void
     {
         $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         $previousTimeout = getenv('_APP_COMPUTE_BUILD_TIMEOUT');
@@ -49,7 +49,8 @@ final class BuildTimeoutTest extends TestCase
                 $requests[] = json_decode((string) $request->getBody(), true, flags: JSON_THROW_ON_ERROR);
                 return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
             });
-            $service = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
+            $service = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost'], $configured);
+            putenv('_APP_COMPUTE_BUILD_TIMEOUT=1');
 
             $result = $service->createFromUpload(new Document([
                 '$id' => 'function', '$collection' => 'functions',

@@ -62,6 +62,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private int $timeout,
     ) {
     }
 
@@ -221,7 +222,7 @@ readonly class Deployments
         }
 
         try {
-            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source, $this->timeout()));
+            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $this->timeout, $source));
         } catch (\Throwable $error) {
             // A refused variable key is the owner's to fix, so the build log
             // carries the actual reason; anything else stays a generic
@@ -340,16 +341,6 @@ readonly class Deployments
     }
 
     /**
-     * Editions may resolve a project-specific build budget here. The same
-     * budget governs the job and the credentials it needs while building.
-     */
-    protected function timeout(): int
-    {
-        // Self-hosted operators configure the build budget; default to 15 minutes.
-        return (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-    }
-
-    /**
      * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
      */
     protected static function payload(
@@ -357,13 +348,12 @@ readonly class Deployments
         Document $resource,
         Document $deployment,
         array $platform,
+        int $timeout,
         ?array $source = null,
-        ?int $timeout = null,
     ): array {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
         $isSite = $resource->getCollection() === 'sites';
-        $timeout ??= (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
         $runtime = self::runtime($resource, self::version($resource));
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
