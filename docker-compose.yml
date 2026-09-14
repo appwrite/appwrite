@@ -1716,6 +1716,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -1731,13 +1732,12 @@ services:
       - --innodb-flush-method=fsync
     healthcheck:
       test:
-        - CMD
-        - healthcheck.sh
-        - --connect
-        - --innodb_initialized
+        - CMD-SHELL
+        - mariadb --protocol=tcp -h127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent -e "SELECT 1"
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 10s
   mongodb:
     image: mongo:8.2.5
     container_name: appwrite-mongodb
