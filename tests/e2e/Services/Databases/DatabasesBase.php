@@ -1554,6 +1554,16 @@ trait DatabasesBase
             $this->assertEquals(200, $encrypted['headers']['status-code']);
             $this->assertEquals(150, $encrypted['body']['size']);
 
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [$type => 'a'],
+            ]);
+            $this->assertEquals(201, $document['headers']['status-code']);
+
+            $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']), $headers);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertSame('a', $document['body'][$type]);
+
             $plain = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type . 'Plain'), $headers, [
                 'required' => false,
                 'default' => null,
