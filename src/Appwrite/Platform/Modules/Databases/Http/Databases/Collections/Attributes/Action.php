@@ -650,8 +650,8 @@ abstract class Action extends DatabasesAction
                     newKey: $newKey ?? null
                 );
 
-                // updateAttribute treats null as an unchanged default. The API
-                // uses null to clear it, including when the key was renamed.
+                // updateAttribute() keeps the stored default when given null,
+                // but the API uses null to clear it.
                 if ($default === null && $definition->getAttribute('default') !== null) {
                     $dbForProject->updateAttributeDefault(
                         collection: $collectionId,

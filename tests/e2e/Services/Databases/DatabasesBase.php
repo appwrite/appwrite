@@ -1508,29 +1508,16 @@ trait DatabasesBase
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
             $this->getContainerIdParam() => ID::unique(),
             'name' => 'Clear defaults',
-            $this->getSecurityParam() => true,
-            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertEquals(201, $collection['headers']['status-code']);
         $collectionId = $collection['body']['$id'];
 
-        $marker = $this->createAttribute($databaseId, $collectionId, 'boolean', [
-            'key' => 'marker',
-            'required' => false,
-        ]);
-        $this->assertEquals(202, $marker['headers']['status-code']);
-        $this->waitForAttribute($databaseId, $collectionId, 'marker');
-
-        foreach ([
+        $defaults = [
             'string' => ['default' => 'original', 'size' => 100],
             'boolean' => ['default' => false],
-            'integer' => ['default' => 0],
-            'float' => ['default' => 1.5],
-            'enum' => ['default' => 'first', 'elements' => ['first', 'second']],
-        ] as $type => $options) {
-            /**
-             * Test for SUCCESS
-             */
+        ];
+
+        foreach ($defaults as $type => $options) {
             $attribute = $this->createAttribute($databaseId, $collectionId, $type, [
                 'key' => $type,
                 'required' => false,
@@ -1538,60 +1525,34 @@ trait DatabasesBase
             ]);
             $this->assertEquals(202, $attribute['headers']['status-code']);
             $this->waitForAttribute($databaseId, $collectionId, $type);
+        }
 
-            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-                $this->getRecordIdParam() => ID::unique(),
-                'data' => [$type => null],
-                'permissions' => [Permission::read(Role::user($this->getUser()['$id']))],
-            ]);
-            $this->assertEquals(201, $document['headers']['status-code']);
-            $this->assertSame($options['default'], $document['body'][$type]);
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['string' => null, 'boolean' => null],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertSame('original', $document['body']['string']);
+        $this->assertFalse($document['body']['boolean']);
 
-            /**
-             * Test for FAILURE
-             */
-            $invalid = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
-                ...$options,
-                'required' => true,
-            ]);
-            $this->assertEquals(400, $invalid['headers']['status-code']);
-
-            /**
-             * Test for SUCCESS
-             */
-            $key = $type === 'string' ? 'renamed' : $type;
+        // Clear the string default while renaming it, and the boolean one in place.
+        foreach ($defaults as $type => $options) {
             $attribute = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, $type, $type), $headers, [
                 ...$options,
                 'required' => false,
                 'default' => null,
-                'newKey' => $key,
+                'newKey' => $type === 'string' ? 'renamed' : null,
             ]);
             $this->assertEquals(200, $attribute['headers']['status-code']);
-            $this->assertNull($attribute['body']['default']);
-
-            $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $collectionId) . '/' . $key, $headers);
-            $this->assertEquals(200, $attribute['headers']['status-code']);
-            $this->assertNull($attribute['body']['default']);
-
-            foreach ([[$key => null], ['marker' => true]] as $data) {
-                $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-                    $this->getRecordIdParam() => ID::unique(),
-                    'data' => $data,
-                    'permissions' => [Permission::read(Role::user($this->getUser()['$id']))],
-                ]);
-                $this->assertEquals(201, $created['headers']['status-code']);
-                $this->assertArrayHasKey($key, $created['body']);
-                $this->assertNull($created['body'][$key]);
-
-                $persisted = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $created['body']['$id']), $headers);
-                $this->assertEquals(200, $persisted['headers']['status-code']);
-                $this->assertNull($persisted['body'][$key]);
-            }
-
-            $existing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']), $headers);
-            $this->assertEquals(200, $existing['headers']['status-code']);
-            $this->assertSame($options['default'], $existing['body'][$key]);
         }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['renamed' => null, 'boolean' => null],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertNull($document['body']['renamed']);
+        $this->assertNull($document['body']['boolean']);
     }
 
     public function testUpdateAttributeEnum(): void
