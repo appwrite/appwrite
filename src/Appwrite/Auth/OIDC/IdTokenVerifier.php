@@ -11,10 +11,10 @@ use Utopia\Database\Document;
  * Verifies an OpenID Connect ID token against the provider's `idToken`
  * profile from the oAuthProviders config.
  *
- * The JWT layer (signature, expiry, not-before) is the same library that
+ * The JWT layer (signature, expiry, not-before, age) is the same library that
  * signs Appwrite's own JWTs. It verifies with the pinned RS256 whatever the
  * token header claims, which defeats algorithm confusion. The OpenID claims
- * (issuer, audience, nonce, subject) are checked here.
+ * (issuer, audience, nonce, subject) and a future `iat` are checked here.
  */
 class IdTokenVerifier
 {
@@ -76,6 +76,12 @@ class IdTokenVerifier
 
         if (!\is_numeric($claims['exp'] ?? null)) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token expired');
+        }
+
+        // The JWT layer caps how old `iat` may be but accepts one in the future,
+        // which would let a correctly signed token in before it is valid.
+        if (\is_numeric($claims['iat'] ?? null) && $claims['iat'] > \time() + self::CLOCK_SKEW) {
+            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token issued in the future');
         }
 
         if (!\in_array($claims['iss'] ?? null, $profile->getAttribute('issuers', []), true)) {

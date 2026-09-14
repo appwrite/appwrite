@@ -76,6 +76,18 @@ final class IdTokenVerifierTest extends TestCase
         $this->assertSame('subject-1', $claims['sub']);
     }
 
+    public function testIatWithinClockSkewIsAccepted(): void
+    {
+        $claims = $this->verifier()->verify(
+            $this->profile(),
+            $this->mint(['iat' => \time() + IdTokenVerifier::CLOCK_SKEW - 5]),
+            [self::AUDIENCE],
+            null,
+        );
+
+        $this->assertSame('subject-1', $claims['sub']);
+    }
+
     /**
      * Google echoes the raw nonce; Apple clients send SHA256(raw) to the
      * provider, so the claim is the hex hash. Both conventions must verify
@@ -100,6 +112,7 @@ final class IdTokenVerifierTest extends TestCase
         yield 'expired' => [['exp' => \time() - 3600], null, 'Expired'];
         yield 'missing exp' => [['exp' => null], null, 'Token expired'];
         yield 'stale iat' => [['iat' => \time() - 172800, 'exp' => \time() + 3600], null, 'Expired'];
+        yield 'future iat' => [['iat' => \time() + 3600, 'exp' => \time() + 7200], null, 'issued in the future'];
         yield 'future nbf' => [['nbf' => \time() + 3600], null, 'Not now'];
         yield 'wrong issuer' => [['iss' => 'https://evil.test'], null, 'Invalid issuer'];
         yield 'missing issuer' => [['iss' => null], null, 'Invalid issuer'];
@@ -118,10 +131,7 @@ final class IdTokenVerifierTest extends TestCase
     #[DataProvider('rejections')]
     public function testClaimRejections(array $claims, ?string $rawNonce, string $message): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage($message);
-
-        $this->verifier()->verify($this->profile(), $this->mint($claims), [self::AUDIENCE], $rawNonce);
+        $this->assertRejected($message, fn () => $this->verifier()->verify($this->profile(), $this->mint($claims), [self::AUDIENCE], $rawNonce));
     }
 
     /**
@@ -131,18 +141,12 @@ final class IdTokenVerifierTest extends TestCase
      */
     public function testNonceRequiredProfileRejectsTokenWithoutNonceClaim(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Nonce required');
-
-        $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], null);
+        $this->assertRejected('Nonce required', fn () => $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], null));
     }
 
     public function testNonceRequiredProfileRejectsTokenWithoutNonceClaimEvenWithRequestNonce(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Nonce required');
-
-        $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], 'raw-nonce');
+        $this->assertRejected('Nonce required', fn () => $this->verifier()->verify($this->profile(nonceRequired: true), $this->mint([]), [self::AUDIENCE], 'raw-nonce'));
     }
 
     public function testNonceRequiredProfileAcceptsMatchingNonce(): void
@@ -166,18 +170,12 @@ final class IdTokenVerifierTest extends TestCase
             \array_merge(self::claims([]), ['sub' => 'attacker'])
         ));
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Signature failed');
-
-        $this->verifier()->verify($this->profile(), \implode('.', $parts), [self::AUDIENCE], null);
+        $this->assertRejected('Signature failed', fn () => $this->verifier()->verify($this->profile(), \implode('.', $parts), [self::AUDIENCE], null));
     }
 
     public function testUnknownKidIsRejected(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unknown signing key');
-
-        $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => 'rotated-away']), [self::AUDIENCE], null);
+        $this->assertRejected('Unknown signing key', fn () => $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => 'rotated-away']), [self::AUDIENCE], null));
     }
 
     /**
@@ -192,10 +190,7 @@ final class IdTokenVerifierTest extends TestCase
         $publicPem = \openssl_pkey_get_details(self::$key)['key'];
         $signature = self::base64UrlEncode(\hash_hmac('sha256', $header . '.' . $payload, $publicPem, true));
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Signature failed');
-
-        $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.' . $signature, [self::AUDIENCE], null);
+        $this->assertRejected('Signature failed', fn () => $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.' . $signature, [self::AUDIENCE], null));
     }
 
     public function testAlgNoneIsRejected(): void
@@ -203,26 +198,35 @@ final class IdTokenVerifierTest extends TestCase
         $header = self::base64UrlEncode(\json_encode(['alg' => 'none', 'kid' => self::KID, 'typ' => 'JWT']));
         $payload = self::base64UrlEncode(\json_encode(self::claims([])));
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unsupported header algo');
-
-        $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.', [self::AUDIENCE], null);
+        $this->assertRejected('Unsupported header algo', fn () => $this->verifier()->verify($this->profile(), $header . '.' . $payload . '.', [self::AUDIENCE], null));
     }
 
     public function testMalformedTokenIsRejected(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Malformed token');
-
-        $this->verifier()->verify($this->profile(), 'only.twoparts', [self::AUDIENCE], null);
+        $this->assertRejected('Malformed token', fn () => $this->verifier()->verify($this->profile(), 'only.twoparts', [self::AUDIENCE], null));
     }
 
     public function testMissingKidIsRejected(): void
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Missing key ID');
+        $this->assertRejected('Missing key ID', fn () => $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => null]), [self::AUDIENCE], null));
+    }
 
-        $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => null]), [self::AUDIENCE], null);
+    /**
+     * Every rejection surfaces as the same API error type; the message is what
+     * tells the rules apart, so both are checked.
+     */
+    private function assertRejected(string $message, callable $verify): void
+    {
+        try {
+            $verify();
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::USER_OAUTH2_TOKEN_INVALID, $exception->getType());
+            $this->assertStringContainsString($message, $exception->getMessage());
+
+            return;
+        }
+
+        $this->fail('The token must be rejected');
     }
 
     private function verifier(): IdTokenVerifier
