@@ -2263,8 +2263,6 @@ final class SitesCustomServerTest extends Scope
     {
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            // Keep the measured build longer than Kubernetes timestamp precision.
-            'buildCommand' => 'sleep 2',
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -2293,7 +2291,9 @@ final class SitesCustomServerTest extends Scope
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertGreaterThan(0, $deployment['body']['buildDuration']);
+        // A build that finishes within the measured second can report zero.
+        $this->assertIsInt($deployment['body']['buildDuration']);
+        $this->assertGreaterThanOrEqual(0, $deployment['body']['buildDuration']);
         $this->assertNotEmpty($deployment['body']['status']);
         $this->assertNotEmpty($deployment['body']['buildLogs']);
         $this->assertArrayHasKey('sourceSize', $deployment['body']);

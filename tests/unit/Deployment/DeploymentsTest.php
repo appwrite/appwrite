@@ -180,6 +180,6 @@ final readonly class ExposedDeployments extends Deployments
 {
     public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
     {
-        return static::payload($project, $resource, $deployment, $platform, 900);
+        return static::payload($project, $resource, $deployment, $platform, 137);
     }
 }

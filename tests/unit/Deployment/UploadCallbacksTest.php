@@ -42,7 +42,7 @@ final class UploadCallbacksTest extends TestCase
             $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
             $result = $deployments->createFromUpload(new Document([
                 '$id' => 'function', '$collection' => 'functions', 'runtime' => array_key_first(Config::getParam('runtimes-v2')),
-            ]), clone $deployment, 900);
+            ]), clone $deployment, 137);
 
             $this->assertSame('waiting', $result->getAttribute('status'));
             $this->assertCount(1, $requests);
