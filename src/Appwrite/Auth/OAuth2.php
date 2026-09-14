@@ -170,6 +170,21 @@ abstract class OAuth2
     }
 
     /**
+     * OpenID Connect providers return a signed id_token alongside the access
+     * token. Providers without one return an empty string.
+     *
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getIdToken(string $code): string
+    {
+        $tokens = $this->getTokens($code);
+
+        return $tokens['id_token'] ?? '';
+    }
+
+    /**
      * @param string $code
      *
      * @return int
