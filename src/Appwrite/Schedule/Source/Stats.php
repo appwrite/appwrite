@@ -25,9 +25,13 @@ final class Stats implements Source, Changes
 {
     public const string CONCURRENCY = 'concurrency';
 
+    /**
+     * @param list<string> $subqueries project decode filters to skip; only the id is read
+     */
     public function __construct(
         private readonly Database $dbForPlatform,
         private readonly int $interval,
+        private readonly array $subqueries = APP_PROJECTS_SUBQUERIES,
     ) {
     }
 
@@ -79,10 +83,9 @@ final class Stats implements Source, Changes
                 $queries[] = Query::cursorAfter($latest);
             }
 
-            // Only the id is read, so no decode filter -- and no subquery,
-            // whichever edition registered it -- needs to run.
             $projects = $this->dbForPlatform->skipFilters(
                 fn () => $this->dbForPlatform->find('projects', $queries),
+                $this->subqueries
             );
             $sum = \count($projects);
 

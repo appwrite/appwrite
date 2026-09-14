@@ -49,7 +49,7 @@ class StatsResources extends Action
         // legitimately run short intervals (Cloud CI uses 2s).
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
-        $source = new Source\Stats($dbForPlatform, $interval);
+        $source = new Source\Stats($dbForPlatform, $interval, $this->subqueries());
 
         $scheduler = new Scheduler(
             source: $source,
@@ -66,6 +66,17 @@ class StatsResources extends Action
 
         Span::init('schedule.stats.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
+    }
+
+    /**
+     * Project decode filters the listing skips. Editions that register more
+     * subqueries on projects extend this.
+     *
+     * @return list<string>
+     */
+    protected function subqueries(): array
+    {
+        return APP_PROJECTS_SUBQUERIES;
     }
 
     /**
