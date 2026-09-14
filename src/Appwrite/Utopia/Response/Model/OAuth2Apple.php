@@ -81,13 +81,13 @@ class OAuth2Apple extends OAuth2Base
             ])
             ->addRule('nativeEnabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Native Sign in with Apple is active and can be used to create sessions from an ID token.',
+                'description' => 'Native Sign in with Apple is active and can be used to create sessions from an ID token. Independent of enabled, which only controls the browser-based flow.',
                 'default' => false,
                 'example' => false,
             ])
             ->addRule('nativeClientIds', [
                 'type' => self::TYPE_STRING,
-                'description' => 'App bundle IDs accepted as ID token audiences for native Sign in with Apple.',
+                'description' => 'App bundle IDs accepted as ID token audiences for native Sign in with Apple, next to the Services ID.',
                 'default' => [],
                 'example' => ['com.example.app'],
                 'array' => true,

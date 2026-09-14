@@ -18,7 +18,9 @@ use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -198,16 +200,19 @@ Http::get('/v1/mock/tests/general/oauth2/user-no-email')
     });
 
 Http::patch('/v1/mock/tests/general/oauth2/native')
-    ->desc('Switch native ID token sign-in for the mock provider')
+    ->desc('Configure native ID token sign-in for a mock provider')
     ->groups(['mock', 'api', 'projects'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->label('mock', true)
     ->param('projectId', '', new UID(), 'Project ID.')
     ->param('enabled', false, new Boolean(), 'Accept ID tokens minted by the mock provider.')
+    ->param('provider', 'mock', new WhiteList(\array_keys(\array_filter(Config::getParam('oAuthProviders', []), fn ($node) => !empty($node['mock']) && !empty($node['idToken']))), true), 'Mock provider to configure.', true)
+    ->param('appId', null, new Nullable(new Text(256, 0)), 'App ID to store for the provider. Null leaves it untouched, an empty string clears it.', true)
+    ->param('clientIds', [], new ArrayList(new Text(256, 0), 20), 'Native client IDs accepted as ID token audiences next to the app ID.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -220,10 +225,14 @@ Http::patch('/v1/mock/tests/general/oauth2/native')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        // The mock provider has no console form of its own; this is the only
-        // way a test can reach the switch the real providers expose.
+        // The mock providers have no console form of their own; this is the
+        // only way a test can reach the switches the real providers expose.
         $providers = $project->getAttribute('oAuthProviders', []);
-        $providers['mockNativeEnabled'] = $enabled;
+        $providers[$provider . 'NativeEnabled'] = $enabled;
+        $providers[$provider . 'ClientIds'] = \array_values($clientIds);
+        if (!\is_null($appId)) {
+            $providers[$provider . 'Appid'] = $appId;
+        }
 
         $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'oAuthProviders' => $providers,

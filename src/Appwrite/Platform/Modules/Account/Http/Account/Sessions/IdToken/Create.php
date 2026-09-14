@@ -71,19 +71,7 @@ class Create extends Action
                 namespace: 'account',
                 group: 'sessions',
                 name: 'createIdTokenSession',
-                description: <<<EOT
-                Allow the user to login to their account using an OpenID Connect ID token obtained natively from the OAuth2 provider, for example via Google Credential Manager on Android or Sign in with Apple on iOS. No browser or redirect is involved: the ID token is verified against the provider's published signing keys and a session is created in a single request.
-
-                The token's audience must match the provider's configured client ID or one of its native client IDs. That configuration is what enables this flow: unlike the browser-based flow, it does not redeem an authorization code, so it needs no client secret and does not require the provider to be enabled. Clearing the client ID and native client IDs is what turns it off. For Sign in with Apple, register your app's bundle ID as a native client ID. For Google, the web client ID used by Credential Manager is usually the configured client ID; add your Android and iOS client IDs as native client IDs if your app requests tokens for them.
-
-                Pass the raw nonce used when requesting the ID token so it can be validated against the token's nonce claim. When signing in with Apple, the nonce is required: hash it with SHA-256 before passing it to the Apple SDK, and send the raw value here - Apple tokens requested without a nonce are rejected. Apple only returns the user's name on the first authorization, and never inside the ID token - capture it on the client and pass it via the name parameter.
-
-                If there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the verified email received from the provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.
-
-                This flow does not return provider refresh tokens. You may pass an access token the provider handed your client, along with its lifetime, to store it on the session - but Appwrite cannot renew it once it expires. If your app needs long-lived access to provider APIs, use the browser-based OAuth2 flow instead.
-
-                A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
-                EOT,
+                description: '/docs/references/account/create-session-id-token.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -98,7 +86,7 @@ class Create extends Action
             ->label('abuse-reset', [201])
             ->param('provider', '', new WhiteList(\array_keys($providers), true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $idTokenProviders) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
-            ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token contains a nonce claim.', true)
+            ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)
             ->param('accessToken', '', new Text(4096, 0), 'Provider access token to store alongside the session for calling provider APIs. Never used for authentication.', true)
             ->param('accessTokenExpiry', 0, new Range(0, 31536000), 'Seconds until the provider access token expires, as reported by the provider. Stored so clients can tell when the stored token goes stale.', true)
             ->param('name', '', new Text(128, 0), 'User name. Only used when creating a new user and the ID token has no name claim, such as on the first Sign in with Apple authorization.', true)

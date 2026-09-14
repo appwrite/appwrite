@@ -105,6 +105,19 @@ final class IdTokenVerifierTest extends TestCase
     }
 
     /**
+     * Some Google SDKs (Sign-In on iOS) cannot attach a nonce, so a token the
+     * provider issued without one is accepted even when the client sent a
+     * nonce. Refusing would gain nothing: a nonce-less token can always be
+     * presented without a request nonce.
+     */
+    public function testRequestNonceIsIgnoredWhenTokenCarriesNone(): void
+    {
+        $claims = $this->verifier()->verify($this->profile(), $this->mint([]), [self::AUDIENCE], 'unexpected');
+
+        $this->assertSame('subject-1', $claims['sub']);
+    }
+
+    /**
      * @return \Iterator<string, array{array<string, mixed>, ?string, string}>
      */
     public static function rejections(): \Iterator
@@ -122,7 +135,6 @@ final class IdTokenVerifierTest extends TestCase
         yield 'empty subject' => [['sub' => ''], null, 'Missing subject'];
         yield 'nonce mismatch' => [['nonce' => 'expected'], 'other', 'Nonce mismatch'];
         yield 'nonce claim without request nonce' => [['nonce' => 'expected'], null, 'Nonce required'];
-        yield 'request nonce without claim' => [[], 'unexpected', 'Token carries no nonce'];
     }
 
     /**

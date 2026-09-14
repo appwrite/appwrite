@@ -342,6 +342,78 @@ trait OAuth2Base
         $this->assertTrue($update['body']['nativeEnabled']);
     }
 
+    /**
+     * `nativeEnabled` is the only switch for native sign-in. Toggling the
+     * browser flow's `enabled` in either direction leaves it untouched, and
+     * switching native sign-in off leaves the browser flow untouched.
+     */
+    public function testUpdateOAuth2EnabledLeavesNativeSignInAlone(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'nativeClientIds' => ['com.example.app'],
+            'nativeEnabled' => true,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => true]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => false]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertSame(['com.example.app'], $update['body']['nativeClientIds']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => true]);
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $update = $this->updateOAuth2('apple', ['nativeEnabled' => false]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['nativeEnabled']);
+        $this->assertTrue($update['body']['enabled']);
+    }
+
+    /**
+     * Native sign-in needs an audience to match tokens against, so switching it
+     * on without one is refused at configuration time rather than at sign-in.
+     */
+    public function testUpdateOAuth2NativeEnabledRequiresAudience(): void
+    {
+        // Clear both audience sources in the same call, so the refusal cannot
+        // depend on what another test left behind.
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => '',
+            'nativeClientIds' => [],
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+        $this->assertStringContainsString('native client ID', (string) $update['body']['message']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => ['com.example.app'],
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+        $this->assertSame(['com.example.app'], $update['body']['nativeClientIds']);
+    }
+
     public function testUpdateOAuth2OidcRoundTrip(): void
     {
         $update = $this->updateOAuth2('oidc', [

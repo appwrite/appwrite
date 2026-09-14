@@ -578,6 +578,13 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => true,
+        // Same mock signing keys as `mock`, but with Apple's nonce policy, so
+        // the required-nonce path is covered end to end
+        'idToken' => [
+            'issuers' => ['https://localhost/v1/mock'],
+            'jwksUrl' => 'http://localhost/v1/mock/tests/general/oauth2/jwks',
+            'nonceRequired' => true,
+        ],
         'class' => 'Appwrite\\Auth\\OAuth2\\MockUnverified',
     ],
     'mock-no-email' => [

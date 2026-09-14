@@ -34,7 +34,7 @@ class IdTokenVerifier
     /**
      * @param Document $profile `issuers`, `jwksUrl` and `nonceRequired` for the provider
      * @param string[] $allowedAudiences client IDs accepted as the `aud` claim
-     * @param ?string $rawNonce raw nonce from the request; the claim may carry it verbatim (Google) or as its SHA-256 hex hash (Apple)
+     * @param ?string $rawNonce raw nonce from the request; the claim may carry it verbatim (Google) or as its SHA-256 hex hash (Apple). Ignored when the token carries no nonce claim and the profile does not require one
      * @return array<string, mixed> the verified claims
      * @throws Exception
      */
@@ -99,6 +99,11 @@ class IdTokenVerifier
         if ($profile->getAttribute('nonceRequired', false) && !$hasNonceClaim) {
             throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce required');
         }
+        // A nonce claim must match the request nonce. A token issued without one
+        // by a provider that does not require it is accepted whether or not the
+        // request carries a nonce: some Google SDKs (Sign-In on iOS) cannot
+        // attach one, and refusing would gain nothing, since a nonce-less token
+        // can always be presented without a request nonce anyway.
         if ($hasNonceClaim) {
             if ($rawNonce === null || $rawNonce === '') {
                 throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce required');
@@ -106,8 +111,6 @@ class IdTokenVerifier
             if (!\hash_equals($nonce, $rawNonce) && !\hash_equals($nonce, \hash('sha256', $rawNonce))) {
                 throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Nonce mismatch');
             }
-        } elseif ($rawNonce !== null && $rawNonce !== '') {
-            throw new Exception(Exception::USER_OAUTH2_TOKEN_INVALID, 'Token carries no nonce');
         }
 
         $sub = $claims['sub'] ?? null;
