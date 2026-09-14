@@ -463,8 +463,19 @@ trait ProjectsBase
 
     public function testListProjectsQuerySelect(): void
     {
-        $data = $this->setupOrganizationProject();
-        $projectId = $data['projectId'];
+        $name = 'Select Organization Project ' . ID::unique();
+
+        $project = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getOrganizationHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => $name,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
@@ -479,7 +490,7 @@ trait ProjectsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['projects']);
         $this->assertSame($projectId, $response['body']['projects'][0]['$id']);
-        $this->assertSame('Organization Project Test', $response['body']['projects'][0]['name']);
+        $this->assertSame($name, $response['body']['projects'][0]['name']);
         $this->assertArrayNotHasKey('teamId', $response['body']['projects'][0]);
     }
 }
