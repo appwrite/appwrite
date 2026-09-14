@@ -310,8 +310,7 @@ final class FunctionsCustomClientTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-jwt' => $jwt,
-            ], [
-                'headers' => ['x-appwrite-user-jwt' => 'OVERRIDDEN'],
+                'x-appwrite-user-jwt' => 'OVERRIDDEN',
             ]);
 
             $this->assertEquals(201, $execution['headers']['status-code']);
@@ -366,7 +365,7 @@ final class FunctionsCustomClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-jwt' => $jwt,
             ], $this->getHeaders()));
-            $this->assertEquals(401, $execution['headers']['status-code']);
+            $this->assertEquals(403, $execution['headers']['status-code']);
             $this->assertEquals('user_jwt_and_cookie_set', $execution['body']['type']);
         } finally {
             $this->cleanupFunction($functionId);
