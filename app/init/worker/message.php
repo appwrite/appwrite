@@ -109,26 +109,6 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'project']);
 
-    $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-        $database = null;
-
-        return function (?Document $project = null) use ($databaseFactory, &$database) {
-            if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-                $database->setTenant($project->getSequence());
-
-                return $database;
-            }
-
-            $database = $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
-                APP_DATABASE_QUERY_MAX_VALUES_WORKER
-            );
-
-            return $database;
-        };
-    }, ['databaseFactory']);
-
     $container->set('abuseRetention', function () {
         return \time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
     }, []);
