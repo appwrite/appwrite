@@ -49,6 +49,7 @@ class Install extends Action
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
     protected string $topology = 'combined';
+    protected string $channel = self::CHANNEL_STABLE;
 
     public static function getName(): string
     {
@@ -82,6 +83,7 @@ class Install extends Action
         string $topology,
         string $channel = self::CHANNEL_STABLE
     ): void {
+        $this->channel = $channel;
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
@@ -571,7 +573,7 @@ class Install extends Action
         // The nightly channel tracks the minor line rather than one release, so the
         // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
         // single build. See the Releases section of AGENTS.md.
-        if ($channel === self::CHANNEL_NIGHTLY) {
+        if ($this->channel === self::CHANNEL_NIGHTLY) {
             $version = $this->nightlyTag($version);
         }
 

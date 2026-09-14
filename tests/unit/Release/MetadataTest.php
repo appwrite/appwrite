@@ -33,14 +33,12 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function readmes(): array
+    public static function readmes(): \Iterator
     {
-        return [
-            'README.md' => ['README.md'],
-            'README-CN.md' => ['README-CN.md'],
-        ];
+        yield 'README.md' => ['README.md'];
+        yield 'README-CN.md' => ['README-CN.md'];
     }
 
     /**
@@ -119,10 +117,11 @@ final class MetadataTest extends TestCase
             'docker-compose.yml does not pin an appwrite/new console image.'
         );
 
+        // A build suffix is fine (1.1.78-self-hosted); a floating tag is not.
         $this->assertMatchesRegularExpression(
-            '/^\d+\.\d+\.\d+$/',
+            '/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/',
             $matches[1],
-            "The console is pinned to '{$matches[1]}', which is not an exact X.Y.Z version."
+            "The console is pinned to '{$matches[1]}', which is not an exact version."
         );
     }
 }
