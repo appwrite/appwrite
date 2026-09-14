@@ -162,6 +162,8 @@ readonly class Deployments
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        $deployment->setAttribute('providerRootDirectory', $rootDirectory);
+
         if ($vcs->supportsRepositoryArchives()) {
             return $this->createFromUrl(
                 $resource,
