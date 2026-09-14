@@ -147,7 +147,9 @@ class Microsoft extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        // Microsoft explicitly does not verify emails in Graph /me, so treat as unverified until one is confirmed
+        // Microsoft explicitly does not verify emails in Graph /me, so treat as unverified until one is confirmed.
+        // Self-hosted deployments that trust their tenant's directory can allow account linking by email through
+        // the project's `oauthTrustProviderEmail` policy without changing this default.
         return false;
     }
 
