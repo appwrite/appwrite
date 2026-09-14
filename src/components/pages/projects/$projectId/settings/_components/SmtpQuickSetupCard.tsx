@@ -382,7 +382,7 @@ function ProviderTile({
     </Button>
   ) : (
     <ActionButton
-      label={connected ? t('One-click setup') : t(provider.connectLabel)}
+      label={t(provider.connectLabel)}
       onClick={onSelect}
       disabled={disabled}
       planTooltip={planTooltip}

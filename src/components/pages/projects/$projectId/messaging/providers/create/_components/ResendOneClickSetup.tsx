@@ -11,7 +11,6 @@ import { AlertCircle, Check, ExternalLink, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
   SelectContent,
@@ -263,40 +262,19 @@ export const ResendOneClickSetup = forwardRef<
           </p>
         </div>
         {phase === 'idle' ? (
-          // The label depends on whether Resend is already connected. Both
-          // labels are laid out invisibly in the same grid cell so the slot
-          // is always as wide as the longer one; the skeleton and then the
-          // button sit on top without ever changing the header's footprint.
-          <div className="grid shrink-0">
-            {[t(provider.connectLabel), t('One-click setup')].map((label) => (
-              <Button
-                key={label}
-                type="button"
-                variant="outline"
-                size="sm"
-                className="invisible col-start-1 row-start-1 h-8 text-[12px]"
-                aria-hidden="true"
-                tabIndex={-1}
-              >
-                {label}
-              </Button>
-            ))}
-            {identitiesPending ? (
-              <Skeleton className="col-start-1 row-start-1 h-8" />
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="col-start-1 row-start-1 h-8 text-[12px]"
-                disabled={!accountId}
-                onClick={connected ? () => void loadDomains() : authorize}
-                {...analyticsAttrs('messaging-quick-setup-resend')}
-              >
-                {connected ? t('One-click setup') : t(provider.connectLabel)}
-              </Button>
-            )}
-          </div>
+          // Same label whether or not Resend is already connected; only the
+          // action differs, and that is not known until the identities load.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0 text-[12px]"
+            disabled={!accountId || identitiesPending}
+            onClick={connected ? () => void loadDomains() : authorize}
+            {...analyticsAttrs('messaging-quick-setup-resend')}
+          >
+            {t(provider.connectLabel)}
+          </Button>
         ) : null}
       </div>
 
