@@ -77,7 +77,8 @@ trait Deployment
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
 
-                $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
+                $timeout = $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization)
+                    ?? (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
                 try {
                     $dsn = new DSN($project->getAttribute('database'));
@@ -400,6 +401,7 @@ trait Deployment
                     ->createFromVcs(
                         $resource,
                         $deployment,
+                        $timeout,
                         $vcs,
                         $providerRepositoryOwner,
                         $providerRepositoryName,
@@ -594,8 +596,10 @@ trait Deployment
         }
     }
 
-    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
+    /** Validate the tenant before submission and optionally supply its build budget. */
+    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): ?int
     {
+        return null;
     }
 
 }

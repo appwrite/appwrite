@@ -130,6 +130,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -179,6 +180,7 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Deployments $deployments,
+        int $buildTimeout,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -377,7 +379,8 @@ class Create extends Base
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
-                    referenceType: 'branch'
+                    referenceType: 'branch',
+                    buildTimeout: $buildTimeout
                 );
 
             } elseif (!$template->isEmpty()) {
@@ -402,6 +405,7 @@ class Create extends Base
                         'type' => 'vcs',
                         'activate' => true,
                     ]),
+                    $buildTimeout,
                     $templateOwner,
                     $templateRepository,
                     Git::CLONE_TYPE_TAG,

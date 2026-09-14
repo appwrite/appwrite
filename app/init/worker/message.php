@@ -174,7 +174,7 @@ return function (Container $container): void {
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new Deployments($jobs, $dbForProject, $project, $platform, (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
+        return new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
