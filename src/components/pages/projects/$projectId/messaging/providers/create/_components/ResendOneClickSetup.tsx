@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, Check, ExternalLink, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -20,13 +27,17 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import {
   buildCredentialName,
+  createMintedCredentialTracker,
   defaultSenderEmail,
   emailBelongsToDomain,
   pickDefaultQuickSetupDomain,
   sortQuickSetupDomains,
   type QuickSetupDomain,
 } from '@/lib/smtp/quick-setup'
-import { getAvailableSmtpQuickSetupProvider } from '@/lib/smtp/providers'
+import {
+  getAvailableSmtpQuickSetupProvider,
+  type SmtpQuickSetupCredential,
+} from '@/lib/smtp/providers'
 import {
   QuickSetupReauthorizeRequiredError,
   startProviderAuthorization,
@@ -102,6 +113,16 @@ interface ResendOneClickSetupProps {
   autoStart?: boolean
 }
 
+export interface ResendOneClickSetupHandle {
+  /**
+   * The provider was created with `apiKey`. Call this before leaving the
+   * wizard: a key minted here is now in use and must survive the unmount,
+   * while a minted key the user replaced by hand is still unused and is
+   * revoked as usual.
+   */
+  keepCredential(apiKey: unknown): void
+}
+
 /**
  * One-click setup for the messaging Resend provider: authorize Resend once,
  * then let Appwrite mint a sending-only API key for a verified domain and fill
@@ -110,13 +131,19 @@ interface ResendOneClickSetupProps {
  * Same credentials and reconnect rules as the project SMTP one-click setup;
  * the difference is what gets filled, since this provider sends through
  * Resend's API rather than the SMTP relay.
+ *
+ * The key exists at Resend from the moment it is minted, but nothing depends
+ * on it until the provider is created. Until the wizard reports that through
+ * {@link ResendOneClickSetupHandle.keepCredential}, this panel owns the key
+ * and revokes it when the user leaves without creating the provider.
  */
-export function ResendOneClickSetup({
-  projectName,
-  values,
-  onFill,
-  autoStart = false,
-}: ResendOneClickSetupProps) {
+export const ResendOneClickSetup = forwardRef<
+  ResendOneClickSetupHandle,
+  ResendOneClickSetupProps
+>(function ResendOneClickSetup(
+  { projectName, values, onFill, autoStart = false },
+  ref,
+) {
   const t = useT()
   const { account } = useAuth()
   const accountId =
@@ -131,6 +158,15 @@ export function ResendOneClickSetup({
   )
 
   const { callWith } = useProviderTokens()
+  const [minted] = useState(() =>
+    createMintedCredentialTracker<SmtpQuickSetupCredential>((credentialId) =>
+      provider
+        ? callWith(provider, (accessToken) =>
+            provider.api.deleteCredential(accessToken, credentialId),
+          )
+        : Promise.resolve(),
+    ),
+  )
   const [phase, setPhase] = useState<Phase>('idle')
   const [domains, setDomains] = useState<QuickSetupDomain[]>([])
   const [domainId, setDomainId] = useState('')
@@ -181,6 +217,17 @@ export function ResendOneClickSetup({
     void loadDomains()
   }, [autoStart, connected, loadDomains])
 
+  // Leaving the wizard without creating the provider (back, close, browser
+  // navigation) abandons the minted key. Revoke it rather than leave a live,
+  // unused sending key in the Resend account.
+  useEffect(() => () => minted.release(), [minted])
+
+  useImperativeHandle(
+    ref,
+    () => ({ keepCredential: (apiKey) => minted.keep(apiKey) }),
+    [minted],
+  )
+
   if (!provider) return null
 
   const authorize = () => {
@@ -214,6 +261,9 @@ export function ResendOneClickSetup({
           domainId: selectedDomain.id,
         }),
       )
+      // Generating again replaces the key in the form, so the previous one
+      // (if any) is revoked here as well.
+      minted.track(credential)
 
       const currentEmail =
         typeof values.fromEmail === 'string' ? values.fromEmail.trim() : ''
@@ -440,4 +490,4 @@ export function ResendOneClickSetup({
       ) : null}
     </div>
   )
-}
+})

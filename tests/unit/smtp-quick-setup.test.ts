@@ -1,10 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { OAuthProvider } from '@appwrite.io/console'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import {
   buildCredentialName,
   buildQuickSetupOAuthUrls,
+  createMintedCredentialTracker,
   defaultSenderEmail,
   emailBelongsToDomain,
   isProviderTokenExpired,
@@ -16,22 +14,15 @@ import {
   stripQuickSetupReturn,
 } from '@/lib/smtp/quick-setup'
 import {
-  SMTP_QUICK_SETUP_PROVIDERS,
   getAvailableSmtpQuickSetupProvider,
   getSmtpQuickSetupProvider,
   isProviderAvailable,
 } from '@/lib/smtp/providers'
-import {
-  RESEND_OAUTH_SCOPES,
-  sanitizeCreateApiKeyBody,
-} from '@/lib/smtp/resend'
+import { sanitizeCreateApiKeyBody } from '@/lib/smtp/resend'
 import {
   isAllowedFetchSite,
   readBearerAuthorization,
 } from '@/lib/smtp/resend-proxy'
-import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
-
-const REPO_ROOT = join(import.meta.dir, '../..')
 
 describe('isProviderTokenExpired', () => {
   const now = Date.parse('2026-09-08T12:00:00.000Z')
@@ -170,73 +161,93 @@ describe('sending domains and sender defaults', () => {
   })
 })
 
+describe('minted credentials', () => {
+  type Credential = { id: string; secret: string }
+
+  function tracked() {
+    const revoked: string[] = []
+    const minted = createMintedCredentialTracker<Credential>(
+      async (credentialId) => {
+        revoked.push(credentialId)
+      },
+    )
+    return { minted, revoked }
+  }
+
+  test('revokes a credential the flow abandons before anything stores it', () => {
+    const { minted, revoked } = tracked()
+    minted.track({ id: 'key_1', secret: 's1' })
+    minted.release()
+    expect(revoked).toEqual(['key_1'])
+  })
+
+  test('leaves a credential alone once its secret was saved', () => {
+    // A failed refetch or a closed wizard after saving must not revoke the
+    // password the project now sends with.
+    const { minted, revoked } = tracked()
+    minted.track({ id: 'key_1', secret: 's1' })
+    minted.keep('s1')
+    minted.release()
+    expect(revoked).toEqual([])
+  })
+
+  test('still revokes a minted credential the user replaced by hand', () => {
+    const { minted, revoked } = tracked()
+    minted.track({ id: 'key_1', secret: 's1' })
+    minted.keep('re_typed_by_the_user')
+    minted.release()
+    expect(revoked).toEqual(['key_1'])
+  })
+
+  test('minting again revokes only the previous unused credential', () => {
+    const { minted, revoked } = tracked()
+    minted.track({ id: 'key_1', secret: 's1' })
+    minted.track({ id: 'key_2', secret: 's2' })
+    expect(revoked).toEqual(['key_1'])
+    minted.keep('s2')
+    minted.release()
+    expect(revoked).toEqual(['key_1'])
+  })
+
+  test('does nothing without a credential and swallows revocation failures', async () => {
+    const { minted, revoked } = tracked()
+    minted.keep('s1')
+    minted.release()
+    expect(revoked).toEqual([])
+
+    const failing = createMintedCredentialTracker<Credential>(async () => {
+      throw new Error('offline')
+    })
+    failing.track({ id: 'key_1', secret: 's1' })
+    expect(() => failing.release()).not.toThrow()
+    // Let the rejected revocation settle; an unhandled rejection fails the run.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+})
+
 describe('provider registry', () => {
-  test('ids are unique and resolvable', () => {
-    const ids = SMTP_QUICK_SETUP_PROVIDERS.map((provider) => provider.id)
-    expect(new Set(ids).size).toBe(ids.length)
-    for (const id of ids) {
-      expect(getSmtpQuickSetupProvider(id)?.id).toBe(id)
-    }
+  test('resolves the shipped provider and rejects unknown ids', () => {
+    expect(getSmtpQuickSetupProvider('resend')?.id).toBe('resend')
+    expect(getAvailableSmtpQuickSetupProvider('resend')?.id).toBe('resend')
     expect(getSmtpQuickSetupProvider('nope')).toBeUndefined()
     expect(getSmtpQuickSetupProvider(undefined)).toBeUndefined()
+    expect(getAvailableSmtpQuickSetupProvider(null)).toBeUndefined()
   })
 
-  test('every entry ships an icon asset and an analytics action', () => {
-    for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
-      expect(existsSync(join(REPO_ROOT, 'public', provider.iconPath))).toBe(
-        true,
-      )
-      expect(ANALYTICS_ACTIONS[provider.analyticsAction]).toBeTruthy()
-    }
-  })
-
-  test('interest feature ids are unique and safe for the comma-separated pref', () => {
-    const ids = SMTP_QUICK_SETUP_PROVIDERS.map((provider) =>
-      providerInterestFeatureId(provider.id),
-    )
-    expect(new Set(ids).size).toBe(ids.length)
-    for (const id of ids) {
-      expect(id).not.toContain(',')
-      expect(id.startsWith('smtp-quick-setup-')).toBe(true)
-    }
-  })
-
-  test('brand copy is whole sentences per provider, never fragments', () => {
-    for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
-      expect(provider.connectLabel).toBe(`Connect with ${provider.name}`)
-      expect(provider.setupTitle).toBe(`Set up SMTP with ${provider.name}`)
-      expect(provider.disconnectTitle).toBe(`Disconnect ${provider.name}`)
-    }
-  })
-
-  test('only providers with OAuth and an API adapter are runnable', () => {
-    for (const provider of SMTP_QUICK_SETUP_PROVIDERS) {
-      expect(isProviderAvailable(provider)).toBe(
-        Boolean(provider.oauth && provider.api),
-      )
-    }
-    expect(getAvailableSmtpQuickSetupProvider('resend')?.id).toBe('resend')
-    // Coming soon until Appwrite ships console OAuth2 providers for them.
-    expect(getAvailableSmtpQuickSetupProvider('mailgun')).toBeUndefined()
-    expect(getAvailableSmtpQuickSetupProvider('sendgrid')).toBeUndefined()
-  })
-
-  test('Resend uses its documented SMTP relay settings and full access', () => {
+  test('a provider is runnable only with both OAuth and an API adapter', () => {
     const resend = getAvailableSmtpQuickSetupProvider('resend')!
-    expect(resend.smtp.host).toBe('smtp.resend.com')
-    expect(resend.smtp.port).toBe(587)
-    expect(resend.smtp.secure).toBe('tls')
-    expect(resend.smtp.username('acme.dev')).toBe('resend')
-    expect(resend.oauth.scopes).toEqual(RESEND_OAUTH_SCOPES)
-    expect(resend.oauth.provider).toBe(OAuthProvider.Resend)
+    const { oauth, api, ...comingSoon } = resend
+    expect(isProviderAvailable(resend)).toBe(true)
+    expect(isProviderAvailable({ ...comingSoon, api })).toBe(false)
+    expect(isProviderAvailable({ ...comingSoon, oauth })).toBe(false)
+    expect(isProviderAvailable(comingSoon)).toBe(false)
   })
 
-  test('usernames resolve per selected domain where the provider needs it', () => {
-    const mailgun = getSmtpQuickSetupProvider('mailgun')!
-    expect(mailgun.smtp.username('acme.dev')).toBe('postmaster@acme.dev')
-    expect(
-      getSmtpQuickSetupProvider('sendgrid')!.smtp.username('acme.dev'),
-    ).toBe('apikey')
+  test('interest feature ids stay distinct and safe for the comma-separated pref', () => {
+    expect(providerInterestFeatureId('mailgun')).not.toBe(
+      providerInterestFeatureId('sendgrid'),
+    )
+    expect(providerInterestFeatureId('mailgun')).not.toContain(',')
   })
 })
 

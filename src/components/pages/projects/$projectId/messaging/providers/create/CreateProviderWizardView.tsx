@@ -40,6 +40,7 @@ import {
   ResendOneClickSetup,
   clearResendDraft,
   readResendDraft,
+  type ResendOneClickSetupHandle,
 } from './_components/ResendOneClickSetup'
 
 type ProviderType = 'email' | 'sms' | 'push'
@@ -549,6 +550,7 @@ export function CreateProviderWizardView() {
   )
   const handledReturnRef = useRef(false)
   const [autoStartOneClick, setAutoStartOneClick] = useState(false)
+  const oneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
 
   const selected = useMemo(
     () => PROVIDERS.find((p) => p.id === selectedId) ?? null,
@@ -607,7 +609,11 @@ export function CreateProviderWizardView() {
     mutationFn: async () => {
       if (!selected) throw new Error('No provider selected')
       const projectSdk = sdk.forProject(pid)
-      return selected.submit(projectSdk, ID.unique(), values)
+      const provider = await selected.submit(projectSdk, ID.unique(), values)
+      // The provider now holds this key, so the one-click panel must not
+      // revoke it when the wizard unmounts after the redirect below.
+      oneClickRef.current?.keepCredential(values.apiKey)
+      return provider
     },
     onSuccess: async (provider) => {
       await queryClient.refetchQueries({
@@ -681,6 +687,7 @@ export function CreateProviderWizardView() {
           {/* Needs the console's Resend OAuth2 provider, which only cloud has. */}
           {selected.id === 'resend' && isCloudProfile() ? (
             <ResendOneClickSetup
+              ref={oneClickRef}
               projectName={project?.name ?? ''}
               values={values}
               autoStart={autoStartOneClick}

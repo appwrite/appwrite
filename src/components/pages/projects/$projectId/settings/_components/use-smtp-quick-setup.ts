@@ -6,6 +6,7 @@ import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildCredentialName,
+  createMintedCredentialTracker,
   defaultSenderEmail,
   emailBelongsToDomain,
   pickDefaultQuickSetupDomain,
@@ -162,9 +163,14 @@ export function useSmtpQuickSetup({
     setErrorMessage('')
     setPhase('submitting')
 
-    let created: SmtpQuickSetupCredential | null = null
+    const minted = createMintedCredentialTracker<SmtpQuickSetupCredential>(
+      (credentialId) =>
+        callProvider((accessToken) =>
+          provider.api.deleteCredential(accessToken, credentialId),
+        ),
+    )
     try {
-      created = await callProvider((accessToken) =>
+      const created = await callProvider((accessToken) =>
         provider.api.createCredential(accessToken, {
           name: buildCredentialName(
             project?.name ?? '',
@@ -173,6 +179,7 @@ export function useSmtpQuickSetup({
           domainId: selectedDomain.id,
         }),
       )
+      minted.track(created)
 
       await updateSMTPMutation.mutateAsync({
         enabled: true,
@@ -185,23 +192,23 @@ export function useSmtpQuickSetup({
         password: created.secret,
         secure: provider.smtp.secure,
       })
-
-      // Make sure the SMTP form behind the flow already shows the saved values.
-      await queryClient.refetchQueries({
-        queryKey: projectQueryOptions(projectId).queryKey,
-      })
-      setPhase('success')
+      minted.keep(created.secret)
     } catch (error) {
-      if (created) {
-        // The credential exists at the provider but the project never stored
-        // it; drop it so retries do not pile up unused credentials.
-        const orphanId = created.id
-        void callProvider((accessToken) =>
-          provider.api.deleteCredential(accessToken, orphanId),
-        ).catch(() => {})
-      }
+      // The project never stored the credential, so drop it at the provider
+      // rather than let retries pile up unused credentials.
+      minted.release()
       failWith(error, 'Failed to set up SMTP with the email provider')
+      return
     }
+
+    // The project now sends through the new credential, so nothing past this
+    // point may revoke it. The refetch only brings the SMTP form behind the
+    // flow up to date with what was saved; if it fails the form is merely
+    // stale, not the setup.
+    await queryClient.refetchQueries({
+      queryKey: projectQueryOptions(projectId).queryKey,
+    })
+    setPhase('success')
   }, [
     callProvider,
     failWith,

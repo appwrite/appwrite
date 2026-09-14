@@ -197,6 +197,58 @@ export function providerInterestFeatureId(providerId: string): string {
   return `smtp-quick-setup-${providerId}`
 }
 
+/**
+ * One minted credential that nothing depends on yet, so it can be revoked
+ * instead of piling up at the provider when the flow does not get to use it.
+ */
+export interface MintedCredentialTracker<
+  T extends { id: string; secret: string },
+> {
+  /** Start tracking a fresh credential; the previous unused one is revoked. */
+  track(credential: T): void
+  /**
+   * Something now stores `secret` (the project's SMTP password, a messaging
+   * provider's API key), so the matching credential is in use and must
+   * survive. Any other tracked credential stays revocable: the user may have
+   * replaced the minted key with one of their own before saving.
+   */
+  keep(secret: unknown): void
+  /** Revoke whatever is still unused, when the flow is abandoned or failed. */
+  release(): void
+}
+
+/**
+ * Shared by every surface that mints credentials, so the two rules live in
+ * one place: revoke only while the credential is unused, and mint again only
+ * after revoking the previous unused one.
+ *
+ * `revoke` is best effort. Its failures are swallowed, because the caller has
+ * already moved on from the credential and there is nothing left to retry.
+ */
+export function createMintedCredentialTracker<
+  T extends { id: string; secret: string },
+>(revoke: (credentialId: string) => Promise<void>): MintedCredentialTracker<T> {
+  let minted: T | null = null
+  const revokeQuietly = (credential: T) => {
+    void revoke(credential.id).catch(() => {})
+  }
+  return {
+    track(credential) {
+      const previous = minted
+      minted = credential
+      if (previous) revokeQuietly(previous)
+    },
+    keep(secret) {
+      if (minted && minted.secret === secret) minted = null
+    },
+    release() {
+      const current = minted
+      minted = null
+      if (current) revokeQuietly(current)
+    },
+  }
+}
+
 /** Credential name written at the provider, trimmed to that provider's limit. */
 export function buildCredentialName(
   projectName: string,
