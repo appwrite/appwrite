@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14b334b7efd3509beaf5d541489bbe3d",
+    "content-hash": "c02799dfff0113599204fcddb77148d9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1002,16 +1002,16 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "1.0.1",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "b3566132b2dea7995959e60e8b6d8d6c3745d711"
+                "reference": "97ae1280f9dcdbdebd7bf69a52d36f57807f2720"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/b3566132b2dea7995959e60e8b6d8d6c3745d711",
-                "reference": "b3566132b2dea7995959e60e8b6d8d6c3745d711",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/97ae1280f9dcdbdebd7bf69a52d36f57807f2720",
+                "reference": "97ae1280f9dcdbdebd7bf69a52d36f57807f2720",
                 "shasum": ""
             },
             "require": {
@@ -1039,9 +1039,9 @@
             "description": "PHP SDK for the Open Runtimes orchestrator: jobs, deployments, and sandboxes.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/1.0.1"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/2.0.0"
             },
-            "time": "2026-09-09T15:05:02+00:00"
+            "time": "2026-09-10T11:51:16+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -4550,16 +4550,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "2.2.3",
+            "version": "2.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "9474bc419fef9680a60ebd7d6773b730402d7446"
+                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/9474bc419fef9680a60ebd7d6773b730402d7446",
-                "reference": "9474bc419fef9680a60ebd7d6773b730402d7446",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/c6994fe68c58d48f303693dad2762d1f80d5bf97",
+                "reference": "c6994fe68c58d48f303693dad2762d1f80d5bf97",
                 "shasum": ""
             },
             "require": {
@@ -4610,9 +4610,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/2.2.3"
+                "source": "https://github.com/utopia-php/queue/tree/2.2.4"
             },
-            "time": "2026-09-11T10:05:23+00:00"
+            "time": "2026-09-11T17:50:20+00:00"
         },
         {
             "name": "utopia-php/registry",

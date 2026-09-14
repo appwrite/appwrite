@@ -1,10 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
+namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
+use Appwrite\Auth\Key;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -14,14 +15,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-/**
- * TODO: Remove once the Console, CLI and SDKs use the Organization API
- * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
- */
-class Delete extends Base
+class Delete extends Action
 {
     use HTTP;
 
@@ -34,22 +30,21 @@ class Delete extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/project/keys/:keyId')
-            ->httpAlias('/v1/projects/:projectId/keys/:keyId')
+            ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Delete project key')
-            ->groups(['api', 'project'])
-            ->label('scope', 'keys.write')
+            ->groups(['api', 'organization'])
+            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
             ->label('event', 'keys.[keyId].delete')
             ->label('audits.event', 'project.key.delete')
             ->label('audits.resource', 'project.key/{request.keyId}')
             ->label('sdk', new Method(
-                namespace: 'project',
+                namespace: 'organization',
                 group: 'keys',
-                name: 'deleteKey',
+                name: 'deleteProjectKey',
                 description: <<<EOT
-                Delete a key by its unique ID. Once deleted, the key can no longer be used to authenticate API calls.
+                Delete a project key by its unique ID. Once deleted, the key can no longer be used to authenticate API calls.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -58,23 +53,34 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->inject('project')
+            ->inject('team')
             ->inject('authorization')
+            ->inject('apiKey')
+            ->inject('auditContext')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $projectId,
         string $keyId,
         Response $response,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Document $project,
+        Document $team,
         Authorization $authorization,
+        ?Key $apiKey,
+        AuditContext $auditContext,
     ) {
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+
+        // The request may run through the console project; events and audits belong to the resolved project
+        $queueForEvents->setProject($project);
+        $auditContext->project = $project;
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
@@ -83,7 +89,7 @@ class Delete extends Base
 
         if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('keys', $key->getId()))) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove document from DB');
-        };
+        }
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 

@@ -1416,7 +1416,12 @@ Http::error()
             ->addHeader('Pragma', 'no-cache')
             ->setStatusCode($code);
 
-        $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
+        $template = $error->getView();
+
+        // SDKs send `accept: text/html` to these routes too, so only non-SDK requests get the error page
+        if ($template === null && $route && $request->getHeaderLine('x-sdk-name') === '') {
+            $template = $route->getLabel('error', null);
+        }
 
         // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
         if (empty($route) || !\str_starts_with($route->getPath(), '/v1')) {
