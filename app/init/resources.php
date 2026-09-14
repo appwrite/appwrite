@@ -213,7 +213,6 @@ $container->set('executionStore', function () {
     }
 
     return new ExecutionStore(
-        enabled: true,
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),

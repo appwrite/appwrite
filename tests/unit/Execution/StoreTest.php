@@ -285,24 +285,6 @@ final class StoreTest extends TestCase
         $this->store(new FailingClient())->deleteProject('project');
     }
 
-    public function testDisabledStoreRejectsWrites(): void
-    {
-        $store = new Store(
-            enabled: false,
-            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
-            client: new CapturingClient(),
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Execution ClickHouse persistence is not configured');
-
-        $store->create('project', new Document([
-            '$id' => 'execution',
-            '$createdAt' => '2026-08-25T10:00:00.000+00:00',
-            'status' => 'completed',
-        ]));
-    }
-
     public function testSetupFailuresRemainVisible(): void
     {
         $this->expectException(\RuntimeException::class);
@@ -314,7 +296,6 @@ final class StoreTest extends TestCase
     private function store(ClientInterface $client): Store
     {
         return new Store(
-            enabled: true,
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
         );

@@ -104,7 +104,6 @@ class Store
     private array $lastVersions = [];
 
     public function __construct(
-        private readonly bool $enabled,
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
@@ -112,17 +111,8 @@ class Store
         $this->requestFactory = new RequestFactory();
     }
 
-    public function isEnabled(): bool
-    {
-        return $this->enabled;
-    }
-
     public function setup(): void
     {
-        if (!$this->enabled) {
-            return;
-        }
-
         $this->connect();
         $database = $this->identifier($this->database);
         $table = $this->table();
@@ -179,10 +169,6 @@ class Store
     /** @return array<string, mixed> */
     public function healthCheck(): array
     {
-        if (!$this->enabled) {
-            return ['healthy' => true, 'enabled' => false, 'schemaReady' => false];
-        }
-
         try {
             $rows = $this->rows($this->query(
                 'SELECT count() AS tables FROM system.tables WHERE database = {database:String} AND name = {table:String} FORMAT JSON',
@@ -198,14 +184,12 @@ class Store
 
             return [
                 'healthy' => true,
-                'enabled' => true,
                 'schemaReady' => $ready,
                 'database' => $this->database,
             ];
         } catch (Throwable $th) {
             return [
                 'healthy' => false,
-                'enabled' => true,
                 'schemaReady' => false,
                 'error' => $th->getMessage(),
             ];
@@ -214,10 +198,6 @@ class Store
 
     public function isReady(): bool
     {
-        if (!$this->enabled) {
-            return false;
-        }
-
         if ($this->ready && (\microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
             return true;
         }
@@ -250,8 +230,6 @@ class Store
             return;
         }
 
-        $this->requireEnabled();
-
         $rows = [];
         foreach ($executions as $execution) {
             $rows[] = $this->snapshot($projectId, $execution, false);
@@ -262,7 +240,6 @@ class Store
 
     public function delete(string $projectId, Document $execution): void
     {
-        $this->requireEnabled();
         $this->insert([$this->snapshot($projectId, $execution, true)]);
     }
 
@@ -290,10 +267,6 @@ class Store
      */
     public function get(string $projectId, string $executionId, ?array $roles = null): Document
     {
-        if (!$this->enabled) {
-            return new Document();
-        }
-
         $params = [
             'projectId' => $projectId,
             'executionId' => $executionId,
@@ -317,10 +290,6 @@ class Store
      */
     public function find(string $projectId, array $queries, ?array $roles = null): array
     {
-        if (!$this->enabled) {
-            return [];
-        }
-
         $params = ['projectId' => $projectId];
         [$filters, $order, $limit, $offset, $cursor] = $this->compileQueries($queries, $params);
         $permission = $this->permissionSql($roles, $params);
@@ -371,10 +340,6 @@ class Store
      */
     public function count(string $projectId, array $queries, int $max, ?array $roles = null): int
     {
-        if (!$this->enabled) {
-            return 0;
-        }
-
         $params = ['projectId' => $projectId, 'max' => $max];
         [$filters] = $this->compileQueries($queries, $params);
         $permission = $this->permissionSql($roles, $params);
@@ -487,8 +452,6 @@ class Store
         ?string $resourceType = null,
         ?string $createdBefore = null,
     ): void {
-        $this->requireEnabled();
-
         $params = ['projectId' => $projectId];
         $conditions = ['source.projectId = {projectId:String}'];
         if ($resourceInternalId !== null) {
@@ -885,13 +848,6 @@ class Store
     private function builder(): ClickHouseBuilder
     {
         return (new ClickHouseBuilder())->useNamedBindings();
-    }
-
-    private function requireEnabled(): void
-    {
-        if (!$this->enabled) {
-            throw new \RuntimeException('Execution ClickHouse persistence is not configured');
-        }
     }
 
     /** @param array<string, mixed> $params */
