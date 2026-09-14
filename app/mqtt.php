@@ -238,14 +238,15 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 $mqtt = new Mqtt($telemetry);
 
-$dispatcher = (new Dispatcher())
-    ->addHandler(new ConnectHandler())
-    ->addHandler(new SubscribeHandler())
-    ->addHandler(new UnsubscribeHandler())
-    ->addHandler(new PubackHandler())
-    ->addHandler(new AuthHandler())
-    ->addHandler(new PingHandler())
-    ->addHandler(new DisconnectHandler());
+$dispatcher = new Dispatcher([
+    new ConnectHandler(),
+    new SubscribeHandler(),
+    new UnsubscribeHandler(),
+    new PubackHandler(),
+    new AuthHandler(),
+    new PingHandler(),
+    new DisconnectHandler(),
+]);
 
 $server->onStart(fn () => print("MQTT broker started\n"));
 
