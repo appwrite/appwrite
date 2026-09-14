@@ -15,7 +15,7 @@ faqs:
   - question: "How does the agent remember earlier messages?"
     answer: "Every inbound and outbound message is a row in a TablesDB messages table keyed by the customer's phone number. Before each reply, the agent loads the rows for that number and sends them to the model as conversation history, so the model sees the whole thread instead of a single message."
   - question: "What is context compaction and when does it run?"
-    answer: "Compaction folds older messages into a short running summary once the verbatim history grows past a token threshold. The agent counts tokens with the model provider's count endpoint and asks the model to merge the older messages into the existing summary. It stores that summary on the conversation row and marks the folded messages as compacted. The prompt then contains the summary plus the most recent messages."
+    answer: "Compaction folds older messages into a short running summary once the prompt grows past a token threshold. The agent reads the input token count that the model reports on each reply, stores it on the conversation row, and on the next message asks the model to merge the older messages into the existing summary. It stores that summary on the conversation row and marks the folded messages as compacted. The prompt then contains the summary plus the most recent messages."
   - question: "How are duplicate WhatsApp deliveries handled?"
     answer: "Each WhatsApp message carries a unique ID. The messages table has a unique index on that ID, so a redelivered message fails to insert with a conflict error. The webhook catches the conflict, returns 200, and does not trigger the agent again."
   - question: "Do I need Meta business verification to test this?"
@@ -101,6 +101,7 @@ The `conversations` table is small. Its row ID is the phone number itself, so th
 | --- | --- | --- |
 | `phone` | varchar(32) | The customer's number |
 | `summary` | text | The running summary of compacted history, empty until the first compaction |
+| `promptTokens` | integer | How many input tokens the last reply's prompt used |
 
 The `orders` table is the data behind the agent's tool. It has `orderNumber` with a unique index, `items`, a `status` enum, and `expectedDelivery`. Add a few rows through the Console **Rows** tab so the agent has something to find.
 
@@ -197,12 +198,12 @@ const result = await tablesDB.listRows({
 });
 ```
 
-**Count tokens and compact when needed.** The agent asks the model provider how many tokens the history is with a count request, which is free. When the count crosses `COMPACT_AFTER_TOKENS`, the agent takes every message except the six most recent and asks the model to merge them into the existing summary. It then writes the new summary to the conversation row and marks those rows as compacted:
+**Compact when the prompt is getting long.** Every model reply reports how many input tokens its prompt used, and the agent stores that number on the conversation row. When it crosses `COMPACT_AFTER_TOKENS`, the agent takes every message except the six most recent and asks the model to merge them into the existing summary. It then writes the new summary to the conversation row and marks those rows as compacted:
 
 ```javascript
-if (tokens > COMPACT_AFTER_TOKENS && history.length > KEEP_RECENT_MESSAGES) {
+if (conversation.promptTokens > COMPACT_AFTER_TOKENS && history.length > KEEP_RECENT_MESSAGES) {
   const older = history.slice(0, history.length - KEEP_RECENT_MESSAGES);
-  const summary = await summarize(anthropic, conversation.summary, older);
+  const summary = await summarize(openai, conversation.summary, older);
 
   await tablesDB.updateRow({
     databaseId: process.env.DATABASE_ID,
@@ -224,50 +225,71 @@ if (tokens > COMPACT_AFTER_TOKENS && history.length > KEEP_RECENT_MESSAGES) {
 
 The summary prompt tells the model to keep names, order numbers, preferences, unresolved questions, and promises made, and to drop greetings. The agent deletes nothing. Compacted rows stay in the table with `compacted` set to `true`, so the full transcript is still there for a support dashboard or an audit. Only the prompt shrinks.
 
-**Give the model a tool.** The `lookup_order` tool is a single `listRows` call filtered by order number. The model decides when to call it:
+**Give the model a tool.** The `lookup_order` tool is declared as a function with a JSON schema, and its implementation is a single `listRows` call filtered by order number. The model decides when to call it:
 
 ```javascript
-const lookupOrder = betaZodTool({
-  name: 'lookup_order',
-  description: 'Look up a Northwind Coffee order by its order number.',
-  inputSchema: z.object({
-    orderNumber: z.string().describe('The order number, for example NW-1042'),
-  }),
-  run: async ({ orderNumber }) => {
-    const result = await tablesDB.listRows({
-      databaseId: process.env.DATABASE_ID,
-      tableId: 'orders',
-      queries: [Query.equal('orderNumber', orderNumber.toUpperCase()), Query.limit(1)],
-    });
-    if (result.total === 0) return `No order found with number ${orderNumber}.`;
-    const order = result.rows[0];
-    return JSON.stringify({
-      orderNumber: order.orderNumber,
-      items: order.items,
-      status: order.status,
-      expectedDelivery: order.expectedDelivery,
-    });
+const TOOLS = [
+  {
+    type: 'function',
+    name: 'lookup_order',
+    description: 'Look up a Northwind Coffee order by its order number.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        orderNumber: { type: 'string', description: 'The order number, for example NW-1042' },
+      },
+      required: ['orderNumber'],
+      additionalProperties: false,
+    },
   },
-});
+];
+
+async function runTool(tablesDB, name, args) {
+  const result = await tablesDB.listRows({
+    databaseId: process.env.DATABASE_ID,
+    tableId: 'orders',
+    queries: [Query.equal('orderNumber', args.orderNumber.toUpperCase()), Query.limit(1)],
+  });
+  if (result.total === 0) return `No order found with number ${args.orderNumber}.`;
+  const order = result.rows[0];
+  return JSON.stringify({
+    orderNumber: order.orderNumber,
+    items: order.items,
+    status: order.status,
+    expectedDelivery: order.expectedDelivery,
+  });
+}
 ```
 
-**Ask the model.** The system prompt describes the shop and the tone, and the agent appends the summary when one exists. The history rows become the message list. The tool runner in the Anthropic SDK handles the tool-call loop. If the model asks for an order, the tool runs and the model reads the result before it answers:
+**Ask the model.** The instructions describe the shop and the tone, and the agent appends the summary when one exists. The history rows become the input list. If the model answers with a function call instead of text, the agent runs the tool, appends the result to the input, and asks again. The loop ends when the model replies with text:
 
 ```javascript
-const system = conversation.summary
+const instructions = conversation.summary
   ? `${SYSTEM_PROMPT}\n\nWhat you already know from earlier in this conversation:\n${conversation.summary}`
   : SYSTEM_PROMPT;
 
-const finalMessage = await anthropic.beta.messages.toolRunner({
-  model: 'claude-opus-5',
-  max_tokens: 1024,
-  system,
-  tools: [lookupOrder],
-  messages: history.map((row) => ({ role: row.role, content: row.content })),
-});
+const input = history.map((row) => ({ role: row.role, content: row.content }));
+let response = await openai.responses.create({ model: 'gpt-5.6-luna', instructions, input, tools: TOOLS });
+let promptTokens = response.usage.input_tokens;
+
+for (let round = 0; round < 5; round++) {
+  const calls = response.output.filter((item) => item.type === 'function_call');
+  if (calls.length === 0) break;
+
+  input.push(...response.output);
+  for (const call of calls) {
+    const output = await runTool(tablesDB, call.name, JSON.parse(call.arguments));
+    input.push({ type: 'function_call_output', call_id: call.call_id, output });
+  }
+  response = await openai.responses.create({ model: 'gpt-5.6-luna', instructions, input, tools: TOOLS });
+  promptTokens = Math.max(promptTokens, response.usage.input_tokens);
+}
+
+const reply = response.output_text.trim();
 ```
 
-**Send the reply and store it.** The reply goes to the WhatsApp Cloud API as a text message to the customer's number. The agent stores the message ID that comes back as the `wamid` of a new assistant row. The next incoming message will load this reply as part of the history.
+**Send the reply and store it.** The reply goes to the WhatsApp Cloud API as a text message to the customer's number. The agent stores the message ID that comes back as the `wamid` of a new assistant row, and writes the prompt size to the conversation row for the next compaction check. The next incoming message will load this reply as part of the history.
 
 ```javascript
 const wamid = await sendWhatsAppMessage(phone, reply);
@@ -277,6 +299,13 @@ await tablesDB.createRow({
   tableId: 'messages',
   rowId: ID.unique(),
   data: { phone, role: 'assistant', content: reply, wamid, compacted: false },
+});
+
+await tablesDB.updateRow({
+  databaseId: process.env.DATABASE_ID,
+  tableId: 'conversations',
+  rowId: conversation.$id,
+  data: { promptTokens },
 });
 ```
 
@@ -303,7 +332,8 @@ Open each function in the Console, go to **Variables**, and add the values from 
 | whatsapp-webhook | `WHATSAPP_VERIFY_TOKEN` | Any random string. You will paste the same string into Meta |
 | whatsapp-agent | `WHATSAPP_PHONE_NUMBER_ID` | The Phone Number ID from the Try it out page |
 | whatsapp-agent | `WHATSAPP_TOKEN` | The access token from the Try it out page |
-| whatsapp-agent | `ANTHROPIC_API_KEY` | Your Anthropic API key |
+| whatsapp-agent | `OPENAI_API_KEY` | Your OpenAI API key |
+| whatsapp-agent | `OPENAI_MODEL` | Optional. Defaults to `gpt-5.6-luna` |
 | whatsapp-agent | `COMPACT_AFTER_TOKENS` | Optional. Defaults to 1500 |
 
 Appwrite applies new variables on the next deployment, so redeploy after adding them. **Redeploy** at the top of the function page does it in one click.
@@ -314,7 +344,16 @@ Appwrite applies new variables on the next deployment, so redeploy after adding 
 
 Back in the Meta dashboard, open **Step 2. Production setup** under the WhatsApp use case and expand **Configure Webhooks**. Paste the webhook function's domain as the **Callback URL**. Paste the verify token you stored in Appwrite as the **Verify token**, then select **Verify and save**. Meta sends the GET handshake, the function echoes the challenge, and the form closes.
 
-One more step is easy to miss. After the save, the same section lists **Webhook fields**. Find the `messages` field and switch on **Subscribe**. Without this, Meta saves the webhook URL but delivers no messages. The **Test** button next to the field sends a sample message payload to the function. That is a quick way to see a row appear in the `messages` table before you touch your phone.
+Two more steps are easy to miss. After the save, the same section lists **Webhook fields**. Find the `messages` field and switch on **Subscribe**. The **Test** button next to the field sends a sample message payload to the function. That is a quick way to see a row appear in the `messages` table before you touch your phone.
+
+The second step is one API call. The webhook is registered on the app, but the WhatsApp Business account also has to be subscribed to the app before Meta forwards real messages. The dashboard does not do this for a test account, so run it once with the access token and the WhatsApp Business account ID from the Try it out page:
+
+```bash
+curl -X POST "https://graph.facebook.com/v25.0/<WABA_ID>/subscribed_apps" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+Meta answers with `{"success":true}`. Without this call, the sample payload from the Test button arrives but messages from a phone never do.
 
 # Talk to the agent
 
@@ -324,7 +363,7 @@ Send a message from your allowlisted phone to the test number. The reply arrives
 
 To watch compaction happen, set `COMPACT_AFTER_TOKENS` low, keep chatting, and open the `conversations` table in the Console. After the threshold, the `summary` column fills in and older rows in `messages` flip to `compacted: true`. The agent keeps answering as if nothing changed.
 
-The function's **Executions** tab in the Console shows every run with its logs, including the token count line the agent prints on each message. That is the fastest place to look when a reply does not arrive.
+The function's **Executions** tab in the Console shows every run with its logs, including the history size line the agent prints on each message. That is the fastest place to look when a reply does not arrive.
 
 # Where to take it
 
