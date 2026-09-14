@@ -106,6 +106,8 @@ class Initials extends Photo
      */
     private function getWords(string $name): array
     {
+        // A leading @ identifies a handle; the following name supplies its initials.
+        $name = \preg_replace('/^@(?=[\p{L}\p{N}])/u', '', \trim($name)) ?? $name;
         $words = \explode(' ', \trim($name));
 
         // Fallback: split on underscores when there is no space
