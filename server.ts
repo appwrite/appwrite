@@ -107,6 +107,11 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './src/lib/seo/agent-discovery.ts'
+import {
+  CHANGE_PASSWORD_WELL_KNOWN_PATH,
+  HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
+  wellKnownChangePasswordResponse,
+} from './src/lib/seo/change-password-url.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
 
 // Configuration
@@ -876,6 +881,14 @@ async function initializeServer() {
           ),
           'application/json; charset=utf-8',
         ),
+
+      // W3C change-password well-known URL (password managers).
+      [CHANGE_PASSWORD_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
 
       // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,
       // llms exports, and discovery documents are excluded so they use tracked
