@@ -921,7 +921,7 @@ Http::patch('/v1/account/sessions/:sessionId')
                     Query::equal('providerUid', [$session->getAttribute('providerUid', '')]),
                 ]);
 
-                if ($identity !== null && !$identity->isEmpty()) {
+                if (!$identity->isEmpty()) {
                     $dbForProject->updateDocument('identities', $identity->getId(), new Document([
                         'photo' => $oauth2->getUserPhoto($oauth2->getAccessToken('')),
                     ]));
