@@ -42,8 +42,6 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-
-
 ## Products
 
 - **[Appwrite Auth](https://appwrite.io/docs/products/auth)** - Secure user authentication with multiple login methods including email/password, SMS, OAuth, anonymous sessions, and magic links. Includes session management, multi-factor authentication, and user verification flows.
