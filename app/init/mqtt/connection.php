@@ -34,50 +34,55 @@ return function (Container $container): void {
         $dbForProject = getProjectDB($project);
         $dbForProject->setAuthorization($authorization);
 
-        if ($authMethod === 'appwrite-jwt') {
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+        switch ($authMethod) {
+            case 'appwrite-jwt':
+                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
-            try {
-                $payload = $jwt->decode($credential);
-            } catch (JWTException) {
+                try {
+                    $payload = $jwt->decode($credential);
+                } catch (JWTException) {
+                    return new User([]);
+                }
+
+                $userId = $payload['userId'] ?? '';
+                $sessionId = $payload['sessionId'] ?? '';
+
+                /** @var User $user */
+                $user = $dbForProject->getDocument('users', $userId);
+
+                if (
+                    $user->isEmpty()
+                    || $user->getAttribute('status', true) === false // blocked account
+                    || ($sessionId !== '' && !$user->sessionActive($sessionId))
+                ) {
+                    return new User([]);
+                }
+
+                return $user;
+
+            case 'appwrite-session':
+                $store = new Store();
+                $store->decode($credential);
+
+                $proofForToken = new Token();
+                $proofForToken->setHash(new Sha());
+
+                /** @var User $user */
+                $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+
+                if (
+                    $user->isEmpty()
+                    || $user->getAttribute('status', true) === false // blocked account
+                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+                ) {
+                    return new User([]);
+                }
+
+                return $user;
+
+            default:
                 return new User([]);
-            }
-
-            $userId = $payload['userId'] ?? '';
-            $sessionId = $payload['sessionId'] ?? '';
-
-            /** @var User $user */
-            $user = $dbForProject->getDocument('users', $userId);
-
-            if (
-                $user->isEmpty()
-                || $user->getAttribute('status', true) === false // blocked account
-                || ($sessionId !== '' && !$user->sessionActive($sessionId))
-            ) {
-                return new User([]);
-            }
-
-            return $user;
         }
-
-        $store = new Store();
-        $store->decode($credential);
-
-        $proofForToken = new Token();
-        $proofForToken->setHash(new Sha());
-
-        /** @var User $user */
-        $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
-
-        if (
-            $user->isEmpty()
-            || $user->getAttribute('status', true) === false // blocked account
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
-        ) {
-            return new User([]);
-        }
-
-        return $user;
     };
 
     $container->set('authenticator', function () use ($getProject, $getUser): callable {

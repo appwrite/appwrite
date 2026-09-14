@@ -66,6 +66,23 @@ final class MessagingMqttServerTest extends Scope
         return ['userId' => $userId, 'jwt' => $jwt['body']['jwt']];
     }
 
+    /**
+     * Create a server-side session for a user and return its credential — the base64({id,
+     * secret}) store blob the broker's appwrite-session auth decodes (the same value a client
+     * holds as its session cookie).
+     */
+    private function createSession(string $userId): string
+    {
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['secret']);
+
+        return $session['body']['secret'];
+    }
+
     public function testUnauthorizedConnectRejected(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -92,6 +109,32 @@ final class MessagingMqttServerTest extends Scope
         // Test for FAILURE: a blocked account is refused at CONNECT with reason 0x87.
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0x87, $subscriber->connect($projectId, $jwt, 'e2e-blocked', cleanStart: true));
+        $subscriber->disconnect();
+    }
+
+    public function testSessionAuthConnect(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $credential = $this->createSession($userId);
+
+        // Test for SUCCESS: a valid session credential authenticates via appwrite-session,
+        // the session-based analogue of the JWT auth method.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $credential, 'e2e-session-' . $userId, cleanStart: true, authMethod: 'appwrite-session'));
+        $subscriber->disconnect();
+    }
+
+    public function testSessionAuthWithInvalidSecretRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+
+        // Test for FAILURE: a well-formed store blob with a wrong secret is refused at CONNECT
+        // with reason 0x87 (the session does not verify).
+        $credential = base64_encode((string) json_encode(['id' => $userId, 'secret' => 'not-a-real-secret']));
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $credential, 'e2e-badsession-' . $userId, cleanStart: true, authMethod: 'appwrite-session'));
         $subscriber->disconnect();
     }
 
