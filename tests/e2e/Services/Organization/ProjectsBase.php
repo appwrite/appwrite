@@ -471,12 +471,15 @@ trait ProjectsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
             'queries' => [
+                Query::equal('$id', [$projectId])->toString(),
                 Query::select(['name'])->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['projects']);
-        $this->assertEquals('Organization Project Test', $response['body']['projects'][0]['name']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertSame($projectId, $response['body']['projects'][0]['$id']);
+        $this->assertSame('Organization Project Test', $response['body']['projects'][0]['name']);
+        $this->assertArrayNotHasKey('teamId', $response['body']['projects'][0]);
     }
 }
