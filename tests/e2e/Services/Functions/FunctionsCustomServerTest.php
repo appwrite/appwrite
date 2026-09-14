@@ -1981,99 +1981,103 @@ final class FunctionsCustomServerTest extends Scope
             'entrypoint' => 'index.js',
             'timeout' => 15,
         ]);
-        $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
-            'key' => 'GLOBAL_VARIABLE',
-            'value' => 'Global Variable Value',
-        ]);
-        $this->assertEquals(201, $variable['headers']['status-code']);
-        $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('basic'),
-            'activate' => true,
-        ]);
-        $data = ['functionId' => $functionId, 'deploymentId' => $deploymentId];
+        try {
+            $variable = $this->createVariable($functionId, [
+                'variableId' => ID::unique(),
+                'key' => 'GLOBAL_VARIABLE',
+                'value' => 'Global Variable Value',
+            ]);
+            $this->assertEquals(201, $variable['headers']['status-code']);
+            $deploymentId = $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $data = ['functionId' => $functionId, 'deploymentId' => $deploymentId];
 
-        /**
-         * Test for SUCCESS
-         */
-        // Explicitly send an empty JSON object instead of relying on the default empty array.
-        $execution = $this->createExecution($data['functionId'], [
-            'async' => 'false',
-            'headers' => new \stdClass(),
-        ]);
+            /**
+             * Test for SUCCESS
+             */
+            // Explicitly send an empty JSON object instead of relying on the default empty array.
+            $execution = $this->createExecution($data['functionId'], [
+                'async' => 'false',
+                'headers' => new \stdClass(),
+            ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+            $this->assertEquals(201, $execution['headers']['status-code']);
 
-        $this->assertNotEmpty($execution['body']['responseHeaders']);
+            $this->assertNotEmpty($execution['body']['responseHeaders']);
 
-        $executionIdHeader = null;
-        foreach ($execution['body']['responseHeaders'] as $header) {
-            if ($header['name'] === 'x-appwrite-execution-id') {
-                $executionIdHeader = $header['value'];
-                break;
+            $executionIdHeader = null;
+            foreach ($execution['body']['responseHeaders'] as $header) {
+                if ($header['name'] === 'x-appwrite-execution-id') {
+                    $executionIdHeader = $header['value'];
+                    break;
+                }
             }
+            $this->assertNotEmpty($executionIdHeader);
+            $this->assertEquals($execution['body']['$id'], $executionIdHeader);
+
+            $this->assertNotEmpty($execution['body']['$id']);
+            $this->assertNotEmpty($execution['body']['resourceId']);
+            $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
+            $this->assertEquals($data['functionId'], $execution['body']['resourceId']);
+            $this->assertEquals('functions', $execution['body']['resourceType']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertEquals(200, $execution['body']['responseStatusCode']);
+            $this->assertStringContainsString($execution['body']['resourceId'], (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString($data['deploymentId'], (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString('Test1', (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
+            $this->assertStringContainsString('Global Variable Value', (string) $execution['body']['responseBody']);
+            // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
+            $this->assertNotEmpty($execution['body']['errors']);
+            $this->assertNotEmpty($execution['body']['logs']);
+            $this->assertLessThan(10, $execution['body']['duration']);
+
+            /** Test create execution with HEAD method */
+            $execution = $this->createExecution($data['functionId'], [
+                'async' => 'false',
+                'method' => 'HEAD',
+            ]);
+
+            $this->assertEquals(201, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertEquals(200, $execution['body']['responseStatusCode']);
+            $this->assertIsArray($execution['body']['responseHeaders']);
+            $this->assertEmpty($execution['body']['responseBody']); // For HEAD requests, response body is empty
+
+            $executionId = $execution['body']['$id'];
+            $this->assertEventually(function () use ($data, $executionId) {
+                $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), []);
+                $this->assertEquals(204, $execution['headers']['status-code']);
+            }, 10000, 500);
+
+            /** Test create execution with 400 status code */
+            $execution = $this->createExecution($data['functionId'], [
+                'async' => 'false',
+                'path' => '/?code=400'
+            ]);
+
+            $this->assertEquals(201, $execution['headers']['status-code']);
+            $this->assertEquals('completed', $execution['body']['status']);
+            $this->assertEquals(400, $execution['body']['responseStatusCode']);
+
+            $executionId = $execution['body']['$id'];
+            $this->assertEventually(function () use ($data, $executionId) {
+                $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), []);
+                $this->assertEquals(204, $execution['headers']['status-code']);
+            }, 10000, 500);
+        } finally {
+            $this->cleanupFunction($functionId);
         }
-        $this->assertNotEmpty($executionIdHeader);
-        $this->assertEquals($execution['body']['$id'], $executionIdHeader);
-
-        $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertNotEmpty($execution['body']['resourceId']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
-        $this->assertEquals($data['functionId'], $execution['body']['resourceId']);
-        $this->assertEquals('functions', $execution['body']['resourceType']);
-        $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString($execution['body']['resourceId'], (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString($data['deploymentId'], (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString('Test1', (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
-        $this->assertStringContainsString('Global Variable Value', (string) $execution['body']['responseBody']);
-        // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
-        $this->assertNotEmpty($execution['body']['errors']);
-        $this->assertNotEmpty($execution['body']['logs']);
-        $this->assertLessThan(10, $execution['body']['duration']);
-
-        /** Test create execution with HEAD method */
-        $execution = $this->createExecution($data['functionId'], [
-            'async' => 'false',
-            'method' => 'HEAD',
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertIsArray($execution['body']['responseHeaders']);
-        $this->assertEmpty($execution['body']['responseBody']); // For HEAD requests, response body is empty
-
-        $executionId = $execution['body']['$id'];
-        $this->assertEventually(function () use ($data, $executionId) {
-            $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), []);
-            $this->assertEquals(204, $execution['headers']['status-code']);
-        }, 10000, 500);
-
-        /** Test create execution with 400 status code */
-        $execution = $this->createExecution($data['functionId'], [
-            'async' => 'false',
-            'path' => '/?code=400'
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(400, $execution['body']['responseStatusCode']);
-
-        $executionId = $execution['body']['$id'];
-        $this->assertEventually(function () use ($data, $executionId) {
-            $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), []);
-            $this->assertEquals(204, $execution['headers']['status-code']);
-        }, 10000, 500);
     }
 
     public function testSyncCreateExecution(): void
