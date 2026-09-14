@@ -47,6 +47,7 @@ const KEPT_PROFILES = ['embedding']
 const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE, ...KEPT_PROFILES]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
 const ASSISTANT_SERVICE = 'appwrite-assistant'
+const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
 
 // The appwrite repo's .env is a development file. These keys are dropped from the
 // .env the docs hand to a self-hoster:
@@ -357,6 +358,7 @@ async function main() {
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
     ASSISTANT_SERVICE,
+    AUTOGRAVITY_SERVICE,
   ]
   for (const name of expected) {
     if (!knownNames.has(name)) {
@@ -376,6 +378,8 @@ export const DATABASE_SERVICES = ${JSON.stringify(DATABASE_SERVICES)} as const
 export const TOPOLOGY_SERVICES = ${JSON.stringify(TOPOLOGY_SERVICES, null, 2)}
 
 export const ASSISTANT_SERVICE = ${JSON.stringify(ASSISTANT_SERVICE)}
+
+export const AUTOGRAVITY_SERVICE = ${JSON.stringify(AUTOGRAVITY_SERVICE)}
 
 export const DATABASE_VOLUMES: Record<string, string[]> = ${JSON.stringify(
     {

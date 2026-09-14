@@ -33,6 +33,8 @@ export const TOPOLOGY_SERVICES = {
 
 export const ASSISTANT_SERVICE = "appwrite-assistant"
 
+export const AUTOGRAVITY_SERVICE = "appwrite-autogravity"
+
 export const DATABASE_VOLUMES: Record<string, string[]> = {
   "postgresql": [
     "appwrite-postgresql"
