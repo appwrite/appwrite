@@ -1,7 +1,7 @@
-name: Nightly Security Scan
+name: Security Scan
 on:
   schedule:
-    - cron: '0 0 * * *'  # 12am UTC daily runtime
+    - cron: '30 1 * * *'  # 1:30am UTC, after the nightly build has taken 00:00
   workflow_dispatch:
 
 jobs:
