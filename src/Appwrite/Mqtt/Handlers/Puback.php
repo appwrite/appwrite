@@ -56,8 +56,8 @@ class Puback extends Action
 
         Span::add('mqtt.topic', $delivery['topic']);
         Span::add('mqtt.sequence', $delivery['sequence']);
-        $mqtt->metrics->messagesAcked->add(1);
-        $mqtt->metrics->pubacksReceived->add(1);
+        $mqtt->messagesAcked->add(1);
+        $mqtt->pubacksReceived->add(1);
 
         // Save how far the client has caught up (the "cursor" from acknowledge), not the
         // sequence it just acked — so an out-of-order ack can't skip a still-unacked

@@ -308,7 +308,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                     if ($subscribers === []) {
                         // No local subscriber on this worker; with multiple workers this
                         // counts per-worker rather than as a global drop.
-                        $mqtt->metrics->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+                        $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
                         $span->finish();
                         return;
                     }
@@ -324,8 +324,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                             ? V5::publish($topic, $message, $effectiveQos, $packetId)
                             : V3::publish($topic, $message, $effectiveQos, $packetId);
                         $server->send($fd, $publish);
-                        $mqtt->metrics->bytesSent->add(\strlen($publish));
-                        $mqtt->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
+                        $mqtt->bytesSent->add(\strlen($publish));
+                        $mqtt->messagesDelivered->add(1, ['qos' => $effectiveQos]);
 
                         // Hold QoS 1 deliveries until the subscriber's PUBACK matches them back.
                         if ($effectiveQos === 1) {
@@ -360,14 +360,14 @@ $server->onReceive(function (int $fd, string $data) use (
         $packet = Packet::parse($data);
         $connection = $mqtt->open($fd);
 
-        $mqtt->metrics->bytesReceived->add(\strlen($data));
+        $mqtt->bytesReceived->add(\strlen($data));
 
         $span = Span::init('mqtt.' . $packet->name());
         $span->set('mqtt.fd', $fd);
         $span->set('mqtt.is_broker', false); // an inbound packet from a client
         $span->set('mqtt.bytes', \strlen($data));
 
-        $response = new Response($server, $fd, $mqtt->metrics->bytesSent);
+        $response = new Response($server, $fd, $mqtt->bytesSent);
 
         // authenticator/authorizer are inherited from the global container (registered above).
         $packetContainer = new Container($container);

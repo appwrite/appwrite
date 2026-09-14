@@ -55,7 +55,7 @@ class Auth extends Action
             if ($projectId !== '' && $projectId === $connection->projectId) {
                 $start = microtime(true);
                 $identity = $authenticator($projectId, $method, $data);
-                $mqtt->metrics->authDuration->record(microtime(true) - $start);
+                $mqtt->authDuration->record(microtime(true) - $start);
             }
 
             // Reauth only refreshes the credential for the identity resolved at CONNECT — it
@@ -63,7 +63,7 @@ class Auth extends Action
             // user's subscriptions on this connection, leaking their fan-out to the new user
             // and breaking PUBACK ownership checks. A mismatch (or failure) drops the connection.
             if ($identity === [] || ($identity['userId'] ?? '') !== ($connection->identity['userId'] ?? '')) {
-                $mqtt->metrics->reauth->add(1, ['result' => 'rejected']);
+                $mqtt->reauth->add(1, ['result' => 'rejected']);
                 Span::add('mqtt.result', 'rejected');
                 $response->send(V5::disconnect(V5::REASON_NOT_AUTHORIZED));
                 $response->close();
@@ -71,7 +71,7 @@ class Auth extends Action
             }
 
             $connection->identity = $identity;
-            $mqtt->metrics->reauth->add(1, ['result' => 'success']);
+            $mqtt->reauth->add(1, ['result' => 'success']);
             Span::add('mqtt.result', 'reauthenticated');
         }
 

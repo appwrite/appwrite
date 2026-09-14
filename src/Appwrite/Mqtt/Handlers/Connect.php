@@ -71,11 +71,11 @@ class Connect extends Action
             $start = microtime(true);
             $identity = $authenticator($projectId, $authMethod, $authData);
             $duration = microtime(true) - $start;
-            $mqtt->metrics->authDuration->record($duration);
+            $mqtt->authDuration->record($duration);
             Span::add('mqtt.auth.duration', $duration);
 
             if ($identity === []) {
-                $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
+                $mqtt->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
                 Span::add('mqtt.result', 'rejected');
                 $response->send($this->connack($level, false));
                 $response->close();
@@ -93,7 +93,7 @@ class Connect extends Action
                 $timeLimit->setParam('{userId}', $identity['userId'] ?? '');
 
                 if ((new Abuse($timeLimit))->check()) {
-                    $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'abuse']);
+                    $mqtt->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'abuse']);
                     Span::add('mqtt.result', 'abuse');
                     $response->send($this->connack($level, false));
                     $response->close();
@@ -106,8 +106,8 @@ class Connect extends Action
         $connection->setClientId(Packet::getClientId($body));
         Span::add('mqtt.client_id', $connection->getClientId());
 
-        $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
-        $mqtt->metrics->connectionsActive->add(1);
+        $mqtt->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'accepted']);
+        $mqtt->connectionsActive->add(1);
         $connection->active = true;
         $response->send($this->connack($level, true));
     }

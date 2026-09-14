@@ -95,7 +95,7 @@ class Subscribe extends Action
 
             if (!isset($allowed[$filter])) {
                 $granted .= chr($denied);
-                $mqtt->metrics->subscriptions->add(1, ['result' => 'denied']);
+                $mqtt->subscriptions->add(1, ['result' => 'denied']);
                 continue;
             }
 
@@ -103,14 +103,14 @@ class Subscribe extends Action
             $topicDocument = $topicsById[$filter] ?? null;
             if ($topicDocument === null) {
                 $granted .= chr($denied);
-                $mqtt->metrics->subscriptions->add(1, ['result' => 'unknown']);
+                $mqtt->subscriptions->add(1, ['result' => 'unknown']);
                 continue;
             }
 
             // The topic's subscribe roles gate who may subscribe.
             if (!$this->authorizedForTopic($topicDocument->getAttribute('subscribe', []) ?? [], $roles)) {
                 $granted .= chr($denied);
-                $mqtt->metrics->subscriptions->add(1, ['result' => 'forbidden']);
+                $mqtt->subscriptions->add(1, ['result' => 'forbidden']);
                 continue;
             }
 
@@ -120,7 +120,7 @@ class Subscribe extends Action
 
             $mqtt->subscribe($connection->projectId, $connection->fd, '', [], [$filter], [], $grantedQos);
             $granted .= chr($grantedQos);
-            $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
+            $mqtt->subscriptions->add(1, ['result' => 'granted']);
 
             $topicDocuments[$filter] = $topicDocument;
             $grantedQosByTopic[$filter] = $grantedQos;

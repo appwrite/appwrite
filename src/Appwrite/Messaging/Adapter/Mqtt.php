@@ -5,11 +5,13 @@ namespace Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\KeepAlive;
-use Appwrite\Mqtt\Metrics;
 use Appwrite\Mqtt\SubscriptionStore;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Utopia\Mqtt\Packet;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\Histogram;
+use Utopia\Telemetry\UpDownCounter;
 
 class Mqtt extends MessagingAdapter
 {
@@ -24,19 +26,47 @@ class Mqtt extends MessagingAdapter
      */
     public array $connections = [];
 
-    /** Telemetry instruments the handlers record connection and delivery outcomes on. */
-    public readonly Metrics $metrics;
+    // Telemetry instruments the broker records connection and delivery outcomes on
+    // (accepted/rejected, granted/denied, delivered/dropped). A no-op telemetry adapter
+    // yields no-op instruments, so the broker runs untelemetered under raw protocol tests.
+    public readonly Counter $connectionsOpened;
+    public readonly UpDownCounter $connectionsActive;
+    public readonly Counter $subscriptions;
+    public readonly Counter $messagesPublished;
+    public readonly Counter $messagesDelivered;
+    public readonly Counter $messagesDropped;
+    public readonly Counter $messagesAcked;
+    public readonly Counter $pubacksReceived;
+    public readonly Counter $reauth;
+    public readonly Counter $bytesReceived;
+    public readonly Counter $bytesSent;
+    public readonly Histogram $authDuration;
+    public readonly Histogram $connectionDuration;
+    public readonly Histogram $messageSize;
 
     /** Keep-alive reaper wheel: connections register their deadline here, the tick drains it. */
     public readonly KeepAlive $keepAlive;
 
-    private ?SubscriptionStore $subscriptions = null;
+    private ?SubscriptionStore $subscriptionStore = null;
 
     private ?PubSubPool $pubSubPool = null;
 
     public function __construct(Telemetry $telemetry)
     {
-        $this->metrics = new Metrics($telemetry);
+        $this->connectionsOpened = $telemetry->createCounter('mqtt.connections.opened');
+        $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
+        $this->subscriptions = $telemetry->createCounter('mqtt.subscriptions');
+        $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
+        $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
+        $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
+        $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
+        $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
+        $this->reauth = $telemetry->createCounter('mqtt.reauth');
+        $this->bytesReceived = $telemetry->createCounter('mqtt.bytes.received', 'By');
+        $this->bytesSent = $telemetry->createCounter('mqtt.bytes.sent', 'By');
+        $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
+        $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
+        $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');
         $this->keepAlive = new KeepAlive();
     }
 
@@ -44,9 +74,9 @@ class Mqtt extends MessagingAdapter
      * The subscription index, created lazily so the adapter owns it rather than
      * receiving it — the in-memory tree has no external dependency to wire in.
      */
-    private function subscriptions(): SubscriptionStore
+    private function subscriptionStore(): SubscriptionStore
     {
-        return $this->subscriptions ??= new SubscriptionStore();
+        return $this->subscriptionStore ??= new SubscriptionStore();
     }
 
     private function getPubSubPool(): PubSubPool
@@ -74,8 +104,8 @@ class Mqtt extends MessagingAdapter
         $connection = $this->connections[$fd] ?? null;
         if ($connection !== null) {
             if ($connection->active) {
-                $this->metrics->connectionsActive->add(-1);
-                $this->metrics->connectionDuration->record(microtime(true) - $connection->openedAt);
+                $this->connectionsActive->add(-1);
+                $this->connectionDuration->record(microtime(true) - $connection->openedAt);
             }
             if ($connection->wheelSlot > 0) {
                 $this->keepAlive->remove($fd, $connection->wheelSlot);
@@ -102,7 +132,7 @@ class Mqtt extends MessagingAdapter
         $userId = $this->connections[$identifier]->identity['userId'] ?? '';
 
         foreach ($channels as $topic) {
-            $this->subscriptions()->subscribe(
+            $this->subscriptionStore()->subscribe(
                 $projectId,
                 $userId,
                 $topic,
@@ -115,7 +145,7 @@ class Mqtt extends MessagingAdapter
     /** Remove every subscription for a connection (used on close). */
     public function unsubscribe(mixed $identifier): void
     {
-        $this->subscriptions()->close($identifier);
+        $this->subscriptionStore()->close($identifier);
     }
 
     /**
@@ -141,10 +171,10 @@ class Mqtt extends MessagingAdapter
         $qos = $options['qos'] ?? 0;
         $sequence = (int) ($options['sequence'] ?? 0);
 
-        $this->metrics->messageSize->record(\strlen($message));
+        $this->messageSize->record(\strlen($message));
 
         foreach ($channels as $topic) {
-            $this->metrics->messagesPublished->add(1, ['qos' => $qos]);
+            $this->messagesPublished->add(1, ['qos' => $qos]);
             $this->getPubSubPool()->publish(self::CHANNEL, (string) json_encode([
                 'project' => $projectId,
                 'topic' => $topic,
@@ -158,7 +188,7 @@ class Mqtt extends MessagingAdapter
     /** Remove a single topic subscription (MQTT UNSUBSCRIBE). */
     public function unsubscribeSubscription(int $fd, string $topic): void
     {
-        $this->subscriptions()->unsubscribe($topic, $fd);
+        $this->subscriptionStore()->unsubscribe($topic, $fd);
     }
 
     /**
@@ -168,12 +198,12 @@ class Mqtt extends MessagingAdapter
      */
     public function getSubscribers(string $projectId, string $topic): array
     {
-        return $this->subscriptions()->getSubscribers($projectId, $topic);
+        return $this->subscriptionStore()->getSubscribers($projectId, $topic);
     }
 
     public function hasSubscriber(string $projectId, string $topic): bool
     {
-        return $this->subscriptions()->getSubscribers($projectId, $topic) !== [];
+        return $this->subscriptionStore()->getSubscribers($projectId, $topic) !== [];
     }
 
     /**
@@ -185,6 +215,6 @@ class Mqtt extends MessagingAdapter
      */
     public function getConnection(int $fd): ?array
     {
-        return $this->subscriptions()->getConnection($fd);
+        return $this->subscriptionStore()->getConnection($fd);
     }
 }
