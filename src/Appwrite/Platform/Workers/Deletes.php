@@ -441,33 +441,27 @@ class Deletes extends Action
                     return;
                 }
 
-                $collectionId = match ($document->getAttribute('resourceType')) {
-                    'function' => 'functions',
-                    'execution' => 'executions',
-                    'message' => 'messages',
-                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
-                };
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // One-shot execution schedules are claimed then deleted by the
+                // functions worker; this sweeper does not reap them.
+                if ($resourceType === 'execution') {
+                    return;
+                }
 
                 try {
-                    $resource = $getProjectDB($project)->getDocument(
-                        $collectionId,
-                        $document->getAttribute('resourceId')
-                    );
+                    $resource = match ($resourceType) {
+                        'function' => $getProjectDB($project)->getDocument('functions', $resourceId),
+                        'message' => $getProjectDB($project)->getDocument('messages', $resourceId),
+                        default => throw new \Exception('Unknown resource type: ' . $resourceType),
+                    };
                 } catch (Throwable $e) {
                     Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
                     return;
                 }
 
-                $delete = true;
-
-                switch ($document->getAttribute('resourceType')) {
-                    case 'function':
-                        $delete = $resource->isEmpty();
-                        break;
-                    case 'execution':
-                        $delete = false;
-                        break;
-                }
+                $delete = $resourceType === 'function' ? $resource->isEmpty() : true;
 
                 if ($delete) {
                     $dbForPlatform->deleteDocument('schedules', $document->getId());
