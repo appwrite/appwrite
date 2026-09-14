@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Presences;
 
 use Appwrite\Event\Event;
@@ -13,7 +15,7 @@ use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Span\Span;
 use Utopia\Span\Storage\Memory;
 
-class StateTest extends TestCase
+final class StateTest extends TestCase
 {
     public function testFailedPresenceEventRemainsOnTheCallerSpan(): void
     {
