@@ -17,7 +17,7 @@ final class Executions extends Database
     #[\Override]
     protected function collection(): string
     {
-        return RESOURCE_TYPE_EXECUTIONS;
+        return RESOURCE_TYPE_FUNCTIONS;
     }
 
     #[\Override]
@@ -27,8 +27,17 @@ final class Executions extends Database
     }
 
     #[\Override]
+    protected function blockResourceId(array $schedule): string
+    {
+        return (string) ($schedule['data']['functionId'] ?? '');
+    }
+
+    #[\Override]
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
-        return new Document(['$id' => $schedule['resourceId']]);
+        return new Document([
+            '$id' => $schedule['resourceId'],
+            'resourceId' => $schedule['data']['functionId'] ?? '',
+        ]);
     }
 }

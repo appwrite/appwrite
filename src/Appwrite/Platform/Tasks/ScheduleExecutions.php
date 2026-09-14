@@ -68,10 +68,12 @@ class ScheduleExecutions extends Action
             $error = null;
 
             try {
+                $functionId = (string) ($schedule['data']['functionId'] ?? $schedule['resource']->getAttribute('resourceId', ''));
+
                 Span::add('project.id', $schedule['project']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
                 Span::add('execution.id', (string) ($schedule['resourceId'] ?? ''));
-                Span::add('function.id', $schedule['resource']->getAttribute('resourceId', ''));
+                Span::add('function.id', $functionId);
                 Span::add('occurrence.due', $occurrence->due->format('c'));
                 Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
                 Span::add('occurrence.batch', $batch);
@@ -79,7 +81,7 @@ class ScheduleExecutions extends Action
 
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
-                    functionId: $schedule['resource']->getAttribute('resourceId', ''),
+                    functionId: $functionId,
                     execution: new Document([
                         '$id' => $schedule['resourceId'],
                         'scheduleId' => $schedule['$id'],
