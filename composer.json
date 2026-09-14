@@ -79,7 +79,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "^0.2",
-        "utopia-php/database": "^7.3.8",
+        "utopia-php/database": "^7.3.9",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "^4.2.1",
         "utopia-php/emails": "0.8.*",
