@@ -2529,6 +2529,65 @@ final class FunctionsCustomServerTest extends Scope
     }
 
 
+    public function testEventTriggerContinuesAfterExecutionFailure(): void
+    {
+        $userId = ID::unique();
+        $functions = [];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        try {
+            // Subscribers run in creation order, so the timeout must run first.
+            $functions[] = $this->setupDeployedFunction('Failing event subscriber', 'timeout', [
+                'events' => ['users.' . $userId . '.create'],
+                'timeout' => 1,
+            ]);
+            $functions[] = $this->setupDeployedFunction('Successful event subscriber', 'event-handler', [
+                'events' => ['users.' . $userId . '.create'],
+            ]);
+
+            $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+                'userId' => $userId,
+                'name' => 'Event subscriber isolation',
+            ]);
+            $this->assertEquals(201, $user['headers']['status-code']);
+
+            /**
+             * Test for FAILURE
+             */
+            $this->assertEventually(function () use ($functions) {
+                $executions = $this->listExecutions($functions[0]);
+                $this->assertEquals(200, $executions['headers']['status-code']);
+                $this->assertNotEmpty($executions['body']['executions']);
+                $execution = $executions['body']['executions'][0];
+                $this->assertEquals('failed', $execution['status']);
+                $this->assertEquals('event', $execution['trigger']);
+                $this->assertNotEmpty($execution['errors']);
+            }, 30000, 500);
+
+            /**
+             * Test for SUCCESS
+             */
+            $this->assertEventually(function () use ($functions, $userId) {
+                $executions = $this->listExecutions($functions[1]);
+                $this->assertEquals(200, $executions['headers']['status-code']);
+                $this->assertNotEmpty($executions['body']['executions']);
+                $execution = $executions['body']['executions'][0];
+                $this->assertEquals('completed', $execution['status']);
+                $this->assertEquals('event', $execution['trigger']);
+                $this->assertStringContainsString($userId, (string) $execution['logs']);
+                $this->assertStringContainsString('Event subscriber isolation', (string) $execution['logs']);
+            }, 30000, 500);
+        } finally {
+            foreach ($functions as $functionId) {
+                $this->cleanupFunction($functionId);
+            }
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $headers);
+        }
+    }
+
     public function testEventTrigger()
     {
         $functionId = $this->setupFunction([

@@ -161,6 +161,7 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
+            $error = null;
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -195,34 +196,45 @@ class Functions extends Action
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                    $this->execute(
-                        dbForProject: $dbForProject,
-                        queueForWebhooks: $queueForWebhooks,
-                        publisherForFunctions: $publisherForFunctions,
-                        queueForRealtime: $queueForRealtime,
-                        queueForEvents: $queueForEvents,
-                        bus: $bus,
-                        project: $project,
-                        function: $function,
-                        executor:  $executor,
-                        trigger: 'event',
-                        path: '/',
-                        method: 'POST',
-                        headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
-                        ],
-                        platform: $platform,
-                        data: null,
-                        user: $user,
-                        jwt: null,
-                        event: $events[0],
-                        eventData: \json_encode($eventData) ?: null,
-                        executionId: null,
-                    );
-                    Console::success('Triggered function: ' . $events[0]);
+                    try {
+                        $this->execute(
+                            dbForProject: $dbForProject,
+                            queueForWebhooks: $queueForWebhooks,
+                            publisherForFunctions: $publisherForFunctions,
+                            queueForRealtime: $queueForRealtime,
+                            queueForEvents: $queueForEvents,
+                            bus: $bus,
+                            project: $project,
+                            function: $function,
+                            executor:  $executor,
+                            trigger: 'event',
+                            path: '/',
+                            method: 'POST',
+                            headers: [
+                                'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                                'content-type' => 'application/json'
+                            ],
+                            platform: $platform,
+                            data: null,
+                            user: $user,
+                            jwt: null,
+                            event: $events[0],
+                            eventData: \json_encode($eventData) ?: null,
+                            executionId: null,
+                        );
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        $error ??= $th;
+                        Console::error('Failed to trigger function ' . $function->getId() . ': ' . $th->getMessage());
+                    }
                 }
             }
+
+            // Process every subscriber before preserving the failed job for retries.
+            if ($error !== null) {
+                throw $error;
+            }
+
             return;
         }
 
