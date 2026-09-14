@@ -361,6 +361,10 @@ Http::post('/v1/account')
             }
         }
 
+        // A signed-in caller's attributes must not become part of the new account.
+        if (!$user->isEmpty()) {
+            $user = new User();
+        }
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -439,7 +443,6 @@ Http::post('/v1/account')
                 'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
-            $user->removeAttribute('$sequence');
             $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
