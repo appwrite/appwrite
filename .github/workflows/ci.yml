@@ -464,14 +464,6 @@ jobs:
         timeout-minutes: 5
         run: docker compose up -d --quiet-pull --wait
 
-      - name: Wait for MQTT broker
-        timeout-minutes: 3
-        run: |
-          while ! docker logs appwrite-mqtt 2>&1 | grep -q "MQTT broker started"; do
-            echo "Waiting for the MQTT broker to come online"
-            sleep 1
-          done
-
       - name: Run MQTT Tests
         timeout-minutes: 15
         run: >-
