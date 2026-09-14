@@ -2,6 +2,7 @@
 
 namespace Appwrite\Mqtt\Handlers;
 
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
 use Utopia\Mqtt\Packet;
@@ -9,6 +10,7 @@ use Utopia\Mqtt\Packet\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 use Utopia\Platform\Action;
+use Utopia\Span\Span;
 
 class Auth extends Action
 {
@@ -17,6 +19,7 @@ class Auth extends Action
         $this
             ->desc('Re-authenticate a live connection with a fresh credential')
             ->label(Dispatcher::LABEL_TYPE, Packet::AUTH)
+            ->inject('mqtt')
             ->inject('authenticator')
             ->inject('connection')
             ->inject('packet')
@@ -28,7 +31,7 @@ class Auth extends Action
      * @param (callable(string, string, string): array<string, string>)|null $authenticator
      * @param callable(string, bool): void $reply writes a packet back to this connection (and optionally closes it)
      */
-    public function action(?callable $authenticator, Connection $connection, Packet $packet, callable $reply): void
+    public function action(Mqtt $mqtt, ?callable $authenticator, Connection $connection, Packet $packet, callable $reply): void
     {
         $body = $packet->body;
         $method = '';
@@ -51,16 +54,23 @@ class Auth extends Action
         if ($authenticator !== null) {
             $projectId = $userProperties['projectId'] ?? '';
 
-            $identity = ($projectId !== '' && $projectId === $connection->projectId)
-                ? $authenticator($projectId, $method, $data)
-                : [];
+            $identity = [];
+            if ($projectId !== '' && $projectId === $connection->projectId) {
+                $start = microtime(true);
+                $identity = $authenticator($projectId, $method, $data);
+                $mqtt->metrics->authDuration->record(microtime(true) - $start);
+            }
 
             if ($identity === []) {
+                $mqtt->metrics->reauth->add(1, ['result' => 'rejected']);
+                Span::add('mqtt.result', 'rejected');
                 $reply(V5::disconnect(V5::REASON_NOT_AUTHORIZED), true);
                 return;
             }
 
             $connection->identity = $identity;
+            $mqtt->metrics->reauth->add(1, ['result' => 'success']);
+            Span::add('mqtt.result', 'reauthenticated');
         }
 
         // Acknowledge success on the live connection with an AUTH packet that echoes

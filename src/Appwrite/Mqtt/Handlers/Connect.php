@@ -66,7 +66,11 @@ class Connect extends Action
 
         // TODO: add abuse limiting keyed on the client ip.
         if ($authenticator !== null) {
+            $start = microtime(true);
             $identity = $authenticator($projectId, $authMethod, $authData);
+            $duration = microtime(true) - $start;
+            $mqtt->metrics->authDuration->record($duration);
+            Span::add('mqtt.auth.duration', $duration);
 
             if ($identity === []) {
                 $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'rejected']);
