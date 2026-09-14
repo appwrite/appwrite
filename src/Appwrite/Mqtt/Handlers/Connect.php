@@ -5,6 +5,8 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
 use Utopia\Mqtt\Packet\V5;
@@ -12,6 +14,7 @@ use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 use Utopia\Platform\Action;
 use Utopia\Span\Span;
+use Utopia\System\System;
 
 class Connect extends Action
 {
@@ -64,7 +67,6 @@ class Connect extends Action
         Span::add('project.id', $projectId);
         Span::add('mqtt.auth_method', $authMethod);
 
-        // TODO: add abuse limiting keyed on the client ip.
         if ($authenticator !== null) {
             $start = microtime(true);
             $identity = $authenticator($projectId, $authMethod, $authData);
@@ -81,6 +83,21 @@ class Connect extends Action
 
             $connection->identity = $identity;
             Span::add('user.id', $identity['userId'] ?? '');
+
+            // Rate-limit CONNECT per user.
+            // TODO: in future this will be IP based; currently keyed on userId because the
+            // infra does not surface the client IP to the broker.
+            if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, getRedis());
+                $timeLimit->setParam('{userId}', $identity['userId'] ?? '');
+
+                if ((new Abuse($timeLimit))->check()) {
+                    $mqtt->metrics->connectionsOpened->add(1, ['auth_method' => $authMethod, 'result' => 'abuse']);
+                    Span::add('mqtt.result', 'abuse');
+                    $reply($this->connack($level, false), true);
+                    return;
+                }
+            }
         }
 
         // The client id can only be resolved once the identity is known.
