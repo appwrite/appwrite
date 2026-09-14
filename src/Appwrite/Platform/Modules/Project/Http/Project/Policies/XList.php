@@ -171,7 +171,7 @@ class XList extends Action
             ]),
             new Document([
                 '$id' => 'oauth-trust-provider-email',
-                'enabled' => $auths['oauthTrustProviderEmail'] ?? false,
+                'providers' => $auths['oauthTrustProviderEmailProviders'] ?? [],
             ]),
         ];
     }

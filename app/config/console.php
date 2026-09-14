@@ -50,7 +50,7 @@ $console = [
         'canonicalEmails' => false,
         'freeEmails' => false,
         'corporateEmails' => false,
-        'oauthTrustProviderEmail' => false,
+        'oauthTrustProviderEmailProviders' => [],
         'invalidateSessions' => true
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],

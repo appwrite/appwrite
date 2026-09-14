@@ -224,7 +224,7 @@ class Get extends Action
             'oauth-trust-provider-email' => [
                 new Document([
                     '$id' => 'oauth-trust-provider-email',
-                    'enabled' => $auths['oauthTrustProviderEmail'] ?? false,
+                    'providers' => $auths['oauthTrustProviderEmailProviders'] ?? [],
                 ]),
                 Response::MODEL_POLICY_OAUTH_TRUST_PROVIDER_EMAIL,
             ],

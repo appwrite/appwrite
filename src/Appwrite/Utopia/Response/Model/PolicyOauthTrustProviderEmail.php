@@ -14,11 +14,12 @@ class PolicyOauthTrustProviderEmail extends PolicyBase
     {
         parent::__construct();
 
-        $this->addRule('enabled', [
-            'type' => self::TYPE_BOOLEAN,
-            'description' => 'Whether the email reported by an OAuth provider is trusted for account linking even when the provider does not flag it as verified.',
-            'default' => false,
-            'example' => false,
+        $this->addRule('providers', [
+            'type' => self::TYPE_STRING,
+            'description' => 'OAuth provider IDs whose reported email is trusted for account linking even when the provider does not flag it as verified. Empty when the policy is disabled.',
+            'default' => [],
+            'example' => ['microsoft'],
+            'array' => true,
         ]);
     }
 

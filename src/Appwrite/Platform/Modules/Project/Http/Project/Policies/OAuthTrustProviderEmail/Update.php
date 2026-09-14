@@ -8,11 +8,14 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Boolean;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\WhiteList;
 
 class Update extends Action
 {
@@ -39,11 +42,11 @@ class Update extends Action
                 group: 'policies',
                 name: 'updateOauthTrustProviderEmailPolicy',
                 description: <<<'EOT'
-                By default Appwrite only links a new OAuth sign-in to an existing account when the provider reports the email as verified. The Microsoft provider does not report the email as verified, so same-email linking fails. Enabling this policy lets a project deliberately trust the email the provider reports and allow linking even when the provider does not flag it as verified.
+                List of OAuth provider IDs whose reported email is trusted for linking an OAuth sign-in to an existing account by email, even when the provider does not flag the email as verified. By default Appwrite only links when the provider reports the email as verified; the Microsoft provider never reports it, so same-email linking fails. Add a provider ID to trust that provider, or pass an empty list to keep the default behavior.
 
-                Trust boundary: successful authentication only proves control of the provider identity, not verified ownership of every reported address. Only enable this for providers and directories you trust (for example your own Microsoft tenant with accounts provisioned by IT).
+                Trust boundary: successful authentication only proves control of the provider identity, not verified ownership of every reported address. Only trust providers and directories you control, for example your own Microsoft tenant with accounts provisioned by IT.
 
-                This policy only affects linking an OAuth sign-in to an existing account by email. It does not mark the user's email as verified in Appwrite: the `emailVerification` flag stays driven by the provider verification status, so account features that require Appwrite-side email verification still enforce it.
+                This policy only affects linking an OAuth sign-in to an existing account by email. It never marks the user's email as verified in Appwrite: the `emailVerification` flag stays driven by the provider verification status, so account features that require Appwrite-side email verification still enforce it.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -53,7 +56,7 @@ class Update extends Action
                     ),
                 ],
             ))
-            ->param('enabled', null, new Boolean, 'Toggle the OAuth trust provider email policy. Set to true to allow linking an OAuth sign-in to an existing account by email even when the provider does not report the email as verified, or false to keep requiring a verified email.')
+            ->param('providers', [], new ArrayList(new WhiteList(array_keys(Config::getParam('oAuthProviders', [])), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of OAuth provider IDs whose reported email is trusted for linking an OAuth sign-in to an existing account even when the provider does not flag it as verified. An empty list disables the policy.', optional: false, enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -63,7 +66,7 @@ class Update extends Action
     }
 
     public function action(
-        bool $enabled,
+        array $providers,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -71,7 +74,7 @@ class Update extends Action
         Event $queueForEvents,
     ): void {
         $auths = $project->getAttribute('auths', []);
-        $auths['oauthTrustProviderEmail'] = $enabled;
+        $auths['oauthTrustProviderEmailProviders'] = $providers;
 
         $updates = new Document([
             'auths' => $auths,

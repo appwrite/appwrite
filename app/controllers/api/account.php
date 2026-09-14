@@ -1731,7 +1731,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $isVerified = $oauth2->isEmailVerified($accessToken);
-            $trustProviderEmail = $project->getAttribute('auths', [])['oauthTrustProviderEmail'] ?? false;
+            // Only providers explicitly trusted by the oauth-trust-provider-email policy may
+            // link an unverified email. Normalize the stored value to an array so an older
+            // boolean on the project cannot silently trust every provider.
+            $trustedProviders = $project->getAttribute('auths', [])['oauthTrustProviderEmailProviders'] ?? [];
+            if (!is_array($trustedProviders)) {
+                $trustedProviders = [];
+            }
+            $trustProviderEmail = in_array($provider, $trustedProviders, true);
 
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),

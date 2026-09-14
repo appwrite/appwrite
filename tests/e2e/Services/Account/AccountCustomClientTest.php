@@ -780,20 +780,24 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
-     * Helper to delete all identities for a given provider in the project.
-     * Mock OAuth providers reuse a fixed provider identity across tests, so
-     * the linked identity must be removed to keep parallel runs isolated.
+     * Delete identities this test class created for the given provider.
+     *
+     * Mock providers reuse a fixed (provider, providerUid) identity, so a
+     * crashed run can leave one behind. Only identities belonging to accounts
+     * using $email (this class's accounts) are removed; identities created for
+     * other emails by other tests are left untouched.
      */
-    protected function deleteIdentityByProvider(string $provider): void
+    protected function deleteCreatedIdentitiesForEmail(string $provider, string $email): void
     {
         $projectId = $this->getProject()['$id'];
         $apiKey = $this->getProject()['apiKey'];
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/identities', [
+        $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
-        ], [
+        ];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/identities', $headers, [
             'queries' => [
                 Query::equal('provider', [$provider])->toString(),
             ],
@@ -801,11 +805,11 @@ final class AccountCustomClientTest extends Scope
 
         if ($response['headers']['status-code'] === 200) {
             foreach ($response['body']['identities'] ?? [] as $identity) {
-                $this->client->call(Client::METHOD_DELETE, '/users/identities/' . $identity['$id'], [
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $apiKey,
-                ]);
+                $user = $this->client->call(Client::METHOD_GET, '/users/' . $identity['userId'], $headers);
+
+                if ($user['headers']['status-code'] === 404 || ($user['body']['email'] ?? '') === $email) {
+                    $this->client->call(Client::METHOD_DELETE, '/users/identities/' . $identity['$id'], $headers);
+                }
             }
         }
     }
@@ -3392,9 +3396,9 @@ final class AccountCustomClientTest extends Scope
         $email = 'useroauthunverified@localhost.test';
         $password = 'password';
 
-        // Clean up any existing user or identity with this provider from parallel tests
+        // Clean up any existing user or identity left over from earlier runs
         $this->deleteUserByEmail($email);
-        $this->deleteIdentityByProvider($provider);
+        $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
@@ -3458,9 +3462,9 @@ final class AccountCustomClientTest extends Scope
         $apiKey = $this->getProject()['apiKey'];
         $sessionCookieKey = 'a_session_' . $projectId;
 
-        // Clean up any leftover identity/user from prior or parallel runs
+        // Clean up accounts and identities left over from earlier runs
         $this->deleteUserByEmail($email);
-        $this->deleteIdentityByProvider($provider);
+        $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
         // Create an existing account that owns the provider's email
         $response = $this->client->call(Client::METHOD_POST, '/account', [
@@ -3504,14 +3508,38 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('failure', $response['body']['result']);
 
-        // Enable the policy
+        // Trusting a provider that is not mock-unverified must keep the unverified email blocked
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'enabled' => true,
+            'providers' => ['mock'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('failure', $response['body']['result']);
+
+        // Trust the mock-unverified provider; linking the unverified email must now succeed
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'providers' => [$provider],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3572,6 +3600,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($existingUserId, $response['body']['$id']);
         $this->assertEquals($email, $response['body']['email']);
+        // The policy only governs linking; it must not mark the email as verified in Appwrite
+        $this->assertFalse($response['body']['emailVerification']);
 
         // Cleanup: restore the default policy, remove the identity, delete the user
         $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', [
@@ -3580,10 +3610,10 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'enabled' => false,
+            'providers' => [],
         ]);
 
-        $this->deleteIdentityByProvider($provider);
+        $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, [
             'origin' => 'http://localhost',
