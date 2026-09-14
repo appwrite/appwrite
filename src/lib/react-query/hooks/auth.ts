@@ -67,6 +67,7 @@ import {
   MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS,
   MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH,
   MAX_SAVED_IMAGE_TRANSFORM_PRESETS,
+  appendRecentImpersonationUser,
   clearRecentImpersonationSessionList,
   mergeRecentImpersonationIntoAccountPrefs,
   mergeRecentImpersonationLists,
@@ -75,6 +76,8 @@ import {
   parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
   writeRecentImpersonationDetails,
+  writeRecentImpersonationSavedList,
+  writeRecentImpersonationSessionList,
   clearLegacyAIChatLocalStorage,
   clearLegacyBuildNotificationsOptedOutLocalStorage,
   clearLegacyCliShellHeightLocalStorage,
@@ -1429,37 +1432,77 @@ export async function updateAccountPrefs(
   })) as Models.User
 }
 
+/** Longest an impersonation start or exit waits on the recent-targets prefs write. */
+const RECENT_IMPERSONATION_SYNC_TIMEOUT_MS = 3000
+
 /**
- * Merge session-stored recent impersonation targets (while operator was impersonating)
- * into the operator account prefs. Call after impersonation headers are cleared so
- * `account.get()` resolves to the operator.
+ * Wait for a recent impersonation targets write before a hard navigation, but no
+ * longer than `RECENT_IMPERSONATION_SYNC_TIMEOUT_MS`. A write the navigation cuts off
+ * is not lost: the targets stay in sessionStorage and the next flush retries them.
+ */
+export function waitForRecentImpersonationSync(
+  task: Promise<unknown>,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, RECENT_IMPERSONATION_SYNC_TIMEOUT_MS)
+    task
+      .catch((e) => console.error(e))
+      .finally(() => {
+        clearTimeout(timer)
+        resolve()
+      })
+  })
+}
+
+/**
+ * Merge this tab's unsaved recent impersonation targets into the operator account prefs.
+ * No-op during an impersonation session (prefs would belong to the target), so call
+ * before headers are applied or after they are cleared. Unsaved targets are cleared
+ * only once the write lands, so a cut-off request is retried.
  */
 export async function flushRecentImpersonationUsersToAccountPrefs(
   operatorId: string,
 ) {
-  const list = readRecentImpersonationSessionList(operatorId)
-  if (list.length === 0) return
-  clearRecentImpersonationSessionList(operatorId)
-  // Labels stay in localStorage; account prefs only get ID references.
-  writeRecentImpersonationDetails(operatorId, list)
+  const unsaved = readRecentImpersonationSessionList(operatorId)
+  if (unsaved.length === 0 || hasConsoleImpersonationSessionTarget()) return
   const account = await fetchConsoleAccount({ force: true })
-  const fromPrefs = parseRecentImpersonationUsers(
-    account.prefs as UserPrefs,
-    operatorId,
+  if (account.$id !== operatorId) return
+  // Unsaved picks are newer than what prefs hold, so they lead. Merging with fresh
+  // prefs keeps targets another tab saved in the meantime.
+  const merged = mergeRecentImpersonationLists(
+    unsaved,
+    parseRecentImpersonationUsers(account.prefs as UserPrefs, operatorId),
   )
-  const merged = mergeRecentImpersonationLists(fromPrefs, list)
+  // Labels stay in localStorage; account prefs only get ID references.
   writeRecentImpersonationDetails(operatorId, merged)
   const updatedPrefs = mergeRecentImpersonationIntoAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
   const updatedAccount = await updateAccountPrefs(updatedPrefs, 'flush-recent-impersonation-users')
-  setConsoleAccountCache(
-    updatedAccount && isConsoleAccountUser(updatedAccount)
-      ? updatedAccount
-      : ({ ...account, prefs: updatedPrefs } as Models.User),
-    getConsoleAccountQueryRevision(),
+  if (!updatedAccount || !isConsoleAccountUser(updatedAccount)) return
+  clearRecentImpersonationSessionList(operatorId)
+  writeRecentImpersonationSavedList(operatorId, merged)
+  setConsoleAccountCache(updatedAccount, getConsoleAccountQueryRevision())
+}
+
+/**
+ * Put `target` first in the operator's recent impersonation targets. Call before
+ * impersonation headers are applied so the operator prefs write can happen; a switch
+ * made mid-impersonation waits in sessionStorage until the exit flush.
+ */
+export async function recordRecentImpersonationTarget(
+  operatorId: string,
+  target: { $id: string; name?: string | null; email?: string | null },
+) {
+  writeRecentImpersonationSessionList(
+    operatorId,
+    appendRecentImpersonationUser(
+      readRecentImpersonationSessionList(operatorId),
+      target,
+    ),
   )
+  await flushRecentImpersonationUsersToAccountPrefs(operatorId)
 }
 
 /**

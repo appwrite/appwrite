@@ -48,6 +48,22 @@ export function consoleUsersImpersonationSearchQueryOptions(
   })
 }
 
+/**
+ * Console users by id. Fills in name/email for recent impersonation targets whose
+ * labels are not cached in this browser (account prefs only keep the IDs).
+ */
+export function consoleUsersByIdQueryOptions(userIds: string[]) {
+  return queryOptions({
+    queryKey: ['console', 'users', 'by-id', userIds],
+    queryFn: () =>
+      sdk.forConsole.users.list({
+        queries: [Query.equal('$id', userIds), Query.limit(userIds.length)],
+      }),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+}
+
 /** How a `/impersonate` deep link identifies the target: console user id or email. */
 export type ConsoleImpersonationTargetLookup =
   | { userId: string; email?: undefined }
