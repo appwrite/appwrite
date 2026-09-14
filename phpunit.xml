@@ -33,7 +33,7 @@
             <directory suffix="Test.php">tests/e2e/Services/Console</directory>
         </testsuite>
         <testsuite name="e2e-databases">
-            <directory suffix="Test.php">tests/e2e/Services/Databases</directory>
+            <directory suffix="Test.php" groups="documentsdb,embedding">tests/e2e/Services/Databases</directory>
         </testsuite>
         <testsuite name="e2e-functions">
             <directory suffix="Test.php">tests/e2e/Services/Functions</directory>
@@ -54,7 +54,7 @@
             <directory suffix="Test.php">tests/e2e/Services/Messaging</directory>
         </testsuite>
         <testsuite name="e2e-migrations">
-            <directory suffix="Test.php">tests/e2e/Services/Migrations</directory>
+            <directory suffix="Test.php" groups="documentsdb">tests/e2e/Services/Migrations</directory>
         </testsuite>
         <testsuite name="e2e-notifications">
             <directory suffix="Test.php">tests/e2e/Services/Notifications</directory>
@@ -72,13 +72,13 @@
             <directory suffix="Test.php">tests/e2e/Services/ProjectWebhooks</directory>
         </testsuite>
         <testsuite name="e2e-projects">
-            <directory suffix="Test.php">tests/e2e/Services/Projects</directory>
+            <directory suffix="Test.php" groups="documentsdb">tests/e2e/Services/Projects</directory>
         </testsuite>
         <testsuite name="e2e-proxy">
             <directory suffix="Test.php">tests/e2e/Services/Proxy</directory>
         </testsuite>
         <testsuite name="e2e-realtime">
-            <directory suffix="Test.php">tests/e2e/Services/Realtime</directory>
+            <directory suffix="Test.php" groups="documentsdb">tests/e2e/Services/Realtime</directory>
         </testsuite>
         <testsuite name="e2e-sites">
             <directory suffix="Test.php">tests/e2e/Services/Sites</directory>

@@ -198,7 +198,7 @@ jobs:
         id: suites
         run: |
           docker pull "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}"
-          suites=$(docker run --rm -v "$PWD/tests:/usr/src/code/tests:ro" -v "$PWD/phpunit.xml:/usr/src/code/phpunit.xml:ro" "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}" php tests/tools/suites.php phpunit.xml)
+          suites=$(docker run --rm -v "$PWD/tests:/usr/src/code/tests:ro" -v "$PWD/phpunit.xml:/usr/src/code/phpunit.xml:ro" "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}" php tests/tools/suites.php phpunit.xml --groups)
           echo "names=$suites" >> "$GITHUB_OUTPUT"
 
       - name: Generate matrix
@@ -211,28 +211,30 @@ jobs:
             const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
             const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
 
-            const allNames = JSON.parse(process.env.PHPUNIT_SUITES);
+            const suiteGroups = JSON.parse(process.env.PHPUNIT_SUITES);
+            const allNames = Object.keys(suiteGroups);
             for (const name of allNames) {
               if (name !== 'unit' && !name.startsWith('e2e-')) throw new Error(`Unassigned suite: ${name}`);
             }
             const names = allNames.filter(name => name.startsWith('e2e-'));
-            const overrides = {
-              'e2e-databases': { runner: runner8, functional: false, processes: 3, documentsdb: true, embedding: true },
+            const execution = {
+              'e2e-databases': { runner: runner8, functional: false, processes: 3 },
               'e2e-tablesdb': { runner: runner8, functional: false, processes: 3 },
               'e2e-functions': { functional: false },
               'e2e-graphql': { functional: false },
-              'e2e-projects': { documentsdb: true },
-              'e2e-realtime': { functional: false, documentsdb: true },
+              'e2e-realtime': { functional: false },
               'e2e-projectwebhooks': { functional: false },
               'e2e-vcsgitea': { functional: false },
-              'e2e-migrations': { processes: 1, documentsdb: true },
+              'e2e-migrations': { processes: 1 },
             };
-            for (const name of Object.keys(overrides)) {
+            for (const name of Object.keys(execution)) {
               if (!names.includes(name)) throw new Error(`Stale suite override: ${name}`);
             }
             const services = names.filter(name => name !== 'e2e-general').map(suite => ({
               name: suite.slice(4), suite, runner: runner4, functional: true, processes: null,
-              ...overrides[suite],
+              ...execution[suite],
+              documentsdb: suiteGroups[suite].includes('documentsdb'),
+              embedding: suiteGroups[suite].includes('embedding'),
             }));
             core.setOutput('services', JSON.stringify(services));
 

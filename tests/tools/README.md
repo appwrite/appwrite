@@ -39,3 +39,11 @@ real PHPUnit output, including interrupted execution and inherited tests.
 Make `Tests / Complete` required in repository protection to prevent failed or
 missing test jobs being treated as verified. Weekly/manual runs cover all engine
 and table-mode combinations; ordinary runs retain the existing smaller matrix.
+
+Capability requirements belong to native PHPUnit directory/file `groups` in
+`phpunit.xml` (currently `documentsdb` and `embedding`). The matrix reads their
+union per suite with `php tests/tools/suites.php phpunit.xml --groups` and enables
+the corresponding services. These are ordinary PHPUnit groups, also usable with
+`--group`. Runner size and ParaTest process/functional settings remain CI execution
+policy; they are not PHPUnit XML attributes. A new suite carrying an existing
+capability group automatically receives the required service setup.

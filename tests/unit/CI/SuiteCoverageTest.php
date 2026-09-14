@@ -40,6 +40,21 @@ final class SuiteCoverageTest extends TestCase
         $this->assertSame(0, $this->check());
     }
 
+    public function testXmlGroupsDriveBothInventoryAndPhpunitSelection(): void
+    {
+        $config = $this->directory . '/phpunit.xml';
+        file_put_contents($config, str_replace('<directory>', '<directory groups="documentsdb,embedding">', file_get_contents($config)));
+        $this->assertSame(0, $this->command([PHP_BINARY, dirname(__DIR__, 3) . '/tests/tools/suites.php', $config, '--groups']));
+        $this->assertSame(['unit' => ['documentsdb', 'embedding']], json_decode($this->output, true));
+        $listing = $this->directory . '/expected.xml';
+        $arguments = [PHP_BINARY, getcwd() . '/vendor/bin/phpunit', '--configuration', $config, '--bootstrap', getcwd() . '/vendor/autoload.php', '--group', 'embedding', '--list-tests-xml', $listing];
+        $this->assertSame(0, $this->command($arguments), $this->output);
+        $this->assertStringContainsString('ExampleTest::testExample', file_get_contents($listing));
+        file_put_contents($config, str_replace(' groups="documentsdb,embedding"', '', file_get_contents($config)));
+        $this->assertSame(0, $this->command($arguments), $this->output);
+        $this->assertStringNotContainsString('ExampleTest::testExample', file_get_contents($listing));
+    }
+
     public function testMisnamedClassWithOnlyInheritedMethodsIsRejected(): void
     {
         file_put_contents($this->directory . '/tests/unit/Base.php', '<?php abstract class Base extends \\PHPUnit\\Framework\\TestCase { public function testInherited(): void { $this->assertTrue(true); } }');

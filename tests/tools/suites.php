@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // Validate PHPUnit's source inventory without booting the application or running data providers.
-// Usage: php tests/tools/suites.php phpunit.xml [suite-prefix]
+// Usage: php tests/tools/suites.php phpunit.xml [suite-prefix|--groups]
 require getcwd() . '/vendor/autoload.php';
 
 use PhpParser\Node\Stmt\Class_;
@@ -25,12 +25,14 @@ try {
     }
     $suites = [];
     $membership = [];
+    $groups = [];
     foreach ($xml->testsuites->testsuite as $suite) {
         $name = (string) $suite['name'];
         if (!preg_match('/^[a-z][a-z0-9-]*$/D', $name) || isset($suites[$name])) {
             throw new RuntimeException('Invalid or duplicate suite name: ' . $name);
         }
         $suites[$name] = [];
+        $groups[$name] = [];
         $excluded = [];
         foreach ($suite->exclude as $path) {
             $resolved = realpath($root . '/' . $path);
@@ -43,6 +45,7 @@ try {
             if (!in_array($entry->getName(), ['directory', 'file'], true)) {
                 continue;
             }
+            $groups[$name] = array_values(array_unique([...$groups[$name], ...array_filter(array_map('trim', explode(',', (string) $entry['groups'])))]));
             $path = realpath($root . '/' . $entry);
             if ($path === false) {
                 throw new RuntimeException('Missing PHPUnit path: ' . $entry);
@@ -130,12 +133,14 @@ try {
     }
     $names = array_keys($suites);
     sort($names);
-    $prefix = $argv[2] ?? '';
+    ksort($groups);
+    $withGroups = ($argv[2] ?? '') === '--groups';
+    $prefix = $withGroups ? '' : ($argv[2] ?? '');
     $names = array_values(array_filter($names, static fn (string $name): bool => str_starts_with($name, $prefix)));
     if ($names === []) {
         throw new RuntimeException('No suites match prefix: ' . $prefix);
     }
-    echo json_encode($names, JSON_THROW_ON_ERROR) . PHP_EOL;
+    echo json_encode($withGroups ? $groups : $names, JSON_THROW_ON_ERROR) . PHP_EOL;
 } catch (Throwable $error) {
     fwrite(STDERR, $error->getMessage() . PHP_EOL);
     exit(1);
