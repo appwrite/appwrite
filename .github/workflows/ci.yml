@@ -191,11 +191,14 @@ jobs:
       modes: ${{ steps.generate.outputs.modes }}
       services: ${{ steps.generate.outputs.services }}
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Read and validate PHPUnit suites from the test image
         id: suites
         run: |
           docker pull "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}"
-          suites=$(docker run --rm "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}" php tests/tools/suites.php phpunit.xml)
+          suites=$(docker run --rm -v "$PWD/tests:/usr/src/code/tests:ro" -v "$PWD/phpunit.xml:/usr/src/code/phpunit.xml:ro" "${RUNS_ON_ECR_CACHE}:${IMAGE}-${GITHUB_SHA}" php tests/tools/suites.php phpunit.xml)
           echo "names=$suites" >> "$GITHUB_OUTPUT"
 
       - name: Generate matrix
