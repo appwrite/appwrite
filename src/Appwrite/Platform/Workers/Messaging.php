@@ -1109,12 +1109,18 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
         if ($provider->getAttribute('provider') === 'smtp') {
-            foreach ($to as $recipient) {
-                $bcc[] = ['email' => $recipient];
+            // SMTP sends one message to the whole batch. Hide subscribers from each other.
+            if (\count($to) > 1) {
+                foreach ($to as $recipient) {
+                    $bcc[] = ['email' => $recipient];
+                }
+                $to = [];
+            } else {
+                // Failed BCC recipients re-enter through To on retry. Keep them hidden,
+                // while ordinary single recipients retain a visible To header.
+                $to = \array_values(\array_diff($to, \array_column($bcc, 'email')));
             }
-            $to = [];
         }
 
         return new Email(
