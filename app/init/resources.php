@@ -37,6 +37,7 @@ use Utopia\Cache\Cache;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -304,6 +305,27 @@ $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Teleme
 
 function getDevice(string $root, string $connection = ''): Device
 {
+    // Every S3-family device in the process shares one pooled client. A device
+    // is built per request (and per project in the workers), and the library's
+    // default client forbids connection reuse, so every object call paid a new
+    // TCP and TLS handshake. Handles stay in the pool across devices and requests.
+    static $client = null;
+    $client ??= new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'storage',
+        64,
+        fn () => new Retry(
+            new Client((new CurlAdapter(options: [
+                \CURLOPT_TIMEOUT_MS => 0, // Large transfers may take arbitrarily long...
+                \CURLOPT_LOW_SPEED_LIMIT => 1, // ...but abort once nothing moves for 60s.
+                \CURLOPT_LOW_SPEED_TIME => 60,
+                \CURLOPT_TCP_KEEPALIVE => 1,
+            ]))->withConnectionReuse()),
+            new S3\RetryStrategy(),
+        ),
+        timeout: 30.0,
+    ));
+
     $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
     $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
     $s3AccessSecret = System::getEnv('_APP_STORAGE_S3_SECRET', '');
@@ -366,18 +388,18 @@ function getDevice(string $root, string $connection = ''): Device
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region, client: $client);
             }
 
-            return new AWS($root, $accessKey, $accessSecret, $bucket, $region);
+            return new AWS($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::DoSpaces:
-            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region);
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Backblaze:
-            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Linode:
-            return new Linode($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Wasabi:
-            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Local:
             return new Local($root);
     }
