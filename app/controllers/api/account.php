@@ -2346,6 +2346,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 1 hour.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2358,7 +2359,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, int $expire, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2470,7 +2471,7 @@ Http::post('/v1/account/tokens/magic-url')
         $proofForToken->setHash(new Sha());
 
         $tokenSecret = $proofForToken->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -2674,6 +2675,7 @@ Http::post('/v1/account/tokens/email')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2687,7 +2689,7 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2816,7 +2818,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),

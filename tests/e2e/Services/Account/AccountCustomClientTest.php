@@ -4426,6 +4426,10 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
+        $defaultExpire = \strtotime($response['body']['expire']);
+        $this->assertGreaterThanOrEqual(\time() + TOKEN_EXPIRATION_CONFIRM - 10, $defaultExpire);
+        $this->assertLessThanOrEqual(\time() + TOKEN_EXPIRATION_CONFIRM + 10, $defaultExpire);
+
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($email);
@@ -4447,6 +4451,23 @@ final class AccountCustomClientTest extends Scope
         $userIDTest = strpos($lastEmail['text'], 'userId=' . $response['body']['userId'], 0);
 
         $this->assertNotFalse($userIDTest);
+
+        $customExpireEmail = 'magic-expire-' . uniqid() . '-' . \time() . '@appwrite.io';
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $customExpireEmail,
+            'expire' => 300,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $customExpire = \strtotime($response['body']['expire']);
+        $this->assertGreaterThanOrEqual(\time() + 300 - 10, $customExpire);
+        $this->assertLessThanOrEqual(\time() + 300 + 10, $customExpire);
 
         /**
          * Test for FAILURE
@@ -4481,6 +4502,30 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'expire' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'expire' => 999999999999999,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

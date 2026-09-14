@@ -188,6 +188,10 @@ trait AccountBase
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
 
+        $defaultExpire = \strtotime($response['body']['expire']);
+        $this->assertGreaterThanOrEqual(\time() + TOKEN_EXPIRATION_OTP - 10, $defaultExpire);
+        $this->assertLessThanOrEqual(\time() + TOKEN_EXPIRATION_OTP + 10, $defaultExpire);
+
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($otpEmail);
@@ -278,6 +282,23 @@ trait AccountBase
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
         $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
 
+        $customExpireEmail = 'otp-expire-' . uniqid() . '@appwrite.io';
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $customExpireEmail,
+            'expire' => 300,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $customExpire = \strtotime($response['body']['expire']);
+        $this->assertGreaterThanOrEqual(\time() + 300 - 10, $customExpire);
+        $this->assertLessThanOrEqual(\time() + 300 + 10, $customExpire);
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -308,6 +329,32 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $otpEmail,
+            'expire' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $otpEmail,
+            'expire' => 999999999999999,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
