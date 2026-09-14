@@ -46,5 +46,8 @@
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
         </testsuite>
+        <testsuite name="mqtt">
+            <directory>./tests/e2e/Services/Mqtt</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\Messaging;
+namespace Tests\E2E\Services\Mqtt;
 
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Mqtt\KeepAlive;
@@ -27,7 +27,7 @@ use Utopia\Database\Helpers\ID;
  * selects it with --group mqtt.
  */
 #[Group('mqtt')]
-final class MessagingMqttServerTest extends Scope
+final class MqttServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;

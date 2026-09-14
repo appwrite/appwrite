@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\Messaging;
+namespace Tests\E2E\Services\Mqtt;
 
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V5;
