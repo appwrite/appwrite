@@ -437,7 +437,12 @@ abstract class Base extends Action
             }
         }
 
-        if ($enabled === true || \is_null($enabled)) {
+        // Browser sign-in is switched on implicitly when a request that says
+        // nothing about either method leaves complete credentials behind. A
+        // request that only touches native sign-in must leave it alone.
+        $implicitEnable = \is_null($enabled) && \is_null($nativeEnabled) && \is_null($clientIds);
+
+        if ($enabled === true || $implicitEnable) {
             try {
                 if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');

@@ -18,10 +18,10 @@ trait OAuth2Base
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
-            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'nativeClientIds' => [], 'enabled' => false],
+            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
             'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
-            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false],
+            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
         ];
 
@@ -291,6 +291,55 @@ trait OAuth2Base
 
         $this->assertSame(200, $update['headers']['status-code']);
         $this->assertSame(['120000000095-android.apps.googleusercontent.com'], $update['body']['nativeClientIds']);
+    }
+
+    /**
+     * The two sign-in methods are switched on independently. With complete
+     * browser credentials stored and the browser flow off, switching on only
+     * native sign-in must leave the browser flow off.
+     */
+    public function testUpdateOAuth2NativeEnabledLeavesBrowserSignInAlone(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => ['com.example.app'],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $get = $this->getOAuth2Provider('apple');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertTrue($get['body']['nativeEnabled']);
+        $this->assertFalse($get['body']['enabled']);
+
+        // A request that says nothing about either method still switches the
+        // browser flow on once the credentials are complete, as before.
+        $update = $this->updateOAuth2('apple', [
+            'keyId' => 'P4000000N9',
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
     }
 
     public function testUpdateOAuth2OidcRoundTrip(): void
