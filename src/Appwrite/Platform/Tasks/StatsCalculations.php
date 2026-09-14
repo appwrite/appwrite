@@ -14,13 +14,13 @@ use Utopia\Database\Query;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
-class StatsResources extends Action
+class StatsCalculations extends Action
 {
     private Concurrency $concurrency;
 
     public static function getName(): string
     {
-        return 'stats-resources';
+        return 'stats-calculations';
     }
 
     public function __construct()
@@ -28,7 +28,7 @@ class StatsResources extends Action
         $this->concurrency = new Concurrency();
 
         $this
-            ->desc('Schedule active projects for usage resource counts')
+            ->desc('Schedule active projects for usage resource-count calculations')
             ->inject('dbForPlatform')
             ->inject('publisherForStatsResources')
             ->inject('usageConnection')
@@ -48,7 +48,7 @@ class StatsResources extends Action
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
         Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
-            Span::init('stats_resources_task');
+            Span::init('stats_calculations_task');
             $projectsQueued = 0;
             $projectsFailed = 0;
 
@@ -61,8 +61,8 @@ class StatsResources extends Action
             // Ready for weeks while queueing nothing.
             try {
                 if (!$usageConnection->isReady()) {
-                    Span::add('stats_resources_task.skipped', 'usage_schema_not_ready');
-                    Console::error('stats resources: usage schema is not ready, skipping cycle');
+                    Span::add('stats_calculations_task.skipped', 'usage_schema_not_ready');
+                    Console::error('stats calculations: usage schema is not ready, skipping cycle');
                     return;
                 }
 
@@ -73,7 +73,7 @@ class StatsResources extends Action
                 try {
                     $this->concurrency->sample($usageConnection->getUsage());
                 } catch (\Throwable $th) {
-                    Console::error('stats resources: concurrency sample failed, continuing: ' . $th->getMessage());
+                    Console::error('stats calculations: concurrency sample failed, continuing: ' . $th->getMessage());
                 }
 
                 $last24Hours = (new \DateTime())->sub(new \DateInterval('P1D'));
@@ -93,12 +93,12 @@ class StatsResources extends Action
                 });
             } catch (\Throwable $th) {
                 // Cost a cycle, not the process: the next tick retries in full.
-                Span::add('stats_resources_task.error', $th->getMessage());
-                Console::error('stats resources: cycle failed, retrying next interval: ' . $th->getMessage());
+                Span::add('stats_calculations_task.error', $th->getMessage());
+                Console::error('stats calculations: cycle failed, retrying next interval: ' . $th->getMessage());
             } finally {
                 // An unfinished span exports nothing, including the early return.
-                Span::add('stats_resources_task.projects_queued', $projectsQueued);
-                Span::add('stats_resources_task.projects_failed', $projectsFailed);
+                Span::add('stats_calculations_task.projects_queued', $projectsQueued);
+                Span::add('stats_calculations_task.projects_failed', $projectsFailed);
                 Span::current()?->finish();
             }
         }, $interval, 0, function (\Throwable $th) {

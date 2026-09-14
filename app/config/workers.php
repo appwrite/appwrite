@@ -18,9 +18,14 @@ return [
         'queueEnv' => '_APP_STATS_USAGE_QUEUE_NAME',
         'maxCoroutines' => 8,
     ],
-    'stats-resources' => [
-        'queue' => Event::STATS_RESOURCES_QUEUE_NAME,
-        'queueEnv' => '_APP_STATS_RESOURCES_QUEUE_NAME',
+    'stats-calculations' => [
+        'queue' => Event::STATS_CALCULATIONS_QUEUE_NAME,
+        'queueEnv' => '_APP_STATS_CALCULATIONS_QUEUE_NAME',
+        'maxCoroutines' => 1,
+    ],
+    'stats-events' => [
+        'queue' => Event::STATS_EVENTS_QUEUE_NAME,
+        'queueEnv' => '_APP_STATS_EVENTS_QUEUE_NAME',
         'maxCoroutines' => 1,
     ],
     'webhooks' => [

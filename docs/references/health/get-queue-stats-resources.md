@@ -1,1 +1,1 @@
-Get the number of metrics that are waiting to be processed in the Appwrite stats resources queue.
+Get the number of metrics that are waiting to be processed in the Appwrite stats calculations queue. The legacy name `v1-stats-resources` still resolves here; real-time gauges use `v1-stats-events`.
