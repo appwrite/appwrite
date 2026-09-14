@@ -48,9 +48,6 @@ class Auth extends Action
         }
 
         // The AUTH packet re-sends projectId as a User Property.
-        // TODO: check the events for the reauth only refreshes
-        // the credential, so enforce it stays on the project resolved at CONNECT — the
-        // connection must not switch tenants — then verify the fresh credential.
         if ($authenticator !== null) {
             $projectId = $userProperties['projectId'] ?? '';
 
