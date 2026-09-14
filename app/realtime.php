@@ -369,35 +369,6 @@ $adapter
 
 $server = new Server($adapter);
 
-// Allows overriding
-if (!function_exists('logError')) {
-    function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
-    {
-        // Server callbacks (pub/sub, stats) run outside a connection span; open one
-        // so the failure still reaches the exporters.
-        $span = Span::current();
-        $owned = $span === null;
-        $span ??= Span::init($action);
-
-        $span->setError($error);
-        $span->set('error.action', $action);
-        $span->set('project.id', $project?->getId() ?: 'n/a');
-        $span->set('user.id', $user?->getId() ?: 'n/a');
-        foreach ($tags as $key => $value) {
-            $span->set($key, \is_scalar($value) || $value === null ? $value : \json_encode($value));
-        }
-
-        if ($owned) {
-            $span->finish(error: $error);
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-    }
-}
-
 $server->error(function (Throwable $error): void {
     $span = Span::current() ?? Span::init('realtime.error');
     $span->finish(error: $error);
