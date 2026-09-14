@@ -26,6 +26,13 @@ abstract class Request
     public const string METHOD_CONNECT = 'CONNECT';
 
     /**
+     * Schemes a trusted proto header may name.
+     *
+     * @var array<int, string>
+     */
+    public const array SCHEMES = ['http', 'https', 'ws', 'wss'];
+
+    /**
      * Container for php://input parsed stream as an associative array
      *
      * @var array<string, mixed>|null
@@ -57,9 +64,10 @@ abstract class Request
     protected ?array $cookies = null;
 
     /**
-     * @var array<int, string>
+     * Which forwarded headers this server believes. Set at construction by the
+     * adapter, so a request cannot be talked into trusting a new hop later.
      */
-    protected array $trustedIpHeaders = [];
+    protected TrustedHeaders $trusted;
 
     /**
      * Get Param
@@ -131,20 +139,26 @@ abstract class Request
     abstract public function setServer(string $key, string $value): static;
 
     /**
-     * Set Trusted IP Headers
-     *
-     * Set which headers to trust for determining client IP address.
-     * Headers are checked in order; the first one found with a valid IP is used.
-     *
-     * @param  array<int, string>  $headers
+     * Read the scheme from the first trusted header that carries a known one.
      */
-    public function setTrustedIpHeaders(array $headers): static
+    protected function trustedProtocol(): ?string
     {
-        $normalized = array_map(strtolower(...), $headers);
-        $trimmed = array_map(trim(...), $normalized);
-        $this->trustedIpHeaders = array_filter($trimmed);
+        foreach ($this->trusted->proto as $header) {
+            $value = $this->getHeaderLine($header);
 
-        return $this;
+            if ($value === '') {
+                continue;
+            }
+
+            // Each hop appends, so the leftmost value is the client's own.
+            $scheme = strtolower(trim(explode(',', $value)[0]));
+
+            if (\in_array($scheme, self::SCHEMES, true)) {
+                return $scheme;
+            }
+        }
+
+        return null;
     }
 
     /**

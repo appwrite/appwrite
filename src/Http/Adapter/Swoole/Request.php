@@ -4,6 +4,7 @@ namespace Utopia\Http\Adapter\Swoole;
 
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Http\Request as UtopiaRequest;
+use Utopia\Http\TrustedHeaders;
 
 class Request extends UtopiaRequest
 {
@@ -15,9 +16,10 @@ class Request extends UtopiaRequest
     /**
      * Request constructor.
      */
-    public function __construct(SwooleRequest $request)
+    public function __construct(SwooleRequest $request, TrustedHeaders $trusted = new TrustedHeaders())
     {
         $this->swoole = $request;
+        $this->trusted = $trusted;
     }
 
     /**
@@ -63,7 +65,7 @@ class Request extends UtopiaRequest
     {
         $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
 
-        foreach ($this->trustedIpHeaders as $header) {
+        foreach ($this->trusted->ip as $header) {
             $headerValue = $this->getHeaderLine($header);
 
             if (empty($headerValue)) {
@@ -92,7 +94,16 @@ class Request extends UtopiaRequest
      */
     public function getProtocol(): string
     {
-        $protocol = $this->getHeaderLine('x-forwarded-proto', $this->getServer('server_protocol') ?? 'https');
+        $trusted = $this->trustedProtocol();
+
+        if ($trusted !== null) {
+            return $trusted;
+        }
+
+        // Nothing in front of this server stated the scheme, so fall back to
+        // the request line. `server_protocol` is the HTTP version rather than a
+        // scheme, so it can only say that TLS was not terminated here.
+        $protocol = $this->getServer('server_protocol') ?? 'https';
 
         if ($protocol === 'HTTP/1.1') {
             return 'http';

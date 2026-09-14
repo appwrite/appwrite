@@ -6,6 +6,7 @@ namespace Utopia\Http\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Adapter\FPM\Request;
+use Utopia\Http\TrustedHeaders;
 
 final class RequestTest extends TestCase
 {
@@ -19,7 +20,7 @@ final class RequestTest extends TestCase
                 unset($_SERVER[$key]);
             }
         }
-        unset($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI'], $_SERVER['REQUEST_SCHEME'], $_SERVER['key']);
+        unset($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI'], $_SERVER['REQUEST_SCHEME'], $_SERVER['REMOTE_ADDR'], $_SERVER['key']);
         $_GET = [];
         $_POST = [];
         $_COOKIE = [];
@@ -180,6 +181,74 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_SCHEME'] = 'http';
 
         $this->assertSame('https', $this->request->getProtocol());
+    }
+
+    public function testCanStopTrustingTheForwardedProtocol(): void
+    {
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+
+        $this->request = new Request(new TrustedHeaders(proto: ['x-cdn-proto']));
+
+        $this->assertSame('http', $this->request->getProtocol());
+    }
+
+    public function testCanTrustAProtocolHeaderOfAnyName(): void
+    {
+        $_SERVER['HTTP_X_CDN_PROTO'] = 'https';
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+
+        $this->request = new Request(new TrustedHeaders(proto: ['x-cdn-proto']));
+
+        $this->assertSame('https', $this->request->getProtocol());
+    }
+
+    public function testReadsTrustedProtocolHeadersInOrder(): void
+    {
+        $_SERVER['HTTP_X_CDN_PROTO'] = 'https';
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+
+        $this->request = new Request(new TrustedHeaders(proto: ['x-cdn-proto', 'x-forwarded-proto']));
+
+        $this->assertSame('https', $this->request->getProtocol());
+    }
+
+    public function testSkipsATrustedProtocolHeaderThatNamesNoKnownScheme(): void
+    {
+        $_SERVER['HTTP_X_CDN_PROTO'] = 'gopher';
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+
+        $this->request = new Request(new TrustedHeaders(proto: ['x-cdn-proto', 'x-forwarded-proto']));
+
+        $this->assertSame('https', $this->request->getProtocol());
+    }
+
+    public function testTakesTheClientSchemeFromAChainOfProxies(): void
+    {
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https, http';
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+
+        $this->assertSame('https', $this->request->getProtocol());
+    }
+
+    public function testFallsBackToTheSocketAddressUntilAHeaderIsTrusted(): void
+    {
+        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
+
+        $this->assertSame('10.0.0.1', $this->request->getIP());
+    }
+
+    public function testReadsTheClientAddressFromATrustedHeader(): void
+    {
+        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7, 10.0.0.1';
+
+        $this->request = new Request(new TrustedHeaders(ip: ['x-forwarded-for']));
+
+        $this->assertSame('203.0.113.7', $this->request->getIP());
     }
 
     public function testCanGetMethod(): void

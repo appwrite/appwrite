@@ -9,6 +9,7 @@ use Swoole\Http\Server as SwooleServer;
 use Swoole\Timer;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter;
+use Utopia\Http\TrustedHeaders;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None;
 
@@ -95,6 +96,7 @@ class Server extends Adapter
         Mode|array $settings = [],
         int $mode = SWOOLE_PROCESS,
         protected Container $resources = new Container(),
+        protected TrustedHeaders $trusted = new TrustedHeaders(),
     ) {
         $this->server = new SwooleServer($host, (int) $port, $mode);
         $this->server->set($settings instanceof Mode ? $settings->settings() : $settings);
@@ -115,7 +117,7 @@ class Server extends Adapter
             }
 
             try {
-                \call_user_func($callback, new Request($request), new Response($response));
+                \call_user_func($callback, new Request($request, $this->trusted), new Response($response));
             } finally {
                 // Coroutine mode discards its context slot when the coroutine
                 // ends; the non-coroutine slot is shared across requests, so

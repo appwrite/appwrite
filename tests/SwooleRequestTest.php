@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Http\TrustedHeaders;
 
 #[RequiresPhpExtension('swoole')]
 final class SwooleRequestTest extends TestCase
@@ -74,6 +75,74 @@ final class SwooleRequestTest extends TestCase
         $swoole = $this->swooleRequest('data=value', 'application/x-www-form-urlencoded');
 
         $this->assertSame(['data' => 'value'], (new Request($swoole))->getParams());
+    }
+
+    public function testTrustsTheForwardedProtocolByDefault(): void
+    {
+        $request = new Request($this->schemeRequest(['X-Forwarded-Proto' => 'https']));
+
+        $this->assertSame('https', $request->getProtocol());
+    }
+
+    public function testTakesTheClientSchemeFromAChainOfProxies(): void
+    {
+        $request = new Request($this->schemeRequest(['X-Forwarded-Proto' => 'https, http']));
+
+        $this->assertSame('https', $request->getProtocol());
+    }
+
+    public function testCanTrustAProtocolHeaderOfAnyName(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-CDN-Proto' => 'https']),
+            new TrustedHeaders(proto: ['x-cdn-proto']),
+        );
+
+        $this->assertSame('https', $request->getProtocol());
+    }
+
+    public function testStopsTrustingTheForwardedProtocolWhenAnotherIsNamed(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Proto' => 'https']),
+            new TrustedHeaders(proto: ['x-cdn-proto']),
+        );
+
+        $this->assertSame('http', $request->getProtocol(), 'the untrusted header must not decide the scheme');
+    }
+
+    public function testFallsBackToTheRequestLineWhenNoTrustedHeaderSaysAnything(): void
+    {
+        $request = new Request($this->schemeRequest([]));
+
+        $this->assertSame('http', $request->getProtocol());
+    }
+
+    public function testSkipsATrustedProtocolHeaderThatNamesNoKnownScheme(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-CDN-Proto' => 'gopher', 'X-Forwarded-Proto' => 'https']),
+            new TrustedHeaders(proto: ['x-cdn-proto', 'x-forwarded-proto']),
+        );
+
+        $this->assertSame('https', $request->getProtocol());
+    }
+
+    /**
+     * @param  array<string, string>  $headers
+     */
+    private function schemeRequest(array $headers): SwooleRequest
+    {
+        $request = SwooleRequest::create(['parse_cookie' => false, 'parse_files' => false]);
+        $raw = "GET /v1/documents HTTP/1.1\r\nHost: localhost\r\n";
+
+        foreach ($headers as $name => $value) {
+            $raw .= $name . ': ' . $value . "\r\n";
+        }
+
+        $request->parse($raw . "\r\n");
+
+        return $request;
     }
 
     private function swooleRequest(string $body, string $contentType = 'application/json'): SwooleRequest

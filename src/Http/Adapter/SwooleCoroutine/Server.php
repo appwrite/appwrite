@@ -8,6 +8,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter;
+use Utopia\Http\TrustedHeaders;
 
 class Server extends Adapter
 {
@@ -26,6 +27,7 @@ class Server extends Adapter
         ?string $port = null,
         array $settings = [],
         protected Container $resources = new Container(),
+        protected TrustedHeaders $trusted = new TrustedHeaders(),
     ) {
         $this->server = new SwooleServer($host, $port, false, true);
         $this->server->set($settings);
@@ -41,7 +43,7 @@ class Server extends Adapter
             Coroutine::getContext()[self::CONTEXT_KEY] = $context;
 
             try {
-                \call_user_func($callback, new Request($request), new Response($response));
+                \call_user_func($callback, new Request($request, $this->trusted), new Response($response));
             } finally {
                 unset(Coroutine::getContext()[self::CONTEXT_KEY]);
             }
