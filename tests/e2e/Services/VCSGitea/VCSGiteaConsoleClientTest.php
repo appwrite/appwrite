@@ -622,26 +622,16 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals(201, $session['headers']['status-code']);
         $sessionCookie = $session['cookies']['a_session_console'];
 
-        // Sessions propagate slowly under parallel load, so retry 401s
-        $team = null;
-        for ($i = 0; $i < 5; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'cookie' => 'a_session_console=' . $sessionCookie,
-                'x-appwrite-project' => 'console',
-            ], [
-                'teamId' => ID::unique(),
-                'name' => 'VCS Tenant Team',
-            ]);
-
-            if ($team['headers']['status-code'] !== 401) {
-                break;
-            }
-
-            \usleep(500000);
-        }
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $team = $this->createTeamFixture([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $sessionCookie,
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'VCS Tenant Team',
+        ]);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project = null;
         for ($i = 0; $i < 5; $i++) {

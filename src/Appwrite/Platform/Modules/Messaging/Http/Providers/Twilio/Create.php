@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Twilio;
 
-use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -56,7 +55,7 @@ class Create extends Action
             ))
             ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.')
-            ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+            ->param('from', '', new Text(256), 'Sender phone number or alphanumeric sender ID. Format phone numbers with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
             ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)

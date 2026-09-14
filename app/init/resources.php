@@ -268,25 +268,6 @@ $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $datab
     ['host' => \gethostname(), 'project' => 'console']
 ), ['databaseFactory']);
 
-$container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-    $database = null;
-
-    return function (?Document $project = null) use ($databaseFactory, &$database) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        $database = $databaseFactory->logs(
-            $project,
-            APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-            APP_DATABASE_QUERY_MAX_VALUES
-        );
-
-        return $database;
-    };
-}, ['databaseFactory']);
-
 $container->set('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -306,12 +287,13 @@ $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $conf
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $user = System::getEnv('_APP_REDIS_USER', '');
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
     @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
+    if ($pass !== '') {
+        $redis->auth($user !== '' ? [$user, $pass] : $pass);
     }
     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 

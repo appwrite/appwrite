@@ -883,7 +883,8 @@ Http::shutdown()
         // Generate events for this operation
         $generatedEvents = Event::generateEvents(
             $queueForEvents->getEvent(),
-            $queueForEvents->getParams()
+            $queueForEvents->getParams(),
+            $queueForEvents->getContext('database')
         );
 
         $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
@@ -905,6 +906,7 @@ Http::shutdown()
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        database: $queueForEvents->getContext('database'),
                     ));
                     break;
                 }
@@ -1188,7 +1190,7 @@ Http::shutdown()
          * cannot suppress RequestCompleted or usage metrics on the same request.
          */
         $statusCode = $response->getStatusCode();
-        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+        if ($statusCode < 200 || $statusCode >= 300) {
             return;
         }
 
@@ -1224,6 +1226,19 @@ Http::shutdown()
 
         if ($method === null) {
             return;
+        }
+
+        // Organization routes act on the project named in the path, not on the console project.
+        if ($project->getId() === 'console') {
+            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            if ($projectId === '') {
+                return;
+            }
+
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                return;
+            }
         }
 
         $byMethod = $project->getAttribute('onboarding', []);

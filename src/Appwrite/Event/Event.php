@@ -386,7 +386,7 @@ class Event
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams(), $this->getContext('database'))
         ];
     }
 

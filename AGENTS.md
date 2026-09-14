@@ -222,6 +222,7 @@ Actions should read like a story. The `action()` method is the plot: [`Teams/Htt
 ## Conventions
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
+- Do not add regular expressions (`preg_*`, regex patterns passed to validators). Use string functions (`str_starts_with`, `str_ends_with`, `str_contains`, `strlen`, `substr`, `explode`, `ctype_*`) or an existing validator instead; regex is hard to review and easy to get subtly wrong. If nothing else works, explain why in the PR.
 - When updating documents, pass only changed attributes as a sparse Document:
 
 ```php

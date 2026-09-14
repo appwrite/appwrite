@@ -100,7 +100,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.0.0';
+const APP_VERSION_STABLE = '2.1.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -278,7 +278,6 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
@@ -584,6 +583,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_TABLESDB,
     DATABASE_TYPE_VECTORSDB
 ];
+
+const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',

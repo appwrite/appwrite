@@ -130,6 +130,7 @@ class Exception extends \Exception
     public const string TEAM_ALREADY_EXISTS = 'team_already_exists';
 
     public const string ORGANIZATION_ID_MISSING = 'organization_id_missing';
+    public const string ORGANIZATION_CREATION_PROHIBITED = 'organization_creation_prohibited';
 
     /** Console */
     public const string RESOURCE_ALREADY_EXISTS = 'resource_already_exists';
