@@ -431,6 +431,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONNECTIONS_MAX',
+                'description' => 'Base value used to calculate database and Redis connection pool sizes. The default value is 151. Worker counts and minimum pool sizes also affect allocation; this does not set a server-wide connection limit.',
+                'introduction' => '',
+                'default' => 151,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',
