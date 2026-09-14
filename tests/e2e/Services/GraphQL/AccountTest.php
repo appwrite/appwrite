@@ -535,6 +535,60 @@ final class AccountTest extends Scope
         return $account;
     }
 
+    public function testUpdateAccountPrefsWithLiterals(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $original = $this->client->call(Client::METHOD_GET, '/account/prefs', $headers);
+        $this->assertEquals(200, $original['headers']['status-code']);
+        $payload = [
+            'query' => <<<'GRAPHQL'
+                mutation ($name: String!) {
+                    accountUpdatePrefs(prefs: {
+                        name: $name,
+                        count: 9007199254740993,
+                        values: [0, false, null, "text", {name: $name}]
+                    }) {
+                        prefs { data }
+                    }
+                }
+                GRAPHQL,
+            'variables' => ['name' => 'Literal preferences'],
+        ];
+        $expected = [
+            'name' => 'Literal preferences',
+            'count' => 9007199254740993,
+            'values' => [0, false, null, 'text', ['name' => 'Literal preferences']],
+        ];
+
+        try {
+            /**
+             * Test for SUCCESS
+             */
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayNotHasKey('errors', $response['body']);
+            $this->assertSame($expected, \json_decode($response['body']['data']['accountUpdatePrefs']['prefs']['data'], true));
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/prefs', $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertSame($expected, $response['body']);
+
+            /**
+             * Test for FAILURE
+             */
+            $payload['variables'] = [];
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+            $this->assertArrayHasKey('errors', $response['body']);
+            $response = $this->client->call(Client::METHOD_GET, '/account/prefs', $headers);
+            $this->assertSame($expected, $response['body']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/account/prefs', $headers, ['prefs' => $original['body']]);
+        }
+    }
+
     public function testDeleteAccountSessions(): array
     {
         $projectId = $this->getProject()['$id'];
