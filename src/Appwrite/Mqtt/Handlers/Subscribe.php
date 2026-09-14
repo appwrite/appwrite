@@ -5,6 +5,8 @@ namespace Appwrite\Mqtt\Handlers;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\Dispatcher;
+use Appwrite\Utopia\Database\Documents\User;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\V3;
@@ -52,6 +54,12 @@ class Subscribe extends Action
         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $connection->projectId));
         $projectDB = getProjectDB($project);
 
+        // The subscriber's roles, resolved once, to enforce each topic's subscribe ACL below.
+        $authorization = $projectDB->getAuthorization();
+        /** @var User $user */
+        $user = $authorization->skip(fn () => $projectDB->getDocument('users', $connection->identity['userId'] ?? ''));
+        $roles = $user->getRoles($authorization);
+
         // Parse every (filter, requested QoS) in order; the SUBACK carries one reason code
         // per filter in this order. Bits 0-1 of the subscription options byte are the max QoS.
         $filters = [];
@@ -81,6 +89,7 @@ class Subscribe extends Action
 
         $granted = '';
         $topicDocuments = []; // filter => topic document, reused for replay below
+        $grantedQosByTopic = []; // filter => granted QoS, so replay honours it below
         foreach ($filters as [$filter, $requestedQos]) {
             Span::add('mqtt.topic', $filter);
 
@@ -98,6 +107,13 @@ class Subscribe extends Action
                 continue;
             }
 
+            // The topic's subscribe roles gate who may subscribe.
+            if (!$this->authorizedForTopic($topicDocument->getAttribute('subscribe', []) ?? [], $roles)) {
+                $granted .= chr($denied);
+                $mqtt->metrics->subscriptions->add(1, ['result' => 'forbidden']);
+                continue;
+            }
+
             // Requested max QoS, capped by the topic's configured QoS (null = no cap, broker max 1).
             $topicQos = $topicDocument->getAttribute('qos');
             $grantedQos = min($requestedQos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
@@ -107,6 +123,7 @@ class Subscribe extends Action
             $mqtt->metrics->subscriptions->add(1, ['result' => 'granted']);
 
             $topicDocuments[$filter] = $topicDocument;
+            $grantedQosByTopic[$filter] = $grantedQos;
         }
 
         $reply(
@@ -130,8 +147,8 @@ class Subscribe extends Action
             $expiry = 3600;
         }
 
-        // Replay depth comes from the user's org plan (self-hosted default; see getPlanForUser).
-        $maxDepth = getPlanForUser($project, $connection->identity['userId'] ?? '');
+        // Replay depth comes from the user's org plan (self-hosted default; see getPlanForUser)
+        $maxDepth = max(1, getPlanForUser($project, $connection->identity['userId'] ?? ''));
 
         $cache = getCache();
 
@@ -163,6 +180,10 @@ class Subscribe extends Action
         }
 
         foreach ($resumeTopics as $topic) {
+            if (($grantedQosByTopic[$topic] ?? Packet::QOS_1) < Packet::QOS_1) {
+                continue;
+            }
+
             $from = (int) ($cursors[$topic]['sequence'] ?? 0);
             $tail = $tails[$topic] ?? $from;
             if ($tail <= $from) {
@@ -194,5 +215,25 @@ class Subscribe extends Action
         if ($persist !== []) {
             $cache->saveMany($cursorKey, $persist, $expiry);
         }
+    }
+
+    /**
+     * Whether the subscriber's roles satisfy a topic's subscribe roles. No configured roles
+     * means the topic is open to everyone, as does an explicit `any` role.
+     *
+     * @param array<int, string> $topicRoles the topic's `subscribe` roles
+     * @param array<int, string> $userRoles  the subscriber's resolved roles
+     */
+    private function authorizedForTopic(array $topicRoles, array $userRoles): bool
+    {
+        if ($topicRoles === []) {
+            return true;
+        }
+
+        if (\in_array(Role::any()->toString(), $topicRoles, true)) {
+            return true;
+        }
+
+        return \array_intersect($topicRoles, $userRoles) !== [];
     }
 }

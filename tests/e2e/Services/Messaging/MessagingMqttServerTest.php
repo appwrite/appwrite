@@ -156,6 +156,46 @@ final class MessagingMqttServerTest extends Scope
         }
     }
 
+    public function testSubscribeForbiddenByTopicRoles(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $ownerId, 'jwt' => $ownerJwt] = $this->createUser();
+        ['userId' => $otherId, 'jwt' => $otherJwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A topic only the owner may subscribe to.
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => ID::unique(),
+            'name' => 'mqtt-restricted',
+            'subscribe' => ['user:' . $ownerId],
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        // Test for FAILURE: a user outside the topic's subscribe roles is refused (0x87).
+        $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-acl-other-' . $otherId, cleanStart: true));
+        try {
+            $this->assertSame([0x87], $other->subscribe([$topicId]));
+        } finally {
+            $other->disconnect();
+        }
+
+        // Test for SUCCESS: the owner is inside the roles and is granted.
+        $owner = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $owner->connect($projectId, $ownerJwt, 'e2e-acl-owner-' . $ownerId, cleanStart: true));
+        try {
+            $this->assertSame([1], $owner->subscribe([$topicId]));
+        } finally {
+            $owner->disconnect();
+        }
+    }
+
     public function testKeepAliveReapsSilentClient(): void
     {
         $projectId = $this->getProject()['$id'];
