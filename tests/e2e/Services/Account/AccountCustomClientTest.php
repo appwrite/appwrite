@@ -3466,7 +3466,6 @@ final class AccountCustomClientTest extends Scope
         $this->deleteUserByEmail($email);
         $this->deleteCreatedIdentitiesForEmail($provider, $email);
 
-        // Create an existing account that owns the provider's email
         $response = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3544,7 +3543,6 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Now linking the unverified email must succeed
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3557,7 +3555,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
 
-        // The session must belong to the existing account
         $session = $response['cookies'][$sessionCookieKey] ?? '';
         $this->assertNotEmpty($session);
 
@@ -3600,7 +3597,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($existingUserId, $response['body']['$id']);
         $this->assertEquals($email, $response['body']['email']);
-        // The policy only governs linking; it must not mark the email as verified in Appwrite
         $this->assertFalse($response['body']['emailVerification']);
 
         // Cleanup: restore the default policy, remove the identity, delete the user
