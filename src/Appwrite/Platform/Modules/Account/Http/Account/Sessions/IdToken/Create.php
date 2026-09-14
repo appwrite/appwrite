@@ -315,13 +315,6 @@ class Create extends Action
             Permission::delete(Role::user($user->getId())),
         ]));
 
-        if ($current) { // Delete the replaced session only now that its successor exists
-            $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
-                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-            }
-        }
-
         if ($sessionUpgrade) {
             foreach ($user->getAttribute('targets', []) as $target) {
                 if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
@@ -336,6 +329,16 @@ class Create extends Action
                     'sessionId' => $target->getAttribute('sessionId'),
                     'sessionInternalId' => $target->getAttribute('sessionInternalId'),
                 ]));
+            }
+        }
+
+        // The replaced session goes last, once its successor exists and every
+        // write that could still fail is done, so no failure leaves the caller
+        // without a session.
+        if ($current) {
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if (!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
             }
         }
 
