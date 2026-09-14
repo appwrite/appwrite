@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         failOnEmptyTestSuite="true"
          backupGlobals="false"
          bootstrap="app/init.php"
          colors="true"
@@ -14,37 +15,100 @@
     </extensions>
     <testsuites>
         <testsuite name="unit">
-            <directory>./tests/unit</directory>
+            <directory suffix="Test.php">tests/unit</directory>
         </testsuite>
-        <testsuite name="e2e">
-            <file>./tests/e2e/Client.php</file>
-            <directory>./tests/e2e/General</directory>
-            <directory>./tests/e2e/Scopes</directory>
-            <directory>./tests/e2e/Services/Teams</directory>
-            <directory>./tests/e2e/Services/Realtime</directory>
-            <directory>./tests/e2e/Services/Account</directory>
-            <directory>./tests/e2e/Services/Users</directory>
-            <directory>./tests/e2e/Services/Console</directory>
-            <directory>./tests/e2e/Services/Avatars</directory>
-            <directory>./tests/e2e/Services/Databases</directory>
-            <directory>./tests/e2e/Services/GraphQL</directory>
-            <directory>./tests/e2e/Services/Health</directory>
-            <directory>./tests/e2e/Services/Locale</directory>
-            <directory>./tests/e2e/Services/Projects</directory>
-            <directory>./tests/e2e/Services/Storage</directory>
-            <directory>./tests/e2e/Services/Tokens</directory>
-            <directory>./tests/e2e/Services/Webhooks</directory>
-            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
-            <directory>./tests/e2e/Services/Messaging</directory>
-            <directory>./tests/e2e/Services/Migrations</directory>
-            <directory>./tests/e2e/Services/Notifications</directory>
-            <directory>./tests/e2e/Services/Project</directory>
-            <directory>./tests/e2e/Services/Organization</directory>
-            <directory>./tests/e2e/Services/Advisor</directory>
-            <directory>./tests/e2e/Services/Usage</directory>
-            <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
-            <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
-            <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+        <testsuite name="e2e-general">
+            <directory suffix="Test.php">tests/e2e/General</directory>
+        </testsuite>
+        <testsuite name="e2e-account">
+            <directory suffix="Test.php">tests/e2e/Services/Account</directory>
+        </testsuite>
+        <testsuite name="e2e-advisor">
+            <directory suffix="Test.php">tests/e2e/Services/Advisor</directory>
+        </testsuite>
+        <testsuite name="e2e-avatars">
+            <directory suffix="Test.php">tests/e2e/Services/Avatars</directory>
+        </testsuite>
+        <testsuite name="e2e-console">
+            <directory suffix="Test.php">tests/e2e/Services/Console</directory>
+        </testsuite>
+        <testsuite name="e2e-databases">
+            <directory suffix="Test.php">tests/e2e/Services/Databases</directory>
+        </testsuite>
+        <testsuite name="e2e-functions">
+            <directory suffix="Test.php">tests/e2e/Services/Functions</directory>
+        </testsuite>
+        <testsuite name="e2e-functionsschedule">
+            <directory suffix="Test.php">tests/e2e/Services/FunctionsSchedule</directory>
+        </testsuite>
+        <testsuite name="e2e-graphql">
+            <directory suffix="Test.php">tests/e2e/Services/GraphQL</directory>
+        </testsuite>
+        <testsuite name="e2e-health">
+            <directory suffix="Test.php">tests/e2e/Services/Health</directory>
+        </testsuite>
+        <testsuite name="e2e-locale">
+            <directory suffix="Test.php">tests/e2e/Services/Locale</directory>
+        </testsuite>
+        <testsuite name="e2e-messaging">
+            <directory suffix="Test.php">tests/e2e/Services/Messaging</directory>
+        </testsuite>
+        <testsuite name="e2e-migrations">
+            <directory suffix="Test.php">tests/e2e/Services/Migrations</directory>
+        </testsuite>
+        <testsuite name="e2e-notifications">
+            <directory suffix="Test.php">tests/e2e/Services/Notifications</directory>
+        </testsuite>
+        <testsuite name="e2e-organization">
+            <directory suffix="Test.php">tests/e2e/Services/Organization</directory>
+        </testsuite>
+        <testsuite name="e2e-presences">
+            <directory suffix="Test.php">tests/e2e/Services/Presences</directory>
+        </testsuite>
+        <testsuite name="e2e-project">
+            <directory suffix="Test.php">tests/e2e/Services/Project</directory>
+        </testsuite>
+        <testsuite name="e2e-projectwebhooks">
+            <directory suffix="Test.php">tests/e2e/Services/ProjectWebhooks</directory>
+        </testsuite>
+        <testsuite name="e2e-projects">
+            <directory suffix="Test.php">tests/e2e/Services/Projects</directory>
+        </testsuite>
+        <testsuite name="e2e-proxy">
+            <directory suffix="Test.php">tests/e2e/Services/Proxy</directory>
+        </testsuite>
+        <testsuite name="e2e-realtime">
+            <directory suffix="Test.php">tests/e2e/Services/Realtime</directory>
+        </testsuite>
+        <testsuite name="e2e-sites">
+            <directory suffix="Test.php">tests/e2e/Services/Sites</directory>
+        </testsuite>
+        <testsuite name="e2e-storage">
+            <directory suffix="Test.php">tests/e2e/Services/Storage</directory>
+        </testsuite>
+        <testsuite name="e2e-tablesdb">
+            <directory suffix="Test.php">tests/e2e/Services/TablesDB</directory>
+        </testsuite>
+        <testsuite name="e2e-teams">
+            <directory suffix="Test.php">tests/e2e/Services/Teams</directory>
+        </testsuite>
+        <testsuite name="e2e-tokens">
+            <directory suffix="Test.php">tests/e2e/Services/Tokens</directory>
+        </testsuite>
+        <testsuite name="e2e-usage">
+            <directory suffix="Test.php">tests/e2e/Services/Usage</directory>
+        </testsuite>
+        <testsuite name="e2e-users">
+            <directory suffix="Test.php">tests/e2e/Services/Users</directory>
+        </testsuite>
+        <testsuite name="e2e-vcsgithub">
+            <directory suffix="Test.php">tests/e2e/Services/VCSGitHub</directory>
+        </testsuite>
+        <testsuite name="e2e-vcsgitea">
+            <directory suffix="Test.php">tests/e2e/Services/VCSGitea</directory>
+        </testsuite>
+        <testsuite name="e2e-webhooks">
+            <directory suffix="Test.php">tests/e2e/Services/Webhooks</directory>
         </testsuite>
     </testsuites>
 </phpunit>
