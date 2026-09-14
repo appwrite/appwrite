@@ -3336,9 +3336,22 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertEquals('refreshed-123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+
+        // Verify that updateSession refetched the photo and stored it on identity
+        $photoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+
+        $this->assertEquals(200, $photoResponse['headers']['status-code']);
+        $this->assertEquals('image/png', $photoResponse['headers']['content-type']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
