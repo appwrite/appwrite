@@ -22,6 +22,7 @@ import {
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { InputTags } from '@/components/ui/input-tags'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
@@ -37,11 +38,14 @@ import {
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import {
+  getOAuth2NativeSignInError,
   getOAuth2ProviderFieldErrors,
   hasOAuth2ProviderFieldErrors,
   isOAuth2ParameterAlwaysOptional,
   isOAuth2ParameterOptionalInForm,
   isOAuth2ParameterRequiredWhenEnabling,
+  NATIVE_CLIENT_IDS_PARAM_ID,
+  supportsNativeSignIn,
   isOAuth2SecretParameter,
   isOidcManualDiscoveryParam,
   OIDC_MANUAL_DISCOVERY_PARAM_IDS,
@@ -52,7 +56,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { canUpdateProjectOAuth2Provider } from '@/lib/oauth2/update-project-oauth2'
+import {
+  canUpdateProjectOAuth2Provider,
+  type OAuth2UpdateValues,
+} from '@/lib/oauth2/update-project-oauth2'
 import {
   getOAuth2ProviderDisplayName,
   getOAuth2ProviderIconPath,
@@ -447,6 +454,88 @@ function OAuth2ParameterField({
   )
 }
 
+type OAuth2NativeSignInCardProps = {
+  param: CatalogParameter
+  enabled: boolean
+  onEnabledChange: (enabled: boolean) => void
+  clientIds: string[]
+  onClientIdsChange: (clientIds: string[]) => void
+  error?: string
+  disabled: boolean
+}
+
+/**
+ * Native ID token sign-in has its own switch because it needs different
+ * things from the browser flow: no secret, only the audiences to accept.
+ */
+function OAuth2NativeSignInCard({
+  param,
+  enabled,
+  onEnabledChange,
+  clientIds,
+  onClientIdsChange,
+  error,
+  disabled,
+}: OAuth2NativeSignInCardProps) {
+  const t = useT()
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label
+            htmlFor="oauth2-provider-native-enabled"
+            className="text-[13px] font-semibold text-foreground"
+          >
+            {t('Native sign-in')}
+          </Label>
+          <p className="text-[12px] text-muted-foreground">
+            {enabled
+              ? t('Sessions can be created from ID tokens obtained on device')
+              : t('Native sign-in is turned off for this project')}
+          </p>
+        </div>
+        <Switch
+          id="oauth2-provider-native-enabled"
+          checked={enabled}
+          onCheckedChange={onEnabledChange}
+          disabled={disabled}
+        />
+      </div>
+
+      {enabled ? (
+        <div className="space-y-2">
+          <p className="text-[12px] text-muted-foreground">
+            {t(
+              'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.',
+            )}
+          </p>
+          <Label
+            htmlFor={`oauth2-${param.$id}`}
+            className="text-[12px] font-medium"
+          >
+            {param.name}
+          </Label>
+          <InputTags
+            id={`oauth2-${param.$id}`}
+            value={clientIds}
+            onChange={onClientIdsChange}
+            splitOnComma
+            placeholder={t('Add a client ID and press Enter')}
+            className={cn('text-[13px]', error && 'border-destructive')}
+            disabled={disabled}
+          />
+          {error ? (
+            <p className="text-[12px] text-destructive">{t(error)}</p>
+          ) : param.hint ? (
+            <p className="text-[11px] text-muted-foreground">{param.hint}</p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 type OidcProviderFormFieldsProps = Omit<
   OAuth2ParameterFieldProps,
   'param' | 'providerId' | 'hintOverride'
@@ -648,6 +737,23 @@ function readStringField(
   return typeof v === 'string' ? v : ''
 }
 
+function readBooleanField(
+  model: Record<string, unknown> | undefined,
+  key: string,
+): boolean {
+  return model?.[key] === true
+}
+
+function readStringListField(
+  model: Record<string, unknown> | undefined,
+  key: string,
+): string[] {
+  const v = model?.[key]
+  return Array.isArray(v)
+    ? v.filter((item): item is string => typeof item === 'string')
+    : []
+}
+
 export function OAuth2ProvidersSection({
   projectId,
   initialData,
@@ -681,9 +787,13 @@ export function OAuth2ProvidersSection({
   )
   const [formEnabled, setFormEnabled] = useState(false)
   const [formFields, setFormFields] = useState<Record<string, string>>({})
+  const [formNativeEnabled, setFormNativeEnabled] = useState(false)
+  const [formNativeClientIds, setFormNativeClientIds] = useState<string[]>([])
   const [initialSnapshot, setInitialSnapshot] = useState<{
     enabled: boolean
     fields: Record<string, string>
+    nativeEnabled: boolean
+    nativeClientIds: string[]
   } | null>(null)
   const [providerError, setProviderError] = useState('')
   const [validationTouched, setValidationTouched] = useState(false)
@@ -718,14 +828,27 @@ export function OAuth2ProvidersSection({
 
       const fields: Record<string, string> = {}
       for (const param of entry.parameters) {
+        if (param.$id === NATIVE_CLIENT_IDS_PARAM_ID) continue
         fields[param.$id] = readStringField(model, param.$id)
       }
       const enabled = typeof model?.enabled === 'boolean' ? model.enabled : false
+      const nativeEnabled = readBooleanField(model, 'nativeEnabled')
+      const nativeClientIds = readStringListField(
+        model,
+        NATIVE_CLIENT_IDS_PARAM_ID,
+      )
 
       setSelectedProviderId(providerId)
       setFormEnabled(enabled)
       setFormFields(fields)
-      setInitialSnapshot({ enabled, fields: { ...fields } })
+      setFormNativeEnabled(nativeEnabled)
+      setFormNativeClientIds(nativeClientIds)
+      setInitialSnapshot({
+        enabled,
+        fields: { ...fields },
+        nativeEnabled,
+        nativeClientIds: [...nativeClientIds],
+      })
       setProviderError('')
       setValidationTouched(false)
       const wellKnownSet = Boolean(fields[OIDC_WELL_KNOWN_PARAM_ID]?.trim())
@@ -743,6 +866,8 @@ export function OAuth2ProvidersSection({
       setSelectedProviderId(null)
       setFormEnabled(false)
       setFormFields({})
+      setFormNativeEnabled(false)
+      setFormNativeClientIds([])
       setInitialSnapshot(null)
       setProviderError('')
       setValidationTouched(false)
@@ -791,16 +916,64 @@ export function OAuth2ProvidersSection({
     return { popularRows: popular, otherRows: other }
   }, [filteredEntries, resolvedProviderList])
 
+  const providerSupportsNative = useMemo(
+    () =>
+      selectedCatalog ? supportsNativeSignIn(selectedCatalog.parameters) : false,
+    [selectedCatalog],
+  )
+
+  /** Everything except the native audience list, which has its own control. */
+  const browserParameters = useMemo(
+    () =>
+      selectedCatalog?.parameters.filter(
+        (p) => p.$id !== NATIVE_CLIENT_IDS_PARAM_ID,
+      ) ?? [],
+    [selectedCatalog],
+  )
+
   const hasProviderChanges = useMemo(() => {
     if (!selectedCatalog || !initialSnapshot) return false
     if (formEnabled !== initialSnapshot.enabled) return true
-    for (const p of selectedCatalog.parameters) {
+    if (formNativeEnabled !== initialSnapshot.nativeEnabled) return true
+    if (
+      formNativeClientIds.join('\n') !==
+      initialSnapshot.nativeClientIds.join('\n')
+    ) {
+      return true
+    }
+    for (const p of browserParameters) {
       const cur = formFields[p.$id] ?? ''
       const init = initialSnapshot.fields[p.$id] ?? ''
       if (cur.trim() !== init.trim()) return true
     }
     return false
-  }, [selectedCatalog, initialSnapshot, formEnabled, formFields])
+  }, [
+    selectedCatalog,
+    browserParameters,
+    initialSnapshot,
+    formEnabled,
+    formFields,
+    formNativeEnabled,
+    formNativeClientIds,
+  ])
+
+  const nativeSignInError = useMemo(() => {
+    if (!selectedCatalog || !providerSupportsNative) return undefined
+    return getOAuth2NativeSignInError({
+      parameters: selectedCatalog.parameters,
+      nativeEnabled: formNativeEnabled,
+      nativeClientIds: formNativeClientIds,
+      formFields,
+      initialFields: initialSnapshot?.fields ?? {},
+    })
+  }, [
+    selectedCatalog,
+    providerSupportsNative,
+    formNativeEnabled,
+    formNativeClientIds,
+    formFields,
+    initialSnapshot,
+  ])
 
   const formFieldErrors = useMemo(() => {
     if (!selectedProviderId || !selectedCatalog || !formEnabled) return {}
@@ -822,7 +995,13 @@ export function OAuth2ProvidersSection({
 
   useEffect(() => {
     setProviderError('')
-  }, [formEnabled, formFields, selectedProviderId])
+  }, [
+    formEnabled,
+    formFields,
+    formNativeEnabled,
+    formNativeClientIds,
+    selectedProviderId,
+  ])
 
   const validateAndSubmit = () => {
     if (!selectedProviderId || !selectedCatalog) return
@@ -830,8 +1009,21 @@ export function OAuth2ProvidersSection({
     const parameters = selectedCatalog.parameters
     const wasEnabled = initialSnapshot?.enabled ?? false
 
+    // The two switches are independent on the server too: native sign-in
+    // verifies a signature and needs only an audience, never a secret.
+    const nativeValues: OAuth2UpdateValues = providerSupportsNative
+      ? {
+          nativeEnabled: formNativeEnabled,
+          nativeClientIds: formNativeClientIds,
+        }
+      : {}
+
     if (!formEnabled) {
-      void submitValues({ enabled: false })
+      if (nativeSignInError) {
+        setValidationTouched(true)
+        return
+      }
+      void submitValues({ enabled: false, ...nativeValues })
       return
     }
 
@@ -843,7 +1035,7 @@ export function OAuth2ProvidersSection({
       initialEnabled: wasEnabled,
       initialFields: initialSnapshot?.fields ?? {},
     })
-    if (hasOAuth2ProviderFieldErrors(fieldErrors)) {
+    if (hasOAuth2ProviderFieldErrors(fieldErrors) || nativeSignInError) {
       setValidationTouched(true)
       if (
         selectedProviderId === 'oidc' &&
@@ -859,8 +1051,9 @@ export function OAuth2ProvidersSection({
         ? (formFields[OIDC_WELL_KNOWN_PARAM_ID] ?? '').trim()
         : ''
 
-    const values: Record<string, string | boolean> = { enabled: true }
+    const values: OAuth2UpdateValues = { enabled: true, ...nativeValues }
     for (const p of parameters) {
+      if (p.$id === NATIVE_CLIENT_IDS_PARAM_ID) continue
       if (
         selectedProviderId === 'oidc' &&
         wellKnownTrim &&
@@ -879,7 +1072,7 @@ export function OAuth2ProvidersSection({
     void submitValues(values)
   }
 
-  const submitValues = (values: Record<string, string | boolean>) => {
+  const submitValues = (values: OAuth2UpdateValues) => {
     if (!selectedProviderId) return
     setProviderError('')
     updateMutation.mutate(
@@ -911,6 +1104,7 @@ export function OAuth2ProvidersSection({
       {rows.map((row) => {
         const model = findProjectProviderModel(resolvedProviderList, row.$id)
         const enabled = Boolean(model?.enabled)
+        const nativeEnabled = readBooleanField(model, 'nativeEnabled')
         return (
           <button
             key={row.$id}
@@ -939,12 +1133,19 @@ export function OAuth2ProvidersSection({
                 {getOAuth2ProviderDisplayName(row.$id)}
               </span>
             </div>
-            <Badge
-              variant={enabled ? 'success' : 'secondary'}
-              className="shrink-0 text-[11px]"
-            >
-              {enabled ? t('enabled') : t('disabled')}
-            </Badge>
+            <div className="flex shrink-0 items-center gap-1">
+              {nativeEnabled ? (
+                <Badge variant="info" className="shrink-0 text-[11px]">
+                  {t('native')}
+                </Badge>
+              ) : null}
+              <Badge
+                variant={enabled ? 'success' : 'secondary'}
+                className="shrink-0 text-[11px]"
+              >
+                {enabled ? t('enabled') : t('disabled')}
+              </Badge>
+            </div>
           </button>
         )
       })}
@@ -1081,6 +1282,22 @@ export function OAuth2ProvidersSection({
                   </div>
                 </div>
 
+                {providerSupportsNative && selectedCatalog ? (
+                  <OAuth2NativeSignInCard
+                    param={
+                      selectedCatalog.parameters.find(
+                        (p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID,
+                      ) as CatalogParameter
+                    }
+                    enabled={formNativeEnabled}
+                    onEnabledChange={setFormNativeEnabled}
+                    clientIds={formNativeClientIds}
+                    onClientIdsChange={setFormNativeClientIds}
+                    error={validationTouched ? nativeSignInError : undefined}
+                    disabled={updateMutation.isPending}
+                  />
+                ) : null}
+
                 {formEnabled && selectedCatalog && selectedProviderId
                   ? selectedProviderId === 'oidc' ? (
                       <OidcProviderFormFields
@@ -1109,7 +1326,7 @@ export function OAuth2ProvidersSection({
                             }))
                           }}
                         />
-                        {selectedCatalog.parameters.map((param) => (
+                        {browserParameters.map((param) => (
                           <OAuth2ParameterField
                             key={param.$id}
                             param={param}
@@ -1125,7 +1342,7 @@ export function OAuth2ProvidersSection({
                         ))}
                       </>
                     ) : (
-                      selectedCatalog.parameters.map((param) => (
+                      browserParameters.map((param) => (
                         <OAuth2ParameterField
                           key={param.$id}
                           param={param}

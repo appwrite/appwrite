@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaAuthStorageDictionary: Record<string, string> = {
+  'Native sign-in': 'ネイティブサインイン',
+  'Sessions can be created from ID tokens obtained on device': 'デバイス上で取得した ID トークンからセッションを作成できます',
+  'Native sign-in is turned off for this project': 'このプロジェクトではネイティブサインインは無効です',
+  'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.': 'Sign in with Apple や Google Credential Manager などのネイティブ SDK から取得した ID トークンを、クライアントシークレットなしで検証します。',
+  'Add a client ID and press Enter': 'クライアント ID を入力して Enter を押してください',
+  'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'トークンをアプリに照合できるよう、ネイティブクライアント ID を 1 つ以上追加するか、クライアント ID を設定してください。',
+  'native': 'ネイティブ',
   '(365 days)': '(365 日)',
   '(optional)': '(任意)',
   '(required)': '(必須)',

@@ -3,6 +3,13 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heAuthStorageDictionary: Record<string, string> = {
+  'Native sign-in': 'התחברות נייטיב',
+  'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
+  'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',
+  'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.': 'מאמת טוקני ID מה-SDK הנייטיב, כגון Sign in with Apple או Google Credential Manager, ללא client secret.',
+  'Add a client ID and press Enter': 'הוסיפו client ID ולחצו Enter',
+  'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'הוסיפו לפחות client ID נייטיב אחד, או הגדירו את ה-client ID, כדי שניתן יהיה להתאים טוקנים לאפליקציה שלכם.',
+  'native': 'נייטיב',
   '(365 days)': '(365 ימים)',
   '(optional)': '(אופציונלי)',
   '(required)': '(חובה)',
