@@ -79,9 +79,10 @@ final class Stats implements Source, Changes
                 $queries[] = Query::cursorAfter($latest);
             }
 
+            // Only the id is read, so no decode filter -- and no subquery,
+            // whichever edition registered it -- needs to run.
             $projects = $this->dbForPlatform->skipFilters(
                 fn () => $this->dbForPlatform->find('projects', $queries),
-                APP_PROJECTS_SUBQUERIES
             );
             $sum = \count($projects);
 
