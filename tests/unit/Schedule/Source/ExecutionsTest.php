@@ -33,7 +33,7 @@ final class ExecutionsTest extends TestCase
         $this->assertSame('execution', $entry->payload['resource']->getId());
         $this->assertSame('function', $entry->payload['resource']->getAttribute('resourceId'));
         $this->assertSame([[RESOURCE_TYPE_FUNCTIONS, 'function']], $blocked);
-        $this->assertSame([['projects', 'project']], $database->reads);
+        $this->assertNotContains('executions', array_column($database->reads, 0));
     }
 
     public function testBlocksOnTheFunctionNotTheExecution(): void

@@ -78,9 +78,9 @@ abstract class Database implements Source, Changes
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
-        $blockedId = $this->blockResourceId($schedule);
-        if (($this->isResourceBlocked)($project, $this->collection(), $blockedId)) {
-            throw new \InvalidArgumentException("Resource blocked: {$blockedId}");
+        $resourceId = (string) ($schedule['data']['functionId'] ?? $schedule['resourceId']);
+        if (($this->isResourceBlocked)($project, $this->collection(), $resourceId)) {
+            throw new \InvalidArgumentException("Resource blocked: {$resourceId}");
         }
 
         $schedule['project'] = $project;
@@ -93,14 +93,6 @@ abstract class Database implements Source, Changes
         }
 
         return new Entry($this->trigger($schedule), $schedule);
-    }
-
-    /**
-     * @param array<string, mixed> $schedule
-     */
-    protected function blockResourceId(array $schedule): string
-    {
-        return (string) $schedule['resourceId'];
     }
 
     /**

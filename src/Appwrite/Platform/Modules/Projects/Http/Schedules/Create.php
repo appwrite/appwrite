@@ -40,12 +40,6 @@ class Create extends Action
         ];
     }
 
-    /**
-     * Project-DB collection for the schedule's resource.
-     *
-     * Execution schedules are looked up via `executionStore` (ClickHouse), not
-     * this map. Do not add an `executions` arm.
-     */
     protected function getCollection(string $resourceType): string
     {
         return match ($resourceType) {

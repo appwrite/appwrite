@@ -27,12 +27,6 @@ final class Executions extends Database
     }
 
     #[\Override]
-    protected function blockResourceId(array $schedule): string
-    {
-        return (string) ($schedule['data']['functionId'] ?? '');
-    }
-
-    #[\Override]
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
         return new Document([
