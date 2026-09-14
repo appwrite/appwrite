@@ -55,8 +55,8 @@ const CONTENT_REFERENCE_ROOTS = [
 ]
 
 const resizeConfig: sharp.ResizeOptions = {
-  width: 1280,
-  height: 1280,
+  width: 2920,
+  height: 2920,
   fit: sharp.fit.inside,
   withoutEnlargement: true,
 }
