@@ -252,13 +252,13 @@ export function SitesProductVisual() {
 
   return (
     <div ref={rootRef} className="absolute inset-0 flex flex-col overflow-hidden">
-      <div className="flex h-full min-h-0 w-full flex-col justify-end space-y-3.5 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-        <div className="mx-auto w-full max-w-[21rem] space-y-3.5">
+      <div className="flex h-full min-h-0 w-full flex-col justify-end space-y-3.5 pt-3 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
+        <div className="mx-auto w-full max-w-[18.5rem] space-y-3.5">
           <div
             className={cn(
-              'flex items-center gap-2.5 px-3.5 py-3 transition-[border-color,background-color] duration-300',
+              'flex items-center gap-2.5 px-3.5 py-3 transition-colors duration-300',
               productBentoContainer.panel,
-              'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_28%,var(--border))] group-hover:bg-background',
+              'group-hover:bg-background',
             )}
           >
             <div
@@ -279,7 +279,7 @@ export function SitesProductVisual() {
               <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{COMMIT_HASH}</p>
             </div>
             <ArrowRight
-              className="size-4 shrink-0 text-muted-foreground/50 transition-[color,transform] duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--brand-cta)] motion-reduce:group-hover:translate-x-0"
+              className="size-4 shrink-0 text-muted-foreground/50 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0"
               aria-hidden
             />
           </div>

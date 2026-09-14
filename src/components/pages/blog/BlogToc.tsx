@@ -10,9 +10,18 @@ type BlogTocProps = {
 
 export function BlogToc({ items }: BlogTocProps) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? '')
+  const [tocVisible, setTocVisible] = useState(false)
 
   useEffect(() => {
-    if (items.length === 0) return
+    const media = window.matchMedia('(min-width: 900px)')
+    const sync = () => setTocVisible(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (!tocVisible || items.length === 0) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -36,7 +45,7 @@ export function BlogToc({ items }: BlogTocProps) {
     }
 
     return () => observer.disconnect()
-  }, [items])
+  }, [items, tocVisible])
 
   return (
     <aside

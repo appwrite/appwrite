@@ -16,7 +16,7 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
-import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import {
   isValidRelativeRedirect,
   requiresConsoleEmailVerification,
@@ -70,7 +70,9 @@ export function isOptionalAuthPage(pathname: string): boolean {
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).
   if (pathname.startsWith('/debug/')) return true
-  return isMarketingPagePath(pathname)
+  // Do not gate on the marketing feature flag. Debug profile overrides can flip
+  // that after hydrate; a guest 401 must not bounce /blog to /sign-in.
+  return matchesMarketingPagePath(pathname)
 }
 
 /** Undefined means the effect is stale (or server-side), so do not navigate. */

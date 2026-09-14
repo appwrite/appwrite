@@ -92,6 +92,7 @@ import {
 } from '@/lib/layout/offcanvas-classes'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import {
   analyticsAttrs,
   getDocsNavAnalyticsAction,
@@ -476,7 +477,7 @@ export function DocsGlobalSidebar({
   const pathname = location.pathname
   const [collapsed, setCollapsed] = useState(false)
   const { features } = useConsoleProfile()
-  const marketingEnabled = features.marketing
+  const marketingEnabled = useLocalMarketingEnabled()
   const audience = getDocsAudienceFromPathname(pathname)
   const globalNav = getDocsGlobalNav(audience)
   const [hasMounted, setHasMounted] = useState(false)

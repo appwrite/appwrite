@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "introducing-the-affiliates-program",
+    "href": "/blog/post/introducing-the-affiliates-program",
+    "title": "Introducing the Affiliates program",
+    "description": "Introducing the Affiliates program, a new way to share Appwrite, track referrals, and earn Cloud credits when people you refer upgrade to Pro.",
+    "date": "2026-09-11",
+    "lastUpdated": "2026-09-11",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "announcements",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/introducing-the-affiliates-program/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "introducing-autogravity",
     "href": "/blog/post/introducing-autogravity",
     "title": "Automatic image cropping in Appwrite with AutoGravity",
@@ -16,6 +31,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "unlisted": false,
     "draft": false,
     "cover": "/images/blog/introducing-autogravity/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "phone-duo-whats-new-and-what-developers-can-build",
+    "href": "/blog/post/phone-duo-whats-new-and-what-developers-can-build",
+    "title": "Iphone Duo: What’s new and what developers can build",
+    "description": "See how iPhone Duo could change app development, from adaptive interfaces and testing to new experiences built for foldable screens.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/phone-duo-whats-new-and-what-developers-can-build/cover.avif",
     "hasCover": true
   },
   {

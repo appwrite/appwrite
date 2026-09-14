@@ -1841,20 +1841,12 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;
-  border-radius: calc(0.75rem - 1px);
 }
 
-/* Skip layout/paint for off-screen bento tiles while scrolling the home page. */
-.product-bento-grid > article {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 420px;
-  contain: layout paint style;
-}
-
-@media (min-width: 1024px) {
-  .product-bento-grid > article {
-    contain-intrinsic-size: auto 240px;
-  }
+/* Keep bento tiles in normal layout. content-visibility/contain on these
+   articles jumps #main-content back to top when hover styles change. */
+.product-bento-grid {
+  overflow-anchor: none;
 }
 
 /* Home product bento mock UI */
@@ -1946,19 +1938,45 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
   0% {
     transform: scale(1);
     border-color: var(--border);
-    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+    background-color: var(--background);
+    color: var(--muted-foreground);
   }
 
   45% {
     transform: scale(0.96);
-    border-color: color-mix(in oklch, var(--brand-cta) 30%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 12%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
   }
 
   100% {
     transform: scale(1);
-    border-color: color-mix(in oklch, var(--brand-cta) 18%, var(--border));
-    background-color: color-mix(in oklch, var(--brand-cta) 6%, var(--background));
+    border-color: var(--brand-cta);
+    background-color: var(--brand-cta);
+    color: #fff;
+  }
+}
+
+.group:hover .product-bento-pink-cta {
+  background-color: var(--brand-cta);
+  border-color: transparent;
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta :is(p, span, svg, [class*='text-']) {
+  color: #fff !important;
+}
+
+.group:hover .product-bento-pink-cta img {
+  filter: brightness(0) invert(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .product-bento-pink-cta {
+    background-color: var(--brand-cta);
+    border-color: transparent;
+    color: #fff;
   }
 }
 

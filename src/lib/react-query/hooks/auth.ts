@@ -303,6 +303,7 @@ export function consoleAccountQueryOptions(options?: {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: typeof window !== 'undefined',
+    placeholderData: () => getConsoleAccountSync(revision),
   })
 }
 

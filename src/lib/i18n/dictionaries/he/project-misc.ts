@@ -2508,6 +2508,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    'מספר טלפון עם סימן ה-+ וקידומת המדינה, או מזהה שולח אלפאנומרי.',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2576,6 +2578,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Resend.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
+  Sender: 'שולח',
   'Sender ID': 'מזהה שולח',
   'Sender Name': 'שם שולח',
   'Sender phone': 'טלפון שולח',

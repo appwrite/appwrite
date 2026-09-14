@@ -1,5 +1,5 @@
 import { Outlet, useParams } from '@tanstack/react-router'
-import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
+import { StandaloneCommandCenterScope } from '@/components/global/providers/StandaloneCommandCenterScope'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 

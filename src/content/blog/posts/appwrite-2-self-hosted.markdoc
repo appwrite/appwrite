@@ -92,7 +92,7 @@ You can also let developers sign in to the Console with GitHub, GitLab, Bitbucke
 
 # One organization in the Console
 
-On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither. The Console creates an organization and an initial project when the first user signs in. After that, the API rejects additional organization creation, whether it comes from the Console, an SDK, or the CLI. This is an instance-wide limit, not a limit per account.
+On Appwrite Cloud, organizations have plans and billing. A self-hosted instance has neither. The Console creates an organization and an initial project when the first user signs in.
 
 Other users join through invitations to the existing organization and use its existing projects. Allowing new accounts to register does not grant them access or create a project for each account. The Console explains how to get an invitation when a user has no organization access.
 

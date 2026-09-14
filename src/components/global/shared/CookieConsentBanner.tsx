@@ -17,8 +17,8 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-const BANNER_ENTER_MS = 500
-const BANNER_EXIT_MS = 300
+const BANNER_ENTER_MS = 300
+const BANNER_EXIT_MS = 200
 
 type CookieConsentBannerProps = {
   open: boolean
@@ -54,7 +54,6 @@ export function CookieConsentBanner({
   const panelRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(open)
   const [translateY, setTranslateY] = useState(0)
-  const [lockedHeight, setLockedHeight] = useState<number | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
@@ -76,13 +75,11 @@ export function CookieConsentBanner({
 
     if (open) {
       if (reduceMotion) {
-        setLockedHeight(null)
         setTranslateY(0)
         setIsAnimating(false)
         return
       }
 
-      setLockedHeight(height)
       setIsAnimating(false)
       setTranslateY(height)
       const frame = requestAnimationFrame(() => {
@@ -93,13 +90,11 @@ export function CookieConsentBanner({
     }
 
     if (reduceMotion) {
-      setLockedHeight(null)
       setTranslateY(height)
       setIsAnimating(false)
       return
     }
 
-    setLockedHeight(height)
     setIsAnimating(true)
     const frame = requestAnimationFrame(() => setTranslateY(height))
     return () => cancelAnimationFrame(frame)
@@ -111,7 +106,6 @@ export function CookieConsentBanner({
     const duration = open ? BANNER_ENTER_MS : BANNER_EXIT_MS
     const timeout = window.setTimeout(() => {
       setIsAnimating(false)
-      setLockedHeight(null)
     }, duration)
     return () => window.clearTimeout(timeout)
   }, [isAnimating, open])
@@ -129,15 +123,14 @@ export function CookieConsentBanner({
           <div
             ref={panelRef}
             className={cn(
-              'pointer-events-auto border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom,0px)] shadow-lg backdrop-blur-sm',
+              'pointer-events-auto border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)] shadow-lg',
               'will-change-transform [backface-visibility:hidden] motion-reduce:transition-none',
               isAnimating && 'transition-transform ease-out',
-              isAnimating && (open ? 'duration-500' : 'duration-300 ease-in'),
+              isAnimating && (open ? 'duration-300' : 'duration-200 ease-in'),
               !open && !isAnimating && 'pointer-events-none',
             )}
             style={{
               transform: `translate3d(0, ${translateY}px, 0)`,
-              ...(lockedHeight != null ? { height: lockedHeight } : null),
             }}
             role="dialog"
             aria-labelledby="cookie-consent-title"

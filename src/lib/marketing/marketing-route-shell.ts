@@ -1,5 +1,5 @@
 import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
-import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
+import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   type MarketingPageRouteStaticData,
@@ -17,9 +17,32 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'agent',
 ])
 
-function isConsoleAreaPath(pathname: string): boolean {
+const CONSOLE_AUTH_EXACT_PATHS = new Set([
+  '/sign-in',
+  '/sign-up',
+  '/sign-out',
+  '/recovery',
+  '/join',
+  '/mfa',
+  '/verify-email',
+  '/education/join',
+])
+
+export function isConsoleAreaPath(pathname: string): boolean {
   const firstSegment = pathname.split('/').filter(Boolean)[0]
   return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
+}
+
+function normalizeShellPath(pathname: string): string {
+  return pathname.replace(/\/+$/, '') || '/'
+}
+
+export function isConsoleAuthPath(pathname: string): boolean {
+  const normalized = normalizeShellPath(pathname)
+  if (CONSOLE_AUTH_EXACT_PATHS.has(normalized)) return true
+  if (normalized === '/auth' || normalized.startsWith('/auth/')) return true
+  if (normalized === '/oauth2' || normalized.startsWith('/oauth2/')) return true
+  return false
 }
 
 function isConsoleAuthRouteMatch(
@@ -31,10 +54,10 @@ function isConsoleAuthRouteMatch(
   )
 }
 
-function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
+export function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   if (isConsoleRedirectHopPath(pathname)) return true
-  const normalized = pathname.replace(/\/+$/, '') || '/'
-  if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
+  const normalized = normalizeShellPath(pathname)
+  if (isConsoleAuthPath(normalized)) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true
   }
@@ -89,9 +112,8 @@ export function shouldUseMarketingSiteLayout({
 }: {
   marketingEnabled: boolean
   pathname: string
-  matches: Array<{ staticData?: unknown }>
+  matches: Array<{ staticData?: unknown; routeId?: string }>
 }): boolean {
-  if (!marketingEnabled) return false
   if (isConsoleAuthRouteMatch(matches)) return false
   if (isExcludedMarketingSiteLayoutPath(pathname)) return false
 
@@ -99,5 +121,7 @@ export function shouldUseMarketingSiteLayout({
     return true
   }
 
-  return isMarketingPagePath(pathname) || !isConsoleAreaPath(pathname)
+  if (!marketingEnabled) return false
+
+  return matchesMarketingPagePath(pathname) || !isConsoleAreaPath(pathname)
 }

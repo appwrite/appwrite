@@ -439,7 +439,11 @@ export function MarketingProductsNavPanel({
   )
 }
 
-export function MarketingProductsNavPopover() {
+export function MarketingProductsNavPopover({
+  isActive = false,
+}: {
+  isActive?: boolean
+}) {
   const { catalog } = useI18n()
   const navigationCopy = catalog.website.products.navigation
   const [open, setOpen] = useState(false)
@@ -451,7 +455,11 @@ export function MarketingProductsNavPopover() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={NAV_TRIGGER_CLASS}
+          className={cn(
+            NAV_TRIGGER_CLASS,
+            isActive && 'bg-accent text-foreground',
+          )}
+          aria-current={isActive ? 'page' : undefined}
           aria-expanded={open}
           aria-haspopup="dialog"
           {...analyticsAttrs('marketing-nav-products')}
@@ -477,7 +485,11 @@ export function MarketingProductsNavPopover() {
   )
 }
 
-export function MarketingProductsMobileNav() {
+export function MarketingProductsMobileNav({
+  isActive = false,
+}: {
+  isActive?: boolean
+}) {
   const { catalog } = useI18n()
   const navigationCopy = catalog.website.products.navigation
   const { pathname } = useLocation()
@@ -489,7 +501,11 @@ export function MarketingProductsMobileNav() {
     <Accordion type="single" collapsible>
       <AccordionItem value="products" className="border-none">
         <AccordionTrigger
-          className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground"
+          className={cn(
+            'flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground',
+            isActive && 'bg-accent text-foreground',
+          )}
+          aria-current={isActive ? 'page' : undefined}
           {...analyticsAttrs('marketing-nav-products')}
         >
           {navigationCopy.triggerLabel}

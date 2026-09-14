@@ -9,12 +9,8 @@ import {
  * Kept separate from marketing-page-paths.ts so vite.config can import the path
  * list without pulling in profile/runtime modules before aliases are available.
  */
-export function isMarketingPagePath(pathname: string): boolean {
+export function matchesMarketingPagePath(pathname: string): boolean {
   const normalized = normalizeMarketingPath(pathname)
-
-  if (!getActiveProfileFeatures().marketing) {
-    return false
-  }
 
   if (normalized === '/docs' || normalized.startsWith('/docs/')) {
     return true
@@ -37,4 +33,12 @@ export function isMarketingPagePath(pathname: string): boolean {
   }
 
   return (MARKETING_PAGE_PATHS as readonly string[]).includes(normalized)
+}
+
+export function isMarketingPagePath(pathname: string): boolean {
+  if (!getActiveProfileFeatures().marketing) {
+    return false
+  }
+
+  return matchesMarketingPagePath(pathname)
 }

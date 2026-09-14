@@ -161,7 +161,7 @@ On non-Linux hosts, the server might take a few minutes to start after installat
 
 ## Organizations {% #organizations %}
 
-A self-hosted instance allows one organization to be created. The Console creates it, along with an initial project, when the first user signs in. Once any organization exists, requests to create another are rejected by the API with HTTP 403 (`organization_creation_prohibited`), including requests made through the SDKs or CLI. The limit applies to the instance, not to each account.
+A self-hosted instance allows one organization to be created. The Console creates it, along with an initial project, when the first user signs in. The limit applies to the instance, not to each account.
 
 Invite other users to the organization to share its existing projects. Creating an account alone does not grant organization or project access, and signing up does not create a separate project for each user. If you allow additional accounts to register with `_APP_CONSOLE_WHITELIST_ROOT=disabled`, they still need to accept an organization invitation.
 
