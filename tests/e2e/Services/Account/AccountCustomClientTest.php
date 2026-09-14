@@ -5767,7 +5767,7 @@ final class AccountCustomClientTest extends Scope
 
             $this->assertEquals(412, $response['headers']['status-code']);
             $this->assertEquals('project_provider_disabled', $response['body']['type']);
-            $this->assertStringContainsString('Native sign-in is disabled', $response['body']['message']);
+            $this->assertStringContainsString('Native sign-in is disabled', (string) $response['body']['message']);
         } finally {
             $this->updateMockProvider(true);
         }
@@ -5795,7 +5795,7 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('native client ID', $response['body']['message']);
+        $this->assertStringContainsString('native client ID', (string) $response['body']['message']);
 
         // With an audience it is accepted, and reports the new switch back.
         $response = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/apple', $headers, [
