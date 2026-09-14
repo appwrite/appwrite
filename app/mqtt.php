@@ -318,9 +318,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $mqtt, $register):
                         }
                         $effectiveQos = min($qos, $grantedQos);
                         $packetId = $subscriber->nextPacketId();
-                        $server->send($fd, $subscriber->protocol >= 5
+                        $publish = $subscriber->protocol >= 5
                             ? V5::publish($topic, $message, $effectiveQos, $packetId)
-                            : V3::publish($topic, $message, $effectiveQos, $packetId));
+                            : V3::publish($topic, $message, $effectiveQos, $packetId);
+                        $server->send($fd, $publish);
+                        $mqtt->metrics->bytesSent->add(\strlen($publish));
                         $mqtt->metrics->messagesDelivered->add(1, ['qos' => $effectiveQos]);
 
                         // Hold QoS 1 deliveries until the subscriber's PUBACK matches them back.
@@ -351,13 +353,17 @@ $server->onReceive(function (int $fd, string $data) use (
     $packet = Packet::parse($data);
     $connection = $mqtt->open($fd);
 
+    $mqtt->metrics->bytesReceived->add(\strlen($data));
+
     $span = Span::init('mqtt.' . $packet->name());
     $span->set('mqtt.fd', $fd);
     $span->set('mqtt.is_broker', false); // an inbound packet from a client
+    $span->set('mqtt.bytes', \strlen($data));
 
-    $reply = function (string $packet = '', bool $close = false) use ($server, $fd): void {
+    $reply = function (string $packet = '', bool $close = false) use ($server, $mqtt, $fd): void {
         if ($packet !== '') {
             $server->send($fd, $packet);
+            $mqtt->metrics->bytesSent->add(\strlen($packet));
         }
         if ($close) {
             $server->close($fd);

@@ -75,6 +75,7 @@ class Mqtt extends MessagingAdapter
         if ($connection !== null) {
             if ($connection->active) {
                 $this->metrics->connectionsActive->add(-1);
+                $this->metrics->connectionDuration->record(microtime(true) - $connection->openedAt);
             }
             if ($connection->wheelSlot > 0) {
                 $this->keepAlive->remove($fd, $connection->wheelSlot);
@@ -139,6 +140,8 @@ class Mqtt extends MessagingAdapter
         $message = $options['payload'] ?? '';
         $qos = $options['qos'] ?? 0;
         $sequence = (int) ($options['sequence'] ?? 0);
+
+        $this->metrics->messageSize->record(\strlen($message));
 
         foreach ($channels as $topic) {
             $this->metrics->messagesPublished->add(1, ['qos' => $qos]);

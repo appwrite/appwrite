@@ -52,9 +52,13 @@ class Connection
      */
     private array $inflight = [];
 
+    /** Wall-clock time (fractional unix seconds) the connection was opened, for its lifetime metric. */
+    public readonly float $openedAt;
+
     public function __construct(
         public readonly int $fd,
     ) {
+        $this->openedAt = microtime(true);
     }
 
     /**
