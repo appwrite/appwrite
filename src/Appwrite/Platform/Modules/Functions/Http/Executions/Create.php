@@ -99,6 +99,7 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('user')
+            ->inject('impersonatorUser')
             ->inject('queueForEvents')
             ->inject('publisherForFunctions')
             ->inject('geo')
@@ -127,6 +128,7 @@ class Create extends Base
         Database $dbForProject,
         Database $dbForPlatform,
         User $user,
+        Document $impersonatorUser,
         Event $queueForEvents,
         FunctionPublisher $publisherForFunctions,
         Geo $geo,
@@ -207,8 +209,11 @@ class Create extends Base
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $jwt = ''; // initialize
-        if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
+        // Forward the authenticated user's token only when no other credential or impersonation applies.
+        $jwt = !$user->isEmpty() && $impersonatorUser->isEmpty() && $request->getHeaderLine('x-appwrite-key', '') === ''
+            ? ($request->getHeaderLine('x-appwrite-jwt', '') ?: '')
+            : '';
+        if (!$user->isEmpty() && $jwt === '') { // Generate a JWT for session-authenticated users
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
 
