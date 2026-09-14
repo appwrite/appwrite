@@ -40,11 +40,16 @@ class Create extends Action
         ];
     }
 
+    /**
+     * Project-DB collection for the schedule's resource.
+     *
+     * Execution schedules are looked up via `executionStore` (ClickHouse), not
+     * this map. Do not add an `executions` arm.
+     */
     protected function getCollection(string $resourceType): string
     {
         return match ($resourceType) {
             SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
-            SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',
             SCHEDULE_RESOURCE_TYPE_MESSAGE => 'messages',
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType),
         };
