@@ -9,7 +9,7 @@ For best performance, create an [index](/docs/products/databases/tables#indexes)
 
 # Ordering one column {% #one-column %}
 
-When querying using the [listRows](/docs/references/cloud/client-web/tables#listRows) endpoint,
+When querying using the [listRows](/docs/references/cloud/client-web/tablesDB#listRows) endpoint,
 you can specify the order of the rows returned using the `Query.orderAsc()` and `Query.orderDesc()` query methods.
 
 {% multicode %}

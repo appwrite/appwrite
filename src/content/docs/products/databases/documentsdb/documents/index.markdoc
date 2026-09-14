@@ -166,7 +166,7 @@ import io.appwrite.Permission
 import io.appwrite.Role
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
@@ -393,7 +393,7 @@ Document result = await documentsDB.getDocument(
 import io.appwrite.Client
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
@@ -630,7 +630,7 @@ import io.appwrite.Client
 import io.appwrite.Query
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
@@ -863,7 +863,7 @@ Document result = await documentsDB.updateDocument(
 import io.appwrite.Client
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
@@ -1092,7 +1092,7 @@ Document result = await documentsDB.upsertDocument(
 import io.appwrite.Client
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key
@@ -1314,7 +1314,7 @@ await documentsDB.deleteDocument(
 import io.appwrite.Client
 import io.appwrite.services.DocumentsDB
 
-val client = Client(context)
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<YOUR_PROJECT_ID>") // Your project ID
     .setKey("<YOUR_API_KEY>") // Your secret API key

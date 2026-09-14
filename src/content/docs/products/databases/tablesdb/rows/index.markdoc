@@ -135,10 +135,10 @@ You must grant _read_ permissions to users at the _table level_ or _row level_ b
 [Learn more about permissions](#permissions)
 {% /info %}
 
-A single row can be retrieved by its ID using the [Get row](/docs/references/cloud/client-web/tables#getRow) endpoint.
+A single row can be retrieved by its ID using the [Get row](/docs/references/cloud/client-web/tablesDB#getRow) endpoint.
 
 Pass `queries` to shape the response, for example `Query.select()` to return only the columns you need or to
-[load relationship data](/docs/products/databases/relationships#performance-loading).
+[load relationship data](/docs/products/databases/tablesdb/relationships#performance-loading).
 
 {% multicode %}
 ```client-web
@@ -229,7 +229,7 @@ suspend fun main() {
 ```
 ```graphql
 query {
-    tablesGetRow(
+    tablesDBGetRow(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
         rowId: "<ROW_ID>"
@@ -253,7 +253,7 @@ You must grant _read_ permissions to users at the _table level_ before users can
 [Learn more about permissions](#permissions)
 {% /info %}
 
-Rows can be retrieved using the [List rows](/docs/references/cloud/client-web/tables#listRows) endpoint.
+Rows can be retrieved using the [List rows](/docs/references/cloud/client-web/tablesDB#listRows) endpoint.
 
 Results can be filtered, sorted, and paginated using Appwrite's shared set of query methods.
 You can find a full guide on querying in the [Queries Guide](/docs/products/databases/queries).
