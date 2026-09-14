@@ -213,6 +213,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,
+  'build-support-chatbot-vectorsdb': convertCoverSourceToAvif,
 }
 
 async function main() {

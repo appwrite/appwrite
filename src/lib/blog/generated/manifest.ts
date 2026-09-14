@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "build-support-chatbot-vectorsdb",
+    "href": "/blog/post/build-support-chatbot-vectorsdb",
+    "title": "Build a support chatbot with Appwrite Functions and VectorsDB",
+    "description": "Seed a help center, retrieve relevant articles with VectorsDB, and answer customer questions through an Appwrite Function. Deploy the chat interface on Appwrite Sites.",
+    "date": "2026-09-10",
+    "lastUpdated": "2026-09-10",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorial",
+    "cover": "/images/blog-local/build-support-chatbot-vectorsdb/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-lorari",
     "href": "/blog/post/customer-story-lorari",
     "title": "How Lorari scaled to 130+ fitness studios solo with Appwrite",
