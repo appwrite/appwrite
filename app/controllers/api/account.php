@@ -5327,7 +5327,7 @@ Http::put('/v1/account/verifications/email/otp')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setPayload($response->showSensitive(fn () => $response->output($verificationDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -5679,7 +5679,8 @@ Http::put('/v1/account/recovery/otp')
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
-            ->setParam('tokenId', $recoveryDocument->getId());
+            ->setParam('tokenId', $recoveryDocument->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
