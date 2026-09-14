@@ -13,6 +13,7 @@ import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { fetchPaymentMethod } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -30,11 +31,13 @@ export function PaymentMethodContextMenu({
   children,
 }: PaymentMethodContextMenuProps) {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem
+          disabled={isImpersonating}
           onSelect={() =>
             openDialogAfterOverlayCloses(() => onUpdate(paymentMethod))
           }
@@ -77,6 +80,7 @@ export function PaymentMethodContextMenu({
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem
+          disabled={isImpersonating}
           onSelect={() =>
             openDialogAfterOverlayCloses(() => onDelete(paymentMethod))
           }

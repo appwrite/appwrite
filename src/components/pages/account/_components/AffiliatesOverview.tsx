@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/tooltip'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
@@ -181,6 +182,7 @@ export function AffiliatesOverview({
   organizations,
 }: AffiliatesOverviewProps) {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   const [dateRange, setDateRange] = useState<DateRange>(() =>
     getStableUsageChartDateRange(),
   )
@@ -409,7 +411,7 @@ export function AffiliatesOverview({
                   type="button"
                   size="sm"
                   className="h-9 w-full text-[13px] sm:w-auto"
-                  disabled={!canClaim}
+                  disabled={isImpersonating || !canClaim}
                   onClick={() => setRewardToClaim(firstPendingReward)}
                   {...analyticsAttrs('claim-affiliate-reward')}
                 >

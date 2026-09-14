@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useBrowserAlertSettings } from '@/lib/browser-alerts/use-browser-alert-settings'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 
 function permissionBadgeVariant(
@@ -26,6 +27,8 @@ const INCLUDED_ALERTS = [
 
 export function BrowserAlertsSection() {
   const t = useT()
+  // The opt-out lives in account prefs, which are not saved while impersonating.
+  const isImpersonating = useConsoleImpersonationActive()
   const {
     supported,
     permission,
@@ -109,7 +112,12 @@ export function BrowserAlertsSection() {
             id="browser-alerts-toggle"
             checked={switchChecked}
             onCheckedChange={(checked) => void setAlertsEnabled(checked)}
-            disabled={!supported || isUpdating || permission === 'denied'}
+            disabled={
+              isImpersonating ||
+              !supported ||
+              isUpdating ||
+              permission === 'denied'
+            }
           />
         </div>
 

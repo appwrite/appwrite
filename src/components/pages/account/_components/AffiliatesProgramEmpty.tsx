@@ -19,6 +19,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
@@ -45,6 +46,7 @@ const PROGRAM_STEPS = [
 
 export function AffiliatesProgramEmpty() {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   const createLink = useCreateAffiliateLink()
   const [createOpen, setCreateOpen] = useState(false)
   const [linkId, setLinkId] = useState<string | undefined>(undefined)
@@ -151,6 +153,7 @@ export function AffiliatesProgramEmpty() {
               <Button
                 className="h-9 text-[13px]"
                 onClick={() => setCreateOpen(true)}
+                disabled={isImpersonating}
                 {...analyticsAttrs('create-affiliate-link')}
               >
                 <Link2 className="mr-1.5 h-4 w-4" />

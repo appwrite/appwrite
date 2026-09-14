@@ -42,6 +42,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 
 // Dependencies for query invalidation
@@ -139,6 +140,7 @@ export function AccountSessions({
   initialData?: Awaited<ReturnType<typeof fetchAccountSessions>>
 } = {}) {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   const { data, isFetched } = useAccountSessions()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -308,7 +310,7 @@ export function AccountSessions({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleDeleteAllClick}
-              disabled={deleteAllSessionsMutation.isPending}
+              disabled={isImpersonating || deleteAllSessionsMutation.isPending}
             >
               <LogOut className="me-1.5 h-4 w-4" />
               {t('Delete all sessions')}
@@ -467,7 +469,9 @@ export function AccountSessions({
                         size="sm"
                         className="h-8 w-8 p-0"
                         onClick={() => handleDeleteClick(session.$id)}
-                        disabled={deleteSessionMutation.isPending}
+                        disabled={
+                          isImpersonating || deleteSessionMutation.isPending
+                        }
                         title={t('Revoke session')}
                         aria-label={t('Revoke session')}
                       >

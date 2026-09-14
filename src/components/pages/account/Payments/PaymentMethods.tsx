@@ -50,6 +50,7 @@ import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
 import { PaymentMethodContextMenu } from './PaymentMethodContextMenu'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -66,6 +67,7 @@ export function AccountPaymentMethods({
   initialData,
 }: AccountPaymentMethodsProps) {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   const { data: paymentMethodsData, isFetched: methodsFetched } = useQuery(
     paymentMethodsQueryOptions(),
   )
@@ -178,6 +180,7 @@ export function AccountPaymentMethods({
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={onAddPaymentMethod}
+                disabled={isImpersonating}
               >
                 <Plus className="me-1.5 h-4 w-4" />
                 {t('Add payment method')}
@@ -206,6 +209,7 @@ export function AccountPaymentMethods({
               size="sm"
               className="h-9 text-[13px]"
               onClick={onAddPaymentMethod}
+              disabled={isImpersonating}
             >
               <Plus className="me-1.5 h-4 w-4" />
               {t('Add payment method')}
@@ -372,6 +376,7 @@ export function AccountPaymentMethods({
                             <DropdownMenuItem
                               className="text-[13px]"
                               onClick={() => handleEdit(method)}
+                              disabled={isImpersonating}
                             >
                               <MenuItemContent icon={Pencil}>
                                 {t('Update')}
@@ -381,6 +386,7 @@ export function AccountPaymentMethods({
                             <DropdownMenuItem
                               className="text-[13px]"
                               onClick={() => handleDelete(method)}
+                              disabled={isImpersonating}
                             >
                               <MenuItemContent icon={Trash2}>
                                 {t('Delete')}

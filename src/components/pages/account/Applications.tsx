@@ -35,6 +35,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
+import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 
 const Dependencies = {
@@ -128,6 +129,7 @@ function ConsentTokenFamilies({
 }) {
   const t = useT()
   const queryClient = useQueryClient()
+  const isImpersonating = useConsoleImpersonationActive()
   const { data: tokens, isLoading } = useConsentTokens(consent.$id)
   const [revokingId, setRevokingId] = useState<string | null>(null)
 
@@ -204,7 +206,7 @@ function ConsentTokenFamilies({
               size="sm"
               className="h-7 shrink-0 text-[12px] text-muted-foreground hover:text-foreground"
               onClick={() => revokeToken(token.$id)}
-              disabled={revokingId !== null}
+              disabled={isImpersonating || revokingId !== null}
             >
               {revokingId === token.$id ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -233,6 +235,7 @@ function ConsentDetail({
   revokePending: boolean
 }) {
   const t = useT()
+  const isImpersonating = useConsoleImpersonationActive()
   const { consent } = connectedApp
 
   return (
@@ -254,7 +257,7 @@ function ConsentDetail({
             size="sm"
             className="h-7 shrink-0 text-[12px] text-muted-foreground hover:text-foreground"
             onClick={onRevoke}
-            disabled={revokePending}
+            disabled={isImpersonating || revokePending}
           >
             {t('Revoke')}
           </Button>
@@ -289,6 +292,7 @@ export function AccountApplications({
 }: AccountApplicationsProps = {}) {
   const t = useT()
   const queryClient = useQueryClient()
+  const isImpersonating = useConsoleImpersonationActive()
   const { data, isFetched } = useAccountConnectedApps()
   const resolvedData = data ?? initialData
   const groups =
@@ -493,7 +497,9 @@ export function AccountApplications({
                               event.stopPropagation()
                               handleRevokeGroupClick(group)
                             }}
-                            disabled={revokeMutation.isPending}
+                            disabled={
+                              isImpersonating || revokeMutation.isPending
+                            }
                           >
                             {isGrouped ? t('Revoke all') : t('Revoke')}
                           </Button>

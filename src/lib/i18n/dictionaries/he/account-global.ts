@@ -7,6 +7,10 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Join an organization': 'הצטרפו לארגון',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
+  'Account changes are disabled while impersonating':
+    'שינויים בחשבון מושבתים בזמן התחזות',
+  "You can view this user's account, but updates are blocked until you exit impersonation.":
+    'אפשר לצפות בחשבון של המשתמש הזה, אבל עדכונים חסומים עד שתצאו מההתחזות.',
   '123 Main St': 'הרצל 1',
   Account: 'חשבון',
   'Account ID': 'מזהה חשבון',
