@@ -684,13 +684,10 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
-        $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
-            'live' => true,
-            'deploymentId' => $deployment->getId(),
-            'deploymentInternalId' => $deployment->getSequence(),
-            'deploymentCreatedAt' => $deployment->getCreatedAt(),
-        ]));
-
+        // Repoint the rules before marking the resource active. Clients poll the
+        // resource's deploymentId to learn that a deployment went live, and a
+        // request to its domain that arrives in between would otherwise resolve
+        // a rule still pointing at the previous (or no) deployment.
         $branch = $deployment->getAttribute('providerBranch', '');
         $branches = $branch === '' ? [''] : ['', $branch];
 
@@ -708,6 +705,13 @@ class Jobs extends Action
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', $branches),
         ]);
+
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+            'live' => true,
+            'deploymentId' => $deployment->getId(),
+            'deploymentInternalId' => $deployment->getSequence(),
+            'deploymentCreatedAt' => $deployment->getCreatedAt(),
+        ]));
     }
 
     /**
