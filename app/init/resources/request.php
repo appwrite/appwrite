@@ -244,17 +244,6 @@ return function (Container $context): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
-
     /**
      * List of allowed request hostnames for the request.
      */

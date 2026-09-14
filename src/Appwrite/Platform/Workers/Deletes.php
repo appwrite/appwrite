@@ -63,7 +63,6 @@ class Deletes extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('getDatabasesDB')
-            ->inject('getLogsDB')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
@@ -94,7 +93,6 @@ class Deletes extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         callable $getDatabasesDB,
-        callable $getLogsDB,
         Device $deviceForFiles,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -128,7 +126,6 @@ class Deletes extends Action
             $dbForPlatform,
             $getProjectDB,
             $getDatabasesDB,
-            $getLogsDB,
             $deviceForFiles,
             $deviceForFunctions,
             $deviceForSites,
@@ -222,7 +219,6 @@ class Deletes extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         callable $getDatabasesDB,
-        callable $getLogsDB,
         Device $deviceForFiles,
         Device $deviceForFunctions,
         Device $deviceForSites,
