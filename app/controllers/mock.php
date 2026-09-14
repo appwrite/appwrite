@@ -18,6 +18,7 @@ use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -194,6 +195,42 @@ Http::get('/v1/mock/tests/general/oauth2/user-no-email')
             'id' => 3,
             'name' => 'User Name NoEmail',
         ]);
+    });
+
+Http::patch('/v1/mock/tests/general/oauth2/native')
+    ->desc('Switch native ID token sign-in for the mock provider')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('enabled', false, new Boolean(), 'Accept ID tokens minted by the mock provider.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        // The mock provider has no console form of its own; this is the only
+        // way a test can reach the switch the real providers expose.
+        $providers = $project->getAttribute('oAuthProviders', []);
+        $providers['mockNativeEnabled'] = $enabled;
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'oAuthProviders' => $providers,
+        ]));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
+        $response->noContent();
     });
 
 Http::get('/v1/mock/tests/general/oauth2/jwks')

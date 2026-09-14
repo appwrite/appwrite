@@ -5257,10 +5257,21 @@ final class AccountCustomClientTest extends Scope
             'appId' => '1',
             'secret' => '123456',
             'enabled' => $enabled,
-            'nativeEnabled' => $nativeEnabled,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'projectId' => $this->getProject()['$id'],
+            'enabled' => $nativeEnabled,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     private function createIdTokenSession(array $body, array $headers = []): array
