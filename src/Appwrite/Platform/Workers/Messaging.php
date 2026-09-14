@@ -1278,9 +1278,9 @@ class Messaging extends Action
                 'twilio' => [
                     'accountSid' => $user,
                     'authToken' => $password,
-                    // Twilio Messaging Service SIDs always start with MG
-                    // https://www.twilio.com/docs/messaging/services
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
+                    // Messaging Service SIDs are always 34 characters; alphanumeric sender IDs, at most 11, can also start with MG
+                    // https://www.twilio.com/docs/messaging/api/service-resource
+                    'messagingServiceSid' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? $from : null
                 ],
                 'textmagic' => [
                     'username' => $user,
@@ -1313,7 +1313,7 @@ class Messaging extends Action
             },
             'options' => match ($host) {
                 'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') ? null : $from
+                    'from' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? null : $from
                 ],
                 default => [
                     'from' => $from

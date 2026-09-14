@@ -268,25 +268,6 @@ $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $datab
     ['host' => \gethostname(), 'project' => 'console']
 ), ['databaseFactory']);
 
-$container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-    $database = null;
-
-    return function (?Document $project = null) use ($databaseFactory, &$database) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        $database = $databaseFactory->logs(
-            $project,
-            APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-            APP_DATABASE_QUERY_MAX_VALUES
-        );
-
-        return $database;
-    };
-}, ['databaseFactory']);
-
 $container->set('cache', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];

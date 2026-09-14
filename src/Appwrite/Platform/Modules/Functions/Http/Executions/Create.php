@@ -229,6 +229,9 @@ class Create extends Base
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
+            } else {
+                // A JWT cannot be used to create another JWT, so forward the caller's token as-is
+                $jwt = $request->getHeaderLine('x-appwrite-jwt');
             }
         }
 
