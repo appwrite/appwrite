@@ -71,7 +71,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
       throw notFound()
     }
 
-    return { post, ...renderBlogPostBodies(post) }
+    return { post, ...(await renderBlogPostBodies(post)) }
   },
   head: ({ loaderData }) => {
     if (!loaderData?.post) return {}

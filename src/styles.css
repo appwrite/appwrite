@@ -2362,6 +2362,53 @@ pre.prism-code .token-line > span {
   box-shadow: none !important;
 }
 
+/* Blog code fences: Prism tokens rendered at build/server time. Same palette
+   as CodeBlock (prismSyntaxHighlightStyles) via the --code-* theme variables. */
+.blog-code .token.comment,
+.blog-code .token.prolog,
+.blog-code .token.doctype,
+.blog-code .token.cdata {
+  color: var(--code-comment);
+}
+.blog-code .token.namespace,
+.blog-code .token.class-name,
+.blog-code .language-markup .token.doctype {
+  color: var(--code-module-keyword);
+}
+.blog-code .token.keyword,
+.blog-code .token.builtin,
+.blog-code .token.changed,
+.blog-code .token.interpolation-punctuation,
+.blog-code .token.boolean,
+.blog-code .token.selector,
+.blog-code .language-markup .token.tag {
+  color: var(--code-keyword);
+}
+.blog-code .token.function {
+  color: var(--code-function);
+}
+.blog-code .token.attr-name,
+.blog-code .token.variable,
+.blog-code .token.property {
+  color: var(--code-property);
+}
+.blog-code .token.tag,
+.blog-code .token.deleted,
+.blog-code .token.string,
+.blog-code .token.attr-value,
+.blog-code .token.template-punctuation,
+.blog-code .token.char,
+.blog-code .token.regexp,
+.blog-code .token.number,
+.blog-code .token.inserted,
+.blog-code .token.constant {
+  color: var(--code-string);
+}
+.blog-code .token.punctuation,
+.blog-code .token.operator {
+  color: inherit;
+}
+
 /* Overlay scrollbar - hidden until hover/focus; thin rounded thumb on Windows/Linux */
 .overlay-scrollbar {
   scrollbar-width: none;
