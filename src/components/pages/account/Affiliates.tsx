@@ -60,7 +60,6 @@ import { ClaimAffiliateReward } from './_components/ClaimAffiliateReward'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
@@ -314,7 +313,6 @@ function LinksCard({
     handlePageChange,
     handlePageSizeChange,
   } = useAffiliateCardPagination()
-  const isImpersonating = useConsoleImpersonationActive()
   const [createOpen, setCreateOpen] = useState(false)
   const [linkToDelete, setLinkToDelete] = useState<Models.AffiliateLink | null>(
     null,
@@ -380,7 +378,6 @@ function LinksCard({
             size="sm"
             className="h-9 shrink-0 text-[13px]"
             onClick={() => setCreateOpen(true)}
-            disabled={isImpersonating}
             {...analyticsAttrs('create-affiliate-link')}
           >
             <Plus className="mr-1.5 h-4 w-4" />
@@ -464,7 +461,6 @@ function LinksCard({
                           variant="outline"
                           className="h-8 w-8 p-0"
                           onClick={() => setLinkToDelete(link)}
-                          disabled={isImpersonating}
                           aria-label={t('Delete')}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -714,7 +710,6 @@ function RewardsCard({
     handlePageChange,
     handlePageSizeChange,
   } = useAffiliateCardPagination()
-  const isImpersonating = useConsoleImpersonationActive()
   const [selectedReward, setSelectedReward] =
     useState<Models.AffiliateReward | null>(null)
 
@@ -865,9 +860,7 @@ function RewardsCard({
                           variant="outline"
                           className="h-8 text-[12px]"
                           onClick={() => setSelectedReward(reward)}
-                          disabled={
-                            isImpersonating || organizations.length === 0
-                          }
+                          disabled={organizations.length === 0}
                           {...analyticsAttrs('claim-affiliate-reward')}
                         >
                           {t('Claim')}

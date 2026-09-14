@@ -23,7 +23,6 @@ import { ACCOUNT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/account-setti
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
-import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 
 export type AccountSectionId =
@@ -58,7 +57,6 @@ export function View() {
     refetchOnWindowFocus: true,
   })
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
     useState<string | null>(null)
@@ -288,21 +286,6 @@ export function View() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   {t(
                     'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.',
-                  )}
-                </p>
-              </section>
-            )}
-            {isImpersonating && (
-              <section
-                role="status"
-                className="mb-6 rounded-lg border border-border bg-card p-4"
-              >
-                <h2 className="text-sm font-medium text-foreground">
-                  {t('Account changes are disabled while impersonating')}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t(
-                    "You can view this user's account, but updates are blocked until you exit impersonation.",
                   )}
                 </p>
               </section>

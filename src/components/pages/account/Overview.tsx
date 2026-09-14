@@ -61,7 +61,6 @@ import {
   useMfaReauth,
   verifyMfaReauth,
 } from '@/components/global/auth/MfaReauthForm'
-import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 
 // Dependencies for query invalidation
@@ -112,7 +111,6 @@ export function UpdateNameSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const [name, setName] = useState('')
   const accountName = account?.name
 
@@ -138,8 +136,7 @@ export function UpdateNameSection() {
   })
 
   const hasChanges = name !== (account?.name || '')
-  const isDisabled =
-    isImpersonating || !name || !hasChanges || updateNameMutation.isPending
+  const isDisabled = !name || !hasChanges || updateNameMutation.isPending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,7 +169,7 @@ export function UpdateNameSection() {
               placeholder={t('Enter name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={isImpersonating || updateNameMutation.isPending}
+              disabled={updateNameMutation.isPending}
               className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
               required
             />
@@ -201,7 +198,6 @@ export function UpdateEmailSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const [email, setEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
   const accountEmail = account?.email
@@ -238,11 +234,7 @@ export function UpdateEmailSection() {
   const emailChanged = email !== (account?.email || '')
   const showPassword = emailChanged && !!email
   const isDisabled =
-    isImpersonating ||
-    !email ||
-    !emailPassword ||
-    !emailChanged ||
-    updateEmailMutation.isPending
+    !email || !emailPassword || !emailChanged || updateEmailMutation.isPending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -286,7 +278,7 @@ export function UpdateEmailSection() {
                 placeholder={t('Enter email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isImpersonating || updateEmailMutation.isPending}
+                disabled={updateEmailMutation.isPending}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
@@ -300,7 +292,7 @@ export function UpdateEmailSection() {
                   placeholder={t('Enter password')}
                   value={emailPassword}
                   onChange={(e) => setEmailPassword(e.target.value)}
-                  disabled={isImpersonating || updateEmailMutation.isPending}
+                  disabled={updateEmailMutation.isPending}
                   className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   required
                 />
@@ -329,7 +321,6 @@ export function UpdateEmailSection() {
 
 export function UpdatePasswordSection() {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const queryClient = useQueryClient()
@@ -361,10 +352,7 @@ export function UpdatePasswordSection() {
   })
 
   const isDisabled =
-    isImpersonating ||
-    !newPassword ||
-    !oldPassword ||
-    updatePasswordMutation.isPending
+    !newPassword || !oldPassword || updatePasswordMutation.isPending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -400,7 +388,7 @@ export function UpdatePasswordSection() {
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                disabled={isImpersonating || updatePasswordMutation.isPending}
+                disabled={updatePasswordMutation.isPending}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
@@ -413,21 +401,19 @@ export function UpdatePasswordSection() {
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                disabled={isImpersonating || updatePasswordMutation.isPending}
+                disabled={updatePasswordMutation.isPending}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
             </div>
-            {!isImpersonating && (
-              <div className="text-sm">
-                <Link
-                  to="/recovery"
-                  className="link-neutral text-[13px]"
-                >
-                  {t('Forgot your password?')}
-                </Link>
-              </div>
-            )}
+            <div className="text-sm">
+              <Link
+                to="/recovery"
+                className="link-neutral text-[13px]"
+              >
+                {t('Forgot your password?')}
+              </Link>
+            </div>
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -455,7 +441,6 @@ export function IdentitiesSection({
   initialData?: Awaited<ReturnType<typeof fetchAccountIdentities>>
 } = {}) {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const { data, isFetched } = useAccountIdentities()
   const queryClient = useQueryClient()
   const identities = data?.identities ?? initialData?.identities ?? []
@@ -613,7 +598,7 @@ export function IdentitiesSection({
                   size="sm"
                   className="h-7 w-7 p-0"
                   onClick={() => requestDelete(identity)}
-                  disabled={isImpersonating || deleteIdentityMutation.isPending}
+                  disabled={deleteIdentityMutation.isPending}
                   aria-label={t('Delete identity')}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -672,7 +657,6 @@ export function IdentitiesSection({
 
 export function MFASection() {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const { account } = useAuth()
   const { data: factorsData } = useMFAFactors()
   const queryClient = useQueryClient()
@@ -769,7 +753,7 @@ export function MFASection() {
             id="mfa-toggle"
             checked={mfaEnabled}
             onCheckedChange={handleMfaToggle}
-            disabled={isImpersonating || updateMFAMutation.isPending}
+            disabled={updateMFAMutation.isPending}
           />
         </div>
 
@@ -794,7 +778,6 @@ export function MFASection() {
 // TOTP Method Component
 function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const queryClient = useQueryClient()
   const [setupDialogOpen, setSetupDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -967,7 +950,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleDelete}
-              disabled={isImpersonating || isDeleting}
+              disabled={isDeleting}
             >
               {t('Delete')}
             </Button>
@@ -976,9 +959,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleStartSetup}
-              disabled={
-                isImpersonating || createAuthenticatorMutation.isPending
-              }
+              disabled={createAuthenticatorMutation.isPending}
             >
               {t('Add')}
             </Button>
@@ -1166,7 +1147,6 @@ function EmailMFAMethod({
 }) {
   useQueryClient()
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
 
   const createVerificationMutation = useMutation({
     mutationFn: async () => {
@@ -1218,7 +1198,7 @@ function EmailMFAMethod({
           size="sm"
           className="h-9 text-[13px]"
           onClick={handleVerify}
-          disabled={isImpersonating || createVerificationMutation.isPending}
+          disabled={createVerificationMutation.isPending}
         >
           {t('Verify')}
         </Button>
@@ -1279,7 +1259,6 @@ function RecoveryCodesMethod({
   hasAnyMfaMethod: boolean
 }) {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const queryClient = useQueryClient()
   const [codesDialogOpen, setCodesDialogOpen] = useState(false)
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
@@ -1449,7 +1428,7 @@ function RecoveryCodesMethod({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => handleRegenerateDialogOpenChange(true)}
-              disabled={isImpersonating || !hasAnyMfaMethod}
+              disabled={!hasAnyMfaMethod}
             >
               {t('Regenerate')}
             </Button>
@@ -1459,7 +1438,7 @@ function RecoveryCodesMethod({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleView}
-              disabled={isImpersonating || !hasAnyMfaMethod}
+              disabled={!hasAnyMfaMethod}
             >
               {t('View')}
             </Button>
@@ -1667,7 +1646,6 @@ function CopyButton({ text }: { text: string }) {
 
 export function DeleteAccountSection() {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -1738,7 +1716,6 @@ export function DeleteAccountSection() {
                 variant="destructive"
                 size="sm"
                 className="h-9 text-[13px]"
-                disabled={isImpersonating}
               >
                 {t('Delete account')}
               </Button>

@@ -7,10 +7,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Join an organization': '組織に参加する',
   'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
     'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
-  'Account changes are disabled while impersonating':
-    'なりすまし中はアカウントを変更できません',
-  "You can view this user's account, but updates are blocked until you exit impersonation.":
-    'このユーザーのアカウントを閲覧できますが、なりすましを終了するまで更新できません。',
   '123 Main St': '大手町 1-1-1',
   'Account ID': 'アカウント ID',
   'Account was deleted': 'アカウントを削除しました',

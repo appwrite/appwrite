@@ -43,7 +43,6 @@ import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 import { BillingAddressContextMenu } from './BillingAddressContextMenu'
-import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -56,7 +55,6 @@ export function AccountBillingAddresses({
   }
 } = {}) {
   const t = useT()
-  const isImpersonating = useConsoleImpersonationActive()
   const { data: addressesData, isFetched: addressesFetched } = useQuery(
     billingAddressesQueryOptions(),
   )
@@ -171,7 +169,6 @@ export function AccountBillingAddresses({
                   size="sm"
                   className="h-9 text-[13px]"
                   onClick={handleAdd}
-                  disabled={isImpersonating}
                 >
                   <Plus className="me-1.5 h-4 w-4" />
                   {t('Add billing address')}
@@ -203,12 +200,7 @@ export function AccountBillingAddresses({
                 {t('Manage your billing addresses for invoices and payments.')}
               </p>
             </div>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleAdd}
-              disabled={isImpersonating}
-            >
+            <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
               <Plus className="me-1.5 h-4 w-4" />
               {t('Add billing address')}
             </Button>
@@ -301,7 +293,6 @@ export function AccountBillingAddresses({
                         <DropdownMenuItem
                           className="text-[13px]"
                           onClick={() => handleEdit(address)}
-                          disabled={isImpersonating}
                         >
                           <MenuItemContent icon={Pencil}>
                             {t('Update')}
@@ -311,7 +302,6 @@ export function AccountBillingAddresses({
                         <DropdownMenuItem
                           className="text-[13px]"
                           onClick={() => handleDelete(address)}
-                          disabled={isImpersonating}
                         >
                           <MenuItemContent icon={Trash2}>
                             {t('Delete')}

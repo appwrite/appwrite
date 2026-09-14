@@ -7,7 +7,6 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { useConsoleImpersonationActive } from '@/hooks/use-console-impersonation-active'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
@@ -181,8 +180,6 @@ function VerifyEmailPage() {
     },
   })
 
-  // The server refuses account writes while impersonating, so resending is hidden.
-  const isImpersonating = useConsoleImpersonationActive()
   const resendMutation = useMutation({
     mutationFn: async () => {
       // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
@@ -251,7 +248,7 @@ function VerifyEmailPage() {
       <div className="flex min-h-full flex-col items-center p-6 md:p-10">
         <div className="my-auto w-full max-w-sm md:max-w-4xl">
           <VerifyEmail
-            onResend={isImpersonating ? undefined : () => resendMutation.mutate()}
+            onResend={() => resendMutation.mutate()}
             isResendLoading={resendMutation.isPending}
             redirect={search.redirect}
           />
