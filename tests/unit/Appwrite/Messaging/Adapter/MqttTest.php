@@ -6,6 +6,7 @@ namespace Tests\Unit\Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Connection;
+use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -22,7 +23,24 @@ final class MqttTest extends TestCase
 {
     private function adapter(): Mqtt
     {
-        return new Mqtt(new NoTelemetry());
+        // send() (the only path that publishes) is covered by e2e, so a null-object
+        // pub/sub is enough for the registry and subscription-store behaviour tested here.
+        $pubsub = new class () implements PubSub {
+            public function ping($message = null): bool
+            {
+                return true;
+            }
+
+            public function subscribe($channels, $callback)
+            {
+            }
+
+            public function publish($channel, $message)
+            {
+            }
+        };
+
+        return new Mqtt(new NoTelemetry(), $pubsub);
     }
 
     /** open() the fd, then subscribe it to $topic (the store keys by topic). */

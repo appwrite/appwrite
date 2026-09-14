@@ -236,7 +236,7 @@ $adapter->setPackageMaxLength((int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', 
 $server = new Server($adapter);
 $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$action} error: " . $error->getMessage()));
 
-$mqtt = new Mqtt($telemetry);
+$mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub')));
 
 $dispatcher = new Dispatcher([
     new ConnectHandler(),

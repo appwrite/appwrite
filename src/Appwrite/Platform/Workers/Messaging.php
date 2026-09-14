@@ -8,6 +8,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -48,6 +49,7 @@ use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
 use Utopia\Mqtt\Packet;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -64,6 +66,8 @@ class Messaging extends Action
     private ?SMSAdapter $adapter = null;
 
     private Telemetry $telemetry;
+
+    private Group $pools;
 
     public static function getName(): string
     {
@@ -83,6 +87,7 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -93,6 +98,7 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
+     * @param Group $pools
      * @return void
      * @throws \Exception
      */
@@ -102,9 +108,11 @@ class Messaging extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         UsagePublisher $publisherForUsage,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        Group $pools
     ): void {
         $this->telemetry = $telemetry;
+        $this->pools = $pools;
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -921,7 +929,7 @@ class Messaging extends Action
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             'appwrite' => new AppwritePush(
-                new Mqtt($this->telemetry),
+                new Mqtt($this->telemetry, new PubSubPool($this->pools->get('pubsub'))),
                 $dbForProject,
                 $project->getId(),
                 $message->getId(),

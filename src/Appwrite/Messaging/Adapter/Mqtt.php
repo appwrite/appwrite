@@ -6,7 +6,7 @@ use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\Mqtt\Connection;
 use Appwrite\Mqtt\KeepAlive;
 use Appwrite\Mqtt\SubscriptionStore;
-use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\PubSub\Adapter as PubSub;
 use Utopia\Mqtt\Packet;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -49,9 +49,7 @@ class Mqtt extends MessagingAdapter
 
     private ?SubscriptionStore $subscriptionStore = null;
 
-    private ?PubSubPool $pubSubPool = null;
-
-    public function __construct(Telemetry $telemetry)
+    public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
     {
         $this->connectionsOpened = $telemetry->createCounter('mqtt.connections.opened');
         $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
@@ -77,16 +75,6 @@ class Mqtt extends MessagingAdapter
     private function subscriptionStore(): SubscriptionStore
     {
         return $this->subscriptionStore ??= new SubscriptionStore();
-    }
-
-    private function getPubSubPool(): PubSubPool
-    {
-        if ($this->pubSubPool === null) {
-            global $register;
-            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
-        }
-
-        return $this->pubSubPool;
     }
 
     /** Get or create the connection state for a file descriptor. */
@@ -175,7 +163,7 @@ class Mqtt extends MessagingAdapter
 
         foreach ($channels as $topic) {
             $this->messagesPublished->add(1, ['qos' => $qos]);
-            $this->getPubSubPool()->publish(self::CHANNEL, (string) json_encode([
+            $this->pubsub->publish(self::CHANNEL, (string) json_encode([
                 'project' => $projectId,
                 'topic' => $topic,
                 'qos' => $qos,
