@@ -684,13 +684,6 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
-        $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
-            'live' => true,
-            'deploymentId' => $deployment->getId(),
-            'deploymentInternalId' => $deployment->getSequence(),
-            'deploymentCreatedAt' => $deployment->getCreatedAt(),
-        ]));
-
         $branch = $deployment->getAttribute('providerBranch', '');
         $branches = $branch === '' ? [''] : ['', $branch];
 
@@ -708,6 +701,13 @@ class Jobs extends Action
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', $branches),
         ]);
+
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+            'live' => true,
+            'deploymentId' => $deployment->getId(),
+            'deploymentInternalId' => $deployment->getSequence(),
+            'deploymentCreatedAt' => $deployment->getCreatedAt(),
+        ]));
     }
 
     /**

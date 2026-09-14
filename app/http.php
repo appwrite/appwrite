@@ -194,9 +194,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
-        // create logs database first, `getLogsDB` is a callable.
-        createDatabase($container, 'getLogsDB', 'logs', $collections['logs'], $pools);
-
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
             $authorization = $container->get('authorization');
