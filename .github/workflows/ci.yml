@@ -419,6 +419,71 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
 
+  e2e_mqtt:
+    name: Tests / E2E / MQTT
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_PROFILES: ''
+    steps:
+      - name: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Wait for MQTT broker
+        timeout-minutes: 3
+        run: |
+          while ! docker logs appwrite-mqtt 2>&1 | grep -q "MQTT broker started"; do
+            echo "Waiting for the MQTT broker to come online"
+            sleep 1
+          done
+
+      - name: Run MQTT Tests
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          appwrite test /usr/src/code/tests/e2e/Services/Messaging/MessagingMqttServerTest.php --group mqtt
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs --timestamps
+
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
@@ -576,7 +641,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group mqtt --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
