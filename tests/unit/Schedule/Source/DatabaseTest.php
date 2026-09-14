@@ -102,6 +102,30 @@ final class DatabaseTest extends TestCase
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }
 
+    public function testBlocksOnResourceIdWhenDataHasFunctionId(): void
+    {
+        $database = new ScheduleDatabase();
+        $database->documents['projects']['project'] = new Document(['$id' => 'project']);
+        $database->documents['schedules']['schedule'] = new Document(array_merge(
+            $database->documents['schedules']['schedule']->getArrayCopy(),
+            ['data' => ['functionId' => 'other']],
+        ));
+        $blocked = [];
+        $source = new Functions(
+            $database,
+            fn () => $database,
+            function (Document $project, string $type, string $id) use (&$blocked): bool {
+                $blocked[] = [$type, $id];
+                return false;
+            },
+            fn () => 0,
+        );
+
+        $source->make(iterator_to_array($source->snapshot())[0]);
+
+        $this->assertSame([[RESOURCE_TYPE_FUNCTIONS, 'function']], $blocked);
+    }
+
     private function source(ScheduleDatabase $database): Functions
     {
         return new Functions($database, fn () => $database, fn () => false, fn () => 0);
