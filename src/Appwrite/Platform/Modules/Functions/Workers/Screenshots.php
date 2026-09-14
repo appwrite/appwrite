@@ -147,6 +147,14 @@ class Screenshots extends Action
             $headers = [
                 'x-appwrite-hostname' => $rule->getAttribute('domain'),
                 'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+                // A capture is the only request this deployment will ever get:
+                // it fires once per successful build, against a preview URL
+                // nobody visits. Edge holds a site runtime warm for 90 minutes
+                // after its last request, so without this every build leaves a
+                // runtime occupying a node for an hour and a half to serve a
+                // screenshot that took 15 seconds. This tells edge to keep the
+                // runtime only as long as an ordinary function.
+                'x-appwrite-runtime-ephemeral' => '1',
             ];
 
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
