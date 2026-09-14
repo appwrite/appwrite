@@ -75,6 +75,8 @@ final class MigrationVersionsTest extends TestCase
         $this->assertArrayHasKey('parentResourceInternalId', $attributes);
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
+        $this->assertArrayHasKey('teamId', $attributes);
+        $this->assertArrayHasKey('teamInternalId', $attributes);
 
         $indexes = [];
         foreach ($collection->getAttribute('indexes', []) as $index) {
@@ -86,10 +88,12 @@ final class MigrationVersionsTest extends TestCase
             '_key_messageId',
             '_key_recipient',
             '_key_project',
+            '_key_team',
             '_key_project_resource',
             '_key_project_parent_resource',
         ], \array_keys($indexes));
         $this->assertSame(['projectId', 'projectInternalId'], $indexes['_key_project']);
+        $this->assertSame(['teamId', 'teamInternalId'], $indexes['_key_team']);
         $this->assertSame(['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], $indexes['_key_project_resource']);
         $this->assertSame(['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], $indexes['_key_project_parent_resource']);
     }
