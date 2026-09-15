@@ -255,16 +255,17 @@ use Utopia\Mqtt\Keepalive;
 
 $keepalive = new Keepalive(interval: 20, multiplier: 1.5);
 
-// On CONNECT / every packet: (re)schedule the fd at its next deadline.
+// On CONNECT and on every inbound packet: (re)schedule the fd at its next deadline.
+// Rescheduling is atomic — the fd is moved off its previous bucket automatically.
 $deadline = microtime(true) + $negotiatedKeepAlive * $keepalive->multiplier;
-$slot = $keepalive->schedule($fd, $deadline);
+$keepalive->schedule($fd, $deadline);
 
 // Every $keepalive->interval seconds, reap whatever is due.
 foreach ($keepalive->drain((int) microtime(true)) as $fd) {
     $server->close($fd);
 }
 
-$keepalive->remove($fd, $slot); // e.g. on an explicit DISCONNECT
+$keepalive->remove($fd); // e.g. on an explicit DISCONNECT
 ```
 
 ### Per-connection state (`Connection`)

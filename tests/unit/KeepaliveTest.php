@@ -50,25 +50,37 @@ final class KeepaliveTest extends TestCase
         $this->assertSame([1, 2], $wheel->drain(1002));
     }
 
-    public function testRemoveTakesAConnectionOffItsSlot(): void
+    public function testRemoveTakesAConnectionOffTheWheel(): void
     {
         $wheel = new Keepalive(now: 1000);
-        $slot = $wheel->schedule(7, 1002.0);
+        $wheel->schedule(7, 1002.0);
 
-        $wheel->remove(7, $slot);
+        $wheel->remove(7);
 
         $this->assertSame([], $wheel->drain(1002));
     }
 
-    public function testRemovingAnAlreadyDrainedSlotIsHarmless(): void
+    public function testRemovingAnAlreadyDrainedConnectionIsHarmless(): void
     {
         $wheel = new Keepalive(now: 1000);
-        $slot = $wheel->schedule(7, 1002.0);
+        $wheel->schedule(7, 1002.0);
         $this->assertSame([7], $wheel->drain(1002));
 
-        $wheel->remove(7, $slot); // e.g. a close that races the reaper
+        $wheel->remove(7); // e.g. a close that races the reaper
 
         $this->assertSame([], $wheel->drain(1003));
+    }
+
+    public function testReschedulingMovesTheFdOffItsOldDeadline(): void
+    {
+        // A packet pushing the deadline forward must not leave the fd in its old bucket,
+        // or the superseded deadline would reap a still-active client.
+        $wheel = new Keepalive(now: 1000);
+        $wheel->schedule(7, 1005.0);
+        $wheel->schedule(7, 1010.0);
+
+        $this->assertSame([], $wheel->drain(1005), 'not reaped at the superseded deadline');
+        $this->assertSame([7], $wheel->drain(1010), 'reaped at the current deadline');
     }
 
     public function testAStaleDeadlineIsReapedOnTheNextTickNotDropped(): void
