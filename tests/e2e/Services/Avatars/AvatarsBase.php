@@ -539,18 +539,23 @@ trait AvatarsBase
 
     public function testGetInitialsHandle(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'name' => '@ItzNotABug',
-            'width' => 100,
-            'height' => 100,
-        ]);
+        $signatures = [];
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
+        foreach (['@ItzNotABug', 'ItzNotABug'] as $name) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'name' => $name,
+                'width' => 100,
+                'height' => 100,
+            ]);
 
-        $this->assertGreaterThan(1, $image->getImageColors(), 'A handle rendered a blank square.');
+            $image = new \Imagick();
+            $image->readImageBlob($response['body']);
+            $signatures[] = $image->getImageSignature();
+        }
+
+        $this->assertSame($signatures[1], $signatures[0], 'A handle rendered differently from its name.');
     }
 
     public function testInitialImage()
