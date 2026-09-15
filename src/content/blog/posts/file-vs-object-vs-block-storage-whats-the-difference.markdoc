@@ -8,7 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: architecture
 featured: false
-unlisted: true
+unlisted: false
 faqs:
   - question: What is the difference between file, object, and block storage?
     answer: File storage organizes data in a folder hierarchy accessed by path. Object storage stores data as objects with metadata in a flat structure accessed by a unique key over an API. Block storage splits data into fixed-size blocks for high-performance, low-latency access.
