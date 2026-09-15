@@ -36,7 +36,7 @@ If you missed any part of the week, here is everything that happened during Init
 
 Five days, five sets of launches:
 
-- **Day 1:** [Appwrite 2.0](/blog/post/announcing-appwrite-2), a redesigned Console, [Appwrite Explorer](/blog/post/announcing-appwrite-explorer), and the [Hyperloop B](/blog/post/hyperloop-b) engine.
+- **Day 1:** [Appwrite 2.0](/blog/post/announcing-appwrite-2), a redesigned Console, [Appwrite Explorer](/blog/post/announcing-appwrite-explorer), [Appwrite Terminal](/blog/post/announcing-console-terminal), and the [Hyperloop B](/blog/post/hyperloop-b) engine.
 - **Day 2:** [native PostgreSQL databases](/blog/post/appwrite-now-speaks-postgresql) inside Appwrite projects.
 - **Day 3:** [VectorsDB](/blog/post/announcing-vectorsdb), [DocumentsDB](/blog/post/announcing-documentsdb), and [native MySQL](/blog/post/announcing-native-mysql-databases).
 - **Day 4:** an [S3-compatible API](/blog/post/announcing-s3-api) for Appwrite Storage.
