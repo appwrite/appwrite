@@ -105,7 +105,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('publisherForMessaging')
             ->inject('publisherForMails')
-            ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
@@ -125,7 +124,6 @@ class Create extends Action
         Event $queueForEvents,
         MessagingPublisher $publisherForMessaging,
         MailPublisher $publisherForMails,
-        callable $timelimit,
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,

@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -895,7 +896,14 @@ trait VariablesBase
         $folderPath = realpath(__DIR__ . '/../../../resources/' . $type) . "/$name";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

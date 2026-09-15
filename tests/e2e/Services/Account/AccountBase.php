@@ -464,4 +464,74 @@ trait AccountBase
 
         $this->assertEquals($session['headers']['status-code'], 429);
     }
+
+    /**
+     * Configure the mock OAuth2 provider on the project under test: the
+     * browser flow through the console endpoint, native sign-in through the
+     * mock route that stands in for the console form mock providers lack.
+     */
+    protected function updateMockProvider(bool $enabled, bool $nativeEnabled = true, array $clientIds = [], string $provider = 'mock'): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => $enabled,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'projectId' => $this->getProject()['$id'],
+            'provider' => $provider,
+            'enabled' => $nativeEnabled,
+            'clientIds' => $clientIds,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    protected function createIdTokenSession(array $body, array $headers = []): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers), $body);
+    }
+
+    /**
+     * Mint an ID token signed by the mock provider's test key. Claim and
+     * header overrides allow producing deliberately invalid tokens.
+     */
+    protected function mintIdToken(array $claims, array $header = []): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'claims' => \json_encode(array_merge([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+            ], $claims)),
+            'header' => empty($header) ? '' : \json_encode($header),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body']['token'];
+    }
 }
