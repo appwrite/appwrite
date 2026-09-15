@@ -3,6 +3,8 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Pwned\Appwrite as PwnedAppwrite;
+use Appwrite\Auth\Pwned\HIBP as PwnedHIBP;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
@@ -675,7 +677,16 @@ return function (Container $context): void {
     }, ['user', 'store', 'proofForToken']);
 
     $context->set('pwnedPasswords', function (Document $project, Cache $cache) {
-        return new PasswordPwned($project->getAttribute('auths', [])['passwordPwned'] ?? [], $cache, System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+        $endpoint = System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT', '');
+        $name = \strtolower(System::getEnv('_APP_PWNED_PASSWORDS_ADAPTER', 'hibp'));
+
+        $adapter = match ($name) {
+            'hibp' => new PwnedHIBP($endpoint, $cache),
+            'appwrite' => new PwnedAppwrite($endpoint, System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_ADAPTER: ' . $name),
+        };
+
+        return new PasswordPwned($adapter, $project->getAttribute('auths', [])['passwordPwned'] ?? []);
     }, ['project', 'cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {

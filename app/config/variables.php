@@ -485,10 +485,19 @@ return [
                 'filter' => 'token'
             ],
             [
-                'name' => '_APP_PWNED_PASSWORDS_ENDPOINT',
-                'description' => 'Endpoint of the Have I Been Pwned range API used by the password pwned project policy. Only the first five characters of a password SHA-1 hash are sent to this endpoint. Defaults to the public Have I Been Pwned service.',
+                'name' => '_APP_PWNED_PASSWORDS_ADAPTER',
+                'description' => 'Service the password pwned project policy asks whether a password has been breached. `hibp` calls the Have I Been Pwned range API and only ever sends the first five characters of the password SHA-1 hash. `appwrite` calls an [Appwrite Pwned](https://github.com/appwrite-labs/pwned) service you run yourself, which caches answers and can front a detector of your choice, but receives the whole password inside a JWT signed with `_APP_OPENSSL_KEY_V1`, so only point it at a service on your own network.',
                 'introduction' => 'TBD',
-                'default' => 'https://api.pwnedpasswords.com/range',
+                'default' => 'hibp',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PWNED_PASSWORDS_ENDPOINT',
+                'description' => 'Address the adapter chosen in `_APP_PWNED_PASSWORDS_ADAPTER` calls. Leave empty to use that adapter\'s default, which is `https://api.pwnedpasswords.com/range` for `hibp` and `http://appwrite-pwned/v1/detection` for `appwrite`.',
+                'introduction' => 'TBD',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
