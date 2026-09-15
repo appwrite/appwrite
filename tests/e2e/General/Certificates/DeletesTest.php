@@ -135,7 +135,6 @@ final class DeletesTest extends TestCase
             $database,
             static fn () => $database,
             static fn () => $database,
-            static fn () => $database,
             $device,
             $device,
             $device,
