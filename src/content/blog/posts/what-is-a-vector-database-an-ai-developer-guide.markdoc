@@ -114,7 +114,7 @@ Being honest about the trade-offs matters more than defending the tool. You can 
 
 A dedicated vector database earns its place when scale, latency, or advanced retrieval features push past what an extension can comfortably do. For a decision framework, read [choosing the right AI database for your application](/blog/post/choosing-the-right-ai-database).
 
-## Popular vector databases
+# Popular vector databases
 
 A handful of options dominate real-world usage:
 
