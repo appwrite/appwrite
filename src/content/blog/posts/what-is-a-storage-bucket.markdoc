@@ -8,7 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: architecture
 featured: false
-unlisted: true
+unlisted: false
 faqs:
   - question: What is a storage bucket in simple terms?
     answer: "It's a container in the cloud that holds your files. You put files (objects) into a bucket, give the bucket a name and permissions, and then access each file by its unique key or URL."
