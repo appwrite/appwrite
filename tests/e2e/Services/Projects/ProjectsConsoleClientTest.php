@@ -3572,6 +3572,54 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        /**
+         * Setup password recovery for the personal data check on account/recovery
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+
+        /**
+         * Test for failure
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => $tokens['secret'],
+            'password' => $phone,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals(Exception::USER_PASSWORD_PERSONAL_DATA, $response['body']['type']);
+
+        /** Test for success */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => $tokens['secret'],
+            'password' => 'not-personal-data',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
          * Reset
