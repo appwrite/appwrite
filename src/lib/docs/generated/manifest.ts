@@ -3545,7 +3545,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     title: 'Develop Appwrite Sites',
     description: 'Master site development with Appwrite.',
     layout: 'article',
-    readingTimeMinutes: 3,
+    readingTimeMinutes: 5,
   },
   {
     slug: 'products/sites/domains',
@@ -3712,7 +3712,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     title: 'Server Side Rendering',
     description: 'Learn how to host SSR web apps on Appwrite Sites.',
     layout: 'article',
-    readingTimeMinutes: 2,
+    readingTimeMinutes: 3,
   },
   {
     slug: 'products/sites/rendering/static',

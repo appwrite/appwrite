@@ -4001,7 +4001,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.',
     excerpt:
-      'Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See project variables for the full reference. 2. **Site variables** are scoped to a single…',
+      'Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as third-party API keys, connection strings, and feature flags without hardcoding them in your source. To call your own Appwrite project, you do not need to store an API key at all: Appwrite provides a dynamic API key to every build and SSR request. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every…',
     breadcrumbs: ['Sites', 'Concepts', 'Environment variables'],
   },
   {

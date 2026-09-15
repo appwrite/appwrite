@@ -69,6 +69,10 @@ Use `@astrojs/node` adapter in the `astro.config.mjs` file.
 
 {% /tabs %}
 
+# Authenticating with Appwrite {% #authentication %}
+
+SSR code can call Appwrite in two ways. To act on behalf of a signed-in visitor, forward their session as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering). To act as the server, use the [dynamic API key](/docs/products/sites/develop#dynamic-api-key) that Appwrite sends on the `x-appwrite-key` header of every SSR request. The key is limited to the scopes granted to the site and expires on its own, so the site needs no stored API key.
+
 # Appwrite-specific environment variables
 
 You can [access several environment variables](/docs/products/sites/develop#accessing-environment-variables) pertaining to your Appwrite project in SSR apps.
