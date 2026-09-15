@@ -90,8 +90,6 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
-        $this->deleteRules($function, $queueForEvents->getProject(), 'function', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
-
         // Inform scheduler to no longer run function
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         if (!$schedule->isEmpty()) {
@@ -109,6 +107,9 @@ class Delete extends Base
             type: DELETE_TYPE_DOCUMENT,
             document: $function,
         ));
+
+        // Keep the resource cleanup queued if immediate rule removal fails.
+        $this->deleteRules($function, $queueForEvents->getProject(), 'function', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
 
         $queueForEvents->setParam('functionId', $function->getId());
 

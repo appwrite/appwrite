@@ -88,13 +88,14 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove site from DB');
         }
 
-        $this->deleteRules($site, $queueForEvents->getProject(), 'site', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
-
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $queueForEvents->getProject(),
             type: DELETE_TYPE_DOCUMENT,
             document: $site,
         ));
+
+        // Keep the resource cleanup queued if immediate rule removal fails.
+        $this->deleteRules($site, $queueForEvents->getProject(), 'site', $dbForPlatform, $publisherForDeletes, $authorization, $bus);
 
         $queueForEvents->setParam('siteId', $site->getId());
 
