@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Password;
 
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Event;
@@ -22,6 +23,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 
@@ -81,6 +83,13 @@ class Update extends Action
             $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
+            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'), allowEmpty: true);
+            if (!$pwnedValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
 

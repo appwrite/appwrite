@@ -271,6 +271,11 @@ return [
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_PWNED => [
+        'name' => Exception::USER_PASSWORD_PWNED,
+        'description' => 'The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',

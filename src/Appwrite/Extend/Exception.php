@@ -83,6 +83,7 @@ class Exception extends \Exception
     public const string USER_NOT_FOUND = 'user_not_found';
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
+    public const string USER_PASSWORD_PWNED = 'password_pwned';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';

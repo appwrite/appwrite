@@ -17,6 +17,7 @@ trait PoliciesBase
             'password-history' => ['total'],
             'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
             'password-personal-data' => ['enabled'],
+            'password-pwned' => ['enabled'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
@@ -631,6 +632,70 @@ trait PoliciesBase
     public function testUpdatePasswordPersonalDataPolicyWithoutAuth(): void
     {
         $response = $this->updatePasswordPersonalDataPolicy(true, false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // Password Pwned Policy
+    // =========================================================================
+
+    public function testUpdatePasswordPwnedPolicyEnable(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy(true);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(true, $policy['body']['enabled']);
+
+        // Cleanup
+        $this->updatePasswordPwnedPolicy(false);
+    }
+
+    public function testUpdatePasswordPwnedPolicyDisable(): void
+    {
+        $this->updatePasswordPwnedPolicy(true);
+
+        $response = $this->updatePasswordPwnedPolicy(false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->getPolicy('password-pwned');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(false, $policy['body']['enabled']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyDisabledByDefault(): void
+    {
+        $policy = $this->getPolicy('password-pwned');
+
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame('password-pwned', $policy['body']['$id']);
+        $this->assertSame(false, $policy['body']['enabled']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyInvalidType(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-pwned', $this->buildHeaders(), [
+            'enabled' => 'not-a-boolean',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyMissingParam(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-pwned', $this->buildHeaders(), []);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePasswordPwnedPolicyWithoutAuth(): void
+    {
+        $response = $this->updatePasswordPwnedPolicy(true, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -1325,6 +1390,13 @@ trait PoliciesBase
     protected function updatePasswordPersonalDataPolicy(bool $enabled, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders($authenticated), [
+            'enabled' => $enabled,
+        ]);
+    }
+
+    protected function updatePasswordPwnedPolicy(bool $enabled, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-pwned', $this->buildHeaders($authenticated), [
             'enabled' => $enabled,
         ]);
     }

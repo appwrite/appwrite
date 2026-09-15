@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users;
 
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
@@ -18,6 +19,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Emails\Email;
+use Utopia\System\System;
 
 class Base extends Action
 {
@@ -147,6 +149,13 @@ class Base extends Action
             ]);
 
             if (!$isHashed && !empty($password)) {
+                if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
+                    $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+                    if (!$pwnedValidator->isValid($plaintextPassword)) {
+                        throw new Exception(Exception::USER_PASSWORD_PWNED);
+                    }
+                }
+
                 $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
             }
 

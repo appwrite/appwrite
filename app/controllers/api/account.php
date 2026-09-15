@@ -7,6 +7,7 @@ use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
@@ -358,6 +359,13 @@ Http::post('/v1/account')
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
+            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+            if (!$pwnedValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
 
@@ -3483,6 +3491,13 @@ Http::patch('/v1/account/password')
             }
         }
 
+        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
+            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+            if (!$pwnedValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
+        }
+
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $user
@@ -4135,6 +4150,13 @@ Http::put('/v1/account/recovery')
 
             $history[] = $newPassword;
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        if ($project->getAttribute('auths', [])['passwordPwned'] ?? false) {
+            $pwnedValidator = new PasswordPwned(System::getEnv('_APP_PWNED_PASSWORDS_ENDPOINT'));
+            if (!$pwnedValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PWNED);
+            }
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);

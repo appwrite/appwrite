@@ -483,6 +483,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'token'
+            ],
+            [
+                'name' => '_APP_PWNED_PASSWORDS_ENDPOINT',
+                'description' => 'Endpoint of the Have I Been Pwned range API used by the password pwned project policy. Only the first five characters of a password SHA-1 hash are sent to this endpoint. Defaults to the public Have I Been Pwned service.',
+                'introduction' => 'TBD',
+                'default' => 'https://api.pwnedpasswords.com/range',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

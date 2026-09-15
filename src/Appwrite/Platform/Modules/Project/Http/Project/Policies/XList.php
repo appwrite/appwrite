@@ -117,6 +117,10 @@ class XList extends Action
                 'enabled' => $auths['personalDataCheck'] ?? false,
             ]),
             new Document([
+                '$id' => 'password-pwned',
+                'enabled' => $auths['passwordPwned'] ?? false,
+            ]),
+            new Document([
                 '$id' => 'session-alert',
                 'enabled' => $auths['sessionAlerts'] ?? false,
             ]),
