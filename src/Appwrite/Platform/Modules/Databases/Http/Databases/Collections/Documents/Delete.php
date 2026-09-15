@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -82,6 +83,7 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
@@ -100,6 +102,7 @@ class Delete extends Action
         Database $dbForProject,
         callable $getDatabasesDB,
         Event $queueForEvents,
+        Realtime $queueForRealtime,
         Context $usage,
         TransactionState $transactionState,
         array $plan,
@@ -242,6 +245,102 @@ class Delete extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->output($document, $this->getResponseModel()), sensitive: $relationships);
 
+        $this->triggerRelationshipUpdates(
+            $database,
+            $collection,
+            $document,
+            $dbForProject,
+            $dbForDatabases,
+            $queueForEvents,
+            $queueForRealtime,
+            $response,
+            $authorization
+        );
+
         $response->noContent();
+    }
+
+    private function triggerRelationshipUpdates(
+        Document $database,
+        Document $collection,
+        Document $document,
+        Database $dbForProject,
+        Database $dbForDatabases,
+        Event $queueForEvents,
+        Realtime $queueForRealtime,
+        UtopiaResponse $response,
+        Authorization $authorization
+    ): void {
+        $processed = [];
+        $collectionsCache = [];
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (
+                $attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP
+                || !$attribute->getAttribute('twoWay')
+                || $attribute->getAttribute('onDelete') !== Database::RELATION_MUTATE_SET_NULL
+            ) {
+                continue;
+            }
+
+            $value = $document->getAttribute($attribute->getAttribute('key'));
+            $related = \is_array($value) ? $value : [$value];
+            $collectionId = $attribute->getAttribute('relatedCollection');
+            $relatedCollection = $authorization->skip(fn () => $dbForProject->getDocument(
+                'database_' . $database->getSequence(),
+                $collectionId
+            ));
+            if ($relatedCollection->isEmpty()) {
+                continue;
+            }
+
+            $sensitive = \array_map(
+                fn (Document $attribute) => $attribute->getAttribute('key'),
+                \array_filter(
+                    $relatedCollection->getAttribute('attributes', []),
+                    fn (Document $attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                )
+            );
+
+            foreach ($related as $relation) {
+                if (!$relation instanceof Document || isset($processed[$collectionId][$relation->getId()])) {
+                    continue;
+                }
+                $processed[$collectionId][$relation->getId()] = true;
+
+                // Deleting a child can change a virtual relationship without updating its parent row.
+                // Read after the delete commits; another relationship may also have deleted this peer.
+                $current = $authorization->skip(fn () => $dbForDatabases->getDocument(
+                    'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
+                    $relation->getId()
+                ));
+                if ($current->isEmpty()) {
+                    continue;
+                }
+
+                $this->processDocument(
+                    database: $database,
+                    collection: $relatedCollection,
+                    document: $current,
+                    dbForProject: $dbForProject,
+                    collectionsCache: $collectionsCache,
+                    authorization: $authorization
+                );
+
+                // Keep the original delete event intact for the API shutdown hooks.
+                $event = clone $queueForEvents;
+                $event->reset()
+                    ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+                    ->setParam('databaseId', $database->getId())
+                    ->setParam('collectionId', $collectionId)
+                    ->setParam('tableId', $collectionId)
+                    ->setParam('documentId', $current->getId())
+                    ->setParam('rowId', $current->getId())
+                    ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
+                    ->setPayload($response->output($current, $this->getResponseModel()), sensitive: $sensitive);
+
+                $queueForRealtime->from($event)->trigger();
+            }
+        }
     }
 }
