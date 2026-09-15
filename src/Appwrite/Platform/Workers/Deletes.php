@@ -27,7 +27,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -442,33 +441,27 @@ class Deletes extends Action
                     return;
                 }
 
-                $collectionId = match ($document->getAttribute('resourceType')) {
-                    'function' => 'functions',
-                    'execution' => 'executions',
-                    'message' => 'messages',
-                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
-                };
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // One-shot execution schedules are claimed then deleted by the
+                // functions worker; this sweeper does not reap them.
+                if ($resourceType === 'execution') {
+                    return;
+                }
 
                 try {
-                    $resource = $getProjectDB($project)->getDocument(
-                        $collectionId,
-                        $document->getAttribute('resourceId')
-                    );
+                    $resource = match ($resourceType) {
+                        'function' => $getProjectDB($project)->getDocument('functions', $resourceId),
+                        'message' => $getProjectDB($project)->getDocument('messages', $resourceId),
+                        default => throw new \Exception('Unknown resource type: ' . $resourceType),
+                    };
                 } catch (Throwable $e) {
                     Console::error('Failed to get resource for schedule ' . $document->getId() . ' ' . $e->getMessage());
                     return;
                 }
 
-                $delete = true;
-
-                switch ($document->getAttribute('resourceType')) {
-                    case 'function':
-                        $delete = $resource->isEmpty();
-                        break;
-                    case 'execution':
-                        $delete = false;
-                        break;
-                }
+                $delete = $resourceType === 'function' ? $resource->isEmpty() : true;
 
                 if ($delete) {
                     $dbForPlatform->deleteDocument('schedules', $document->getId());
@@ -1124,17 +1117,7 @@ class Deletes extends Action
 
         Console::info('Delete execution logs');
 
-        /** @var Database $dbForProject */
-        $dbForProject = $getProjectDB($project);
-
-        // Delete Executions
         $executionStore?->deleteBefore($project->getId(), $datetime);
-        $this->deleteByGroup('executions', [
-            Query::select([...$this->selects, '$createdAt']),
-            Query::lessThan('$createdAt', $datetime),
-            Query::orderDesc('$createdAt'),
-            Query::orderDesc(),
-        ], $dbForProject);
 
         /* delete based on custom retention, if any */
         $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount, executionStore: $executionStore);
@@ -1157,7 +1140,7 @@ class Deletes extends Action
         ?string $resourceType = null,
         ?Store $executionStore = null,
     ): void {
-        if ($executionsRetentionCount <= 0 || $project->getId() === 'console') {
+        if ($executionsRetentionCount <= 0 || $project->getId() === 'console' || $executionStore === null) {
             return;
         }
 
@@ -1165,48 +1148,38 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         /* delete log for a given $resourceInternalId  */
-        $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount, $executionStore, $project) {
-            // get the execution at position `N+1`
-            try {
-                $execution = $dbForProject->findOne('executions', [
-                    Query::select(['$createdAt']),
-                    Query::equal('resourceInternalId', [$resourceInternalId]),
-                    Query::equal('resourceType', [$resourceType]),
-                    Query::orderDesc('$createdAt'),
-                    Query::orderDesc(),
-                    Query::offset($executionsRetentionCount),
-                ]);
-            } catch (NotFoundException) {
+        $delete = function (string $resourceInternalId, string $resourceType) use ($executionsRetentionCount, $executionStore, $project) {
+            $executions = $executionStore->find($project->getId(), [
+                Query::equal('resourceInternalId', [$resourceInternalId]),
+                Query::equal('resourceType', [$resourceType]),
+                Query::orderDesc('$createdAt'),
+                Query::limit(1),
+                Query::offset($executionsRetentionCount),
+            ]);
+
+            if ($executions === []) {
                 return;
             }
 
-            if (!$execution->isEmpty()) {
-                // delete everything older
-                $cutoffTime = $execution->getAttribute('$createdAt');
-
-                $executionStore?->deleteByResource($project->getId(), $resourceInternalId, $resourceType, $cutoffTime);
-                $this->deleteByGroup('executions', [
-                    Query::select([...$this->selects, '$createdAt']),
-                    Query::equal('resourceInternalId', [$resourceInternalId]),
-                    Query::equal('resourceType', [$resourceType]),
-                    Query::lessThan('$createdAt', $cutoffTime),
-                    Query::orderDesc('$createdAt'),
-                    Query::orderDesc(),
-                ], $dbForProject);
+            $cutoffTime = $executions[0]->getCreatedAt();
+            if ($cutoffTime === null || $cutoffTime === '') {
+                return;
             }
+
+            $executionStore->deleteByResource($project->getId(), $resourceInternalId, $resourceType, $cutoffTime);
         };
 
         if (!empty($resourceInternalId)) {
             // fast path, no need to list anything!
-            $delete($dbForProject, $resourceInternalId, $resourceType);
+            $delete($resourceInternalId, $resourceType);
         } else {
             foreach ([RESOURCE_TYPE_SITES, RESOURCE_TYPE_FUNCTIONS] as $type) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id', '$sequence'])],
                     database: $dbForProject,
-                    callback: function (Document $resource) use ($dbForProject, $delete, $type) {
-                        $delete($dbForProject, $resource->getSequence(), $type);
+                    callback: function (Document $resource) use ($delete, $type) {
+                        $delete($resource->getSequence(), $type);
                     }
                 );
             }
@@ -1403,12 +1376,6 @@ class Deletes extends Action
          */
         Console::info("Deleting logs for site " . $siteId);
         $executionStore?->deleteByResource($project->getId(), (string) $siteInternalId, RESOURCE_TYPE_SITES);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
-            Query::equal('resourceInternalId', [$siteInternalId]),
-            Query::equal('resourceType', ['sites']),
-            Query::orderAsc()
-        ], $dbForProject);
 
         /**
          * Delete VCS Repositories and VCS Comments
@@ -1489,12 +1456,6 @@ class Deletes extends Action
          */
         Console::info("Deleting executions for function " . $functionId);
         $executionStore?->deleteByResource($project->getId(), (string) $functionInternalId, RESOURCE_TYPE_FUNCTIONS);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
-            Query::equal('resourceInternalId', [$functionInternalId]),
-            Query::equal('resourceType', ['functions']),
-            Query::orderAsc()
-        ], $dbForProject);
 
         /**
          * Delete VCS Repositories and VCS Comments

@@ -969,6 +969,63 @@ trait MessagingBase
         $this->assertEquals(false, $response['body']['enabled']);
     }
 
+    public function testCreateMsg91ProviderWithoutTemplate(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $providerId = ID::unique();
+        $completeProviderId = ID::unique();
+        $params = [
+            'providerId' => $providerId,
+            'name' => 'Msg91 without template',
+            'senderId' => 'APPWRT',
+            'authKey' => 'test-auth-key',
+            'enabled' => true,
+        ];
+
+        try {
+            /**
+             * Test for FAILURE
+             */
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/msg91', $headers, $params);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertFalse($response['body']['enabled']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, $headers);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertFalse($response['body']['enabled']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/msg91/' . $providerId, $headers, [
+                'enabled' => true,
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('provider_missing_credentials', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/msg91/' . $providerId, $headers, [
+                'templateId' => 'test-template-id',
+                'enabled' => true,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertTrue($response['body']['enabled']);
+
+            $params['providerId'] = $completeProviderId;
+            $params['templateId'] = 'test-template-id';
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/msg91', $headers, $params);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertTrue($response['body']['enabled']);
+        } finally {
+            foreach ([$providerId, $completeProviderId] as $id) {
+                $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $id, $headers);
+            }
+        }
+    }
+
     public function testCreateFCMProviderInvalidCredentials(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [

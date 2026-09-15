@@ -537,6 +537,27 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testGetInitialsHandle(): void
+    {
+        $signatures = [];
+
+        foreach (['@ItzNotABug', 'ItzNotABug'] as $name) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'name' => $name,
+                'width' => 100,
+                'height' => 100,
+            ]);
+
+            $image = new \Imagick();
+            $image->readImageBlob($response['body']);
+            $signatures[] = $image->getImageSignature();
+        }
+
+        $this->assertSame($signatures[1], $signatures[0], 'A handle rendered differently from its name.');
+    }
+
     public function testInitialImage()
     {
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [

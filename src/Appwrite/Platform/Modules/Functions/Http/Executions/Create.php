@@ -117,7 +117,7 @@ class Create extends Base
         string $functionId,
         string $body,
         mixed $async,
-        string $path,
+        ?string $path,
         string $method,
         mixed $headers,
         ?string $scheduledAt,
@@ -139,6 +139,7 @@ class Create extends Base
         int $executionsRetentionCount,
         Bus $bus,
     ) {
+        $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {

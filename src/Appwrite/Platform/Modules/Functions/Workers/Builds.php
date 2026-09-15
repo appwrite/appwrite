@@ -413,6 +413,7 @@ class Builds extends Action
             $deployments->createFromVcs(
                 $resource,
                 $deployment,
+                $timeout,
                 $providerAdapter,
                 $cloneOwner,
                 $cloneRepository,

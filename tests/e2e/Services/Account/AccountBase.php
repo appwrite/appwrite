@@ -49,6 +49,21 @@ trait AccountBase
         $this->assertIsBool($response['body']['emailIsCorporate']);
         $this->assertIsBool($response['body']['emailIsCanonical']);
 
+        // An explicit null for an optional param must fall back to its default, not 500.
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => $password,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['name']);
+
         /**
          * Test for FAILURE
          */

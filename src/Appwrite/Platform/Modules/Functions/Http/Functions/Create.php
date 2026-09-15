@@ -131,6 +131,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -152,7 +153,7 @@ class Create extends Base
         string $runtime,
         array $execute,
         array $events,
-        string $schedule,
+        ?string $schedule,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -180,6 +181,7 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Deployments $deployments,
+        int $buildTimeout,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -193,6 +195,7 @@ class Create extends Base
         Bus $bus,
         array $platform
     ) {
+        $schedule ??= '';
 
         // Temporary abuse check
         $abuseCheck = function () use ($project, $timelimit, $response): void {
@@ -382,7 +385,8 @@ class Create extends Base
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
-                    referenceType: 'branch'
+                    referenceType: 'branch',
+                    buildTimeout: $buildTimeout
                 );
 
             } elseif (!$template->isEmpty()) {
@@ -407,6 +411,7 @@ class Create extends Base
                         'type' => 'vcs',
                         'activate' => true,
                     ]),
+                    $buildTimeout,
                     $templateOwner,
                     $templateRepository,
                     Git::CLONE_TYPE_TAG,
