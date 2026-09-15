@@ -49,6 +49,10 @@
         },
         {
             "type": "vcs",
+            "url": "https://github.com/utopia-php/messaging"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/utopia-php/vcs"
         }
     ],
@@ -91,7 +95,7 @@
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.3.*",
-        "utopia-php/messaging": "^2.1",
+        "utopia-php/messaging": "dev-feat/messaging-whatsapp-otp-adapter",
         "utopia-php/migration": "^2.0.0",
         "utopia-php/platform": "1.0.0-rc20",
         "utopia-php/pools": "2.*",
