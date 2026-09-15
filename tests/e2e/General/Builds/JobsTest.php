@@ -265,6 +265,47 @@ final class JobsTest extends TestCase
         $this->assertNoEvents();
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('writes')]
+    public function testCompleteRecreatedAfterWriteSelection(string $collection, string $field): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        if (! $this->database->getAdapter() instanceof \Utopia\Database\Adapter\SQL) {
+            $this->markTestSkipped('The controlled statement boundary requires a SQL adapter.');
+        }
+        $resource = $this->resource($collection);
+        $deployment = $this->deployment($resource);
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $replacement = null;
+        $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-owner', function (string $sql) use ($resource, $field, &$replacement): string {
+            if (! str_contains($sql, $field)) {
+                return $sql;
+            }
+            $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-owner', null);
+            $replacement = $this->replace($resource);
+
+            return $sql;
+        });
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertInstanceOf(Document::class, $replacement);
+        $this->assertReplacement($replacement);
+        $this->assertSame([], $this->realtime->payloads);
+        $this->assertNoEvents();
+    }
+
+    public static function writes(): \Iterator
+    {
+        foreach (['functions', 'sites'] as $collection) {
+            yield "$collection latest" => [$collection, 'latestDeploymentId'];
+            yield "$collection active" => [$collection, 'deploymentCreatedAt'];
+        }
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
