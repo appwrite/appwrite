@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Deployment\Detection;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -129,6 +130,13 @@ class Jobs extends Action
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+                return;
+            }
+
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+            if (! Deployments::belongsTo($deployment, $resource)) {
+                // The owner was deleted or its public ID was reused. Acknowledge
+                // the callback without publishing it to the replacement resource.
                 return;
             }
 
