@@ -421,6 +421,63 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
 
+  e2e_mqtt:
+    name: Tests / E2E / MQTT
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_PROFILES: ''
+    steps:
+      - name: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Run MQTT Tests
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          appwrite test /usr/src/code/tests/e2e/Services/Mqtt --group mqtt
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs --timestamps
+
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
