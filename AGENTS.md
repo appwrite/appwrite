@@ -18,6 +18,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
+| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring |
+| `bin/monorepo check <name> [--fix]` | Pint, PHPStan (package `phpstan.neon`) and Rector for one package |
+| `bin/monorepo test <name> [--linked]` | Package unit tier (`composer test`), plus `test:e2e` against its compose file when defined |
+| `bin/monorepo absorb <name> [url]` | Import a library with history, strip hoisted QA, write mirror plumbing |
+| `bin/monorepo split <name> --dry-run` | Synthesize the mirror history and print its head without pushing |
+| `bin/monorepo release <name> <version>` | Tag `<name>/<version>` and push it; CI mirrors the tag and publishes the release |
 
 `composer check` / `composer analyze` over the whole project is very slow. Prefer specific files during development.
 
