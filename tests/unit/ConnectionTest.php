@@ -82,6 +82,18 @@ final class ConnectionTest extends TestCase
         $this->assertSame(7, $connection->acknowledge(2)['cursor']); // gap filled   -> highest (7)
     }
 
+    public function testCursorStopsAtAGapInDeliveredSequences(): void
+    {
+        // The broker delivered 5 and 7 but never 6. Acking both must not advance the cursor past
+        // 5 — persisting 7 would skip the still-undelivered 6 on replay.
+        $connection = new Connection(1);
+        $connection->track(1, 'topic', 5);
+        $connection->track(2, 'topic', 7);
+
+        $this->assertSame(5, $connection->acknowledge(1)['cursor']);
+        $this->assertSame(5, $connection->acknowledge(2)['cursor'], 'the gap at 6 blocks the cursor');
+    }
+
     public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
     {
         $connection = new Connection(1);

@@ -46,17 +46,18 @@ class Connection
     private int $packetId = 0;
 
     /**
-     * Outbound QoS 1 deliveries awaiting a PUBACK, keyed by packet id. Each entry keeps the
-     * topic and the durable sequence delivered, so the matching PUBACK can advance that topic's
-     * cursor. Emptied as acks arrive; the remaining entries are exactly this session's unacked
-     * gaps, used to advance the cursor only to the highest *contiguous* ack.
+     * Outbound QoS 1 deliveries awaiting a PUBACK, keyed by packet id, so a PUBACK resolves back
+     * to the topic and durable sequence it acknowledges.
      *
      * @var array<int, array{topic: string, sequence: int}>
      */
     private array $inflight = [];
 
-    /** @var array<string, int> topic => highest sequence ever delivered on this connection */
-    private array $highWater = [];
+    /** @var array<string, int> topic => highest contiguously-acknowledged sequence (its cursor) */
+    private array $cursors = [];
+
+    /** @var array<string, array<int, true>> topic => acked sequences sitting above the cursor, waiting on a gap */
+    private array $acked = [];
 
     /** Wall-clock time (fractional unix seconds) the connection was opened, for its lifetime metric. */
     public readonly float $openedAt;
@@ -86,28 +87,33 @@ class Connection
         return $this->packetId;
     }
 
-    /** Record an outbound QoS 1 delivery so its PUBACK can be matched back to a topic and sequence. */
+    /**
+     * Record an outbound QoS 1 delivery so its PUBACK can be matched back to a topic and sequence.
+     * The first delivery on a topic anchors that topic's cursor one below it — everything up to
+     * there was settled before this connection resumed, and deliveries are contiguous (a replay
+     * walks a monotonic sequence in order), so it is the correct resume point.
+     */
     public function track(int $packetId, string $topic, int $sequence): void
     {
         $this->inflight[$packetId] = ['topic' => $topic, 'sequence' => $sequence];
-        $this->highWater[$topic] = max($this->highWater[$topic] ?? 0, $sequence);
+
+        if (!isset($this->cursors[$topic])) {
+            $this->cursors[$topic] = $sequence - 1;
+        }
     }
 
     /**
-     * Resolve a PUBACK to the delivery it acknowledges, removing it from the in-flight set.
-     * Returns the topic, the acked sequence, and `cursor`: the highest sequence safe to persist
-     * — one below the lowest sequence still in flight for the topic, or, once nothing is pending,
-     * the highest sequence delivered on this topic (every delivery through it is now acked).
-     * Advancing to `cursor` (not `sequence`) keeps a non-contiguous ack from skipping an earlier
-     * unacked message; while a gap stays unfilled the worst case is a harmless tail re-delivery on
-     * reconnect, never a lost message. Returns null for an unknown or duplicate ack.
+     * Resolve a PUBACK to the delivery it acknowledges, advancing the topic's cursor across the
+     * now-contiguous run of acknowledged sequences. `cursor` is the highest sequence safe to
+     * persist for replay: it moves up only while the next sequence has also been acked, so an
+     * unacked or never-delivered gap is never skipped — a non-contiguous ack simply waits for the
+     * gap to fill, the worst case being a harmless tail re-delivery on reconnect, never a lost
+     * message. Returns null for an unknown or duplicate ack.
      *
-     * Example — messages 5, 6, 7 were delivered and the client acks 5, then 7 (6 is still
-     * pending):
-     *   ack 5 -> in flight {6, 7}, cursor = 5   (lowest pending is 6, so stop at 5)
-     *   ack 7 -> in flight {6},    cursor = 5   (6 is still the gap, don't jump to 7)
-     *   ack 6 -> in flight {},     cursor = 7   (gap filled; every delivery through 7 is acked)
-     * The cursor never moves past the unacked 6, so a reconnect before that last ack replays 6.
+     * Example — 5, 6, 7 delivered; the client acks 5, then 7, then 6:
+     *   ack 5 -> cursor = 5   (contiguous from the resume point)
+     *   ack 7 -> cursor = 5   (6 is an open gap, so 7 waits above the cursor)
+     *   ack 6 -> cursor = 7   (the gap fills, so the cursor runs up through 7)
      *
      * @return array{topic: string, sequence: int, cursor: int}|null
      */
@@ -120,18 +126,19 @@ class Connection
         }
 
         $topic = $delivery['topic'];
-        $pending = [];
-        foreach ($this->inflight as $entry) {
-            if ($entry['topic'] === $topic) {
-                $pending[] = $entry['sequence'];
-            }
+        $sequence = $delivery['sequence'];
+
+        $this->acked[$topic][$sequence] = true;
+
+        // Advance only across a contiguous run of acked sequences, so a gap is never skipped.
+        $cursor = $this->cursors[$topic] ?? ($sequence - 1);
+        while (isset($this->acked[$topic][$cursor + 1])) {
+            unset($this->acked[$topic][$cursor + 1]);
+            $cursor++;
         }
+        $this->cursors[$topic] = $cursor;
 
-        // With a gap still open, stop one below it; with none, every delivery up to the topic's
-        // high-water mark is acked, so advance to it rather than just this (possibly lower) ack.
-        $cursor = $pending === [] ? ($this->highWater[$topic] ?? $delivery['sequence']) : (min($pending) - 1);
-
-        return ['topic' => $topic, 'sequence' => $delivery['sequence'], 'cursor' => $cursor];
+        return ['topic' => $topic, 'sequence' => $sequence, 'cursor' => $cursor];
     }
 
     /**
