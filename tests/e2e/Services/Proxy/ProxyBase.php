@@ -105,6 +105,33 @@ trait ProxyBase
         $this->cleanupFunction($functionId);
     }
 
+    public function testDeleteSiteRecreateId(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $siteId = $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-recreated-site.custom.localhost';
+        $this->setupSiteRule($domain, $siteId);
+        $this->cleanupSite($siteId);
+
+        $replacement = $this->setupSite($siteId, deploy: false);
+        $this->assertSame($siteId, $replacement['siteId']);
+        $rules = $this->listRules(['queries' => [
+            Query::equal('deploymentResourceType', ['site'])->toString(),
+            Query::equal('deploymentResourceId', [$siteId])->toString(),
+            Query::equal('domain', [$domain])->toString(),
+        ]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+
+        $ruleId = $this->setupSiteRule($domain, $siteId);
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertSame($siteId, $rule['body']['deploymentResourceId']);
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
