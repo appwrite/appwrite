@@ -116,7 +116,18 @@ class Client
             return null;
         }
 
-        $this->emit('receive', $data);
+        // A throwing receive handler is reported once, then the connection closes.
+        try {
+            $this->emit('receive', $data);
+        } catch (\Throwable $error) {
+            try {
+                $this->emit('error', $error);
+            } finally {
+                $this->handleClose();
+            }
+            return null;
+        }
+
         return $data;
     }
 
