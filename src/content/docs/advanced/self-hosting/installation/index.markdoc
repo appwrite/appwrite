@@ -171,9 +171,9 @@ Organizations use console teams, but this restriction does not apply to teams in
 
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
-The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Every SDK sends an `X-Appwrite-Response-Format` header that names the Appwrite version whose response shapes it expects, and each row lists the SDK versions that send that row's version. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.2.0.
+The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.2.0.
 
-The Appwrite CLI is not listed by response format. It pins an older format on purpose so that one CLI build works against a range of server versions.
+The Appwrite CLI is not listed. One CLI build works against a range of server versions.
 
 ### Client SDKs {% #client-compatibility %}
 
