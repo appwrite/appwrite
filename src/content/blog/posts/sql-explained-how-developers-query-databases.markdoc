@@ -210,7 +210,7 @@ That query does exactly what the SQL `SELECT ... WHERE ... ORDER BY ... LIMIT` e
 
 Appwrite Databases gives you a structured way to store and work with application data without managing the underlying database infrastructure yourself. You can define your data model, store records in tables, control access with permissions, and build applications around the data using Appwrite's database services.
 
-For developers coming from SQL, the underlying concepts will feel familiar: tables hold structured data, rows represent records, and queries let you filter, sort, and paginate the data you need. Appwrite adds these capabilities as part of its native database experience, alongside permissions and realtime updates.
+For developers coming from SQL, the underlying concepts will feel familiar: tables hold structured data, rows represent records, and queries let you filter, sort, and paginate the data you need. Appwrite also offers native PostgreSQL and MySQL, giving you familiar relational database options alongside Appwrite Databases, permissions, and realtime updates.
 
 To get started, see the [Appwrite Databases documentation](/docs/products/databases) and [databases quick start](/docs/products/databases/quick-start).
 
