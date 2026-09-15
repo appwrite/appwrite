@@ -215,14 +215,14 @@ trait ProxyHelpers
         return ['siteId' => $siteId, 'deploymentId' => $deploymentId];
     }
 
-    protected function setupFunction(): mixed
+    protected function setupFunction(?string $functionId = null, bool $deploy = true): mixed
     {
         // Function
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => $functionId ?? ID::unique(),
             'runtime' => 'node-22',
             'name' => 'Proxy Function',
             'entrypoint' => 'index.js',
@@ -233,6 +233,9 @@ trait ProxyHelpers
         $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
         $functionId = $function['body']['$id'];
+        if (!$deploy) {
+            return ['functionId' => $functionId];
+        }
 
         // Deployment
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([

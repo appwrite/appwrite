@@ -39,6 +39,26 @@ trait ProxyBase
         }
     }
 
+    public function testDeleteFunctionRules(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction(deploy: false)['functionId'];
+        $domain = \uniqid() . '-deleted-function.custom.localhost';
+        $ruleId = $this->setupFunctionRule($domain, $functionId);
+
+        $this->cleanupFunction($functionId);
+
+        // No polling: deletion must release the domain before responding.
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+        $rules = $this->listRules(['queries' => [Query::equal('domain', [$domain])->toString()]]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(0, $rules['body']['total']);
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
