@@ -24,7 +24,7 @@ Application data rarely stays as simple as a fixed set of columns. A user profil
 
 Document databases take a different approach: they store related data together as flexible, JSON-like documents. This guide explains how the document model works, how it differs from relational databases, and when it is the right choice.
 
-## What is a document database?
+# What is a document database?
 
 A **document database** is a type of NoSQL database that stores data as **documents**, usually in a JSON or JSON-like format, instead of in rigid tables with rows and columns. Each document is a self-contained record that holds its own fields, values, and nested structures.
 
