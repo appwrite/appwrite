@@ -55,7 +55,7 @@ Here is what an embedding looks like in practice:
 
 The `embedding` array is what the vector database indexes and searches. The `metadata` travels alongside it so you can filter results by ordinary fields, like restricting a search to one category.
 
-## How similarity search works
+# How similarity search works
 
 Once your data is stored as vectors, search becomes a geometry problem: find the vectors closest to the query vector. Closeness is measured with a **distance metric**, most commonly **cosine similarity** or **Euclidean distance**.
 
