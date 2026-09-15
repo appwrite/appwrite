@@ -845,14 +845,14 @@ class Messaging extends Action
             $this->adapter = $this->createInternalSMSAdapter();
         }
 
-        if ($whatsapp && $this->whatsappAdapter === null) {
-            $this->whatsappAdapter = $this->createInternalWhatsAppAdapter();
-        }
+        $smsAdapter = $this->adapter;
 
-        $adapter = $whatsapp ? $this->whatsappAdapter : $this->adapter;
-
-        if ($adapter === null) {
-            throw new \Exception($whatsapp ? 'WhatsApp adapter is not set.' : 'SMS adapter is not set.');
+        // Only the SMS adapter is required up front. The WhatsApp one is built inside the try
+        // below, because its constructor rejects a malformed or missing template and that
+        // failure has to reach the fallback like any other, rather than killing every phone
+        // OTP on the instance.
+        if (!$whatsapp && $smsAdapter === null) {
+            throw new \Exception('SMS adapter is not set.');
         }
 
         if ($project->isEmpty()) {
@@ -869,61 +869,115 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
+        $countryCode = CallingCode::fromPhoneNumber($recipients[0] ?? '');
+        Span::add('message.country_code', $countryCode ?? 'unknown');
 
         $data = $message->getAttribute('data');
 
-        // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce keeps
-        // a payload enqueued in the older shape, and already in flight, deliverable.
-        $code = $data['code'] ?? $data['content'];
-
-        $sms = new SMS(
-            $recipients,
-            $whatsapp ? $code : $data['content'],
-            $from
-        );
-        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
-
-        // Attach the project ID so the provider's delivery logs and webhooks can be
-        // attributed back to the originating project. Meta drops every metadata key it
-        // does not know, so callback data is the only attribution it echoes back.
-        $sms->setMetadata($whatsapp
-            ? [WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]
-            : [MetadataParameter::UUID->value => $project->getId()]);
-
-        $response = $adapter->send($sms);
-
         if (!$whatsapp) {
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            // Attach the project ID so the provider's delivery logs and webhooks can be
+            // attributed back to the originating project.
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+
+            $smsAdapter->send($sms);
+
             return;
         }
 
-        $errors = $this->getSendErrors($response);
+        // Everything the WhatsApp adapter can refuse — a malformed template name, a code the
+        // authentication template will not carry, oversized callback data — surfaces as a
+        // throw rather than a failure result, so both shapes are funnelled into $errors and
+        // get the same chance at the SMS fallback.
+        try {
+            if ($this->whatsappAdapter === null) {
+                $this->whatsappAdapter = $this->createInternalWhatsAppAdapter();
+            }
+
+            if ($this->whatsappAdapter === null) {
+                throw new \Exception('WhatsApp adapter is not set.');
+            }
+
+            // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce keeps
+            // a payload enqueued in the older shape, and already in flight, deliverable.
+            $code = $data['code'] ?? $data['content'];
+
+            $sms = new SMS($recipients, $code, $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            // Meta drops every metadata key it does not know, so callback data is the only
+            // attribution it echoes back.
+            $sms->setMetadata([WhatsAppMetadataParameter::CALLBACK_DATA->value => $project->getId() . ':' . $message->getId()]);
+
+            $errors = $this->getSendErrors($this->whatsappAdapter->send($sms));
+        } catch (\Throwable $error) {
+            $errors = [$error->getMessage()];
+        }
 
         if ($errors === []) {
             return;
         }
 
-        Span::add('message.error', \implode(', ', $errors));
+        Span::add('message.error', \implode(', ', \array_map($this->redactErrorDetails(...), $errors)));
 
-        if (!$fallback || $this->adapter === null) {
+        if (!$fallback) {
             return;
         }
 
-        $sms = new SMS($recipients, $data['content'], $from);
-        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
-        $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+        if ($smsAdapter === null) {
+            Span::add('message.fallback', 'sms_provider_not_configured');
+            return;
+        }
 
-        $this->adapter->send($sms);
+        // A throw here would put the whole job back on the queue and send the recipient a
+        // second WhatsApp message on the retry, so the fallback absorbs its own failures.
+        try {
+            $sms = new SMS($recipients, $data['content'], $from);
+            $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+            $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
+
+            $fallbackErrors = $this->getSendErrors($smsAdapter->send($sms));
+        } catch (\Throwable $error) {
+            $fallbackErrors = [$error->getMessage()];
+        }
+
+        if ($fallbackErrors !== []) {
+            Span::add('message.fallback_error', \implode(', ', \array_map($this->redactErrorDetails(...), $fallbackErrors)));
+            return;
+        }
 
         // Pairs with the controller's METRIC_AUTH_METHOD_WHATSAPP: one records the channel
-        // attempted, this one the channel that carried the code, so neither double counts.
+        // attempted, this one the channel that actually carried the code, so neither double
+        // counts. Only a delivered fallback earns the metric.
         $usage = new UsageContext();
         $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
+
+        if (!empty($countryCode)) {
+            $usage->addMetric(\str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+        }
 
         $publisherForUsage->enqueue(new Usage(
             project: $project,
             metrics: $usage->getMetrics(),
         ));
+    }
+
+    /**
+     * Strip the provider-echoed tail off an error before it reaches a span.
+     *
+     * Meta formats a rejection as "Error <code>: <message>: <error_data.details>", and the
+     * details segment can quote the parameter it rejected — which for an authentication
+     * template is the passcode itself. Keep the code and the message, drop the rest.
+     */
+    private function redactErrorDetails(string $error): string
+    {
+        if (!\str_starts_with($error, 'Error ')) {
+            return $error;
+        }
+
+        return \implode(': ', \array_slice(\explode(': ', $error), 0, 2));
     }
 
     /**
@@ -1384,10 +1438,10 @@ class Messaging extends Action
 
         $dsn = new DSN($provider);
 
-        // The username differs from the SMS mock's so end-to-end tests can tell the two
-        // channels apart at the request catcher.
+        // The DSN's username differs from the SMS mock's so end-to-end tests can tell the
+        // two channels apart at the request catcher.
         $adapter = $dsn->getHost() === 'mock'
-            ? (new Mock('whatsapp', 'password'))->setEndpoint('http://request-catcher-sms:5000/')
+            ? (new Mock($dsn->getUser() ?? '', $dsn->getPassword() ?? ''))->setEndpoint('http://request-catcher-sms:5000/')
             : $this->getSmsAdapter($this->createProviderFromDSN($dsn));
 
         $adapter?->setTelemetry($this->telemetry);
