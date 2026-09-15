@@ -120,6 +120,10 @@ trait RealtimeRelationshipBase
                 'databases.' . $fixture['databaseId'] . '.collections.' . $fixture[$survivor]['collectionId'] . '.documents.' . $fixture[$survivor]['id'] . '.update',
                 $event['data']['events']
             );
+            $this->assertContains(
+                'databases.' . $fixture['databaseId'] . '.tables.' . $fixture[$survivor]['collectionId'] . '.rows.' . $fixture[$survivor]['id'] . '.update',
+                $event['data']['events']
+            );
             $this->assertSame($survivor, $event['data']['payload']['name']);
             $this->assertArrayNotHasKey($key, $event['data']['payload']);
             $this->assertSame($fixture['databaseId'], $event['data']['payload']['$databaseId']);
@@ -176,5 +180,10 @@ trait RealtimeRelationshipBase
     public function testDeleteManyToManyParentRealtime(): void
     {
         $this->assertRelationshipRemovalEvent('manyToMany', 'parent');
+    }
+
+    public function testDeleteRelatedRowRealtime(): void
+    {
+        $this->assertRelationshipRemovalEvent('oneToMany', 'child', 'tablesdb');
     }
 }
