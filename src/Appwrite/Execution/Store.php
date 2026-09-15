@@ -381,6 +381,8 @@ class Store
             $execution->setAttribute('$sequence', $sequence);
         }
 
+        $this->publicTimestamps($execution);
+
         $permissions = \array_values($execution->getPermissions());
 
         $readRoles = [];
@@ -806,7 +808,28 @@ class Store
         }
 
         $data = \json_decode($json, true);
-        return \is_array($data) ? new Document($data) : new Document();
+        if (!\is_array($data)) {
+            return new Document();
+        }
+
+        $document = new Document($data);
+        $this->publicTimestamps($document);
+
+        return $document;
+    }
+
+    private function publicTimestamps(Document $execution): void
+    {
+        foreach (['$createdAt', '$updatedAt', 'scheduledAt'] as $attribute) {
+            $value = $execution->getAttribute($attribute);
+            if (!\is_string($value) || $value === '') {
+                continue;
+            }
+            $formatted = DateTime::formatTz($value);
+            if (\is_string($formatted)) {
+                $execution->setAttribute($attribute, $formatted);
+            }
+        }
     }
 
     private function executionVersion(Document $execution, bool $deleted): int

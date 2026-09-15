@@ -311,6 +311,68 @@ final class StoreTest extends TestCase
         $this->assertSame(42, $preserved['sequence']);
     }
 
+    public function testPersistsPublicIso8601Timestamps(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+        $stored = '2026-09-14 21:27:33.884';
+
+        $store->create('project', new Document([
+            '$id' => 'execution',
+            '$createdAt' => $stored,
+            '$updatedAt' => $stored,
+            'scheduledAt' => $stored,
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$createdAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['$updatedAt']);
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $document['scheduledAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['createdAt']);
+        $this->assertSame('2026-09-14 21:27:33.884', $row['updatedAt']);
+    }
+
+    public function testFillsMissingTimestampsAsIso8601(): void
+    {
+        $client = new CapturingClient();
+        $this->store($client)->create('project', new Document([
+            '$id' => 'execution',
+            'resourceType' => 'functions',
+            'status' => 'completed',
+        ]));
+
+        $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $document = \json_decode((string) $row['document'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertRfc3339($document['$createdAt']);
+        $this->assertRfc3339($document['$updatedAt']);
+    }
+
+    public function testReadsStoredDbTimestampsAsIso8601(): void
+    {
+        $stored = '2026-09-14 21:27:33.884';
+        $client = new CapturingClient([
+            $this->jsonResponse([['document' => \json_encode([
+                '$id' => 'execution',
+                '$createdAt' => $stored,
+                '$updatedAt' => $stored,
+                'scheduledAt' => $stored,
+                'resourceType' => 'functions',
+                'status' => 'completed',
+            ], JSON_THROW_ON_ERROR)]]),
+        ]);
+
+        $execution = $this->store($client)->get('project', 'execution');
+
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getCreatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getUpdatedAt());
+        $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
@@ -349,6 +411,13 @@ final class StoreTest extends TestCase
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
         );
+    }
+
+    private function assertRfc3339(string $value): void
+    {
+        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339_EXTENDED, $value);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $parsed, $value);
+        $this->assertSame($parsed->format(\DateTimeInterface::RFC3339_EXTENDED), $value);
     }
 
     /** @param list<array<string, mixed>> $rows */
