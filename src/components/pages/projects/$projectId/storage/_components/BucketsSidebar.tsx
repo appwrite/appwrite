@@ -69,7 +69,9 @@ type BucketsSidebarProps = {
   showBackButton?: boolean
 }
 
-export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) {
+export function BucketsSidebar({
+  showBackButton = false,
+}: BucketsSidebarProps) {
   const t = useT()
   const { projectId, bucketId: activeBucketId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -94,7 +96,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
   }, [debouncedSearch, sortBy, sortOrder])
 
   const { project } = useProject(projectId)
-  const { isCloud, features } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const noCreatePermission = !canCreateBucket(access, features)
@@ -276,7 +278,9 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
                   </Button>
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="right">{createPermissionTooltip}</TooltipContent>
+              <TooltipContent side="right">
+                {createPermissionTooltip}
+              </TooltipContent>
             </Tooltip>
           ) : (
             <Button
@@ -309,8 +313,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
                 </div>
               ) : (
                 buckets.map((bucket) => {
-                  const isBucketSelected =
-                    activeBucketId === bucket.$id
+                  const isBucketSelected = activeBucketId === bucket.$id
                   return (
                     <BucketContextMenu
                       key={bucket.$id}
@@ -333,7 +336,9 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
                         )}
                       >
                         <HardDrive className="h-3.5 w-3.5 shrink-0" />
-                        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+                        <span
+                          className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}
+                        >
                           {bucket.name}
                         </span>
                         {bucket.enabled === false ? (
@@ -384,7 +389,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
           </div>
         </div>
 
-        {isCloud && projectId ? (
+        {projectId ? (
           <div className="flex h-[54px] shrink-0 items-center border-t border-border bg-background px-2">
             <S3ConnectionCard />
           </div>
