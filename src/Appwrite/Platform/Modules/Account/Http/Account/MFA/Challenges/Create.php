@@ -33,6 +33,7 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
+use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -95,6 +96,8 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
             ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
+            ->param('length', 6, new Range(4, 128), 'Length of the verification code in characters. The default length is 6 characters. Only applies to email and phone factors.', true)
+            ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Challenge expiration period in seconds. The default expiration is 1 hour.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -114,6 +117,8 @@ class Create extends Action
 
     public function action(
         string $factor,
+        int $length,
+        int $expire,
         Response $response,
         Database $dbForProject,
         Document $user,
@@ -142,7 +147,11 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
+
+        if ($factor === Type::EMAIL || $factor === Type::PHONE) {
+            $proofForCode->setLength($length);
+        }
 
         $code = $proofForCode->generate();
         $challenge = new Document([
@@ -313,6 +322,7 @@ class Create extends Action
                 }
 
                 $emailVariables = [
+                    'expire' => $expire,
                     'heading' => $heading,
                     'direction' => $locale->getText('settings.direction'),
                     'user' => $user->getAttribute('name'),

@@ -4426,12 +4426,14 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
+        $this->assertEqualsWithDelta(3600, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
+
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
-        $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires in 1 hour.', $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires at ' . $response['body']['expire'] . '.', $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
@@ -4447,6 +4449,21 @@ final class AccountCustomClientTest extends Scope
         $userIDTest = strpos($lastEmail['text'], 'userId=' . $response['body']['userId'], 0);
 
         $this->assertNotFalse($userIDTest);
+
+        $customExpireEmail = 'magic-expire-' . uniqid() . '-' . \time() . '@appwrite.io';
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $customExpireEmail,
+            'expire' => 300,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertEqualsWithDelta(300, \strtotime($response['body']['expire']) - \strtotime($response['body']['$createdAt']), 1);
 
         /**
          * Test for FAILURE
@@ -4481,6 +4498,30 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'expire' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'expire' => 999999999999999,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4819,11 +4860,14 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'factor' => 'recoveryCode'
+            'factor' => 'recoveryCode',
+            'length' => 128,
+            'expire' => 300,
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
         $challengeId = $challenge['body']['$id'];
 
         // Test SUCCESS: Verify with valid recovery code (this tests the bug fix)
@@ -4910,11 +4954,14 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'factor' => 'custom'
+            'factor' => 'custom',
+            'length' => 128,
+            'expire' => 300,
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
         // The challenge code must never be exposed on the client-facing create response
         $this->assertArrayNotHasKey('code', $challenge['body']);
         $challengeId = $challenge['body']['$id'];
@@ -4938,6 +4985,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $codeResponse['headers']['status-code']);
         $this->assertNotEmpty($codeResponse['body']['code']);
         $code = $codeResponse['body']['code'];
+        $this->assertSame(6, strlen($code));
 
         // Test FAILURE: verifying with a random/incorrect otp before the real one is used
         $wrongFirst = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
@@ -5168,10 +5216,13 @@ final class AccountCustomClientTest extends Scope
 
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
             'factor' => 'totp',
+            'length' => 128,
+            'expire' => 300,
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        $this->assertEqualsWithDelta(300, \strtotime($challenge['body']['expire']) - \strtotime($challenge['body']['$createdAt']), 1);
 
         $invalidChallengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
