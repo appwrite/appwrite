@@ -40,7 +40,7 @@ class Http extends Service
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
-        // web redirects to /console; root-scheme consoles serve these paths themselves
+        // web redirects to /console, only where the console is served under /console
         if (System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root') {
             $this->addAction(RedirectRoot::getName(), new RedirectRoot());
             $this->addAction(RedirectAuth::getName(), new RedirectAuth());
