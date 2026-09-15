@@ -1042,7 +1042,7 @@ jobs:
           # compose emits NDJSON on some versions and a JSON array on others;
           # flatten handles both.
           docker compose ps --format json \
-            | jq -e -s 'flatten | map(select(.State != "running" and .State != "exited")) | length == 0' \
+            | jq -e -s 'flatten | map(select(.State != "running")) | length == 0' \
             || { echo "::error::Some containers are not running."; docker compose logs --tail=200; exit 1; }
 
       - name: Stop
@@ -1095,12 +1095,12 @@ jobs:
           set -euo pipefail
           target=$(sed -n "s/^const APP_VERSION_STABLE = '\([^']*\)';.*/\1/p" app/init/constants.php)
 
-          # Sort the published X.Y.Z tags together with the target, then take
-          # whatever lands immediately before it.
+          # Sort the released X.Y.Z tags together with the target, then take
+          # whatever lands immediately before it. Git rather than Docker Hub's
+          # tag listing: the nightly channel pushes a tag a day to the same
+          # repository, so the stables drop out of any recent-tags window.
           previous=$(
-            curl --silent --fail --retry 3 --retry-all-errors --max-time 60 \
-              'https://hub.docker.com/v2/repositories/appwrite/appwrite/tags/?page_size=100&ordering=last_updated' \
-              | jq -r '.results[].name' \
+            git tag --list \
               | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
               | { cat; echo "${target}"; } \
               | sort -u -V \
@@ -1109,7 +1109,7 @@ jobs:
           )
 
           if [ -z "$previous" ] || [ "$previous" = "$target" ]; then
-            echo "::error::No published stable below ${target} in the 100 most recent Docker Hub tags."
+            echo "::error::No released stable below ${target}."
             exit 1
           fi
 
@@ -1123,7 +1123,6 @@ jobs:
           PREVIOUS: ${{ steps.previous.outputs.previous }}
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth 1 origin "refs/tags/${PREVIOUS}:refs/tags/${PREVIOUS}"
           git show "${PREVIOUS}:docker-compose.yml" > docker-compose.previous.yml
           git show "${PREVIOUS}:.env" > .env.previous
 
