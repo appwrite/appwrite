@@ -22,6 +22,7 @@ final class RealtimeCustomClientTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
+    use RealtimeRelationshipBase;
     use ProjectCustom;
     use SideClient;
 
