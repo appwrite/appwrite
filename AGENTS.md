@@ -308,6 +308,8 @@ When bumping a patch (e.g. `1.9.0` → `1.9.1`):
 - [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
 - [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
 
+`docker compose exec appwrite release X.Y.Z` writes all four in one pass, and the `Check release metadata` step in [`ci.yml`](.github/workflows/ci.yml) fails when they disagree. Edit them by hand only when the task cannot express the change.
+
 Ask the user to review, publish notes on the [Appwrite changelog](https://appwrite.io/changelog), generate specs if the API changed, and add request/response filters if needed.
 
 `APP_CACHE_BUSTER` is not a version number and does not track releases. It salts the response cache key in [`Request::cacheIdentifier()`](src/Appwrite/Utopia/Request.php) for the routes labelled `cache` (file preview, avatars). Bump it only when cached output would now be wrong — a changed image pipeline or new bundled avatar assets — since every bump orphans every entry and regenerates them.
@@ -315,6 +317,8 @@ Ask the user to review, publish notes on the [Appwrite changelog](https://appwri
 ### Self-hosted RC / final
 
 A release is not ready until a **fresh install** and an **upgrade from the previous stable** both work with realistic data. Previous baseline = highest stable semver tag lower than the target (ignore RC/beta/alpha; prefer `git ls-remote --tags origin`).
+
+Both gates run in CI on release branches — the `install` and `upgrade` jobs in [`ci.yml`](.github/workflows/ci.yml), seeding and asserting through the public API with [`upgrade.sh`](.github/scripts/upgrade.sh). Read those jobs before doing the work by hand; do it by hand when the release changes something they do not cover (a new service, a data shape they do not seed).
 
 **Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
 
