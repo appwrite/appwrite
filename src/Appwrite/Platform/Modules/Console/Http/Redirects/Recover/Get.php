@@ -16,8 +16,13 @@ class Get extends Base
         return '/recover';
     }
 
-    protected function getTarget(string $path): string
+    protected function getTarget(string $path, array $params): string
     {
+        // The reset page requires the emailed userId and secret, without them only the request form is usable
+        if (empty($params['userId']) || empty($params['secret'])) {
+            return '/recovery';
+        }
+
         return '/reset';
     }
 }

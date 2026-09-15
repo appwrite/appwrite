@@ -16,7 +16,7 @@ class Get extends Base
         return '/invite';
     }
 
-    protected function getTarget(string $path): string
+    protected function getTarget(string $path, array $params): string
     {
         return '/join';
     }

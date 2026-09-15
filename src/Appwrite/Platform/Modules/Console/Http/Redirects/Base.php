@@ -25,7 +25,7 @@ abstract class Base extends Action
     /**
      * Console route to land on, the request path unless the console names it differently.
      */
-    protected function getTarget(string $path): string
+    protected function getTarget(string $path, array $params): string
     {
         return $path;
     }
@@ -54,8 +54,8 @@ abstract class Base extends Action
         }
 
         $url = parse_url($request->getURI());
-        $target = $consoleUrl . $this->getTarget($url['path'] ?? '');
         $params = $request->getParams();
+        $target = $consoleUrl . $this->getTarget($url['path'] ?? '', $params);
         if (!empty($params)) {
             $target .= "?" . \http_build_query($params);
         }
