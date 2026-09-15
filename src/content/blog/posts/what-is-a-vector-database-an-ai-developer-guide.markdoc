@@ -126,7 +126,7 @@ A handful of options dominate real-world usage:
 
 For a deeper feature-by-feature comparison, see [the top 6 vector databases to use for AI applications](/blog/post/top-6-vector-databases-2025).
 
-## How Appwrite fits into a vector search stack
+# How Appwrite fits into a vector search stack
 
 Appwrite gives you multiple ways to add vector search to your application. You can use VectorsDB for a purpose-built vector database, use pgvector with Appwrite's native PostgreSQL databases, or connect an external vector database when your application requires one.
 
