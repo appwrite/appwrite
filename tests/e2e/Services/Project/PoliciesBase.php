@@ -24,6 +24,7 @@ trait PoliciesBase
             'user-limit' => ['total'],
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
             'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
+            'oauth-trust-provider-email' => ['providers'],
         ];
     }
 
@@ -1240,6 +1241,90 @@ trait PoliciesBase
     }
 
     // =========================================================================
+    // OAuth Trust Provider Email Policy
+    // =========================================================================
+
+    public function testUpdateOAuthTrustProviderEmailPolicyEnable(): void
+    {
+        $response = $this->updateOAuthTrustProviderEmailPolicy(['mock']);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSame(['mock'], $response['body']['authOauthTrustProviderEmailProviders']);
+
+        $project = $this->getProjectDocument();
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame(['mock'], $project['body']['authOauthTrustProviderEmailProviders']);
+
+        $policy = $this->getPolicy('oauth-trust-provider-email');
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame(['mock'], $policy['body']['providers']);
+
+        // Cleanup
+        $this->updateOAuthTrustProviderEmailPolicy([]);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyDisable(): void
+    {
+        $this->updateOAuthTrustProviderEmailPolicy(['mock']);
+
+        $response = $this->updateOAuthTrustProviderEmailPolicy([]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame([], $response['body']['authOauthTrustProviderEmailProviders']);
+
+        $project = $this->getProjectDocument();
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame([], $project['body']['authOauthTrustProviderEmailProviders']);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyIdempotent(): void
+    {
+        $first = $this->updateOAuthTrustProviderEmailPolicy(['mock']);
+        $this->assertSame(200, $first['headers']['status-code']);
+        $this->assertSame(['mock'], $first['body']['authOauthTrustProviderEmailProviders']);
+
+        $second = $this->updateOAuthTrustProviderEmailPolicy(['mock']);
+        $this->assertSame(200, $second['headers']['status-code']);
+        $this->assertSame(['mock'], $second['body']['authOauthTrustProviderEmailProviders']);
+
+        // Cleanup
+        $this->updateOAuthTrustProviderEmailPolicy([]);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyWithoutAuth(): void
+    {
+        $response = $this->updateOAuthTrustProviderEmailPolicy(['mock'], false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyInvalidType(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', $this->buildHeaders(), [
+            'providers' => 'not-an-array',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyInvalidProvider(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', $this->buildHeaders(), [
+            'providers' => ['fake-provider'],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateOAuthTrustProviderEmailPolicyMissingParam(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', $this->buildHeaders(), []);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -1370,5 +1455,15 @@ trait PoliciesBase
     protected function updateMembershipPrivacyPolicy(array $params, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $this->buildHeaders($authenticated), $params);
+    }
+
+    /**
+     * @param  array<string>  $providers
+     */
+    protected function updateOAuthTrustProviderEmailPolicy(array $providers, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/oauth-trust-provider-email', $this->buildHeaders($authenticated), [
+            'providers' => $providers,
+        ]);
     }
 }

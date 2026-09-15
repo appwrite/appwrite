@@ -169,6 +169,10 @@ class XList extends Action
                 '$id' => 'deny-corporate-email',
                 'enabled' => $auths['corporateEmails'] ?? false,
             ]),
+            new Document([
+                '$id' => 'oauth-trust-provider-email',
+                'providers' => $auths['oauthTrustProviderEmailProviders'] ?? [],
+            ]),
         ];
     }
 }

@@ -90,6 +90,7 @@ class Get extends Action
             'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
             'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'oauth-trust-provider-email' => Response::MODEL_POLICY_OAUTH_TRUST_PROVIDER_EMAIL,
         ];
     }
 
@@ -219,6 +220,13 @@ class Get extends Action
                     'enabled' => $auths['corporateEmails'] ?? false,
                 ]),
                 Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'oauth-trust-provider-email' => [
+                new Document([
+                    '$id' => 'oauth-trust-provider-email',
+                    'providers' => $auths['oauthTrustProviderEmailProviders'] ?? [],
+                ]),
+                Response::MODEL_POLICY_OAUTH_TRUST_PROVIDER_EMAIL,
             ],
             default => null,
         };
