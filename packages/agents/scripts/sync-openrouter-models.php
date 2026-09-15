@@ -10,7 +10,7 @@
  * The full catalog is available via the MODELS array.
  */
 $endpoint = getenv('OPENROUTER_MODELS_ENDPOINT') ?: 'https://openrouter.ai/api/v1/models';
-$defaultOutput = __DIR__.'/../src/Agents/Adapters/OpenRouter/Models.php';
+$defaultOutput = __DIR__.'/../src/Adapters/OpenRouter/Models.php';
 $outputPath = $argv[1] ?? $defaultOutput;
 
 // Providers whose models get named class constants

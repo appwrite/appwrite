@@ -19,6 +19,32 @@ const SPLIT_APP_ID = 4016286; // GitHub App that pushes splits to the mirrors
 const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/phpunit'];
 const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.yml', '.coderabbit.yaml'];
 
+/**
+ * Dockerfiles a package's docker-compose.yml builds from. Those belong to the
+ * e2e tier and stay; every other Dockerfile is CI tooling the root replaces.
+ */
+function compose_dockerfiles(string $directory): array
+{
+    $compose = "{$directory}/docker-compose.yml";
+    if (!is_file($compose)) {
+        return [];
+    }
+    $files = [];
+    foreach (file($compose) as $line) {
+        $line = trim($line);
+        foreach (['dockerfile:', 'build:'] as $key) {
+            if (!str_starts_with($line, $key)) {
+                continue;
+            }
+            $value = trim(substr($line, strlen($key)), " \t\"'");
+            if ($value !== '' && $value !== '.' && !str_contains($value, '/')) {
+                $files[] = $value;
+            }
+        }
+    }
+    return $files;
+}
+
 function out(string $message): void
 {
     fwrite(STDOUT, $message . PHP_EOL);
@@ -381,7 +407,8 @@ switch ($command) {
         if (($manifest['require-dev'] ?? null) === []) {
             unset($manifest['require-dev']);
         }
-        foreach ([...BANNED, ...array_map('basename', glob("{$directory}/Dockerfile*"))] as $file) {
+        $keep = compose_dockerfiles($directory);
+        foreach ([...BANNED, ...array_diff(array_map('basename', glob("{$directory}/Dockerfile*")), $keep)] as $file) {
             if (is_file("{$directory}/{$file}")) {
                 unlink("{$directory}/{$file}");
                 out("removed {$file} (root tooling is canonical)");
@@ -656,7 +683,7 @@ switch ($command) {
             }
             foreach ($tracked as $file) {
                 $name = basename($file);
-                if (in_array($name, BANNED, true) || str_starts_with($name, 'Dockerfile')) {
+                if (in_array($name, BANNED, true) || (str_starts_with($name, 'Dockerfile') && !in_array($name, compose_dockerfiles("packages/{$package}"), true))) {
                     $problems[] = substr($file, strlen("packages/{$package}/")) . ' must not exist (root tooling is canonical)';
                 }
             }

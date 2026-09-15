@@ -353,7 +353,6 @@ jobs:
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
       - name: Check package
-        if: ${{ !matrix.linked }}
         run: bin/monorepo check ${{ matrix.package }}
 
       - name: Test package

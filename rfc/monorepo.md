@@ -76,7 +76,7 @@ Rules `validate` checks per package:
 2. The main `autoload` declares exactly one PSR-4 prefix, `Utopia\<Ns>\`, mapped to `src/`. `<Ns>` lowercased with hyphens removed equals `<name>` (`CircuitBreaker` ↔ `circuit-breaker`, `DNS` ↔ `dns`, `Psr7` ↔ `psr7`, `OpenAPI` ↔ `openapi`).
 3. `autoload-dev` declares exactly `Utopia\<Ns>\Tests\` mapped to `tests/`.
 4. No `composer.lock`; `.gitignore` lists it.
-5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, per-PHP-version `Dockerfile*`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`.
+5. None of: `psalm.xml`, `phpcs.xml`, `.travis.yml`, `.gitpod.yml`, `.coderabbit.yaml`, `pint.json`, Pint/PHPStan/Rector/PHPUnit in `require-dev`, nor any `Dockerfile*` except the ones `docker-compose.yml` builds an e2e service from.
 6. Sibling dependencies are Packagist constraints, never path repositories (the mirror must install standalone).
 7. The root autoload map (below) matches what the manifests declare.
 

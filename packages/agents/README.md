@@ -271,7 +271,7 @@ $conversation
         }
         flush();
     })
-    ->message($user, new Message('Write a short release note for today''s deployment.'));
+    ->message($user, new Message("Write a short release note for today's deployment."));
 
 $final = $conversation->send();
 
