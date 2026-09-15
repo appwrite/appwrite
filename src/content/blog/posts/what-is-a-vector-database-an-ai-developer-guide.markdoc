@@ -128,16 +128,13 @@ For a deeper feature-by-feature comparison, see [the top 6 vector databases to u
 
 ## How Appwrite fits into a vector search stack
 
-Appwrite does not ship a dedicated vector engine, and that is a deliberate scope choice rather than a gap to paper over. What it gives you is the surrounding backend that every AI app needs, plus a clean way to orchestrate the vector database of your choice.
+Appwrite gives you multiple ways to add vector search to your application. You can use VectorsDB for a purpose-built vector database, use pgvector with Appwrite's native PostgreSQL databases, or connect an external vector database when your application requires one.
 
-The common pattern looks like this:
-
-* **Generate and query embeddings from a function.** [Appwrite Functions](/docs/products/functions) call your embedding model and talk to your vector database server-side, so API keys and connection strings never touch the client. See [integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project) for a working Upstash Vector example.
-* **Store operational data in Appwrite Databases.** Your users, chat history, and metadata live in [Appwrite Databases](/docs/products/databases), close to your app logic.
-* **Keep source files in Storage.** The documents and images you embed can live in [Appwrite Storage](/docs/products/storage).
-* **Guard access with Auth.** [Appwrite Auth](/docs/products/auth) and document-level permissions control who can trigger retrieval and see results.
-
-Since version 1.9, Appwrite also supports MongoDB as its underlying database engine, which brings native vector search within reach for teams that want to keep embeddings and operational data in one place. See [choosing the right database for AI applications: when to use MongoDB](/blog/post/choosing-the-right-database-for-ai-applications-when-to-use-mongodb).
+* **Use Appwrite VectorsDB.** [VectorsDB](/docs/products/databases/vectorsdb) is built for storing embeddings and running similarity searches for use cases such as RAG, semantic search, and recommendations. It supports HNSW indexes and cosine, dot product, and Euclidean distance.
+* **Use pgvector with native PostgreSQL.** Appwrite's [native PostgreSQL](/docs/products/databases/postgresql) databases support the [pgvector extension](/docs/products/databases/postgresql/extensions), giving you vector storage and similarity search alongside your relational data.
+* **Generate embeddings with Appwrite or your own model.** VectorsDB supports built-in embedding generation, or you can generate embeddings with your preferred model and store them directly.
+* **Keep source files in Storage.** Documents, images, and other files used in your AI workflows can live in [Appwrite Storage](/docs/products/storage).
+* **Build AI workflows with Functions.** [Appwrite Functions](/docs/products/functions) can run server-side logic for embedding generation, retrieval, and other AI workflows.
 
 ## Getting started with VectorsDB on Appwrite
 
