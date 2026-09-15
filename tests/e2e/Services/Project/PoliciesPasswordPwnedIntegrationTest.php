@@ -20,15 +20,8 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    // Reported as breached by the mock range endpoint, 12345 and 9 times respectively
+    // Reported as breached by the mock range endpoint
     private const PWNED_PASSWORD = 'pwned-fixture-common';
-    private const RARELY_PWNED_PASSWORD = 'pwned-fixture-rare';
-
-    // The mock range endpoint the stack already uses through _APP_PWNED_PASSWORDS_ENDPOINT
-    private const MOCK_ENDPOINT = 'http://localhost/v1/mock/tests/general/pwned-passwords';
-
-    // Nothing listens here, so lookups fail
-    private const DEAD_ENDPOINT = 'http://localhost:1/range';
 
     public function testDefaultsOnNewProject(): void
     {
@@ -48,13 +41,10 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         // Breached passwords are rejected out of the box
         $this->assertTrue($response['body']['enabled']);
-        $this->assertFalse($response['body']['failClosed']);
-        $this->assertSame(1, $response['body']['threshold']);
-        $this->assertSame('', $response['body']['endpoint']);
 
         // Sign-in checks stay opt-in
         $this->assertFalse($response['body']['sessions']);
-        $this->assertFalse($response['body']['forceReset']);
+        $this->assertFalse($response['body']['users']);
 
         // A breached password is blocked without touching the policy
         $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
@@ -318,160 +308,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['enabled' => false]);
     }
 
-    public function testThreshold(): void
-    {
-        $this->updatePolicy(['enabled' => true, 'threshold' => 10]);
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_rare_' . \uniqid() . '@localhost.test',
-            'password' => self::RARELY_PWNED_PASSWORD,
-            'name' => 'Rarely Pwned User',
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_often_' . \uniqid() . '@localhost.test',
-            'password' => self::PWNED_PASSWORD,
-            'name' => 'Often Pwned User',
-        ]);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('password_pwned', $response['body']['type']);
-
-        $this->updatePolicy(['enabled' => false, 'threshold' => 1]);
-    }
-
-    public function testCustomEndpoint(): void
-    {
-        $this->updatePolicy(['enabled' => true, 'endpoint' => self::MOCK_ENDPOINT]);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_endpoint_' . \uniqid() . '@localhost.test',
-            'password' => self::PWNED_PASSWORD,
-            'name' => 'Endpoint User',
-        ]);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('password_pwned', $response['body']['type']);
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_endpoint_clean_' . \uniqid() . '@localhost.test',
-            'password' => $this->cleanPassword(),
-            'name' => 'Endpoint Clean User',
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        // An empty endpoint falls back to the server configuration
-        $this->updatePolicy(['endpoint' => '']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_fallback_' . \uniqid() . '@localhost.test',
-            'password' => self::PWNED_PASSWORD,
-            'name' => 'Fallback User',
-        ]);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('password_pwned', $response['body']['type']);
-
-        $this->updatePolicy(['enabled' => false]);
-    }
-
-    public function testFailClosed(): void
-    {
-        $this->updatePolicy(['enabled' => true, 'endpoint' => self::DEAD_ENDPOINT, 'failClosed' => true]);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_outage_' . \uniqid() . '@localhost.test',
-            'password' => $this->cleanPassword(),
-            'name' => 'Outage User',
-        ]);
-
-        $this->assertSame(503, $response['headers']['status-code']);
-        $this->assertSame('general_pwned_passwords_unavailable', $response['body']['type']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_outage_account_' . \uniqid() . '@localhost.test',
-            'password' => $this->cleanPassword(),
-            'name' => 'Outage Account',
-        ]);
-
-        $this->assertSame(503, $response['headers']['status-code']);
-        $this->assertSame('general_pwned_passwords_unavailable', $response['body']['type']);
-
-        // Forced reset needs the lookup, so sign-in fails closed as well
-        $this->updatePolicy(['enabled' => false]);
-
-        $email = 'pwned_outage_signin_' . \uniqid() . '@localhost.test';
-        $password = $this->cleanPassword();
-
-        $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => 'Outage Sign In User',
-        ]);
-
-        $this->assertSame(201, $user['headers']['status-code']);
-
-        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'forceReset' => true]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertSame(503, $response['headers']['status-code']);
-        $this->assertSame('general_pwned_passwords_unavailable', $response['body']['type']);
-
-        /**
-         * Test for SUCCESS
-         */
-        $this->updatePolicy(['failClosed' => false]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
-            'email' => 'pwned_outage_open_' . \uniqid() . '@localhost.test',
-            'password' => self::PWNED_PASSWORD,
-            'name' => 'Outage Open User',
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => false]);
-    }
-
-    public function testForceResetOnSignIn(): void
+    public function testSignInBlockedUntilReset(): void
     {
         $this->updatePolicy(['enabled' => false]);
 
@@ -489,7 +326,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'forceReset' => false]);
+        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => false]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -501,7 +338,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for FAILURE
          */
-        $this->updatePolicy(['forceReset' => true]);
+        $this->updatePolicy(['users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -538,7 +375,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
 
-        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'forceReset' => false]);
+        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
     public function testSessionChecksAreOptional(): void
@@ -561,7 +398,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          * Test for SUCCESS
          */
         // Sign-in checks are off by default, so a forced reset has nothing to act on
-        $this->updatePolicy(['enabled' => true, 'sessions' => false, 'forceReset' => true]);
+        $this->updatePolicy(['enabled' => true, 'sessions' => false, 'users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -577,7 +414,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertNull($response['body']['passwordPwned']);
 
         // Checking sessions without forcing a reset records the breach and still allows the sign-in
-        $this->updatePolicy(['sessions' => true, 'forceReset' => false]);
+        $this->updatePolicy(['sessions' => true, 'users' => false]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -594,7 +431,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for FAILURE
          */
-        $this->updatePolicy(['forceReset' => true]);
+        $this->updatePolicy(['users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -604,7 +441,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(412, $response['headers']['status-code']);
         $this->assertSame('user_password_reset_required', $response['body']['type']);
 
-        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'forceReset' => false]);
+        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
     public function testUpdateAnonymousAccountEmail(): void
@@ -1116,7 +953,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(201, $userD['headers']['status-code']);
         $this->assertNull($userD['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'forceReset' => true]);
+        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $emailD,
@@ -1131,21 +968,6 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['passwordPwned']);
 
-        // An outage with a fail-open policy leaves the recorded state untouched and lets the sign-in through
-        $this->updatePolicy(['endpoint' => self::DEAD_ENDPOINT, 'failClosed' => false]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
-            'email' => $emailD,
-            'password' => self::PWNED_PASSWORD,
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userD['body']['$id'], $this->serverHeaders());
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['passwordPwned']);
-
         // Filtering on an attribute outside the whitelist is rejected
         $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
             'queries' => [Query::equal('passwordHistory', ['x'])->toString()],
@@ -1153,7 +975,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
 
-        $this->updatePolicy(['enabled' => false, 'endpoint' => '', 'sessions' => false, 'forceReset' => false, 'failClosed' => false]);
+        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
     /**

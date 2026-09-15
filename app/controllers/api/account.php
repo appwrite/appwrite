@@ -1050,7 +1050,7 @@ Http::post('/v1/account/sessions/email')
 
         if ($pwnedPasswords->checksSessions()) {
             // The outcome is recorded either way; only a forced reset needs an answer, so an outage never blocks a plain sign-in
-            $passwordPwned = $pwnedPasswords->check($password, required: $pwnedPasswords->isForceReset());
+            $passwordPwned = $pwnedPasswords->check($password);
 
             if ($passwordPwned !== null && $passwordPwned !== $user->getAttribute('passwordPwned')) {
                 $user->setAttribute('passwordPwned', $passwordPwned);
@@ -1059,7 +1059,7 @@ Http::post('/v1/account/sessions/email')
                 ]));
             }
 
-            if ($passwordPwned && $pwnedPasswords->isForceReset()) {
+            if ($passwordPwned && $pwnedPasswords->blocksUsers()) {
                 throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
             }
         }

@@ -90,11 +90,8 @@ class Create extends Action
             'personalDataCheck' => false,
             'passwordPwned' => [
                 'enabled' => true,
-                'endpoint' => '',
-                'threshold' => 1,
                 'sessions' => false,
-                'forceReset' => false,
-                'failClosed' => false,
+                'users' => false,
             ],
             'disposableEmails' => false,
             'canonicalEmails' => false,

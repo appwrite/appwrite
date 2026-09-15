@@ -25,21 +25,21 @@ final class PasswordPwnedTest extends TestCase
 
         $this->assertTrue($validator->isEnabled());
         $this->assertFalse($validator->checksSessions());
-        $this->assertFalse($validator->isForceReset());
+        $this->assertFalse($validator->blocksUsers());
     }
 
     public function testPolicyFlags(): void
     {
-        $validator = new PasswordPwned(['enabled' => true, 'sessions' => true, 'forceReset' => true]);
+        $validator = new PasswordPwned(['enabled' => true, 'sessions' => true, 'users' => true]);
 
         $this->assertTrue($validator->isEnabled());
         $this->assertTrue($validator->checksSessions());
-        $this->assertTrue($validator->isForceReset());
+        $this->assertTrue($validator->blocksUsers());
     }
 
     public function testSessionChecksNeedAnEnabledPolicy(): void
     {
-        $validator = new PasswordPwned(['enabled' => false, 'sessions' => true, 'forceReset' => true]);
+        $validator = new PasswordPwned(['enabled' => false, 'sessions' => true, 'users' => true]);
 
         $this->assertFalse($validator->checksSessions());
     }
@@ -61,14 +61,6 @@ final class PasswordPwnedTest extends TestCase
 
         $this->assertTrue($validator->check(self::LEAKED));
         $this->assertFalse($validator->check('never-leaked-' . \uniqid()));
-    }
-
-    public function testCheckNotRequiredReturnsUnknownOnOutage(): void
-    {
-        $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
-        $validator = $this->validator(['failClosed' => true], $adapter);
-
-        $this->assertNull($validator->check(self::LEAKED, required: false));
     }
 
     public function testLeakedPasswordIsRejected(): void
@@ -103,12 +95,11 @@ final class PasswordPwnedTest extends TestCase
         $this->assertFalse($validator->isValid(self::LEAKED));
     }
 
-    public function testThresholdToleratesRareBreaches(): void
+    public function testAnySingleBreachIsEnough(): void
     {
-        $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 9]));
+        $adapter = new RangeAdapter(body: $this->range([self::LEAKED => 1]));
 
-        $this->assertTrue($this->validator(['threshold' => 10], $adapter)->isValid(self::LEAKED));
-        $this->assertFalse($this->validator(['threshold' => 9], $adapter)->isValid(self::LEAKED));
+        $this->assertFalse($this->validator([], $adapter)->isValid(self::LEAKED));
     }
 
     public function testOnlyTheHashPrefixLeavesTheServer(): void
@@ -156,40 +147,23 @@ final class PasswordPwnedTest extends TestCase
         $this->assertCount(2, $adapter->requests);
     }
 
-    public function testUnreachableServiceSkipsTheCheckByDefault(): void
+    public function testUnreachableServiceIsReported(): void
     {
         $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
         $validator = $this->validator([], $adapter);
-
-        // An outage of the breach service must not stop people setting a password
-        $this->assertTrue($validator->isValid(self::LEAKED));
-    }
-
-    public function testUnexpectedStatusSkipsTheCheckByDefault(): void
-    {
-        $adapter = new RangeAdapter(statusCode: 503, body: '');
-        $validator = $this->validator([], $adapter);
-
-        $this->assertTrue($validator->isValid(self::LEAKED));
-    }
-
-    public function testUnreachableServiceIsRejectedWhenFailingClosed(): void
-    {
-        $adapter = new RangeAdapter(failure: new \RuntimeException('connection refused'));
-        $validator = $this->validator(['failClosed' => true], $adapter);
 
         try {
             $validator->isValid(self::LEAKED);
-            $this->fail('Expected the check to fail closed');
+            $this->fail('Expected the unreachable service to surface');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE, $e->getType());
         }
     }
 
-    public function testUnexpectedStatusIsRejectedWhenFailingClosed(): void
+    public function testUnexpectedStatusIsReported(): void
     {
         $adapter = new RangeAdapter(statusCode: 503, body: '');
-        $validator = $this->validator(['failClosed' => true], $adapter);
+        $validator = $this->validator([], $adapter);
 
         $this->expectException(Exception::class);
 
@@ -202,8 +176,13 @@ final class PasswordPwnedTest extends TestCase
         $cache = new Cache(new Memory());
         $validator = new PasswordPwned(['enabled' => true], $cache, self::ENDPOINT, new Client($adapter));
 
-        $validator->isValid(self::LEAKED);
-        $validator->isValid(self::LEAKED);
+        foreach ([1, 2] as $attempt) {
+            try {
+                $validator->isValid(self::LEAKED);
+            } catch (Exception) {
+                // The lookup failed, which is the point; it must be retried rather than remembered
+            }
+        }
 
         $this->assertCount(2, $adapter->requests);
     }
@@ -228,15 +207,15 @@ final class PasswordPwnedTest extends TestCase
         $this->assertCount(0, $adapter->requests);
     }
 
-    public function testPolicyEndpointOverridesTheServerEndpoint(): void
+    public function testLookupsGoToTheConfiguredEndpoint(): void
     {
         $adapter = new RangeAdapter(body: '');
 
-        (new PasswordPwned(['enabled' => true, 'endpoint' => 'https://policy.test/range/'], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
-        (new PasswordPwned(['enabled' => true, 'endpoint' => ''], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true], null, 'https://server.test/range', new Client($adapter)))->isValid(self::LEAKED);
+        (new PasswordPwned(['enabled' => true], null, 'https://other.test/range/', new Client($adapter)))->isValid(self::LEAKED);
 
-        $this->assertStringStartsWith('https://policy.test/range/', $adapter->requests[0]);
-        $this->assertStringStartsWith('https://server.test/range/', $adapter->requests[1]);
+        $this->assertStringStartsWith('https://server.test/range/', $adapter->requests[0]);
+        $this->assertStringStartsWith('https://other.test/range/', $adapter->requests[1]);
     }
 
     /**

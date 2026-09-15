@@ -17,7 +17,7 @@ trait PoliciesBase
             'password-history' => ['total'],
             'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
             'password-personal-data' => ['enabled'],
-            'password-pwned' => ['enabled', 'endpoint', 'threshold', 'sessions', 'forceReset', 'failClosed'],
+            'password-pwned' => ['enabled', 'sessions', 'users'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
@@ -650,11 +650,8 @@ trait PoliciesBase
         $policy = $this->getPolicy('password-pwned');
         $this->assertSame(200, $policy['headers']['status-code']);
         $this->assertSame(true, $policy['body']['enabled']);
-        $this->assertSame('', $policy['body']['endpoint']);
-        $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
-        $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(false, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['users']);
 
         // Cleanup
         $this->updatePasswordPwnedPolicy(['enabled' => false]);
@@ -682,11 +679,8 @@ trait PoliciesBase
         $this->assertSame(200, $policy['headers']['status-code']);
         $this->assertSame('password-pwned', $policy['body']['$id']);
         $this->assertSame(true, $policy['body']['enabled']);
-        $this->assertSame('', $policy['body']['endpoint']);
-        $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
-        $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(false, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['users']);
     }
 
     public function testUpdatePasswordPwnedPolicySessions(): void
@@ -709,11 +703,8 @@ trait PoliciesBase
     public function testUpdatePasswordPwnedPolicyOptionPreservesOtherOptions(): void
     {
         $response = $this->updatePasswordPwnedPolicy([
-            'endpoint' => 'https://example.com/range',
-            'threshold' => 5,
             'sessions' => true,
-            'forceReset' => true,
-            'failClosed' => true,
+            'users' => true,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -724,11 +715,8 @@ trait PoliciesBase
 
         $policy = $this->getPolicy('password-pwned');
         $this->assertSame(true, $policy['body']['enabled']);
-        $this->assertSame('https://example.com/range', $policy['body']['endpoint']);
-        $this->assertSame(5, $policy['body']['threshold']);
         $this->assertSame(true, $policy['body']['sessions']);
-        $this->assertSame(true, $policy['body']['forceReset']);
-        $this->assertSame(true, $policy['body']['failClosed']);
+        $this->assertSame(true, $policy['body']['users']);
 
         // Cleanup
         $this->resetPasswordPwnedPolicy();
@@ -744,39 +732,16 @@ trait PoliciesBase
 
         $policy = $this->getPolicy('password-pwned');
         $this->assertSame(true, $policy['body']['enabled']);
-        $this->assertSame('', $policy['body']['endpoint']);
-        $this->assertSame(1, $policy['body']['threshold']);
         $this->assertSame(false, $policy['body']['sessions']);
-        $this->assertSame(false, $policy['body']['forceReset']);
-        $this->assertSame(false, $policy['body']['failClosed']);
+        $this->assertSame(false, $policy['body']['users']);
     }
 
     public function testUpdatePasswordPwnedPolicyInvalidType(): void
     {
-        foreach (['enabled', 'sessions', 'forceReset', 'failClosed'] as $option) {
+        foreach (['enabled', 'sessions', 'users'] as $option) {
             $response = $this->updatePasswordPwnedPolicy([$option => 'not-a-boolean']);
 
             $this->assertSame(400, $response['headers']['status-code'], $option);
-        }
-
-        $response = $this->updatePasswordPwnedPolicy(['threshold' => 'not-a-number']);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-
-    public function testUpdatePasswordPwnedPolicyInvalidThreshold(): void
-    {
-        $response = $this->updatePasswordPwnedPolicy(['threshold' => 0]);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-
-    public function testUpdatePasswordPwnedPolicyInvalidEndpoint(): void
-    {
-        foreach (['not-a-url', 'ftp://example.com/range', 'http://192.168.1.1/range'] as $endpoint) {
-            $response = $this->updatePasswordPwnedPolicy(['endpoint' => $endpoint]);
-
-            $this->assertSame(400, $response['headers']['status-code'], $endpoint);
         }
     }
 
@@ -1493,11 +1458,8 @@ trait PoliciesBase
     {
         $this->updatePasswordPwnedPolicy([
             'enabled' => true,
-            'endpoint' => '',
-            'threshold' => 1,
             'sessions' => false,
-            'forceReset' => false,
-            'failClosed' => false,
+            'users' => false,
         ]);
     }
 

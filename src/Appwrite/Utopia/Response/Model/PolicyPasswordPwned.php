@@ -21,33 +21,15 @@ class PolicyPasswordPwned extends PolicyBase
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('endpoint', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Custom endpoint of a Have I Been Pwned compatible range API. Empty when the server default is used.',
-                'default' => '',
-                'example' => 'https://api.pwnedpasswords.com/range',
-            ])
-            ->addRule('threshold', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Minimum number of known breaches a password must appear in before it is rejected.',
-                'default' => 1,
-                'example' => 1,
-            ])
             ->addRule('sessions', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether passwords are checked when a session is created.',
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('forceReset', [
+            ->addRule('users', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether signing in with a breached password is blocked until the password is reset. Only applies when sessions are checked.',
-                'default' => false,
-                'example' => false,
-            ])
-            ->addRule('failClosed', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether passwords are rejected when the breach service cannot be reached. When false, the check is skipped instead.',
+                'description' => 'Whether users signing in with a breached password are blocked until they reset it. Only applies when sessions are checked.',
                 'default' => false,
                 'example' => false,
             ]);

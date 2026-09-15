@@ -26,27 +26,23 @@ class PasswordPwned extends Password
 
     protected bool $enabled;
     protected string $endpoint;
-    protected int $threshold;
     protected bool $sessions;
-    protected bool $forceReset;
-    protected bool $failClosed;
+    protected bool $users;
     protected ?Cache $cache;
     protected Client $client;
 
     /**
      * @param array<string, mixed> $policy the project's `passwordPwned` auth settings
-     * @param ?string $endpoint server-wide endpoint, used when the policy sets none
+     * @param ?string $endpoint the breach API this server is configured to use
      */
     public function __construct(array $policy = [], ?Cache $cache = null, ?string $endpoint = null, ?Client $client = null, bool $allowEmpty = false)
     {
         parent::__construct($allowEmpty);
 
         $this->enabled = (bool) ($policy['enabled'] ?? true);
-        $this->endpoint = \rtrim(($policy['endpoint'] ?? '') ?: ($endpoint ?: self::ENDPOINT), '/');
-        $this->threshold = \max(1, (int) ($policy['threshold'] ?? 1));
         $this->sessions = (bool) ($policy['sessions'] ?? false);
-        $this->forceReset = (bool) ($policy['forceReset'] ?? false);
-        $this->failClosed = (bool) ($policy['failClosed'] ?? false);
+        $this->users = (bool) ($policy['users'] ?? false);
+        $this->endpoint = \rtrim($endpoint ?: self::ENDPOINT, '/');
         $this->cache = $cache;
         $this->client = $client ?? (new Client())
             ->setConnectTimeout(self::CONNECT_TIMEOUT)
@@ -72,13 +68,13 @@ class PasswordPwned extends Password
     }
 
     /**
-     * Whether a breached password blocks sign-in until it is reset.
+     * Whether users signing in with a breached password are blocked until they reset it.
      *
      * Only takes effect when sessions are checked.
      */
-    public function isForceReset(): bool
+    public function blocksUsers(): bool
     {
-        return $this->forceReset;
+        return $this->users;
     }
 
     /**
@@ -94,14 +90,13 @@ class PasswordPwned extends Password
     }
 
     /**
-     * Whether the password appears in at least `threshold` known breaches.
+     * Whether the password appears in a known breach.
      *
-     * Returns null when the policy is disabled, or when the service could not
-     * be reached and the answer is not required by a fail-closed policy.
+     * Returns null only when the policy is disabled.
      *
-     * @throws Exception when the answer is required, the policy fails closed, and the service is unreachable
+     * @throws Exception when the breach service cannot be reached
      */
-    public function check(string $password, bool $required = true): ?bool
+    public function check(string $password): ?bool
     {
         if (!$this->enabled) {
             return null;
@@ -114,14 +109,11 @@ class PasswordPwned extends Password
         $breaches = $this->range($prefix);
 
         if ($breaches === null) {
-            if ($required && $this->failClosed) {
-                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
-            }
-
-            return null;
+            throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
         }
 
-        return ($breaches[$suffix] ?? 0) >= $this->threshold;
+        // Entries with no breaches are dropped, so any hit means the password is breached
+        return isset($breaches[$suffix]);
     }
 
     /**
