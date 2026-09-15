@@ -93,6 +93,24 @@ final class JobsTest extends TestCase
         $this->assertSame([], $this->realtime->payloads);
     }
 
+    public function testCompleteDeletedResource(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resource = $this->resource('functions');
+        $deployment = $this->deployment($resource);
+        $this->database->deleteDocument('functions', $resource->getId());
+        $this->cache->save('jobs-exit-' . $deployment->getId(), true);
+
+        $this->enqueue($deployment, 'complete');
+        $this->runWorker();
+
+        $this->assertTrue($this->database->getDocument('functions', $resource->getId())->isEmpty());
+        $this->assertSame('building', $this->database->getDocument('deployments', $deployment->getId())->getAttribute('status'));
+        $this->assertSame([], $this->realtime->payloads);
+    }
+
     private function project(): Document
     {
         return new Document(['$id' => 'console', '$sequence' => '0', 'region' => 'default']);
