@@ -110,7 +110,7 @@ A storage bucket is more than a folder in the cloud. It's the unit where you dec
 
 Appwrite Storage also supports an [S3-compatible API](/blog/post/announcing-s3-api), so you can use existing S3 clients, SDKs, and tools like the AWS CLI and rclone with your Appwrite buckets without migrating your files.
 
-## Resources
+# Resources
 
 * [Appwrite Storage documentation](/docs/products/storage)
 * [Storage buckets](/docs/products/storage/buckets)
