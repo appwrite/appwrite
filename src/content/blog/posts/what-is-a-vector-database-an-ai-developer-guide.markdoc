@@ -83,7 +83,7 @@ The core difference is what "match" means. A **traditional database** matches ex
 
 A vector database is not a replacement for your primary database. It is a specialized layer that sits alongside it. Your users, orders, and permissions still belong in a relational or document store, while embeddings live in the vector store. Many teams keep operational data in a [document database](/blog/post/what-is-a-document-database-an-expert-guide-for-developers) and add vector search on top.
 
-## What are vector databases used for?
+# What are vector databases used for?
 
 Vector databases are the retrieval layer of most modern AI applications. The main use cases are:
 
