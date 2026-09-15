@@ -46,6 +46,7 @@ class Release extends Action
     {
         if (!$this->isVersion($version)) {
             Console::error("'{$version}' is not an X.Y.Z or X.Y.Z-rc.N version.");
+            Console::exit(1);
 
             return;
         }
@@ -54,6 +55,7 @@ class Release extends Action
 
         if (\version_compare($version, $current, '<=')) {
             Console::error("{$version} is not newer than the current {$current}.");
+            Console::exit(1);
 
             return;
         }
@@ -67,12 +69,14 @@ class Release extends Action
                 . "(" . Migration::$versions[$previous] . "), not {$migration}. A fix that needs a "
                 . "schema change is a minor -- see the Releases section of AGENTS.md."
             );
+            Console::exit(1);
 
             return;
         }
 
         if (!\class_exists('Appwrite\\Migration\\Version\\' . $migration)) {
             Console::error("Migration class {$migration} does not exist.");
+            Console::exit(1);
 
             return;
         }
@@ -97,8 +101,11 @@ class Release extends Action
             Console::log("    {$change['from']}");
             Console::log("    {$change['to']}\n");
 
-            if ($dryRun === 'N') {
-                \file_put_contents($this->path($file), $change['contents']);
+            if ($dryRun === 'N' && \file_put_contents($this->path($file), $change['contents']) === false) {
+                Console::error("Could not write {$file}; the release is now half applied.");
+                Console::exit(1);
+
+                return;
             }
         }
 

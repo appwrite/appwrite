@@ -188,6 +188,15 @@ jobs:
                 echo "  ok ${readme}"
               done
 
+              # `release` maps every version it writes; a hand edit that forgets
+              # leaves migrate with nothing to run for the version being shipped.
+              if ! grep -qF "'${version}' =>" src/Appwrite/Migration/Migration.php; then
+                echo "::error file=src/Appwrite/Migration/Migration.php::APP_VERSION_STABLE is ${version}, which has no entry in \$versions."
+                exit 1
+              fi
+
+              echo "  ok Migration::\$versions maps ${version}"
+
               # A floating console tag would make an install unreproducible.
               console=$(grep -oE 'image: appwrite/new:\S+' docker-compose.yml | cut -d: -f3)
 

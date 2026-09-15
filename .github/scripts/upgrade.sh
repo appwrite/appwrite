@@ -120,6 +120,7 @@ snapshot() {
         --argjson table "$(api GET "/tablesdb/${DATABASE}/tables/${POSTS}")" \
         --argjson user "$(api GET "/users/${USER_ID}")" \
         --argjson file "$(api GET "/storage/buckets/${BUCKET}/files/${FILE_ID}")" \
+        --arg digest "$(api GET "/storage/buckets/${BUCKET}/files/${FILE_ID}/download" | sha256sum | cut -d' ' -f1)" \
         '{
             rows: [$rows.rows[] | {
                 id: .["$id"],
@@ -132,7 +133,7 @@ snapshot() {
             total: $rows.total,
             table: { permissions: ($table["$permissions"] | sort), rowSecurity: $table.rowSecurity },
             user: { email: $user.email, name: $user.name },
-            file: { id: $file["$id"], size: $file.sizeOriginal }
+            file: { id: $file["$id"], size: $file.sizeOriginal, digest: $digest }
         }'
 }
 
