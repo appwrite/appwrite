@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Proxy;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -226,6 +227,41 @@ trait ProxyBase
         $this->assertEquals(200, $this->getRule($apiRule)['headers']['status-code']);
         $this->cleanupFunction($retained);
         $this->cleanupRule($apiRule);
+    }
+
+    #[DataProvider('resources')]
+    public function testDeleteRedirectRules(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $resourceId = $type === 'function'
+            ? $this->setupFunction(deploy: false)['functionId']
+            : $this->setupSite(deploy: false)['siteId'];
+        $domain = \uniqid() . '-deleted-redirect.custom.localhost';
+        $ruleId = $this->setupRedirectRule($domain, 'https://example.com/target', 307, $type, $resourceId);
+        $proxy = new Client();
+        $proxy->setEndpoint('http://appwrite.test');
+        $proxy->addHeader('x-appwrite-hostname', $domain);
+        $response = $proxy->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(307, $response['headers']['status-code']);
+        $this->assertSame('https://example.com/target', $response['headers']['location']);
+
+        if ($type === 'function') {
+            $this->cleanupFunction($resourceId);
+        } else {
+            $this->cleanupSite($resourceId);
+        }
+
+        $this->assertEquals(404, $this->getRule($ruleId)['headers']['status-code']);
+        $response = $proxy->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public static function resources(): \Iterator
+    {
+        yield 'function' => ['function'];
+        yield 'site' => ['site'];
     }
 
     public function testCreateRule(): void
