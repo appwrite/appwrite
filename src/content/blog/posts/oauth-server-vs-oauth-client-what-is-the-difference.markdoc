@@ -8,7 +8,7 @@ timeToRead: 5
 author: atharva
 category: comparisons
 featured: false
-unlisted: true
+unlisted: false
 faqs:
   - question: What is the difference between an OAuth server and an OAuth client?
     answer: An OAuth server authenticates users, collects consent, and issues access tokens. An OAuth client requests those tokens and uses them to access a protected API on the user’s behalf.
