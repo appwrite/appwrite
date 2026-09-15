@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15c1335795edc13ae24ff060f8511af2",
+    "content-hash": "a6c7073c169d41bd738310bdb883d0e3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2212,16 +2212,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.18",
+            "version": "v7.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "68d81f78d127984ff2e741f0e0d9cb1078f8f3ea"
+                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/68d81f78d127984ff2e741f0e0d9cb1078f8f3ea",
-                "reference": "68d81f78d127984ff2e741f0e0d9cb1078f8f3ea",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
+                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
                 "shasum": ""
             },
             "require": {
@@ -2289,7 +2289,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.18"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.19"
             },
             "funding": [
                 {
@@ -2309,7 +2309,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-30T13:49:59+00:00"
+            "time": "2026-09-08T13:28:43+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -5145,16 +5145,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "5.2.5",
+            "version": "5.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "8e353113381328489b9a9a736156758c642c875c"
+                "reference": "1224f6eade2ad7be43c9bcb4459321d9ffec97dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8e353113381328489b9a9a736156758c642c875c",
-                "reference": "8e353113381328489b9a9a736156758c642c875c",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/1224f6eade2ad7be43c9bcb4459321d9ffec97dc",
+                "reference": "1224f6eade2ad7be43c9bcb4459321d9ffec97dc",
                 "shasum": ""
             },
             "require": {
@@ -5182,6 +5182,7 @@
                     "phpunit --configuration phpunit.xml --testsuite unit"
                 ],
                 "test:e2e": [
+                    "@php tests/credentials.php",
                     "phpunit --configuration phpunit.xml --testsuite e2e"
                 ]
             },
@@ -5196,10 +5197,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/5.2.5",
+                "source": "https://github.com/utopia-php/vcs/tree/5.4.0",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-08-25T09:26:43+00:00"
+            "time": "2026-09-15T08:06:27+00:00"
         },
         {
             "name": "utopia-php/websocket",

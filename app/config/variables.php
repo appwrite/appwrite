@@ -1820,15 +1820,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
-                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
-                'introduction' => '',
-                'default' => 'enabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_CONNECTIONS_DB_EXECUTIONS',
                 'description' => 'ClickHouse HTTP DSN used for execution storage. Defaults to _APP_CONNECTIONS_DB_USAGE.',
                 'introduction' => '',
@@ -1875,7 +1866,7 @@ return [
             ],
             [
                 'name' => '_APP_STATS_RESOURCES_INTERVAL',
-                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
                 'required' => false,

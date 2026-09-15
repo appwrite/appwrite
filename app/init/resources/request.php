@@ -209,6 +209,7 @@ return function (Container $context): void {
     $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
         return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'platform']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(

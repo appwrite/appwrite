@@ -85,7 +85,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -268,7 +267,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.78-self-hosted
+    image: appwrite/new:1.1.96-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -448,7 +447,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -604,7 +602,6 @@ services:
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -726,7 +723,6 @@ services:
       - _APP_ENV
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -1143,7 +1139,6 @@ services:
       - _APP_ENV
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -1645,7 +1640,7 @@ services:
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.8
+    image: ghcr.io/appwrite/autogravity:0.0.10
     restart: unless-stopped
     networks:
       - appwrite

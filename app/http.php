@@ -401,33 +401,31 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         /** @var \Appwrite\Execution\Store $executionStore */
         $executionStore = $container->get('executionStore');
 
-        if ($executionStore->isEnabled()) {
-            Span::init('executions.setup');
+        Span::init('executions.setup');
 
-            $max = 15;
-            $sleep = 2;
-            $attempts = 0;
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
 
-            while (true) {
-                try {
-                    $attempts++;
-                    $executionStore->setup();
-                    Console::success('[Setup] - Execution schema is ready');
+        while (true) {
+            try {
+                $attempts++;
+                $executionStore->setup();
+                Console::success('[Setup] - Execution schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('executions.ready', false);
+                    Console::warning('[Setup] - Skip: execution schema is not ready: ' . $e->getMessage());
                     break;
-                } catch (\Throwable $e) {
-                    if ($attempts >= $max) {
-                        Span::add('executions.ready', false);
-                        Console::warning('[Setup] - Skip: execution schema is not ready: ' . $e->getMessage());
-                        break;
-                    }
-
-                    Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
-                    sleep($sleep);
                 }
-            }
 
-            Span::current()?->finish();
+                Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
         }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');
