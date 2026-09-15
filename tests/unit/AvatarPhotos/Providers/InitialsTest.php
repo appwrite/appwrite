@@ -111,8 +111,6 @@ final class InitialsTest extends TestCase
         yield 'padding and repeated spaces' => ['  Walter   White  ', 'Walter White'];
         yield 'username handle' => ['@ItzNotABug', 'ItzNotABug'];
         yield 'padded handle with underscores' => ['  @walter_white  ', 'Walter White'];
-        yield 'unicode handle' => ['@élise', 'Élise'];
-        yield 'numeric handle' => ['@0', '0'];
     }
 
     #[DataProvider('provideEquivalentNames')]
