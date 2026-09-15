@@ -298,4 +298,31 @@ trait RealtimeRelationshipBase
             $socket->close();
         }
     }
+
+    public function testStagedRelationshipDeleteRealtime(): void
+    {
+        $fixture = $this->createRelationshipRecords('oneToMany');
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', $fixture['headers'], [
+            'ttl' => 60,
+        ]);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $socket = $this->subscribeToRelationshipRecord($fixture, 'parent');
+        try {
+            // Test for SUCCESS: staging a deletion does not announce a relationship change before commit.
+            $staged = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $fixture['headers'], [
+                'transactionId' => $transaction['body']['$id'],
+            ]);
+            $this->assertSame(204, $staged['headers']['status-code']);
+            $this->assertNoRelationshipEvent($socket);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $this->assertSame($fixture['child']['id'], $parent['body']['children'][0]['$id']);
+            $child = $this->client->call(Client::METHOD_GET, $fixture['child']['path'], $fixture['headers']);
+            $this->assertSame(200, $child['headers']['status-code']);
+        } finally {
+            $socket->close();
+            $this->client->call(Client::METHOD_PATCH, '/databases/transactions/' . $transaction['body']['$id'], $fixture['headers'], [
+                'rollback' => true,
+            ]);
+        }
+    }
 }
