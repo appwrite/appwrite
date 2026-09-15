@@ -32,7 +32,7 @@ Because the structure lives inside each document rather than in a fixed table sc
 
 Document databases are one of several NoSQL types, alongside key-value stores, wide-column stores, and graph databases. For a broader map of those options, see [SQL vs NoSQL: choosing the right database for your project](/blog/post/sql-vs-nosql).
 
-## How a document database stores data
+# How a document database stores data
 
 The document model has three building blocks: documents, collections, and fields.
 
