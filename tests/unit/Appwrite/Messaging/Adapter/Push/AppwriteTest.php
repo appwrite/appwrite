@@ -6,6 +6,7 @@ namespace Tests\Unit\Appwrite\Messaging\Adapter\Push;
 
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
+use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -35,7 +36,21 @@ final class FakeBroker extends Mqtt
 
     public function __construct()
     {
-        parent::__construct(new NoTelemetry());
+        // send() is overridden below, so the pub/sub is never used; a null-object satisfies it.
+        parent::__construct(new NoTelemetry(), new class () implements PubSub {
+            public function ping($message = null): bool
+            {
+                return true;
+            }
+
+            public function subscribe($channels, $callback)
+            {
+            }
+
+            public function publish($channel, $message)
+            {
+            }
+        });
     }
 
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
