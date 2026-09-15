@@ -1,6 +1,6 @@
 services:
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     entrypoint: sh -c 'mkdir -p /data/utopia-storage-test && exec minio server /data'
     environment:
       MINIO_DOMAIN: localhost
