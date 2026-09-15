@@ -4045,7 +4045,14 @@ final class AccountCustomClientTest extends Scope
             );
 
             $this->assertNotEmpty($whatsappRequest, 'WhatsApp request not found for phone number: ' . $number);
-            $this->assertNotEmpty($whatsappRequest['data']['message'] ?? '');
+
+            // Meta's authentication template takes the bare passcode as its only parameter, never
+            // the rendered SMS copy, so assert the payload is the code and nothing else. Asserting
+            // only that it is non-empty would still pass if the SMS body were sent by mistake.
+            $sent = $whatsappRequest['data']['message'] ?? '';
+
+            $this->assertSame(6, \strlen($sent));
+            $this->assertTrue(\ctype_digit($sent));
         } finally {
             // Restore the default channel even when the assertions above fail,
             // so a parallel suite sharing this project is not left on WhatsApp.
