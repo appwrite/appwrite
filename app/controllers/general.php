@@ -357,12 +357,15 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $status = $deployment->getAttribute('status');
             $region = $project->getAttribute('region', 'default');
             $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
-            $siteUrl = $legacyConsolePaths
-                ? "/console/project-{$region}-{$project->getId()}/sites/site-{$resource->getId()}"
-                : "/projects/{$project->getId()}/sites/{$resource->getId()}";
+            $collection = $type === 'function' ? 'functions' : 'sites';
+            $resourceUrl = $legacyConsolePaths
+                ? "/console/project-{$region}-{$project->getId()}/{$collection}/{$type}-{$resource->getId()}"
+                : "/projects/{$project->getId()}/{$collection}/{$resource->getId()}";
+            // Function deployments are listed on the function page itself
+            $deploymentsUrl = $type === 'function' ? $resourceUrl : "{$resourceUrl}/deployments";
             $deploymentUrl = $legacyConsolePaths
-                ? "{$siteUrl}/deployments/deployment-{$deployment->getId()}"
-                : "{$siteUrl}/deployments/{$deployment->getId()}";
+                ? "{$deploymentsUrl}/deployment-{$deployment->getId()}"
+                : "{$resourceUrl}/deployments/{$deployment->getId()}";
 
             switch ($status) {
                 case 'failed':
@@ -371,7 +374,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $exception->addCTA('View deployments', $url . $siteUrl . '/deployments');
+                    $exception->addCTA('View deployments', $url . $deploymentsUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
