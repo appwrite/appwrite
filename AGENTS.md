@@ -304,9 +304,9 @@ Self-hosted ships on two channels. Cloud is separate: it builds from `cl-*` tags
 | Channel | Source | Trigger | Tags on `appwrite/appwrite` |
 |---------|--------|---------|------------------------------|
 | stable | active release branch (`2.0.x`) | GitHub Release, published by a human | `X.Y.Z` (immutable), `X.Y`, `X`, `latest` |
-| nightly | same branch, newest CI-green commit | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
+| nightly | newest CI-green commit on that branch | daily at 00:00 UTC, or `workflow_dispatch` | `X.Y-nightly.<date>` (one a day), `X.Y-nightly`, `nightly` |
 
-[`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y` comes from the branch name and `<date>` is `YYYYMMDD`, so `2.0.x` publishes `2.0-nightly.20260915`. The tag is a label, not a version the product reads: `migrate` keys off `APP_VERSION_STABLE` compiled into the image, and the `VERSION` build arg only sets `_APP_VERSION`. The branch is rebuilt daily whether or not it moved, so the channel carries base image security fixes.
+[`nightly.yml`](.github/workflows/nightly.yml) builds the channel; [`security-scan.yml`](.github/workflows/security-scan.yml) is the Trivy scan that used to own that file name. `X.Y` comes from the branch name and `<date>` is `YYYYMMDD`, so `2.0.x` publishes `2.0-nightly.20260915`. The tag is a label, not a version the product reads: `migrate` keys off `APP_VERSION_STABLE` compiled into the image, and the `VERSION` build arg only sets `_APP_VERSION`. The branch is rebuilt daily whether or not it moved, so the channel carries base image security fixes. Only the newest release branch is built, so an `X.Y-nightly` tag stops moving once a newer line opens.
 
 Four rules keep the channel safe. They are requirements, not preferences:
 

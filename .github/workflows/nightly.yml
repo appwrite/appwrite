@@ -1,123 +1,68 @@
 name: "Nightly"
 
-# Publishes the nightly channel for self-hosting: one build a day from the newest
-# CI-green commit on the active release branch. Never publishes to appwrite/ce --
-# Cloud builds from cl-* tags through publish.yml and is not part of this channel.
+# One build a day of the active release branch, for self-hosters who want to
+# track it. Unsupported, and never publishes to appwrite/ce -- Cloud builds from
+# cl-* tags through publish.yml.
 #
-# Tags pushed (see the Releases section of AGENTS.md):
-#   X.Y-nightly.<date>  the day's build, to pin or roll back to
-#   X.Y-nightly         rolling, per minor line. The form to recommend.
-#   nightly             rolling, newest line only.
-#
-# The line comes from the branch name, not from APP_VERSION_STABLE: migrate keys
-# off the constant compiled into the image, and VERSION only sets _APP_VERSION,
-# so a nightly tag is a label rather than something the product reads.
+# Tags on appwrite/appwrite: X.Y-nightly.<date> to pin or roll back to,
+# X.Y-nightly to follow the line, nightly to follow whatever line is active.
 
 on:
   schedule:
     - cron: '0 0 * * *'  # 12am UTC daily
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Release branch to build (default: newest X.Y.x branch)'
-        required: false
-        type: string
 
 concurrency:
   group: nightly
   cancel-in-progress: false
 
-env:
-  # Invariant 4 in AGENTS.md: the nightly channel publishes here and nowhere else.
-  IMAGE: appwrite/appwrite
-
 permissions:
   contents: read
 
 jobs:
-  resolve:
-    name: Resolve build
-    runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.resolve.outputs.skip }}
-      sha: ${{ steps.resolve.outputs.sha }}
-      version: ${{ steps.resolve.outputs.version }}
-      tags: ${{ steps.resolve.outputs.tags }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Resolve branch, commit and version
-        id: resolve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REQUESTED_BRANCH: ${{ inputs.branch }}
-        run: |
-          set -euo pipefail
-
-          # The active release branch, unless workflow_dispatch named one.
-          branches=$(git ls-remote --heads origin \
-            | sed -n 's#.*refs/heads/##p' \
-            | grep -E '^[0-9]+\.[0-9]+\.x$' \
-            | sort -V)
-          newest=$(echo "$branches" | tail -1)
-          branch="${REQUESTED_BRANCH:-$newest}"
-
-          if ! echo "$branches" | grep -qx -- "$branch"; then
-            echo "::error::'${branch}' is not an X.Y.x release branch on origin."
-            exit 1
-          fi
-
-          line="${branch%.x}"
-
-          # Invariant 2: build the newest CI-green commit, not the tip, so a red
-          # branch delays the channel instead of shipping through it.
-          sha=$(gh run list \
-            --workflow=ci.yml \
-            --branch="${branch}" \
-            --event=push \
-            --status=success \
-            --limit=1 \
-            --json headSha \
-            --jq '.[0].headSha // empty')
-
-          if [ -z "$sha" ]; then
-            echo "::warning::No green CI run found on ${branch}; nothing to publish."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
-
-          # An unchanged branch still gets a build: it picks up base image
-          # security fixes, which is most of what a nightly is good for.
-          version="${line}-nightly.$(date -u +%Y%m%d)"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-
-          tags="${IMAGE}:${version},${IMAGE}:${line}-nightly"
-
-          # The bare tag follows the newest line only, so a dispatched build of an
-          # older branch cannot drag it backwards.
-          if [ "${branch}" = "${newest}" ]; then
-            tags="${tags},${IMAGE}:nightly"
-          fi
-
-          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-
-          echo "Publishing ${tags//,/, } from ${branch} (${sha})." >> "$GITHUB_STEP_SUMMARY"
-
-  build:
+  nightly:
     name: Build and publish
-    needs: resolve
-    if: needs.resolve.outputs.skip == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - name: Checkout the resolved commit
+      - name: Resolve the build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REMOTE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          branch=$(git ls-remote --heads "$REMOTE" \
+            | sed -n 's#.*refs/heads/##p' \
+            | grep -E '^[0-9]+\.[0-9]+\.x$' \
+            | sort -V \
+            | tail -1)
+
+          [ -n "$branch" ] || { echo '::error::No X.Y.x release branch on origin.'; exit 1; }
+
+          # The newest CI-green commit rather than the tip, so a red branch
+          # delays the channel instead of shipping through it.
+          sha=$(gh run list --workflow=ci.yml --branch="$branch" --event=push \
+            --status=success --limit=1 --json headSha --jq '.[0].headSha // empty')
+
+          [ -n "$sha" ] || { echo "::error::No green CI run on ${branch}."; exit 1; }
+
+          line="${branch%.x}"
+          version="${line}-nightly.$(date -u +%Y%m%d)"
+
+          {
+            echo "SHA=${sha}"
+            echo "VERSION=${version}"
+            echo "TAGS=appwrite/appwrite:${version},appwrite/appwrite:${line}-nightly,appwrite/appwrite:nightly"
+          } >> "$GITHUB_ENV"
+
+          echo "Publishing ${version} from ${branch} (${sha})." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check out the resolved commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ needs.resolve.outputs.sha }}
+          ref: ${{ env.SHA }}
           submodules: recursive
 
       - name: Set up QEMU
@@ -138,11 +83,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           target: production
-          build-args: |
-            VERSION=${{ needs.resolve.outputs.version }}
+          build-args: VERSION=${{ env.VERSION }}
           push: true
-          tags: ${{ needs.resolve.outputs.tags }}
-          labels: |
-            org.opencontainers.image.revision=${{ needs.resolve.outputs.sha }}
-            org.opencontainers.image.version=${{ needs.resolve.outputs.version }}
-            io.appwrite.channel=nightly
+          tags: ${{ env.TAGS }}
+          labels: org.opencontainers.image.revision=${{ env.SHA }}
