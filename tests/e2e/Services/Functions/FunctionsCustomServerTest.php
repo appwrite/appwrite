@@ -333,6 +333,18 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($function['body']['schedule']);
         $this->assertEquals(10, $function['body']['timeout']);
 
+        // An explicit null for an optional param must fall back to its default, not 500.
+        $nullSchedule = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'schedule' => null,
+        ]);
+
+        $this->assertEquals(201, $nullSchedule['headers']['status-code']);
+        $this->assertSame('', $nullSchedule['body']['schedule']);
+
         $variable = $this->createVariable($functionId, [
             'variableId' => 'unique()',
             'key' => 'funcKey1',
@@ -2045,6 +2057,15 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(201, $execution['headers']['status-code']);
 
             $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+            // An explicit null for an optional param must fall back to its default, not 500.
+            $nullPath = $this->createExecution($data['functionId'], [
+                'async' => 'false',
+                'path' => null,
+            ]);
+
+            $this->assertEquals(201, $nullPath['headers']['status-code']);
+            $this->assertSame('/', $nullPath['body']['requestPath']);
 
             $executionIdHeader = null;
             foreach ($execution['body']['responseHeaders'] as $header) {
