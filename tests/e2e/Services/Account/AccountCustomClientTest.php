@@ -6140,7 +6140,6 @@ final class AccountCustomClientTest extends Scope
         $data = $this->setupAccountWithSession();
         $session = $data['session'];
         $email = $data['email'];
-        $name = $data['name'];
 
         /**
          * Test for SUCCESS
@@ -6300,6 +6299,35 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - OTP is single use
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - email already verified
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_email_already_verified', $response['body']['type']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void

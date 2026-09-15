@@ -5052,7 +5052,7 @@ Http::post('/v1/account/verifications/email/otp')
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{userId},ip:{ip}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -5089,7 +5089,7 @@ Http::post('/v1/account/verifications/email/otp')
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
-            'type' => TOKEN_TYPE_VERIFICATION,
+            'type' => TOKEN_TYPE_VERIFICATION_OTP,
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -5236,7 +5236,7 @@ Http::post('/v1/account/verifications/email/otp')
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name') ?? '',
             subject: $subject,
-            template: MAIL_TEMPLATE_OTP,
+            template: MAIL_TEMPLATE_OTP_VERIFICATION,
             bodyTemplate: $bodyTemplate,
             body: $body,
             preview: $preview,
@@ -5284,7 +5284,7 @@ Http::put('/v1/account/verifications/email/otp')
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid verification OTP code.')
     ->inject('response')
@@ -5301,7 +5301,7 @@ Http::put('/v1/account/verifications/email/otp')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForCode);
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $secret, $proofForCode);
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -5325,4 +5325,3 @@ Http::put('/v1/account/verifications/email/otp')
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
-
