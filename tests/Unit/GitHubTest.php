@@ -224,6 +224,50 @@ final class GitHubTest extends Base
         $this->assertSame('Iv1.0123456789abcdef', $claims['iss']);
     }
 
+    public function testSearchRepositoriesPrivateProfile(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            protected string $jwtToken = 'app-token';
+            protected string $installationId = '1234';
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return match ($path) {
+                    '/app/installations/1234' => ['body' => ['repository_selection' => 'all', 'account' => ['login' => 'Private-Owner']]],
+                    // GitHub refuses to search owners whose profile is private
+                    '/search/repositories' => ['headers' => ['status-code' => 422]],
+                    '/installation/repositories' => ['body' => ['repositories' => [['id' => 1, 'name' => 'private-repository']], 'total_count' => 1]],
+                    default => ['headers' => ['status-code' => 404]],
+                };
+            }
+        };
+
+        $result = $adapter->searchRepositories('private-owner', 1, 10);
+
+        $this->assertSame(['items' => [['id' => 1, 'name' => 'private-repository']], 'total' => 1], $result);
+    }
+
+    public function testSearchRepositoriesUnknownOwner(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            protected string $jwtToken = 'app-token';
+            protected string $installationId = '1234';
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return match ($path) {
+                    '/app/installations/1234' => ['body' => ['repository_selection' => 'all', 'account' => ['login' => 'installation-owner']]],
+                    '/search/repositories' => ['headers' => ['status-code' => 422]],
+                    default => ['headers' => ['status-code' => 404]],
+                };
+            }
+        };
+
+        $result = $adapter->searchRepositories('unknown-owner', 1, 10);
+
+        $this->assertSame(['items' => [], 'total' => 0], $result);
+    }
+
     /**
      * @return \Iterator<string, array{callable(string): string}>
      */
