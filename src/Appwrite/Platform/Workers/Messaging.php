@@ -11,6 +11,7 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -841,16 +842,15 @@ class Messaging extends Action
     ): void {
         $whatsapp = \in_array($channel, [PHONE_OTP_CHANNEL_WHATSAPP, PHONE_OTP_CHANNEL_WHATSAPP_SMS], true);
 
-        if ($this->adapter === null) {
-            $this->adapter = $this->createInternalSMSAdapter();
-        }
+        // Neither adapter is built unconditionally. Both constructors throw on a malformed DSN,
+        // so building the SMS one on the WhatsApp path would let a fat-fingered _APP_SMS_PROVIDER
+        // take down every WhatsApp OTP on an instance whose WhatsApp config is perfectly healthy.
+        // Each channel builds its own where a failure already has a handled path: here, where the
+        // SMS path throws exactly as it always has; inside the try below, where the WhatsApp
+        // adapter's rejection of a malformed template reaches the fallback; and inside the
+        // fallback, which absorbs its own failures.
+        $smsAdapter = $whatsapp ? null : $this->getInternalSMSAdapter();
 
-        $smsAdapter = $this->adapter;
-
-        // Only the SMS adapter is required up front. The WhatsApp one is built inside the try
-        // below, because its constructor rejects a malformed or missing template and that
-        // failure has to reach the fallback like any other, rather than killing every phone
-        // OTP on the instance.
         if (!$whatsapp && $smsAdapter === null) {
             throw new \Exception('SMS adapter is not set.');
         }
@@ -887,6 +887,13 @@ class Messaging extends Action
             return;
         }
 
+        // The passcode doubles as the needle every provider error is scrubbed with before it
+        // reaches a span or the log, so it is read here rather than inside the try below.
+        // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce
+        // keeps a payload enqueued in the older shape, and already in flight, deliverable.
+        $code = $data['code'] ?? $data['content'] ?? null;
+        $code = \is_string($code) ? $code : null;
+
         // Everything the WhatsApp adapter can refuse — a malformed template name, a code the
         // authentication template will not carry, oversized callback data — surfaces as a
         // throw rather than a failure result, so both shapes are funnelled into $errors and
@@ -899,10 +906,6 @@ class Messaging extends Action
             if ($this->whatsappAdapter === null) {
                 throw new \Exception('WhatsApp adapter is not set.');
             }
-
-            // WhatsApp authentication templates carry the bare code, never rendered copy. The coalesce keeps
-            // a payload enqueued in the older shape, and already in flight, deliverable.
-            $code = $data['code'] ?? $data['content'];
 
             $sms = new SMS($recipients, $code, $from);
             $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
@@ -920,20 +923,29 @@ class Messaging extends Action
             return;
         }
 
-        Span::add('message.error', \implode(', ', \array_map($this->redactErrorDetails(...), $errors)));
+        $reason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $errors));
+
+        Span::add('message.error', $reason);
 
         if (!$fallback) {
-            return;
-        }
-
-        if ($smsAdapter === null) {
-            Span::add('message.fallback', 'sms_provider_not_configured');
+            // Nothing else will carry this code, and re-throwing would re-send the WhatsApp
+            // message on the retry, so the log is the only signal this failure leaves behind.
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' with no SMS fallback configured: ' . $reason);
             return;
         }
 
         // A throw here would put the whole job back on the queue and send the recipient a
-        // second WhatsApp message on the retry, so the fallback absorbs its own failures.
+        // second WhatsApp message on the retry, so the fallback absorbs its own failures —
+        // the SMS adapter's construction included, which throws on a malformed DSN.
         try {
+            $smsAdapter = $this->getInternalSMSAdapter();
+
+            if ($smsAdapter === null) {
+                Span::add('message.fallback', 'sms_provider_not_configured');
+                Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and no SMS provider is configured to fall back to: ' . $reason);
+                return;
+            }
+
             $sms = new SMS($recipients, $data['content'], $from);
             $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
             $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
@@ -944,13 +956,17 @@ class Messaging extends Action
         }
 
         if ($fallbackErrors !== []) {
-            Span::add('message.fallback_error', \implode(', ', \array_map($this->redactErrorDetails(...), $fallbackErrors)));
+            $fallbackReason = \implode(', ', \array_map(fn (string $error): string => $this->redactPasscode($error, $code), $fallbackErrors));
+
+            Span::add('message.fallback_error', $fallbackReason);
+            Console::error('WhatsApp OTP delivery failed for project ' . $project->getId() . ' and the SMS fallback failed too: ' . $reason . ' | fallback: ' . $fallbackReason);
             return;
         }
 
-        // Pairs with the controller's METRIC_AUTH_METHOD_WHATSAPP: one records the channel
-        // attempted, this one the channel that actually carried the code, so neither double
-        // counts. Only a delivered fallback earns the metric.
+        // The controller books METRIC_AUTH_METHOD_WHATSAPP for every OTP it routes at WhatsApp;
+        // this one books METRIC_AUTH_METHOD_PHONE for the SMS that actually carried the code.
+        // A fallback therefore increments both — deliberately, because "WhatsApp attempted" and
+        // "phone delivered" are two different facts. Only a delivered fallback earns this metric.
         $usage = new UsageContext();
         $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
 
@@ -965,19 +981,24 @@ class Messaging extends Action
     }
 
     /**
-     * Strip the provider-echoed tail off an error before it reaches a span.
+     * Scrub the passcode out of a provider error before it reaches a span or the log.
      *
-     * Meta formats a rejection as "Error <code>: <message>: <error_data.details>", and the
-     * details segment can quote the parameter it rejected — which for an authentication
-     * template is the passcode itself. Keep the code and the message, drop the rest.
+     * A rejection can quote the parameter it rejected — which for an authentication template is
+     * the passcode itself — and the provider has several error shapes, only one of which is the
+     * documented "Error <code>: <message>: <details>". Redacting by the secret rather than by the
+     * format is therefore the only control that holds for all of them, and it keeps every word of
+     * diagnostic text a format-based strip would have thrown away.
+     *
+     * A null or empty code carries no secret and gives \str_replace no needle to search for, so
+     * that payload's error is passed through untouched.
      */
-    private function redactErrorDetails(string $error): string
+    private function redactPasscode(string $error, ?string $code): string
     {
-        if (!\str_starts_with($error, 'Error ')) {
+        if ($code === null || $code === '') {
             return $error;
         }
 
-        return \implode(': ', \array_slice(\explode(': ', $error), 0, 2));
+        return \str_replace($code, '[redacted]', $error);
     }
 
     /**
@@ -1358,6 +1379,22 @@ class Messaging extends Action
         // Not cached: the path is project-scoped and the worker handles
         // messages from many projects (and coroutines run them concurrently).
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    }
+
+    /**
+     * The instance-wide SMS adapter, built on first use and memoised for the life of the worker.
+     *
+     * Lazy on purpose: construction throws on a malformed _APP_SMS_PROVIDER DSN, and on a
+     * multi-DSN provider list with no `local=default` entry. Only the callers that actually send
+     * over SMS should wear that.
+     */
+    private function getInternalSMSAdapter(): ?SMSAdapter
+    {
+        if ($this->adapter === null) {
+            $this->adapter = $this->createInternalSMSAdapter();
+        }
+
+        return $this->adapter;
     }
 
     private function createInternalSMSAdapter(): ?SMSAdapter
