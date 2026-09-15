@@ -36,8 +36,10 @@ class Appwrite extends PasswordPwned
     protected string $secret;
     protected Client $client;
 
-    public function __construct(DSN $dsn, ?Cache $cache = null, ?Client $client = null)
+    public function __construct(DSN $dsn, ?Cache $cache = null, ?Client $client = null, bool $allowEmpty = false)
     {
+        parent::__construct($allowEmpty);
+
         $this->cache = $cache;
         $scheme = $dsn->getParam('tls') === 'true' ? 'https' : 'http';
         $port = $dsn->getPort() !== null ? ':' . $dsn->getPort() : '';

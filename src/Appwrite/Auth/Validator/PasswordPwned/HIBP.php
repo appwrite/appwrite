@@ -28,8 +28,10 @@ class HIBP extends PasswordPwned
     protected Client $client;
     protected string $endpoint;
 
-    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT)
+    public function __construct(?Cache $cache = null, ?Client $client = null, string $endpoint = self::ENDPOINT, bool $allowEmpty = false)
     {
+        parent::__construct($allowEmpty);
+
         $this->cache = $cache;
         $this->client = $client ?? (new Client())
             ->setConnectTimeout(self::CONNECT_TIMEOUT)
