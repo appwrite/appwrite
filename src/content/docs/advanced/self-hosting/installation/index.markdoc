@@ -38,7 +38,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.1.0
+    appwrite/appwrite:2.2.0
 ```
 {% /tabsitem %}
 
@@ -49,7 +49,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:2.1.0
+    appwrite/appwrite:2.2.0
 ```
 {% /tabsitem %}
 
@@ -60,7 +60,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:2.1.0
+    appwrite/appwrite:2.2.0
 ```
 {% /tabsitem %}
 {% /tabs %}
@@ -171,7 +171,7 @@ Organizations use console teams, but this restriction does not apply to teams in
 
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
-The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Every SDK sends an `X-Appwrite-Response-Format` header that names the Appwrite version whose response shapes it expects, and each row lists the SDK versions that send that row's version. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.1.0.
+The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Every SDK sends an `X-Appwrite-Response-Format` header that names the Appwrite version whose response shapes it expects, and each row lists the SDK versions that send that row's version. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 2.2.0.
 
 The Appwrite CLI is not listed by response format. It pins an older format on purpose so that one CLI build works against a range of server versions.
 
@@ -256,6 +256,13 @@ The Appwrite CLI is not listed by response format. It pins an older format on pu
 * 27.2.0
 ---
 * 2.1.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
+---
+* 2.2.0
 * 27.0.0
 * 26.2.0
 * 0.35.0
@@ -399,6 +406,18 @@ The Appwrite CLI is not listed by response format. It pins an older format on pu
 * 27.3.0
 ---
 * 2.1.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.3.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+---
+* 2.2.0
 * 29.0.0
 * 24.0.0
 * 30.0.0
