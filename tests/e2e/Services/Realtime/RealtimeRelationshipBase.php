@@ -7,6 +7,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use WebSocket\Client as WebSocketClient;
+use WebSocket\TimeoutException;
 
 trait RealtimeRelationshipBase
 {
@@ -113,7 +114,9 @@ trait RealtimeRelationshipBase
         $socket = $this->subscribeToRelationshipRecord($fixture, $survivor);
         try {
             // Test for SUCCESS: deleting either side notifies the surviving related record.
-            $response = $this->client->call(Client::METHOD_DELETE, $fixture[$deleted]['path'], $fixture['headers']);
+            $clientHeaders = $fixture['headers'];
+            unset($clientHeaders['x-appwrite-key']);
+            $response = $this->client->call(Client::METHOD_DELETE, $fixture[$deleted]['path'], $clientHeaders);
             $this->assertSame(204, $response['headers']['status-code']);
             $event = $this->receiveUntilEvent($socket, fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $fixture[$survivor]['id']);
             $this->assertContains(
@@ -185,5 +188,37 @@ trait RealtimeRelationshipBase
     public function testDeleteRelatedRowRealtime(): void
     {
         $this->assertRelationshipRemovalEvent('oneToMany', 'child', 'tablesdb');
+    }
+
+    private function assertNoRelationshipEvent(WebSocketClient $socket): void
+    {
+        try {
+            $message = $socket->receive();
+            $this->fail('Unexpected relationship event: ' . $message);
+        } catch (TimeoutException) {
+            $this->addToAssertionCount(1);
+        }
+    }
+
+    public function testDeleteRelatedDocumentRealtimePermissions(): void
+    {
+        $fixture = $this->createRelationshipRecords('oneToMany');
+        $private = $this->client->call(Client::METHOD_PATCH, $fixture['parent']['path'], $fixture['headers'], [
+            'permissions' => [Permission::read(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertSame(200, $private['headers']['status-code']);
+        $socket = $this->subscribeToRelationshipRecord($fixture, 'parent');
+        try {
+            // Test for FAILURE: a public child never grants access to its private parent event.
+            $headers = $fixture['headers'];
+            unset($headers['x-appwrite-key']);
+            $deleted = $this->client->call(Client::METHOD_DELETE, $fixture['child']['path'], $headers);
+            $this->assertSame(204, $deleted['headers']['status-code']);
+            $this->assertNoRelationshipEvent($socket);
+            $parent = $this->client->call(Client::METHOD_GET, $fixture['parent']['path'], $fixture['headers']);
+            $this->assertSame([], $parent['body']['children']);
+        } finally {
+            $socket->close();
+        }
     }
 }
