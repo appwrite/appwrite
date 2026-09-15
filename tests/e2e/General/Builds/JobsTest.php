@@ -277,7 +277,7 @@ final class JobsTest extends TestCase
         $resource = $this->resource($collection);
         $deployment = $this->deployment($resource);
         $this->cache->save('jobs-exit-' . $deployment->getId(), true);
-        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => []]);
+        $this->cache->save('jobs-manifest-' . $deployment->getId(), ['files' => $field === 'adapter' ? ['index.html'] : []]);
         $replacement = null;
         $this->database->before(Database::EVENT_DOCUMENTS_UPDATE, 'replace-owner', function (string $sql) use ($resource, $field, &$replacement): string {
             if (! str_contains($sql, $field)) {
@@ -296,10 +296,14 @@ final class JobsTest extends TestCase
         $this->assertReplacement($replacement);
         $this->assertSame([], $this->realtime->payloads);
         $this->assertNoEvents();
+        if ($collection === 'sites') {
+            $this->assertEmpty($this->database->getDocument('sites', $replacement->getId())->getAttribute('adapter'));
+        }
     }
 
     public static function writes(): \Iterator
     {
+        yield 'site detection' => ['sites', 'adapter'];
         foreach (['functions', 'sites'] as $collection) {
             yield "$collection latest" => [$collection, 'latestDeploymentId'];
             yield "$collection active" => [$collection, 'deploymentCreatedAt'];

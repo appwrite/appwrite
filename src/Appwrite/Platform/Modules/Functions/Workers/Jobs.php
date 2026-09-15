@@ -482,7 +482,7 @@ class Jobs extends Action
     protected function detect(Database $dbForProject, Document $deployment, array $files): array
     {
         $site = empty($files) ? new Document() : $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId'));
-        if ($site->isEmpty()) {
+        if (! Deployments::belongsTo($deployment, $site)) {
             return [$deployment, null];
         }
 
@@ -494,7 +494,17 @@ class Jobs extends Action
                 'adapter' => $detection->getName(),
                 'fallbackFile' => $detection->getFallbackFile() ?? '',
             ];
-            $dbForProject->updateDocument('sites', $site->getId(), new Document($update));
+            $dbForProject->updateDocuments('sites', new Document($update), [
+                Query::equal('$id', [$site->getId()]),
+                Query::equal('$sequence', [$site->getSequence()]),
+            ]);
+            $current = $dbForProject->findOne('sites', [
+                Query::equal('$id', [$site->getId()]),
+                Query::equal('$sequence', [$site->getSequence()]),
+            ]);
+            if (! Deployments::belongsTo($deployment, $current)) {
+                return [$deployment, null];
+            }
 
             return [$dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update)), null];
         }
