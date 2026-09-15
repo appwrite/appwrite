@@ -398,7 +398,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('pwned'),
+                '$id' => ID::custom('passwordPwned'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -500,9 +500,9 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_pwned'),
+                '$id' => ID::custom('_key_passwordPwned'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['pwned'],
+                'attributes' => ['passwordPwned'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],

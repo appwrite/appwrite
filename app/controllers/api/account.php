@@ -363,8 +363,8 @@ Http::post('/v1/account')
             }
         }
 
-        $pwned = $pwnedPasswords->check($password);
-        if ($pwned) {
+        $passwordPwned = $pwnedPasswords->check($password);
+        if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -444,7 +444,7 @@ Http::post('/v1/account')
                 'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
                 'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
                 'emailIsFree' => $emailMetadata['emailIsFree'],
-                'pwned' => $pwned,
+                'passwordPwned' => $passwordPwned,
             ]);
 
             $user->removeAttribute('$sequence');
@@ -1049,16 +1049,16 @@ Http::post('/v1/account/sessions/email')
         $authorization->addRole(Role::user($user->getId())->toString());
 
         // The outcome is recorded either way; only a forced reset needs an answer, so an outage never blocks a plain sign-in
-        $pwned = $pwnedPasswords->check($password, required: $pwnedPasswords->isForceReset());
+        $passwordPwned = $pwnedPasswords->check($password, required: $pwnedPasswords->isForceReset());
 
-        if ($pwned !== null && $pwned !== $user->getAttribute('pwned')) {
-            $user->setAttribute('pwned', $pwned);
+        if ($passwordPwned !== null && $passwordPwned !== $user->getAttribute('passwordPwned')) {
+            $user->setAttribute('passwordPwned', $passwordPwned);
             $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'pwned' => $pwned,
+                'passwordPwned' => $passwordPwned,
             ]));
         }
 
-        if ($pwned && $pwnedPasswords->isForceReset()) {
+        if ($passwordPwned && $pwnedPasswords->isForceReset()) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
@@ -3507,8 +3507,8 @@ Http::patch('/v1/account/password')
             }
         }
 
-        $pwned = $pwnedPasswords->check($password);
-        if ($pwned) {
+        $passwordPwned = $pwnedPasswords->check($password);
+        if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -3517,7 +3517,7 @@ Http::patch('/v1/account/password')
         $user
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
-            ->setAttribute('pwned', $pwned)
+            ->setAttribute('passwordPwned', $passwordPwned)
             ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
@@ -3591,7 +3591,7 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $pwned = null;
+        $passwordPwned = null;
         if (empty($passwordUpdate)) {
             // First password for an anonymous account: apply the same policies as account creation
             $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
@@ -3611,8 +3611,8 @@ Http::patch('/v1/account/email')
                 }
             }
 
-            $pwned = $pwnedPasswords->check($password);
-            if ($pwned) {
+            $passwordPwned = $pwnedPasswords->check($password);
+            if ($passwordPwned) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -3687,7 +3687,7 @@ Http::patch('/v1/account/email')
             $user
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
-                ->setAttribute('pwned', $pwned)
+                ->setAttribute('passwordPwned', $passwordPwned)
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -3765,7 +3765,7 @@ Http::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $pwned = null;
+        $passwordPwned = null;
         if (empty($passwordUpdate)) {
             // First password for an anonymous account: apply the same policies as account creation
             $strength = new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []);
@@ -3785,8 +3785,8 @@ Http::patch('/v1/account/phone')
                 }
             }
 
-            $pwned = $pwnedPasswords->check($password);
-            if ($pwned) {
+            $passwordPwned = $pwnedPasswords->check($password);
+            if ($passwordPwned) {
                 throw new Exception(Exception::USER_PASSWORD_PWNED);
             }
         }
@@ -3814,7 +3814,7 @@ Http::patch('/v1/account/phone')
             $user
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('passwordHistory', $historyLimit > 0 ? [$newPassword] : [])
-                ->setAttribute('pwned', $pwned)
+                ->setAttribute('passwordPwned', $passwordPwned)
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
                 ->setAttribute('passwordUpdate', DateTime::now());
@@ -4232,8 +4232,8 @@ Http::put('/v1/account/recovery')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        $pwned = $pwnedPasswords->check($password);
-        if ($pwned) {
+        $passwordPwned = $pwnedPasswords->check($password);
+        if ($passwordPwned) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -4245,7 +4245,7 @@ Http::put('/v1/account/recovery')
             [
                 'password' => $newPassword,
                 'passwordHistory' => $history,
-                'pwned' => $pwned,
+                'passwordPwned' => $passwordPwned,
                 'passwordUpdate' => DateTime::now(),
                 'hash' => $proofForPassword->getHash()->getName(),
                 'hashOptions' => $proofForPassword->getHash()->getOptions(),

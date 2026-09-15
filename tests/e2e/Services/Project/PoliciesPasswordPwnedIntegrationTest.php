@@ -739,8 +739,8 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $userA['headers']['status-code']);
-        $this->assertArrayHasKey('pwned', $userA['body']);
-        $this->assertNull($userA['body']['pwned']);
+        $this->assertArrayHasKey('passwordPwned', $userA['body']);
+        $this->assertNull($userA['body']['passwordPwned']);
 
         // Policy on: a clean password is recorded as clean
         $this->updatePolicy(['enabled' => true]);
@@ -753,12 +753,12 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $userB['headers']['status-code']);
-        $this->assertFalse($userB['body']['pwned']);
+        $this->assertFalse($userB['body']['passwordPwned']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userB['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // A hashed import never sees the plaintext, so nothing is known
         $userC = $this->client->call(Client::METHOD_POST, '/users/sha', $this->serverHeaders(), [
@@ -770,7 +770,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $userC['headers']['status-code']);
-        $this->assertNull($userC['body']['pwned']);
+        $this->assertNull($userC['body']['passwordPwned']);
 
         // Signing in records a breached password, on the users and the account API
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
@@ -783,7 +783,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userA['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['pwned']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         $projectId = $this->getProject()['$id'];
         $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge($this->clientHeaders(), [
@@ -791,14 +791,14 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]));
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['pwned']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         // Listing users can filter on the flag
         $ids = fn (array $response) => \array_column($response['body']['users'], '$id');
 
         $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
             'queries' => [
-                Query::equal('pwned', [true])->toString(),
+                Query::equal('passwordPwned', [true])->toString(),
                 Query::orderDesc('$createdAt')->toString(),
                 Query::limit(100)->toString(),
             ],
@@ -811,7 +811,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
             'queries' => [
-                Query::equal('pwned', [false])->toString(),
+                Query::equal('passwordPwned', [false])->toString(),
                 Query::orderDesc('$createdAt')->toString(),
                 Query::limit(100)->toString(),
             ],
@@ -824,7 +824,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [
             'queries' => [
-                Query::isNull('pwned')->toString(),
+                Query::isNull('passwordPwned')->toString(),
                 Query::orderDesc('$createdAt')->toString(),
                 Query::limit(100)->toString(),
             ],
@@ -841,7 +841,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // Without the policy a new password is unknown again
         $this->updatePolicy(['enabled' => false]);
@@ -851,7 +851,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertNull($response['body']['pwned']);
+        $this->assertNull($response['body']['passwordPwned']);
 
         // Clearing the password clears the flag
         $this->updatePolicy(['enabled' => true]);
@@ -861,7 +861,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertNull($response['body']['pwned']);
+        $this->assertNull($response['body']['passwordPwned']);
 
         $this->updatePolicy(['enabled' => false]);
     }
@@ -884,7 +884,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $account['headers']['status-code']);
-        $this->assertFalse($account['body']['pwned']);
+        $this->assertFalse($account['body']['passwordPwned']);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -901,7 +901,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account', $headers);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $headers, [
             'password' => $this->cleanPassword(),
@@ -909,7 +909,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // Recovery records the new password too
         $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $this->clientHeaders(), [
@@ -935,7 +935,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $account['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // Anonymous conversions record the first password
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', $this->anonymousHeaders(), [
@@ -944,7 +944,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['pwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         /**
          * Test for FAILURE
@@ -962,7 +962,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $userD['headers']['status-code']);
-        $this->assertNull($userD['body']['pwned']);
+        $this->assertNull($userD['body']['passwordPwned']);
 
         $this->updatePolicy(['enabled' => true, 'forceReset' => true]);
 
@@ -977,7 +977,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userD['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['pwned']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         // An outage with a fail-open policy leaves the recorded state untouched and lets the sign-in through
         $this->updatePolicy(['endpoint' => self::DEAD_ENDPOINT, 'failClosed' => false]);
@@ -992,7 +992,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userD['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['pwned']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         // Filtering on an attribute outside the whitelist is rejected
         $response = $this->client->call(Client::METHOD_GET, '/users', $this->serverHeaders(), [

@@ -13,7 +13,7 @@ class Users extends Base
         'registration',
         'emailVerification',
         'phoneVerification',
-        'pwned',
+        'passwordPwned',
         'labels',
         'impersonator',
         'accessedAt',
