@@ -52,10 +52,11 @@ class Notifications extends Action
             ->inject('project')
             ->inject('register')
             ->inject('dbForPlatform')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform): void
     {
         $payload = $message->getPayload();
 
@@ -90,7 +91,7 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
@@ -173,11 +174,12 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
@@ -194,6 +196,7 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
     ): ?string {
         $address = $recipient['address'];
         $smtp = $this->resolveSmtpConfig($project, $payload);
@@ -206,13 +209,10 @@ class Notifications extends Action
         $type = empty($smtp) ? 'cloud' : 'smtp';
         Span::add('type', $type);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
-
         $subject = $payload['subject'] ?? '';
         $variables = $payload['variables'] ?? [];
         $variables = \array_merge($variables, $payload['templateParams'] ?? []);
-        $variables['host'] = $protocol . '://' . $consoleHostname;
+        $variables['host'] = $platform['consoleUrl'] ?? '';
         $name = $payload['name'] ?? '';
         $body = $payload['body'] ?? '';
         $preview = $payload['preview'] ?? '';
