@@ -154,6 +154,45 @@ final class DeletesTest extends TestCase
         $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
     }
 
+    #[DataProvider('resources')]
+    public function testDeleteRecreatedComputeRule(string $type): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->database;
+        $provider = new Provider();
+        $database->createDocument('certificates', new Document(['$id' => 'certificate']));
+        $original = $this->enqueue([
+            '$id' => md5('example.com'),
+            'type' => 'deployment',
+            'deploymentResourceType' => $type,
+            'deploymentResourceId' => 'reused-id',
+            'deploymentResourceInternalId' => '11',
+        ]);
+        $replacement = $database->createDocument('rules', new Document([
+            '$id' => $original->getId(), 'domain' => 'example.com', 'certificateId' => 'certificate',
+            'type' => 'deployment', 'deploymentResourceType' => $type,
+            'deploymentResourceId' => 'reused-id', 'deploymentResourceInternalId' => '12',
+            'projectId' => 'console', 'projectInternalId' => '0', 'region' => 'default',
+        ]));
+        $this->assertNotSame($original->getSequence(), $replacement->getSequence());
+
+        $this->assertSame([], $this->runWorker($provider));
+
+        $this->assertSame([], $provider->deleted);
+        $rule = $database->getDocument('rules', $replacement->getId());
+        $this->assertSame($replacement->getSequence(), $rule->getSequence());
+        $this->assertSame('12', $rule->getAttribute('deploymentResourceInternalId'));
+        $this->assertFalse($database->getDocument('certificates', 'certificate')->isEmpty());
+    }
+
+    public static function resources(): \Iterator
+    {
+        yield 'function' => ['function'];
+        yield 'site' => ['site'];
+    }
+
     private function enqueue(array $attributes = []): Document
     {
         $rule = $this->database->createDocument('rules', new Document(array_merge([
